@@ -603,4 +603,18 @@ function fn_novoton_holidays_upgrade_db()
             }
         }
     }
+
+    // Fix novoton_facilities table: add facility_name_en, facility_name_ro if missing
+    // addon.xml originally created the table with only facility_name column
+    $facilities_columns = db_get_fields("SHOW COLUMNS FROM ?:novoton_facilities");
+    if (!in_array('facility_name_en', $facilities_columns)) {
+        db_query("ALTER TABLE ?:novoton_facilities ADD COLUMN facility_name_en VARCHAR(255) DEFAULT '' AFTER facility_name");
+    }
+    if (!in_array('facility_name_ro', $facilities_columns)) {
+        db_query("ALTER TABLE ?:novoton_facilities ADD COLUMN facility_name_ro VARCHAR(255) DEFAULT '' AFTER facility_name_en");
+    }
+    // Copy existing facility_name data to facility_name_en if it was populated
+    if (in_array('facility_name', $facilities_columns)) {
+        db_query("UPDATE ?:novoton_facilities SET facility_name_en = facility_name WHERE facility_name_en = '' AND facility_name != ''");
+    }
 }

@@ -130,7 +130,13 @@ if ($mode == 'update_prices') {
 
 /**
  * Mode: check_prices
- * Check which hotels have active prices
+ * Check which hotels have active prices using resort-based bulk queries.
+ *
+ * Instead of calling room_price per hotel (N API calls), this queries
+ * room_price per resort (M API calls where M << N). Uses regex on the
+ * raw XML response to extract <IdHotel> values - if a hotel ID appears
+ * in the response, it has prices. Much faster and catches ALL hotels
+ * the API knows about, not just those in our database.
  */
 if ($mode == 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -146,7 +152,6 @@ if ($mode == 'check_prices') {
     $default_check_out = $default_year . '-07-14';
 
     $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-    $limit = intval($_REQUEST['limit'] ?? 500);
     $check_in = $_REQUEST['check_in'] ?? $default_check_in;
     $check_out = $_REQUEST['check_out'] ?? $default_check_out;
     $run = isset($_REQUEST['run']);
@@ -160,6 +165,7 @@ if ($mode == 'check_prices') {
         .success { color: green; }
         .error { color: red; }
         .skip { color: #999; }
+        .resort-header { color: #003580; font-weight: bold; margin-top: 8px; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
         .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
         .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
         .progress { margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; }
@@ -167,7 +173,7 @@ if ($mode == 'check_prices') {
         .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group label { font-size: 12px; font-weight: bold; color: #333; }
         .form-group input, .form-group select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-    </style></head><body><div class="container"><h1>Checking Hotel Prices</h1>';
+    </style></head><body><div class="container"><h1>Checking Hotel Prices (Resort-based)</h1>';
 
     // Date / settings form
     $dispatch_url = fn_url('novoton_holidays.check_prices');
@@ -185,13 +191,12 @@ if ($mode == 'check_prices') {
     echo '<div class="form-group"><label>Check-in</label><input type="text" name="check_in" value="' . htmlspecialchars($check_in) . '" placeholder="e.g. ' . htmlspecialchars($default_check_in) . '" style="width:130px"></div>';
     echo '<div class="form-group"><label>Check-out</label><input type="text" name="check_out" value="' . htmlspecialchars($check_out) . '" placeholder="e.g. ' . htmlspecialchars($default_check_out) . '" style="width:130px"></div>';
     echo '<div class="form-group"><label>Country</label><input type="text" name="country" value="' . htmlspecialchars($country) . '" style="width:120px"></div>';
-    echo '<div class="form-group"><label>Limit</label><input type="number" name="limit" value="' . $limit . '" min="1" max="2000" style="width:80px"></div>';
     echo '<div class="form-group"><label>&nbsp;</label><button type="submit" class="btn-run">Check Prices</button></div>';
     echo '</div></form>';
 
     if (!$run) {
-        // First load - show form only, don't run yet
-        echo '<p style="color:#666;">Set check-in / check-out dates and click <strong>Check Prices</strong> to start.</p>';
+        echo '<p style="color:#666;">Set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
+        echo 'Uses resort-based bulk queries (1 API call per resort instead of 1 per hotel).</p>';
         echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
         echo '</div></body></html>';
         exit;
@@ -199,86 +204,121 @@ if ($mode == 'check_prices') {
 
     echo '<div class="log">';
 
-    // Get ALL hotels for the country (no recency filter - always recheck)
-    $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name, product_id
-         FROM ?:novoton_hotels
-         WHERE country = ?s
-         ORDER BY hotel_name ASC
-         LIMIT ?i",
-        $country, $limit
+    // Step 1: Get all distinct resorts for this country from our database
+    $resorts = db_get_fields(
+        "SELECT DISTINCT resort FROM ?:novoton_hotels WHERE country = ?s AND resort != '' AND resort IS NOT NULL ORDER BY resort",
+        $country
     );
 
-    echo "Checking prices for " . count($hotels) . " hotels in {$country}...<br>";
-    echo "Check-in: {$check_in} | Check-out: {$check_out}<br><br>\n";
+    // Also get all hotels for this country (to map hotel_id -> hotel_name and mark results)
+    $all_hotels = db_get_hash_array(
+        "SELECT hotel_id, hotel_name, resort, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+        'hotel_id',
+        $country
+    );
+
+    $total_hotels = count($all_hotels);
+    $total_resorts = count($resorts);
+
+    echo "Country: {$country} | Resorts: {$total_resorts} | Hotels in DB: {$total_hotels}<br>";
+    echo "Check-in: {$check_in} | Check-out: {$check_out}<br>";
+    echo "Method: resort-based bulk query with regex <IdHotel> extraction<br><br>\n";
     flush();
 
     try {
         $api = new NovotonApi();
         $hotelRepo = new HotelRepository();
 
-        $with_prices = 0;
-        $no_prices = 0;
+        // Set of all hotel IDs that have prices (found via resort queries)
+        $hotels_with_prices = [];
+        $resort_errors = 0;
 
-        foreach ($hotels as $hotel) {
-            $hotel_id = $hotel['hotel_id'];
-            $product_code = 'NVT-' . $hotel_id;
+        // Step 2: Query each resort in bulk
+        foreach ($resorts as $resort_idx => $resort_name) {
+            $resort_num = $resort_idx + 1;
+            echo "<div class='resort-header'>[{$resort_num}/{$total_resorts}] {$resort_name}</div>\n";
+            flush();
 
             try {
-                $params = [
-                    'hotel_id' => $hotel_id,
-                    'check_in' => $check_in,
+                $raw_response = $api->getRoomPriceByResortRaw([
+                    'resort'    => $resort_name,
+                    'check_in'  => $check_in,
                     'check_out' => $check_out,
-                    'adults' => 2,
-                    'children' => 0
-                ];
-
-                $result = $api->getRoomPrice($params);
-
-                // Find any Price element in the response (can be nested in hotel/room/board)
-                $best_price = 0;
-                if ($result instanceof \SimpleXMLElement) {
-                    $prices = $result->xpath('//Price');
-                    if (!empty($prices)) {
-                        foreach ($prices as $p) {
-                            $pv = floatval((string)$p);
-                            if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
-                                $best_price = $pv;
-                            }
-                        }
-                    }
-                }
-
-                $has_prices = ($best_price > 0);
-
-                $hotelRepo->update($hotel_id, [
-                    'has_prices' => $has_prices ? 'Y' : 'N',
-                    'last_price_check' => date('Y-m-d H:i:s')
+                    'adults'    => 2,
                 ]);
 
-                if ($has_prices) {
-                    echo "<span class='success'>✓ {$product_code} | {$hotel['hotel_name']} - €" . number_format($best_price, 2) . "</span><br>\n";
-                    $with_prices++;
+                if (empty($raw_response)) {
+                    echo "<span class='skip'>  Empty response</span><br>\n";
+                    continue;
+                }
+
+                // Step 3: Regex to extract all <IdHotel> values from raw XML
+                // This is much faster than parsing potentially 800KB+ of XML
+                $matches = [];
+                preg_match_all('/<IdHotel>\s*(\d+)\s*<\/IdHotel>/i', $raw_response, $matches);
+
+                if (!empty($matches[1])) {
+                    // Unique hotel IDs found in this resort response
+                    $resort_hotel_ids = array_unique($matches[1]);
+                    $count = count($resort_hotel_ids);
+
+                    foreach ($resort_hotel_ids as $hid) {
+                        $hotels_with_prices[$hid] = $resort_name;
+                    }
+
+                    $response_kb = round(strlen($raw_response) / 1024, 1);
+                    echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                 } else {
-                    echo "<span class='skip'>○ {$product_code} | {$hotel['hotel_name']} - No prices</span><br>\n";
-                    $no_prices++;
+                    echo "<span class='skip'>  No hotels with prices</span><br>\n";
                 }
 
             } catch (Exception $e) {
-                echo "<span class='error'>✗ {$product_code} | {$hotel['hotel_name']} - Error</span><br>\n";
-                $no_prices++;
+                echo "<span class='error'>  Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
+                $resort_errors++;
             }
 
-            if (($with_prices + $no_prices) % 10 == 0) {
-                echo "<div class='progress'>Progress: " . ($with_prices + $no_prices) . "/" . count($hotels) . "</div>";
-                flush();
+            flush();
+        }
+
+        // Step 4: Update database - mark hotels with/without prices
+        $with_prices = 0;
+        $no_prices = 0;
+        $now = date('Y-m-d H:i:s');
+
+        echo "<br><div class='resort-header'>Updating database...</div>\n";
+        flush();
+
+        foreach ($all_hotels as $hotel_id => $hotel) {
+            $has = isset($hotels_with_prices[$hotel_id]);
+
+            $hotelRepo->update($hotel_id, [
+                'has_prices' => $has ? 'Y' : 'N',
+                'last_price_check' => $now
+            ]);
+
+            if ($has) {
+                $with_prices++;
+            } else {
+                $no_prices++;
             }
         }
 
+        // Step 5: Report hotels found by API but NOT in our database
+        $unknown_hotels = array_diff_key($hotels_with_prices, $all_hotels);
+
         echo "<br><strong>Summary:</strong><br>";
-        echo "With prices: {$with_prices}<br>";
+        echo "Resorts queried: {$total_resorts}" . ($resort_errors > 0 ? " ({$resort_errors} errors)" : '') . "<br>";
+        echo "Hotels in DB: {$total_hotels}<br>";
+        echo "With prices: <span class='success'>{$with_prices}</span><br>";
         echo "No prices: {$no_prices}<br>";
-        echo "Total checked: " . ($with_prices + $no_prices) . "<br>";
+
+        if (!empty($unknown_hotels)) {
+            echo "<br><span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
+            foreach ($unknown_hotels as $hid => $resort) {
+                echo "<span class='error'>  Hotel ID {$hid} (resort: {$resort}) - not synced</span><br>\n";
+            }
+            echo "<br><span style='color:#666;'>These hotels have prices in the API but are missing from your hotel list. Run Hotel Sync to add them.</span><br>";
+        }
 
     } catch (Exception $e) {
         echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>";

@@ -554,9 +554,20 @@ if ($mode == 'check_packages') {
                     $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
 
                     $package_name = '';
-                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
-                        $h = $hotel_info->hotels->hotel;
-                        $package_name = (string)($h->PackageName ?? '');
+                    if ($hotel_info) {
+                        // Response root is <hotel>, packages at <packages><PackageName>
+                        if (isset($hotel_info->packages->PackageName)) {
+                            $package_name = (string)$hotel_info->packages->PackageName;
+                        } elseif (isset($hotel_info->packages->Package)) {
+                            $package_name = (string)$hotel_info->packages->Package;
+                        }
+                        // Fallback: try xpath for any PackageName in the response
+                        if (empty($package_name)) {
+                            $pn = $hotel_info->xpath('//PackageName');
+                            if (!empty($pn)) {
+                                $package_name = (string)$pn[0];
+                            }
+                        }
                     }
 
                     if (!empty($package_name)) {

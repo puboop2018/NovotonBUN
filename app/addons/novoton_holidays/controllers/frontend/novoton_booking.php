@@ -705,10 +705,48 @@ if ($mode == 'search') {
                 $debug_log[] = "";
             }
             
+            // ========================================
+            // FETCH ROOM TYPES FROM HOTELINFO API
+            // ========================================
+            // hotelinfo returns <rooms> with <IdRoom> and <Type> for each room
+            // We build a map: IdRoom => Type (e.g., "1-BR APP 2+2" => "APP")
+            // Used to display proper room names: "Apartament (1-BR APP 2+2)" instead of raw codes
+            $roomTypeMap = [];
+            try {
+                $hotelInfoData = fn_novoton_get_api()->getHotelInfo($hotelId);
+                if ($hotelInfoData && isset($hotelInfoData->rooms)) {
+                    foreach ($hotelInfoData->rooms as $roomNode) {
+                        $riId = trim((string)($roomNode->IdRoom ?? ''));
+                        $riType = trim((string)($roomNode->Type ?? ''));
+                        if (!empty($riId) && !empty($riType)) {
+                            $roomTypeMap[$riId] = $riType;
+                        }
+                    }
+                } elseif ($hotelInfoData && isset($hotelInfoData->hotels->hotel->rooms)) {
+                    foreach ($hotelInfoData->hotels->hotel->rooms as $roomNode) {
+                        $riId = trim((string)($roomNode->IdRoom ?? ''));
+                        $riType = trim((string)($roomNode->Type ?? ''));
+                        if (!empty($riId) && !empty($riType)) {
+                            $roomTypeMap[$riId] = $riType;
+                        }
+                    }
+                }
+                if ($debug_mode) {
+                    $debug_log[] = "=== ROOM TYPE MAP (hotelinfo API) ===";
+                    foreach ($roomTypeMap as $rtId => $rtType) {
+                        $debug_log[] = "  {$rtId}: {$rtType}";
+                    }
+                }
+            } catch (Exception $e) {
+                if ($debug_mode) {
+                    $debug_log[] = "=== HOTELINFO FETCH ERROR: " . $e->getMessage() . " ===";
+                }
+            }
+
             // Call room_price API - MULTI-ROOM SUPPORT
             // For multi-room bookings, we need to search for each room's occupancy separately
             // This matches how Novoton's website works
-            
+
             $all_room_results = []; // Store results per room
             
             if ($num_rooms > 1 && count($rooms_data) > 1) {
@@ -810,7 +848,7 @@ if ($mode == 'search') {
                                     $room_results[] = [
                                         'room_id' => $roomId,
                                         'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                        'room_type_display' => fn_novoton_format_room_type($roomId),
+                                        'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                                         'board_id' => $boardId,
                                         'board_name' => fn_novoton_format_board_name($boardId),
                                         'package_name' => urldecode($packageName),
@@ -856,7 +894,7 @@ if ($mode == 'search') {
                                         $room_results[] = [
                                             'room_id' => $roomId,
                                             'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                            'room_type_display' => fn_novoton_format_room_type($roomId),
+                                            'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                                             'board_id' => $boardId,
                                             'board_name' => fn_novoton_format_board_name($boardId),
                                             'package_name' => urldecode($packageName),
@@ -1168,7 +1206,7 @@ if ($mode == 'search') {
                                     'room' => null,
                                     'room_id' => $roomId,
                                     'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                    'room_type_display' => fn_novoton_format_room_type($roomId),
+                                    'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                                     'board_id' => $boardId,
                                     'board_name' => fn_novoton_format_board_name($boardId),
                                     'package_name' => urldecode($packageName),
@@ -1258,7 +1296,7 @@ if ($mode == 'search') {
                                         'room' => null,
                                         'room_id' => $roomId,
                                         'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                        'room_type_display' => fn_novoton_format_room_type($roomId),
+                                        'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                                         'board_id' => $boardId,
                                         'board_name' => fn_novoton_format_board_name($boardId),
                                         'package_name' => urldecode($packageName),
