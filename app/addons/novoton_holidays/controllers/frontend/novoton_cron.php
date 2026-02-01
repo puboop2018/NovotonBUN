@@ -7,7 +7,7 @@
  * 
  * Modes:
  * - resinfo: Check ASK bookings status
- * - hotel_list: Sync hotels from API
+ * - hotel_list: Hotel list sync from API
  * - update_prices: Update hotel prices
  * - room_price: Check which hotels have active prices
  * - alternative_rs: Check alternative_RS for pending requests
@@ -124,63 +124,103 @@ try {
     // MODE: hotel_list
     // =========================================
     elseif ($mode == 'hotel_list') {
-        echo "Syncing hotels from API...\n\n";
-        
+        echo "Syncing hotels from API (with hotelinfo details)...\n\n";
+
         // Get countries from settings (or all if none selected)
         $countries = fn_novoton_parse_countries();
-        
+
         echo "Countries: " . implode(', ', $countries) . "\n";
         if (count($countries) > 3) {
             echo "(All available countries - none specifically selected in settings)\n";
         }
         echo "\n";
-        
+
         $total_hotels = 0;
         $synced_hotels = 0;
-        
+        $detail_fetched = 0;
+        $detail_errors = 0;
+
         foreach ($countries as $country) {
             echo "Fetching {$country}... ";
-            
+
             $hotels = $api->getHotelList($country);
-            
+
             if (!empty($hotels)) {
                 $count = count($hotels);
                 $total_hotels += $count;
                 echo "{$count} hotels\n";
-                
+
                 foreach ($hotels as $hotel) {
                     $hotel_id = (string)($hotel->IdHotel ?? '');
                     $hotel_name = (string)($hotel->Hotel ?? '');
                     $city = (string)($hotel->City ?? '');
-                    
+
                     if (empty($hotel_id)) continue;
-                    
+
                     $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-                    
+
+                    // Extract all available fields from hotel_list response
                     $data = [
                         'hotel_id' => $hotel_id,
                         'hotel_name' => $hotel_name,
                         'city' => $city,
                         'country' => $country,
+                        'resort' => (string)($hotel->Resort ?? $hotel->City ?? ''),
+                        'stars' => intval($hotel->Stars ?? 0),
+                        'hotel_type' => (string)($hotel->HotelType ?? ''),
                         'updated_at' => date('Y-m-d H:i:s')
                     ];
-                    
+
+                    // Fetch hotelinfo details for Region, Lat, Lng
+                    $hotel_info = $api->getHotelInfo($hotel_id);
+                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
+                        $h = $hotel_info->hotels->hotel;
+                        $data['region'] = (string)($h->Region ?? '');
+                        // HotelType from hotelinfo (may be more detailed)
+                        $ht = (string)($h->HotelType ?? '');
+                        if (!empty($ht)) {
+                            $data['hotel_type'] = $ht;
+                        }
+                        // Coordinates
+                        $lat = (string)($h->Lat ?? '');
+                        $lng = (string)($h->Lng ?? '');
+                        if ($lat !== '') {
+                            $data['latitude'] = $lat;
+                        }
+                        if ($lng !== '') {
+                            $data['longitude'] = $lng;
+                        }
+                        $detail_fetched++;
+                        echo "  [{$hotel_id}] {$hotel_name} - details OK";
+                        if (!empty($data['region'])) echo " | Region: {$data['region']}";
+                        if ($lat !== '') echo " | Lat: {$lat}";
+                        if ($lng !== '') echo " | Lng: {$lng}";
+                        echo "\n";
+                    } else {
+                        $detail_errors++;
+                        echo "  [{$hotel_id}] {$hotel_name} - hotelinfo failed\n";
+                    }
+
                     if ($exists) {
                         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
                     } else {
                         $data['created_at'] = date('Y-m-d H:i:s');
                         db_query("INSERT INTO ?:novoton_hotels ?e", $data);
                     }
-                    
+
                     $synced_hotels++;
                 }
             } else {
                 echo "0 hotels (or error)\n";
             }
         }
-        
+
         echo "\nTotal hotels: {$total_hotels}\n";
         echo "Synced: {$synced_hotels}\n";
+        echo "Hotelinfo details fetched: {$detail_fetched}\n";
+        if ($detail_errors > 0) {
+            echo "Hotelinfo errors: {$detail_errors}\n";
+        }
     }
     
     // =========================================
@@ -196,47 +236,71 @@ try {
     // MODE: room_price
     // =========================================
     elseif ($mode == 'room_price') {
-        $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+        $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+7 days'));
         $nights = intval($_REQUEST['nights'] ?? 7);
-        $limit = intval($_REQUEST['limit'] ?? 100);
+        $limit = intval($_REQUEST['limit'] ?? 500);
         $country = strtoupper($_REQUEST['country'] ?? '');
-        
+        $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
+
         echo "Checking hotels with active prices...\n";
-        echo "Check-in: {$check_in}, Nights: {$nights}, Limit: {$limit}\n";
+        echo "Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}\n";
         if ($country) echo "Country: {$country}\n";
         echo "\n";
-        
-        $where = $country ? "WHERE country = '" . addslashes($country) . "'" : "";
+
+        $where = $country ? db_quote("WHERE country = ?s", $country) : "";
         $hotels = db_get_array(
             "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels {$where} ORDER BY country, hotel_name LIMIT ?i",
             $limit
         );
-        
+
         $with_prices = 0;
         $without_prices = 0;
-        
+
         foreach ($hotels as $idx => $hotel) {
-            $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
-            $response = $api->getRoomPrice($hotel['hotel_id'], $check_in, $check_out, 2, 0, 1);
-            
-            if ($response && isset($response->hotel)) {
+            $params = [
+                'hotel_id' => $hotel['hotel_id'],
+                'check_in' => $check_in,
+                'check_out' => $check_out,
+                'adults' => 2,
+                'children' => 0
+            ];
+
+            $response = $api->getRoomPrice($params);
+
+            // Find any Price element in the response (can be nested)
+            $best_price = 0;
+            if ($response instanceof \SimpleXMLElement) {
+                $prices = $response->xpath('//Price');
+                if (!empty($prices)) {
+                    foreach ($prices as $p) {
+                        $pv = floatval((string)$p);
+                        if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
+                            $best_price = $pv;
+                        }
+                    }
+                }
+            }
+
+            if ($best_price > 0) {
                 $with_prices++;
                 db_query("UPDATE ?:novoton_hotels SET has_prices = 'Y', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
+                echo "NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2) . "\n";
             } else {
                 $without_prices++;
                 db_query("UPDATE ?:novoton_hotels SET has_prices = 'N', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
             }
-            
+
             if (($idx + 1) % 25 == 0) {
-                echo "Checked " . ($idx + 1) . " hotels...\n";
+                echo "Checked " . ($idx + 1) . "/" . count($hotels) . " hotels...\n";
             }
-            
+
             usleep(100000); // 100ms delay
         }
-        
+
         echo "\nResults:\n";
         echo "Hotels WITH prices: {$with_prices}\n";
         echo "Hotels WITHOUT prices: {$without_prices}\n";
+        echo "Total checked: " . ($with_prices + $without_prices) . "\n";
     }
     
     // =========================================
@@ -843,7 +907,7 @@ try {
         echo "Unknown mode: {$mode}\n";
         echo "\nAvailable modes:\n";
         echo "- resinfo: Check ASK bookings status\n";
-        echo "- hotel_list: Sync hotels from API\n";
+        echo "- hotel_list: Hotel list sync from API\n";
         echo "- update_prices: Update hotel prices (use admin panel)\n";
         echo "- room_price: Check which hotels have active prices (fast resort-based)\n";
         echo "- alternative_rs: Check alternative_RS for pending requests (24h+)\n";

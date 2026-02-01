@@ -48,18 +48,24 @@ $tools_modes = [
 $addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/controllers/backend/';
 
 if (in_array($mode, $hotels_modes)) {
-    include($addon_dir . 'novoton_hotels.php');
-    return;
+    $__result = include($addon_dir . 'novoton_hotels.php');
+    if (is_array($__result)) {
+        return $__result;
+    }
 }
 
 if (in_array($mode, $prices_modes)) {
-    include($addon_dir . 'novoton_prices.php');
-    return;
+    $__result = include($addon_dir . 'novoton_prices.php');
+    if (is_array($__result)) {
+        return $__result;
+    }
 }
 
 if (in_array($mode, $tools_modes)) {
-    include($addon_dir . 'novoton_tools.php');
-    return;
+    $__result = include($addon_dir . 'novoton_tools.php');
+    if (is_array($__result)) {
+        return $__result;
+    }
 }
 
 // ============================================================================

@@ -208,9 +208,9 @@ try {
             }
         }
         
-        echo "\n=== HOTEL SYNC COMPLETED ===\n";
+        echo "\n=== HOTEL LIST SYNC COMPLETED ===\n";
         echo "Hotels updated: {$hotels_updated}\n";
-        echo "============================\n\n";
+        echo "=================================\n\n";
         
         fn_log_event('novoton_holidays', 'cron_complete', [
             'timestamp' => time(),
@@ -218,7 +218,7 @@ try {
             'hotels_updated' => $hotels_updated
         ]);
         
-        echo "[" . date('Y-m-d H:i:s') . "] Hotel sync completed.\n";
+        echo "[" . date('Y-m-d H:i:s') . "] Hotel list sync completed.\n";
         exit(0);
     }
     

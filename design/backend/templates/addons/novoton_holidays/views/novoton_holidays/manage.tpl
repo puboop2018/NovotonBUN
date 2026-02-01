@@ -158,7 +158,7 @@
                 <th style="width: 150px;">Recommended</th>
             </tr>
             <tr>
-                <td><strong>Hotel Sync</strong></td>
+                <td><strong>Hotel List Sync</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
                 <td>Daily 3 AM</td>
             </tr>
