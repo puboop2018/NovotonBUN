@@ -85,15 +85,36 @@ function fn_novoton_format_room_type($roomId)
         'APARTMENT' => 'Apartament',
         'SUITE' => 'Suita',
         'STE' => 'Suita',
+        'JRSUITE' => 'Junior Suita',
+        'JST' => 'Junior Suita',
+        'JUNIOR' => 'Junior Suita',
         'VILLA' => 'Vila',
         'VLA' => 'Vila',
         'BUNGALOW' => 'Bungalou',
         'BNG' => 'Bungalou',
         'MAISONETTE' => 'Maisoneta',
         'MAI' => 'Maisoneta',
+        'PENTHOUSE' => 'Penthouse',
+        'PH' => 'Penthouse',
+        'DLX' => 'Camera Deluxe',
+        'DELUXE' => 'Camera Deluxe',
+        'SUP' => 'Camera Superior',
+        'SUPERIOR' => 'Camera Superior',
+        '1-BR' => 'Apartament 1 Dormitor',
+        '2-BR' => 'Apartament 2 Dormitoare',
+        '3-BR' => 'Apartament 3 Dormitoare',
     ];
-    
-    $room_name = $room_map[$base] ?? $base;
+
+    $room_name = $room_map[$base] ?? null;
+
+    // Fallback: handle N-BR pattern (e.g., "4-BR", "5-BR") dynamically
+    if ($room_name === null && preg_match('/^(\d+)-BR$/i', $base, $brMatch)) {
+        $room_name = 'Apartament ' . $brMatch[1] . ' Dormitoare';
+    }
+
+    if ($room_name === null) {
+        $room_name = $base;
+    }
     
     // Build occupancy string
     $adults = isset($parts[1]) ? intval($parts[1]) : 0;
