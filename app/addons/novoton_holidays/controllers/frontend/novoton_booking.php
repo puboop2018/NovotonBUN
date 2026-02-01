@@ -2055,11 +2055,13 @@ if ($mode == 'add_to_cart') {
     $terms_of_cancellation = '';
     $remark = '';
     $important = '';
-    
+    $base_price = 0; // API price before commission
+
     if ($priceData) {
         // Update price if we got one from API
         if (isset($priceData->Price)) {
             $rawPrice = floatval((string)$priceData->Price);
+            $base_price = $rawPrice;
             $api_price = fn_novoton_get_api()->applyCommission($rawPrice);
             // ALWAYS use API price when children are involved (ages affect pricing)
             // Also use if we don't have one, or if it's different
@@ -2259,6 +2261,7 @@ if ($mode == 'add_to_cart') {
             'rooms_data' => json_encode($rooms_data),
             'guest_name' => $guest_list,
             'guests_data' => json_encode($guests_data),
+            'base_price' => $base_price,
             'total_price' => $total_price,
             'guest_email' => $contact['email'] ?? '',
             'api_request' => json_encode([
@@ -2306,6 +2309,7 @@ if ($mode == 'add_to_cart') {
             'guest_email' => '',  // Will be set from order at checkout
             'guest_phone' => $contact['phone'] ?? '',
             'guests_data' => json_encode($guests_data),
+            'base_price' => $base_price,
             'total_price' => $total_price,
             'currency' => 'EUR',
             'status' => 'pending',
