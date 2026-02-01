@@ -722,14 +722,6 @@ if ($mode == 'search') {
                             $roomTypeMap[$riId] = $riType;
                         }
                     }
-                } elseif ($hotelInfoData && isset($hotelInfoData->hotels->hotel->rooms)) {
-                    foreach ($hotelInfoData->hotels->hotel->rooms as $roomNode) {
-                        $riId = trim((string)($roomNode->IdRoom ?? ''));
-                        $riType = trim((string)($roomNode->Type ?? ''));
-                        if (!empty($riId) && !empty($riType)) {
-                            $roomTypeMap[$riId] = $riType;
-                        }
-                    }
                 }
                 if ($debug_mode) {
                     $debug_log[] = "=== ROOM TYPE MAP (hotelinfo API) ===";

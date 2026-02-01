@@ -173,17 +173,17 @@ try {
 
                     // Fetch hotelinfo details for Region, Lat, Lng
                     $hotel_info = $api->getHotelInfo($hotel_id);
-                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
-                        $h = $hotel_info->hotels->hotel;
-                        $data['region'] = (string)($h->Region ?? '');
+                    if ($hotel_info) {
+                        // hotelinfo response root IS <hotel>, properties are direct children
+                        $data['region'] = (string)($hotel_info->Region ?? '');
                         // HotelType from hotelinfo (may be more detailed)
-                        $ht = (string)($h->HotelType ?? '');
+                        $ht = (string)($hotel_info->HotelType ?? '');
                         if (!empty($ht)) {
                             $data['hotel_type'] = $ht;
                         }
                         // Coordinates
-                        $lat = (string)($h->Lat ?? '');
-                        $lng = (string)($h->Lng ?? '');
+                        $lat = (string)($hotel_info->Lat ?? '');
+                        $lng = (string)($hotel_info->Lng ?? '');
                         if ($lat !== '') {
                             $data['latitude'] = $lat;
                         }
@@ -603,16 +603,16 @@ try {
                     echo "NEW HOTEL - ";
                     
                     $hotel_info = $api->getHotelInfo($hotel_id);
-                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
-                        $h = $hotel_info->hotels->hotel;
+                    if ($hotel_info) {
+                        // hotelinfo response root IS <hotel>, properties are direct children
                         $hotel_data = [
                             'hotel_id' => $hotel_id,
-                            'hotel_name' => (string)($h->Hotel ?? $hotel_name),
-                            'package_name' => (string)($h->PackageName ?? ''),
-                            'city' => (string)($h->City ?? ''),
-                            'region' => (string)($h->Region ?? ''),
-                            'country' => (string)($h->Country ?? $country),
-                            'stars' => (string)($h->Stars ?? ''),
+                            'hotel_name' => (string)($hotel_info->Hotel ?? $hotel_name),
+                            'package_name' => (string)($hotel_info->packages->PackageName ?? ''),
+                            'city' => (string)($hotel_info->City ?? ''),
+                            'region' => (string)($hotel_info->Region ?? ''),
+                            'country' => (string)($hotel_info->Country ?? $country),
+                            'stars' => (string)($hotel_info->Stars ?? ''),
                             'has_prices' => 'N',
                             'synced_at' => date('Y-m-d H:i:s')
                         ];
