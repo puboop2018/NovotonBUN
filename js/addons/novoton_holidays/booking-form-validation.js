@@ -1,0 +1,402 @@
+/**
+ * Novoton Holidays - Booking Form Validation & Price Recalculation
+ * Version: 2.7.1-A74e
+ * 
+ * Features:
+ * - DOB input masking (DD/MM/YYYY)
+ * - Age validation at check-in date
+ * - Price recalculation via AJAX
+ * - Room change warning modal
+ */
+
+(function() {
+    'use strict';
+
+    // =========================================================================
+    // CONFIGURATION
+    // =========================================================================
+    
+    var CONFIG = {
+        debug: true,
+        selectors: {
+            priceDisplay: '.price-total, .total-price-value, .booking-total-value, .price-amount',
+            priceSection: '.booking-price-box, .price-summary, .booking-summary'
+        }
+    };
+
+    // =========================================================================
+    // LOGGING UTILITIES
+    // =========================================================================
+    
+    function log(message, data) {
+        if (CONFIG.debug && console && console.log) {
+            if (data !== undefined) {
+                console.log('[Novoton] ' + message, data);
+            } else {
+                console.log('[Novoton] ' + message);
+            }
+        }
+    }
+
+    function logError(message, error) {
+        if (console && console.error) {
+            console.error('[Novoton ERROR] ' + message, error);
+        }
+    }
+
+    // =========================================================================
+    // DOB MASKING (DD/MM/YYYY)
+    // =========================================================================
+    
+    var dobLastKeyWasBackspace = false;
+
+    window.handleDobKeydown = function(e) {
+        dobLastKeyWasBackspace = (e.key === 'Backspace' || e.key === 'Delete');
+    };
+
+    function formatDobDigits(digits) {
+        var masked = '';
+        if (digits.length > 0) {
+            masked = digits.substring(0, Math.min(2, digits.length));
+        }
+        if (digits.length > 2) {
+            masked = digits.substring(0, 2) + '/' + digits.substring(2, Math.min(4, digits.length));
+        }
+        if (digits.length > 4) {
+            masked = digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4, Math.min(8, digits.length));
+        }
+        return masked;
+    }
+
+    window.applyDobMask = function(input) {
+        var cursorPos = input.selectionStart;
+        var oldValue = input.value;
+        var oldLen = oldValue.length;
+        var digits = oldValue.replace(/\D/g, '');
+        
+        if (dobLastKeyWasBackspace) {
+            dobLastKeyWasBackspace = false;
+            var masked = formatDobDigits(digits);
+            input.value = masked;
+            var newPos = Math.min(cursorPos, masked.length);
+            try { input.setSelectionRange(newPos, newPos); } catch(e) {}
+            return;
+        }
+        
+        var masked = '';
+        if (digits.length > 0) masked = digits.substring(0, Math.min(2, digits.length));
+        if (digits.length >= 2) masked = digits.substring(0, 2) + '/';
+        if (digits.length > 2) masked = digits.substring(0, 2) + '/' + digits.substring(2, Math.min(4, digits.length));
+        if (digits.length >= 4) masked = digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/';
+        if (digits.length > 4) masked = digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4, Math.min(8, digits.length));
+        
+        input.value = masked;
+        
+        var newLen = masked.length;
+        var newPos = cursorPos;
+        if (newLen > oldLen) {
+            if (cursorPos === 2 || cursorPos === 3) newPos = 3;
+            else if (cursorPos === 5 || cursorPos === 6) newPos = 6;
+            else newPos = newLen;
+        }
+        try { input.setSelectionRange(newPos, newPos); } catch(e) {}
+    };
+
+    window.parseDobMasked = function(dobString) {
+        if (!dobString || dobString.length !== 10) return null;
+        var parts = dobString.split('/');
+        if (parts.length !== 3) return null;
+        
+        var day = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10);
+        var year = parseInt(parts[2], 10);
+        
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+        return { day: day, month: month, year: year };
+    };
+
+    window.calculateAgeAtDate = function(birthDate, targetDate) {
+        var age = targetDate.getFullYear() - birthDate.getFullYear();
+        var m = targetDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && targetDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    // =========================================================================
+    // PRICE DISPLAY UPDATES
+    // =========================================================================
+    
+    window.updatePriceDisplay = function(newPrice, formattedPrice, difference) {
+        log('updatePriceDisplay', { newPrice: newPrice, formattedPrice: formattedPrice, difference: difference });
+        
+        var priceElements = document.querySelectorAll(CONFIG.selectors.priceDisplay);
+        log('Found price elements: ' + priceElements.length);
+        
+        if (priceElements.length === 0) {
+            logError('No price elements found! Selector: ' + CONFIG.selectors.priceDisplay);
+            return;
+        }
+        
+        var displayValue = newPrice ? parseFloat(newPrice).toFixed(2) : (formattedPrice || '0.00');
+        
+        priceElements.forEach(function(el) {
+            log('Updating: ' + el.className + ' from "' + el.textContent + '" to "' + displayValue + '"');
+            el.textContent = displayValue;
+        });
+        
+        // Hide recalc notice
+        var recalcNotice = document.getElementById('price-recalc-notice');
+        if (recalcNotice) recalcNotice.style.display = 'none';
+        
+        // Show price change notification
+        if (difference && difference !== 0) {
+            var notif = document.getElementById('price-change-notification');
+            if (!notif) {
+                notif = document.createElement('div');
+                notif.id = 'price-change-notification';
+                notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:10px 15px;margin:10px 0;border-radius:4px;';
+                var priceSection = document.querySelector(CONFIG.selectors.priceSection);
+                if (priceSection && priceSection.parentNode) {
+                    priceSection.parentNode.insertBefore(notif, priceSection.nextSibling);
+                }
+            }
+            var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
+            var changeColor = difference > 0 ? '#dc3545' : '#28a745';
+            var t = window.NovotonTranslations || {};
+            notif.innerHTML = '💰 ' + (t.priceUpdated || 'Prețul a fost actualizat:') + 
+                              ' <strong style="color:' + changeColor + '">' + changeText + ' €</strong>';
+            notif.style.display = 'block';
+        }
+    };
+
+    window.showPriceRecalculationNotice = function(message) {
+        var notif = document.getElementById('price-recalc-notice');
+        if (!notif) {
+            notif = document.createElement('div');
+            notif.id = 'price-recalc-notice';
+            notif.style.cssText = 'background:#e7f3ff;border-left:4px solid #0071c2;color:#004085;padding:10px 15px;margin:10px 0;border-radius:4px;font-size:13px;';
+            var priceSection = document.querySelector(CONFIG.selectors.priceSection);
+            if (priceSection && priceSection.parentNode) {
+                priceSection.parentNode.insertBefore(notif, priceSection.nextSibling);
+            }
+        }
+        notif.innerHTML = 'ℹ️ ' + message;
+        notif.style.display = 'block';
+    };
+
+    // =========================================================================
+    // ROOM CHANGE WARNING MODAL
+    // =========================================================================
+    
+    window.showRoomChangeWarning = function(data) {
+        log('showRoomChangeWarning', data);
+        
+        var existing = document.getElementById('room-change-warning');
+        if (existing) existing.remove();
+        
+        var priceDiff = parseFloat(data.price_difference) || 0;
+        var newPrice = parseFloat(data.new_price) || 0;
+        var originalPrice = parseFloat(data.original_price) || 0;
+        var originalRoom = data.original_room || '';
+        var newRoom = data.new_room || '';
+        
+        var priceDiffText = '', priceDiffStyle = '';
+        if (priceDiff > 0) {
+            priceDiffText = '+' + priceDiff.toFixed(2) + ' €';
+            priceDiffStyle = 'color:#dc3545;font-weight:bold;';
+        } else if (priceDiff < 0) {
+            priceDiffText = priceDiff.toFixed(2) + ' €';
+            priceDiffStyle = 'color:#28a745;font-weight:bold;';
+        }
+        
+        var t = window.NovotonTranslations || {};
+        
+        var html = '<div id="room-change-warning" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
+            '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
+            '<div style="text-align:center;margin-bottom:20px;">' +
+                '<div style="font-size:40px;margin-bottom:10px;">⚠️</div>' +
+                '<h3 style="margin:0;color:#856404;font-size:18px;">' + (t.roomChangedTitle || 'Camera s-a modificat') + '</h3>' +
+            '</div>' +
+            '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">' + (t.roomChangedDueToAge || 'Camera selectată nu este disponibilă pentru vârsta copilului introdusă.') + '</p>' +
+            '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin-bottom:20px;">' +
+                '<div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">' +
+                    '<div style="text-align:center;">' +
+                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + (t.originalRoom || 'Camera selectată') + '</div>' +
+                        '<div style="font-weight:600;color:#856404;text-decoration:line-through;">' + originalRoom + '</div>' +
+                    '</div>' +
+                    '<div style="font-size:24px;color:#856404;">→</div>' +
+                    '<div style="text-align:center;">' +
+                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + (t.newRoom || 'Camera nouă') + '</div>' +
+                        '<div style="font-weight:600;color:#155724;">' + newRoom + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="background:#f8f9fa;border-radius:8px;padding:15px;margin-bottom:20px;text-align:center;">' +
+                '<div style="font-size:12px;color:#666;margin-bottom:5px;">' + (t.priceChange || 'Modificare preț') + '</div>' +
+                '<div style="font-size:20px;">' +
+                    '<span style="text-decoration:line-through;color:#999;">' + originalPrice.toFixed(2) + ' €</span> ' +
+                    '<span style="' + priceDiffStyle + '">(' + priceDiffText + ')</span> ' +
+                    '<span style="font-weight:bold;color:#003580;">' + newPrice.toFixed(2) + ' €</span>' +
+                '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:10px;justify-content:center;">' +
+                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">← ' + (t.goBackToSearch || 'Înapoi la căutare') + '</button>' +
+                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + (t.continueWithNewRoom || 'Continuă cu noua cameră') + ' →</button>' +
+            '</div>' +
+            '</div></div>';
+        
+        window._roomChangeData = data;
+        document.body.insertAdjacentHTML('beforeend', html);
+        log('Modal displayed');
+    };
+
+    window.acceptRoomChange = function() {
+        var data = window._roomChangeData || {};
+        log('acceptRoomChange', data);
+        
+        var warning = document.getElementById('room-change-warning');
+        if (warning) warning.remove();
+        
+        document.querySelectorAll('.room-name, .selected-room-name, [data-room-name]').forEach(function(el) {
+            el.textContent = data.new_room || '';
+        });
+        
+        var roomIdInput = document.querySelector('input[name="room_id"]');
+        if (roomIdInput) roomIdInput.value = data.new_room || '';
+        
+        if (window.bookingData) {
+            window.bookingData.roomId = data.new_room || '';
+            window.bookingData.currentPrice = parseFloat(data.new_price) || 0;
+        }
+        
+        // Show confirmation
+        var t = window.NovotonTranslations || {};
+        var notif = document.createElement('div');
+        notif.id = 'room-change-confirmation';
+        notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
+        notif.innerHTML = '✓ <strong>' + (t.roomUpdated || 'Camera a fost actualizată:') + '</strong> ' + 
+            (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
+        
+        var section = document.querySelector('.guest-names-section h3, .booking-form-header');
+        if (section && section.parentNode) {
+            section.parentNode.insertBefore(notif, section.nextSibling);
+        }
+        
+        setTimeout(function() {
+            if (notif.parentNode) {
+                notif.style.opacity = '0';
+                notif.style.transition = 'opacity 0.3s';
+                setTimeout(function() { notif.remove(); }, 300);
+            }
+        }, 10000);
+    };
+
+    window.goBackToSearch = function() {
+        log('goBackToSearch');
+        var warning = document.getElementById('room-change-warning');
+        if (warning) warning.remove();
+        
+        var backBtn = document.querySelector('.btn-back, a[href*="novoton_booking.search"]');
+        if (backBtn) backBtn.click();
+        else window.history.back();
+    };
+
+    // =========================================================================
+    // PRICE RECALCULATION (AJAX)
+    // =========================================================================
+    
+    window.triggerPriceRecalculation = function(childrenAges) {
+        log('triggerPriceRecalculation', childrenAges);
+        
+        if (!window.bookingData) {
+            logError('bookingData not defined');
+            return;
+        }
+        
+        var priceDisplay = document.querySelector(CONFIG.selectors.priceDisplay);
+        var loadingIndicator = document.getElementById('price-loading-indicator');
+        
+        if (loadingIndicator) loadingIndicator.style.display = 'inline-block';
+        if (priceDisplay) priceDisplay.style.opacity = '0.5';
+        
+        var requestData = {
+            hotel_id: window.bookingData.hotelId,
+            room_id: window.bookingData.roomId,
+            board_id: window.bookingData.boardId,
+            check_in: window.bookingData.checkIn,
+            nights: window.bookingData.nights,
+            adults: window.bookingData.adults,
+            children_ages: childrenAges,
+            package_name: window.bookingData.packageName,
+            original_price: window.bookingData.currentPrice
+        };
+        
+        log('AJAX request', requestData);
+        
+        // A74k: Use root-level AJAX handler (app/ is blocked by CS-Cart)
+        var ajaxUrl = 'novoton_ajax_price.php';
+        log('AJAX URL', ajaxUrl);
+        
+        fetch(ajaxUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify(requestData)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            log('AJAX response', data);
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (priceDisplay) priceDisplay.style.opacity = '1';
+            
+            if (data.success) {
+                updatePriceDisplay(data.new_price, data.formatted_price, data.price_difference);
+                
+                if (data.room_changed) {
+                    try {
+                        showRoomChangeWarning(data);
+                    } catch (e) {
+                        logError('Modal error', e);
+                        alert('Camera: ' + (data.original_room || '') + ' → ' + (data.new_room || '') + 
+                              '\nPreț: ' + (data.new_price || 0).toFixed(2) + ' €');
+                    }
+                }
+                
+                updateFormWithNewPricing(data);
+            } else {
+                showPriceRecalculationNotice(data.message || 'Prețul va fi verificat la finalizare.');
+            }
+        })
+        .catch(function(error) {
+            logError('AJAX error', error);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (priceDisplay) priceDisplay.style.opacity = '1';
+            showPriceRecalculationNotice('Prețul va fi verificat la finalizare.');
+        });
+    };
+
+    window.updateFormWithNewPricing = function(data) {
+        var priceInput = document.querySelector('input[name="total_price"]');
+        if (priceInput) priceInput.value = data.new_price;
+        
+        var adultsInput = document.querySelector('input[name="adults"]');
+        if (adultsInput && data.new_adults) adultsInput.value = data.new_adults;
+        
+        var childrenInput = document.querySelector('input[name="children"]');
+        if (childrenInput && data.new_children !== undefined) childrenInput.value = data.new_children;
+        
+        if (window.bookingData) {
+            window.bookingData.currentPrice = data.new_price;
+            if (data.new_adults) window.bookingData.adults = data.new_adults;
+        }
+    };
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    
+    log('Booking form validation loaded');
+
+})();

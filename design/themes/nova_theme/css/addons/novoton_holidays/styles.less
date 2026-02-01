@@ -1,0 +1,278 @@
+/**
+ * Novoton Holidays - LESS Styles
+ * 
+ * This LESS file provides CSS variables and theme integration.
+ * It imports the main styles.css and adds LESS-specific features.
+ * 
+ * CS-Cart compiles all LESS files into a single cached CSS file.
+ * 
+ * @package NovotonHolidays
+ * @since 2.8.0
+ */
+
+// ============================================================================
+// VARIABLES (can be overridden by theme)
+// ============================================================================
+
+// Brand colors
+@novoton-primary: #003580;        // Booking.com blue
+@novoton-primary-dark: #00264d;
+@novoton-primary-light: #0071c2;
+@novoton-accent: #febb02;         // Booking.com yellow
+@novoton-accent-hover: #e5a800;
+
+// Status colors
+@novoton-success: #28a745;
+@novoton-warning: #ffc107;
+@novoton-danger: #dc3545;
+@novoton-info: #17a2b8;
+
+// Text colors
+@novoton-text: #333333;
+@novoton-text-muted: #6c757d;
+@novoton-text-light: #999999;
+
+// Background colors
+@novoton-bg-light: #f8f9fa;
+@novoton-bg-card: #ffffff;
+@novoton-border: #dee2e6;
+
+// Typography
+@novoton-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+@novoton-font-size-base: 14px;
+@novoton-font-size-small: 12px;
+@novoton-font-size-large: 16px;
+
+// Spacing
+@novoton-spacing-xs: 5px;
+@novoton-spacing-sm: 10px;
+@novoton-spacing-md: 15px;
+@novoton-spacing-lg: 20px;
+@novoton-spacing-xl: 30px;
+
+// Border radius
+@novoton-radius: 4px;
+@novoton-radius-lg: 8px;
+
+// Shadows
+@novoton-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+@novoton-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// ============================================================================
+// MIXINS
+// ============================================================================
+
+.novoton-button() {
+    display: inline-block;
+    padding: @novoton-spacing-sm @novoton-spacing-lg;
+    font-size: @novoton-font-size-base;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: @novoton-radius;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    
+    &:hover {
+        transform: translateY(-1px);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.novoton-card() {
+    background: @novoton-bg-card;
+    border: 1px solid @novoton-border;
+    border-radius: @novoton-radius-lg;
+    padding: @novoton-spacing-lg;
+    box-shadow: @novoton-shadow;
+}
+
+.novoton-input() {
+    width: 100%;
+    padding: @novoton-spacing-sm @novoton-spacing-md;
+    font-size: @novoton-font-size-base;
+    border: 1px solid @novoton-border;
+    border-radius: @novoton-radius;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: @novoton-primary;
+        box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.1);
+    }
+}
+
+// ============================================================================
+// BASE COMPONENT STYLES
+// ============================================================================
+
+// Primary button
+.novoton-btn-primary {
+    .novoton-button();
+    background-color: @novoton-primary;
+    color: #fff;
+    
+    &:hover {
+        background-color: @novoton-primary-dark;
+        color: #fff;
+    }
+}
+
+// Accent button (yellow)
+.novoton-btn-accent {
+    .novoton-button();
+    background-color: @novoton-accent;
+    color: @novoton-text;
+    
+    &:hover {
+        background-color: @novoton-accent-hover;
+        color: @novoton-text;
+    }
+}
+
+// Success button
+.novoton-btn-success {
+    .novoton-button();
+    background-color: @novoton-success;
+    color: #fff;
+    
+    &:hover {
+        background-color: darken(@novoton-success, 10%);
+        color: #fff;
+    }
+}
+
+// Card component
+.novoton-card {
+    .novoton-card();
+}
+
+// Form input
+.novoton-input {
+    .novoton-input();
+}
+
+// ============================================================================
+// BOOKING ENGINE STYLES (LESS version)
+// ============================================================================
+
+.novoton-booking-engine {
+    .novoton-card();
+    
+    .booking-header {
+        color: @novoton-primary;
+        font-size: @novoton-font-size-large;
+        margin-bottom: @novoton-spacing-md;
+        padding-bottom: @novoton-spacing-sm;
+        border-bottom: 2px solid @novoton-border;
+    }
+    
+    .booking-form {
+        .form-group {
+            margin-bottom: @novoton-spacing-md;
+            
+            label {
+                display: block;
+                margin-bottom: @novoton-spacing-xs;
+                font-weight: 600;
+                color: @novoton-text;
+            }
+            
+            input, select {
+                .novoton-input();
+            }
+        }
+        
+        .submit-btn {
+            .novoton-button();
+            width: 100%;
+            background-color: @novoton-accent;
+            color: @novoton-text;
+            font-size: @novoton-font-size-large;
+            padding: @novoton-spacing-md;
+            
+            &:hover {
+                background-color: @novoton-accent-hover;
+            }
+        }
+    }
+}
+
+// ============================================================================
+// PRICE DISPLAY
+// ============================================================================
+
+.novoton-price {
+    font-weight: 700;
+    color: @novoton-primary;
+    
+    .price-amount {
+        font-size: 1.5em;
+    }
+    
+    .price-currency {
+        font-size: 0.8em;
+    }
+    
+    .price-per-night {
+        font-size: @novoton-font-size-small;
+        color: @novoton-text-muted;
+        font-weight: normal;
+    }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.novoton-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: @novoton-font-size-small;
+    font-weight: 600;
+    border-radius: 12px;
+    
+    &.badge-success {
+        background-color: lighten(@novoton-success, 40%);
+        color: darken(@novoton-success, 10%);
+    }
+    
+    &.badge-warning {
+        background-color: lighten(@novoton-warning, 35%);
+        color: darken(@novoton-warning, 25%);
+    }
+    
+    &.badge-danger {
+        background-color: lighten(@novoton-danger, 35%);
+        color: darken(@novoton-danger, 10%);
+    }
+    
+    &.badge-info {
+        background-color: lighten(@novoton-info, 40%);
+        color: darken(@novoton-info, 15%);
+    }
+}
+
+// ============================================================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================================================
+
+@media (max-width: 768px) {
+    .novoton-booking-engine {
+        padding: @novoton-spacing-md;
+        
+        .booking-form {
+            .form-row {
+                flex-direction: column;
+                
+                .form-group {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}

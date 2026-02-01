@@ -1,0 +1,227 @@
+/**
+ * Novoton Holidays - Admin Panel LESS Styles
+ * 
+ * Admin panel specific styles with LESS variables.
+ * 
+ * @package NovotonHolidays
+ * @since 2.8.0
+ */
+
+// ============================================================================
+// ADMIN VARIABLES
+// ============================================================================
+
+@admin-primary: #003580;
+@admin-success: #28a745;
+@admin-warning: #ffc107;
+@admin-danger: #dc3545;
+@admin-info: #17a2b8;
+
+@admin-bg: #f5f5f5;
+@admin-card-bg: #ffffff;
+@admin-border: #e0e0e0;
+@admin-text: #333333;
+@admin-text-muted: #666666;
+
+// ============================================================================
+// DASHBOARD STYLES
+// ============================================================================
+
+.novoton-dashboard {
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: @admin-card-bg;
+        border: 1px solid @admin-border;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: @admin-primary;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: @admin-text-muted;
+            text-transform: uppercase;
+        }
+    }
+}
+
+// ============================================================================
+// BOOKING MANAGEMENT
+// ============================================================================
+
+.novoton-booking-list {
+    .booking-row {
+        &.status-pending {
+            border-left: 3px solid @admin-warning;
+        }
+        
+        &.status-confirmed {
+            border-left: 3px solid @admin-success;
+        }
+        
+        &.status-cancelled {
+            border-left: 3px solid @admin-danger;
+        }
+    }
+    
+    .booking-status {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        
+        &.pending {
+            background: lighten(@admin-warning, 35%);
+            color: darken(@admin-warning, 25%);
+        }
+        
+        &.confirmed {
+            background: lighten(@admin-success, 45%);
+            color: darken(@admin-success, 10%);
+        }
+        
+        &.cancelled {
+            background: lighten(@admin-danger, 40%);
+            color: darken(@admin-danger, 10%);
+        }
+    }
+}
+
+// ============================================================================
+// HOTEL LIST
+// ============================================================================
+
+.novoton-hotel-list {
+    .hotel-card {
+        background: @admin-card-bg;
+        border: 1px solid @admin-border;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        
+        &:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .hotel-name {
+            font-weight: 600;
+            color: @admin-primary;
+        }
+        
+        .hotel-location {
+            font-size: 12px;
+            color: @admin-text-muted;
+        }
+        
+        .hotel-stars {
+            color: #ffc107;
+        }
+    }
+}
+
+// ============================================================================
+// ACTION BUTTONS
+// ============================================================================
+
+.novoton-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    
+    .btn-novoton {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        
+        &.btn-primary {
+            background: @admin-primary;
+            color: #fff;
+            
+            &:hover {
+                background: darken(@admin-primary, 10%);
+            }
+        }
+        
+        &.btn-success {
+            background: @admin-success;
+            color: #fff;
+            
+            &:hover {
+                background: darken(@admin-success, 10%);
+            }
+        }
+        
+        &.btn-secondary {
+            background: #6c757d;
+            color: #fff;
+            
+            &:hover {
+                background: #5a6268;
+            }
+        }
+    }
+}
+
+// ============================================================================
+// CRON INFO BOX
+// ============================================================================
+
+.novoton-cron-info {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    
+    .cron-url {
+        background: #f5f5f5;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 11px;
+        word-break: break-all;
+        margin: 5px 0;
+    }
+}
+
+// ============================================================================
+// SYNC LOG TABLE
+// ============================================================================
+
+.novoton-sync-log {
+    .sync-success {
+        color: @admin-success;
+    }
+    
+    .sync-error {
+        color: @admin-danger;
+    }
+    
+    .sync-type {
+        display: inline-block;
+        padding: 2px 8px;
+        background: lighten(@admin-info, 45%);
+        color: darken(@admin-info, 15%);
+        border-radius: 10px;
+        font-size: 11px;
+    }
+}

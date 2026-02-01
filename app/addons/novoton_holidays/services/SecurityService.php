@@ -1,0 +1,516 @@
+<?php
+/**
+ * Novoton Security Service
+ * 
+ * Handles input validation, CSRF protection, rate limiting,
+ * and secure data handling for the addon.
+ * 
+ * @package NovotonHolidays
+ * @since 2.7.0
+ */
+
+namespace Tygh\Addons\NovotonHolidays\Services;
+
+use Tygh\Registry;
+
+class SecurityService
+{
+    /** @var int Rate limit window in seconds */
+    private const RATE_LIMIT_WINDOW = 60;
+    
+    /** @var int Max requests per window (per IP for API calls) */
+    private const RATE_LIMIT_MAX = 100;
+    
+    /** @var int Max booking attempts per hour (very high - essentially disabled) */
+    private const BOOKING_LIMIT_HOUR = 500;
+    
+    /**
+     * Validate booking data
+     * 
+     * @param array $data Booking data
+     * @return array [valid => bool, errors => array]
+     */
+    public function validateBookingData(array $data): array
+    {
+        $errors = [];
+        
+        // Required fields
+        $required = ['hotel_id', 'check_in', 'check_out', 'adults'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                $errors[] = "Missing required field: {$field}";
+            }
+        }
+        
+        // Validate hotel_id format
+        if (!empty($data['hotel_id']) && !$this->isValidHotelId($data['hotel_id'])) {
+            $errors[] = 'Invalid hotel ID format';
+        }
+        
+        // Validate dates
+        if (!empty($data['check_in'])) {
+            if (!$this->isValidDate($data['check_in'])) {
+                $errors[] = 'Invalid check-in date format';
+            } elseif (strtotime($data['check_in']) < strtotime('today')) {
+                $errors[] = 'Check-in date cannot be in the past';
+            }
+        }
+        
+        if (!empty($data['check_out'])) {
+            if (!$this->isValidDate($data['check_out'])) {
+                $errors[] = 'Invalid check-out date format';
+            } elseif (!empty($data['check_in']) && strtotime($data['check_out']) <= strtotime($data['check_in'])) {
+                $errors[] = 'Check-out must be after check-in';
+            }
+        }
+        
+        // Validate adults/children
+        if (isset($data['adults'])) {
+            $adults = intval($data['adults']);
+            if ($adults < 1 || $adults > 10) {
+                $errors[] = 'Adults must be between 1 and 10';
+            }
+        }
+        
+        if (isset($data['children'])) {
+            $children = intval($data['children']);
+            if ($children < 0 || $children > 6) {
+                $errors[] = 'Children must be between 0 and 6';
+            }
+        }
+        
+        // Validate children ages
+        if (!empty($data['children_ages'])) {
+            $ages = is_array($data['children_ages']) 
+                ? $data['children_ages'] 
+                : explode(',', $data['children_ages']);
+            
+            foreach ($ages as $age) {
+                $age = intval($age);
+                if ($age < 0 || $age > 17) {
+                    $errors[] = 'Child age must be between 0 and 17';
+                    break;
+                }
+            }
+        }
+        
+        // Validate price (prevent manipulation)
+        if (isset($data['total_price'])) {
+            $price = floatval($data['total_price']);
+            if ($price < 0 || $price > 100000) {
+                $errors[] = 'Invalid price value';
+            }
+        }
+        
+        // Validate guest names (basic XSS prevention)
+        $nameFields = ['holder_name', 'guest_name'];
+        foreach ($nameFields as $field) {
+            if (!empty($data[$field]) && !$this->isValidName($data[$field])) {
+                $errors[] = "Invalid characters in {$field}";
+            }
+        }
+        
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors
+        ];
+    }
+    
+    /**
+     * Validate search parameters
+     * 
+     * @param array $params Search parameters
+     * @return array [valid => bool, errors => array, sanitized => array]
+     */
+    public function validateSearchParams(array $params): array
+    {
+        $errors = [];
+        $sanitized = [];
+        
+        // Sanitize and validate check_in
+        if (!empty($params['check_in'])) {
+            if ($this->isValidDate($params['check_in'])) {
+                $sanitized['check_in'] = $params['check_in'];
+            } else {
+                $errors[] = 'Invalid check-in date';
+            }
+        }
+        
+        // Sanitize nights
+        $sanitized['nights'] = max(1, min(30, intval($params['nights'] ?? 7)));
+        
+        // Sanitize adults
+        $sanitized['adults'] = max(1, min(10, intval($params['adults'] ?? 2)));
+        
+        // Sanitize children
+        $sanitized['children'] = max(0, min(6, intval($params['children'] ?? 0)));
+        
+        // Sanitize rooms
+        $sanitized['rooms'] = max(1, min(5, intval($params['rooms'] ?? 1)));
+        
+        // Sanitize destination (alphanumeric, spaces, common punctuation)
+        if (!empty($params['destination'])) {
+            $sanitized['destination'] = $this->sanitizeString($params['destination'], 100);
+        }
+        
+        // Sanitize hotel_id
+        if (!empty($params['hotel_id'])) {
+            $sanitized['hotel_id'] = $this->sanitizeHotelId($params['hotel_id']);
+        }
+        
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'sanitized' => $sanitized
+        ];
+    }
+    
+    /**
+     * Validate and sanitize guest data
+     * 
+     * @param array $guests Guest data
+     * @return array Sanitized guest data
+     */
+    public function sanitizeGuestData(array $guests): array
+    {
+        $sanitized = [];
+        
+        foreach ($guests as $key => $guest) {
+            if (!is_array($guest)) continue;
+            
+            $sanitized[$key] = [
+                'first_name' => $this->sanitizeName($guest['first_name'] ?? ''),
+                'last_name' => $this->sanitizeName($guest['last_name'] ?? ''),
+                'name' => $this->sanitizeName($guest['name'] ?? ''),
+                'api_name' => $this->sanitizeName($guest['api_name'] ?? ''),
+                'type' => in_array($guest['type'] ?? '', ['adult', 'child']) ? $guest['type'] : 'adult',
+                'age' => isset($guest['age']) ? max(0, min(99, intval($guest['age']))) : null,
+                'room' => max(1, min(5, intval($guest['room'] ?? 1))),
+                'is_holder' => !empty($guest['is_holder']),
+            ];
+            
+            // Validate birthday format
+            if (!empty($guest['birthday'])) {
+                if ($this->isValidDate($guest['birthday'])) {
+                    $sanitized[$key]['birthday'] = $guest['birthday'];
+                }
+            }
+        }
+        
+        return $sanitized;
+    }
+    
+    /**
+     * Check CSRF token
+     * 
+     * @param string $token Token to verify
+     * @return bool Is valid
+     */
+    public function verifyCsrfToken(string $token): bool
+    {
+        if (empty($token)) {
+            return false;
+        }
+        
+        // CS-Cart's built-in CSRF check
+        if (defined('CSRF_TOKEN_NAME')) {
+            return fn_csrf_validate_request([CSRF_TOKEN_NAME => $token]);
+        }
+        
+        // Fallback: check session token
+        $session_token = $_SESSION['nvt_csrf_token'] ?? '';
+        return hash_equals($session_token, $token);
+    }
+    
+    /**
+     * Generate CSRF token
+     * 
+     * @return string Token
+     */
+    public function generateCsrfToken(): string
+    {
+        if (!isset($_SESSION['nvt_csrf_token'])) {
+            $_SESSION['nvt_csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['nvt_csrf_token'];
+    }
+    
+    /**
+     * Check rate limit
+     * 
+     * @param string $key Rate limit key (e.g., IP, user_id)
+     * @param int $maxRequests Max requests per window
+     * @param int $window Window in seconds
+     * @return array [allowed => bool, remaining => int, reset => int]
+     */
+    public function checkRateLimit(string $key, int $maxRequests = null, int $window = null): array
+    {
+        $maxRequests = $maxRequests ?? self::RATE_LIMIT_MAX;
+        $window = $window ?? self::RATE_LIMIT_WINDOW;
+        
+        $cacheKey = 'nvt_rate_' . md5($key);
+        $now = time();
+        
+        // Get current count
+        $data = $this->getRateLimitData($cacheKey);
+        
+        // Reset if window expired
+        if ($data['reset'] <= $now) {
+            $data = [
+                'count' => 0,
+                'reset' => $now + $window
+            ];
+        }
+        
+        // Check if allowed
+        $allowed = $data['count'] < $maxRequests;
+        
+        // Increment counter
+        if ($allowed) {
+            $data['count']++;
+            $this->setRateLimitData($cacheKey, $data);
+        }
+        
+        return [
+            'allowed' => $allowed,
+            'remaining' => max(0, $maxRequests - $data['count']),
+            'reset' => $data['reset']
+        ];
+    }
+    
+    /**
+     * Check booking rate limit (stricter)
+     * 
+     * @param string $identifier User ID or session ID
+     * @return bool Is allowed
+     */
+    public function checkBookingRateLimit(string $identifier): bool
+    {
+        $result = $this->checkRateLimit(
+            'booking_' . $identifier,
+            self::BOOKING_LIMIT_HOUR,
+            3600
+        );
+        
+        return $result['allowed'];
+    }
+    
+    /**
+     * Encrypt sensitive data
+     * 
+     * @param string $data Data to encrypt
+     * @return string Encrypted data
+     */
+    public function encrypt(string $data): string
+    {
+        $key = $this->getEncryptionKey();
+        $iv = random_bytes(16);
+        
+        $encrypted = openssl_encrypt(
+            $data,
+            'AES-256-CBC',
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+        
+        return base64_encode($iv . $encrypted);
+    }
+    
+    /**
+     * Decrypt sensitive data
+     * 
+     * @param string $data Encrypted data
+     * @return string|null Decrypted data or null on failure
+     */
+    public function decrypt(string $data): ?string
+    {
+        $key = $this->getEncryptionKey();
+        $data = base64_decode($data);
+        
+        if (strlen($data) < 17) {
+            return null;
+        }
+        
+        $iv = substr($data, 0, 16);
+        $encrypted = substr($data, 16);
+        
+        $decrypted = openssl_decrypt(
+            $encrypted,
+            'AES-256-CBC',
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+        
+        return $decrypted !== false ? $decrypted : null;
+    }
+    
+    /**
+     * Sanitize output for HTML
+     * 
+     * @param string $string String to sanitize
+     * @return string Sanitized string
+     */
+    public function escapeHtml(string $string): string
+    {
+        return htmlspecialchars($string, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+    
+    /**
+     * Log security event
+     * 
+     * @param string $event Event type
+     * @param array $data Event data
+     */
+    public function logSecurityEvent(string $event, array $data = []): void
+    {
+        $logData = array_merge([
+            'event' => $event,
+            'ip' => $this->getClientIp(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'timestamp' => date('Y-m-d H:i:s'),
+        ], $data);
+        
+        fn_log_event('general', 'runtime', [
+            'message' => 'NovotonSecurity: ' . $event,
+            'data' => $logData
+        ]);
+    }
+    
+    // ========== Private Helper Methods ==========
+    
+    /**
+     * Check if string is valid date
+     */
+    private function isValidDate(string $date): bool
+    {
+        // Accept YYYY-MM-DD format
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return false;
+        }
+        
+        list($year, $month, $day) = explode('-', $date);
+        return checkdate((int)$month, (int)$day, (int)$year);
+    }
+    
+    /**
+     * Check if hotel ID is valid format
+     */
+    private function isValidHotelId(string $hotelId): bool
+    {
+        // Allow alphanumeric, hyphens, underscores (typical ID formats)
+        return preg_match('/^[a-zA-Z0-9_-]{1,50}$/', $hotelId);
+    }
+    
+    /**
+     * Check if name contains only valid characters
+     */
+    private function isValidName(string $name): bool
+    {
+        // Allow letters (including accented), spaces, hyphens, apostrophes
+        return preg_match('/^[\p{L}\s\'-]{1,100}$/u', $name);
+    }
+    
+    /**
+     * Sanitize a name string
+     */
+    private function sanitizeName(string $name): string
+    {
+        // Remove anything that's not a letter, space, hyphen, or apostrophe
+        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
+        return mb_substr(trim($name), 0, 100);
+    }
+    
+    /**
+     * Sanitize general string
+     */
+    private function sanitizeString(string $string, int $maxLength = 255): string
+    {
+        // Remove potential XSS
+        $string = strip_tags($string);
+        $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        return mb_substr($string, 0, $maxLength);
+    }
+    
+    /**
+     * Sanitize hotel ID
+     */
+    private function sanitizeHotelId(string $hotelId): string
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '', substr($hotelId, 0, 50));
+    }
+    
+    /**
+     * Get rate limit data from cache
+     */
+    private function getRateLimitData(string $key): array
+    {
+        $data = db_get_field(
+            "SELECT cache_data FROM ?:novoton_cache WHERE cache_key = ?s AND expires_at > NOW()",
+            $key
+        );
+        
+        if ($data) {
+            return unserialize($data) ?: ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
+        }
+        
+        return ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
+    }
+    
+    /**
+     * Set rate limit data in cache
+     */
+    private function setRateLimitData(string $key, array $data): void
+    {
+        db_query(
+            "REPLACE INTO ?:novoton_cache SET cache_key = ?s, cache_data = ?s, expires_at = ?s, created_at = NOW()",
+            $key,
+            serialize($data),
+            date('Y-m-d H:i:s', $data['reset'] + 60)
+        );
+    }
+    
+    /**
+     * Get encryption key
+     */
+    private function getEncryptionKey(): string
+    {
+        // Use CS-Cart's crypt key or generate one
+        $key = Registry::get('config.crypt_key');
+        
+        if (empty($key)) {
+            $key = Registry::get('addons.novoton_holidays.api_key') ?? 'novoton_default_key';
+        }
+        
+        return hash('sha256', $key, true);
+    }
+    
+    /**
+     * Get client IP address
+     */
+    private function getClientIp(): string
+    {
+        $headers = [
+            'HTTP_CF_CONNECTING_IP',  // Cloudflare
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'REMOTE_ADDR'
+        ];
+        
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ip = $_SERVER[$header];
+                // Handle comma-separated IPs
+                if (strpos($ip, ',') !== false) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+        
+        return '0.0.0.0';
+    }
+}

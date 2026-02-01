@@ -1,0 +1,6 @@
+<div class="control-group">
+    <label class="control-label">Country Selector:</label>
+    <div class="controls">
+        <p class="muted">Country selector - debug mode</p>
+    </div>
+</div>

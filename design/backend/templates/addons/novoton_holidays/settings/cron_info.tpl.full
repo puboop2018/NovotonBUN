@@ -1,0 +1,183 @@
+<div class="control-group">
+    <div class="well">
+        <h4><i class="icon-play"></i> Quick Actions (Click to Run in Browser)</h4>
+        <p class="muted">Click links to open and run tasks in a new browser tab. You must be logged in as admin.</p>
+        
+        <div class="alert alert-info" style="margin: 15px 0;">
+            <strong><i class="icon-info-sign"></i> Recommended Workflow Order:</strong><br>
+            <code>1. Sync Hotels</code> → <code>2. Check Active Prices</code> → <code>3. Add Hotels as Products</code><br>
+            <small class="muted">Hotels must have prices checked before they can be added as products.</small>
+        </div>
+        
+        <style>
+        {literal}
+            .nvt-link-group { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+            .nvt-link-group:last-child { border-bottom: none; }
+            .nvt-link-group h5 { margin-bottom: 10px; }
+            .nvt-link-btn { 
+                display: inline-block; 
+                margin: 5px 5px 5px 0; 
+                padding: 8px 15px; 
+                background: #5bc0de; 
+                color: white; 
+                text-decoration: none; 
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            .nvt-link-btn:hover { background: #46b8da; color: white; text-decoration: none; }
+            .nvt-link-btn.green { background: #5cb85c; }
+            .nvt-link-btn.green:hover { background: #4cae4c; }
+            .nvt-link-btn.orange { background: #f0ad4e; }
+            .nvt-link-btn.orange:hover { background: #ec971f; }
+            .nvt-link-btn.red { background: #d9534f; }
+            .nvt-link-btn.red:hover { background: #c9302c; }
+            .nvt-step { 
+                display: inline-block; 
+                background: #333; 
+                color: #fff; 
+                border-radius: 50%; 
+                width: 20px; 
+                height: 20px; 
+                text-align: center; 
+                line-height: 20px; 
+                font-size: 11px; 
+                margin-right: 5px;
+            }
+        {/literal}
+        </style>
+        
+        <div class="nvt-link-group">
+            <h5><i class="icon-refresh"></i> Step 1: Sync Hotels</h5>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.sync" target="_blank" class="nvt-link-btn">
+                <span class="nvt-step">1</span> Sync Hotels from API
+            </a>
+        </div>
+        
+        <div class="nvt-link-group">
+            <h5><i class="icon-tag"></i> Step 2: Check Prices</h5>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.room_price" target="_blank" class="nvt-link-btn">
+                <span class="nvt-step">2</span> Check Active Prices
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.update_prices" target="_blank" class="nvt-link-btn">
+                <i class="icon-usd"></i> Update All Prices
+            </a>
+        </div>
+        
+        <div class="nvt-link-group">
+            <h5><i class="icon-plus"></i> Step 3: Add Products</h5>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.add_hotels_as_products" target="_blank" class="nvt-link-btn green">
+                <span class="nvt-step">3</span> Add Hotels as Products
+            </a>
+        </div>
+        
+        <div class="nvt-link-group">
+            <h5><i class="icon-refresh"></i> Step 4: Incremental Updates (after initial import)</h5>
+            <p class="muted" style="margin-bottom: 10px;">Use <code>offers_update</code> API to get only NEW hotels added since your last product import.</p>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.add_hotels_as_products" target="_blank" class="nvt-link-btn green">
+                <span class="nvt-step">4</span> offers_update (select in form)
+            </a>
+            <small class="muted" style="display: block; margin-top: 5px;">
+                ⚠️ Requires Step 3 to be run at least once first to establish baseline timestamp.
+            </small>
+        </div>
+        
+        <div class="nvt-link-group">
+            <h5><i class="icon-wrench"></i> Diagnostic & Management</h5>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_diagnostic.test" target="_blank" class="nvt-link-btn orange">
+                <i class="icon-cogs"></i> API Diagnostic
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_bookings.manage" target="_blank" class="nvt-link-btn orange">
+                <i class="icon-list-alt"></i> Manage Bookings
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_alternatives.manage" target="_blank" class="nvt-link-btn orange">
+                <i class="icon-random"></i> Manage Alternatives
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.sync_facilities" target="_blank" class="nvt-link-btn orange">
+                <i class="icon-tags"></i> Sync Facilities
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.list_facilities" target="_blank" class="nvt-link-btn">
+                <i class="icon-list"></i> View Facilities
+            </a>
+            <a href="{$config.current_location}/admin.php?dispatch=novoton_holidays.export_hotel_features_csv" target="_blank" class="nvt-link-btn green">
+                <i class="icon-download-alt"></i> Export Features CSV
+            </a>
+        </div>
+    </div>
+    
+    <div class="well" style="margin-top: 20px;">
+        <h4><i class="icon-time"></i> Automated Cron Jobs (Server Setup)</h4>
+        <p class="muted">For automated scheduling, use these URLs with curl/wget in your server's crontab:</p>
+        
+        <div class="control-group">
+            <label class="control-label">Base Cron URL</label>
+            <div class="controls">
+                <input type="text" class="span12" style="width: 95%; font-family: monospace; font-size: 11px;" readonly value="{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY" onclick="this.select();">
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label">Available Modes</label>
+            <div class="controls">
+                <table class="table table-condensed" style="font-size: 11px;">
+                    <tr><td><code>&mode=hotel_list</code></td><td><strong>Step 1:</strong> Sync hotels from API</td></tr>
+                    <tr><td><code>&mode=room_price</code></td><td><strong>Step 2:</strong> Check which hotels have active prices (uses fast resort-based query)</td></tr>
+                    <tr><td><code>&mode=add_hotels_as_products</code></td><td><strong>Step 3:</strong> Add hotels as products (first/full import). Saves timestamp for Step 4.</td></tr>
+                    <tr><td><code>&mode=offers_update</code></td><td><strong>Step 4:</strong> Incremental import - only hotels added/modified AFTER Step 3. Requires Step 3 first!</td></tr>
+                    <tr><td colspan="2" style="border-top: 2px solid #ddd;"></td></tr>
+                    <tr><td><code>&mode=resinfo</code></td><td>Check ASK (on-request) bookings status</td></tr>
+                    <tr><td><code>&mode=cleanup</code></td><td>Cleanup orphan bookings, old logs, expired cache</td></tr>
+                    <tr><td><code>&mode=alternative_rs</code></td><td>Check alternative_RS for pending requests</td></tr>
+                    <tr><td><code>&mode=alternative_rs_bookings</code></td><td>Check alternatives for RQ status bookings</td></tr>
+                    <tr><td><code>&mode=notify_alternatives</code></td><td>Send email notifications for found alternatives</td></tr>
+                    <tr><td><code>&mode=expire_requests</code></td><td>Expire old alternative requests (&days=30)</td></tr>
+                    <tr><td><code>&mode=list_facilities</code></td><td>Sync facilities list from API</td></tr>
+                </table>
+                <p class="muted" style="margin-top: 10px; font-size: 11px;">
+                    <strong>Hotel Features CSV:</strong> Uses separate endpoint with API key:<br>
+                    <code style="word-break: break-all;">index.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY</code>
+                </p>
+            </div>
+        </div>
+        
+        <details style="margin-top: 15px;">
+            <summary style="cursor: pointer; color: #0088cc;"><strong>▶ Show Crontab Examples</strong></summary>
+            <textarea class="span12" style="width: 95%; height: 340px; font-family: monospace; font-size: 11px; margin-top: 10px;" readonly onclick="this.select();"># === INITIAL SETUP (run manually first time, then automate) ===
+# Step 1: Sync hotels from API
+0 4 * * 0 curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=hotel_list"
+
+# Step 2: Check which hotels have active prices
+0 5 * * 0 curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=room_price"
+
+# Step 3: Add hotels as products (FIRST/FULL IMPORT - run once manually!)
+# This creates products and saves timestamp for Step 4
+# 0 6 * * 0 curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=add_hotels_as_products&country=BULGARIA"
+
+# Step 4: offers_update - INCREMENTAL UPDATES (daily, after Step 3 done once)
+# Gets only NEW hotels added to API since last Step 3/4 run
+0 7 * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=offers_update&country=BULGARIA"
+
+# === DAILY MAINTENANCE ===
+# Check ASK bookings every hour
+0 * * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=resinfo"
+
+# Run cleanup daily at 3:00 AM
+0 3 * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=cleanup"
+
+# Sync facilities monthly on the 1st at 2:00 AM
+0 2 1 * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=list_facilities"
+
+# Generate hotel features CSV daily at 4:00 AM (after hotel sync)
+0 4 * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY"
+
+# Check alternatives daily at 10:00 AM
+0 10 * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=alternative_rs"
+
+# Send notifications daily at 12:00 PM
+0 12 * * * curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY&mode=notify_alternatives"</textarea>
+        </details>
+        
+        <div class="alert alert-warning" style="margin-top: 15px;">
+            <i class="icon-warning-sign"></i> <strong>Important:</strong> Set the <strong>Cron Access Key</strong> in General settings before using automated cron jobs. Replace <code>YOUR_API_KEY</code> in the URLs above with your actual key.
+        </div>
+    </div>
+</div>

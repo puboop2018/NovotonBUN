@@ -1,0 +1,6 @@
+<div class="control-group">
+    <label class="control-label">Cron Information:</label>
+    <div class="controls">
+        <p class="muted">Cron info - debug mode</p>
+    </div>
+</div>

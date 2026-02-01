@@ -1,0 +1,314 @@
+<?php
+/**
+ * Novoton Holidays - Main Backend Controller
+ * 
+ * Dashboard and routing to sub-controllers.
+ * 
+ * This controller has been refactored from a 4,600+ line monolith into:
+ * - novoton_holidays.php (this file) - Dashboard, manage, fix_tab
+ * - novoton_hotels.php - Hotel sync, add products, facilities
+ * - novoton_prices.php - Price sync, updates, checks
+ * - novoton_tools.php - Test modes, diagnostics, CSV exports
+ * 
+ * @package NovotonHolidays
+ * @since 2.8.0
+ */
+
+use Tygh\Registry;
+use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+
+if (!defined('BOOTSTRAP')) { die('Access denied'); }
+
+// ============================================================================
+// ROUTING: Delegate to sub-controllers based on mode
+// ============================================================================
+
+$hotels_modes = [
+    'sync', 'sync_resorts', 'add_hotels_as_products', 'view_hotels_to_add',
+    'list_facilities', 'sync_facilities'
+];
+
+$prices_modes = [
+    'update_prices', 'check_prices', 'room_price', 'download_active_prices_csv',
+    'cron_offers_update'
+];
+
+$tools_modes = [
+    'test_api', 'test_formats', 'test_product', 'test_hotel_list', 'test_room_price',
+    'test_search', 'test_hotel_request', 'test_alternative_rs', 'test_facilities',
+    'export_hotel_features_csv', 'download_hotel_features_csv', 'get_hotel_features_csv',
+    'cron_export_hotel_features'
+];
+
+// Route to appropriate sub-controller
+$addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/controllers/backend/';
+
+if (in_array($mode, $hotels_modes)) {
+    include($addon_dir . 'novoton_hotels.php');
+    return;
+}
+
+if (in_array($mode, $prices_modes)) {
+    include($addon_dir . 'novoton_prices.php');
+    return;
+}
+
+if (in_array($mode, $tools_modes)) {
+    include($addon_dir . 'novoton_tools.php');
+    return;
+}
+
+// ============================================================================
+// MODES HANDLED IN THIS FILE
+// ============================================================================
+
+// Load repositories
+$addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/';
+require_once($addon_dir . 'Repository/HotelRepository.php');
+require_once($addon_dir . 'Repository/BookingRepository.php');
+require_once($addon_dir . 'Repository/SyncLogRepository.php');
+
+// ============================================================================
+// POST HANDLERS
+// ============================================================================
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Save excluded resorts
+    if ($mode == 'save_excluded_resorts') {
+        $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];
+        
+        // Clean and validate
+        $clean_excluded = [];
+        if (is_array($excluded)) {
+            foreach ($excluded as $resort) {
+                $resort = trim($resort);
+                if (!empty($resort)) {
+                    $clean_excluded[] = $resort;
+                }
+            }
+        }
+        
+        // Save to addon settings
+        $value = json_encode(array_unique($clean_excluded));
+        db_query(
+            "UPDATE ?:addon_options SET value = ?s WHERE addon = 'novoton_holidays' AND option_id = 'excluded_resorts'",
+            $value
+        );
+        
+        // Clear registry cache
+        Registry::del('addons.novoton_holidays');
+        
+        fn_set_notification('N', __('notice'), 'Excluded resorts saved: ' . count($clean_excluded) . ' resorts');
+        
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+    }
+}
+
+/**
+ * Mode: fix_tab
+ * Fix product tab name if empty
+ */
+if ($mode == 'fix_tab') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+    
+    $result = fn_novoton_holidays_fix_tab_name();
+    
+    if ($result) {
+        fn_set_notification('N', __('notice'), 'Product tab name fixed successfully');
+    } else {
+        fn_set_notification('W', __('warning'), 'No tab found to fix');
+    }
+    
+    return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
+}
+
+/**
+ * Mode: manage (default)
+ * Dashboard with statistics and quick actions
+ */
+if ($mode == 'manage' || empty($mode)) {
+    // Initialize repositories
+    $hotelRepo = new HotelRepository();
+    $bookingRepo = new BookingRepository();
+    $syncLogRepo = new SyncLogRepository();
+    
+    // Get addon settings
+    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    
+    // Parse selected countries
+    $selected_countries = $addon_settings['selected_countries'] ?? 'BULGARIA';
+    if (is_array($selected_countries)) {
+        $countries = [];
+        foreach ($selected_countries as $key => $value) {
+            if ($value === 'Y' || $value === '1') {
+                $countries[] = $key;
+            } elseif (is_string($value) && strlen($value) > 2) {
+                $countries[] = $value;
+            }
+        }
+    } else {
+        $countries = array_filter(array_map('trim', explode(',', $selected_countries)));
+    }
+    if (empty($countries)) {
+        $countries = ['BULGARIA'];
+    }
+    
+    // Gather statistics
+    $stats = [
+        'hotels' => [
+            'total' => $hotelRepo->count(),
+            'with_prices' => $hotelRepo->count(['has_prices' => 'Y']),
+            'with_products' => $hotelRepo->count(['has_product' => true]),
+            'without_packages' => $hotelRepo->count(['no_packages' => true]),
+        ],
+        'bookings' => $bookingRepo->getStats(),
+        'by_country' => []
+    ];
+    
+    // Per-country stats
+    foreach ($countries as $country) {
+        $stats['by_country'][$country] = [
+            'total' => $hotelRepo->count(['country' => $country]),
+            'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+            'with_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
+        ];
+    }
+    
+    // Recent sync logs
+    $recent_syncs = $syncLogRepo->findRecent(10);
+    
+    // Last sync dates by type
+    $last_syncs = [
+        'resinfo' => $syncLogRepo->getLastSyncDate('resinfo'),
+        'prices' => $syncLogRepo->getLastSyncDate('prices'),
+        'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
+        'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
+    ];
+    
+    // Build cron URLs
+    $cron_key = $addon_settings['cron_access_key'] ?? '';
+    $base_url = Registry::get('config.http_location') . '/';
+    
+    $cron_urls = [
+        'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
+        'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
+        'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
+        'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
+        'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
+        'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+    ];
+    
+    // Assign to view
+    Tygh::$app['view']->assign('stats', $stats);
+    Tygh::$app['view']->assign('countries', $countries);
+    Tygh::$app['view']->assign('recent_syncs', $recent_syncs);
+    Tygh::$app['view']->assign('last_syncs', $last_syncs);
+    Tygh::$app['view']->assign('cron_urls', $cron_urls);
+    Tygh::$app['view']->assign('cron_key', $cron_key);
+    Tygh::$app['view']->assign('addon_settings', $addon_settings);
+    
+    // Get available resorts for exclusion management
+    $resorts_by_country = [];
+    $resorts = db_get_array("SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city");
+    foreach ($resorts as $resort) {
+        $resorts_by_country[$resort['country']][] = $resort['city'];
+    }
+    Tygh::$app['view']->assign('resorts_by_country', $resorts_by_country);
+    
+    // Get current excluded resorts
+    $excluded_resorts = [];
+    if (!empty($addon_settings['excluded_resorts'])) {
+        $excluded_resorts = json_decode($addon_settings['excluded_resorts'], true);
+        if (!is_array($excluded_resorts)) {
+            $excluded_resorts = [];
+        }
+    }
+    Tygh::$app['view']->assign('excluded_resorts', $excluded_resorts);
+}
+
+/**
+ * Mode: hotels
+ * List all hotels with filters
+ */
+if ($mode == 'hotels') {
+    $hotelRepo = new HotelRepository();
+    
+    // Get filters
+    $filters = [];
+    if (!empty($_REQUEST['country'])) {
+        $filters['country'] = $_REQUEST['country'];
+    }
+    if (!empty($_REQUEST['has_prices'])) {
+        $filters['has_prices'] = $_REQUEST['has_prices'];
+    }
+    if (!empty($_REQUEST['has_product'])) {
+        $filters['has_product'] = true;
+    }
+    
+    // Pagination
+    $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page') ?: 30;
+    $page = intval($_REQUEST['page'] ?? 1);
+    $offset = ($page - 1) * $items_per_page;
+    
+    // Get hotels
+    $hotels = $hotelRepo->findAll($filters, $items_per_page, $offset);
+    $total = $hotelRepo->count($filters);
+    
+    // Get countries for filter
+    $countries = $hotelRepo->getCountries();
+    
+    Tygh::$app['view']->assign('hotels', $hotels);
+    Tygh::$app['view']->assign('total', $total);
+    Tygh::$app['view']->assign('page', $page);
+    Tygh::$app['view']->assign('items_per_page', $items_per_page);
+    Tygh::$app['view']->assign('countries', $countries);
+    Tygh::$app['view']->assign('filters', $filters);
+}
+
+/**
+ * Mode: view_hotel
+ * View single hotel details
+ */
+if ($mode == 'view_hotel') {
+    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    
+    if (empty($hotel_id)) {
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
+    }
+    
+    $hotelRepo = new HotelRepository();
+    $hotel = $hotelRepo->findById($hotel_id);
+    
+    if (!$hotel) {
+        fn_set_notification('E', __('error'), 'Hotel not found');
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
+    }
+    
+    // Decode JSON fields
+    if (!empty($hotel['packages_data'])) {
+        $hotel['packages'] = json_decode($hotel['packages_data'], true);
+    }
+    if (!empty($hotel['rooms_data'])) {
+        $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
+    }
+    if (!empty($hotel['boards_data'])) {
+        $hotel['boards'] = json_decode($hotel['boards_data'], true);
+    }
+    
+    // Get facilities
+    $facilities = fn_novoton_get_hotel_facilities($hotel_id);
+    
+    // Get bookings for this hotel
+    $bookingRepo = new BookingRepository();
+    $bookings = $bookingRepo->findByHotelId($hotel_id);
+    
+    Tygh::$app['view']->assign('hotel', $hotel);
+    Tygh::$app['view']->assign('facilities', $facilities);
+    Tygh::$app['view']->assign('bookings', $bookings);
+}

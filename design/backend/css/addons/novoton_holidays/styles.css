@@ -1,0 +1,215 @@
+/**
+ * Novoton Holidays Backend Admin Styles
+ * Path: design/backend/css/addons/novoton_holidays/admin_styles.css
+ */
+
+/* Update Button Section */
+.novoton-update-section {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.novoton-update-section .btn {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.control-group-info {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.control-group-info code {
+    display: block;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 5px;
+    font-size: 12px;
+    overflow-x: auto;
+}
+
+/* Admin Panel Styles */
+.novoton-admin-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Sync Statistics */
+.sync-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card.success .stat-value { color: #27ae60; }
+.stat-card.danger .stat-value { color: #e74c3c; }
+.stat-card.warning .stat-value { color: #f39c12; }
+.stat-card.info .stat-value { color: #3498db; }
+
+/* Bookings Table */
+.novoton-bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.novoton-bookings-table th,
+.novoton-bookings-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.novoton-bookings-table th {
+    background-color: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+.novoton-bookings-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.status-ok {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-ask {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Sync Logs */
+.sync-log-entry {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.sync-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.sync-log-date {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.sync-log-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+}
+
+.sync-log-stats span {
+    padding: 4px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Action Buttons */
+.novoton-action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.novoton-action-buttons .btn {
+    flex: 1;
+}
+
+/* Loading Indicator */
+.novoton-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.novoton-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sync-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .novoton-action-buttons {
+        flex-direction: column;
+    }
+    
+    .novoton-bookings-table {
+        font-size: 12px;
+    }
+    
+    .novoton-bookings-table th,
+    .novoton-bookings-table td {
+        padding: 8px;
+    }
+}

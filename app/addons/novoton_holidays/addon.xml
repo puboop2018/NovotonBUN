@@ -1,0 +1,852 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>novoton_holidays</id>
+    <version>2.8.0-A80D</version>
+    <priority>111</priority>
+    <position>1</position>
+    <status>active</status>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+    <default_language>en</default_language>
+    
+    <!-- 
+    ═══════════════════════════════════════════════════════════════
+    Novoton Holidays Integration for CS-Cart
+    Version: 2.7.0 (Build A20 - Complete Optimization)
+    ═══════════════════════════════════════════════════════════════
+    
+    DESCRIPTION:
+    Complete hotel booking integration with Novoton XML API.
+    Features React 19 booking engine with Booking.com-style interface.
+    
+    FEATURES:
+    - Novoton XML API integration (27 functions)
+    - Real-time hotel availability search
+    - Multi-room booking with guest assignment
+    - React 19 booking engine
+    - Early booking discounts
+    - Flexible date search
+    - Mobile responsive design
+    - Admin booking management
+    - API response caching
+    - Service-based architecture
+    - Security hardening
+    - Performance optimizations
+    
+    CHANGELOG A20 (Complete Optimization):
+    
+    PHASE 1-3 (Architecture & Performance):
+    - NEW: Service classes for code organization
+      - SearchService - search/availability
+      - BookingService - booking operations  
+      - GuestDataService - guest handling
+      - PriceService - real-time prices
+      - PriceInfoService - season price lists
+      - CacheService - API response caching
+    - NEW: API response caching (configurable TTL)
+    - NEW: Database indexes for common queries
+    - Fixed: Booking data sync to database
+    
+    PHASE 4 (Frontend Optimization):
+    - NEW: utils.js - shared utility functions
+    - NEW: lazy-loader.js - on-demand component loading
+    - Reduced duplicate code across JS files
+    - Improved load performance
+    
+    PHASE 5 (Security):
+    - NEW: SecurityService with input validation
+    - NEW: Rate limiting for API/booking requests
+    - NEW: CSRF token validation
+    - NEW: Data encryption helpers
+    - Sanitized all user inputs
+    
+    PHASE 6 (Code Quality):
+    - NEW: Constants.php - centralized constants
+    - NEW: LoggerTrait - consistent PSR-3-like logging
+    - Removed magic strings
+    - Improved error handling
+    - Better code documentation
+    
+    CHANGELOG A67 (Desktop/Mobile + DOB Validation):
+    - FIXED: Desktop showing both desktop AND mobile layouts
+    - Added stronger CSS media queries with !important
+    - Added position:absolute left:-9999px for mobile hiding
+    - NEW: dob-validation.js - client-side DOB future date prevention
+    - Added JS failsafe for desktop/mobile visibility on resize
+    - Added MutationObserver for dynamically added guest fields
+    - Added dobCannotBeFuture translation key
+    
+    CHANGELOG A68 (Server-Side DOB Validation):
+    - NEW: Server-side DOB future date validation in controller
+    - NEW: validateBirthday() helper in GuestDataService
+    - Defense-in-depth: both client and server reject future DOB
+    - Logs invalid DOB attempts for security monitoring
+    
+    CHANGELOG A69 (Child Age Validation + Auto Price Update):
+    - CHANGED: Child age >= 18 at check-in now BLOCKED (not just warning)
+    - NEW: Server-side validation rejects children >= 18 at check-in
+    - FIXED: Price recalculates only when DOB age differs from selected age
+    - Price unchanged if same bracket (e.g., child 5→7 in 2-11 bracket)
+    - Added translations for child age validation errors
+    - Form submission blocked until valid child DOB entered
+    
+    CHANGELOG A70 (Order Details Terms Display):
+    - NEW: Display Terms of Payment in order details (frontend)
+    - NEW: Display Cancellation Terms in order details (frontend)
+    - NEW: PHP hook fn_novoton_holidays_get_order_info formats terms
+    - Terms displayed after orders:extra_list hook
+    - Proper formatting of XML terms into readable text
+    
+    CHANGELOG A71-A72 (Service Integration Cleanup):
+    - NEW: Service getters (_nvt_get_*_service) for lazy-loaded singletons
+    - NEW: _nvt_get_cached_hotel_info() adds 30-min caching to hotel info
+    - KEPT: Validation helpers _nvt_parse_and_validate_guests, _nvt_parse_dob
+    - KEPT: XML utility _nvt_get_xml_value
+    - REMOVED: Duplicate helpers that overlap with existing services
+    - Use SearchService::parseSearchParams() directly
+    - Use SearchService::calculateRoomTotals() directly
+    - Use BookingService::createBooking() and addToCart() directly
+    - Use PriceService::getRoomPrice() directly (has built-in caching)
+    - Use CacheService::remember() for caching patterns
+    - Code reduced by ~280 lines through proper service delegation
+    ═══════════════════════════════════════════════════════════════
+    -->
+    
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+
+    <compatibility>
+        <core_version>
+            <min>4.9.3</min>
+            <max>4.19.1</max>
+        </core_version>
+        <core_edition>ULTIMATE</core_edition>
+        <php_version>
+            <min>7.4.0</min>
+            <max>8.4.12</max>
+        </php_version>
+ 	<php_extensions>
+            <curl>
+                <supported>Y</supported>
+            </curl>
+            <xml>
+                <supported>Y</supported>
+            </xml>
+            <iconv>
+                <supported>Y</supported>
+            </iconv>
+            <dom>
+                <supported>Y</supported>
+            </dom>
+            <libxml>
+                <supported>Y</supported>
+            </libxml>
+        </php_extensions>
+    </compatibility>
+
+    <settings layout="separate">
+        <sections>
+            <section id="general">
+                <items>
+                    <!-- API Settings Header -->
+                    <item id="api_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_url">
+                        <type>input</type>
+                        <default_value>b2b.allinclusivebg.com</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_key">
+                        <type>input</type>
+                        <default_value>TEST-TEST-TEST-TEST-TEST</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_id">
+                        <type>input</type>
+                        <default_value>713</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_user">
+                        <type>input</type>
+                        <default_value>EHROM117</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_password">
+                        <type>password</type>
+                        <default_value>EUP359YJX</default_value>
+                        <variants/>
+                    </item>
+                    <item id="enable_api_cache">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    
+                    <!-- Pricing Header -->
+                    <item id="pricing_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="round_prices">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    
+                    <!-- Products Header -->
+                    <item id="products_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="selected_countries">
+                        <type>multiple checkboxes</type>
+                        <default_value>BULGARIA</default_value>
+                        <variants>
+                            <item id="ALBANIA"></item>
+                            <item id="BULGARIA"></item>
+                            <item id="CYPRUS"></item>
+                            <item id="EGYPT"></item>
+                            <item id="FRANCE"></item>
+                            <item id="GREECE"></item>
+                            <item id="ITALY"></item>
+                            <item id="MALDIVES"></item>
+                            <item id="SPAIN"></item>
+                            <item id="UNITED ARAB EMIRATES"></item>
+                            <item id="UNITED KINGDOM"></item>
+                        </variants>
+                    </item>
+                    <item id="product_code_prefixes">
+                        <type>input</type>
+                        <default_value>NVT</default_value>
+                        <variants/>
+                    </item>
+                    <item id="delete_products_on_uninstall">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="excluded_resorts">
+                        <type>hidden</type>
+                        <default_value>[]</default_value>
+                        <variants/>
+                    </item>
+                    <item id="excluded_resorts_selector">
+                        <type>template</type>
+                        <default_value>excluded_resorts.tpl</default_value>
+                        <variants/>
+                    </item>
+                    
+                    <!-- Cron Header -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="cron_access_key">
+                        <type>password</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    
+                    <!-- Display Header -->
+                    <item id="display_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="show_booking_form">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="booking_form_position">
+                        <type>selectbox</type>
+                        <default_value>before_tabs</default_value>
+                        <variants>
+                            <item id="before_tabs"></item>
+                            <item id="after_description"></item>
+                            <item id="sidebar"></item>
+                        </variants>
+                    </item>
+                    
+                    <!-- Other Header -->
+                    <item id="other_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="last_sync_date">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="test_booking">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="disable_api_submission">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="debug_logging">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+            
+            <section id="tools_cron">
+                <items>
+                    <item id="cron_links_info">
+                        <type>template</type>
+                        <default_value>cron_info.tpl</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+            
+            <section id="sync_settings">
+                <name>Sync Settings</name>
+                <items>
+                    <item id="last_offers_update">
+                        <name>Last Offers Update Check</name>
+                        <type>input</type>
+                        <default_value></default_value>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <!-- Block templates registration -->
+    <block_templates>
+        <templates>
+            <item>
+                <template>blocks/static_templates/addons/novoton_holidays/booking_engine.tpl</template>
+                <name>Novoton: Booking Form</name>
+            </item>
+            <item>
+                <template>blocks/static_templates/addons/novoton_holidays/homepage_booking.tpl</template>
+                <name>Novoton: Homepage Booking Search</name>
+            </item>
+        </templates>
+    </block_templates>
+
+    <queries>
+        <!-- Main prices table - stores season_price data from API -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotel_prices` (
+                `price_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `product_id` int(11) unsigned NOT NULL,
+                `hotel_id` varchar(50) NOT NULL,
+                `package_id` varchar(50) DEFAULT NULL COMMENT 'IdCont from API',
+                `package_name` varchar(255) DEFAULT NULL,
+                `code` varchar(20) DEFAULT NULL COMMENT 'Code from season_price',
+                `base` varchar(10) DEFAULT NULL COMMENT 'Base from season_price',
+                `room_id` varchar(100) NOT NULL COMMENT 'IdRoom from API',
+                `room_type` varchar(255) DEFAULT NULL COMMENT 'Derived from rooms data',
+                `star_rating` varchar(10) DEFAULT NULL COMMENT 'IdStar from API',
+                `age_type` varchar(50) DEFAULT NULL COMMENT 'IdAge: ADULT, CHILD, etc',
+                `acc_type` varchar(50) DEFAULT NULL COMMENT 'IdAcc: REGULAR, EXTRA, etc',
+                `board_id` varchar(50) NOT NULL COMMENT 'IdBoard from API',
+                `room_price` varchar(10) DEFAULT NULL COMMENT 'RoomPrice flag',
+                `from_days` int(3) DEFAULT NULL COMMENT 'FromDays - min nights',
+                `to_days` int(3) DEFAULT NULL COMMENT 'ToDays - max nights',
+                `price_1` decimal(10,2) DEFAULT NULL COMMENT 'Season 1 price',
+                `price_2` decimal(10,2) DEFAULT NULL COMMENT 'Season 2 price',
+                `price_3` decimal(10,2) DEFAULT NULL COMMENT 'Season 3 price',
+                `price_4` decimal(10,2) DEFAULT NULL COMMENT 'Season 4 price',
+                `price_5` decimal(10,2) DEFAULT NULL COMMENT 'Season 5 price',
+                `price_6` decimal(10,2) DEFAULT NULL COMMENT 'Season 6 price',
+                `price_7` decimal(10,2) DEFAULT NULL COMMENT 'Season 7 price',
+                `price_8` decimal(10,2) DEFAULT NULL COMMENT 'Season 8 price',
+                `price_9` decimal(10,2) DEFAULT NULL COMMENT 'Season 9 price',
+                `price_10` decimal(10,2) DEFAULT NULL COMMENT 'Season 10 price',
+                `price_11` decimal(10,2) DEFAULT NULL,
+                `price_12` decimal(10,2) DEFAULT NULL,
+                `price_13` decimal(10,2) DEFAULT NULL,
+                `price_14` decimal(10,2) DEFAULT NULL,
+                `price_15` decimal(10,2) DEFAULT NULL,
+                `price_16` decimal(10,2) DEFAULT NULL,
+                `price_17` decimal(10,2) DEFAULT NULL,
+                `price_18` decimal(10,2) DEFAULT NULL,
+                `price_19` decimal(10,2) DEFAULT NULL,
+                `price_20` decimal(10,2) DEFAULT NULL,
+                `min_price` decimal(10,2) DEFAULT NULL COMMENT 'Lowest non-zero price',
+                `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`price_id`),
+                KEY `idx_product` (`product_id`),
+                KEY `idx_hotel` (`hotel_id`),
+                KEY `idx_room_board` (`room_id`, `board_id`),
+                KEY `idx_age_type` (`age_type`),
+                KEY `idx_min_price` (`min_price`),
+                KEY `idx_product_room` (`product_id`, `room_id`),
+                KEY `idx_product_board` (`product_id`, `board_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Season dates table - stores season periods from API -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_seasons` (
+                `season_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `hotel_id` varchar(50) NOT NULL,
+                `package_id` varchar(50) DEFAULT NULL,
+                `season_number` int(2) NOT NULL COMMENT '1-20 matching Price1-Price20',
+                `date_from` date DEFAULT NULL,
+                `date_to` date DEFAULT NULL,
+                `season_name` varchar(100) DEFAULT NULL,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`season_id`),
+                UNIQUE KEY `idx_hotel_package_season` (`hotel_id`, `package_id`, `season_number`),
+                KEY `idx_dates` (`date_from`, `date_to`),
+                KEY `idx_hotel_dates` (`hotel_id`, `date_from`, `date_to`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Early Booking discounts -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_early_booking` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `hotel_id` varchar(50) NOT NULL,
+                `package_id` varchar(50) DEFAULT NULL,
+                `booking_from` date DEFAULT NULL COMMENT 'Book from date',
+                `booking_to` date DEFAULT NULL COMMENT 'Book until date',
+                `stay_from` date DEFAULT NULL COMMENT 'Travel from date',
+                `stay_to` date DEFAULT NULL COMMENT 'Travel until date',
+                `reduction` decimal(5,2) NOT NULL DEFAULT 0 COMMENT 'Discount percentage',
+                `payment_date` date DEFAULT NULL COMMENT 'Payment due date',
+                `payment_percent` decimal(5,2) DEFAULT 0 COMMENT 'Payment percentage',
+                `room_types` varchar(255) DEFAULT 'all' COMMENT 'Applicable room types',
+                `min_stay` int(3) DEFAULT 0 COMMENT 'Minimum stay required',
+                PRIMARY KEY (`id`),
+                KEY `idx_hotel` (`hotel_id`),
+                KEY `idx_booking_dates` (`booking_from`, `booking_to`),
+                KEY `idx_stay_dates` (`stay_from`, `stay_to`),
+                KEY `idx_hotel_reduction` (`hotel_id`, `reduction`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Hotels cache - stores hotel info from API -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotels` (
+                `hotel_id` varchar(50) NOT NULL,
+                `product_id` int(11) unsigned DEFAULT NULL,
+                `hotel_name` varchar(255) DEFAULT NULL,
+                `package_name` varchar(255) DEFAULT NULL,
+                `city` varchar(100) DEFAULT NULL,
+                `region` varchar(100) DEFAULT NULL,
+                `country` varchar(100) DEFAULT NULL,
+                `stars` varchar(10) DEFAULT NULL,
+                `latitude` varchar(20) DEFAULT NULL,
+                `longitude` varchar(20) DEFAULT NULL,
+                `hotel_data` longtext COMMENT 'JSON: full hotel info from API',
+                `rooms_data` longtext COMMENT 'JSON: rooms array from API',
+                `board_data` longtext COMMENT 'JSON: board types from API',
+                `packages_data` longtext COMMENT 'JSON: available packages',
+                `ages_data` longtext COMMENT 'JSON: age categories from hotelinfo',
+                `has_prices` enum('Y','N') DEFAULT NULL COMMENT 'Has active room prices',
+                `last_price_check` datetime DEFAULT NULL COMMENT 'Last price check date',
+                `synced_at` datetime DEFAULT NULL COMMENT 'Last sync date',
+                `created_at` datetime DEFAULT NULL,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`hotel_id`),
+                KEY `idx_product_id` (`product_id`),
+                KEY `idx_has_prices` (`has_prices`),
+                KEY `idx_country` (`country`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Bookings table -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_bookings` (
+                `booking_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `order_id` int(11) unsigned NOT NULL,
+                `product_id` int(11) unsigned NOT NULL,
+                `user_id` int(11) unsigned DEFAULT NULL COMMENT 'CS-Cart user ID if logged in',
+                `session_id` varchar(64) DEFAULT NULL COMMENT 'Session ID for guest bookings',
+                `novoton_confirm_id` varchar(50) DEFAULT NULL COMMENT 'Confirmation from Novoton API',
+                `novoton_invoice_id` varchar(50) DEFAULT NULL COMMENT 'IdNum from API',
+                `novoton_res_num` varchar(50) DEFAULT NULL COMMENT 'ResNum from resinfo',
+                `novoton_status` varchar(20) DEFAULT NULL COMMENT 'OK, ASK, ST, WT, RQ',
+                `hotel_id` varchar(50) NOT NULL,
+                `hotel_name` varchar(255) NOT NULL,
+                `package_id` varchar(50) DEFAULT NULL,
+                `package_name` varchar(255) DEFAULT NULL,
+                `room_id` varchar(100) NOT NULL,
+                `room_type` varchar(255) DEFAULT NULL,
+                `board_id` varchar(50) NOT NULL,
+                `check_in` date NOT NULL,
+                `check_out` date NOT NULL,
+                `nights` int(3) NOT NULL,
+                `adults` int(2) NOT NULL DEFAULT 2,
+                `children` int(2) NOT NULL DEFAULT 0,
+                `children_ages` varchar(100) DEFAULT NULL COMMENT 'Comma-separated ages',
+                `num_rooms` int(2) NOT NULL DEFAULT 1 COMMENT 'Number of rooms booked',
+                `rooms_data` longtext COMMENT 'JSON: rooms configuration with guests per room',
+                `room_number` int(2) DEFAULT 1 COMMENT 'Which room in multi-room booking',
+                `total_rooms` int(2) DEFAULT 1 COMMENT 'Total rooms in original booking',
+                `guest_name` varchar(255) DEFAULT NULL,
+                `guest_email` varchar(255) DEFAULT NULL,
+                `guest_phone` varchar(50) DEFAULT NULL,
+                `guests_data` longtext COMMENT 'JSON: all guests details',
+                `holder_name` varchar(255) DEFAULT NULL COMMENT 'Main holder name',
+                `base_price` decimal(12,2) NOT NULL,
+                `extras_price` decimal(12,2) DEFAULT 0,
+                `total_price` decimal(12,2) NOT NULL,
+                `api_price` decimal(12,2) DEFAULT NULL COMMENT 'Price returned from API',
+                `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+                `status` enum('pending','confirmed','cancelled','completed','failed','ask','waiting') NOT NULL DEFAULT 'pending',
+                `api_request` longtext COMMENT 'JSON: API request sent',
+                `api_response` longtext COMMENT 'JSON: API response received',
+                `alternatives_data` longtext COMMENT 'JSON: alternative hotels from API',
+                `alternatives_requested` tinyint(1) DEFAULT 0 COMMENT 'Whether alternatives were requested',
+                `last_status_check` timestamp NULL DEFAULT NULL COMMENT 'Last time status was polled',
+                `notes` text,
+                `special_requests` text,
+                `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`booking_id`),
+                KEY `idx_order` (`order_id`),
+                KEY `idx_product` (`product_id`),
+                KEY `idx_user` (`user_id`),
+                KEY `idx_session` (`session_id`),
+                KEY `idx_hotel` (`hotel_id`),
+                KEY `idx_status` (`status`),
+                KEY `idx_novoton_status` (`novoton_status`),
+                KEY `idx_dates` (`check_in`, `check_out`),
+                KEY `idx_novoton_confirm` (`novoton_confirm_id`),
+                KEY `idx_novoton_invoice` (`novoton_invoice_id`),
+                KEY `idx_order_status` (`order_id`, `status`),
+                KEY `idx_created_status` (`created_at`, `status`),
+                KEY `idx_hotel_dates` (`hotel_id`, `check_in`, `check_out`),
+                KEY `idx_user_bookings` (`user_id`, `created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Sync log table -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
+                `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `sync_type` enum('prices','hotels','full') NOT NULL DEFAULT 'prices',
+                `sync_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `products_total` int(11) NOT NULL DEFAULT 0,
+                `products_updated` int(11) NOT NULL DEFAULT 0,
+                `products_failed` int(11) NOT NULL DEFAULT 0,
+                `products_no_data` int(11) NOT NULL DEFAULT 0,
+                `products_missing` int(11) NOT NULL DEFAULT 0,
+                `duration_seconds` int(11) DEFAULT NULL,
+                `log_file` varchar(255) DEFAULT NULL,
+                `error_message` text,
+                `status` enum('running','completed','failed') NOT NULL DEFAULT 'running',
+                PRIMARY KEY (`log_id`),
+                KEY `idx_date` (`sync_date`),
+                KEY `idx_status` (`status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- API Response Cache table (v2.7.0) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_cache` (
+                `cache_key` VARCHAR(255) NOT NULL,
+                `cache_data` MEDIUMTEXT,
+                `expires_at` TIMESTAMP NOT NULL,
+                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`cache_key`),
+                KEY `idx_expires` (`expires_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Stores cached API responses for live data'
+        </item>
+
+        <!-- Alternative Requests table (v2.7.0) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_alternative_requests` (
+                `request_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `user_id` int(11) unsigned DEFAULT NULL,
+                `hotel_id` varchar(50) NOT NULL,
+                `hotel_name` varchar(255) DEFAULT NULL,
+                `check_in` date NOT NULL,
+                `check_out` date NOT NULL,
+                `adults` int(2) NOT NULL DEFAULT 2,
+                `children` int(2) NOT NULL DEFAULT 0,
+                `children_ages` varchar(100) DEFAULT NULL,
+                `room_id` varchar(50) DEFAULT NULL,
+                `room_name` varchar(255) DEFAULT NULL,
+                `board_id` varchar(50) DEFAULT NULL,
+                `board_name` varchar(100) DEFAULT NULL,
+                `contact_name` varchar(255) DEFAULT NULL,
+                `contact_email` varchar(255) DEFAULT NULL,
+                `contact_phone` varchar(50) DEFAULT NULL,
+                `notes` text,
+                `status` enum('pending','pending_manual','alternatives_found','notified','booked','expired','cancelled') NOT NULL DEFAULT 'pending',
+                `novoton_request_id` varchar(50) DEFAULT NULL COMMENT 'IdNum from hotel_request',
+                `api_request_xml` text COMMENT 'XML sent to API (masked)',
+                `api_response` text COMMENT 'Raw API response',
+                `alternatives_data` longtext COMMENT 'JSON: found alternatives',
+                `notified_at` datetime DEFAULT NULL,
+                `created_at` datetime NOT NULL,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`request_id`),
+                KEY `idx_user_id` (`user_id`),
+                KEY `idx_hotel_id` (`hotel_id`),
+                KEY `idx_status` (`status`),
+                KEY `idx_novoton_request_id` (`novoton_request_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Facilities list table (v2.7.0) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_facilities` (
+                `facility_id` int(11) unsigned NOT NULL,
+                `facility_name` varchar(255) NOT NULL,
+                `synced_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`facility_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Hotel-Facility relationships table (v2.7.0) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotel_facilities` (
+                `hotel_id` varchar(50) NOT NULL,
+                `facility_id` int(11) unsigned NOT NULL,
+                PRIMARY KEY (`hotel_id`, `facility_id`),
+                KEY `idx_facility_id` (`facility_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- Performance Optimization Indexes are included in CREATE TABLE statements above -->
+        <!-- For existing installations, run database_upgrade.sql manually -->
+
+        <!-- Product tab is created in fn_novoton_holidays_post_install() function -->
+
+        <!-- Uninstall queries -->
+        <!-- Clean up block manager - use simple direct deletes to avoid subquery issues -->
+        <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_booking_engine'</item>
+        <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_homepage_booking'</item>
+        <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'</item>
+        <!-- Clean up product tabs -->
+        <item for="uninstall">DELETE FROM ?:product_tabs WHERE addon = 'novoton_holidays'</item>
+        <!-- Clean up product tab descriptions for orphaned tabs -->
+        <item for="uninstall">DELETE FROM ?:product_tabs_descriptions WHERE tab_id NOT IN (SELECT tab_id FROM ?:product_tabs)</item>
+        <!-- Drop addon tables - order matters for foreign key constraints -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_facilities`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_facilities`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_alternative_requests`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_cache`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_sync_log`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_bookings`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_early_booking`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_seasons`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_prices`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotels`</item>
+    </queries>
+    
+    <!-- Admin menu -->
+    <menu>
+        <items>
+            <item id="novoton_holidays_menu">
+                <title>Novoton Holidays</title>
+                <position>10</position>
+                <items>
+                    <item id="hotel_bookings">
+                        <href>novoton_bookings.manage</href>
+                        <position>10</position>
+                    </item>
+                    <item id="alternative_requests">
+                        <href>novoton_alternatives.manage</href>
+                        <position>15</position>
+                    </item>
+                    <item id="novoton_sync">
+                        <href>novoton_holidays.sync</href>
+                        <position>20</position>
+                    </item>
+                    <item id="room_price">
+                        <href>novoton_holidays.room_price</href>
+                        <position>25</position>
+                    </item>
+                    <item id="add_hotels_as_products">
+                        <href>novoton_holidays.add_hotels_as_products</href>
+                        <position>26</position>
+                    </item>
+                    <item id="list_facilities">
+                        <href>novoton_holidays.list_facilities</href>
+                        <position>27</position>
+                    </item>
+                    <item id="novoton_diagnostic">
+                        <href>novoton_diagnostic.test</href>
+                        <position>30</position>
+                    </item>
+                    <item id="test_hotel_request">
+                        <href>novoton_holidays.test_hotel_request</href>
+                        <position>40</position>
+                    </item>
+                    <item id="test_alternative_rs">
+                        <href>novoton_holidays.test_alternative_rs</href>
+                        <position>45</position>
+                    </item>
+                </items>
+            </item>
+        </items>
+    </menu>
+    
+    <!-- Email Templates -->
+    <email_templates>
+        <templates>
+            <!-- Hotel Import Report Email -->
+            <item>
+                <code><![CDATA[novoton_holidays_import_report]]></code>
+                <area><![CDATA[A]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[[Novoton] {{ import_type_label }} Report - {{ country }} - {{ date }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+<h2>Novoton Holidays Import Report</h2>
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Type:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ import_type_label }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Country:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ country }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Date:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ date }}</td>
+    </tr>
+</table>
+
+<h3>Summary</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: #f5f5f5;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Added:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.added }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Updated:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.updated }}</td>
+    </tr>
+    <tr style="background: #f5f5f5;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Skipped:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.skipped }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Errors:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.errors }}</td>
+    </tr>
+    <tr style="background: #f5f5f5;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Duration:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.duration }}</td>
+    </tr>
+</table>
+
+{% if summary.errors > 0 %}
+<p style="color: #c00;">⚠️ There were errors during import. Check the attached CSV for details.</p>
+{% endif %}
+
+<p>See attached CSV file for detailed results.</p>
+
+<p style="color: #666; font-size: 12px;">📁 Reports also stored in: var/files/1/novoton_reports/</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+            
+            <!-- Alternatives Available Notification -->
+            <item>
+                <code><![CDATA[novoton_holidays_alternatives_available]]></code>
+                <area><![CDATA[C]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[{{ __("novoton_holidays.alternatives_available_subject") }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+<h2>{{ __("novoton_holidays.alternatives_available_title") }}</h2>
+
+<p>{{ __("novoton_holidays.dear_customer", {"name": customer_name}) }}</p>
+
+<p>{{ __("novoton_holidays.alternatives_available_body", {"hotel": hotel_name, "order_id": order_id}) }}</p>
+
+<h3>{{ __("novoton_holidays.available_alternatives") }}</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: #003580; color: white;">
+        <th style="padding: 10px; border: 1px solid #ddd;">{{ __("hotel") }}</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">{{ __("room") }}</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">{{ __("dates") }}</th>
+        <th style="padding: 10px; border: 1px solid #ddd;">{{ __("price") }}</th>
+    </tr>
+    {% for alt in alternatives %}
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ alt.hotel_name }}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ alt.room_type }}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ alt.check_in }} - {{ alt.check_out }}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ alt.total }} EUR</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<p>{{ __("novoton_holidays.contact_us_alternatives") }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+            
+            <!-- Alternatives Request Confirmation -->
+            <item>
+                <code><![CDATA[novoton_holidays_alternatives_request]]></code>
+                <area><![CDATA[C]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[{{ __("novoton_holidays.alternatives_request_subject") }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+<h2>{{ __("novoton_holidays.alternatives_request_title") }}</h2>
+
+<p>{{ __("novoton_holidays.dear_customer", {"name": customer_name}) }}</p>
+
+<p>{{ __("novoton_holidays.alternatives_request_body", {"hotel": hotel_name}) }}</p>
+
+<h3>{{ __("novoton_holidays.original_booking") }}</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("hotel") }}:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ hotel_name }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("check_in") }}:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_in }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("check_out") }}:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("order_id") }}:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">#{{ order_id }}</td>
+    </tr>
+</table>
+
+<p>{{ __("novoton_holidays.alternatives_request_waiting") }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+        </templates>
+    </email_templates>
+    
+    <!-- Functions to run on install/uninstall -->
+    <functions>
+        <item for="install">fn_novoton_holidays_post_install</item>
+        <item for="uninstall">fn_novoton_holidays_uninstall</item>
+    </functions>
+</addon>
