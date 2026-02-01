@@ -159,14 +159,19 @@ try {
                     $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
 
                     // Extract all available fields from hotel_list response
+                    // HotelType contains stars e.g. "4*" -> parse to integer
+                    $hotelType = (string)($hotel->HotelType ?? '');
+                    $stars = intval(preg_replace('/[^0-9]/', '', $hotelType));
+
                     $data = [
                         'hotel_id' => $hotel_id,
                         'hotel_name' => $hotel_name,
                         'city' => $city,
-                        'country' => $country,
-                        'resort' => (string)($hotel->Resort ?? $hotel->City ?? ''),
-                        'stars' => intval($hotel->Stars ?? 0),
-                        'hotel_type' => (string)($hotel->HotelType ?? ''),
+                        'region' => (string)($hotel->Region ?? ''),
+                        'country' => (string)($hotel->Country ?? $country),
+                        'stars' => $stars,
+                        'latitude' => (string)($hotel->Lat ?? ''),
+                        'longitude' => (string)($hotel->Lng ?? ''),
                         'updated_at' => date('Y-m-d H:i:s')
                     ];
 
@@ -179,7 +184,9 @@ try {
                     }
 
                     $synced_hotels++;
-                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['resort']}\n";
+                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$stars}*";
+                    if (!empty($data['latitude'])) echo " | {$data['latitude']},{$data['longitude']}";
+                    echo "\n";
                 }
             } else {
                 echo "0 hotels (or error)\n";
