@@ -52,18 +52,6 @@
         <strong>{__("novoton_holidays.holder")}:</strong> {$product.extra.holder_name}<br>
     {/if}
     
-    {* Payment and Cancellation Terms *}
-    {$payment_terms = $product.extra.terms_of_payment|default:$product.extra.payment_terms|default:$product.extra.remark|default:''}
-    {$cancel_terms = $product.extra.terms_of_cancellation|default:$product.extra.cancellation_terms|default:$product.extra.important|default:''}
-    
-    {if $payment_terms}
-    <strong>{__("novoton_holidays.terms_of_payment")}:</strong> {$payment_terms|escape:'html'|nl2br nofilter}<br>
-    {/if}
-    
-    {if $cancel_terms}
-    <strong>{__("novoton_holidays.cancellation_policy")}:</strong> {$cancel_terms|escape:'html'|nl2br nofilter}<br>
-    {/if}
-    
     {if $product.extra.special_requests}
     <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests}<br>
     {/if}

@@ -1,54 +1,53 @@
 {* Novoton Holidays - Order Details Hook - Terms of Payment & Cancellation *}
+{* This hook fires after the products table, before Customer notes *}
 
-{* DEBUG - Always show when debug_novoton is set *}
-{if $smarty.request.debug_novoton}
-<div style="margin:15px 0;padding:15px;background:#e3f2fd;border:1px solid #2196f3;border-radius:4px;font-size:12px;">
-    <strong> DEBUG: details.post.tpl hook triggered</strong><br>
-    Order ID: {$order_info.order_id|default:'N/A'}<br>
-    Products count: {$order_info.products|@count|default:0}<br>
-    {if $order_info.products}
-        {foreach from=$order_info.products item=product key=pid}
-        <div style="margin-top:10px;padding:10px;background:#fff;border-radius:4px;">
-            <strong>Product #{$pid}:</strong> {$product.product}<br>
-            novoton_booking: {if !empty($product.extra.novoton_booking)}YES{else}NO{/if}<br>
-            {if !empty($product.extra.novoton_booking)}
-            <strong>Extra keys:</strong> {foreach from=$product.extra key=k item=v}{$k}, {/foreach}<br>
-            <strong>terms_of_payment:</strong> {$product.extra.terms_of_payment|default:'[empty]'|truncate:100}<br>
-            <strong>payment_terms:</strong> {$product.extra.payment_terms|default:'[empty]'|truncate:100}<br>
-            <strong>remark:</strong> {$product.extra.remark|default:'[empty]'|truncate:100}<br>
-            <strong>terms_of_cancellation:</strong> {$product.extra.terms_of_cancellation|default:'[empty]'|truncate:100}<br>
-            <strong>cancellation_terms:</strong> {$product.extra.cancellation_terms|default:'[empty]'|truncate:100}<br>
-            <strong>important:</strong> {$product.extra.important|default:'[empty]'|truncate:100}<br>
-            {/if}
-        </div>
-        {/foreach}
-    {/if}
-</div>
-{/if}
+{* Collect unique terms from all Novoton booking products in this order *}
+{$all_payment_terms = []}
+{$all_cancel_terms = []}
 
 {if $order_info.products}
     {foreach from=$order_info.products item=product}
         {if !empty($product.extra.novoton_booking)}
-            {$payment_terms = $product.extra.terms_of_payment|default:$product.extra.payment_terms|default:$product.extra.remark|default:''}
-            {$cancel_terms = $product.extra.terms_of_cancellation|default:$product.extra.cancellation_terms|default:$product.extra.important|default:''}
-            
-            {if $payment_terms || $cancel_terms}
-            <div class="ty-orders-detail__novoton-terms" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #003580;">
-                {if $payment_terms}
-                <p style="margin-bottom: 10px;">
-                    <strong>{__("novoton_holidays.terms_of_payment")|default:"Terms of Payment"}:</strong><br>
-                    {$payment_terms|escape:'html'|nl2br nofilter}
-                </p>
+            {* Try formatted version first, then raw, then fallbacks *}
+            {$pt = $product.extra.terms_of_payment_formatted|default:$product.extra.terms_of_payment|default:$product.extra.payment_terms|default:$product.extra.remark|default:''}
+            {if $pt}
+                {$pt = $pt|strip_tags|trim}
+                {if $pt && !in_array($pt, $all_payment_terms)}
+                    {$all_payment_terms[] = $pt}
                 {/if}
-                
-                {if $cancel_terms}
-                <p style="margin-bottom: 0;">
-                    <strong>{__("novoton_holidays.cancellation_policy")|default:"Cancellation Policy"}:</strong><br>
-                    {$cancel_terms|escape:'html'|nl2br nofilter}
-                </p>
+            {/if}
+
+            {$ct = $product.extra.terms_of_cancellation_formatted|default:$product.extra.terms_of_cancellation|default:$product.extra.cancellation_terms|default:$product.extra.important|default:''}
+            {if $ct}
+                {$ct = $ct|strip_tags|trim}
+                {if $ct && !in_array($ct, $all_cancel_terms)}
+                    {$all_cancel_terms[] = $ct}
                 {/if}
-            </div>
             {/if}
         {/if}
     {/foreach}
+{/if}
+
+{if $all_payment_terms|@count > 0 || $all_cancel_terms|@count > 0}
+<div class="ty-orders-detail__novoton-terms" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; border-left: 4px solid #003580;">
+
+    {if $all_payment_terms|@count > 0}
+    <div style="margin-bottom: {if $all_cancel_terms|@count > 0}16px{else}0{/if};">
+        <h3 style="font-size: 15px; font-weight: 600; color: #333; margin: 0 0 8px 0;">{__("novoton_holidays.terms_of_payment")|default:"Terms of Payment"}</h3>
+        {foreach from=$all_payment_terms item=terms}
+        <div style="color: #555; font-size: 13px; line-height: 1.7; white-space: pre-line;">{$terms}</div>
+        {/foreach}
+    </div>
+    {/if}
+
+    {if $all_cancel_terms|@count > 0}
+    <div>
+        <h3 style="font-size: 15px; font-weight: 600; color: #333; margin: 0 0 8px 0;">{__("novoton_holidays.cancellation_policy")|default:"Cancellation Policy"}</h3>
+        {foreach from=$all_cancel_terms item=terms}
+        <div style="color: #555; font-size: 13px; line-height: 1.7; white-space: pre-line;">{$terms}</div>
+        {/foreach}
+    </div>
+    {/if}
+
+</div>
 {/if}
