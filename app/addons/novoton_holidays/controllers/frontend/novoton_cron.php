@@ -7,7 +7,7 @@
  * 
  * Modes:
  * - resinfo: Check ASK bookings status
- * - hotel_list: Sync hotels from API
+ * - hotel_list: Hotel list sync from API
  * - update_prices: Update hotel prices
  * - room_price: Check which hotels have active prices
  * - alternative_rs: Check alternative_RS for pending requests
@@ -843,7 +843,7 @@ try {
         echo "Unknown mode: {$mode}\n";
         echo "\nAvailable modes:\n";
         echo "- resinfo: Check ASK bookings status\n";
-        echo "- hotel_list: Sync hotels from API\n";
+        echo "- hotel_list: Hotel list sync from API\n";
         echo "- update_prices: Update hotel prices (use admin panel)\n";
         echo "- room_price: Check which hotels have active prices (fast resort-based)\n";
         echo "- alternative_rs: Check alternative_RS for pending requests (24h+)\n";
