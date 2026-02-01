@@ -236,47 +236,71 @@ try {
     // MODE: room_price
     // =========================================
     elseif ($mode == 'room_price') {
-        $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+        $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+7 days'));
         $nights = intval($_REQUEST['nights'] ?? 7);
-        $limit = intval($_REQUEST['limit'] ?? 100);
+        $limit = intval($_REQUEST['limit'] ?? 500);
         $country = strtoupper($_REQUEST['country'] ?? '');
-        
+        $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
+
         echo "Checking hotels with active prices...\n";
-        echo "Check-in: {$check_in}, Nights: {$nights}, Limit: {$limit}\n";
+        echo "Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}\n";
         if ($country) echo "Country: {$country}\n";
         echo "\n";
-        
-        $where = $country ? "WHERE country = '" . addslashes($country) . "'" : "";
+
+        $where = $country ? db_quote("WHERE country = ?s", $country) : "";
         $hotels = db_get_array(
             "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels {$where} ORDER BY country, hotel_name LIMIT ?i",
             $limit
         );
-        
+
         $with_prices = 0;
         $without_prices = 0;
-        
+
         foreach ($hotels as $idx => $hotel) {
-            $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
-            $response = $api->getRoomPrice($hotel['hotel_id'], $check_in, $check_out, 2, 0, 1);
-            
-            if ($response && isset($response->hotel)) {
+            $params = [
+                'hotel_id' => $hotel['hotel_id'],
+                'check_in' => $check_in,
+                'check_out' => $check_out,
+                'adults' => 2,
+                'children' => 0
+            ];
+
+            $response = $api->getRoomPrice($params);
+
+            // Find any Price element in the response (can be nested)
+            $best_price = 0;
+            if ($response instanceof \SimpleXMLElement) {
+                $prices = $response->xpath('//Price');
+                if (!empty($prices)) {
+                    foreach ($prices as $p) {
+                        $pv = floatval((string)$p);
+                        if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
+                            $best_price = $pv;
+                        }
+                    }
+                }
+            }
+
+            if ($best_price > 0) {
                 $with_prices++;
                 db_query("UPDATE ?:novoton_hotels SET has_prices = 'Y', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
+                echo "NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2) . "\n";
             } else {
                 $without_prices++;
                 db_query("UPDATE ?:novoton_hotels SET has_prices = 'N', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
             }
-            
+
             if (($idx + 1) % 25 == 0) {
-                echo "Checked " . ($idx + 1) . " hotels...\n";
+                echo "Checked " . ($idx + 1) . "/" . count($hotels) . " hotels...\n";
             }
-            
+
             usleep(100000); // 100ms delay
         }
-        
+
         echo "\nResults:\n";
         echo "Hotels WITH prices: {$with_prices}\n";
         echo "Hotels WITHOUT prices: {$without_prices}\n";
+        echo "Total checked: " . ($with_prices + $without_prices) . "\n";
     }
     
     // =========================================

@@ -136,54 +136,61 @@ if ($mode == 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-    
+
     header('Content-Type: text/html; charset=utf-8');
-    
+
     echo '<!DOCTYPE html><html><head><title>Checking Hotel Prices</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
         h1 { color: #003580; }
-        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 500px; overflow-y: auto; }
+        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 600px; overflow-y: auto; }
         .success { color: green; }
         .error { color: red; }
+        .skip { color: #999; }
         .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
         .progress { margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; }
-    </style></head><body><div class="container"><h1>Checking Hotel Prices</h1><div class="log">';
-    
+        .info { margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px; }
+    </style></head><body><div class="container"><h1>Checking Hotel Prices</h1>';
+
     $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-    $limit = intval($_REQUEST['limit'] ?? 100);
-    
-    // Get hotels without recent price check
+    $limit = intval($_REQUEST['limit'] ?? 500);
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+7 days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+14 days'));
+
+    echo '<div class="info">';
+    echo "<strong>Country:</strong> {$country} | ";
+    echo "<strong>Check-in:</strong> {$check_in} | ";
+    echo "<strong>Check-out:</strong> {$check_out} | ";
+    echo "<strong>Limit:</strong> {$limit}<br>";
+    echo "<em>Customize: ?country=BULGARIA&amp;check_in=YYYY-MM-DD&amp;check_out=YYYY-MM-DD&amp;limit=500</em>";
+    echo '</div><div class="log">';
+
+    // Get ALL hotels for the country (no recency filter - always recheck)
     $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name 
-         FROM ?:novoton_hotels 
-         WHERE country = ?s 
-           AND (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
-         ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
+        "SELECT hotel_id, hotel_name, product_id
+         FROM ?:novoton_hotels
+         WHERE country = ?s
+         ORDER BY hotel_name ASC
          LIMIT ?i",
         $country, $limit
     );
-    
+
     echo "Checking prices for " . count($hotels) . " hotels in {$country}...<br><br>\n";
     flush();
-    
+
     try {
         $api = new NovotonApi();
         $hotelRepo = new HotelRepository();
-        
+
         $with_prices = 0;
         $no_prices = 0;
-        
-        // Default search params
-        $check_in = date('Y-m-d', strtotime('+30 days'));
-        $check_out = date('Y-m-d', strtotime('+37 days'));
-        
+
         foreach ($hotels as $hotel) {
             $hotel_id = $hotel['hotel_id'];
-            
+            $product_code = 'NVT-' . $hotel_id;
+
             try {
-                // Try to get a price
                 $params = [
                     'hotel_id' => $hotel_id,
                     'check_in' => $check_in,
@@ -191,46 +198,58 @@ if ($mode == 'check_prices') {
                     'adults' => 2,
                     'children' => 0
                 ];
-                
+
                 $result = $api->getRoomPrice($params);
-                
-                $has_prices = false;
-                if ($result && isset($result->Price) && floatval($result->Price) > 0) {
-                    $has_prices = true;
+
+                // Find any Price element in the response (can be nested in hotel/room/board)
+                $best_price = 0;
+                if ($result instanceof \SimpleXMLElement) {
+                    $prices = $result->xpath('//Price');
+                    if (!empty($prices)) {
+                        foreach ($prices as $p) {
+                            $pv = floatval((string)$p);
+                            if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
+                                $best_price = $pv;
+                            }
+                        }
+                    }
                 }
-                
+
+                $has_prices = ($best_price > 0);
+
                 $hotelRepo->update($hotel_id, [
                     'has_prices' => $has_prices ? 'Y' : 'N',
                     'last_price_check' => date('Y-m-d H:i:s')
                 ]);
-                
+
                 if ($has_prices) {
-                    echo "<span class='success'>✓ {$hotel['hotel_name']} - €" . number_format(floatval($result->Price), 2) . "</span><br>\n";
+                    echo "<span class='success'>✓ {$product_code} | {$hotel['hotel_name']} - €" . number_format($best_price, 2) . "</span><br>\n";
                     $with_prices++;
                 } else {
-                    echo "○ {$hotel['hotel_name']} - No prices<br>\n";
+                    echo "<span class='skip'>○ {$product_code} | {$hotel['hotel_name']} - No prices</span><br>\n";
                     $no_prices++;
                 }
-                
+
             } catch (Exception $e) {
-                echo "<span class='error'>✗ {$hotel['hotel_name']} - Error</span><br>\n";
+                echo "<span class='error'>✗ {$product_code} | {$hotel['hotel_name']} - Error</span><br>\n";
                 $no_prices++;
             }
-            
+
             if (($with_prices + $no_prices) % 10 == 0) {
                 echo "<div class='progress'>Progress: " . ($with_prices + $no_prices) . "/" . count($hotels) . "</div>";
                 flush();
             }
         }
-        
+
         echo "<br><strong>Summary:</strong><br>";
         echo "With prices: {$with_prices}<br>";
         echo "No prices: {$no_prices}<br>";
-        
+        echo "Total checked: " . ($with_prices + $no_prices) . "<br>";
+
     } catch (Exception $e) {
         echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>";
     }
-    
+
     echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">← Back</a>';
     echo '</div></body></html>';
     exit;
