@@ -403,9 +403,9 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
                     $product['extra']['novoton_booking_id'] = $booking['booking_id'];
                     $product['extra']['hotel_id'] = $booking['hotel_id'];
                     $product['extra']['room_id'] = $booking['room_id'];
-                    $product['extra']['room_name'] = str_replace(['%2b', '%2B'], '+', $booking['room_id']);
+                    $product['extra']['room_name'] = fn_novoton_format_room_type($booking['room_id'], $booking['room_type'] ?? '');
                     $product['extra']['board_id'] = $booking['board_id'];
-                    $product['extra']['board_name'] = $booking['board_id'];
+                    $product['extra']['board_name'] = fn_novoton_get_board_name($booking['board_id']);
                     $product['extra']['check_in'] = $booking['check_in'];
                     $product['extra']['check_out'] = $booking['check_out'];
                     $product['extra']['nights'] = $booking['nights'];
@@ -497,10 +497,16 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
         }
     }
     
-    // Get board name in readable format
+    // Get board name in readable format and write back to extra for templates
     $board_id = $product['extra']['board_id'] ?? '';
     $board_name = fn_novoton_get_board_name($board_id);
-    
+    $product['extra']['board_name'] = $board_name;
+
+    // Format room name and write back to extra for templates
+    $room_id = $product['extra']['room_id'] ?? '';
+    $room_type = $product['extra']['room_type'] ?? '';
+    $product['extra']['room_type_display'] = fn_novoton_format_room_type($room_id, $room_type);
+
     // Add booking-specific display fields using product_options_value
     $product['product_options_value'] = [];
     

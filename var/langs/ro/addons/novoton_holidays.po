@@ -1650,6 +1650,10 @@ msgctxt "Languages::novoton_holidays.price_updated"
 msgid "Price updated based on child age"
 msgstr "Prețul a fost actualizat în funcție de vârsta copilului"
 
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Prețul a fost actualizat în funcție de vârsta copilului"
+
 msgctxt "Languages::novoton_holidays.age_at_checkin"
 msgid "Age at check-in"
 msgstr "Vârsta la check-in"

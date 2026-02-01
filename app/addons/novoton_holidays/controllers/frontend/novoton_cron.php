@@ -124,7 +124,7 @@ try {
     // MODE: hotel_list
     // =========================================
     elseif ($mode == 'hotel_list') {
-        echo "Syncing hotels from API (with hotelinfo details)...\n\n";
+        echo "Syncing hotels from API (hotel_list)...\n\n";
 
         // Get countries from settings (or all if none selected)
         $countries = fn_novoton_parse_countries();
@@ -137,8 +137,7 @@ try {
 
         $total_hotels = 0;
         $synced_hotels = 0;
-        $detail_fetched = 0;
-        $detail_errors = 0;
+        $new_hotels = 0;
 
         foreach ($countries as $country) {
             echo "Fetching {$country}... ";
@@ -160,55 +159,34 @@ try {
                     $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
 
                     // Extract all available fields from hotel_list response
+                    // HotelType contains stars e.g. "4*" -> parse to integer
+                    $hotelType = (string)($hotel->HotelType ?? '');
+                    $stars = intval(preg_replace('/[^0-9]/', '', $hotelType));
+
                     $data = [
                         'hotel_id' => $hotel_id,
                         'hotel_name' => $hotel_name,
                         'city' => $city,
-                        'country' => $country,
-                        'resort' => (string)($hotel->Resort ?? $hotel->City ?? ''),
-                        'stars' => intval($hotel->Stars ?? 0),
-                        'hotel_type' => (string)($hotel->HotelType ?? ''),
+                        'region' => (string)($hotel->Region ?? ''),
+                        'country' => (string)($hotel->Country ?? $country),
+                        'stars' => $stars,
+                        'latitude' => (string)($hotel->Lat ?? ''),
+                        'longitude' => (string)($hotel->Lng ?? ''),
                         'updated_at' => date('Y-m-d H:i:s')
                     ];
-
-                    // Fetch hotelinfo details for Region, Lat, Lng
-                    $hotel_info = $api->getHotelInfo($hotel_id);
-                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
-                        $h = $hotel_info->hotels->hotel;
-                        $data['region'] = (string)($h->Region ?? '');
-                        // HotelType from hotelinfo (may be more detailed)
-                        $ht = (string)($h->HotelType ?? '');
-                        if (!empty($ht)) {
-                            $data['hotel_type'] = $ht;
-                        }
-                        // Coordinates
-                        $lat = (string)($h->Lat ?? '');
-                        $lng = (string)($h->Lng ?? '');
-                        if ($lat !== '') {
-                            $data['latitude'] = $lat;
-                        }
-                        if ($lng !== '') {
-                            $data['longitude'] = $lng;
-                        }
-                        $detail_fetched++;
-                        echo "  [{$hotel_id}] {$hotel_name} - details OK";
-                        if (!empty($data['region'])) echo " | Region: {$data['region']}";
-                        if ($lat !== '') echo " | Lat: {$lat}";
-                        if ($lng !== '') echo " | Lng: {$lng}";
-                        echo "\n";
-                    } else {
-                        $detail_errors++;
-                        echo "  [{$hotel_id}] {$hotel_name} - hotelinfo failed\n";
-                    }
 
                     if ($exists) {
                         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
                     } else {
                         $data['created_at'] = date('Y-m-d H:i:s');
                         db_query("INSERT INTO ?:novoton_hotels ?e", $data);
+                        $new_hotels++;
                     }
 
                     $synced_hotels++;
+                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$stars}*";
+                    if (!empty($data['latitude'])) echo " | {$data['latitude']},{$data['longitude']}";
+                    echo "\n";
                 }
             } else {
                 echo "0 hotels (or error)\n";
@@ -216,11 +194,7 @@ try {
         }
 
         echo "\nTotal hotels: {$total_hotels}\n";
-        echo "Synced: {$synced_hotels}\n";
-        echo "Hotelinfo details fetched: {$detail_fetched}\n";
-        if ($detail_errors > 0) {
-            echo "Hotelinfo errors: {$detail_errors}\n";
-        }
+        echo "Synced: {$synced_hotels} (new: {$new_hotels})\n";
     }
     
     // =========================================
@@ -603,16 +577,16 @@ try {
                     echo "NEW HOTEL - ";
                     
                     $hotel_info = $api->getHotelInfo($hotel_id);
-                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
-                        $h = $hotel_info->hotels->hotel;
+                    if ($hotel_info) {
+                        // hotelinfo response root IS <hotel>, properties are direct children
                         $hotel_data = [
                             'hotel_id' => $hotel_id,
-                            'hotel_name' => (string)($h->Hotel ?? $hotel_name),
-                            'package_name' => (string)($h->PackageName ?? ''),
-                            'city' => (string)($h->City ?? ''),
-                            'region' => (string)($h->Region ?? ''),
-                            'country' => (string)($h->Country ?? $country),
-                            'stars' => (string)($h->Stars ?? ''),
+                            'hotel_name' => (string)($hotel_info->Hotel ?? $hotel_name),
+                            'package_name' => (string)($hotel_info->packages->PackageName ?? ''),
+                            'city' => (string)($hotel_info->City ?? ''),
+                            'region' => (string)($hotel_info->Region ?? ''),
+                            'country' => (string)($hotel_info->Country ?? $country),
+                            'stars' => (string)($hotel_info->Stars ?? ''),
                             'has_prices' => 'N',
                             'synced_at' => date('Y-m-d H:i:s')
                         ];

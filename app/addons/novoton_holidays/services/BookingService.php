@@ -91,6 +91,8 @@ class BookingService
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
             'guests_data' => json_encode($guests_data),
+            'base_price' => floatval($bookingData['base_price'] ?? 0),
+            'api_price' => floatval($bookingData['api_price'] ?? 0),
             'total_price' => floatval($bookingData['total_price'] ?? 0),
             'currency' => 'EUR',
             'status' => 'pending',

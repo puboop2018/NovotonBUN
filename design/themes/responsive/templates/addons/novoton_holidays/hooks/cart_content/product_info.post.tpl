@@ -1,7 +1,7 @@
 {if !empty($product.extra.novoton_booking)}
 <div style="margin-top:10px;padding:12px;background:#f5f9fc;border-radius:6px;font-size:13px;border-left:4px solid #003580;">
     {if $product.extra.hotel_name}<div style="font-weight:600;color:#003580;margin-bottom:6px;"> {$product.extra.hotel_name}</div>{/if}
-    <div style="margin-bottom:6px;"><strong></strong> {$product.extra.check_in|date_format:"%d.%m.%Y"} - {$product.extra.check_out|date_format:"%d.%m.%Y"} ({$product.extra.nights} nights)</div>
+    <div style="margin-bottom:6px;"><strong></strong> {$product.extra.check_in|date_format:"%d.%m.%Y"} - {$product.extra.check_out|date_format:"%d.%m.%Y"} ({$product.extra.nights} {__("novoton_holidays.nights")|default:"nopți"})</div>
     {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
         <div style="font-weight:600;color:#003580;margin:8px 0 6px;"> {$product.extra.num_rooms} rooms:</div>
         {foreach from=$product.extra.rooms_data item=room key=idx}
