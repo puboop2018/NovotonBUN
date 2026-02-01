@@ -139,6 +139,18 @@ if ($mode == 'check_prices') {
 
     header('Content-Type: text/html; charset=utf-8');
 
+    // Default dates: July 7 - July 14, use next year if current date is Nov-Dec
+    $month_now = (int) date('n');
+    $default_year = ($month_now >= 11) ? (int) date('Y') + 1 : (int) date('Y');
+    $default_check_in = $default_year . '-07-07';
+    $default_check_out = $default_year . '-07-14';
+
+    $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
+    $limit = intval($_REQUEST['limit'] ?? 500);
+    $check_in = $_REQUEST['check_in'] ?? $default_check_in;
+    $check_out = $_REQUEST['check_out'] ?? $default_check_out;
+    $run = isset($_REQUEST['run']);
+
     echo '<!DOCTYPE html><html><head><title>Checking Hotel Prices</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -149,22 +161,43 @@ if ($mode == 'check_prices') {
         .error { color: red; }
         .skip { color: #999; }
         .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
         .progress { margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; }
-        .info { margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px; }
+        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
+        .form-group input, .form-group select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     </style></head><body><div class="container"><h1>Checking Hotel Prices</h1>';
 
-    $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-    $limit = intval($_REQUEST['limit'] ?? 500);
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+7 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+14 days'));
+    // Date / settings form
+    $dispatch_url = fn_url('novoton_holidays.check_prices');
+    echo '<form method="get" action="' . htmlspecialchars(strtok($dispatch_url, '?')) . '">';
+    // Preserve dispatch and security hash from fn_url
+    $url_parts = parse_url($dispatch_url);
+    if (!empty($url_parts['query'])) {
+        parse_str($url_parts['query'], $qs);
+        foreach ($qs as $k => $v) {
+            echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
+        }
+    }
+    echo '<input type="hidden" name="run" value="1">';
+    echo '<div class="form-row">';
+    echo '<div class="form-group"><label>Check-in</label><input type="date" name="check_in" value="' . htmlspecialchars($check_in) . '"></div>';
+    echo '<div class="form-group"><label>Check-out</label><input type="date" name="check_out" value="' . htmlspecialchars($check_out) . '"></div>';
+    echo '<div class="form-group"><label>Country</label><input type="text" name="country" value="' . htmlspecialchars($country) . '" style="width:120px"></div>';
+    echo '<div class="form-group"><label>Limit</label><input type="number" name="limit" value="' . $limit . '" min="1" max="2000" style="width:80px"></div>';
+    echo '<div class="form-group"><label>&nbsp;</label><button type="submit" class="btn-run">Check Prices</button></div>';
+    echo '</div></form>';
 
-    echo '<div class="info">';
-    echo "<strong>Country:</strong> {$country} | ";
-    echo "<strong>Check-in:</strong> {$check_in} | ";
-    echo "<strong>Check-out:</strong> {$check_out} | ";
-    echo "<strong>Limit:</strong> {$limit}<br>";
-    echo "<em>Customize: ?country=BULGARIA&amp;check_in=YYYY-MM-DD&amp;check_out=YYYY-MM-DD&amp;limit=500</em>";
-    echo '</div><div class="log">';
+    if (!$run) {
+        // First load - show form only, don't run yet
+        echo '<p style="color:#666;">Set check-in / check-out dates and click <strong>Check Prices</strong> to start.</p>';
+        echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
+        echo '</div></body></html>';
+        exit;
+    }
+
+    echo '<div class="log">';
 
     // Get ALL hotels for the country (no recency filter - always recheck)
     $hotels = db_get_array(
@@ -176,7 +209,8 @@ if ($mode == 'check_prices') {
         $country, $limit
     );
 
-    echo "Checking prices for " . count($hotels) . " hotels in {$country}...<br><br>\n";
+    echo "Checking prices for " . count($hotels) . " hotels in {$country}...<br>";
+    echo "Check-in: {$check_in} | Check-out: {$check_out}<br><br>\n";
     flush();
 
     try {
@@ -250,7 +284,7 @@ if ($mode == 'check_prices') {
         echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>";
     }
 
-    echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">← Back</a>';
+    echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
     echo '</div></body></html>';
     exit;
 }
