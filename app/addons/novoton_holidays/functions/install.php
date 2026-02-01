@@ -493,16 +493,91 @@ function fn_novoton_holidays_upgrade_db()
     
     // Add holder_name column to bookings
     $holder_name_exists = db_get_field(
-        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-         WHERE TABLE_SCHEMA = DATABASE() 
-         AND TABLE_NAME = '?:novoton_bookings' 
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_bookings'
          AND COLUMN_NAME = 'holder_name'"
     );
-    
+
     if (!$holder_name_exists) {
         @db_query(
-            "ALTER TABLE ?:novoton_bookings 
+            "ALTER TABLE ?:novoton_bookings
              ADD COLUMN `holder_name` VARCHAR(255) DEFAULT '' AFTER `guest_name`"
+        );
+    }
+
+    // Add resort column to novoton_hotels
+    $resort_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_hotels'
+         AND COLUMN_NAME = 'resort'"
+    );
+
+    if (!$resort_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_hotels
+             ADD COLUMN `resort` VARCHAR(255) DEFAULT '' AFTER `region`"
+        );
+    }
+
+    // Add stars column to novoton_hotels
+    $stars_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_hotels'
+         AND COLUMN_NAME = 'stars'"
+    );
+
+    if (!$stars_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_hotels
+             ADD COLUMN `stars` TINYINT DEFAULT 0 AFTER `resort`"
+        );
+    }
+
+    // Add hotel_type column to novoton_hotels
+    $hotel_type_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_hotels'
+         AND COLUMN_NAME = 'hotel_type'"
+    );
+
+    if (!$hotel_type_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_hotels
+             ADD COLUMN `hotel_type` VARCHAR(50) DEFAULT '' AFTER `stars`"
+        );
+    }
+
+    // Add latitude column to novoton_hotels
+    $latitude_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_hotels'
+         AND COLUMN_NAME = 'latitude'"
+    );
+
+    if (!$latitude_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_hotels
+             ADD COLUMN `latitude` DECIMAL(10,7) DEFAULT NULL AFTER `hotel_type`"
+        );
+    }
+
+    // Add longitude column to novoton_hotels
+    $longitude_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_hotels'
+         AND COLUMN_NAME = 'longitude'"
+    );
+
+    if (!$longitude_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_hotels
+             ADD COLUMN `longitude` DECIMAL(10,7) DEFAULT NULL AFTER `latitude`"
         );
     }
 }
