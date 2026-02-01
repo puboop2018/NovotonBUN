@@ -59,19 +59,17 @@
     {* Terms of Payment *}
     {$pt = $product.extra.terms_of_payment_formatted|default:$product.extra.terms_of_payment|default:''}
     {if $pt}
-    <div style="margin-top:8px;padding:8px 10px;background:#f0f7ff;border-left:3px solid #003580;font-size:12px;">
-        <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plata"}</strong><br>
-        <span style="white-space:pre-line;">{$pt|strip_tags|trim}</span>
-    </div>
+    <br>
+    <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plata"}</strong><br>
+    <span style="white-space:pre-line;">{$pt|strip_tags|trim}</span><br>
     {/if}
 
     {* Terms of Cancellation *}
     {$ct = $product.extra.terms_of_cancellation_formatted|default:$product.extra.terms_of_cancellation|default:''}
     {if $ct}
-    <div style="margin-top:5px;padding:8px 10px;background:#fff8f0;border-left:3px solid #e67e22;font-size:12px;">
-        <strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
-        <span style="white-space:pre-line;">{$ct|strip_tags|trim}</span>
-    </div>
+    {if !$pt}<br>{/if}
+    <strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
+    <span style="white-space:pre-line;">{$ct|strip_tags|trim}</span><br>
     {/if}
 
     {* DEBUG *}
