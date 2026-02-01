@@ -237,34 +237,5 @@
         // Initialize
         updateGuestSummary();
     }
-    
-    /**
-     * Format price with currency
-     */
-    function formatPrice(amount, currency) {
-        currency = currency || 'EUR';
-        
-        var formatted = parseFloat(amount).toFixed(2);
-        
-        // Get currency settings from page
-        var currencyFormat = _.currency || {};
-        
-        if (currencyFormat.after === 'Y') {
-            return formatted + ' ' + currency;
-        } else {
-            return currency + ' ' + formatted;
-        }
-    }
-    
-    /**
-     * Calculate nights between dates
-     */
-    function calculateNights(checkIn, checkOut) {
-        var date1 = new Date(checkIn);
-        var date2 = new Date(checkOut);
-        var diffTime = Math.abs(date2 - date1);
-        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    }
-    
+
 }(Tygh, Tygh.$));
