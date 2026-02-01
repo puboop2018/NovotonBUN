@@ -18,9 +18,3 @@
 {* Form validation scripts *}
 {script src="js/addons/novoton_holidays/dob-validation.js"}
 {script src="js/addons/novoton_holidays/booking-form-validation.js"}
-
-{* Performance optimization - lazy loading *}
-{script src="js/addons/novoton_holidays/lazy-loader.js"}
-
-{* React bundle for booking forms - loaded on demand *}
-{script src="js/addons/novoton_holidays/react19-bundle.js"}
