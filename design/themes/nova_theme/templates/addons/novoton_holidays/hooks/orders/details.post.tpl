@@ -29,22 +29,22 @@
 {/if}
 
 {if $all_payment_terms|@count > 0 || $all_cancel_terms|@count > 0}
-<div class="ty-orders-detail__novoton-terms" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; border-left: 4px solid #003580;">
+<div style="margin: 15px 0;">
 
     {if $all_payment_terms|@count > 0}
-    <div style="margin-bottom: {if $all_cancel_terms|@count > 0}16px{else}0{/if};">
-        <h3 style="font-size: 15px; font-weight: 600; color: #333; margin: 0 0 8px 0;">{__("novoton_holidays.terms_of_payment")|default:"Terms of Payment"}</h3>
+    <div style="margin-bottom: {if $all_cancel_terms|@count > 0}10px{else}0{/if};">
+        <strong>{__("novoton_holidays.terms_of_payment")|default:"Terms of Payment"}</strong><br>
         {foreach from=$all_payment_terms item=terms}
-        <div style="color: #555; font-size: 13px; line-height: 1.7; white-space: pre-line;">{$terms}</div>
+        <span style="white-space: pre-line;">{$terms}</span>
         {/foreach}
     </div>
     {/if}
 
     {if $all_cancel_terms|@count > 0}
     <div>
-        <h3 style="font-size: 15px; font-weight: 600; color: #333; margin: 0 0 8px 0;">{__("novoton_holidays.cancellation_policy")|default:"Cancellation Policy"}</h3>
+        <strong>{__("novoton_holidays.cancellation_policy")|default:"Cancellation Policy"}</strong><br>
         {foreach from=$all_cancel_terms item=terms}
-        <div style="color: #555; font-size: 13px; line-height: 1.7; white-space: pre-line;">{$terms}</div>
+        <span style="white-space: pre-line;">{$terms}</span>
         {/foreach}
     </div>
     {/if}
