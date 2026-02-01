@@ -124,7 +124,7 @@ try {
     // MODE: hotel_list
     // =========================================
     elseif ($mode == 'hotel_list') {
-        echo "Syncing hotels from API (with hotelinfo details)...\n\n";
+        echo "Syncing hotels from API (hotel_list)...\n\n";
 
         // Get countries from settings (or all if none selected)
         $countries = fn_novoton_parse_countries();
@@ -137,8 +137,7 @@ try {
 
         $total_hotels = 0;
         $synced_hotels = 0;
-        $detail_fetched = 0;
-        $detail_errors = 0;
+        $new_hotels = 0;
 
         foreach ($countries as $country) {
             echo "Fetching {$country}... ";
@@ -171,44 +170,16 @@ try {
                         'updated_at' => date('Y-m-d H:i:s')
                     ];
 
-                    // Fetch hotelinfo details for Region, Lat, Lng
-                    $hotel_info = $api->getHotelInfo($hotel_id);
-                    if ($hotel_info) {
-                        // hotelinfo response root IS <hotel>, properties are direct children
-                        $data['region'] = (string)($hotel_info->Region ?? '');
-                        // HotelType from hotelinfo (may be more detailed)
-                        $ht = (string)($hotel_info->HotelType ?? '');
-                        if (!empty($ht)) {
-                            $data['hotel_type'] = $ht;
-                        }
-                        // Coordinates
-                        $lat = (string)($hotel_info->Lat ?? '');
-                        $lng = (string)($hotel_info->Lng ?? '');
-                        if ($lat !== '') {
-                            $data['latitude'] = $lat;
-                        }
-                        if ($lng !== '') {
-                            $data['longitude'] = $lng;
-                        }
-                        $detail_fetched++;
-                        echo "  [{$hotel_id}] {$hotel_name} - details OK";
-                        if (!empty($data['region'])) echo " | Region: {$data['region']}";
-                        if ($lat !== '') echo " | Lat: {$lat}";
-                        if ($lng !== '') echo " | Lng: {$lng}";
-                        echo "\n";
-                    } else {
-                        $detail_errors++;
-                        echo "  [{$hotel_id}] {$hotel_name} - hotelinfo failed\n";
-                    }
-
                     if ($exists) {
                         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
                     } else {
                         $data['created_at'] = date('Y-m-d H:i:s');
                         db_query("INSERT INTO ?:novoton_hotels ?e", $data);
+                        $new_hotels++;
                     }
 
                     $synced_hotels++;
+                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['resort']}\n";
                 }
             } else {
                 echo "0 hotels (or error)\n";
@@ -216,11 +187,7 @@ try {
         }
 
         echo "\nTotal hotels: {$total_hotels}\n";
-        echo "Synced: {$synced_hotels}\n";
-        echo "Hotelinfo details fetched: {$detail_fetched}\n";
-        if ($detail_errors > 0) {
-            echo "Hotelinfo errors: {$detail_errors}\n";
-        }
+        echo "Synced: {$synced_hotels} (new: {$new_hotels})\n";
     }
     
     // =========================================
