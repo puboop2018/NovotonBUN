@@ -218,12 +218,12 @@ function fn_novoton_sync_facilities_list()
             return ['success' => false, 'error' => 'Empty API response'];
         }
         
-        $facilities = $response->xpath('//Facility') ?: $response->xpath('//facility') ?: [];
-        
+        $facilities = $response->xpath('//facility') ?: $response->xpath('//Facility') ?: [];
+
         foreach ($facilities as $facility) {
-            $facility_id = (int)($facility['Id'] ?? $facility['id'] ?? 0);
-            $name_en = (string)($facility['Name'] ?? $facility['name'] ?? $facility);
-            $name_ro = $name_en; // Will be translated if available
+            $facility_id = (int)($facility->IdFacility ?? $facility->Id ?? $facility['Id'] ?? 0);
+            $name_en = (string)($facility->FacilityName ?? $facility->Name ?? $facility['Name'] ?? $facility);
+            $name_ro = $name_en;
             
             if ($facility_id <= 0) continue;
             
