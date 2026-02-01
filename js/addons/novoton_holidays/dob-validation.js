@@ -162,10 +162,18 @@
         field.style.backgroundColor = '';
         
         // Hide error message if exists
-        var errorId = (field.id || field.name) + '-dob-error';
-        var errorElement = document.getElementById(errorId);
-        if (errorElement) {
-            errorElement.style.display = 'none';
+        var errorId = (field.id || field.name);
+        if (errorId) {
+            var errorElement = document.getElementById(errorId + '-dob-error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        } else {
+            // Fallback: find error element by adjacency (matches random ID from showDOBError)
+            var nextEl = field.nextSibling;
+            if (nextEl && nextEl.className === 'novoton-dob-error-message') {
+                nextEl.style.display = 'none';
+            }
         }
         
         // Clear custom validity
