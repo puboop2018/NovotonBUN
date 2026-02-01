@@ -52,17 +52,19 @@ function fn_novoton_ensure_tables_exist()
     
     if (empty($sync_log_exists)) {
         db_query("CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
-            `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `sync_type` varchar(50) NOT NULL,
-            `started_at` datetime NOT NULL,
-            `finished_at` datetime DEFAULT NULL,
-            `hotels_processed` int(11) unsigned DEFAULT 0,
-            `prices_updated` int(11) unsigned DEFAULT 0,
-            `errors` text,
+            `log_id` int(11) NOT NULL AUTO_INCREMENT,
+            `sync_type` varchar(50) DEFAULT '',
+            `sync_date` datetime DEFAULT NULL,
+            `hotels_synced` int(11) DEFAULT 0,
+            `hotels_added` int(11) DEFAULT 0,
+            `hotels_updated` int(11) DEFAULT 0,
+            `errors` int(11) DEFAULT 0,
+            `duration` int(11) DEFAULT 0,
+            `details` longtext,
             `status` enum('running','completed','failed') DEFAULT 'running',
             PRIMARY KEY (`log_id`),
             KEY `idx_sync_type` (`sync_type`),
-            KEY `idx_started_at` (`started_at`)
+            KEY `idx_sync_date` (`sync_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     }
 }

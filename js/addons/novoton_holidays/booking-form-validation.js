@@ -379,16 +379,16 @@
 
     window.updateFormWithNewPricing = function(data) {
         var priceInput = document.querySelector('input[name="total_price"]');
-        if (priceInput) priceInput.value = data.new_price;
-        
+        if (priceInput && data.new_price !== undefined) priceInput.value = data.new_price;
+
         var adultsInput = document.querySelector('input[name="adults"]');
         if (adultsInput && data.new_adults) adultsInput.value = data.new_adults;
-        
+
         var childrenInput = document.querySelector('input[name="children"]');
         if (childrenInput && data.new_children !== undefined) childrenInput.value = data.new_children;
-        
+
         if (window.bookingData) {
-            window.bookingData.currentPrice = data.new_price;
+            if (data.new_price !== undefined) window.bookingData.currentPrice = data.new_price;
             if (data.new_adults) window.bookingData.adults = data.new_adults;
         }
     };

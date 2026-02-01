@@ -1,8 +1,7 @@
-{*
-{style src="css/addons/novoton_holidays/styles.css"}
- * Novoton Booking Engine - React 19 Version v3.6
+{* Novoton Booking Engine - React 19 Version v3.6
  * Booking.com style with minimalist design
  *}
+{style src="css/addons/novoton_holidays/styles.css"}
 
 {$novoton_debug = false}
 
