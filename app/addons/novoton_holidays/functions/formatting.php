@@ -47,25 +47,24 @@ function fn_novoton_format_board_name($boardId)
 
 /**
  * Format room type code for display
- * 
- * @param string $roomId Room code (DBL, SGL, etc.)
- * @return string Formatted room type
+ *
+ * When $roomType is provided (from hotelinfo API <Type>), formats as:
+ *   "{Type display name} ({IdRoom})" e.g. "Camera Dubla (DBL 2+1)"
+ *
+ * When $roomType is empty, falls back to parsing the IdRoom code.
+ *
+ * @param string $roomId Room code from room_price API (e.g., "DBL 2+1", "1-BR APP 2+2")
+ * @param string $roomType Room type from hotelinfo API (e.g., "DBL", "APP", "SGL")
+ * @return string Formatted room display name
  */
-function fn_novoton_format_room_type($roomId)
+function fn_novoton_format_room_type($roomId, $roomType = '')
 {
-    // Decode URL-encoded plus signs (use rawurldecode to preserve + as-is)
+    // Decode URL-encoded plus signs
     $roomId = str_replace(['%2b', '%2B'], '+', $roomId);
     $roomId = rawurldecode($roomId);
     $roomId = trim($roomId);
 
-    // Fix: ensure + sign between numbers (e.g., "DBL 2 1" -> "DBL 2+1")
-    $roomId = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomId);
-    
-    // Parse room code pattern: "DBL 2+1" or "DBL 2+1 DELUXE" etc.
-    $parts = preg_split('/[\s\+]+/', $roomId);
-    $base = strtoupper($parts[0] ?? '');
-    
-    // Room type mapping
+    // Room type mapping (used for both hotelinfo Type and IdRoom base code)
     $room_map = [
         'SGL' => 'Camera Single',
         'DBL' => 'Camera Dubla',
@@ -105,6 +104,18 @@ function fn_novoton_format_room_type($roomId)
         '3-BR' => 'Apartament 3 Dormitoare',
     ];
 
+    // If hotelinfo Type is provided, use it: "{Type display name} ({IdRoom})"
+    if (!empty($roomType)) {
+        $typeKey = strtoupper(trim($roomType));
+        $typeName = $room_map[$typeKey] ?? $roomType;
+        return $typeName . ' (' . $roomId . ')';
+    }
+
+    // Fallback: parse IdRoom code when no hotelinfo Type available
+    $roomIdNorm = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomId);
+    $parts = preg_split('/[\s\+]+/', $roomIdNorm);
+    $base = strtoupper($parts[0] ?? '');
+
     $room_name = $room_map[$base] ?? null;
 
     // Fallback: handle N-BR pattern (e.g., "4-BR", "5-BR") dynamically
@@ -115,11 +126,11 @@ function fn_novoton_format_room_type($roomId)
     if ($room_name === null) {
         $room_name = $base;
     }
-    
+
     // Build occupancy string
     $adults = isset($parts[1]) ? intval($parts[1]) : 0;
     $children = isset($parts[2]) ? intval($parts[2]) : 0;
-    
+
     if ($adults > 0) {
         $occupancy = " ({$adults}";
         if ($children > 0) {
@@ -128,7 +139,7 @@ function fn_novoton_format_room_type($roomId)
         $occupancy .= ")";
         $room_name .= $occupancy;
     }
-    
+
     // Append additional descriptors (DELUXE, SEA VIEW, etc.)
     if (count($parts) > 3) {
         $extra = array_slice($parts, 3);
