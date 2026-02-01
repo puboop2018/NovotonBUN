@@ -6,12 +6,11 @@
  * Split from novoton_holidays.php for maintainability.
  * 
  * Modes:
- * - sync: Sync hotels from API
- * - sync_resorts: Sync resort data
  * - add_hotels_as_products: Import hotels to CS-Cart
  * - view_hotels_to_add: Preview hotels for import
  * - list_facilities: View facilities list
  * - sync_facilities: Sync facilities from API
+ * - check_packages: Check hotel packages from API
  * 
  * @package NovotonHolidays
  * @since 2.8.0
@@ -41,136 +40,11 @@ if (!class_exists('Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository') &&
 }
 
 /**
- * Mode: sync
- * Sync hotels from Novoton API
+ * Mode: sync (removed)
+ * Hotel sync is now handled exclusively by the cron Hotel List Sync:
+ *   dispatch=novoton_cron.run&access_key=KEY&mode=hotel_list
+ * The cron version saves more complete data (region, lat/lng, proper timestamps).
  */
-if ($mode == 'sync') {
-    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-        return [CONTROLLER_STATUS_DENIED];
-    }
-    
-    header('Content-Type: text/html; charset=utf-8');
-    
-    echo '<!DOCTYPE html>
-<html><head><title>Novoton Hotels Sync</title>
-<style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h1 { color: #003580; }
-    .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 500px; overflow-y: auto; }
-    .success { color: green; }
-    .error { color: red; }
-    .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-</style>
-</head><body><div class="container"><h1>Novoton Hotels Sync</h1><div class="log">';
-    
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $countries = fn_novoton_parse_countries($addon_settings['selected_countries'] ?? '');
-    
-    echo "Starting sync for: " . implode(', ', $countries) . "<br>\n";
-    if (count($countries) > 3) {
-        echo "<em>(All available countries - none specifically selected in settings)</em><br>\n";
-    }
-    echo "Time: " . date('Y-m-d H:i:s') . "<br><br>\n";
-    flush();
-    
-    try {
-        $api = new NovotonApi();
-        $hotelRepo = new HotelRepository();
-        $syncLogRepo = new SyncLogRepository();
-        
-        $total_synced = 0;
-        $total_added = 0;
-        $total_updated = 0;
-        $errors = 0;
-        $start_time = time();
-        
-        foreach ($countries as $country) {
-            echo "<strong>Fetching hotels from {$country}...</strong><br>\n";
-            flush();
-            
-            $hotels = $api->getHotelList($country);
-            
-            // Iterate directly over result (SimpleXMLElement), like cron does
-            if (!empty($hotels)) {
-                $count = 0;
-                foreach ($hotels as $hotel) {
-                    // Use ->Property syntax for SimpleXMLElement (not ['Property'])
-                    $hotel_id = (string)($hotel->IdHotel ?? '');
-                    if (empty($hotel_id)) continue;
-                    
-                    $hotel_data = [
-                        'hotel_name' => (string)($hotel->Hotel ?? ''),
-                        'country' => $country,
-                        'city' => (string)($hotel->City ?? ''),
-                        'resort' => (string)($hotel->Resort ?? $hotel->City ?? ''),
-                        'stars' => intval($hotel->Stars ?? 0),
-                        'hotel_type' => (string)($hotel->HotelType ?? ''),
-                        'synced_at' => date('Y-m-d H:i:s')
-                    ];
-                    
-                    if ($hotelRepo->exists($hotel_id)) {
-                        $hotelRepo->update($hotel_id, $hotel_data);
-                        $total_updated++;
-                    } else {
-                        $hotel_data['hotel_id'] = $hotel_id;
-                        $hotelRepo->insert($hotel_data);
-                        $total_added++;
-                    }
-                    
-                    $total_synced++;
-                    $count++;
-                }
-                
-                echo "<span class='success'>✓ {$country}: {$count} hotels synced</span><br>\n";
-            } else {
-                echo "<span class='error'>✗ {$country}: No hotels or error</span><br>\n";
-                $errors++;
-            }
-            flush();
-        }
-        
-        $duration = time() - $start_time;
-        
-        // Log sync
-        $syncLogRepo->logSync('resinfo', $total_synced, $total_added, $total_updated, $errors, $duration, [
-            'countries' => $countries
-        ]);
-        
-        echo "<br><strong>Summary:</strong><br>";
-        echo "Total synced: {$total_synced}<br>";
-        echo "Added: {$total_added}<br>";
-        echo "Updated: {$total_updated}<br>";
-        echo "Duration: {$duration}s<br>";
-        
-    } catch (Exception $e) {
-        echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
-    }
-    
-    echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">← Back to Dashboard</a>';
-    echo '</div></body></html>';
-    exit;
-}
-
-/**
- * Mode: sync_resorts
- * Sync resort data for hotels
- */
-if ($mode == 'sync_resorts') {
-    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-        return [CONTROLLER_STATUS_DENIED];
-    }
-    
-    $result = fn_novoton_sync_resorts_from_api();
-    
-    if ($result['success']) {
-        fn_set_notification('N', __('notice'), "Resorts synced: {$result['synced']}");
-    } else {
-        fn_set_notification('E', __('error'), $result['error'] ?? 'Sync failed');
-    }
-    
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-}
 
 /**
  * Mode: view_hotels_to_add

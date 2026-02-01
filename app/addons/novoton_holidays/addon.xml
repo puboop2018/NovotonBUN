@@ -671,7 +671,7 @@
                         <position>15</position>
                     </item>
                     <item id="novoton_sync">
-                        <href>novoton_holidays.sync</href>
+                        <href>novoton_holidays.manage</href>
                         <position>20</position>
                     </item>
                     <item id="room_price">

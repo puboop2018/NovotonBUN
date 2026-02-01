@@ -120,8 +120,8 @@
     <a href="{fn_url('novoton_diagnostic.test')}" class="btn">
         <i class="icon-wrench"></i> API Diagnostic
     </a>
-    <a href="{fn_url('novoton_holidays.sync')}" class="btn">
-        <i class="icon-refresh"></i> Sync Hotels (find Hotel IDs)
+    <a href="{fn_url('novoton_holidays.manage')}" class="btn">
+        <i class="icon-home"></i> Dashboard
     </a>
 </div>
 

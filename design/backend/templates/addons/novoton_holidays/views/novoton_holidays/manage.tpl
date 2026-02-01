@@ -108,7 +108,6 @@
     <div class="novoton-actions">
         <h3>* Quick Actions</h3>
         <div class="novoton-btn-group">
-            <a href="{"novoton_holidays.sync"|fn_url}" class="novoton-btn">[S] Sync Hotels</a>
             <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices</a>
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
@@ -157,37 +156,44 @@
             <tr>
                 <th style="width: 150px;">Job</th>
                 <th>URL</th>
-                <th style="width: 150px;">Recommended</th>
+                <th style="width: 100px;">Recommended</th>
+                <th style="width: 60px;">Run</th>
             </tr>
             <tr>
                 <td><strong>Hotel List Sync</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
                 <td>Daily 3 AM</td>
+                <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Price Check</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
                 <td>Every 6 hours</td>
+                <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Offers Update</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
                 <td>Every 2 hours</td>
+                <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Facilities</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
+                <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Booking Status</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
                 <td>Every hour</td>
+                <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Add Products</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
                 <td>After hotel sync</td>
+                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
         </table>
         {else}
@@ -371,7 +377,7 @@
         {else}
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; color: #856404;">
             <strong>No resorts found.</strong><br>
-            Run "Sync Hotels" first to load resort data from the API.
+            Run the "Hotel List Sync" cron job first to load resort data from the API.
         </div>
         {/if}
     </div>
