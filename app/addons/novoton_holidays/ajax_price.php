@@ -168,7 +168,7 @@ try {
     
     for ($i = 0; $i < $numResults; $i++) {
         $resultPrice = floatval((string)$prices[$i]);
-        $resultRoom = urldecode((string)$idRooms[$i]);
+        $resultRoom = rawurldecode((string)$idRooms[$i]);
         $resultBoard = (string)$boards[$i];
         
         // Match room and board
@@ -195,7 +195,7 @@ try {
     // Fallback to first result
     if (!$price_found && $numResults > 0) {
         $new_price = floatval((string)$prices[0]);
-        $matched_room = urldecode((string)$idRooms[0]);
+        $matched_room = rawurldecode((string)$idRooms[0]);
         $matched_board = (string)$boards[0];
         $price_found = ($new_price > 0);
         debug_log('Fallback to first', ['room' => $matched_room, 'price' => $new_price]);

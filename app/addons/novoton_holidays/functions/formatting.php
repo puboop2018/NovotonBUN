@@ -53,11 +53,11 @@ function fn_novoton_format_board_name($boardId)
  */
 function fn_novoton_format_room_type($roomId)
 {
-    // Decode URL-encoded plus signs
+    // Decode URL-encoded plus signs (use rawurldecode to preserve + as-is)
     $roomId = str_replace(['%2b', '%2B'], '+', $roomId);
-    $roomId = urldecode($roomId);
+    $roomId = rawurldecode($roomId);
     $roomId = trim($roomId);
-    
+
     // Fix: ensure + sign between numbers (e.g., "DBL 2 1" -> "DBL 2+1")
     $roomId = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomId);
     
@@ -127,7 +127,7 @@ function fn_novoton_format_room_type($roomId)
 function fn_novoton_normalize_room_code($roomCode)
 {
     $roomCode = str_replace(['%2b', '%2B'], '+', $roomCode);
-    $roomCode = urldecode($roomCode);
+    $roomCode = rawurldecode($roomCode);
     $roomCode = trim($roomCode);
     // Ensure + sign between consecutive digits with space
     $roomCode = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomCode);

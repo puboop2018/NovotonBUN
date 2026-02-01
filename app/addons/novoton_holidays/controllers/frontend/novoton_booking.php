@@ -3003,7 +3003,7 @@ if ($mode == 'ajax_recalculate_price') {
             $rooms = isset($hotel->rooms->IdRoom) ? [$hotel->rooms] : ($hotel->rooms ?? []);
             
             foreach ($rooms as $room) {
-                $roomId = urldecode((string)($room->IdRoom ?? ''));
+                $roomId = rawurldecode((string)($room->IdRoom ?? ''));
                 if (!empty($room_id) && $roomId !== $room_id_decoded && stripos($roomId, $room_id_decoded) === false) {
                     continue;
                 }
@@ -3046,9 +3046,9 @@ if ($mode == 'ajax_recalculate_price') {
             
             for ($i = 0; $i < $numResults; $i++) {
                 $resultPrice = floatval((string)$prices[$i]);
-                $resultRoom = urldecode((string)$idRooms[$i]);
+                $resultRoom = rawurldecode((string)$idRooms[$i]);
                 $resultBoard = (string)$boards[$i];
-                
+
                 $debug_log("Result $i", [
                     'price' => $resultPrice,
                     'room' => $resultRoom,
@@ -3086,7 +3086,7 @@ if ($mode == 'ajax_recalculate_price') {
             if (!$price_found && $numResults > 0) {
                 // Get the first available price as fallback
                 $new_price = floatval((string)$prices[0]);
-                $matched_room = urldecode((string)$idRooms[0]); // Store first room
+                $matched_room = rawurldecode((string)$idRooms[0]); // Store first room
                 $matched_board = (string)$boards[0]; // Store first board
                 if ($new_price > 0) {
                     $price_found = true;
@@ -3104,7 +3104,7 @@ if ($mode == 'ajax_recalculate_price') {
             $new_price = floatval((string)$response->Price);
             if ($new_price > 0) {
                 $price_found = true;
-                $matched_room = urldecode((string)($response->IdRoom ?? ''));
+                $matched_room = rawurldecode((string)($response->IdRoom ?? ''));
                 $matched_board = (string)($response->Board ?? '');
                 $debug_log('Found direct Price element', $new_price);
             }

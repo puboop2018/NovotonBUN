@@ -150,23 +150,23 @@
         var recalcNotice = document.getElementById('price-recalc-notice');
         if (recalcNotice) recalcNotice.style.display = 'none';
         
-        // Show price change notification
+        // Show price change notification above guest details heading
         if (difference && difference !== 0) {
             var notif = document.getElementById('price-change-notification');
             if (!notif) {
                 notif = document.createElement('div');
                 notif.id = 'price-change-notification';
-                notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:10px 15px;margin:10px 0;border-radius:4px;';
-                var priceSection = document.querySelector(CONFIG.selectors.priceSection);
-                if (priceSection && priceSection.parentNode) {
-                    priceSection.parentNode.insertBefore(notif, priceSection.nextSibling);
+                notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:8px 15px;margin:0 0 10px 0;border-radius:4px;font-size:14px;';
+                var heading = document.querySelector('.guest-names-section h3');
+                if (heading && heading.parentNode) {
+                    heading.parentNode.insertBefore(notif, heading);
                 }
             }
             var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
             var changeColor = difference > 0 ? '#dc3545' : '#28a745';
             var t = window.NovotonTranslations || {};
-            notif.innerHTML = '💰 ' + (t.priceUpdated || 'Prețul a fost actualizat:') + 
-                              ' <strong style="color:' + changeColor + '">' + changeText + ' €</strong>';
+            notif.innerHTML = (t.priceUpdated || 'Prețul a fost actualizat în funcție de vârsta copilului') +
+                              ': <strong style="color:' + changeColor + '">' + changeText + ' €</strong>';
             notif.style.display = 'block';
         }
     };

@@ -855,21 +855,21 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
 }
 
 function showPriceNotification(difference) {
-    // Show single notification with yellow background and euro icon
+    // Show single notification above guest details heading
     var notif = document.getElementById('price-change-notification');
     if (!notif) {
         notif = document.createElement('div');
         notif.id = 'price-change-notification';
-        notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:10px 15px;margin:10px 0;border-radius:4px;display:flex;align-items:center;gap:8px;';
-        var priceBox = document.querySelector('.booking-price-box');
-        if (priceBox && priceBox.parentNode) {
-            priceBox.parentNode.insertBefore(notif, priceBox.nextSibling);
+        notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:8px 15px;margin:0 0 10px 0;border-radius:4px;font-size:14px;';
+        var heading = document.querySelector('.guest-names-section h3');
+        if (heading && heading.parentNode) {
+            heading.parentNode.insertBefore(notif, heading);
         }
     }
     var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
     var changeColor = difference > 0 ? '#dc3545' : '#28a745';
-    notif.innerHTML = '<span style="font-size:18px;"></span> {__("novoton_holidays.price_updated_child_age")|default:"Price updated based on child age"}: <strong style="color:' + changeColor + '">' + changeText + ' EUR</strong>';
-    notif.style.display = 'flex';
+    notif.innerHTML = '{__("novoton_holidays.price_updated_child_age")|default:"Pre\u021bul a fost actualizat \u00een func\u021bie de v\u00e2rsta copilului"}: <strong style="color:' + changeColor + '">' + changeText + ' EUR</strong>';
+    notif.style.display = 'block';
 }
 
 function showInfoNotice(message) {
