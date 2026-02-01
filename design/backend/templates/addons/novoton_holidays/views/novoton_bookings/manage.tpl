@@ -149,8 +149,8 @@
                     <br><small>{$booking.board_display|default:$booking.board_id|default:'-'}</small>
                 </td>
                 <td>
-                    {$booking.check_in|date_format:$settings.Appearance.date_format}<br>
-                    <small>-> {$booking.check_out|date_format:$settings.Appearance.date_format}</small>
+                    {$booking.check_in|date_format:"%d.%m.%Y"}<br>
+                    <small>-> {$booking.check_out|date_format:"%d.%m.%Y"}</small>
                 </td>
                 <td>{$booking.nights}</td>
                 <td>

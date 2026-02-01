@@ -44,10 +44,17 @@ $schema['novoton_holidays'] = [
 // novoton_bookings controller modes
 $schema['novoton_bookings'] = [
     'modes' => [
-        'manage'       => ['permissions' => 'manage_catalog'],
-        'view'         => ['permissions' => 'manage_catalog'],
-        'update'       => ['permissions' => 'manage_catalog'],
-        'details'      => ['permissions' => 'manage_catalog'],
+        'manage'              => ['permissions' => 'manage_catalog'],
+        'view'                => ['permissions' => 'manage_catalog'],
+        'update'              => ['permissions' => 'manage_catalog'],
+        'details'             => ['permissions' => 'manage_catalog'],
+        'resinfo'             => ['permissions' => 'manage_catalog'],
+        'check_all_status'    => ['permissions' => 'manage_catalog'],
+        'cleanup_orphans'     => ['permissions' => 'manage_catalog'],
+        'update_novoton_id'   => ['permissions' => 'manage_catalog'],
+        'request_alternatives' => ['permissions' => 'manage_catalog'],
+        'alternatives'        => ['permissions' => 'manage_catalog'],
+        'order_tab'           => ['permissions' => 'manage_catalog'],
     ],
 ];
 
