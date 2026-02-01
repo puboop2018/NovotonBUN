@@ -182,8 +182,8 @@ if ($mode == 'check_prices') {
     }
     echo '<input type="hidden" name="run" value="1">';
     echo '<div class="form-row">';
-    echo '<div class="form-group"><label>Check-in</label><input type="date" name="check_in" value="' . htmlspecialchars($check_in) . '"></div>';
-    echo '<div class="form-group"><label>Check-out</label><input type="date" name="check_out" value="' . htmlspecialchars($check_out) . '"></div>';
+    echo '<div class="form-group"><label>Check-in</label><input type="text" name="check_in" value="' . htmlspecialchars($check_in) . '" placeholder="e.g. ' . htmlspecialchars($default_check_in) . '" style="width:130px"></div>';
+    echo '<div class="form-group"><label>Check-out</label><input type="text" name="check_out" value="' . htmlspecialchars($check_out) . '" placeholder="e.g. ' . htmlspecialchars($default_check_out) . '" style="width:130px"></div>';
     echo '<div class="form-group"><label>Country</label><input type="text" name="country" value="' . htmlspecialchars($country) . '" style="width:120px"></div>';
     echo '<div class="form-group"><label>Limit</label><input type="number" name="limit" value="' . $limit . '" min="1" max="2000" style="width:80px"></div>';
     echo '<div class="form-group"><label>&nbsp;</label><button type="submit" class="btn-run">Check Prices</button></div>';

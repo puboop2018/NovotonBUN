@@ -241,7 +241,8 @@ if ($mode === 'manage') {
         "SELECT nb.booking_id, nb.order_id, nb.product_id, nb.hotel_id, nb.hotel_name,
                 nb.room_type, nb.board_id, nb.check_in, nb.check_out, nb.nights,
                 nb.adults, nb.children, nb.children_ages, nb.num_rooms, nb.rooms_data,
-                nb.total_price, nb.currency, nb.status, nb.novoton_status, 
+                nb.base_price, nb.api_price, nb.total_price, nb.currency,
+                nb.status, nb.novoton_status,
                 nb.novoton_confirm_id, nb.novoton_invoice_id, nb.created_at, nb.guests_data,
                 o.status AS order_status, o.total AS order_total,
                 COALESCE(nh.hotel_name, nb.hotel_name) AS hotel_name,
@@ -352,6 +353,17 @@ if ($mode === 'manage') {
                 }
             }
         }
+
+        // Fallback for base_price: use api_price if base_price is empty
+        if (empty($booking['base_price']) && !empty($booking['api_price'])) {
+            $booking['base_price'] = $booking['api_price'];
+        }
+
+        // Fallback for total_price: use base_price if total_price is empty
+        if (empty($booking['total_price']) && !empty($booking['base_price'])) {
+            $booking['total_price'] = $booking['base_price'];
+        }
+
         if (!empty($booking['guests_data'])) {
             $guests = json_decode($booking['guests_data'], true);
             if ($guests) {

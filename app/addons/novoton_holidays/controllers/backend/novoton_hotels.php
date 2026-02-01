@@ -454,6 +454,181 @@ if ($mode == 'sync_facilities') {
 }
 
 /**
+ * Mode: check_packages
+ * Check hotel packages from API (hotelinfo) for all countries
+ */
+if ($mode == 'check_packages') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
+    header('Content-Type: text/html; charset=utf-8');
+
+    $limit = intval($_REQUEST['limit'] ?? 500);
+    $run = isset($_REQUEST['run']);
+
+    echo '<!DOCTYPE html><html><head><title>Check Hotel Packages</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #003580; }
+        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 700px; overflow-y: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        .skip { color: #999; }
+        .country-header { color: #003580; font-weight: bold; margin-top: 10px; padding: 5px 0; border-bottom: 1px solid #dee2e6; }
+        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
+        .progress { margin: 10px 0; padding: 8px; background: #e3f2fd; border-radius: 4px; font-weight: bold; }
+        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
+        .form-group input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .summary-table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        .summary-table th, .summary-table td { border: 1px solid #dee2e6; padding: 6px 10px; text-align: left; font-size: 12px; }
+        .summary-table th { background: #f8f9fa; color: #003580; }
+    </style></head><body><div class="container"><h1>Check Hotel Packages</h1>
+    <p style="color:#666;">Retrieves <code>&lt;PackageName&gt;</code> from <code>hotelinfo</code> API for all hotels across all countries.</p>';
+
+    // Form
+    $dispatch_url = fn_url('novoton_holidays.check_packages');
+    echo '<form method="get" action="' . htmlspecialchars(strtok($dispatch_url, '?')) . '">';
+    $url_parts = parse_url($dispatch_url);
+    if (!empty($url_parts['query'])) {
+        parse_str($url_parts['query'], $qs);
+        foreach ($qs as $k => $v) {
+            echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
+        }
+    }
+    echo '<input type="hidden" name="run" value="1">';
+    echo '<div class="form-row">';
+    echo '<div class="form-group"><label>Limit per country</label><input type="number" name="limit" value="' . $limit . '" min="1" max="2000" style="width:80px"></div>';
+    echo '<div class="form-group"><label>&nbsp;</label><button type="submit" class="btn-run">Check Packages</button></div>';
+    echo '</div></form>';
+
+    if (!$run) {
+        echo '<p style="color:#666;">Click <strong>Check Packages</strong> to retrieve package names from the API for all countries.</p>';
+        echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
+        echo '</div></body></html>';
+        exit;
+    }
+
+    echo '<div class="log">';
+
+    // Get all countries from settings
+    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $countries = fn_novoton_parse_countries($addon_settings['selected_countries'] ?? '');
+
+    echo "Countries: " . implode(', ', $countries) . "<br>";
+    echo "Limit per country: {$limit}<br>";
+    echo "Started: " . date('Y-m-d H:i:s') . "<br><br>\n";
+    flush();
+
+    try {
+        $api = new NovotonApi();
+
+        $grand_total = 0;
+        $with_packages = 0;
+        $without_packages = 0;
+        $errors = 0;
+        $results_table = [];
+
+        foreach ($countries as $country) {
+            $hotels = db_get_array(
+                "SELECT hotel_id, hotel_name, package_name FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name LIMIT ?i",
+                $country, $limit
+            );
+
+            if (empty($hotels)) {
+                echo "<div class='country-header'>{$country}: 0 hotels in DB</div>\n";
+                continue;
+            }
+
+            echo "<div class='country-header'>{$country}: " . count($hotels) . " hotels</div>\n";
+            flush();
+
+            foreach ($hotels as $hotel) {
+                $grand_total++;
+
+                try {
+                    $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
+
+                    $package_name = '';
+                    if ($hotel_info && isset($hotel_info->hotels->hotel)) {
+                        $h = $hotel_info->hotels->hotel;
+                        $package_name = (string)($h->PackageName ?? '');
+                    }
+
+                    if (!empty($package_name)) {
+                        $with_packages++;
+                        // Update package_name in DB
+                        db_query("UPDATE ?:novoton_hotels SET package_name = ?s WHERE hotel_id = ?s", $package_name, $hotel['hotel_id']);
+                        echo "<span class='success'>&check; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} &rarr; " . htmlspecialchars($package_name) . "</span><br>\n";
+
+                        $results_table[] = [
+                            'hotel_id' => $hotel['hotel_id'],
+                            'hotel_name' => $hotel['hotel_name'],
+                            'package_name' => $package_name,
+                            'country' => $country
+                        ];
+                    } else {
+                        $without_packages++;
+                        echo "<span class='skip'>&cir; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - No package</span><br>\n";
+                    }
+                } catch (Exception $e) {
+                    $errors++;
+                    echo "<span class='error'>&cross; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
+                }
+
+                if ($grand_total % 25 == 0) {
+                    echo "<div class='progress'>Progress: {$grand_total} hotels checked ({$with_packages} with packages)...</div>\n";
+                    flush();
+                }
+
+                usleep(100000); // 100ms delay between API calls
+            }
+        }
+
+        echo "<br><strong>Summary:</strong><br>";
+        echo "With packages: {$with_packages}<br>";
+        echo "Without packages: {$without_packages}<br>";
+        echo "Errors: {$errors}<br>";
+        echo "Total checked: {$grand_total}<br>";
+        echo "Completed: " . date('Y-m-d H:i:s') . "<br>";
+
+        // Show results table if any
+        if (!empty($results_table)) {
+            echo '</div>';
+            echo '<h3 style="margin-top:20px; color:#003580;">Hotels with Packages (' . count($results_table) . ')</h3>';
+            echo '<table class="summary-table">';
+            echo '<tr><th>#</th><th>Hotel ID</th><th>Hotel Name</th><th>Package Name</th><th>Country</th></tr>';
+            $idx = 0;
+            foreach ($results_table as $row) {
+                $idx++;
+                echo '<tr>';
+                echo '<td>' . $idx . '</td>';
+                echo '<td>NVT-' . htmlspecialchars($row['hotel_id']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['hotel_name']) . '</td>';
+                echo '<td><strong>' . htmlspecialchars($row['package_name']) . '</strong></td>';
+                echo '<td>' . htmlspecialchars($row['country']) . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        } else {
+            echo '</div>';
+        }
+
+    } catch (Exception $e) {
+        echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>";
+        echo '</div>';
+    }
+
+    echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
+    echo '</div></body></html>';
+    exit;
+}
+
+/**
  * Helper: Parse countries from settings
  * Note: This is also defined in helpers.php - this is a fallback if helpers.php not loaded
  */

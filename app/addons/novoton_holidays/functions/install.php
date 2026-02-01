@@ -580,4 +580,27 @@ function fn_novoton_holidays_upgrade_db()
              ADD COLUMN `longitude` DECIMAL(10,7) DEFAULT NULL AFTER `latitude`"
         );
     }
+
+    // Install missing language variables for search results translations
+    $lang_vars = [
+        'novoton_holidays.until' => ['en' => 'until', 'ro' => 'până la'],
+        'novoton_holidays.free_cancellation' => ['en' => 'Free Cancellation', 'ro' => 'Anulare gratuită'],
+        'novoton_holidays.free_cancellation_until' => ['en' => 'Free cancellation until', 'ro' => 'Anulare gratuită până la'],
+        'novoton_holidays.on_booking' => ['en' => 'on booking', 'ro' => 'la rezervare'],
+    ];
+
+    foreach ($lang_vars as $name => $translations) {
+        foreach ($translations as $lang_code => $value) {
+            $exists = db_get_field(
+                "SELECT COUNT(*) FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $name, $lang_code
+            );
+            if (!$exists) {
+                db_query(
+                    "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)",
+                    $name, $lang_code, $value
+                );
+            }
+        }
+    }
 }

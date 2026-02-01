@@ -2230,6 +2230,22 @@ msgctxt "Languages::novoton_holidays.free_cancel"
 msgid "Free cancellation"
 msgstr "Free cancellation"
 
+msgctxt "Languages::novoton_holidays.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Free Cancellation"
+
+msgctxt "Languages::novoton_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Free cancellation until"
+
+msgctxt "Languages::novoton_holidays.until"
+msgid "until"
+msgstr "until"
+
+msgctxt "Languages::novoton_holidays.on_booking"
+msgid "on booking"
+msgstr "on booking"
+
 msgctxt "Languages::novoton_holidays.payment_terms_short"
 msgid "Payment terms"
 msgstr "Payment terms"

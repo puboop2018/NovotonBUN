@@ -4137,10 +4137,11 @@
 .novoton-results-header {
     display: grid;
     grid-template-columns: 2fr 2fr 1fr 140px;
-    background: #003580;
-    color: #fff;
+    background: #f8f9fa;
+    color: #003580;
     font-weight: 600;
     font-size: 14px;
+    border-bottom: 2px solid #003580;
 }
 
 .novoton-results-header > div {
@@ -5058,10 +5059,12 @@ body.modal-open {
 }
 
 .novoton-hotel-header {
-    background: linear-gradient(135deg, #003580 0%, #0057b8 100%);
-    color: #fff;
+    background: #fff;
+    color: #003580;
     padding: 20px;
     border-radius: 8px 8px 0 0;
+    border: 1px solid #e0e0e0;
+    border-bottom: none;
 }
 
 .novoton-hotel-header-inner {
@@ -5076,13 +5079,13 @@ body.modal-open {
     margin: 0;
     font-size: 22px;
     font-weight: 600;
-    color: #fff;
+    color: #003580;
 }
 
 .novoton-hotel-header p {
     margin: 5px 0 0;
     font-size: 14px;
-    color: rgba(255,255,255,0.85);
+    color: #666;
 }
 
 .novoton-availability-badge {
@@ -5489,14 +5492,15 @@ div.novoton-desktop-only,
 .novoton-table-header {
     display: grid !important;
     grid-template-columns: 2fr 2fr 1fr 180px !important;
-    background: #003580 !important;
-    color: #ffffff !important;
+    background: #f8f9fa !important;
+    color: #003580 !important;
     font-weight: 600;
     font-size: 14px;
+    border-bottom: 2px solid #003580 !important;
 }
 
 .novoton-table-header > div {
-    color: #ffffff !important;
+    color: #003580 !important;
     padding: 15px 20px;
 }
 
@@ -5547,16 +5551,17 @@ div.novoton-desktop-only,
     div.novoton-table-header {
         display: grid !important;
         grid-template-columns: 2fr 2fr 1fr 180px !important;
-        background: #003580 !important;
-        color: #fff !important;
+        background: #f8f9fa !important;
+        color: #003580 !important;
+        border-bottom: 2px solid #003580 !important;
         visibility: visible !important;
         position: relative !important;
     }
-    
+
     .novoton-table-header > div {
         display: block !important;
         padding: 15px 20px !important;
-        color: #fff !important;
+        color: #003580 !important;
     }
     
     /* FORCE result rows to be 4-column grid on desktop */

@@ -29,7 +29,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 $hotels_modes = [
     'sync', 'sync_resorts', 'add_hotels_as_products', 'view_hotels_to_add',
-    'list_facilities', 'sync_facilities'
+    'list_facilities', 'sync_facilities', 'check_packages'
 ];
 
 $prices_modes = [

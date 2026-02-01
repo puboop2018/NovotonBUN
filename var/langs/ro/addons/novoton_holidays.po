@@ -1272,6 +1272,22 @@ msgctxt "Languages::novoton_holidays.free_cancel"
 msgid "Free cancellation"
 msgstr "Anulare gratuită"
 
+msgctxt "Languages::novoton_holidays.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::novoton_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Anulare gratuită până la"
+
+msgctxt "Languages::novoton_holidays.until"
+msgid "until"
+msgstr "până la"
+
+msgctxt "Languages::novoton_holidays.on_booking"
+msgid "on booking"
+msgstr "la rezervare"
+
 msgctxt "Languages::novoton_holidays.payment_terms_short"
 msgid "Payment terms"
 msgstr "Condiții plată"
