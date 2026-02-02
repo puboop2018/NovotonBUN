@@ -202,7 +202,7 @@ function fn_novoton_generate_hotel_features_csv()
     try {
         // Get all hotels with products
         $hotels = db_get_array(
-            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, h.boards_data, p.product_code
+            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, h.board_data, p.product_code
              FROM ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              WHERE h.product_id > 0
@@ -235,8 +235,8 @@ function fn_novoton_generate_hotel_features_csv()
             
             // Parse boards data
             $boards = [];
-            if (!empty($hotel['boards_data'])) {
-                $boards_arr = json_decode($hotel['boards_data'], true);
+            if (!empty($hotel['board_data'])) {
+                $boards_arr = json_decode($hotel['board_data'], true);
                 if (is_array($boards_arr)) {
                     $boards = array_values(array_unique($boards_arr));
                 }

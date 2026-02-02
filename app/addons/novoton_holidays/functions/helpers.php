@@ -217,7 +217,7 @@ function fn_novoton_holidays_update_product_prices($product_id)
         $update_data = [
             'packages_data' => json_encode($packages),
             'rooms_data' => json_encode($rooms),
-            'boards_data' => json_encode($boards),
+            'board_data' => json_encode($boards),
             'has_prices' => !empty($packages) ? 'Y' : 'N',
             'last_price_check' => date('Y-m-d H:i:s')
         ];

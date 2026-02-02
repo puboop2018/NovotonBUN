@@ -307,8 +307,8 @@ if ($mode == 'view_hotel') {
     if (!empty($hotel['rooms_data'])) {
         $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
     }
-    if (!empty($hotel['boards_data'])) {
-        $hotel['boards'] = json_decode($hotel['boards_data'], true);
+    if (!empty($hotel['board_data'])) {
+        $hotel['boards'] = json_decode($hotel['board_data'], true);
     }
     
     // Get facilities

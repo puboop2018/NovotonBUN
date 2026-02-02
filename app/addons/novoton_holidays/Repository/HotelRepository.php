@@ -138,7 +138,7 @@ class HotelRepository
         $data = [
             'packages_data' => json_encode($packages),
             'rooms_data' => json_encode($rooms),
-            'boards_data' => json_encode($boards),
+            'board_data' => json_encode($boards),
             'has_prices' => !empty($packages) ? 'Y' : 'N',
             'last_price_check' => date('Y-m-d H:i:s')
         ];
