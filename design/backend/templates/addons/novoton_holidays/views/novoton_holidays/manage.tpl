@@ -123,6 +123,7 @@
         <h3>[W] Statistics by Country</h3>
         <div class="novoton-country-grid">
             {foreach from=$stats.by_country key=country item=country_stats}
+            {if $country_stats.with_prices > 0 || $country_stats.with_packages > 0}
             <div class="novoton-country-card">
                 <h4>{$country}</h4>
                 <div class="novoton-stat-row">
@@ -145,6 +146,7 @@
                     <a href="{"novoton_holidays.add_hotels_as_products?country=`$country`"|fn_url}" class="novoton-btn" style="font-size: 11px; padding: 6px 12px;">Add as Products -></a>
                 </div>
             </div>
+            {/if}
             {/foreach}
         </div>
     </div>
