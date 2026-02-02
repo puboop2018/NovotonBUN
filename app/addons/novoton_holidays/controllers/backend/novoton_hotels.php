@@ -261,8 +261,9 @@ if ($mode == 'add_hotels_as_products') {
                         $hotelRepo->update($hotel_id, ['product_id' => $product_id]);
                         
                         // Set star rating feature
-                        if (!empty($hotel['stars']) && $hotel['stars'] > 0) {
-                            fn_novoton_assign_star_rating_feature($product_id, $hotel['stars']);
+                        $star_rating = intval($hotel['hotel_type'] ?? '');
+                        if ($star_rating > 0) {
+                            fn_novoton_assign_star_rating_feature($product_id, $star_rating);
                         }
                         
                         $added++;

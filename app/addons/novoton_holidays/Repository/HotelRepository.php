@@ -215,7 +215,7 @@ class HotelRepository
             $conditions[] = "(packages_data IS NOT NULL AND packages_data != '' AND packages_data != '[]')";
         }
         if (!empty($filters['stars'])) {
-            $conditions[] = db_quote("stars = ?i", $filters['stars']);
+            $conditions[] = db_quote("hotel_type = ?s", $filters['stars'] . '*');
         }
         
         return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';

@@ -337,7 +337,6 @@ function fn_novoton_cron_resinfo()
                         'hotel_name' => (string)($hotel['HotelName'] ?? $hotel['hotelName'] ?? ''),
                         'country' => $country,
                         'city' => (string)($hotel['City'] ?? $hotel['city'] ?? ''),
-                        'stars' => intval($hotel['Stars'] ?? $hotel['stars'] ?? 0),
                         'hotel_type' => (string)($hotel['HotelType'] ?? $hotel['hotelType'] ?? ''),
                         'last_sync' => date('Y-m-d H:i:s')
                     ];

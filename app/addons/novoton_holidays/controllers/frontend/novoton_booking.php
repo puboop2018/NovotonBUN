@@ -1482,7 +1482,7 @@ if ($mode == 'search') {
     if (!empty($hotelId)) {
         // A73: Optimized query - select only display columns, not JSON blobs
         $hotel_info = db_get_row(
-            "SELECT hotel_id, hotel_name, city, region, country, stars, 
+            "SELECT hotel_id, hotel_name, city, region, country, hotel_type,
                     packages_data, ages_data
              FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotelId

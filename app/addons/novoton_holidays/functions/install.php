@@ -360,21 +360,6 @@ function fn_novoton_holidays_upgrade_db()
         );
     }
 
-    // Add stars column to novoton_hotels
-    $stars_exists = db_get_field(
-        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = '?:novoton_hotels'
-         AND COLUMN_NAME = 'stars'"
-    );
-
-    if (!$stars_exists) {
-        @db_query(
-            "ALTER TABLE ?:novoton_hotels
-             ADD COLUMN `stars` TINYINT DEFAULT 0 AFTER `resort`"
-        );
-    }
-
     // Add hotel_type column to novoton_hotels
     $hotel_type_exists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
@@ -386,7 +371,7 @@ function fn_novoton_holidays_upgrade_db()
     if (!$hotel_type_exists) {
         @db_query(
             "ALTER TABLE ?:novoton_hotels
-             ADD COLUMN `hotel_type` VARCHAR(50) DEFAULT '' AFTER `stars`"
+             ADD COLUMN `hotel_type` VARCHAR(50) DEFAULT '' AFTER `country`"
         );
     }
 

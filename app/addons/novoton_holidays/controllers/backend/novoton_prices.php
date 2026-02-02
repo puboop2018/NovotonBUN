@@ -382,21 +382,21 @@ if ($mode == 'download_active_prices_csv') {
     $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
     
     $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name, city, stars, has_prices, product_id, last_price_check
-         FROM ?:novoton_hotels 
+        "SELECT hotel_id, hotel_name, city, hotel_type, has_prices, product_id, last_price_check
+         FROM ?:novoton_hotels
          WHERE country = ?s AND has_prices = 'Y'
          ORDER BY city, hotel_name",
         $country
     );
     
-    $csv = "Hotel ID;Hotel Name;City;Stars;Product ID;Last Check\n";
-    
+    $csv = "Hotel ID;Hotel Name;City;Hotel Type;Product ID;Last Check\n";
+
     foreach ($hotels as $hotel) {
         $csv .= implode(';', [
             $hotel['hotel_id'],
             '"' . str_replace('"', '""', $hotel['hotel_name']) . '"',
             $hotel['city'],
-            $hotel['stars'],
+            $hotel['hotel_type'],
             $hotel['product_id'] ?: '',
             $hotel['last_price_check'] ?: ''
         ]) . "\n";

@@ -449,7 +449,7 @@
                 `city` varchar(100) DEFAULT NULL,
                 `region` varchar(100) DEFAULT NULL,
                 `country` varchar(100) DEFAULT NULL,
-                `stars` varchar(10) DEFAULT NULL,
+                `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart',
                 `latitude` varchar(20) DEFAULT NULL,
                 `longitude` varchar(20) DEFAULT NULL,
                 `hotel_data` longtext COMMENT 'JSON: full hotel info from API',

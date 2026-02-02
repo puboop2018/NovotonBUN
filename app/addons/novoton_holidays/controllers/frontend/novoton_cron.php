@@ -168,9 +168,7 @@ try {
                     $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
 
                     // Extract all available fields from hotel_list response
-                    // HotelType contains stars e.g. "4*" -> parse to integer
                     $hotelType = (string)($hotel->HotelType ?? '');
-                    $stars = intval(preg_replace('/[^0-9]/', '', $hotelType));
 
                     $data = [
                         'hotel_id' => $hotel_id,
@@ -178,7 +176,7 @@ try {
                         'city' => $city,
                         'region' => (string)($hotel->Region ?? ''),
                         'country' => (string)($hotel->Country ?? $country),
-                        'stars' => $stars,
+                        'hotel_type' => $hotelType,
                         'latitude' => (string)($hotel->Lat ?? ''),
                         'longitude' => (string)($hotel->Lng ?? ''),
                         'hotel_list_synced_at' => date('Y-m-d H:i:s'),
@@ -194,7 +192,7 @@ try {
                     }
 
                     $synced_hotels++;
-                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$stars}*";
+                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$hotelType}";
                     if (!empty($data['latitude'])) echo " | {$data['latitude']},{$data['longitude']}";
                     echo "\n";
                 }
@@ -612,7 +610,7 @@ try {
                             'city' => (string)($hotel_info->City ?? ''),
                             'region' => (string)($hotel_info->Region ?? ''),
                             'country' => (string)($hotel_info->Country ?? $country),
-                            'stars' => (string)($hotel_info->Stars ?? ''),
+                            'hotel_type' => (string)($hotel_info->HotelType ?? $hotel_info->Stars ?? ''),
                             'has_prices' => 'N',
                             'hotel_list_synced_at' => date('Y-m-d H:i:s')
                         ];
