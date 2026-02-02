@@ -154,52 +154,60 @@
         
         <table class="novoton-table">
             <tr>
+                <th style="width: 30px;">#</th>
                 <th style="width: 150px;">Job</th>
                 <th>URL</th>
                 <th style="width: 100px;">Recommended</th>
                 <th style="width: 60px;">Run</th>
             </tr>
             <tr>
+                <td>1</td>
                 <td><strong>Hotel List Sync</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
                 <td>Daily 3 AM</td>
                 <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>2</td>
                 <td><strong>Hotel Accommodation</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
                 <td>After Hotel List</td>
                 <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>3</td>
                 <td><strong>Price Check</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
                 <td>Every 6 hours</td>
                 <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>4</td>
+                <td><strong>Add Products</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
+                <td>After Price Check</td>
+                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
+                <td>5</td>
                 <td><strong>Offers Update</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
                 <td>Every 2 hours</td>
                 <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>6</td>
                 <td><strong>Facilities</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
                 <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>7</td>
                 <td><strong>Booking Status</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
                 <td>Every hour</td>
                 <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Add Products</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
-                <td>After hotel sync</td>
-                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
         </table>
         {else}
