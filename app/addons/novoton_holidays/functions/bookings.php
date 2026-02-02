@@ -305,10 +305,7 @@ function fn_novoton_cron_resinfo()
         return ['success' => false, 'error' => 'API not available'];
     }
     
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $countries = !empty($addon_settings['selected_countries']) 
-        ? explode(',', $addon_settings['selected_countries']) 
-        : ['BULGARIA'];
+    $countries = fn_novoton_parse_countries();
     
     $result = [
         'success' => true,

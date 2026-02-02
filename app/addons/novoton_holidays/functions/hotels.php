@@ -326,10 +326,7 @@ function fn_novoton_get_hotel_facilities($hotel_id, $lang = 'en')
  */
 function fn_novoton_get_resorts_for_settings()
 {
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $selected_countries = !empty($addon_settings['selected_countries'])
-        ? explode(',', $addon_settings['selected_countries'])
-        : [];
+    $selected_countries = fn_novoton_parse_countries();
 
     $resorts = [];
 
