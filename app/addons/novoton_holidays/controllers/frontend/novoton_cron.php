@@ -177,6 +177,7 @@ try {
                         'hotel_name' => $hotel_name,
                         'city' => $city,
                         'region' => (string)($hotel->Region ?? ''),
+                        'resort' => $city,  // City = Resort in hotel_list API
                         'country' => (string)($hotel->Country ?? $country),
                         'stars' => $stars,
                         'latitude' => (string)($hotel->Lat ?? ''),
@@ -194,7 +195,7 @@ try {
                     }
 
                     $synced_hotels++;
-                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$stars}*";
+                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['resort']} | {$stars}*";
                     if (!empty($data['latitude'])) echo " | {$data['latitude']},{$data['longitude']}";
                     echo "\n";
                 }
