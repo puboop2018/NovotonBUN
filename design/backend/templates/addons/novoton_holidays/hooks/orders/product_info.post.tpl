@@ -34,12 +34,16 @@
             {else}{$room_display = $room_raw}{/if}
             {* Format board name *}
             {$board_raw = $room.board_display|default:$room.board_name|default:$room.board_id}
-            {if $board_raw == 'AI' || $board_raw == 'ALL INCL' || $board_raw == 'ALLINC'}{$board_disp = 'All Inclusive'}
-            {elseif $board_raw == 'UAI' || $board_raw == 'ULTRA ALL'}{$board_disp = 'Ultra All Inclusive'}
-            {elseif $board_raw == 'FB' || $board_raw == 'FULL BOARD'}{$board_disp = 'Full Board'}
-            {elseif $board_raw == 'HB' || $board_raw == 'HALF BOARD'}{$board_disp = 'Half Board'}
-            {elseif $board_raw == 'BB' || $board_raw == 'B&B' || $board_raw == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
-            {elseif $board_raw == 'RO' || $board_raw == 'ROOM ONLY'}{$board_disp = 'Room Only'}
+            {$board_up = $board_raw|upper}
+            {if $board_up == 'AI' || $board_up == 'ALL INCL' || $board_up == 'ALL INCLUSIVE' || $board_up == 'ALLINC'}{$board_disp = 'All Inclusive'}
+            {elseif $board_up == 'UAI' || $board_up == 'ULTRA ALL INCL' || $board_up == 'ULTRA ALL INCLUSIVE'}{$board_disp = 'Ultra All Inclusive'}
+            {elseif $board_up == 'FB' || $board_up == 'FULL BOARD'}{$board_disp = 'Full Board'}
+            {elseif $board_up == 'FB+' || $board_up == 'FULL BOARD PLUS'}{$board_disp = 'Full Board Plus'}
+            {elseif $board_up == 'HB' || $board_up == 'HALF BOARD'}{$board_disp = 'Half Board'}
+            {elseif $board_up == 'HB+' || $board_up == 'HALF BOARD PLUS'}{$board_disp = 'Half Board Plus'}
+            {elseif $board_up == 'BB' || $board_up == 'B&B' || $board_up == 'BED AND BREAKFAST' || $board_up == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
+            {elseif $board_up == 'RO' || $board_up == 'ROOM ONLY'}{$board_disp = 'Room Only'}
+            {elseif $board_up == 'SC' || $board_up == 'SELF CATERING'}{$board_disp = 'Self Catering'}
             {else}{$board_disp = $board_raw}{/if}
             &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
         {/foreach}
@@ -60,12 +64,16 @@
         {else}{$room_display = $room_raw}{/if}
         {* Format board name *}
         {$board_raw = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id}
-        {if $board_raw == 'AI' || $board_raw == 'ALL INCL' || $board_raw == 'ALLINC'}{$board_disp = 'All Inclusive'}
-        {elseif $board_raw == 'UAI' || $board_raw == 'ULTRA ALL'}{$board_disp = 'Ultra All Inclusive'}
-        {elseif $board_raw == 'FB' || $board_raw == 'FULL BOARD'}{$board_disp = 'Full Board'}
-        {elseif $board_raw == 'HB' || $board_raw == 'HALF BOARD'}{$board_disp = 'Half Board'}
-        {elseif $board_raw == 'BB' || $board_raw == 'B&B' || $board_raw == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
-        {elseif $board_raw == 'RO' || $board_raw == 'ROOM ONLY'}{$board_disp = 'Room Only'}
+        {$board_up = $board_raw|upper}
+        {if $board_up == 'AI' || $board_up == 'ALL INCL' || $board_up == 'ALL INCLUSIVE' || $board_up == 'ALLINC'}{$board_disp = 'All Inclusive'}
+        {elseif $board_up == 'UAI' || $board_up == 'ULTRA ALL INCL' || $board_up == 'ULTRA ALL INCLUSIVE'}{$board_disp = 'Ultra All Inclusive'}
+        {elseif $board_up == 'FB' || $board_up == 'FULL BOARD'}{$board_disp = 'Full Board'}
+        {elseif $board_up == 'FB+' || $board_up == 'FULL BOARD PLUS'}{$board_disp = 'Full Board Plus'}
+        {elseif $board_up == 'HB' || $board_up == 'HALF BOARD'}{$board_disp = 'Half Board'}
+        {elseif $board_up == 'HB+' || $board_up == 'HALF BOARD PLUS'}{$board_disp = 'Half Board Plus'}
+        {elseif $board_up == 'BB' || $board_up == 'B&B' || $board_up == 'BED AND BREAKFAST' || $board_up == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
+        {elseif $board_up == 'RO' || $board_up == 'ROOM ONLY'}{$board_disp = 'Room Only'}
+        {elseif $board_up == 'SC' || $board_up == 'SELF CATERING'}{$board_disp = 'Self Catering'}
         {else}{$board_disp = $board_raw}{/if}
         <strong>Room:</strong> {$room_display}<br>
         <strong>Board:</strong> {$board_disp}<br>

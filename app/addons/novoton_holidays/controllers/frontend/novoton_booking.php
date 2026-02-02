@@ -2130,18 +2130,7 @@ if ($mode == 'add_to_cart') {
     
     // Format board name for display
     $board_id = $bookingData['board_id'] ?? 'BB';
-    $board_name = $board_id;
-    $board_map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'FB' => 'Full Board',
-        'HB' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'RO' => 'Room Only'
-    ];
-    if (isset($board_map[$board_id])) {
-        $board_name = $board_map[$board_id];
-    }
+    $board_name = fn_novoton_format_board_name($board_id);
     
     // Parse rooms_data
     $num_rooms = intval($bookingData['num_rooms'] ?? 1);

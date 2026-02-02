@@ -233,15 +233,20 @@ function fn_novoton_generate_hotel_features_csv()
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
             $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
             
-            // Parse boards data
-            $boards = [];
+            // Parse boards data — board_data JSON is [{IdBoard, Board}, ...]
+            $board_names = [];
             if (!empty($hotel['board_data'])) {
                 $boards_arr = json_decode($hotel['board_data'], true);
                 if (is_array($boards_arr)) {
-                    $boards = array_values(array_unique($boards_arr));
+                    foreach ($boards_arr as $b) {
+                        $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : $b;
+                        if (!empty($code)) {
+                            $board_names[] = fn_novoton_format_board_name($code);
+                        }
+                    }
                 }
             }
-            $boards_str = implode(',', array_map('fn_novoton_format_board_name', $boards));
+            $boards_str = implode(',', array_unique($board_names));
             
             // Romanian row
             $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';
