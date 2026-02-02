@@ -644,6 +644,7 @@
         <!-- Clean up product tab descriptions for orphaned tabs -->
         <item for="uninstall">DELETE FROM ?:product_tabs_descriptions WHERE tab_id NOT IN (SELECT tab_id FROM ?:product_tabs)</item>
         <!-- Drop addon tables - order matters for foreign key constraints -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_resorts`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_alternative_requests`</item>

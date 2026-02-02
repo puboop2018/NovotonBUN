@@ -30,23 +30,12 @@ function fn_novoton_ensure_tables_exist()
     if ($checked) return;
     $checked = true;
     
-    // Check if resorts table exists
-    $table_exists = db_get_field("SHOW TABLES LIKE '?:novoton_resorts'");
-    
-    if (empty($table_exists)) {
-        db_query("CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
-            `resort_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `country` varchar(100) NOT NULL,
-            `resort_name` varchar(255) NOT NULL,
-            `hotel_count` int(11) unsigned DEFAULT 0,
-            `hotels_with_prices` int(11) unsigned DEFAULT 0,
-            `synced_at` datetime DEFAULT NULL,
-            PRIMARY KEY (`resort_id`),
-            UNIQUE KEY `idx_country_resort` (`country`, `resort_name`),
-            KEY `idx_country` (`country`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Drop unused novoton_resorts table if it exists (dead infrastructure)
+    $resorts_table = db_get_field("SHOW TABLES LIKE '?:novoton_resorts'");
+    if (!empty($resorts_table)) {
+        db_query("DROP TABLE IF EXISTS `?:novoton_resorts`");
     }
-    
+
     // Rename synced_at -> hotel_list_synced_at if old column still exists
     $old_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'synced_at'");
     if (!empty($old_col)) {
