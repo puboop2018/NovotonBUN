@@ -211,6 +211,9 @@ class HotelRepository
         if (!empty($filters['no_packages'])) {
             $conditions[] = "(packages_data IS NULL OR packages_data = '' OR packages_data = '[]')";
         }
+        if (!empty($filters['has_packages'])) {
+            $conditions[] = "(packages_data IS NOT NULL AND packages_data != '' AND packages_data != '[]')";
+        }
         if (!empty($filters['stars'])) {
             $conditions[] = db_quote("stars = ?i", $filters['stars']);
         }

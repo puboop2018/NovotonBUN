@@ -57,12 +57,12 @@
                 <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_prices|default:0}</span>
             </div>
             <div class="novoton-stat-row">
-                <span>As Products</span>
-                <span class="novoton-badge novoton-badge-info">{$stats.hotels.with_products|default:0}</span>
+                <span>With Packages</span>
+                <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_packages|default:0}</span>
             </div>
             <div class="novoton-stat-row">
-                <span>Missing Data</span>
-                <span class="novoton-badge novoton-badge-warning">{$stats.hotels.without_packages|default:0}</span>
+                <span>As Products</span>
+                <span class="novoton-badge novoton-badge-info">{$stats.hotels.with_products|default:0}</span>
             </div>
         </div>
         
@@ -132,6 +132,10 @@
                 <div class="novoton-stat-row">
                     <span>With Prices</span>
                     <span class="novoton-badge novoton-badge-success">{$country_stats.with_prices}</span>
+                </div>
+                <div class="novoton-stat-row">
+                    <span>With Packages</span>
+                    <span class="novoton-badge novoton-badge-success">{$country_stats.with_packages}</span>
                 </div>
                 <div class="novoton-stat-row">
                     <span>As Products</span>
