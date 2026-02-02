@@ -1448,23 +1448,31 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
     if (empty($order['products'])) {
         return;
     }
-    
+
     foreach ($order['products'] as &$product) {
         if (empty($product['extra']['novoton_booking'])) {
             continue;
         }
-        
+
         // Format Terms of Payment
-        $payment_terms_raw = $product['extra']['terms_of_payment'] ?? '';
-        if (!empty($payment_terms_raw)) {
-            $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_terms_raw);
+        // Use _raw (XML) key first; terms_of_payment may already be formatted text
+        $payment_raw = $product['extra']['terms_of_payment_raw'] ?? '';
+        if (!empty($payment_raw)) {
+            $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        } elseif (!empty($product['extra']['terms_of_payment'])) {
+            // Already formatted text — use as-is
+            $product['extra']['terms_of_payment_formatted'] = $product['extra']['terms_of_payment'];
         }
-        
+
         // Format Terms of Cancellation
-        $cancellation_terms_raw = $product['extra']['terms_of_cancellation'] ?? '';
-        if (!empty($cancellation_terms_raw)) {
-            $check_in = $product['extra']['check_in'] ?? '';
-            $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_format_cancellation_terms($cancellation_terms_raw, $check_in);
+        // Use _raw (XML) key first; terms_of_cancellation may already be formatted text
+        $cancel_raw = $product['extra']['terms_of_cancellation_raw'] ?? '';
+        $check_in = $product['extra']['check_in'] ?? '';
+        if (!empty($cancel_raw)) {
+            $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_format_cancellation_terms($cancel_raw, $check_in);
+        } elseif (!empty($product['extra']['terms_of_cancellation'])) {
+            // Already formatted text — use as-is
+            $product['extra']['terms_of_cancellation_formatted'] = $product['extra']['terms_of_cancellation'];
         }
     }
 }
