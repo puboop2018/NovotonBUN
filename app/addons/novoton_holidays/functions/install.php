@@ -360,21 +360,6 @@ function fn_novoton_holidays_upgrade_db()
         );
     }
 
-    // Add resort column to novoton_hotels
-    $resort_exists = db_get_field(
-        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = '?:novoton_hotels'
-         AND COLUMN_NAME = 'resort'"
-    );
-
-    if (!$resort_exists) {
-        @db_query(
-            "ALTER TABLE ?:novoton_hotels
-             ADD COLUMN `resort` VARCHAR(255) DEFAULT '' AFTER `region`"
-        );
-    }
-
     // Add stars column to novoton_hotels
     $stars_exists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS

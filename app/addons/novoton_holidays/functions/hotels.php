@@ -320,41 +320,41 @@ function fn_novoton_get_hotel_facilities($hotel_id, $lang = 'en')
 }
 
 /**
- * Get resorts list for settings dropdown
- * 
+ * Get resorts list for settings dropdown (resort = city in the API)
+ *
  * @return array Resorts grouped by country
  */
 function fn_novoton_get_resorts_for_settings()
 {
     $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $selected_countries = !empty($addon_settings['selected_countries']) 
-        ? explode(',', $addon_settings['selected_countries']) 
+    $selected_countries = !empty($addon_settings['selected_countries'])
+        ? explode(',', $addon_settings['selected_countries'])
         : [];
-    
+
     $resorts = [];
-    
-    // Get from database
-    $query = "SELECT DISTINCT resort, country FROM ?:novoton_hotels WHERE resort != '' AND resort IS NOT NULL";
-    
+
+    // Get from database — city = resort in the Novoton API
+    $query = "SELECT DISTINCT city, country FROM ?:novoton_hotels WHERE city != '' AND city IS NOT NULL";
+
     if (!empty($selected_countries)) {
         $query .= db_quote(" AND country IN (?a)", $selected_countries);
     }
-    
-    $query .= " ORDER BY country, resort";
-    
+
+    $query .= " ORDER BY country, city";
+
     $db_resorts = db_get_array($query);
-    
+
     foreach ($db_resorts as $row) {
         $country = $row['country'];
-        $resort = $row['resort'];
-        
+        $resort = $row['city'];
+
         if (!isset($resorts[$country])) {
             $resorts[$country] = [];
         }
-        
+
         $resorts[$country][] = $resort;
     }
-    
+
     return $resorts;
 }
 
