@@ -61,7 +61,6 @@ foreach ($function_files as $file) {
  * - fn_novoton_holidays_update_product_prices()
  * 
  * INSTALLATION (functions/install.php):
- * - fn_novoton_holidays_install()
  * - fn_novoton_holidays_uninstall()
  * - fn_novoton_holidays_fix_tab_name()
  * - fn_novoton_holidays_post_install()
@@ -91,8 +90,6 @@ foreach ($function_files as $file) {
  * - fn_novoton_sync_hotel_facilities()
  * - fn_novoton_get_hotel_facilities()
  * - fn_novoton_get_resorts_for_settings()
- * - fn_novoton_sync_resorts_from_api()
- * - fn_novoton_update_resort_stats()
  * - fn_novoton_assign_star_rating_feature()
  * 
  * BOOKINGS (functions/bookings.php):
