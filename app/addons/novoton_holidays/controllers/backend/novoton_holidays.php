@@ -211,6 +211,7 @@ if ($mode == 'manage' || empty($mode)) {
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+        'check_packages' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=check_packages",
     ];
     
     // Assign to view

@@ -93,6 +93,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
         'offers_update'  => 'Offers Update',
         'facilities'     => 'Facilities Sync',
         'resinfo'        => 'Booking Status Check',
+        'check_packages' => 'Check Hotel Packages',
         'manual'         => 'Manual Import',
         'cron'           => 'Cron Sync',
     ];

@@ -1189,6 +1189,101 @@ try {
     }
 
     // =========================================
+    // MODE: check_packages
+    // =========================================
+    elseif ($mode == 'check_packages') {
+        echo "Check Hotel Packages (hotelinfo API)\n\n";
+
+        // Get countries from addon settings
+        $countries = fn_novoton_parse_countries();
+
+        echo "Countries: " . implode(', ', $countries) . "\n\n";
+
+        $hotels = db_get_array(
+            "SELECT hotel_id, hotel_name, country, package_name FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
+            $countries
+        );
+
+        if (empty($hotels)) {
+            echo "No hotels found in database.\n";
+        } else {
+            echo "Processing " . count($hotels) . " hotels...\n\n";
+
+            $total = 0;
+            $with_packages = 0;
+            $updated = 0;
+            $errors = 0;
+            $current_country = '';
+
+            foreach ($hotels as $hotel) {
+                $total++;
+
+                if ($hotel['country'] !== $current_country) {
+                    $current_country = $hotel['country'];
+                    echo "\n--- {$current_country} ---\n";
+                }
+
+                try {
+                    $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
+
+                    $package_name = '';
+                    if ($hotel_info) {
+                        if (isset($hotel_info->packages->PackageName)) {
+                            $package_name = (string)$hotel_info->packages->PackageName;
+                        } elseif (isset($hotel_info->packages->Package)) {
+                            $package_name = (string)$hotel_info->packages->Package;
+                        }
+                        if (empty($package_name)) {
+                            $pn = $hotel_info->xpath('//PackageName');
+                            if (!empty($pn)) {
+                                $package_name = (string)$pn[0];
+                            }
+                        }
+                    }
+
+                    if (!empty($package_name)) {
+                        $with_packages++;
+                        if ($package_name !== ($hotel['package_name'] ?? '')) {
+                            db_query("UPDATE ?:novoton_hotels SET package_name = ?s WHERE hotel_id = ?s", $package_name, $hotel['hotel_id']);
+                            $updated++;
+                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name} (updated)\n";
+                        } else {
+                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name}\n";
+                        }
+                    } else {
+                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no package\n";
+                    }
+                } catch (Exception $e) {
+                    $errors++;
+                    echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - ERROR: " . $e->getMessage() . "\n";
+                }
+
+                usleep(100000); // 100ms delay
+
+                if ($total % 50 == 0) {
+                    echo "\n--- Progress: {$total}/" . count($hotels) . " ({$with_packages} with packages) ---\n";
+                }
+            }
+
+            echo "\n\nSummary:\n";
+            echo "Total checked: {$total}\n";
+            echo "With packages: {$with_packages}\n";
+            echo "Updated: {$updated}\n";
+            echo "Errors: {$errors}\n";
+
+            // Send email report
+            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
+            fn_novoton_send_import_report_email([], 'check_packages', [
+                'added'    => $with_packages,
+                'updated'  => $updated,
+                'skipped'  => $total - $with_packages - $errors,
+                'errors'   => $errors,
+                'duration' => $duration,
+            ], implode(', ', $countries));
+        }
+    }
+
+    // =========================================
     // UNKNOWN MODE
     // =========================================
     else {
@@ -1207,6 +1302,7 @@ try {
         echo "- add_hotels_as_products: Add hotels as products (&country=BULGARIA&limit=50&exclude_resorts=RESORT1,RESORT2)\n";
         echo "- list_facilities: Sync facilities list from API\n";
         echo "- hotel_info: Sync hotel accommodation (rooms, boards, packages, ages) (&force=1&limit=500)\n";
+        echo "- check_packages: Check PackageName for all hotels across selected countries\n";
         echo "\nExamples:\n";
         echo "  &mode=add_hotels_as_products&country=BULGARIA&limit=100\n";
         echo "  &mode=add_hotels_as_products&country=BULGARIA&exclude_resorts=GOLDEN+SANDS,ALBENA\n";
