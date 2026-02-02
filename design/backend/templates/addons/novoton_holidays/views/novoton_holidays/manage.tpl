@@ -166,6 +166,12 @@
                 <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Hotel Accommodation</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
+                <td>After Hotel List</td>
+                <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
                 <td><strong>Price Check</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
                 <td>Every 6 hours</td>

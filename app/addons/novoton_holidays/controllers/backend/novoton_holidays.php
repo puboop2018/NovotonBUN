@@ -203,6 +203,7 @@ if ($mode == 'manage' || empty($mode)) {
     
     $cron_urls = [
         'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
+        'hotel_info' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info",
         'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",

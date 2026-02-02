@@ -47,6 +47,12 @@ function fn_novoton_ensure_tables_exist()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     }
     
+    // Add hotelinfo_synced_at column if missing (for existing installations)
+    $col_exists = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotelinfo_synced_at'");
+    if (empty($col_exists)) {
+        db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date' AFTER `ages_data`");
+    }
+
     // Check if sync_log table exists
     $sync_log_exists = db_get_field("SHOW TABLES LIKE '?:novoton_sync_log'");
     
