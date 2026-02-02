@@ -28,7 +28,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 // ============================================================================
 
 $hotels_modes = [
-    'sync', 'sync_resorts', 'add_hotels_as_products', 'view_hotels_to_add',
+    'add_hotels_as_products', 'view_hotels_to_add',
     'list_facilities', 'sync_facilities', 'check_packages'
 ];
 
@@ -171,17 +171,19 @@ if ($mode == 'manage' || empty($mode)) {
             'total' => $hotelRepo->count(),
             'with_prices' => $hotelRepo->count(['has_prices' => 'Y']),
             'with_products' => $hotelRepo->count(['has_product' => true]),
+            'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
         'bookings' => $bookingRepo->getStats(),
         'by_country' => []
     ];
-    
+
     // Per-country stats
     foreach ($countries as $country) {
         $stats['by_country'][$country] = [
             'total' => $hotelRepo->count(['country' => $country]),
             'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+            'with_packages' => $hotelRepo->count(['country' => $country, 'has_packages' => true]),
             'with_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         ];
     }
@@ -203,6 +205,7 @@ if ($mode == 'manage' || empty($mode)) {
     
     $cron_urls = [
         'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
+        'hotel_info' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info",
         'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",

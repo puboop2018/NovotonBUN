@@ -457,9 +457,10 @@
                 `board_data` longtext COMMENT 'JSON: board types from API',
                 `packages_data` longtext COMMENT 'JSON: available packages',
                 `ages_data` longtext COMMENT 'JSON: age categories from hotelinfo',
+                `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date',
                 `has_prices` enum('Y','N') DEFAULT NULL COMMENT 'Has active room prices',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last price check date',
-                `synced_at` datetime DEFAULT NULL COMMENT 'Last sync date',
+                `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date',
                 `created_at` datetime DEFAULT NULL,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`hotel_id`),
@@ -671,7 +672,7 @@
                         <position>15</position>
                     </item>
                     <item id="novoton_sync">
-                        <href>novoton_holidays.sync</href>
+                        <href>novoton_holidays.manage</href>
                         <position>20</position>
                     </item>
                     <item id="room_price">

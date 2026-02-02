@@ -57,12 +57,12 @@
                 <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_prices|default:0}</span>
             </div>
             <div class="novoton-stat-row">
-                <span>As Products</span>
-                <span class="novoton-badge novoton-badge-info">{$stats.hotels.with_products|default:0}</span>
+                <span>With Packages</span>
+                <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_packages|default:0}</span>
             </div>
             <div class="novoton-stat-row">
-                <span>Missing Data</span>
-                <span class="novoton-badge novoton-badge-warning">{$stats.hotels.without_packages|default:0}</span>
+                <span>As Products</span>
+                <span class="novoton-badge novoton-badge-info">{$stats.hotels.with_products|default:0}</span>
             </div>
         </div>
         
@@ -108,7 +108,6 @@
     <div class="novoton-actions">
         <h3>* Quick Actions</h3>
         <div class="novoton-btn-group">
-            <a href="{"novoton_holidays.sync"|fn_url}" class="novoton-btn">[S] Sync Hotels</a>
             <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices</a>
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
@@ -124,6 +123,7 @@
         <h3>[W] Statistics by Country</h3>
         <div class="novoton-country-grid">
             {foreach from=$stats.by_country key=country item=country_stats}
+            {if $country_stats.with_prices > 0 || $country_stats.with_packages > 0}
             <div class="novoton-country-card">
                 <h4>{$country}</h4>
                 <div class="novoton-stat-row">
@@ -135,6 +135,10 @@
                     <span class="novoton-badge novoton-badge-success">{$country_stats.with_prices}</span>
                 </div>
                 <div class="novoton-stat-row">
+                    <span>With Packages</span>
+                    <span class="novoton-badge novoton-badge-success">{$country_stats.with_packages}</span>
+                </div>
+                <div class="novoton-stat-row">
                     <span>As Products</span>
                     <span class="novoton-badge novoton-badge-info">{$country_stats.with_products}</span>
                 </div>
@@ -142,6 +146,7 @@
                     <a href="{"novoton_holidays.add_hotels_as_products?country=`$country`"|fn_url}" class="novoton-btn" style="font-size: 11px; padding: 6px 12px;">Add as Products -></a>
                 </div>
             </div>
+            {/if}
             {/foreach}
         </div>
     </div>
@@ -155,39 +160,60 @@
         
         <table class="novoton-table">
             <tr>
+                <th style="width: 30px;">#</th>
                 <th style="width: 150px;">Job</th>
                 <th>URL</th>
-                <th style="width: 150px;">Recommended</th>
+                <th style="width: 100px;">Recommended</th>
+                <th style="width: 60px;">Run</th>
             </tr>
             <tr>
+                <td>1</td>
                 <td><strong>Hotel List Sync</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
                 <td>Daily 3 AM</td>
+                <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>2</td>
+                <td><strong>Hotel Accommodation</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
+                <td>After Hotel List</td>
+                <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
+                <td>3</td>
                 <td><strong>Price Check</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
                 <td>Every 6 hours</td>
+                <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>4</td>
+                <td><strong>Add Products</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
+                <td>After Price Check</td>
+                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
+                <td>5</td>
                 <td><strong>Offers Update</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
                 <td>Every 2 hours</td>
+                <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>6</td>
                 <td><strong>Facilities</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
+                <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td>7</td>
                 <td><strong>Booking Status</strong></td>
                 <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
                 <td>Every hour</td>
-            </tr>
-            <tr>
-                <td><strong>Add Products</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
-                <td>After hotel sync</td>
+                <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
         </table>
         {else}
@@ -371,7 +397,7 @@
         {else}
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; color: #856404;">
             <strong>No resorts found.</strong><br>
-            Run "Sync Hotels" first to load resort data from the API.
+            Run the "Hotel List Sync" cron job first to load resort data from the API.
         </div>
         {/if}
     </div>
