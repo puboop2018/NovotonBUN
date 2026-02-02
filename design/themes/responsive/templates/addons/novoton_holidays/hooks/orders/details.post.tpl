@@ -29,21 +29,13 @@
 {/if}
 
 {if $_nv_has_terms}
-<div class="ty-orders-detail__terms" style="margin: 20px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px; background: #fafafa;">
-
     {if $_nv_payment}
-    <div style="margin-bottom: {if $_nv_cancel}12px{else}0{/if};">
-        <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
-        <span style="white-space: pre-line;">{$_nv_payment|strip_tags|trim}</span>
-    </div>
+    <p><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
+    {$_nv_payment|strip_tags|trim|nl2br}</p>
     {/if}
 
     {if $_nv_cancel}
-    <div>
-        <strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
-        <span style="white-space: pre-line;">{$_nv_cancel|strip_tags|trim}</span>
-    </div>
+    <p><strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
+    {$_nv_cancel|strip_tags|trim|nl2br}</p>
     {/if}
-
-</div>
 {/if}
