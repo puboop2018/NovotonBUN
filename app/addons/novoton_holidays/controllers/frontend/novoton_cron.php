@@ -173,6 +173,7 @@ try {
                         'stars' => $stars,
                         'latitude' => (string)($hotel->Lat ?? ''),
                         'longitude' => (string)($hotel->Lng ?? ''),
+                        'hotel_list_synced_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                     ];
 
@@ -589,7 +590,7 @@ try {
                             'country' => (string)($hotel_info->Country ?? $country),
                             'stars' => (string)($hotel_info->Stars ?? ''),
                             'has_prices' => 'N',
-                            'synced_at' => date('Y-m-d H:i:s')
+                            'hotel_list_synced_at' => date('Y-m-d H:i:s')
                         ];
                         
                         db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $hotel_data, $hotel_data);
@@ -957,8 +958,8 @@ try {
                     $hotel_ids_to_sync = array_unique(array_merge($hotel_ids_to_sync, $unsyced));
                 }
             } else {
-                // First run ever — sync all hotels that have no rooms_data
-                echo "First run: syncing all hotels without accommodation data...\n\n";
+                // First run ever — sync all hotels
+                echo "First run: syncing all hotels...\n\n";
                 $hotel_ids_to_sync = db_get_fields(
                     "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name LIMIT ?i",
                     $countries, $limit

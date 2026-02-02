@@ -460,7 +460,7 @@
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date',
                 `has_prices` enum('Y','N') DEFAULT NULL COMMENT 'Has active room prices',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last price check date',
-                `synced_at` datetime DEFAULT NULL COMMENT 'Last sync date',
+                `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date',
                 `created_at` datetime DEFAULT NULL,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`hotel_id`),

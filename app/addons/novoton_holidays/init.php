@@ -47,6 +47,17 @@ function fn_novoton_ensure_tables_exist()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     }
     
+    // Rename synced_at -> hotel_list_synced_at if old column still exists
+    $old_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'synced_at'");
+    if (!empty($old_col)) {
+        db_query("ALTER TABLE `?:novoton_hotels` CHANGE COLUMN `synced_at` `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date'");
+    } else {
+        $new_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotel_list_synced_at'");
+        if (empty($new_col)) {
+            db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date' AFTER `last_price_check`");
+        }
+    }
+
     // Add hotelinfo_synced_at column if missing (for existing installations)
     $col_exists = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotelinfo_synced_at'");
     if (empty($col_exists)) {
