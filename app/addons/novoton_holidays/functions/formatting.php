@@ -440,7 +440,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
             // Final 100% tier = No Show
             $lines[] = "Neprezentare: penalizare 100%";
         } else {
-            // Middle tier: show date range from [prev_tillDate] to [current_tillDate]
+            // Middle tier: show date range from [prev_tillDate + 1 day] to [current_tillDate]
             $penalty_str = '';
             if ($type === 'Over Nights' || $type === 'Overnights') {
                 $nights = (int)$value;
@@ -452,7 +452,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
             }
 
             if (!empty($prev_till_date) && !empty($tillDate)) {
-                $from_str = $formatDateRo($prev_till_date);
+                $from_str = $formatDateRo(date('Y-m-d', strtotime($prev_till_date . ' +1 day')));
                 $to_str = $formatDateRo($tillDate);
                 $lines[] = "Între {$from_str} - {$to_str}: {$penalty_str}";
             } elseif (!empty($tillDate)) {
