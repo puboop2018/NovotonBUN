@@ -57,15 +57,18 @@ function fn_novoton_generate_import_csv_report($results, $import_type = 'manual'
 }
 
 /**
- * Send import report email with CSV attachment
- * 
- * @param array $results Array of import results
- * @param string $import_type Type of import (manual/cron/offers_update)
- * @param array $summary Summary statistics (added, updated, skipped, errors, time)
- * @param string $country Country code
+ * Send cron/import report email via CS-Cart Mailer
+ *
+ * Uses the 'novoton_holidays_import_report' email template registered in addon.xml.
+ * Works for all cron job types — hotel_list, hotel_info, room_price, etc.
+ *
+ * @param array  $summary     Summary statistics: added, updated, skipped, errors, duration, plus any extra keys
+ * @param string $import_type Type identifier: hotel_list, hotel_info, room_price, offers_update, add_products, facilities, resinfo, manual
+ * @param string $country     Country code or comma-separated list
+ * @param array  $results     Optional detailed results for CSV attachment (empty = no attachment)
  * @return bool Success
  */
-function fn_novoton_send_import_report_email($results, $import_type, $summary, $country = 'BULGARIA')
+function fn_novoton_send_import_report_email($results, $import_type, $summary, $country = '')
 {
     // Get admin email from settings
     $admin_email = Registry::get('settings.Company.company_orders_email');
@@ -77,78 +80,87 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
     }
     
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send import report: no admin email found');
+        fn_log_event('novoton', 'error', 'Cannot send cron report: no admin email found');
         return false;
     }
-    
-    // Generate CSV content and save to file
-    $csv_content = fn_novoton_generate_import_csv_report($results, $import_type, $summary);
-    
-    // Create file for attachment
-    $filename = 'novoton_import_report_' . date('Y-m-d_H-i-s') . '.csv';
-    $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
-    
-    if (!is_dir($temp_path)) {
-        fn_mkdir($temp_path);
-    }
-    
-    $file_path = $temp_path . $filename;
-    file_put_contents($file_path, $csv_content);
-    
-    // Build email subject line
-    $import_type_label = [
-        'manual' => 'Manual Import',
-        'cron' => 'Cron Sync',
-        'offers_update' => 'Offers Update'
+
+    // Build type label for email subject
+    $type_labels = [
+        'hotel_list'     => 'Hotel List Sync',
+        'hotel_info'     => 'Hotel Accommodation',
+        'room_price'     => 'Price Check',
+        'add_products'   => 'Add Hotels as Products',
+        'offers_update'  => 'Offers Update',
+        'facilities'     => 'Facilities Sync',
+        'resinfo'        => 'Booking Status Check',
+        'manual'         => 'Manual Import',
+        'cron'           => 'Cron Sync',
     ];
-    $type_label = $import_type_label[$import_type] ?? 'Import';
-    
+    $type_label = $type_labels[$import_type] ?? ucfirst(str_replace('_', ' ', $import_type));
+
     // Prepare data for email template
     $email_data = [
         'import_type_label' => $type_label,
-        'country' => $country,
+        'country' => $country ?: 'ALL',
         'date' => date('d.m.Y H:i'),
         'summary' => [
-            'added' => $summary['added'] ?? 0,
-            'updated' => $summary['updated'] ?? 0,
-            'skipped' => $summary['skipped'] ?? 0,
-            'errors' => $summary['errors'] ?? 0,
-            'duration' => $summary['duration'] ?? 'N/A'
+            'added'    => $summary['added'] ?? 0,
+            'updated'  => $summary['updated'] ?? 0,
+            'skipped'  => $summary['skipped'] ?? 0,
+            'errors'   => $summary['errors'] ?? 0,
+            'duration' => $summary['duration'] ?? 'N/A',
         ],
-        'results_count' => count($results)
+        'results_count' => count($results),
     ];
-    
-    // Prepare attachment
+
+    // Generate CSV attachment only if there are detailed results
     $attachments = [];
-    if (file_exists($file_path)) {
-        $attachments[] = [
-            'path' => $file_path,
-            'name' => $filename
-        ];
+    if (!empty($results)) {
+        $csv_content = fn_novoton_generate_import_csv_report($results, $import_type, $summary);
+
+        $filename = 'novoton_' . $import_type . '_report_' . date('Y-m-d_H-i-s') . '.csv';
+        $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
+
+        if (!is_dir($temp_path)) {
+            fn_mkdir($temp_path);
+        }
+
+        $file_path = $temp_path . $filename;
+        file_put_contents($file_path, $csv_content);
+
+        if (file_exists($file_path)) {
+            $attachments[] = [
+                'path' => $file_path,
+                'name' => $filename,
+            ];
+        }
     }
-    
-    $result = false;
-    
+
+    $send_result = false;
+
     try {
         /** @var \Tygh\Mailer\Mailer $mailer */
         $mailer = Tygh::$app['mailer'];
-        
-        $result = $mailer->send([
+
+        $send_result = $mailer->send([
             'to' => $admin_email,
             'from' => 'default_company_orders_department',
             'data' => $email_data,
             'template_code' => 'novoton_holidays_import_report',
-            'attachments' => $attachments
+            'attachments' => $attachments,
         ], 'A', CART_LANGUAGE);
-        
+
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send import report email: ' . $e->getMessage());
+        fn_log_event('novoton', 'error', 'Failed to send cron report email: ' . $e->getMessage());
     }
-    
-    // Clean up old reports
-    fn_novoton_cleanup_old_reports($temp_path, 7);
-    
-    return $result;
+
+    // Clean up old reports (once a day)
+    $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
+    if (is_dir($temp_path)) {
+        fn_novoton_cleanup_old_reports($temp_path, 7);
+    }
+
+    return $send_result;
 }
 
 /**

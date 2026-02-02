@@ -708,7 +708,7 @@
     <!-- Email Templates -->
     <email_templates>
         <templates>
-            <!-- Hotel Import Report Email -->
+            <!-- Cron Job Report Email (used by all cron modes) -->
             <item>
                 <code><![CDATA[novoton_holidays_import_report]]></code>
                 <area><![CDATA[A]]></area>
@@ -716,11 +716,11 @@
                 <default_subject><![CDATA[[Novoton] {{ import_type_label }} Report - {{ country }} - {{ date }}]]></default_subject>
                 <default_template><![CDATA[{{ snippet("header") }}
 
-<h2>Novoton Holidays Import Report</h2>
+<h2 style="color: #003580;">Novoton Holidays - {{ import_type_label }}</h2>
 
 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
     <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Type:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd; width: 120px;"><strong>Job:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">{{ import_type_label }}</td>
     </tr>
     <tr>
@@ -731,39 +731,49 @@
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>Date:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">{{ date }}</td>
     </tr>
-</table>
-
-<h3>Summary</h3>
-<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-    <tr style="background: #f5f5f5;">
-        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Added:</strong></td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.added }}</td>
-    </tr>
     <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Updated:</strong></td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.updated }}</td>
-    </tr>
-    <tr style="background: #f5f5f5;">
-        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Skipped:</strong></td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.skipped }}</td>
-    </tr>
-    <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Errors:</strong></td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.errors }}</td>
-    </tr>
-    <tr style="background: #f5f5f5;">
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>Duration:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.duration }}</td>
     </tr>
 </table>
 
+<h3>Summary</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    {% if summary.added > 0 %}
+    <tr style="background: #d4edda;">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 120px;"><strong>Added:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.added }}</td>
+    </tr>
+    {% endif %}
+    {% if summary.updated > 0 %}
+    <tr style="background: #d1ecf1;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Updated:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.updated }}</td>
+    </tr>
+    {% endif %}
+    {% if summary.skipped > 0 %}
+    <tr style="background: #f5f5f5;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Skipped:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.skipped }}</td>
+    </tr>
+    {% endif %}
+    {% if summary.errors > 0 %}
+    <tr style="background: #f8d7da;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Errors:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ summary.errors }}</td>
+    </tr>
+    {% endif %}
+</table>
+
 {% if summary.errors > 0 %}
-<p style="color: #c00;">⚠️ There were errors during import. Check the attached CSV for details.</p>
+<p style="color: #c00;">There were errors during this job. Check the logs for details.</p>
 {% endif %}
 
-<p>See attached CSV file for detailed results.</p>
+{% if results_count > 0 %}
+<p>See attached CSV file for detailed results ({{ results_count }} records).</p>
+{% endif %}
 
-<p style="color: #666; font-size: 12px;">📁 Reports also stored in: var/files/1/novoton_reports/</p>
+<p style="color: #666; font-size: 12px;">Reports stored in: var/files/1/novoton_reports/</p>
 
 {{ snippet("footer") }}]]></default_template>
                 <addon><![CDATA[novoton_holidays]]></addon>

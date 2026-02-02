@@ -369,8 +369,16 @@ class PriceSync
             date('Y-m-d H:i:s')
         );
         
-        // Send email report
-        $this->sendEmailReport($stats, $logFile);
+        // Send email report via CS-Cart Mailer
+        if (function_exists('fn_novoton_send_import_report_email')) {
+            fn_novoton_send_import_report_email([], 'room_price', [
+                'added'    => 0,
+                'updated'  => count($stats['updated']),
+                'skipped'  => count($stats['no_data']),
+                'errors'   => count($stats['failed']),
+                'duration' => $stats['duration'] ?? 'N/A',
+            ], $this->defaultCountry);
+        }
         
         return $stats;
     }
@@ -484,41 +492,8 @@ class PriceSync
         return $filename;
     }
 
-    /**
-     * Send email report
-     */
-    private function sendEmailReport($stats, $logFile)
-    {
-        $companyData = fn_get_company_data(0);
-        $toEmail = $companyData['company_users_department'] ?? $companyData['company_support_department'] ?? '';
-        
-        if (empty($toEmail)) {
-            return;
-        }
-        
-        $subject = 'Novoton Price Sync Report - ' . date('Y-m-d H:i:s');
-        
-        $message = "Novoton Price Synchronization Report\n\n";
-        $message .= "Summary:\n";
-        $message .= "- Total products: " . $stats['total'] . "\n";
-        $message .= "- Updated: " . count($stats['updated']) . "\n";
-        $message .= "- Failed: " . count($stats['failed']) . "\n";
-        $message .= "- No data: " . count($stats['no_data']) . "\n";
-        $message .= "- Missing in CS-Cart: " . count($stats['missing']) . "\n\n";
-        $message .= "See attached log file for details.";
-        
-        $logPath = fn_get_files_dir_path() . 'novoton_logs/' . $logFile;
-        
-        fn_send_mail(
-            $toEmail,
-            $toEmail,
-            $subject,
-            $message,
-            false,
-            '', // from
-            [$logPath]
-        );
-    }
+    // Legacy sendEmailReport() removed — now uses fn_novoton_send_import_report_email()
+    // via CS-Cart Mailer with 'novoton_holidays_import_report' template.
 
     /**
      * Convert XML to JSON string
