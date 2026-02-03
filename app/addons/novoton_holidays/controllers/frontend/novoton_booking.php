@@ -1989,19 +1989,8 @@ if ($mode == 'booking_form') {
                     }
                 }
                 
-                // Store in database for future use
-                if (!empty($age_categories) || !empty($room_limits)) {
-                    $update_data = [];
-                    if (!empty($age_categories)) {
-                        $update_data['ages_data'] = json_encode($age_categories);
-                    }
-                    if (!empty($room_limits)) {
-                        $update_data['rooms_data'] = json_encode($room_limits);
-                    }
-                    if (!empty($update_data)) {
-                        db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $booking['hotel_id']);
-                    }
-                }
+                // V3: Age and room data is already stored in hotel_data JSON via hotelinfo sync
+                // No separate caching needed - data will be fetched fresh from API or hotel_data
             }
         }
     }
