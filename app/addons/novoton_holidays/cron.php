@@ -19,7 +19,7 @@ if (!defined('AREA')) {
 require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\PriceSync;
+use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 use Tygh\Addons\NovotonHolidays\HotelSync;
 
 // Verify API key
@@ -398,7 +398,7 @@ try {
     
     // Default mode: Full sync (prices + status check)
     // Initialize price sync
-    $sync = new PriceSync();
+    $sync = new PriceInfoSync();
     
     // Run sync
     echo "Syncing prices...\n";

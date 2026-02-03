@@ -389,7 +389,8 @@ app/addons/novoton_holidays/
 │
 ├── src/                      # Core classes
 │   ├── NovotonApi.php        # API client
-│   └── PriceSync.php         # Price synchronization
+│   ├── HotelSync.php         # V3 Hotel synchronization
+│   └── PriceInfoSync.php     # Priceinfo synchronization
 │
 └── schemas/                  # CS-Cart schemas
     ├── block_manager/

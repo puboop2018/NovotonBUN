@@ -468,7 +468,10 @@
                 KEY `idx_dates` (`check_in`, `check_out`),
                 KEY `idx_novoton_confirm` (`novoton_confirm_id`),
                 KEY `idx_novoton_invoice` (`novoton_invoice_id`),
-                KEY `idx_order_status` (`order_id`, `status`)
+                KEY `idx_order_status` (`order_id`, `status`),
+                KEY `idx_session_id` (`session_id`),
+                KEY `idx_user_created` (`user_id`, `created_at`),
+                KEY `idx_hotel_status` (`hotel_id`, `status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Booking records'
         </item>
 

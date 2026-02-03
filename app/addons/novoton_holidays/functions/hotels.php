@@ -13,6 +13,62 @@ use Tygh\Registry;
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 /**
+ * Transform database package record to normalized format
+ * Shared helper to avoid code duplication
+ *
+ * @param array $pkg Package record from novoton_hotel_packages table
+ * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
+ * @return array Normalized package data
+ */
+function fn_novoton_normalize_package($pkg, $include_priceinfo_details = false)
+{
+    $packageData = [
+        'IdCont' => $pkg['package_id'],
+        'PackageName' => $pkg['package_name'],
+        'min_price' => $pkg['min_price'],
+        'has_early_booking' => $pkg['has_early_booking'],
+        'seasons_count' => $pkg['seasons_count'],
+        'synced_at' => $pkg['synced_at']
+    ];
+
+    // Decode priceinfo if available
+    if (!empty($pkg['priceinfo_data'])) {
+        $priceinfo = json_decode($pkg['priceinfo_data'], true);
+        if ($priceinfo) {
+            $packageData['priceinfo'] = $priceinfo;
+
+            // Extract detailed priceinfo components if requested
+            if ($include_priceinfo_details) {
+                // Extract seasons for display
+                if (isset($priceinfo['seasons']['season'])) {
+                    $packageData['seasons'] = $priceinfo['seasons']['season'];
+                    // Normalize single season to array
+                    if (isset($packageData['seasons']['IdSeason'])) {
+                        $packageData['seasons'] = [$packageData['seasons']];
+                    }
+                }
+
+                // Extract early booking for display
+                if (isset($priceinfo['early_booking'])) {
+                    $packageData['early_booking'] = $priceinfo['early_booking'];
+                }
+
+                // Extract season prices for display
+                if (isset($priceinfo['season_price'])) {
+                    $packageData['season_price'] = $priceinfo['season_price'];
+                    // Normalize single entry to array
+                    if (isset($packageData['season_price']['IdRoom'])) {
+                        $packageData['season_price'] = [$packageData['season_price']];
+                    }
+                }
+            }
+        }
+    }
+
+    return $packageData;
+}
+
+/**
  * Get hotel data by hotel_id
  * V3 Architecture: Reads from hotelinfo_data JSON + packages from novoton_hotel_packages
  *
@@ -75,21 +131,7 @@ function fn_novoton_get_hotel_data($hotel_id, $force = false)
         if (!empty($packages)) {
             $hotel['packages'] = [];
             foreach ($packages as $pkg) {
-                $packageData = [
-                    'IdCont' => $pkg['package_id'],
-                    'PackageName' => $pkg['package_name'],
-                    'min_price' => $pkg['min_price'],
-                    'has_early_booking' => $pkg['has_early_booking'],
-                    'seasons_count' => $pkg['seasons_count'],
-                    'synced_at' => $pkg['synced_at']
-                ];
-
-                // Decode priceinfo if available
-                if (!empty($pkg['priceinfo_data'])) {
-                    $packageData['priceinfo'] = json_decode($pkg['priceinfo_data'], true);
-                }
-
-                $hotel['packages'][] = $packageData;
+                $hotel['packages'][] = fn_novoton_normalize_package($pkg, false);
             }
         }
 
@@ -132,47 +174,8 @@ function fn_novoton_get_hotel_prices($product_id, $force = false)
 
     $result = [];
     foreach ($packages as $pkg) {
-        $packageData = [
-            'IdCont' => $pkg['package_id'],
-            'PackageName' => $pkg['package_name'],
-            'min_price' => $pkg['min_price'],
-            'has_early_booking' => $pkg['has_early_booking'],
-            'seasons_count' => $pkg['seasons_count'],
-            'synced_at' => $pkg['synced_at']
-        ];
-
-        // Decode priceinfo if available
-        if (!empty($pkg['priceinfo_data'])) {
-            $priceinfo = json_decode($pkg['priceinfo_data'], true);
-            if ($priceinfo) {
-                $packageData['priceinfo'] = $priceinfo;
-
-                // Extract seasons for display
-                if (isset($priceinfo['seasons']['season'])) {
-                    $packageData['seasons'] = $priceinfo['seasons']['season'];
-                    // Normalize single season to array
-                    if (isset($packageData['seasons']['IdSeason'])) {
-                        $packageData['seasons'] = [$packageData['seasons']];
-                    }
-                }
-
-                // Extract early booking for display
-                if (isset($priceinfo['early_booking'])) {
-                    $packageData['early_booking'] = $priceinfo['early_booking'];
-                }
-
-                // Extract season prices for display
-                if (isset($priceinfo['season_price'])) {
-                    $packageData['season_price'] = $priceinfo['season_price'];
-                    // Normalize single entry to array
-                    if (isset($packageData['season_price']['IdRoom'])) {
-                        $packageData['season_price'] = [$packageData['season_price']];
-                    }
-                }
-            }
-        }
-
-        $result[] = $packageData;
+        // Use shared helper with detailed priceinfo extraction
+        $result[] = fn_novoton_normalize_package($pkg, true);
     }
 
     $cache[$product_id] = $result;
@@ -442,6 +445,11 @@ function fn_novoton_sync_hotel_facilities($hotel_id)
         return true;
         
     } catch (\Exception $e) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton: Failed to sync hotel facilities',
+            'hotel_id' => $hotel_id,
+            'error' => $e->getMessage()
+        ]);
         return false;
     }
 }

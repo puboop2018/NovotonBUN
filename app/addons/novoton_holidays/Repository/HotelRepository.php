@@ -41,6 +41,13 @@ class HotelRepository
     }
 
     /**
+     * Core columns for hotel listing (excludes large hotel_data JSON)
+     */
+    private const LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
+        hotel_type, star_rating, latitude, longitude, has_prices, packages_count,
+        hotelinfo_synced_at, hotel_list_synced_at, created_at, updated_at';
+
+    /**
      * Find all hotels with optional filters
      */
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
@@ -52,11 +59,46 @@ class HotelRepository
     }
 
     /**
+     * Find all hotels for listing (excludes large hotel_data JSON)
+     * Use this for admin lists, exports, etc. where full data isn't needed
+     */
+    public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
+    {
+        $where = $this->buildWhereClause($filters);
+        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
+
+        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+    }
+
+    /**
      * Find hotels by country
      */
     public function findByCountry(string $country): array
     {
         return db_get_array("SELECT * FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
+    }
+
+    /**
+     * Find hotels by country for listing (excludes large hotel_data JSON)
+     */
+    public function findByCountryForListing(string $country): array
+    {
+        return db_get_array(
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+            $country
+        );
+    }
+
+    /**
+     * Get basic hotel info by ID (excludes large hotel_data JSON)
+     */
+    public function findBasicById(string $hotel_id): ?array
+    {
+        $hotel = db_get_row(
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotel_id
+        );
+        return $hotel ?: null;
     }
 
     /**
@@ -175,12 +217,25 @@ class HotelRepository
     }
 
     /**
-     * Get packages for a hotel (V3)
+     * Get packages for a hotel (V3) - full data including priceinfo_data
      */
     public function getPackages(string $hotel_id): array
     {
         return db_get_array(
             "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotel_id
+        );
+    }
+
+    /**
+     * Get packages for listing (V3) - excludes large priceinfo_data JSON
+     */
+    public function getPackagesForListing(string $hotel_id): array
+    {
+        return db_get_array(
+            "SELECT id, hotel_id, package_id, package_name, seasons_count, has_early_booking,
+                    min_price, currency, synced_at, created_at, updated_at
+             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
             $hotel_id
         );
     }

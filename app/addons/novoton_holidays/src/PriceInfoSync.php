@@ -1,17 +1,17 @@
 <?php
 /**
- * Novoton Price Synchronization Class
- * Path: app/addons/novoton_holidays/src/PriceSync.php
+ * Novoton PriceInfo Synchronization Class
+ * Path: app/addons/novoton_holidays/src/PriceInfoSync.php
  *
- * V3 Architecture: Writes priceinfo data to novoton_hotel_packages table
- * as JSON in priceinfo_data column.
+ * V3 Architecture: Syncs priceinfo data from API to novoton_hotel_packages table
+ * Stores seasons, prices, and early booking discounts as JSON.
  */
 
 namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Registry;
 
-class PriceSync
+class PriceInfoSync
 {
     private $api;
     private $defaultCountry;
@@ -39,7 +39,7 @@ class PriceSync
 
         $condition = implode(' OR ', $prefixConditions);
 
-        $products = db_get_array(
+        return db_get_array(
             "SELECT p.product_id, pd.product, p.product_code, p.status
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
@@ -47,8 +47,6 @@ class PriceSync
              AND p.status = 'A'",
             CART_LANGUAGE
         );
-
-        return $products;
     }
 
     /**
@@ -72,7 +70,7 @@ class PriceSync
     }
 
     /**
-     * Sync prices for a single product
+     * Sync priceinfo for a single product
      * V3: Writes priceinfo to novoton_hotel_packages table
      */
     public function syncProductPrices($productId, &$stats)
@@ -149,11 +147,7 @@ class PriceSync
                 // Count seasons
                 if (isset($priceData['seasons']['season'])) {
                     $seasons = $priceData['seasons']['season'];
-                    if (isset($seasons['IdSeason'])) {
-                        $seasonsCount = 1;
-                    } else {
-                        $seasonsCount = count($seasons);
-                    }
+                    $seasonsCount = isset($seasons['IdSeason']) ? 1 : count($seasons);
                 }
 
                 // Find minimum price
@@ -196,11 +190,7 @@ class PriceSync
                 );
 
                 if ($existingId) {
-                    db_query(
-                        "UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i",
-                        $packageData,
-                        $existingId
-                    );
+                    db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
                 } else {
                     db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);
                 }
@@ -217,8 +207,6 @@ class PriceSync
                 );
 
                 $stats['updated'][] = $product['product_code'] . ' - ' . $product['product'];
-
-                // Clear cache for this hotel
                 $this->clearHotelCache($hotelId);
 
                 return true;
@@ -251,9 +239,7 @@ class PriceSync
 
         // Create log entry
         $logId = db_query(
-            "INSERT INTO ?:novoton_sync_log SET
-             sync_date = NOW(),
-             status = 'running'"
+            "INSERT INTO ?:novoton_sync_log SET sync_date = NOW(), status = 'running'"
         );
 
         $currentIndex = 0;
@@ -301,13 +287,11 @@ class PriceSync
         // Update last sync date in settings
         db_query(
             "UPDATE ?:settings_vendor_values SET value = ?s
-             WHERE object_id = 0
-             AND name = 'last_sync_date'
-             AND object_type = 'A'",
+             WHERE object_id = 0 AND name = 'last_sync_date' AND object_type = 'A'",
             date('Y-m-d H:i:s')
         );
 
-        // Send email report via CS-Cart Mailer
+        // Send email report
         if (function_exists('fn_novoton_send_import_report_email')) {
             fn_novoton_send_import_report_email([], 'room_price', [
                 'added'    => 0,
@@ -323,6 +307,7 @@ class PriceSync
 
     /**
      * Check for products in API but not in CS-Cart
+     * Optimized: Fetches all matching products once instead of querying per hotel
      */
     private function checkMissingProducts(&$stats)
     {
@@ -330,19 +315,28 @@ class PriceSync
             $apiHotels = $this->api->getHotelList($this->defaultCountry);
 
             if ($apiHotels && isset($apiHotels->hotelinfo)) {
+                // Build LIKE conditions for all prefixes and fetch all matching products at once
+                $likeConditions = [];
+                foreach ($this->productPrefixes as $prefix) {
+                    $likeConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
+                }
+
+                // Single query to get all product codes matching any prefix
+                $existingProducts = [];
+                if (!empty($likeConditions)) {
+                    $productCodes = db_get_fields(
+                        "SELECT product_code FROM ?:products WHERE " . implode(' OR ', $likeConditions)
+                    );
+                    $existingProducts = array_flip($productCodes);
+                }
+
+                // Check each API hotel against the pre-fetched list
                 foreach ($apiHotels->hotelinfo as $hotelInfo) {
                     $hotelId = (string)$hotelInfo->IdHotel;
 
-                    // Check if product exists
                     $exists = false;
                     foreach ($this->productPrefixes as $prefix) {
-                        $productCode = $prefix . $hotelId;
-                        $product = db_get_field(
-                            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-                            $productCode
-                        );
-
-                        if ($product) {
+                        if (isset($existingProducts[$prefix . $hotelId])) {
                             $exists = true;
                             break;
                         }
@@ -371,10 +365,10 @@ class PriceSync
             fn_mkdir($logDir);
         }
 
-        $filename = 'sync_log_' . date('Y-m-d_H-i-s') . '.txt';
+        $filename = 'priceinfo_sync_' . date('Y-m-d_H-i-s') . '.txt';
         $filepath = $logDir . $filename;
 
-        $content = "Novoton Price Sync Report (V3)\n";
+        $content = "Novoton PriceInfo Sync Report (V3)\n";
         $content .= "Date: " . date('Y-m-d H:i:s') . "\n";
         $content .= str_repeat('=', 50) . "\n\n";
 
@@ -431,37 +425,12 @@ class PriceSync
     }
 
     /**
-     * Get board name from code
-     */
-    private function getBoardName($boardCode)
-    {
-        $boards = [
-            'BB' => 'Bed & Breakfast',
-            'HB' => 'Half Board',
-            'AI' => 'All Inclusive',
-            'BO' => 'Bed Only',
-            'FB' => 'Full Board',
-            'UAI' => 'Ultra All Inclusive'
-        ];
-
-        return $boards[$boardCode] ?? $boardCode;
-    }
-
-    /**
-     * Clear all cached data for a specific hotel
-     * This ensures fresh data is served after manual price sync
-     * Only clears live API cache (room_price, hotel_quota) for this hotel
-     * Note: priceinfo is stored in novoton_hotel_packages, not cached
-     *
-     * @param string $hotelId Hotel ID
+     * Clear cached data for a specific hotel
      */
     private function clearHotelCache($hotelId)
     {
-        // Clear live API cache from database cache table
-        db_query(
-            "DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l",
-            '%' . $hotelId . '%'
-        );
+        // Clear live API cache from database
+        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l", '%' . $hotelId . '%');
 
         // Clear from file cache if exists
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
@@ -482,15 +451,12 @@ class PriceSync
     }
 
     /**
-     * Clear all Novoton live API cache
-     * Note: This only clears cached API responses, not database data
+     * Clear all Novoton API cache
      */
     public static function clearAllCache()
     {
-        // Clear database cache (live API responses only)
         db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE 'nvt_api_%'");
 
-        // Clear file cache
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
             $files = glob($cacheDir . 'nvt_api_*');
