@@ -64,6 +64,16 @@ function fn_novoton_format_room_type($roomId, $roomType = '')
     $roomId = rawurldecode($roomId);
     $roomId = trim($roomId);
 
+    // Detect if roomType or roomId is already formatted (e.g., "Camera Dubla (DBL 2+1)")
+    // to prevent double formatting
+    $formatted_pattern = '/^(Camera|Apartament|Studio|Suita|Vila|Bungalou|Maisoneta|Penthouse|Junior Suita)\s.*\(.+\)$/i';
+    if (!empty($roomType) && preg_match($formatted_pattern, $roomType)) {
+        return $roomType;
+    }
+    if (preg_match($formatted_pattern, $roomId)) {
+        return $roomId;
+    }
+
     // Room type mapping (used for both hotelinfo Type and IdRoom base code)
     $room_map = [
         'SGL' => 'Camera Single',
