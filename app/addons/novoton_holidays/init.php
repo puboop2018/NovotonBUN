@@ -231,6 +231,5 @@ fn_register_hooks(
     'dispatch_before_display',                 // Ensure meta variables are set
     'get_cart_product_data_post',              // Add booking info to cart items
     'calculate_cart_items',                    // After cart calculation
-    'calculate_cart_items_post',               // After cart items calculation - for rooms_data
-    'mailer_send_pre'                          // Add booking terms to order notification emails
+    'calculate_cart_items_post'                // After cart items calculation - for rooms_data
 );
