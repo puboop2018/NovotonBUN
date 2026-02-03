@@ -1804,40 +1804,72 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
     $terms_html .= '</td></tr></table>';
     $terms_html .= '<!-- NOVOTON EMAIL BOOKING END -->';
 
-    // Find the best place to insert terms - before the footer section
+    // Find the best place to insert - before the footer section
     $inserted = false;
 
-    // Try to find common footer patterns and insert before them
-    $footer_patterns = [
-        // CS-Cart footer snippet marker
-        '<!-- footer -->',
-        // Contact information section (seen in screenshot)
-        'CONTACT INFORMATION',
-        // Social section
-        'GET SOCIAL',
-        // Copyright section
-        '© CS-Cart',
-        '&copy; CS-Cart',
-        // Thank you message
-        'Thank you for using',
-        // Generic footer table patterns
-        'id="footer"',
-        'class="footer"',
+    // Method 1: Look for footer background color (gray footer seen in CS-Cart emails)
+    // The footer typically has a gray background like #6c757d or similar
+    $footer_bg_patterns = [
+        'background-color: #6c757d',
+        'background-color:#6c757d',
+        'background: #6c757d',
+        'bgcolor="#6c757d"',
+        'background-color: #666',
+        'background-color: #777',
+        'background-color: #888',
     ];
 
-    foreach ($footer_patterns as $pattern) {
+    foreach ($footer_bg_patterns as $pattern) {
         $pos = stripos($body, $pattern);
         if ($pos !== false) {
-            // Find the start of the table/section containing this pattern
-            // Look backwards for a table start
-            $search_start = max(0, $pos - 500);
+            // Found footer background, look backwards for the table start
+            $search_start = max(0, $pos - 1000);
             $before_pattern = substr($body, $search_start, $pos - $search_start);
 
-            // Find the last <table before the pattern
+            // Find the last <table or <tr before this
+            $last_table_pos = strripos($before_pattern, '<table');
+            $last_tr_pos = strripos($before_pattern, '<tr');
+
+            $insert_pos = false;
+            if ($last_table_pos !== false) {
+                $insert_pos = $search_start + $last_table_pos;
+            } elseif ($last_tr_pos !== false) {
+                $insert_pos = $search_start + $last_tr_pos;
+            }
+
+            if ($insert_pos !== false) {
+                $body = substr($body, 0, $insert_pos) . $terms_html . substr($body, $insert_pos);
+                $inserted = true;
+                break;
+            }
+        }
+    }
+
+    // Method 2: Look for "CONTACT INFORMATION" text
+    if (!$inserted) {
+        $pos = stripos($body, 'CONTACT INFORMATION');
+        if ($pos !== false) {
+            // Found it, look backwards for table/tr start (up to 2000 chars)
+            $search_start = max(0, $pos - 2000);
+            $before_pattern = substr($body, $search_start, $pos - $search_start);
+
+            // Find table that contains footer - look for the outermost table
             $last_table_pos = strripos($before_pattern, '<table');
             if ($last_table_pos !== false) {
                 $insert_pos = $search_start + $last_table_pos;
                 $body = substr($body, 0, $insert_pos) . $terms_html . substr($body, $insert_pos);
+                $inserted = true;
+            }
+        }
+    }
+
+    // Method 3: Look for snippet footer comment if present
+    if (!$inserted) {
+        $footer_markers = ['<!-- footer -->', '<!--footer-->', '<!-- /snippet'];
+        foreach ($footer_markers as $marker) {
+            $pos = stripos($body, $marker);
+            if ($pos !== false) {
+                $body = substr($body, 0, $pos) . $terms_html . substr($body, $pos);
                 $inserted = true;
                 break;
             }
