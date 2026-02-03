@@ -1,9 +1,8 @@
 {* Novoton Holidays - Order Details Hook - Terms of Payment & Cancellation *}
 {* Hook: orders:details — fires after the products table *}
+{* Supports multiple hotels with different terms *}
 
-{$_nv_has_terms = false}
-{$_nv_payment = ""}
-{$_nv_cancel = ""}
+{$_nv_hotels_terms = []}
 
 {* Debug output when ?debug=1 *}
 {if $smarty.request.debug}
@@ -14,6 +13,7 @@
         <hr style="margin:5px 0;">
         Product [{$dbg_key}]: {$dbg_product.product|default:'?'}<br>
         - novoton_booking: {if $dbg_product.extra.novoton_booking}YES{else}NO{/if}<br>
+        - hotel_id: {$dbg_product.extra.hotel_id|default:'(empty)'}<br>
         - terms_of_payment: {if $dbg_product.extra.terms_of_payment}"{$dbg_product.extra.terms_of_payment|truncate:50}"{else}(empty){/if}<br>
         - terms_of_payment_raw: {if $dbg_product.extra.terms_of_payment_raw}"{$dbg_product.extra.terms_of_payment_raw|truncate:50}"{else}(empty){/if}<br>
         - terms_of_payment_formatted: {if $dbg_product.extra.terms_of_payment_formatted}"{$dbg_product.extra.terms_of_payment_formatted|truncate:50}"{else}(empty){/if}<br>
@@ -25,37 +25,65 @@
 </div>
 {/if}
 
+{* Collect terms from all hotel bookings *}
 {if $order_info.products}
     {foreach from=$order_info.products item=product}
-        {if !empty($product.extra.novoton_booking) && !$_nv_has_terms}
-            {* Use formatted version (set by PHP hook), fall back to stored text *}
+        {if !empty($product.extra.novoton_booking)}
+            {$_hotel_id = $product.extra.hotel_id|default:'unknown'}
+            {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
+
+            {* Get terms - formatted version first, then stored text *}
+            {$_payment = ""}
+            {$_cancel = ""}
+
             {if $product.extra.terms_of_payment_formatted}
-                {$_nv_payment = $product.extra.terms_of_payment_formatted}
+                {$_payment = $product.extra.terms_of_payment_formatted}
             {elseif $product.extra.terms_of_payment}
-                {$_nv_payment = $product.extra.terms_of_payment}
+                {$_payment = $product.extra.terms_of_payment}
             {/if}
 
             {if $product.extra.terms_of_cancellation_formatted}
-                {$_nv_cancel = $product.extra.terms_of_cancellation_formatted}
+                {$_cancel = $product.extra.terms_of_cancellation_formatted}
             {elseif $product.extra.terms_of_cancellation}
-                {$_nv_cancel = $product.extra.terms_of_cancellation}
+                {$_cancel = $product.extra.terms_of_cancellation}
             {/if}
 
-            {if $_nv_payment || $_nv_cancel}
-                {$_nv_has_terms = true}
+            {* Only add if we have terms and haven't already added this hotel *}
+            {if ($_payment || $_cancel) && !isset($_nv_hotels_terms[$_hotel_id])}
+                {$_nv_hotels_terms[$_hotel_id] = [
+                    'hotel_name' => $_hotel_name,
+                    'payment' => $_payment,
+                    'cancel' => $_cancel
+                ]}
             {/if}
         {/if}
     {/foreach}
 {/if}
 
-{if $_nv_has_terms}
-    {if $_nv_payment}
-    <p><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
-    {$_nv_payment|strip_tags|trim|nl2br}</p>
-    {/if}
+{* Display terms for each hotel *}
+{if $_nv_hotels_terms|@count > 0}
+<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+    {foreach from=$_nv_hotels_terms item=_hotel_terms key=_hotel_id name=hotel_loop}
+        {if !$smarty.foreach.hotel_loop.first}
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #dee2e6;">
+        {/if}
 
-    {if $_nv_cancel}
-    <p><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
-    {$_nv_cancel|strip_tags|trim|nl2br}</p>
-    {/if}
+        {* Show hotel name if multiple hotels *}
+        {if $_nv_hotels_terms|@count > 1}
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #495057;">
+                {$_hotel_terms.hotel_name}
+            </p>
+        {/if}
+
+        {if $_hotel_terms.payment}
+        <p style="margin: 0 0 10px 0;"><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
+        <span style="white-space: pre-line;">{$_hotel_terms.payment|replace:"<br />":"\n"|replace:"<br>":"\n"|replace:"<br/>":"\n"|trim}</span></p>
+        {/if}
+
+        {if $_hotel_terms.cancel}
+        <p style="margin: 0;"><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
+        <span style="white-space: pre-line;">{$_hotel_terms.cancel|replace:"<br />":"\n"|replace:"<br>":"\n"|replace:"<br/>":"\n"|trim}</span></p>
+        {/if}
+    {/foreach}
+</div>
 {/if}
