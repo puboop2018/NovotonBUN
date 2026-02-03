@@ -62,7 +62,7 @@
 
 {* Display terms for each hotel *}
 {if $_nv_hotels_terms|@count > 0}
-<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+<div style="margin-top: 20px; padding: 15px;">
     {foreach from=$_nv_hotels_terms item=_hotel_terms key=_hotel_id name=hotel_loop}
         {if !$smarty.foreach.hotel_loop.first}
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid #dee2e6;">
