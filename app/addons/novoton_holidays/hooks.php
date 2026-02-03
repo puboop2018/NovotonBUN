@@ -1445,11 +1445,22 @@ function fn_novoton_holidays_create_user_post($user_data)
  */
 function fn_novoton_holidays_get_order_info(&$order, $additional_data)
 {
+    // Debug: Log when hook fires
+    if (!empty($_REQUEST['debug'])) {
+        fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
+    }
+
     if (empty($order['products'])) {
         return;
     }
 
     foreach ($order['products'] as &$product) {
+        // Debug: Show extra keys
+        if (!empty($_REQUEST['debug'])) {
+            $extra_keys = array_keys($product['extra'] ?? []);
+            fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', $extra_keys));
+        }
+
         if (empty($product['extra']['novoton_booking'])) {
             continue;
         }
@@ -1473,6 +1484,13 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         } elseif (!empty($product['extra']['terms_of_cancellation'])) {
             // Already formatted text — use as-is
             $product['extra']['terms_of_cancellation_formatted'] = $product['extra']['terms_of_cancellation'];
+        }
+
+        // Debug: Show what was set
+        if (!empty($_REQUEST['debug'])) {
+            $payment_set = !empty($product['extra']['terms_of_payment_formatted']) ? 'YES' : 'NO';
+            $cancel_set = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
+            fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, terms_of_cancellation_formatted: {$cancel_set}");
         }
     }
 }
