@@ -1728,11 +1728,53 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
     $terms_html .= '</table></td></tr></table>';
     $terms_html .= '<!-- NOVOTON EMAIL TERMS END -->';
 
-    // Find a good place to insert the terms - before </body> or at end
-    if (stripos($body, '</body>') !== false) {
-        $body = str_ireplace('</body>', $terms_html . '</body>', $body);
-    } else {
-        $body .= $terms_html;
+    // Find the best place to insert terms - before the footer section
+    $inserted = false;
+
+    // Try to find common footer patterns and insert before them
+    $footer_patterns = [
+        // CS-Cart footer snippet marker
+        '<!-- footer -->',
+        // Contact information section (seen in screenshot)
+        'CONTACT INFORMATION',
+        // Social section
+        'GET SOCIAL',
+        // Copyright section
+        '© CS-Cart',
+        '&copy; CS-Cart',
+        // Thank you message
+        'Thank you for using',
+        // Generic footer table patterns
+        'id="footer"',
+        'class="footer"',
+    ];
+
+    foreach ($footer_patterns as $pattern) {
+        $pos = stripos($body, $pattern);
+        if ($pos !== false) {
+            // Find the start of the table/section containing this pattern
+            // Look backwards for a table start
+            $search_start = max(0, $pos - 500);
+            $before_pattern = substr($body, $search_start, $pos - $search_start);
+
+            // Find the last <table before the pattern
+            $last_table_pos = strripos($before_pattern, '<table');
+            if ($last_table_pos !== false) {
+                $insert_pos = $search_start + $last_table_pos;
+                $body = substr($body, 0, $insert_pos) . $terms_html . substr($body, $insert_pos);
+                $inserted = true;
+                break;
+            }
+        }
+    }
+
+    // Fallback: insert before </body> or at end
+    if (!$inserted) {
+        if (stripos($body, '</body>') !== false) {
+            $body = str_ireplace('</body>', $terms_html . '</body>', $body);
+        } else {
+            $body .= $terms_html;
+        }
     }
 
     // Update message body
