@@ -1561,3 +1561,147 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         }
     }
 }
+
+/**
+ * Hook: mailer_send_pre - Add booking terms to order notification emails
+ *
+ * CS-Cart 4.19 uses Twig for emails, so we modify the message body directly
+ * before it's sent.
+ *
+ * @param object $mailer Mailer instance
+ * @param string $transport Transport type
+ * @param object $message Swift_Message object
+ * @param string $area Area (A/C)
+ * @param string $lang_code Language code
+ */
+function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $area, $lang_code)
+{
+    // Get the message body
+    $body = $message->getBody();
+
+    // Check if this is an order-related email by looking for order patterns
+    // Look for order_id in the body or subject
+    $subject = $message->getSubject();
+
+    // Try to extract order ID from subject or body
+    $order_id = 0;
+
+    // Common patterns: "Order #123", "Comanda #123", "order_id=123"
+    if (preg_match('/(?:Order|Comanda|order)\s*#?\s*(\d+)/i', $subject . ' ' . $body, $matches)) {
+        $order_id = (int)$matches[1];
+    }
+
+    // Also check for order_id in any data attributes
+    if ($order_id == 0 && preg_match('/order_id["\s:=]+(\d+)/i', $body, $matches)) {
+        $order_id = (int)$matches[1];
+    }
+
+    if ($order_id <= 0) {
+        return; // Not an order email
+    }
+
+    // Get order info
+    $order_info = fn_get_order_info($order_id);
+    if (empty($order_info) || empty($order_info['products'])) {
+        return;
+    }
+
+    // Collect terms from all hotel bookings
+    $hotels_terms = [];
+
+    foreach ($order_info['products'] as $product) {
+        if (empty($product['extra']['novoton_booking'])) {
+            continue;
+        }
+
+        $hotel_id = $product['extra']['hotel_id'] ?? 'unknown';
+        $hotel_name = $product['extra']['hotel_name'] ?? $product['product'] ?? 'Hotel';
+
+        // Skip if already processed this hotel
+        if (isset($hotels_terms[$hotel_id])) {
+            continue;
+        }
+
+        // Get terms
+        $payment = '';
+        $cancel = '';
+
+        if (!empty($product['extra']['terms_of_payment_formatted'])) {
+            $payment = $product['extra']['terms_of_payment_formatted'];
+        } elseif (!empty($product['extra']['terms_of_payment'])) {
+            $payment = $product['extra']['terms_of_payment'];
+        }
+
+        if (!empty($product['extra']['terms_of_cancellation_formatted'])) {
+            $cancel = $product['extra']['terms_of_cancellation_formatted'];
+        } elseif (!empty($product['extra']['terms_of_cancellation'])) {
+            $cancel = $product['extra']['terms_of_cancellation'];
+        }
+
+        if ($payment || $cancel) {
+            $hotels_terms[$hotel_id] = [
+                'hotel_name' => $hotel_name,
+                'payment' => $payment,
+                'cancel' => $cancel
+            ];
+        }
+    }
+
+    // If no terms found, nothing to add
+    if (empty($hotels_terms)) {
+        return;
+    }
+
+    // Build terms HTML
+    $terms_html = '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px;">';
+    $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa; border-radius: 4px;">';
+    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%">';
+
+    $is_first = true;
+    $multiple_hotels = count($hotels_terms) > 1;
+
+    foreach ($hotels_terms as $hotel_id => $hotel_terms) {
+        // Separator between hotels
+        if (!$is_first) {
+            $terms_html .= '<tr><td style="padding: 10px 0;"><hr style="border: 0; border-top: 1px solid #dee2e6; margin: 0;"></td></tr>';
+        }
+        $is_first = false;
+
+        // Hotel name if multiple hotels
+        if ($multiple_hotels) {
+            $terms_html .= '<tr><td style="padding-bottom: 10px; font-weight: bold; color: #495057; font-size: 14px;">';
+            $terms_html .= htmlspecialchars($hotel_terms['hotel_name']);
+            $terms_html .= '</td></tr>';
+        }
+
+        // Payment terms
+        if (!empty($hotel_terms['payment'])) {
+            $payment_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_terms['payment']);
+            $terms_html .= '<tr><td style="padding-bottom: 10px;">';
+            $terms_html .= '<strong style="color: #333;">Termeni de plată</strong><br>';
+            $terms_html .= '<span style="color: #555; font-size: 13px; line-height: 1.6;">' . $payment_text . '</span>';
+            $terms_html .= '</td></tr>';
+        }
+
+        // Cancellation terms
+        if (!empty($hotel_terms['cancel'])) {
+            $cancel_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_terms['cancel']);
+            $terms_html .= '<tr><td>';
+            $terms_html .= '<strong style="color: #333;">Condiții de anulare</strong><br>';
+            $terms_html .= '<span style="color: #555; font-size: 13px; line-height: 1.6;">' . $cancel_text . '</span>';
+            $terms_html .= '</td></tr>';
+        }
+    }
+
+    $terms_html .= '</table></td></tr></table>';
+
+    // Find a good place to insert the terms - before </body> or at end
+    if (stripos($body, '</body>') !== false) {
+        $body = str_ireplace('</body>', $terms_html . '</body>', $body);
+    } else {
+        $body .= $terms_html;
+    }
+
+    // Update message body
+    $message->setBody($body);
+}
