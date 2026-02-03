@@ -1576,6 +1576,16 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
  */
 function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $area, $lang_code)
 {
+    // Debug logging
+    $debug_log = Registry::get('addons.novoton_holidays.debug_logging') === 'Y';
+    if ($debug_log) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'NOVOTON mailer_send_pre hook called',
+            'subject' => $message->getSubject(),
+            'area' => $area
+        ]);
+    }
+
     // Get the message body
     $body = $message->getBody();
 
@@ -1597,12 +1607,22 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
     }
 
     if ($order_id <= 0) {
+        if ($debug_log) {
+            fn_log_event('general', 'runtime', ['message' => 'NOVOTON mailer_send_pre: Not an order email, skipping']);
+        }
         return; // Not an order email
+    }
+
+    if ($debug_log) {
+        fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: Found order_id=$order_id"]);
     }
 
     // Get order info
     $order_info = fn_get_order_info($order_id);
     if (empty($order_info) || empty($order_info['products'])) {
+        if ($debug_log) {
+            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No order info or products for order $order_id"]);
+        }
         return;
     }
 
@@ -1649,12 +1669,24 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
 
     // If no terms found, nothing to add
     if (empty($hotels_terms)) {
+        if ($debug_log) {
+            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No booking terms found for order $order_id"]);
+        }
         return;
     }
 
+    if ($debug_log) {
+        fn_log_event('general', 'runtime', [
+            'message' => "NOVOTON mailer_send_pre: Found terms for " . count($hotels_terms) . " hotel(s), injecting into email"
+        ]);
+    }
+
     // Build terms HTML
-    $terms_html = '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px;">';
-    $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa; border-radius: 4px;">';
+    // Add visible DEBUG marker for testing
+    $terms_html = '<!-- NOVOTON EMAIL TERMS START -->';
+    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px; border: 2px solid #28a745;">';
+    $terms_html .= '<tr><td style="background-color: #d4edda; padding: 5px; font-size: 11px; color: #155724;"><strong>DEBUG:</strong> Novoton Terms Injected (order #' . $order_id . ')</td></tr>';
+    $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa;">';
     $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%">';
 
     $is_first = true;
@@ -1694,6 +1726,7 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
     }
 
     $terms_html .= '</table></td></tr></table>';
+    $terms_html .= '<!-- NOVOTON EMAIL TERMS END -->';
 
     // Find a good place to insert the terms - before </body> or at end
     if (stripos($body, '</body>') !== false) {
@@ -1704,4 +1737,8 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
 
     // Update message body
     $message->setBody($body);
+
+    if ($debug_log) {
+        fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: Terms successfully injected into email for order $order_id"]);
+    }
 }
