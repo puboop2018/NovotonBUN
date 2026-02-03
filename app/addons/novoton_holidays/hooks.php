@@ -1503,17 +1503,29 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
                             'room_id' => $room_id
                         ]);
 
-                        if ($priceData && isset($priceData->hotel)) {
-                            // Extract terms from response
-                            if (isset($priceData->hotel->TermsOfPayment)) {
-                                $payment_raw = $priceData->hotel->TermsOfPayment->asXML();
+                        if (!empty($_REQUEST['debug'])) {
+                            $type = $priceData ? (($priceData instanceof \SimpleXMLElement) ? 'SimpleXMLElement' : gettype($priceData)) : 'null';
+                            fn_set_notification('N', 'DEBUG', "API response type: {$type}");
+                        }
+
+                        if ($priceData instanceof \SimpleXMLElement) {
+                            // Use XPath to find terms anywhere in the XML tree (like search does)
+                            $termsPayment = $priceData->xpath('//TermsOfPayment');
+                            $termsCancellation = $priceData->xpath('//TermsOfCancellation');
+
+                            if (!empty($_REQUEST['debug'])) {
+                                fn_set_notification('N', 'DEBUG', 'XPath results: TermsOfPayment=' . count($termsPayment) . ', TermsOfCancellation=' . count($termsCancellation));
                             }
-                            if (isset($priceData->hotel->TermsOfCancellation)) {
-                                $cancel_raw = $priceData->hotel->TermsOfCancellation->asXML();
+
+                            if (!empty($termsPayment[0])) {
+                                $payment_raw = $termsPayment[0]->asXML();
+                            }
+                            if (!empty($termsCancellation[0])) {
+                                $cancel_raw = $termsCancellation[0]->asXML();
                             }
 
                             if (!empty($_REQUEST['debug'])) {
-                                fn_set_notification('N', 'DEBUG', 'API returned terms: payment=' . (!empty($payment_raw) ? 'YES' : 'NO') . ', cancel=' . (!empty($cancel_raw) ? 'YES' : 'NO'));
+                                fn_set_notification('N', 'DEBUG', 'Terms extracted: payment=' . (!empty($payment_raw) ? 'YES (' . strlen($payment_raw) . ' chars)' : 'NO') . ', cancel=' . (!empty($cancel_raw) ? 'YES (' . strlen($cancel_raw) . ' chars)' : 'NO'));
                             }
                         }
                     }
