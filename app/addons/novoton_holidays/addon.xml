@@ -866,8 +866,11 @@
                     <ro><![CDATA[Detalii Rezervare Novoton]]></ro>
                 </name>
                 <default_template><![CDATA[{# Novoton Booking Details & Terms - Use: {{ snippet("novoton_booking") }} #}
+{# Handles multiple rooms/hotels: shows each booking, terms only once per hotel #}
+{% set seen_hotels = [] %}
 {% for product in order_info.products %}
   {% if product.extra.novoton_booking %}
+    {% set hotel_id = product.extra.hotel_id|default('unknown') %}
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 20px 0;">
   <tr><td style="padding: 15px;">
     <p style="margin: 0 0 10px; font-weight: bold; color: #003580; font-size: 15px;">{{ product.extra.hotel_name|default(product.product) }}</p>
@@ -880,13 +883,17 @@
       <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.guests")|default("Guests") }}:</strong></td><td>{{ product.extra.adults }} {{ __("novoton_holidays.adults")|default("adults") }}{% if product.extra.children %}, {{ product.extra.children }} {{ __("novoton_holidays.children")|default("children") }}{% endif %}</td></tr>
       {% if product.extra.holder_name %}<tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.holder")|default("Holder") }}:</strong></td><td>{{ product.extra.holder_name }}</td></tr>{% endif %}
     </table>
-    {% if product.extra.terms_of_payment_formatted %}
+    {# Show terms only once per hotel (not duplicated for each room) #}
+    {% if hotel_id not in seen_hotels %}
+      {% if product.extra.terms_of_payment_formatted %}
     <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.terms_of_payment")|default("Payment Terms") }}</strong></p>
     <p style="margin: 0; color: #555; white-space: pre-line;">{{ product.extra.terms_of_payment_formatted }}</p>
-    {% endif %}
-    {% if product.extra.terms_of_cancellation_formatted %}
+      {% endif %}
+      {% if product.extra.terms_of_cancellation_formatted %}
     <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.cancellation_terms")|default("Cancellation Terms") }}</strong></p>
     <p style="margin: 0; color: #555; white-space: pre-line;">{{ product.extra.terms_of_cancellation_formatted }}</p>
+      {% endif %}
+      {% set seen_hotels = seen_hotels|merge([hotel_id]) %}
     {% endif %}
   </td></tr>
 </table>
