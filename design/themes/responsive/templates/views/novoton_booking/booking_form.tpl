@@ -631,7 +631,10 @@ function validateAndCheckAge(id, originalAge) {
     
     // Check if child (under 18)
     if (calculatedAge >= 18) {
-        showDobError(dobInput, errorDiv, 'La check-in copilul va avea ' + calculatedAge + ' ani. Trebuie sa fie sub 18.');
+        var notChildMsg = window.NovotonTranslations.notChild || 'La check-in, copilul va avea';
+        var yearsLabel = window.NovotonTranslations.ageLabel || 'ani';
+        var mustBeUnder18 = window.NovotonTranslations.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
+        showDobError(dobInput, errorDiv, notChildMsg + ' ' + calculatedAge + ' ' + yearsLabel + '. ' + mustBeUnder18);
         return;
     }
     
