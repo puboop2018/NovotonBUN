@@ -1504,38 +1504,28 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
                         ]);
 
                         if (!empty($_REQUEST['debug'])) {
-                            $type = $priceData ? get_class($priceData) : 'null';
+                            $type = $priceData ? (($priceData instanceof \SimpleXMLElement) ? 'SimpleXMLElement' : gettype($priceData)) : 'null';
                             fn_set_notification('N', 'DEBUG', "API response type: {$type}");
                         }
 
                         if ($priceData instanceof \SimpleXMLElement) {
-                            // Try multiple possible locations for terms
-                            // Check direct on root
-                            if (isset($priceData->TermsOfPayment)) {
-                                $payment_raw = $priceData->TermsOfPayment->asXML();
-                            }
-                            if (isset($priceData->TermsOfCancellation)) {
-                                $cancel_raw = $priceData->TermsOfCancellation->asXML();
+                            // Use XPath to find terms anywhere in the XML tree (like search does)
+                            $termsPayment = $priceData->xpath('//TermsOfPayment');
+                            $termsCancellation = $priceData->xpath('//TermsOfCancellation');
+
+                            if (!empty($_REQUEST['debug'])) {
+                                fn_set_notification('N', 'DEBUG', 'XPath results: TermsOfPayment=' . count($termsPayment) . ', TermsOfCancellation=' . count($termsCancellation));
                             }
 
-                            // Check under ->hotel
-                            if (empty($payment_raw) && isset($priceData->hotel->TermsOfPayment)) {
-                                $payment_raw = $priceData->hotel->TermsOfPayment->asXML();
+                            if (!empty($termsPayment[0])) {
+                                $payment_raw = $termsPayment[0]->asXML();
                             }
-                            if (empty($cancel_raw) && isset($priceData->hotel->TermsOfCancellation)) {
-                                $cancel_raw = $priceData->hotel->TermsOfCancellation->asXML();
-                            }
-
-                            // Check under ->hotel[0] (array access)
-                            if (empty($payment_raw) && isset($priceData->hotel[0]->TermsOfPayment)) {
-                                $payment_raw = $priceData->hotel[0]->TermsOfPayment->asXML();
-                            }
-                            if (empty($cancel_raw) && isset($priceData->hotel[0]->TermsOfCancellation)) {
-                                $cancel_raw = $priceData->hotel[0]->TermsOfCancellation->asXML();
+                            if (!empty($termsCancellation[0])) {
+                                $cancel_raw = $termsCancellation[0]->asXML();
                             }
 
                             if (!empty($_REQUEST['debug'])) {
-                                fn_set_notification('N', 'DEBUG', 'API terms found: payment=' . (!empty($payment_raw) ? 'YES' : 'NO') . ', cancel=' . (!empty($cancel_raw) ? 'YES' : 'NO'));
+                                fn_set_notification('N', 'DEBUG', 'Terms extracted: payment=' . (!empty($payment_raw) ? 'YES (' . strlen($payment_raw) . ' chars)' : 'NO') . ', cancel=' . (!empty($cancel_raw) ? 'YES (' . strlen($cancel_raw) . ' chars)' : 'NO'));
                             }
                         }
                     }
