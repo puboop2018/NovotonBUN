@@ -1917,3 +1917,31 @@ msgstr "Novoton: Alternative Disponibile"
 msgctxt "Languages::email_template.novoton_holidays_alternatives_request"
 msgid "Novoton: Alternatives Request Confirmation"
 msgstr "Novoton: Confirmare Cerere Alternative"
+
+msgctxt "Languages::novoton_holidays.cancel_free"
+msgid "Free cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::novoton_holidays.cancel_free_before"
+msgid "Free cancellation before [date]"
+msgstr "Anulare gratuită până la [date]"
+
+msgctxt "Languages::novoton_holidays.cancel_no_show"
+msgid "No show: 100% penalty"
+msgstr "Neprezentare: penalizare 100%"
+
+msgctxt "Languages::novoton_holidays.cancel_nights_penalty"
+msgid "[nights] night(s) penalty"
+msgstr "penalizare [nights] nopți"
+
+msgctxt "Languages::novoton_holidays.cancel_percent_penalty"
+msgid "[percent]% penalty"
+msgstr "penalizare [percent]%"
+
+msgctxt "Languages::novoton_holidays.cancel_between_dates"
+msgid "Between [from] - [to]: [penalty]"
+msgstr "Între [from] - [to]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.cancel_until_date"
+msgid "Until [date]: [penalty]"
+msgstr "Până la [date]: [penalty]"
