@@ -300,15 +300,22 @@ if ($mode == 'view_hotel') {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
     }
     
-    // Decode JSON fields
-    if (!empty($hotel['packages_data'])) {
-        $hotel['packages'] = json_decode($hotel['packages_data'], true);
-    }
-    if (!empty($hotel['rooms_data'])) {
-        $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
-    }
-    if (!empty($hotel['board_data'])) {
-        $hotel['boards'] = json_decode($hotel['board_data'], true);
+    // V3: Get packages from novoton_hotel_packages table
+    $hotel['packages'] = db_get_array(
+        "SELECT package_id, package_name, min_price, has_early_booking, synced_at
+         FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+        $hotel_id
+    );
+
+    // V3: Get rooms and boards from hotel_data JSON
+    if (!empty($hotel['hotel_data'])) {
+        $hotelData = json_decode($hotel['hotel_data'], true);
+        if (!empty($hotelData['rooms'])) {
+            $hotel['rooms'] = isset($hotelData['rooms']['IdRoom']) ? [$hotelData['rooms']] : $hotelData['rooms'];
+        }
+        if (!empty($hotelData['boards'])) {
+            $hotel['boards'] = isset($hotelData['boards']['IdBoard']) ? [$hotelData['boards']] : $hotelData['boards'];
+        }
     }
     
     // Get facilities

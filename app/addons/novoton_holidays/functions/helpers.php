@@ -126,7 +126,8 @@ function fn_novoton_get_api()
 
 /**
  * Update product prices from API
- * 
+ * V3: Stores packages in novoton_hotel_packages table
+ *
  * @param int $product_id Product ID
  * @return bool|string True on success, 'no_data', or false on failure
  */
@@ -136,114 +137,154 @@ function fn_novoton_holidays_update_product_prices($product_id)
     if (!$api) {
         return false;
     }
-    
+
     try {
         // Get product info
         $product = db_get_row(
-            "SELECT p.product_id, p.product_code, pd.product 
+            "SELECT p.product_id, p.product_code, pd.product
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
              WHERE p.product_id = ?i",
             CART_LANGUAGE,
             $product_id
         );
-        
+
         if (empty($product)) {
             return false;
         }
-        
+
         // Get hotel_id from novoton_hotels table
         $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
-        
+
         if (empty($hotel_id)) {
-            // Try extracting from product code (NVT-XXXX format)
-            if (!empty($product['product_code']) && strpos($product['product_code'], 'NVT-') === 0) {
-                $hotel_id = substr($product['product_code'], 4);
+            // Try extracting from product code (NVT-XXXX or NVT format)
+            if (!empty($product['product_code'])) {
+                preg_match('/\d+/', $product['product_code'], $matches);
+                $hotel_id = $matches[0] ?? null;
             }
         }
-        
+
         if (empty($hotel_id)) {
             return 'no_data';
         }
-        
-        // Get price info from API
-        $price_info = $api->getHotelDescription($hotel_id, 'UK', true);
-        
-        if (empty($price_info)) {
+
+        // Get hotel info from API (includes packages)
+        $hotel_info = $api->getHotelInfo($hotel_id);
+
+        if (empty($hotel_info) || !isset($hotel_info->packages)) {
             return 'no_data';
         }
-        
-        // Store packages data
+
+        // Convert to array
+        $hotelData = json_decode(json_encode($hotel_info), true);
+
+        // Normalize packages array
         $packages = [];
-        $rooms = [];
-        $boards = [];
-        
-        // Parse the response for packages
-        if (isset($price_info->Packages->Package)) {
-            foreach ($price_info->Packages->Package as $package) {
-                $pkg = [
-                    'name' => (string)($package['Name'] ?? ''),
-                    'from' => (string)($package['From'] ?? ''),
-                    'to' => (string)($package['To'] ?? ''),
-                    'min_price' => floatval($package['MinPrice'] ?? 0),
-                ];
-                
-                if (!empty($pkg['name'])) {
-                    $packages[] = $pkg;
+        if (isset($hotelData['packages']['IdCont'])) {
+            $packages = [$hotelData['packages']];
+        } elseif (!empty($hotelData['packages'])) {
+            $packages = $hotelData['packages'];
+        }
+
+        if (empty($packages)) {
+            return 'no_data';
+        }
+
+        $packagesUpdated = 0;
+        $minPrice = null;
+
+        // V3: Store each package in novoton_hotel_packages table
+        foreach ($packages as $pkg) {
+            $packageId = $pkg['IdCont'] ?? '';
+            $packageName = $pkg['PackageName'] ?? '';
+
+            if (empty($packageId) || empty($packageName)) {
+                continue;
+            }
+
+            // Get priceinfo for this package
+            $priceInfo = $api->getPriceInfo($hotel_id, $packageName);
+            $priceData = !empty($priceInfo) ? json_decode(json_encode($priceInfo), true) : [];
+
+            // Calculate metadata
+            $hasEarlyBooking = !empty($priceData['early_booking']) ? 'Y' : 'N';
+            $seasonsCount = 0;
+            $pkgMinPrice = null;
+
+            // Count seasons and find min price
+            if (isset($priceData['seasons']['season'])) {
+                $seasons = $priceData['seasons']['season'];
+                $seasonsCount = isset($seasons['IdSeason']) ? 1 : count($seasons);
+            }
+
+            if (isset($priceData['season_price'])) {
+                $seasonPrices = $priceData['season_price'];
+                if (isset($seasonPrices['Code'])) {
+                    $seasonPrices = [$seasonPrices];
                 }
-                
-                // Extract rooms and boards from package
-                if (isset($package->Rooms->Room)) {
-                    foreach ($package->Rooms->Room as $room) {
-                        $room_id = (string)($room['Id'] ?? $room['id'] ?? '');
-                        if (!empty($room_id) && !in_array($room_id, $rooms)) {
-                            $rooms[] = $room_id;
-                        }
-                    }
-                }
-                
-                if (isset($package->Boards->Board)) {
-                    foreach ($package->Boards->Board as $board) {
-                        $board_id = (string)($board['Id'] ?? $board['id'] ?? $board);
-                        if (!empty($board_id) && !in_array($board_id, $boards)) {
-                            $boards[] = $board_id;
+                foreach ($seasonPrices as $sp) {
+                    for ($i = 1; $i <= 20; $i++) {
+                        $priceKey = 'Price' . $i;
+                        if (isset($sp[$priceKey]) && floatval($sp[$priceKey]) > 0) {
+                            $price = floatval($sp[$priceKey]);
+                            if ($pkgMinPrice === null || $price < $pkgMinPrice) {
+                                $pkgMinPrice = $price;
+                            }
                         }
                     }
                 }
             }
+
+            // Track overall min price
+            if ($pkgMinPrice !== null && ($minPrice === null || $pkgMinPrice < $minPrice)) {
+                $minPrice = $pkgMinPrice;
+            }
+
+            // Save to novoton_hotel_packages
+            $packageData = [
+                'hotel_id' => $hotel_id,
+                'package_id' => $packageId,
+                'package_name' => $packageName,
+                'priceinfo_data' => !empty($priceData) ? json_encode($priceData) : null,
+                'seasons_count' => $seasonsCount,
+                'has_early_booking' => $hasEarlyBooking,
+                'min_price' => $pkgMinPrice,
+                'synced_at' => date('Y-m-d H:i:s')
+            ];
+
+            $existingId = db_get_field(
+                "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
+                $hotel_id, $packageId
+            );
+
+            if ($existingId) {
+                db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
+            } else {
+                db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);
+            }
+
+            $packagesUpdated++;
         }
-        
+
         // Update hotel record
         $update_data = [
-            'packages_data' => json_encode($packages),
-            'rooms_data' => json_encode($rooms),
-            'board_data' => json_encode($boards),
-            'has_prices' => !empty($packages) ? 'Y' : 'N',
+            'has_prices' => $packagesUpdated > 0 ? 'Y' : 'N',
+            'packages_count' => $packagesUpdated,
             'last_price_check' => date('Y-m-d H:i:s')
         ];
-        
         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $hotel_id);
-        
+
         // Update product price if we have min price
-        if (!empty($packages)) {
-            $min_price = PHP_FLOAT_MAX;
-            foreach ($packages as $pkg) {
-                if ($pkg['min_price'] > 0 && $pkg['min_price'] < $min_price) {
-                    $min_price = $pkg['min_price'];
-                }
-            }
-            
-            if ($min_price < PHP_FLOAT_MAX) {
-                $price_with_commission = $api->applyCommission($min_price);
-                db_query(
-                    "UPDATE ?:products SET price = ?d WHERE product_id = ?i",
-                    $price_with_commission, $product_id
-                );
-            }
+        if ($minPrice !== null && $minPrice > 0) {
+            $price_with_commission = $api->applyCommission($minPrice);
+            db_query(
+                "UPDATE ?:products SET price = ?d WHERE product_id = ?i",
+                $price_with_commission, $product_id
+            );
         }
-        
-        return true;
-        
+
+        return $packagesUpdated > 0 ? true : 'no_data';
+
     } catch (\Exception $e) {
         fn_log_event('novoton', 'error', 'Price update failed: ' . $e->getMessage());
         return false;

@@ -239,34 +239,34 @@ function fn_novoton_get_hotels_count()
 
 /**
  * Get count of hotels without packages data
- * 
+ * V3: Checks novoton_hotel_packages table instead of packages_data column
+ *
  * @return int Count
  */
 function fn_novoton_get_hotels_no_packages_count()
 {
     return db_get_field(
-        "SELECT COUNT(*) FROM ?:novoton_hotels 
-         WHERE packages_data IS NULL 
-            OR packages_data = '' 
-            OR packages_data = '[]' 
-            OR packages_data = 'null'"
+        "SELECT COUNT(*) FROM ?:novoton_hotels h
+         WHERE NOT EXISTS (
+             SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
+         )"
     );
 }
 
 /**
  * Get hotels without packages data grouped by country
- * 
+ * V3: Checks novoton_hotel_packages table instead of packages_data column
+ *
  * @return array Array with country => count
  */
 function fn_novoton_get_hotels_no_packages_by_country()
 {
     return db_get_hash_single_array(
-        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels 
-         WHERE packages_data IS NULL 
-            OR packages_data = '' 
-            OR packages_data = '[]' 
-            OR packages_data = 'null'
-         GROUP BY country
+        "SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
+         WHERE NOT EXISTS (
+             SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
+         )
+         GROUP BY h.country
          ORDER BY cnt DESC",
         ['country', 'cnt']
     );
