@@ -1181,18 +1181,19 @@ try {
     }
 
     // =========================================
-    // MODE: check_packages
+    // MODE: check_packages (V3)
     // =========================================
     elseif ($mode == 'check_packages') {
-        echo "Check Hotel Packages (hotelinfo API)\n\n";
+        echo "Check Hotel Packages - V3 (hotelinfo API)\n\n";
 
         // Get countries from addon settings
         $countries = fn_novoton_parse_countries();
 
         echo "Countries: " . implode(', ', $countries) . "\n\n";
 
+        // V3: Select hotels without package_name column (it's now in novoton_hotel_packages)
         $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, country, package_name FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
+            "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
             $countries
         );
 
@@ -1203,6 +1204,7 @@ try {
 
             $total = 0;
             $with_packages = 0;
+            $packages_added = 0;
             $updated = 0;
             $errors = 0;
             $current_country = '';
@@ -1218,32 +1220,54 @@ try {
                 try {
                     $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
 
-                    $package_name = '';
-                    if ($hotel_info) {
-                        if (isset($hotel_info->packages->PackageName)) {
-                            $package_name = (string)$hotel_info->packages->PackageName;
-                        } elseif (isset($hotel_info->packages->Package)) {
-                            $package_name = (string)$hotel_info->packages->Package;
+                    // V3: Extract all packages from hotelinfo
+                    $packages = [];
+                    if ($hotel_info && isset($hotel_info->packages)) {
+                        // Single package format
+                        if (isset($hotel_info->packages->IdCont)) {
+                            $packages[] = [
+                                'id' => (string)$hotel_info->packages->IdCont,
+                                'name' => (string)($hotel_info->packages->PackageName ?? '')
+                            ];
                         }
-                        if (empty($package_name)) {
-                            $pn = $hotel_info->xpath('//PackageName');
-                            if (!empty($pn)) {
-                                $package_name = (string)$pn[0];
+                        // Multiple packages format
+                        if (isset($hotel_info->packages->package)) {
+                            foreach ($hotel_info->packages->package as $pkg) {
+                                $packages[] = [
+                                    'id' => (string)($pkg->IdCont ?? ''),
+                                    'name' => (string)($pkg->PackageName ?? '')
+                                ];
                             }
                         }
                     }
 
-                    if (!empty($package_name)) {
+                    if (!empty($packages)) {
                         $with_packages++;
-                        if ($package_name !== ($hotel['package_name'] ?? '')) {
-                            db_query("UPDATE ?:novoton_hotels SET package_name = ?s WHERE hotel_id = ?s", $package_name, $hotel['hotel_id']);
-                            $updated++;
-                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name} (updated)\n";
-                        } else {
-                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name}\n";
+                        $pkg_names = [];
+
+                        // V3: Store packages in novoton_hotel_packages table
+                        foreach ($packages as $pkg) {
+                            if (!empty($pkg['id'])) {
+                                db_query(
+                                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+                                     VALUES (?s, ?s, ?s, NOW())
+                                     ON DUPLICATE KEY UPDATE package_name = ?s",
+                                    $hotel['hotel_id'], $pkg['id'], $pkg['name'], $pkg['name']
+                                );
+                                $packages_added++;
+                                $pkg_names[] = $pkg['name'];
+                            }
                         }
+
+                        // Update hotel packages_count
+                        db_query(
+                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
+                            count($packages), $hotel['hotel_id']
+                        );
+
+                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> " . count($packages) . " pkg: " . implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '') . "\n";
                     } else {
-                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no package\n";
+                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no packages\n";
                     }
                 } catch (Exception $e) {
                     $errors++;
@@ -1260,6 +1284,7 @@ try {
             echo "\n\nSummary:\n";
             echo "Total checked: {$total}\n";
             echo "With packages: {$with_packages}\n";
+            echo "Packages added/updated: {$packages_added}\n";
             echo "Updated: {$updated}\n";
             echo "Errors: {$errors}\n";
 
