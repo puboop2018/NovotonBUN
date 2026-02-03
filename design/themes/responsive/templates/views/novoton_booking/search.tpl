@@ -145,7 +145,7 @@
                         {/if}
                     {/foreach}
                     <span style="background: #28a745; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                        [OK] {__("novoton_holidays.available")}: {if $total_quota > 0}{$total_quota}{else}{$novoton_results|@count}{/if} {__("novoton_holidays.rooms")}, {$novoton_results|@count} {if $novoton_results|@count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
+                        ✓ {__("novoton_holidays.available")}: {if $total_quota > 0}{$total_quota}{else}{$novoton_results|@count}{/if} {__("novoton_holidays.rooms")}, {$novoton_results|@count} {if $novoton_results|@count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
                     </span>
                     {/if}
                 </div>
@@ -620,7 +620,7 @@
                                 </span>
                             {elseif $result.rooms_available > 5}
                                 <span style="display: inline-block; background: #d4edda; color: #155724; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
-                                    [OK] {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
+                                    ✓ {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
                                 </span>
                             {/if}
                             
