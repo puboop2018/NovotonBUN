@@ -50,7 +50,7 @@ header('Content-Type: text/plain; charset=utf-8');
 echo "===========================================\n";
 echo "NOVOTON HOLIDAYS CRON - " . strtoupper($mode) . "\n";
 echo "===========================================\n";
-echo "Time: " . date('Y-m-d H:i:s') . "\n\n";
+echo "Time: " . (new DateTime('now', new DateTimeZone('Europe/Bucharest')))->format('Y-m-d H:i:s') . " (Europe/Bucharest)\n\n";
 
 // Load API
 $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
@@ -1313,7 +1313,7 @@ try {
 }
 
 echo "\n===========================================\n";
-echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
+echo "Completed at: " . (new DateTime('now', new DateTimeZone('Europe/Bucharest')))->format('Y-m-d H:i:s') . " (Europe/Bucharest)\n";
 echo "===========================================\n";
 
 exit;
