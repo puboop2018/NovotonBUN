@@ -56,21 +56,7 @@
     <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests}<br>
     {/if}
 
-    {* Terms of Payment *}
-    {$pt = $product.extra.terms_of_payment_formatted|default:$product.extra.terms_of_payment|default:''}
-    {if $pt}
-    <br>
-    <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plata"}</strong><br>
-    <span style="white-space:pre-line;">{$pt|strip_tags|trim}</span><br>
-    {/if}
-
-    {* Terms of Cancellation *}
-    {$ct = $product.extra.terms_of_cancellation_formatted|default:$product.extra.terms_of_cancellation|default:''}
-    {if $ct}
-    {if !$pt}<br>{/if}
-    <strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
-    <span style="white-space:pre-line;">{$ct|strip_tags|trim}</span><br>
-    {/if}
+    {* Terms of Payment/Cancellation - displayed in details.post.tpl hook instead *}
 
     {* DEBUG *}
     {if $smarty.request.debug_novoton}

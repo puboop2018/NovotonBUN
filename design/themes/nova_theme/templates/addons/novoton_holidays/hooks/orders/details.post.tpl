@@ -29,13 +29,15 @@
 {/if}
 
 {if $_nv_has_terms}
+<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
     {if $_nv_payment}
-    <p><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
-    {$_nv_payment|strip_tags|trim|nl2br}</p>
+    <p style="margin: 0 0 10px 0;"><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
+    {$_nv_payment|trim nofilter}</p>
     {/if}
 
     {if $_nv_cancel}
-    <p><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
-    {$_nv_cancel|strip_tags|trim|nl2br}</p>
+    <p style="margin: 0;"><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
+    {$_nv_cancel|trim nofilter}</p>
     {/if}
+</div>
 {/if}
