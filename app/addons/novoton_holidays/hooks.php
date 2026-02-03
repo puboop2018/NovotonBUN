@@ -649,14 +649,16 @@ function fn_novoton_get_board_name($board_id)
     $board_map = [
         'AI' => 'All Inclusive',
         'ALL INCL' => 'All Inclusive',
+        'ALLINC' => 'All Inclusive',
         'UAI' => 'Ultra All Inclusive',
+        'ULTRA ALL INCL' => 'Ultra All Inclusive',
         'FB' => 'Full Board',
         'HB' => 'Half Board',
         'BB' => 'Bed & Breakfast',
         'RO' => 'Room Only',
         'SC' => 'Self Catering',
     ];
-    
+
     $board_upper = strtoupper(trim($board_id));
     return $board_map[$board_upper] ?? $board_id;
 }
@@ -1553,6 +1555,12 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
             $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
         }
 
+        // Format board display name (e.g., "ULTRA ALL INCL" -> "Ultra All Inclusive")
+        $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
+        if (!empty($board_id)) {
+            $product['extra']['board_display'] = fn_novoton_get_board_name($board_id);
+        }
+
         // Debug: Show what was set
         if (!empty($_REQUEST['debug'])) {
             $payment_set = !empty($product['extra']['terms_of_payment_formatted']) ? 'YES' : 'NO';
@@ -1740,7 +1748,7 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
     // Build booking details and terms HTML
     $terms_html = '<!-- NOVOTON EMAIL BOOKING START -->';
     $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px;">';
-    $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa;">';
+    $terms_html .= '<tr><td style="padding: 15px;">';
 
     $is_first = true;
     $multiple_hotels = count($hotels_data) > 1;
