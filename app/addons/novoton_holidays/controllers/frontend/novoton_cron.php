@@ -572,10 +572,11 @@ try {
         }
         
         echo "Country: {$country}\n";
-        echo "Last product import: {$last_product_import}\n";
+        $last_import_display = (new DateTime($last_product_import))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
+        echo "Last product import: {$last_import_display}\n";
         echo "Checking offers added/modified after this time...\n\n";
-        
-        $sync_start_time = date('Y-m-d\TH:i:s');
+
+        $sync_start_time = (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d\TH:i:s');
         
         $response = $api->getOffersUpdate($last_product_import, $country);
         
@@ -982,9 +983,13 @@ try {
 
             if (!empty($last_hotelinfo_sync)) {
                 // Incremental: use offers_update API to find changed hotels
+                // API parameter uses server time for consistency with DB
                 $datetime_param = date('Y-m-d\TH:i:s', strtotime($last_hotelinfo_sync));
-                echo "Last hotelinfo sync: {$last_hotelinfo_sync}\n";
-                echo "Calling offers_update since {$datetime_param}...\n\n";
+                // Display uses configured timezone
+                $last_sync_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
+                $datetime_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d\TH:i:s');
+                echo "Last hotelinfo sync: {$last_sync_display}\n";
+                echo "Calling offers_update since {$datetime_display}...\n\n";
 
                 $changed_ids = [];
                 foreach ($countries as $country) {
