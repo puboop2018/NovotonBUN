@@ -599,7 +599,11 @@ try {
                 
                 echo "[{$hotel_id}] {$hotel_name} ... ";
                 
-                $existing = db_get_row("SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
+                // Optimized: Only fetch columns needed for sync check (not hotel_data JSON)
+                $existing = db_get_row(
+                    "SELECT hotel_id, hotel_name, country, city, has_prices, hotel_list_synced_at FROM ?:novoton_hotels WHERE hotel_id = ?s",
+                    $hotel_id
+                );
                 
                 if (!$existing) {
                     echo "NEW HOTEL - ";

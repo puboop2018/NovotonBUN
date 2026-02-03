@@ -323,6 +323,7 @@ class PriceSync
 
     /**
      * Check for products in API but not in CS-Cart
+     * Optimized: Fetches all matching products once instead of querying per hotel
      */
     private function checkMissingProducts(&$stats)
     {
@@ -330,19 +331,30 @@ class PriceSync
             $apiHotels = $this->api->getHotelList($this->defaultCountry);
 
             if ($apiHotels && isset($apiHotels->hotelinfo)) {
+                // Build LIKE conditions for all prefixes and fetch all matching products at once
+                $likeConditions = [];
+                foreach ($this->productPrefixes as $prefix) {
+                    $likeConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
+                }
+
+                // Single query to get all product codes matching any prefix
+                $existingProducts = [];
+                if (!empty($likeConditions)) {
+                    $productCodes = db_get_fields(
+                        "SELECT product_code FROM ?:products WHERE " . implode(' OR ', $likeConditions)
+                    );
+                    // Index by product code for O(1) lookup
+                    $existingProducts = array_flip($productCodes);
+                }
+
+                // Now check each API hotel against the pre-fetched list
                 foreach ($apiHotels->hotelinfo as $hotelInfo) {
                     $hotelId = (string)$hotelInfo->IdHotel;
 
-                    // Check if product exists
+                    // Check if any prefixed product code exists
                     $exists = false;
                     foreach ($this->productPrefixes as $prefix) {
-                        $productCode = $prefix . $hotelId;
-                        $product = db_get_field(
-                            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-                            $productCode
-                        );
-
-                        if ($product) {
+                        if (isset($existingProducts[$prefix . $hotelId])) {
                             $exists = true;
                             break;
                         }

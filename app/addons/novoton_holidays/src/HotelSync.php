@@ -75,6 +75,7 @@ class HotelSync
     /**
      * Step 1: Sync hotel list from API
      * Calls hotel_list for each selected country
+     * Optimized: Uses batch INSERT ON DUPLICATE KEY UPDATE
      *
      * @param string|null $country Specific country or null for all selected
      * @return array Stats
@@ -100,6 +101,10 @@ class HotelSync
                     $hotels = [$hotels];
                 }
 
+                // Collect hotel data for batch insert
+                $batchData = [];
+                $batchSize = 100; // Process in batches of 100
+
                 foreach ($hotels as $hotelInfo) {
                     $hotelId = (string)$hotelInfo->IdHotel;
                     $hotelName = (string)$hotelInfo->Hotel;
@@ -111,46 +116,25 @@ class HotelSync
 
                     $this->stats['hotels_processed']++;
 
-                    // Check if hotel exists
-                    $exists = db_get_field(
-                        "SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                        $hotelId
-                    );
+                    $batchData[] = [
+                        'hotel_id' => $hotelId,
+                        'hotel_name' => $hotelName,
+                        'city' => $city,
+                        'country' => $countryName,
+                        'hotel_type' => $hotelType,
+                        'star_rating' => $starRating
+                    ];
 
-                    if ($exists) {
-                        // Update existing hotel
-                        db_query(
-                            "UPDATE ?:novoton_hotels SET
-                             hotel_name = ?s,
-                             city = ?s,
-                             country = ?s,
-                             hotel_type = ?s,
-                             star_rating = ?i,
-                             hotel_list_synced_at = NOW()
-                             WHERE hotel_id = ?s",
-                            $hotelName,
-                            $city,
-                            $countryName,
-                            $hotelType,
-                            $starRating,
-                            $hotelId
-                        );
-                    } else {
-                        // Insert new hotel
-                        db_query(
-                            "INSERT INTO ?:novoton_hotels
-                             (hotel_id, hotel_name, city, country, hotel_type, star_rating, hotel_list_synced_at, created_at)
-                             VALUES (?s, ?s, ?s, ?s, ?s, ?i, NOW(), NOW())",
-                            $hotelId,
-                            $hotelName,
-                            $city,
-                            $countryName,
-                            $hotelType,
-                            $starRating
-                        );
+                    // Execute batch when full
+                    if (count($batchData) >= $batchSize) {
+                        $this->executeBatchHotelUpsert($batchData);
+                        $batchData = [];
                     }
+                }
 
-                    $this->stats['hotels_updated']++;
+                // Execute remaining batch
+                if (!empty($batchData)) {
+                    $this->executeBatchHotelUpsert($batchData);
                 }
 
                 $this->log("Processed " . count($hotels) . " hotels for {$countryName}");
@@ -165,6 +149,46 @@ class HotelSync
         }
 
         return $this->stats;
+    }
+
+    /**
+     * Execute batch INSERT ON DUPLICATE KEY UPDATE for hotels
+     *
+     * @param array $batchData Array of hotel data arrays
+     */
+    private function executeBatchHotelUpsert(array $batchData)
+    {
+        if (empty($batchData)) {
+            return;
+        }
+
+        $values = [];
+        foreach ($batchData as $hotel) {
+            $values[] = db_quote(
+                "(?s, ?s, ?s, ?s, ?s, ?i, NOW(), NOW())",
+                $hotel['hotel_id'],
+                $hotel['hotel_name'],
+                $hotel['city'],
+                $hotel['country'],
+                $hotel['hotel_type'],
+                $hotel['star_rating']
+            );
+        }
+
+        $sql = "INSERT INTO ?:novoton_hotels
+                (hotel_id, hotel_name, city, country, hotel_type, star_rating, hotel_list_synced_at, created_at)
+                VALUES " . implode(', ', $values) . "
+                ON DUPLICATE KEY UPDATE
+                hotel_name = VALUES(hotel_name),
+                city = VALUES(city),
+                country = VALUES(country),
+                hotel_type = VALUES(hotel_type),
+                star_rating = VALUES(star_rating),
+                hotel_list_synced_at = NOW()";
+
+        db_query($sql);
+
+        $this->stats['hotels_updated'] += count($batchData);
     }
 
     /**
