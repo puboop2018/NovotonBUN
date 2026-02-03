@@ -413,27 +413,32 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = '')
 function fn_novoton_format_payment_terms($xml_string)
 {
     $terms = fn_novoton_parse_payment_terms($xml_string);
-    
+
     if (empty($terms)) {
         return '';
     }
-    
+
     $lines = [];
-    
+
     foreach ($terms as $term) {
         $percent = isset($term['percent']) ? number_format($term['percent'], 0) : '0';
         $date = $term['date'] ?? '';
 
         if (!empty($date)) {
             $formatted_date = fn_novoton_format_date($date);
-            $lines[] = "{$percent}% până la {$formatted_date}";
+            // "[percent]% until [date]" / "[percent]% până la [date]"
+            $lines[] = __('novoton_holidays.payment_percent_until', [
+                '[percent]' => $percent,
+                '[date]' => $formatted_date
+            ]);
         } elseif (!empty($term['is_on_booking'])) {
-            $lines[] = "{$percent}% la rezervare";
+            // "[percent]% on booking" / "[percent]% la rezervare"
+            $lines[] = __('novoton_holidays.payment_percent_on_booking', ['[percent]' => $percent]);
         } else {
             $lines[] = "{$percent}%";
         }
     }
-    
+
     return implode("\n", $lines);
 }
 

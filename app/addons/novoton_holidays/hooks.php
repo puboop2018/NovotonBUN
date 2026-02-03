@@ -1626,8 +1626,14 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
         return;
     }
 
-    // Collect terms from all hotel bookings
-    $hotels_terms = [];
+    // Collect booking details and terms from all hotel bookings
+    $hotels_data = [];
+
+    // Get CS-Cart date format
+    $date_format = Registry::get('settings.Appearance.date_format');
+    if (empty($date_format)) {
+        $date_format = '%d/%m/%Y';
+    }
 
     foreach ($order_info['products'] as $product) {
         if (empty($product['extra']['novoton_booking'])) {
@@ -1638,95 +1644,165 @@ function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $ar
         $hotel_name = $product['extra']['hotel_name'] ?? $product['product'] ?? 'Hotel';
 
         // Skip if already processed this hotel
-        if (isset($hotels_terms[$hotel_id])) {
+        if (isset($hotels_data[$hotel_id])) {
             continue;
         }
 
-        // Get terms
+        // Get booking details
+        $check_in = $product['extra']['check_in'] ?? '';
+        $check_out = $product['extra']['check_out'] ?? '';
+        $nights = $product['extra']['nights'] ?? '';
+        $room_display = $product['extra']['room_type_display'] ?? $product['extra']['room_name'] ?? $product['extra']['room_id'] ?? '';
+        $board_display = $product['extra']['board_name'] ?? $product['extra']['board_id'] ?? '';
+        $adults = $product['extra']['adults'] ?? '';
+        $children = $product['extra']['children'] ?? 0;
+        $holder_name = $product['extra']['holder_name'] ?? '';
+
+        // Format dates
+        $check_in_formatted = !empty($check_in) ? fn_date_format(strtotime($check_in), $date_format) : '';
+        $check_out_formatted = !empty($check_out) ? fn_date_format(strtotime($check_out), $date_format) : '';
+
+        // Get terms - try formatted first, then raw, then try to format raw
         $payment = '';
         $cancel = '';
 
         if (!empty($product['extra']['terms_of_payment_formatted'])) {
             $payment = $product['extra']['terms_of_payment_formatted'];
+        } elseif (!empty($product['extra']['terms_of_payment_raw'])) {
+            $payment = function_exists('fn_novoton_format_payment_terms')
+                ? fn_novoton_format_payment_terms($product['extra']['terms_of_payment_raw'])
+                : $product['extra']['terms_of_payment_raw'];
         } elseif (!empty($product['extra']['terms_of_payment'])) {
             $payment = $product['extra']['terms_of_payment'];
         }
 
         if (!empty($product['extra']['terms_of_cancellation_formatted'])) {
             $cancel = $product['extra']['terms_of_cancellation_formatted'];
+        } elseif (!empty($product['extra']['terms_of_cancellation_raw'])) {
+            $cancel = function_exists('fn_novoton_format_cancellation_terms')
+                ? fn_novoton_format_cancellation_terms($product['extra']['terms_of_cancellation_raw'], $check_in)
+                : $product['extra']['terms_of_cancellation_raw'];
         } elseif (!empty($product['extra']['terms_of_cancellation'])) {
             $cancel = $product['extra']['terms_of_cancellation'];
         }
 
-        if ($payment || $cancel) {
-            $hotels_terms[$hotel_id] = [
-                'hotel_name' => $hotel_name,
-                'payment' => $payment,
-                'cancel' => $cancel
-            ];
-        }
+        $hotels_data[$hotel_id] = [
+            'hotel_name' => $hotel_name,
+            'check_in' => $check_in_formatted,
+            'check_out' => $check_out_formatted,
+            'nights' => $nights,
+            'room' => $room_display,
+            'board' => $board_display,
+            'adults' => $adults,
+            'children' => $children,
+            'holder_name' => $holder_name,
+            'payment' => $payment,
+            'cancel' => $cancel
+        ];
     }
 
-    // If no terms found, nothing to add
-    if (empty($hotels_terms)) {
+    // If no booking data found, nothing to add
+    if (empty($hotels_data)) {
         if ($debug_log) {
-            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No booking terms found for order $order_id"]);
+            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No booking data found for order $order_id"]);
         }
         return;
     }
 
     if ($debug_log) {
         fn_log_event('general', 'runtime', [
-            'message' => "NOVOTON mailer_send_pre: Found terms for " . count($hotels_terms) . " hotel(s), injecting into email"
+            'message' => "NOVOTON mailer_send_pre: Found booking data for " . count($hotels_data) . " hotel(s), injecting into email"
         ]);
     }
 
-    // Build terms HTML
-    // Add visible DEBUG marker for testing
-    $terms_html = '<!-- NOVOTON EMAIL TERMS START -->';
-    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px; border: 2px solid #28a745;">';
-    $terms_html .= '<tr><td style="background-color: #d4edda; padding: 5px; font-size: 11px; color: #155724;"><strong>DEBUG:</strong> Novoton Terms Injected (order #' . $order_id . ')</td></tr>';
+    // Get language-aware labels
+    $is_ro = ($lang_code === 'ro');
+    $label_booking_details = $is_ro ? 'Detalii Rezervare' : 'Booking Details';
+    $label_check_in = $is_ro ? 'Check-in' : 'Check-in';
+    $label_check_out = $is_ro ? 'Check-out' : 'Check-out';
+    $label_nights = $is_ro ? 'Nopți' : 'Nights';
+    $label_room = $is_ro ? 'Cameră' : 'Room';
+    $label_board = $is_ro ? 'Masă' : 'Board';
+    $label_guests = $is_ro ? 'Oaspeți' : 'Guests';
+    $label_adults = $is_ro ? 'adulți' : 'adults';
+    $label_children = $is_ro ? 'copii' : 'children';
+    $label_holder = $is_ro ? 'Titular' : 'Holder';
+
+    $label_payment = __('novoton_holidays.terms_of_payment', [], $lang_code);
+    if (empty($label_payment) || $label_payment === 'novoton_holidays.terms_of_payment') {
+        $label_payment = $is_ro ? 'Condiții de plată' : 'Payment Terms';
+    }
+    $label_cancel = __('novoton_holidays.cancellation_terms', [], $lang_code);
+    if (empty($label_cancel) || $label_cancel === 'novoton_holidays.cancellation_terms') {
+        $label_cancel = $is_ro ? 'Condiții de anulare' : 'Cancellation Terms';
+    }
+
+    // Build booking details and terms HTML
+    $terms_html = '<!-- NOVOTON EMAIL BOOKING START -->';
+    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px;">';
     $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa;">';
-    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%">';
 
     $is_first = true;
-    $multiple_hotels = count($hotels_terms) > 1;
+    $multiple_hotels = count($hotels_data) > 1;
 
-    foreach ($hotels_terms as $hotel_id => $hotel_terms) {
+    foreach ($hotels_data as $hotel_id => $hotel_info) {
         // Separator between hotels
         if (!$is_first) {
-            $terms_html .= '<tr><td style="padding: 10px 0;"><hr style="border: 0; border-top: 1px solid #dee2e6; margin: 0;"></td></tr>';
+            $terms_html .= '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #dee2e6;">';
         }
         $is_first = false;
 
-        // Hotel name if multiple hotels
-        if ($multiple_hotels) {
-            $terms_html .= '<tr><td style="padding-bottom: 10px; font-weight: bold; color: #495057; font-size: 14px;">';
-            $terms_html .= htmlspecialchars($hotel_terms['hotel_name']);
-            $terms_html .= '</td></tr>';
+        // Hotel name
+        $terms_html .= '<p style="margin: 0 0 10px 0; font-weight: bold; color: #003580; font-size: 15px;">';
+        $terms_html .= htmlspecialchars($hotel_info['hotel_name']);
+        $terms_html .= '</p>';
+
+        // Booking details table
+        $terms_html .= '<table cellpadding="3" cellspacing="0" border="0" style="margin-bottom: 10px; font-size: 13px; color: #333;">';
+
+        if (!empty($hotel_info['check_in']) && !empty($hotel_info['check_out'])) {
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_check_in . ':</strong></td><td>' . htmlspecialchars($hotel_info['check_in']) . '</td></tr>';
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_check_out . ':</strong></td><td>' . htmlspecialchars($hotel_info['check_out']) . '</td></tr>';
+        }
+        if (!empty($hotel_info['nights'])) {
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_nights . ':</strong></td><td>' . htmlspecialchars($hotel_info['nights']) . '</td></tr>';
+        }
+        if (!empty($hotel_info['room'])) {
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_room . ':</strong></td><td>' . htmlspecialchars($hotel_info['room']) . '</td></tr>';
+        }
+        if (!empty($hotel_info['board'])) {
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_board . ':</strong></td><td>' . htmlspecialchars($hotel_info['board']) . '</td></tr>';
+        }
+        if (!empty($hotel_info['adults'])) {
+            $guests_str = $hotel_info['adults'] . ' ' . $label_adults;
+            if (!empty($hotel_info['children']) && $hotel_info['children'] > 0) {
+                $guests_str .= ', ' . $hotel_info['children'] . ' ' . $label_children;
+            }
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_guests . ':</strong></td><td>' . htmlspecialchars($guests_str) . '</td></tr>';
+        }
+        if (!empty($hotel_info['holder_name'])) {
+            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_holder . ':</strong></td><td>' . htmlspecialchars($hotel_info['holder_name']) . '</td></tr>';
         }
 
+        $terms_html .= '</table>';
+
         // Payment terms
-        if (!empty($hotel_terms['payment'])) {
-            $payment_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_terms['payment']);
-            $terms_html .= '<tr><td style="padding-bottom: 10px;">';
-            $terms_html .= '<strong style="color: #333;">Termeni de plată</strong><br>';
-            $terms_html .= '<span style="color: #555; font-size: 13px; line-height: 1.6;">' . $payment_text . '</span>';
-            $terms_html .= '</td></tr>';
+        if (!empty($hotel_info['payment'])) {
+            $payment_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_info['payment']);
+            $terms_html .= '<p style="margin: 10px 0 5px 0;"><strong style="color: #333;">' . htmlspecialchars($label_payment) . '</strong></p>';
+            $terms_html .= '<p style="margin: 0 0 10px 0; color: #555; font-size: 13px; line-height: 1.6;">' . $payment_text . '</p>';
         }
 
         // Cancellation terms
-        if (!empty($hotel_terms['cancel'])) {
-            $cancel_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_terms['cancel']);
-            $terms_html .= '<tr><td>';
-            $terms_html .= '<strong style="color: #333;">Condiții de anulare</strong><br>';
-            $terms_html .= '<span style="color: #555; font-size: 13px; line-height: 1.6;">' . $cancel_text . '</span>';
-            $terms_html .= '</td></tr>';
+        if (!empty($hotel_info['cancel'])) {
+            $cancel_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_info['cancel']);
+            $terms_html .= '<p style="margin: 10px 0 5px 0;"><strong style="color: #333;">' . htmlspecialchars($label_cancel) . '</strong></p>';
+            $terms_html .= '<p style="margin: 0; color: #555; font-size: 13px; line-height: 1.6;">' . $cancel_text . '</p>';
         }
     }
 
-    $terms_html .= '</table></td></tr></table>';
-    $terms_html .= '<!-- NOVOTON EMAIL TERMS END -->';
+    $terms_html .= '</td></tr></table>';
+    $terms_html .= '<!-- NOVOTON EMAIL BOOKING END -->';
 
     // Find the best place to insert terms - before the footer section
     $inserted = false;

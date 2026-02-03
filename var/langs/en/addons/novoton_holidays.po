@@ -2900,3 +2900,11 @@ msgstr "Between [from] - [to]: [penalty]"
 msgctxt "Languages::novoton_holidays.cancel_until_date"
 msgid "Until [date]: [penalty]"
 msgstr "Until [date]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_until"
+msgid "[percent]% until [date]"
+msgstr "[percent]% until [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
+msgid "[percent]% on booking"
+msgstr "[percent]% on booking"
