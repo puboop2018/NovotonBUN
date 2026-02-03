@@ -20,6 +20,7 @@ require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\PriceSync;
+use Tygh\Addons\NovotonHolidays\HotelSync;
 
 // Verify API key
 $settings = Registry::get('addons.novoton_holidays') ?? [];
@@ -155,28 +156,28 @@ try {
         exit(0);
     }
     
-    // Mode: hotel_list - Only sync hotel information
+    // Mode: hotel_list - Only sync hotel information (legacy mode)
     if ($mode === 'hotel_list') {
         echo "Syncing hotel information...\n";
-        
+
         // Load API
         $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
         if (file_exists($src_dir . 'NovotonApi.php')) {
             require_once($src_dir . 'NovotonApi.php');
         }
-        
+
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         $hotels_updated = 0;
-        
+
         // Get all Novoton products
         $products = db_get_array(
             "SELECT product_id, product_code FROM ?:products WHERE product_code LIKE 'NVT%'"
         );
-        
+
         foreach ($products as $product) {
             preg_match('/\d+/', $product['product_code'], $matches);
             $hotel_id = $matches[0] ?? null;
-            
+
             if ($hotel_id) {
                 echo "  Syncing hotel {$hotel_id}...\n";
                 try {
@@ -184,9 +185,9 @@ try {
                     if ($hotelInfo) {
                         // Update hotel cache
                         db_query(
-                            "INSERT INTO ?:novoton_hotels (hotel_id, product_id, hotel_name, city, country, hotel_data, updated_at) 
+                            "INSERT INTO ?:novoton_hotels (hotel_id, product_id, hotel_name, city, country, hotel_data, updated_at)
                              VALUES (?s, ?i, ?s, ?s, ?s, ?s, NOW())
-                             ON DUPLICATE KEY UPDATE 
+                             ON DUPLICATE KEY UPDATE
                              product_id = ?i, hotel_name = ?s, city = ?s, country = ?s, hotel_data = ?s, updated_at = NOW()",
                             $hotel_id,
                             $product['product_id'],
@@ -207,18 +208,191 @@ try {
                 }
             }
         }
-        
+
         echo "\n=== HOTEL LIST SYNC COMPLETED ===\n";
         echo "Hotels updated: {$hotels_updated}\n";
         echo "=================================\n\n";
-        
+
         fn_log_event('novoton_holidays', 'cron_complete', [
             'timestamp' => time(),
             'mode' => 'hotel_list',
             'hotels_updated' => $hotels_updated
         ]);
-        
+
         echo "[" . date('Y-m-d H:i:s') . "] Hotel list sync completed.\n";
+        exit(0);
+    }
+
+    // =============================================================
+    // V3 Architecture Sync Modes
+    // =============================================================
+
+    // Mode: sync_hotels - V3 Full hotel sync (hotel_list → hotelinfo → priceinfo)
+    if ($mode === 'sync_hotels') {
+        echo "=== V3 FULL HOTEL SYNC ===\n";
+        echo "[" . date('Y-m-d H:i:s') . "]\n\n";
+
+        // Load HotelSync class
+        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        if (file_exists($src_dir . 'HotelSync.php')) {
+            require_once($src_dir . 'HotelSync.php');
+        }
+
+        // Get optional parameters
+        $country = isset($_GET['country']) ? $_GET['country'] : null;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
+
+        // CLI arguments
+        if (isset($argv)) {
+            foreach ($argv as $arg) {
+                if (strpos($arg, 'country=') === 0) {
+                    $country = str_replace('country=', '', $arg);
+                }
+                if (strpos($arg, 'limit=') === 0) {
+                    $limit = (int)str_replace('limit=', '', $arg);
+                }
+            }
+        }
+
+        $sync = new HotelSync();
+        $stats = $sync->fullSync($country, $limit);
+
+        echo "\n=== V3 SYNC COMPLETED ===\n";
+        echo "Duration: " . ($stats['duration'] ?? 0) . " seconds\n";
+        echo "Hotels processed: " . $stats['hotels_processed'] . "\n";
+        echo "Hotels updated: " . $stats['hotels_updated'] . "\n";
+        echo "Hotels failed: " . $stats['hotels_failed'] . "\n";
+        echo "Packages processed: " . $stats['packages_processed'] . "\n";
+        echo "Packages updated: " . $stats['packages_updated'] . "\n";
+        echo "Packages failed: " . $stats['packages_failed'] . "\n";
+        if (!empty($stats['errors'])) {
+            echo "Errors:\n";
+            foreach (array_slice($stats['errors'], 0, 10) as $error) {
+                echo "  - {$error}\n";
+            }
+        }
+        echo "=========================\n\n";
+
+        fn_log_event('novoton_holidays', 'cron_complete', [
+            'timestamp' => time(),
+            'mode' => 'sync_hotels',
+            'stats' => $stats
+        ]);
+
+        echo "[" . date('Y-m-d H:i:s') . "] V3 hotel sync completed.\n";
+        exit(0);
+    }
+
+    // Mode: sync_hotellist - V3 Sync hotel_list API only (fast)
+    if ($mode === 'sync_hotellist') {
+        echo "=== V3 HOTEL LIST SYNC ===\n";
+        echo "[" . date('Y-m-d H:i:s') . "]\n\n";
+
+        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        if (file_exists($src_dir . 'HotelSync.php')) {
+            require_once($src_dir . 'HotelSync.php');
+        }
+
+        $country = isset($_GET['country']) ? $_GET['country'] : null;
+        if (isset($argv)) {
+            foreach ($argv as $arg) {
+                if (strpos($arg, 'country=') === 0) {
+                    $country = str_replace('country=', '', $arg);
+                }
+            }
+        }
+
+        $sync = new HotelSync();
+        $stats = $sync->syncHotelList($country);
+
+        echo "\n=== HOTEL LIST SYNC COMPLETED ===\n";
+        echo "Hotels processed: " . $stats['hotels_processed'] . "\n";
+        echo "Hotels updated: " . $stats['hotels_updated'] . "\n";
+        echo "=================================\n\n";
+
+        fn_log_event('novoton_holidays', 'cron_complete', [
+            'timestamp' => time(),
+            'mode' => 'sync_hotellist',
+            'stats' => $stats
+        ]);
+
+        echo "[" . date('Y-m-d H:i:s') . "] Hotel list sync completed.\n";
+        exit(0);
+    }
+
+    // Mode: sync_hotelinfo - V3 Sync hotelinfo + priceinfo for hotels
+    if ($mode === 'sync_hotelinfo') {
+        echo "=== V3 HOTEL INFO SYNC ===\n";
+        echo "[" . date('Y-m-d H:i:s') . "]\n\n";
+
+        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        if (file_exists($src_dir . 'HotelSync.php')) {
+            require_once($src_dir . 'HotelSync.php');
+        }
+
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+        if (isset($argv)) {
+            foreach ($argv as $arg) {
+                if (strpos($arg, 'limit=') === 0) {
+                    $limit = (int)str_replace('limit=', '', $arg);
+                }
+            }
+        }
+
+        $sync = new HotelSync();
+        $stats = $sync->syncHotelInfo(null, $limit);
+
+        echo "\n=== HOTEL INFO SYNC COMPLETED ===\n";
+        echo "Hotels processed: " . $stats['hotels_processed'] . "\n";
+        echo "Hotels updated: " . $stats['hotels_updated'] . "\n";
+        echo "Packages updated: " . $stats['packages_updated'] . "\n";
+        echo "=================================\n\n";
+
+        fn_log_event('novoton_holidays', 'cron_complete', [
+            'timestamp' => time(),
+            'mode' => 'sync_hotelinfo',
+            'stats' => $stats
+        ]);
+
+        echo "[" . date('Y-m-d H:i:s') . "] Hotel info sync completed.\n";
+        exit(0);
+    }
+
+    // Mode: sync_priceinfo - V3 Sync only priceinfo (fast refresh)
+    if ($mode === 'sync_priceinfo') {
+        echo "=== V3 PRICE INFO SYNC ===\n";
+        echo "[" . date('Y-m-d H:i:s') . "]\n\n";
+
+        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        if (file_exists($src_dir . 'HotelSync.php')) {
+            require_once($src_dir . 'HotelSync.php');
+        }
+
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 100;
+        if (isset($argv)) {
+            foreach ($argv as $arg) {
+                if (strpos($arg, 'limit=') === 0) {
+                    $limit = (int)str_replace('limit=', '', $arg);
+                }
+            }
+        }
+
+        $sync = new HotelSync();
+        $stats = $sync->syncPriceInfoOnly($limit);
+
+        echo "\n=== PRICE INFO SYNC COMPLETED ===\n";
+        echo "Packages processed: " . $stats['packages_processed'] . "\n";
+        echo "Packages updated: " . $stats['packages_updated'] . "\n";
+        echo "Duration: " . ($stats['duration'] ?? 0) . " seconds\n";
+        echo "=================================\n\n";
+
+        fn_log_event('novoton_holidays', 'cron_complete', [
+            'timestamp' => time(),
+            'mode' => 'sync_priceinfo',
+            'stats' => $stats
+        ]);
+
+        echo "[" . date('Y-m-d H:i:s') . "] Price info sync completed.\n";
         exit(0);
     }
     

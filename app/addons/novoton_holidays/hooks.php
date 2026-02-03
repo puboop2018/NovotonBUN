@@ -60,12 +60,13 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         $product['novoton_prices'] = $prices;
         $product['is_hotel_product'] = true;
         
-        // Get last update time from prices
+        // V3: Get last update time from packages table
         $last_update_db = null;
-        if (!empty($prices)) {
+        preg_match('/\d+/', $product['product_code'], $matches);
+        if (!empty($matches[0])) {
             $last_update_db = db_get_field(
-                "SELECT MAX(updated_at) FROM ?:novoton_hotel_prices WHERE product_id = ?i",
-                $product['product_id']
+                "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
+                $matches[0]
             );
         }
         $product['novoton_last_update'] = $last_update_db;
@@ -99,13 +100,10 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
                     \Tygh\Tygh::$app['view']->assign('board_data', $hotel_info['board']);
                 }
                 
-                // Get active package name (from price records or first package)
-                $active_package = db_get_field(
-                    "SELECT package_name FROM ?:novoton_hotel_prices WHERE product_id = ?i AND package_name IS NOT NULL LIMIT 1",
-                    $product['product_id']
-                );
+                // V3: Get active package name from packages data
+                $active_package = '';
                 $packages_data = $hotel_info['packages'] ?? [];
-                if (empty($active_package) && !empty($packages_data)) {
+                if (!empty($packages_data)) {
                     // Use first non-bracketed package or just first
                     foreach ($packages_data as $pkg) {
                         $pkg_name = is_array($pkg) ? ($pkg['PackageName'] ?? '') : '';
@@ -128,26 +126,67 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
                 }
             }
             
-            // Get season dates
-            $season_dates = db_get_hash_array(
-                "SELECT season_number, date_from, date_to FROM ?:novoton_seasons 
-                 WHERE hotel_id = ?s ORDER BY season_number",
-                'season_number',
+            // V3 Architecture: Get season dates and early_booking from packages table
+            // Extract from the first package with priceinfo_data (or active package)
+            $season_dates = [];
+            $early_booking = [];
+
+            // Get first package with priceinfo for this hotel
+            $package_data = db_get_field(
+                "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+                 WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+                 ORDER BY synced_at DESC LIMIT 1",
                 $hotel_id
             );
+
+            if (!empty($package_data)) {
+                $priceinfo = json_decode($package_data, true);
+                if ($priceinfo) {
+                    // Extract seasons
+                    if (isset($priceinfo['seasons']['season'])) {
+                        $seasons = $priceinfo['seasons']['season'];
+                        // Normalize single season to array
+                        if (isset($seasons['IdSeason'])) {
+                            $seasons = [$seasons];
+                        }
+                        foreach ($seasons as $idx => $season) {
+                            $seasonNum = isset($season['IdSeason']) ? (int)$season['IdSeason'] : ($idx + 1);
+                            $season_dates[$seasonNum] = [
+                                'season_number' => $seasonNum,
+                                'date_from' => $season['DateFrom'] ?? '',
+                                'date_to' => $season['DateTo'] ?? '',
+                                'season_name' => $season['SeasonName'] ?? "Season {$seasonNum}"
+                            ];
+                        }
+                    }
+
+                    // Extract early booking discounts
+                    if (isset($priceinfo['early_booking'])) {
+                        $eb_data = $priceinfo['early_booking'];
+                        // Normalize single entry to array
+                        if (isset($eb_data['Reduction'])) {
+                            $eb_data = [$eb_data];
+                        }
+                        foreach ($eb_data as $eb) {
+                            $early_booking[] = [
+                                'booking_from' => $eb['BookFrom'] ?? '',
+                                'booking_to' => $eb['BookTo'] ?? '',
+                                'stay_from' => $eb['StayFrom'] ?? '',
+                                'stay_to' => $eb['StayTo'] ?? '',
+                                'reduction' => $eb['Reduction'] ?? 0,
+                                'payment_date' => $eb['PaymentDate'] ?? '',
+                                'payment_percent' => $eb['PaymentPercent'] ?? 0,
+                                'room_types' => $eb['RoomTypes'] ?? 'all',
+                                'min_stay' => $eb['MinStay'] ?? 0
+                            ];
+                        }
+                    }
+                }
+            }
+
             $product['novoton_season_dates'] = $season_dates;
             \Tygh\Tygh::$app['view']->assign('season_dates', $season_dates);
-            
-            // Get early booking discounts - A73: optimized query
-            $early_booking = db_get_array(
-                "SELECT id, booking_from, booking_to, stay_from, stay_to, 
-                        reduction, payment_date, payment_percent, room_types, min_stay 
-                 FROM ?:novoton_early_booking 
-                 WHERE hotel_id = ?s 
-                 ORDER BY reduction DESC 
-                 LIMIT 20",
-                $hotel_id
-            );
+
             $product['novoton_early_booking'] = $early_booking;
             \Tygh\Tygh::$app['view']->assign('early_booking', $early_booking);
         }
@@ -218,24 +257,16 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
     
     // Add hotel prices data if this is a hotel product
     if ($is_hotel_product) {
-        // A73: Optimized query - select only needed columns for display
-        $product_data['hotel_prices'] = db_get_array(
-            "SELECT price_id, hotel_id, room_id, room_type, board_id, age_type, acc_type,
-                    price_1, price_2, price_3, price_4, price_5, price_6, price_7, 
-                    price_8, price_9, price_10, min_price, from_days, to_days
-             FROM ?:novoton_hotel_prices 
-             WHERE product_id = ?i 
-             ORDER BY room_id, board_id, age_type, min_price",
-            $product_id
-        );
-        
-        $product_data['is_hotel_product'] = true;
-        
         // Get hotel ID from product code
         preg_match('/\d+/', $product_data['product_code'], $matches);
         if (!empty($matches[0])) {
             $product_data['hotel_id'] = $matches[0];
+
+            // V3: Get packages with priceinfo from packages table
+            $product_data['hotel_packages'] = fn_novoton_get_hotel_prices($product_id);
         }
+
+        $product_data['is_hotel_product'] = true;
     }
 }
 
@@ -261,8 +292,7 @@ function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $la
 function fn_novoton_holidays_delete_product_post($product_id, $product_deleted)
 {
     if ($product_deleted) {
-        // Clean up hotel data when product is deleted
-        db_query("DELETE FROM ?:novoton_hotel_prices WHERE product_id = ?i", $product_id);
+        // Clean up booking data when product is deleted
         db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
     }
 }
@@ -649,14 +679,16 @@ function fn_novoton_get_board_name($board_id)
     $board_map = [
         'AI' => 'All Inclusive',
         'ALL INCL' => 'All Inclusive',
+        'ALLINC' => 'All Inclusive',
         'UAI' => 'Ultra All Inclusive',
+        'ULTRA ALL INCL' => 'Ultra All Inclusive',
         'FB' => 'Full Board',
         'HB' => 'Half Board',
         'BB' => 'Bed & Breakfast',
         'RO' => 'Room Only',
         'SC' => 'Self Catering',
     ];
-    
+
     $board_upper = strtoupper(trim($board_id));
     return $board_map[$board_upper] ?? $board_id;
 }
@@ -1553,310 +1585,17 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
             $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
         }
 
+        // Format board display name (e.g., "ULTRA ALL INCL" -> "Ultra All Inclusive")
+        $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
+        if (!empty($board_id)) {
+            $product['extra']['board_display'] = fn_novoton_get_board_name($board_id);
+        }
+
         // Debug: Show what was set
         if (!empty($_REQUEST['debug'])) {
             $payment_set = !empty($product['extra']['terms_of_payment_formatted']) ? 'YES' : 'NO';
             $cancel_set = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
             fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, terms_of_cancellation_formatted: {$cancel_set}");
         }
-    }
-}
-
-/**
- * Hook: mailer_send_pre - Add booking terms to order notification emails
- *
- * CS-Cart 4.19 uses Twig for emails, so we modify the message body directly
- * before it's sent.
- *
- * @param object $mailer Mailer instance
- * @param string $transport Transport type
- * @param object $message Swift_Message object
- * @param string $area Area (A/C)
- * @param string $lang_code Language code
- */
-function fn_novoton_holidays_mailer_send_pre($mailer, $transport, &$message, $area, $lang_code)
-{
-    // Debug logging
-    $debug_log = Registry::get('addons.novoton_holidays.debug_logging') === 'Y';
-    if ($debug_log) {
-        fn_log_event('general', 'runtime', [
-            'message' => 'NOVOTON mailer_send_pre hook called',
-            'subject' => $message->getSubject(),
-            'area' => $area
-        ]);
-    }
-
-    // Get the message body
-    $body = $message->getBody();
-
-    // Check if this is an order-related email by looking for order patterns
-    // Look for order_id in the body or subject
-    $subject = $message->getSubject();
-
-    // Try to extract order ID from subject or body
-    $order_id = 0;
-
-    // Common patterns: "Order #123", "Comanda #123", "order_id=123"
-    if (preg_match('/(?:Order|Comanda|order)\s*#?\s*(\d+)/i', $subject . ' ' . $body, $matches)) {
-        $order_id = (int)$matches[1];
-    }
-
-    // Also check for order_id in any data attributes
-    if ($order_id == 0 && preg_match('/order_id["\s:=]+(\d+)/i', $body, $matches)) {
-        $order_id = (int)$matches[1];
-    }
-
-    if ($order_id <= 0) {
-        if ($debug_log) {
-            fn_log_event('general', 'runtime', ['message' => 'NOVOTON mailer_send_pre: Not an order email, skipping']);
-        }
-        return; // Not an order email
-    }
-
-    if ($debug_log) {
-        fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: Found order_id=$order_id"]);
-    }
-
-    // Get order info
-    $order_info = fn_get_order_info($order_id);
-    if (empty($order_info) || empty($order_info['products'])) {
-        if ($debug_log) {
-            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No order info or products for order $order_id"]);
-        }
-        return;
-    }
-
-    // Collect booking details and terms from all hotel bookings
-    $hotels_data = [];
-
-    // Get CS-Cart date format
-    $date_format = Registry::get('settings.Appearance.date_format');
-    if (empty($date_format)) {
-        $date_format = '%d/%m/%Y';
-    }
-
-    foreach ($order_info['products'] as $product) {
-        if (empty($product['extra']['novoton_booking'])) {
-            continue;
-        }
-
-        $hotel_id = $product['extra']['hotel_id'] ?? 'unknown';
-        $hotel_name = $product['extra']['hotel_name'] ?? $product['product'] ?? 'Hotel';
-
-        // Skip if already processed this hotel
-        if (isset($hotels_data[$hotel_id])) {
-            continue;
-        }
-
-        // Get booking details
-        $check_in = $product['extra']['check_in'] ?? '';
-        $check_out = $product['extra']['check_out'] ?? '';
-        $nights = $product['extra']['nights'] ?? '';
-        $room_display = $product['extra']['room_type_display'] ?? $product['extra']['room_name'] ?? $product['extra']['room_id'] ?? '';
-        $board_display = $product['extra']['board_name'] ?? $product['extra']['board_id'] ?? '';
-        $adults = $product['extra']['adults'] ?? '';
-        $children = $product['extra']['children'] ?? 0;
-        $holder_name = $product['extra']['holder_name'] ?? '';
-
-        // Format dates
-        $check_in_formatted = !empty($check_in) ? fn_date_format(strtotime($check_in), $date_format) : '';
-        $check_out_formatted = !empty($check_out) ? fn_date_format(strtotime($check_out), $date_format) : '';
-
-        // Get terms - try formatted first, then raw, then try to format raw
-        $payment = '';
-        $cancel = '';
-
-        if (!empty($product['extra']['terms_of_payment_formatted'])) {
-            $payment = $product['extra']['terms_of_payment_formatted'];
-        } elseif (!empty($product['extra']['terms_of_payment_raw'])) {
-            $payment = function_exists('fn_novoton_format_payment_terms')
-                ? fn_novoton_format_payment_terms($product['extra']['terms_of_payment_raw'])
-                : $product['extra']['terms_of_payment_raw'];
-        } elseif (!empty($product['extra']['terms_of_payment'])) {
-            $payment = $product['extra']['terms_of_payment'];
-        }
-
-        if (!empty($product['extra']['terms_of_cancellation_formatted'])) {
-            $cancel = $product['extra']['terms_of_cancellation_formatted'];
-        } elseif (!empty($product['extra']['terms_of_cancellation_raw'])) {
-            $cancel = function_exists('fn_novoton_format_cancellation_terms')
-                ? fn_novoton_format_cancellation_terms($product['extra']['terms_of_cancellation_raw'], $check_in)
-                : $product['extra']['terms_of_cancellation_raw'];
-        } elseif (!empty($product['extra']['terms_of_cancellation'])) {
-            $cancel = $product['extra']['terms_of_cancellation'];
-        }
-
-        $hotels_data[$hotel_id] = [
-            'hotel_name' => $hotel_name,
-            'check_in' => $check_in_formatted,
-            'check_out' => $check_out_formatted,
-            'nights' => $nights,
-            'room' => $room_display,
-            'board' => $board_display,
-            'adults' => $adults,
-            'children' => $children,
-            'holder_name' => $holder_name,
-            'payment' => $payment,
-            'cancel' => $cancel
-        ];
-    }
-
-    // If no booking data found, nothing to add
-    if (empty($hotels_data)) {
-        if ($debug_log) {
-            fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: No booking data found for order $order_id"]);
-        }
-        return;
-    }
-
-    if ($debug_log) {
-        fn_log_event('general', 'runtime', [
-            'message' => "NOVOTON mailer_send_pre: Found booking data for " . count($hotels_data) . " hotel(s), injecting into email"
-        ]);
-    }
-
-    // Get language-aware labels
-    $is_ro = ($lang_code === 'ro');
-    $label_booking_details = $is_ro ? 'Detalii Rezervare' : 'Booking Details';
-    $label_check_in = $is_ro ? 'Check-in' : 'Check-in';
-    $label_check_out = $is_ro ? 'Check-out' : 'Check-out';
-    $label_nights = $is_ro ? 'Nopți' : 'Nights';
-    $label_room = $is_ro ? 'Cameră' : 'Room';
-    $label_board = $is_ro ? 'Masă' : 'Board';
-    $label_guests = $is_ro ? 'Oaspeți' : 'Guests';
-    $label_adults = $is_ro ? 'adulți' : 'adults';
-    $label_children = $is_ro ? 'copii' : 'children';
-    $label_holder = $is_ro ? 'Titular' : 'Holder';
-
-    $label_payment = __('novoton_holidays.terms_of_payment', [], $lang_code);
-    if (empty($label_payment) || $label_payment === 'novoton_holidays.terms_of_payment') {
-        $label_payment = $is_ro ? 'Condiții de plată' : 'Payment Terms';
-    }
-    $label_cancel = __('novoton_holidays.cancellation_terms', [], $lang_code);
-    if (empty($label_cancel) || $label_cancel === 'novoton_holidays.cancellation_terms') {
-        $label_cancel = $is_ro ? 'Condiții de anulare' : 'Cancellation Terms';
-    }
-
-    // Build booking details and terms HTML
-    $terms_html = '<!-- NOVOTON EMAIL BOOKING START -->';
-    $terms_html .= '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px;">';
-    $terms_html .= '<tr><td style="padding: 15px; background-color: #f8f9fa;">';
-
-    $is_first = true;
-    $multiple_hotels = count($hotels_data) > 1;
-
-    foreach ($hotels_data as $hotel_id => $hotel_info) {
-        // Separator between hotels
-        if (!$is_first) {
-            $terms_html .= '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #dee2e6;">';
-        }
-        $is_first = false;
-
-        // Hotel name
-        $terms_html .= '<p style="margin: 0 0 10px 0; font-weight: bold; color: #003580; font-size: 15px;">';
-        $terms_html .= htmlspecialchars($hotel_info['hotel_name']);
-        $terms_html .= '</p>';
-
-        // Booking details table
-        $terms_html .= '<table cellpadding="3" cellspacing="0" border="0" style="margin-bottom: 10px; font-size: 13px; color: #333;">';
-
-        if (!empty($hotel_info['check_in']) && !empty($hotel_info['check_out'])) {
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_check_in . ':</strong></td><td>' . htmlspecialchars($hotel_info['check_in']) . '</td></tr>';
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_check_out . ':</strong></td><td>' . htmlspecialchars($hotel_info['check_out']) . '</td></tr>';
-        }
-        if (!empty($hotel_info['nights'])) {
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_nights . ':</strong></td><td>' . htmlspecialchars($hotel_info['nights']) . '</td></tr>';
-        }
-        if (!empty($hotel_info['room'])) {
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_room . ':</strong></td><td>' . htmlspecialchars($hotel_info['room']) . '</td></tr>';
-        }
-        if (!empty($hotel_info['board'])) {
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_board . ':</strong></td><td>' . htmlspecialchars($hotel_info['board']) . '</td></tr>';
-        }
-        if (!empty($hotel_info['adults'])) {
-            $guests_str = $hotel_info['adults'] . ' ' . $label_adults;
-            if (!empty($hotel_info['children']) && $hotel_info['children'] > 0) {
-                $guests_str .= ', ' . $hotel_info['children'] . ' ' . $label_children;
-            }
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_guests . ':</strong></td><td>' . htmlspecialchars($guests_str) . '</td></tr>';
-        }
-        if (!empty($hotel_info['holder_name'])) {
-            $terms_html .= '<tr><td style="padding-right: 10px;"><strong>' . $label_holder . ':</strong></td><td>' . htmlspecialchars($hotel_info['holder_name']) . '</td></tr>';
-        }
-
-        $terms_html .= '</table>';
-
-        // Payment terms
-        if (!empty($hotel_info['payment'])) {
-            $payment_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_info['payment']);
-            $terms_html .= '<p style="margin: 10px 0 5px 0;"><strong style="color: #333;">' . htmlspecialchars($label_payment) . '</strong></p>';
-            $terms_html .= '<p style="margin: 0 0 10px 0; color: #555; font-size: 13px; line-height: 1.6;">' . $payment_text . '</p>';
-        }
-
-        // Cancellation terms
-        if (!empty($hotel_info['cancel'])) {
-            $cancel_text = str_replace(["\n", "<br />", "<br>"], "<br>", $hotel_info['cancel']);
-            $terms_html .= '<p style="margin: 10px 0 5px 0;"><strong style="color: #333;">' . htmlspecialchars($label_cancel) . '</strong></p>';
-            $terms_html .= '<p style="margin: 0; color: #555; font-size: 13px; line-height: 1.6;">' . $cancel_text . '</p>';
-        }
-    }
-
-    $terms_html .= '</td></tr></table>';
-    $terms_html .= '<!-- NOVOTON EMAIL BOOKING END -->';
-
-    // Find the best place to insert terms - before the footer section
-    $inserted = false;
-
-    // Try to find common footer patterns and insert before them
-    $footer_patterns = [
-        // CS-Cart footer snippet marker
-        '<!-- footer -->',
-        // Contact information section (seen in screenshot)
-        'CONTACT INFORMATION',
-        // Social section
-        'GET SOCIAL',
-        // Copyright section
-        '© CS-Cart',
-        '&copy; CS-Cart',
-        // Thank you message
-        'Thank you for using',
-        // Generic footer table patterns
-        'id="footer"',
-        'class="footer"',
-    ];
-
-    foreach ($footer_patterns as $pattern) {
-        $pos = stripos($body, $pattern);
-        if ($pos !== false) {
-            // Find the start of the table/section containing this pattern
-            // Look backwards for a table start
-            $search_start = max(0, $pos - 500);
-            $before_pattern = substr($body, $search_start, $pos - $search_start);
-
-            // Find the last <table before the pattern
-            $last_table_pos = strripos($before_pattern, '<table');
-            if ($last_table_pos !== false) {
-                $insert_pos = $search_start + $last_table_pos;
-                $body = substr($body, 0, $insert_pos) . $terms_html . substr($body, $insert_pos);
-                $inserted = true;
-                break;
-            }
-        }
-    }
-
-    // Fallback: insert before </body> or at end
-    if (!$inserted) {
-        if (stripos($body, '</body>') !== false) {
-            $body = str_ireplace('</body>', $terms_html . '</body>', $body);
-        } else {
-            $body .= $terms_html;
-        }
-    }
-
-    // Update message body
-    $message->setBody($body);
-
-    if ($debug_log) {
-        fn_log_event('general', 'runtime', ['message' => "NOVOTON mailer_send_pre: Terms successfully injected into email for order $order_id"]);
     }
 }
