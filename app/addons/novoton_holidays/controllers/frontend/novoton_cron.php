@@ -1181,18 +1181,19 @@ try {
     }
 
     // =========================================
-    // MODE: check_packages
+    // MODE: check_packages (V3)
     // =========================================
     elseif ($mode == 'check_packages') {
-        echo "Check Hotel Packages (hotelinfo API)\n\n";
+        echo "Check Hotel Packages - V3 (hotelinfo API)\n\n";
 
         // Get countries from addon settings
         $countries = fn_novoton_parse_countries();
 
         echo "Countries: " . implode(', ', $countries) . "\n\n";
 
+        // V3: Select hotels without package_name column (it's now in novoton_hotel_packages)
         $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, country, package_name FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
+            "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
             $countries
         );
 
@@ -1203,6 +1204,7 @@ try {
 
             $total = 0;
             $with_packages = 0;
+            $packages_added = 0;
             $updated = 0;
             $errors = 0;
             $current_country = '';
@@ -1218,32 +1220,54 @@ try {
                 try {
                     $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
 
-                    $package_name = '';
-                    if ($hotel_info) {
-                        if (isset($hotel_info->packages->PackageName)) {
-                            $package_name = (string)$hotel_info->packages->PackageName;
-                        } elseif (isset($hotel_info->packages->Package)) {
-                            $package_name = (string)$hotel_info->packages->Package;
+                    // V3: Extract all packages from hotelinfo
+                    $packages = [];
+                    if ($hotel_info && isset($hotel_info->packages)) {
+                        // Single package format
+                        if (isset($hotel_info->packages->IdCont)) {
+                            $packages[] = [
+                                'id' => (string)$hotel_info->packages->IdCont,
+                                'name' => (string)($hotel_info->packages->PackageName ?? '')
+                            ];
                         }
-                        if (empty($package_name)) {
-                            $pn = $hotel_info->xpath('//PackageName');
-                            if (!empty($pn)) {
-                                $package_name = (string)$pn[0];
+                        // Multiple packages format
+                        if (isset($hotel_info->packages->package)) {
+                            foreach ($hotel_info->packages->package as $pkg) {
+                                $packages[] = [
+                                    'id' => (string)($pkg->IdCont ?? ''),
+                                    'name' => (string)($pkg->PackageName ?? '')
+                                ];
                             }
                         }
                     }
 
-                    if (!empty($package_name)) {
+                    if (!empty($packages)) {
                         $with_packages++;
-                        if ($package_name !== ($hotel['package_name'] ?? '')) {
-                            db_query("UPDATE ?:novoton_hotels SET package_name = ?s WHERE hotel_id = ?s", $package_name, $hotel['hotel_id']);
-                            $updated++;
-                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name} (updated)\n";
-                        } else {
-                            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> {$package_name}\n";
+                        $pkg_names = [];
+
+                        // V3: Store packages in novoton_hotel_packages table
+                        foreach ($packages as $pkg) {
+                            if (!empty($pkg['id'])) {
+                                db_query(
+                                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+                                     VALUES (?s, ?s, ?s, NOW())
+                                     ON DUPLICATE KEY UPDATE package_name = ?s",
+                                    $hotel['hotel_id'], $pkg['id'], $pkg['name'], $pkg['name']
+                                );
+                                $packages_added++;
+                                $pkg_names[] = $pkg['name'];
+                            }
                         }
+
+                        // Update hotel packages_count
+                        db_query(
+                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
+                            count($packages), $hotel['hotel_id']
+                        );
+
+                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> " . count($packages) . " pkg: " . implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '') . "\n";
                     } else {
-                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no package\n";
+                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no packages\n";
                     }
                 } catch (Exception $e) {
                     $errors++;
@@ -1260,6 +1284,7 @@ try {
             echo "\n\nSummary:\n";
             echo "Total checked: {$total}\n";
             echo "With packages: {$with_packages}\n";
+            echo "Packages added/updated: {$packages_added}\n";
             echo "Updated: {$updated}\n";
             echo "Errors: {$errors}\n";
 
@@ -1276,28 +1301,347 @@ try {
     }
 
     // =========================================
+    // MODE: sync_hotels (V3 - Full sync)
+    // =========================================
+    elseif ($mode == 'sync_hotels') {
+        echo "V3 Full Sync: hotel_list + hotelinfo + priceinfo\n\n";
+
+        $start_time = microtime(true);
+        $limit = intval($_REQUEST['limit'] ?? 100);
+        $countries = fn_novoton_parse_countries();
+
+        echo "Countries: " . implode(', ', $countries) . "\n";
+        echo "Limit per step: {$limit}\n\n";
+
+        // Step 1: Hotel List
+        echo "=== STEP 1: Hotel List ===\n";
+        $hotels_added = 0;
+        $hotels_updated = 0;
+
+        foreach ($countries as $country) {
+            echo "\n[{$country}] Fetching hotel list... ";
+            $result = $api->getHotelList($country, '%', '%', '%');
+
+            if (!$result) {
+                echo "FAILED\n";
+                continue;
+            }
+
+            $count = 0;
+            foreach ($result as $hotel) {
+                $count++;
+                $hotel_id = (string)($hotel->IdHotel ?? '');
+                if (empty($hotel_id)) continue;
+
+                $hotel_data = [
+                    'hotel_id' => $hotel_id,
+                    'hotel_name' => (string)($hotel->Hotel ?? ''),
+                    'city' => (string)($hotel->City ?? ''),
+                    'country' => $country,
+                    'hotel_type' => (string)($hotel->HotelType ?? ''),
+                    'latitude' => (string)($hotel->Latitude ?? ''),
+                    'longitude' => (string)($hotel->Longitude ?? ''),
+                ];
+
+                // Parse star rating
+                $stars = (string)($hotel->Stars ?? '');
+                if (preg_match('/(\d)/', $stars, $m)) {
+                    $hotel_data['star_rating'] = intval($m[1]);
+                }
+
+                $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
+                if ($exists) {
+                    db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $hotel_data, $hotel_id);
+                    $hotels_updated++;
+                } else {
+                    $hotel_data['created_at'] = date('Y-m-d H:i:s');
+                    db_query("INSERT INTO ?:novoton_hotels ?e", $hotel_data);
+                    $hotels_added++;
+                }
+            }
+            echo "{$count} hotels\n";
+        }
+
+        echo "\nHotels: +{$hotels_added} added, {$hotels_updated} updated\n";
+
+        // Step 2: Hotelinfo (for hotels without hotel_data)
+        echo "\n=== STEP 2: Hotelinfo ===\n";
+        $hotels_to_sync = db_get_array(
+            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
+             WHERE country IN (?a) AND (hotel_data IS NULL OR hotel_data = '')
+             ORDER BY hotel_name LIMIT ?i",
+            $countries, $limit
+        );
+
+        echo "Hotels needing hotelinfo: " . count($hotels_to_sync) . "\n\n";
+        $info_synced = 0;
+        $packages_created = 0;
+
+        foreach ($hotels_to_sync as $hotel) {
+            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} ... ";
+
+            $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
+            if (!$hotel_info) {
+                echo "SKIP\n";
+                continue;
+            }
+
+            // Store hotel_data JSON
+            $update = [
+                'hotel_data' => json_encode($hotel_info),
+                'hotelinfo_synced_at' => date('Y-m-d H:i:s'),
+            ];
+
+            // Extract and store packages
+            $packages = [];
+            if (isset($hotel_info->packages)) {
+                if (isset($hotel_info->packages->IdCont)) {
+                    $packages[] = [
+                        'IdCont' => (string)$hotel_info->packages->IdCont,
+                        'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
+                    ];
+                }
+                if (isset($hotel_info->packages->package)) {
+                    foreach ($hotel_info->packages->package as $pkg) {
+                        $packages[] = [
+                            'IdCont' => (string)($pkg->IdCont ?? ''),
+                            'PackageName' => (string)($pkg->PackageName ?? ''),
+                        ];
+                    }
+                }
+            }
+
+            $update['packages_count'] = count($packages);
+            $update['has_prices'] = count($packages) > 0 ? 'Y' : 'N';
+            if (!empty($packages[0]['PackageName'])) {
+                $update['package_name'] = $packages[0]['PackageName'];
+            }
+
+            db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel['hotel_id']);
+
+            // Insert packages into novoton_hotel_packages
+            foreach ($packages as $pkg) {
+                if (!empty($pkg['IdCont'])) {
+                    db_query(
+                        "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+                         VALUES (?s, ?s, ?s, NOW())
+                         ON DUPLICATE KEY UPDATE package_name = ?s",
+                        $hotel['hotel_id'], $pkg['IdCont'], $pkg['PackageName'], $pkg['PackageName']
+                    );
+                    $packages_created++;
+                }
+            }
+
+            $info_synced++;
+            echo count($packages) . " pkg\n";
+
+            usleep(100000); // 100ms delay
+        }
+
+        echo "\nHotelinfo: {$info_synced} synced, {$packages_created} packages\n";
+
+        // Step 3: Priceinfo (for packages without priceinfo_data)
+        echo "\n=== STEP 3: Priceinfo ===\n";
+        $packages_to_sync = db_get_array(
+            "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
+             FROM ?:novoton_hotel_packages p
+             JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
+             WHERE h.country IN (?a) AND (p.priceinfo_data IS NULL OR p.priceinfo_data = '')
+             ORDER BY h.hotel_name LIMIT ?i",
+            $countries, $limit
+        );
+
+        echo "Packages needing priceinfo: " . count($packages_to_sync) . "\n\n";
+        $prices_synced = 0;
+
+        foreach ($packages_to_sync as $pkg) {
+            echo "[{$pkg['hotel_id']}] {$pkg['hotel_name']} / {$pkg['package_name']} ... ";
+
+            $priceinfo = $api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
+            if (!$priceinfo) {
+                echo "SKIP\n";
+                continue;
+            }
+
+            $priceinfo_data = json_decode(json_encode($priceinfo), true);
+
+            // Calculate metadata
+            $has_eb = !empty($priceinfo_data['early_booking']) ? 'Y' : 'N';
+            $seasons = 0;
+            $min_price = null;
+
+            if (isset($priceinfo_data['seasons']['season'])) {
+                $s = $priceinfo_data['seasons']['season'];
+                $seasons = isset($s['IdSeason']) ? 1 : count($s);
+            }
+
+            if (isset($priceinfo_data['season_price'])) {
+                $sp = $priceinfo_data['season_price'];
+                if (isset($sp['Code'])) $sp = [$sp];
+                foreach ($sp as $row) {
+                    for ($i = 1; $i <= 20; $i++) {
+                        $p = floatval($row['Price' . $i] ?? 0);
+                        if ($p > 0 && ($min_price === null || $p < $min_price)) {
+                            $min_price = $p;
+                        }
+                    }
+                }
+            }
+
+            db_query(
+                "UPDATE ?:novoton_hotel_packages SET
+                 priceinfo_data = ?s, has_early_booking = ?s, seasons_count = ?i, min_price = ?d, synced_at = NOW()
+                 WHERE hotel_id = ?s AND package_id = ?s",
+                json_encode($priceinfo_data), $has_eb, $seasons, $min_price,
+                $pkg['hotel_id'], $pkg['package_id']
+            );
+
+            $prices_synced++;
+            echo "OK (€" . ($min_price ?? 0) . ")\n";
+
+            usleep(100000); // 100ms delay
+        }
+
+        echo "\nPriceinfo: {$prices_synced} synced\n";
+
+        $duration = round(microtime(true) - $start_time, 1);
+        echo "\n=== SUMMARY ===\n";
+        echo "Hotels: +{$hotels_added} added, {$hotels_updated} updated\n";
+        echo "Hotelinfo: {$info_synced} synced\n";
+        echo "Priceinfo: {$prices_synced} synced\n";
+        echo "Duration: {$duration}s\n";
+
+        // Log sync
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'sync_hotels', sync_date = NOW(),
+             hotels_synced = ?i, hotels_added = ?i, hotels_updated = ?i, duration = ?d, status = 'completed'",
+            $info_synced + $prices_synced, $hotels_added, $hotels_updated, $duration
+        );
+    }
+
+    // =========================================
+    // MODE: sync_priceinfo (V3 - Priceinfo only)
+    // =========================================
+    elseif ($mode == 'sync_priceinfo') {
+        echo "V3 Priceinfo Sync\n\n";
+
+        $start_time = microtime(true);
+        $limit = intval($_REQUEST['limit'] ?? 200);
+        $force = !empty($_REQUEST['force']);
+        $countries = fn_novoton_parse_countries();
+
+        echo "Countries: " . implode(', ', $countries) . "\n";
+        echo "Limit: {$limit}\n";
+        echo "Force re-sync: " . ($force ? 'YES' : 'NO') . "\n\n";
+
+        // Get packages to sync
+        if ($force) {
+            $packages = db_get_array(
+                "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
+                 FROM ?:novoton_hotel_packages p
+                 JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
+                 WHERE h.country IN (?a)
+                 ORDER BY p.synced_at ASC LIMIT ?i",
+                $countries, $limit
+            );
+        } else {
+            $packages = db_get_array(
+                "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
+                 FROM ?:novoton_hotel_packages p
+                 JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
+                 WHERE h.country IN (?a) AND (p.priceinfo_data IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL 24 HOUR))
+                 ORDER BY p.synced_at ASC LIMIT ?i",
+                $countries, $limit
+            );
+        }
+
+        echo "Packages to sync: " . count($packages) . "\n\n";
+
+        $synced = 0;
+        $errors = 0;
+
+        foreach ($packages as $pkg) {
+            echo "[{$pkg['hotel_id']}] {$pkg['hotel_name']} / {$pkg['package_name']} ... ";
+
+            $priceinfo = $api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
+            if (!$priceinfo) {
+                echo "SKIP\n";
+                $errors++;
+                continue;
+            }
+
+            $priceinfo_data = json_decode(json_encode($priceinfo), true);
+
+            // Calculate metadata
+            $has_eb = !empty($priceinfo_data['early_booking']) ? 'Y' : 'N';
+            $seasons = 0;
+            $min_price = null;
+
+            if (isset($priceinfo_data['seasons']['season'])) {
+                $s = $priceinfo_data['seasons']['season'];
+                $seasons = isset($s['IdSeason']) ? 1 : count($s);
+            }
+
+            if (isset($priceinfo_data['season_price'])) {
+                $sp = $priceinfo_data['season_price'];
+                if (isset($sp['Code'])) $sp = [$sp];
+                foreach ($sp as $row) {
+                    for ($i = 1; $i <= 20; $i++) {
+                        $p = floatval($row['Price' . $i] ?? 0);
+                        if ($p > 0 && ($min_price === null || $p < $min_price)) {
+                            $min_price = $p;
+                        }
+                    }
+                }
+            }
+
+            db_query(
+                "UPDATE ?:novoton_hotel_packages SET
+                 priceinfo_data = ?s, has_early_booking = ?s, seasons_count = ?i, min_price = ?d, synced_at = NOW()
+                 WHERE hotel_id = ?s AND package_id = ?s",
+                json_encode($priceinfo_data), $has_eb, $seasons, $min_price,
+                $pkg['hotel_id'], $pkg['package_id']
+            );
+
+            $synced++;
+            echo "OK (€" . ($min_price ?? 0) . ", {$seasons} seasons, EB={$has_eb})\n";
+
+            usleep(100000); // 100ms delay
+        }
+
+        $duration = round(microtime(true) - $start_time, 1);
+        echo "\n=== SUMMARY ===\n";
+        echo "Synced: {$synced}\n";
+        echo "Errors: {$errors}\n";
+        echo "Duration: {$duration}s\n";
+
+        // Log sync
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'sync_priceinfo', sync_date = NOW(),
+             hotels_synced = ?i, errors = ?i, duration = ?d, status = 'completed'",
+            $synced, $errors, $duration
+        );
+    }
+
+    // =========================================
     // UNKNOWN MODE
     // =========================================
     else {
         $mode_found = false;
         echo "Unknown mode: {$mode}\n";
         echo "\nAvailable modes:\n";
+        echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
+        echo "- sync_priceinfo: V3 priceinfo sync only (&force=1&limit=200)\n";
         echo "- resinfo: Check ASK bookings status\n";
         echo "- hotel_list: Hotel list sync from API\n";
-        echo "- update_prices: Update hotel prices (use admin panel)\n";
-        echo "- room_price: Check which hotels have active prices (fast resort-based)\n";
-        echo "- alternative_rs: Check alternative_RS for pending requests (24h+)\n";
-        echo "- alternative_rs_bookings: Check alternatives for RQ status bookings\n";
-        echo "- notify_alternatives: Send email notifications for found alternatives\n";
-        echo "- expire_requests: Expire old alternative requests (&days=30)\n";
+        echo "- hotel_info: Sync hotel accommodation (rooms, boards, packages)\n";
         echo "- offers_update: Check for new/updated offers (&country=BULGARIA)\n";
-        echo "- add_hotels_as_products: Add hotels as products (&country=BULGARIA&limit=50&exclude_resorts=RESORT1,RESORT2)\n";
+        echo "- add_hotels_as_products: Add hotels as products\n";
         echo "- list_facilities: Sync facilities list from API\n";
-        echo "- hotel_info: Sync hotel accommodation (rooms, boards, packages, ages) (&force=1&limit=500)\n";
-        echo "- check_packages: Check PackageName for all hotels across selected countries\n";
-        echo "\nExamples:\n";
-        echo "  &mode=add_hotels_as_products&country=BULGARIA&limit=100\n";
-        echo "  &mode=add_hotels_as_products&country=BULGARIA&exclude_resorts=GOLDEN+SANDS,ALBENA\n";
+        echo "\nRecommended V3 workflow:\n";
+        echo "  1. sync_hotels (daily) - Full sync of hotels, packages, and prices\n";
+        echo "  2. sync_priceinfo (every 6h) - Update prices for existing packages\n";
+        echo "  3. offers_update (every 2h) - Track changed hotels\n";
     }
     
 } catch (Exception $e) {

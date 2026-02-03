@@ -62,7 +62,7 @@ function fn_novoton_ensure_tables_exist()
     // Add hotelinfo_synced_at column if missing (for existing installations)
     $col_exists = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotelinfo_synced_at'");
     if (empty($col_exists)) {
-        db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date' AFTER `ages_data`");
+        db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date' AFTER `hotel_list_synced_at`");
     }
 
     // Check if sync_log table exists

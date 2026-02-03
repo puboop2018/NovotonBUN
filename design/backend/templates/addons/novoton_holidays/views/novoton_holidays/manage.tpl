@@ -158,41 +158,42 @@
         {if $cron_key}
         <p style="color: #666; margin-bottom: 15px;">Use these URLs in your server's crontab:</p>
         
+        <p style="color: #28a745; margin-bottom: 10px;"><strong>V3 Architecture</strong> - Hotels, packages, and priceinfo stored in optimized tables</p>
         <table class="novoton-table">
             <tr>
                 <th style="width: 30px;">#</th>
-                <th style="width: 150px;">Job</th>
+                <th style="width: 180px;">Job</th>
                 <th>URL</th>
                 <th style="width: 100px;">Recommended</th>
                 <th style="width: 60px;">Run</th>
             </tr>
-            <tr>
+            <tr style="background: #e8f5e9;">
                 <td>1</td>
-                <td><strong>Hotel List Sync</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
+                <td><strong>Full Sync (V3)</strong><br><small style="color:#666;">hotel_list + hotelinfo + priceinfo</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.sync_hotels}</div></td>
                 <td>Daily 3 AM</td>
-                <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+                <td><a href="{$cron_urls.sync_hotels}" target="_blank" class="novoton-btn novoton-btn-success" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td>2</td>
-                <td><strong>Hotel Accommodation</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
-                <td>After Hotel List</td>
-                <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+                <td><strong>Hotel List Only</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
+                <td>-</td>
+                <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td>3</td>
-                <td><strong>Price Check</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
-                <td>Every 6 hours</td>
-                <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+                <td><strong>Hotelinfo Only</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
+                <td>-</td>
+                <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td>4</td>
-                <td><strong>Add Products</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
-                <td>After Price Check</td>
-                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+                <td><strong>Priceinfo Only</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.sync_priceinfo}</div></td>
+                <td>Every 6 hours</td>
+                <td><a href="{$cron_urls.sync_priceinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td>5</td>
@@ -217,10 +218,10 @@
             </tr>
             <tr>
                 <td>8</td>
-                <td><strong>Check Packages</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.check_packages}</div></td>
-                <td>After Hotel List</td>
-                <td><a href="{$cron_urls.check_packages}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+                <td><strong>Add Products</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
+                <td>After sync</td>
+                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
         </table>
         {else}

@@ -224,18 +224,16 @@ class HotelSync
                 $longitude = (string)($hotelInfo->Longitude ?? '');
                 $region = (string)($hotelInfo->Region ?? '');
 
-                // Update hotel record
+                // Update hotel record (V3: hotel_data stores hotelinfo JSON)
                 db_query(
                     "UPDATE ?:novoton_hotels SET
                      hotel_data = ?s,
-                     hotelinfo_data = ?s,
                      latitude = ?s,
                      longitude = ?s,
                      region = ?s,
                      packages_count = ?i,
                      hotelinfo_synced_at = NOW()
                      WHERE hotel_id = ?s",
-                    $hotelDataJson,
                     $hotelDataJson,
                     $latitude,
                     $longitude,

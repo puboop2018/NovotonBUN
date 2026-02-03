@@ -410,8 +410,9 @@ if ($mode == 'check_packages') {
         $results_table = [];
 
         foreach ($countries as $country) {
+            // V3: Select hotels without package_name column (it's now in novoton_hotel_packages)
             $hotels = db_get_array(
-                "SELECT hotel_id, hotel_name, package_name FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name LIMIT ?i",
+                "SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name LIMIT ?i",
                 $country, $limit
             );
 
@@ -429,38 +430,62 @@ if ($mode == 'check_packages') {
                 try {
                     $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
 
-                    $package_name = '';
-                    if ($hotel_info) {
-                        // Response root is <hotel>, packages at <packages><PackageName>
-                        if (isset($hotel_info->packages->PackageName)) {
-                            $package_name = (string)$hotel_info->packages->PackageName;
-                        } elseif (isset($hotel_info->packages->Package)) {
-                            $package_name = (string)$hotel_info->packages->Package;
+                    // V3: Extract all packages from hotelinfo
+                    $packages = [];
+                    if ($hotel_info && isset($hotel_info->packages)) {
+                        // Single package format
+                        if (isset($hotel_info->packages->IdCont)) {
+                            $packages[] = [
+                                'id' => (string)$hotel_info->packages->IdCont,
+                                'name' => (string)($hotel_info->packages->PackageName ?? '')
+                            ];
                         }
-                        // Fallback: try xpath for any PackageName in the response
-                        if (empty($package_name)) {
-                            $pn = $hotel_info->xpath('//PackageName');
-                            if (!empty($pn)) {
-                                $package_name = (string)$pn[0];
+                        // Multiple packages format
+                        if (isset($hotel_info->packages->package)) {
+                            foreach ($hotel_info->packages->package as $pkg) {
+                                $packages[] = [
+                                    'id' => (string)($pkg->IdCont ?? ''),
+                                    'name' => (string)($pkg->PackageName ?? '')
+                                ];
                             }
                         }
                     }
 
-                    if (!empty($package_name)) {
+                    if (!empty($packages)) {
                         $with_packages++;
-                        // Update package_name in DB
-                        db_query("UPDATE ?:novoton_hotels SET package_name = ?s WHERE hotel_id = ?s", $package_name, $hotel['hotel_id']);
-                        echo "<span class='success'>&check; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} &rarr; " . htmlspecialchars($package_name) . "</span><br>\n";
+                        $pkg_names = [];
+
+                        // V3: Store packages in novoton_hotel_packages table
+                        foreach ($packages as $pkg) {
+                            if (!empty($pkg['id'])) {
+                                db_query(
+                                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+                                     VALUES (?s, ?s, ?s, NOW())
+                                     ON DUPLICATE KEY UPDATE package_name = ?s",
+                                    $hotel['hotel_id'], $pkg['id'], $pkg['name'], $pkg['name']
+                                );
+                                $pkg_names[] = $pkg['name'];
+                            }
+                        }
+
+                        // Update hotel packages_count
+                        db_query(
+                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
+                            count($packages), $hotel['hotel_id']
+                        );
+
+                        $display_pkgs = implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '');
+                        echo "<span class='success'>&check; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} &rarr; " . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";
 
                         $results_table[] = [
                             'hotel_id' => $hotel['hotel_id'],
                             'hotel_name' => $hotel['hotel_name'],
-                            'package_name' => $package_name,
+                            'package_name' => implode(', ', $pkg_names),
                             'country' => $country
                         ];
                     } else {
                         $without_packages++;
-                        echo "<span class='skip'>&cir; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - No package</span><br>\n";
+                        echo "<span class='skip'>&cir; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - No packages</span><br>\n";
                     }
                 } catch (Exception $e) {
                     $errors++;

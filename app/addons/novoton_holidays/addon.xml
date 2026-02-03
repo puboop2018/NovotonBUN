@@ -799,8 +799,8 @@
   <tr><td style="padding: 15px;">
     <p style="margin: 0 0 10px; font-weight: bold; color: #003580; font-size: 15px;">{{ product.extra.hotel_name|default(product.product) }}</p>
     <table cellpadding="3" cellspacing="0" border="0" style="font-size: 13px; color: #333;">
-      <tr><td style="padding-right:10px;"><strong>Check-in:</strong></td><td>{{ product.extra.check_in ? product.extra.check_in|date : product.extra.check_in }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>Check-out:</strong></td><td>{{ product.extra.check_out ? product.extra.check_out|date : product.extra.check_out }}</td></tr>
+      <tr><td style="padding-right:10px;"><strong>Check-in:</strong></td><td>{{ product.extra.check_in }}</td></tr>
+      <tr><td style="padding-right:10px;"><strong>Check-out:</strong></td><td>{{ product.extra.check_out }}</td></tr>
       <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.nights")|default("Nights") }}:</strong></td><td>{{ product.extra.nights }}</td></tr>
       <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.room_type")|default("Room") }}:</strong></td><td>{{ product.extra.room_type_display|default(product.extra.room_name)|default(product.extra.room_id) }}</td></tr>
       <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.board")|default("Board") }}:</strong></td><td>{{ product.extra.board_display|default(product.extra.board_name)|default(product.extra.board_id) }}</td></tr>

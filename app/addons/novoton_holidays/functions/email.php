@@ -200,20 +200,20 @@ function fn_novoton_generate_hotel_features_csv()
     ];
     
     try {
-        // Get all hotels with products
+        // V3: Get all hotels with products (boards now in hotel_data JSON)
         $hotels = db_get_array(
-            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, h.board_data, p.product_code
+            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, h.hotel_data, p.product_code
              FROM ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              WHERE h.product_id > 0
              ORDER BY h.hotel_name"
         );
-        
+
         if (empty($hotels)) {
             $result['error'] = 'No hotels with products found';
             return $result;
         }
-        
+
         // CSV header
         $csv_lines = [];
         $csv_lines[] = implode(';', [
@@ -222,24 +222,25 @@ function fn_novoton_generate_hotel_features_csv()
             'Feature: Stele',
             'Feature: Tip Masa'
         ]);
-        
+
         // Star rating labels
         $star_labels = [
             'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
             'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars']
         ];
-        
+
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
             $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
-            
-            // Parse boards data — board_data JSON is [{IdBoard, Board}, ...]
+
+            // V3: Parse boards from hotel_data JSON
             $board_names = [];
-            if (!empty($hotel['board_data'])) {
-                $boards_arr = json_decode($hotel['board_data'], true);
-                if (is_array($boards_arr)) {
+            if (!empty($hotel['hotel_data'])) {
+                $hotelData = json_decode($hotel['hotel_data'], true);
+                if (!empty($hotelData['board'])) {
+                    $boards_arr = isset($hotelData['board']['IdBoard']) ? [$hotelData['board']] : $hotelData['board'];
                     foreach ($boards_arr as $b) {
-                        $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : $b;
+                        $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string)$b;
                         if (!empty($code)) {
                             $board_names[] = fn_novoton_format_board_name($code);
                         }

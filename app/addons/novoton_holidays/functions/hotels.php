@@ -34,8 +34,8 @@ function fn_novoton_get_hotel_data($hotel_id, $force = false)
     );
 
     if ($hotel) {
-        // V3: Decode hotelinfo_data (or hotel_data for backwards compatibility)
-        $hotelInfoJson = !empty($hotel['hotelinfo_data']) ? $hotel['hotelinfo_data'] : $hotel['hotel_data'];
+        // V3: Decode hotel_data JSON (stores hotelinfo API response)
+        $hotelInfoJson = $hotel['hotel_data'] ?? '';
         if (!empty($hotelInfoJson)) {
             $hotelInfo = json_decode($hotelInfoJson, true);
             if ($hotelInfo) {
