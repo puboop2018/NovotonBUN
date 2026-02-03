@@ -60,23 +60,13 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         $product['novoton_prices'] = $prices;
         $product['is_hotel_product'] = true;
         
-        // V3: Get last update time from packages table (or fallback to old prices table)
+        // V3: Get last update time from packages table
         $last_update_db = null;
-        $hotel_id_for_update = null;
         preg_match('/\d+/', $product['product_code'], $matches);
         if (!empty($matches[0])) {
-            $hotel_id_for_update = $matches[0];
-            // Try new packages table first
             $last_update_db = db_get_field(
                 "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-                $hotel_id_for_update
-            );
-        }
-        // Fallback to old prices table
-        if (empty($last_update_db) && !empty($prices)) {
-            $last_update_db = db_get_field(
-                "SELECT MAX(updated_at) FROM ?:novoton_hotel_prices WHERE product_id = ?i",
-                $product['product_id']
+                $matches[0]
             );
         }
         $product['novoton_last_update'] = $last_update_db;
@@ -110,13 +100,10 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
                     \Tygh\Tygh::$app['view']->assign('board_data', $hotel_info['board']);
                 }
                 
-                // Get active package name (from price records or first package)
-                $active_package = db_get_field(
-                    "SELECT package_name FROM ?:novoton_hotel_prices WHERE product_id = ?i AND package_name IS NOT NULL LIMIT 1",
-                    $product['product_id']
-                );
+                // V3: Get active package name from packages data
+                $active_package = '';
                 $packages_data = $hotel_info['packages'] ?? [];
-                if (empty($active_package) && !empty($packages_data)) {
+                if (!empty($packages_data)) {
                     // Use first non-bracketed package or just first
                     foreach ($packages_data as $pkg) {
                         $pkg_name = is_array($pkg) ? ($pkg['PackageName'] ?? '') : '';
@@ -197,29 +184,6 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
                 }
             }
 
-            // Fallback: Try old novoton_seasons table (for backwards compatibility)
-            if (empty($season_dates)) {
-                $season_dates = db_get_hash_array(
-                    "SELECT season_number, date_from, date_to FROM ?:novoton_seasons
-                     WHERE hotel_id = ?s ORDER BY season_number",
-                    'season_number',
-                    $hotel_id
-                );
-            }
-
-            // Fallback: Try old novoton_early_booking table
-            if (empty($early_booking)) {
-                $early_booking = db_get_array(
-                    "SELECT id, booking_from, booking_to, stay_from, stay_to,
-                            reduction, payment_date, payment_percent, room_types, min_stay
-                     FROM ?:novoton_early_booking
-                     WHERE hotel_id = ?s
-                     ORDER BY reduction DESC
-                     LIMIT 20",
-                    $hotel_id
-                );
-            }
-
             $product['novoton_season_dates'] = $season_dates;
             \Tygh\Tygh::$app['view']->assign('season_dates', $season_dates);
 
@@ -297,22 +261,9 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
         preg_match('/\d+/', $product_data['product_code'], $matches);
         if (!empty($matches[0])) {
             $product_data['hotel_id'] = $matches[0];
-            $hotel_id = $matches[0];
 
-            // V3: Get packages with priceinfo from new table
-            $packages = fn_novoton_get_hotel_prices($product_id);
-            $product_data['hotel_packages'] = $packages;
-
-            // Fallback: Get from old novoton_hotel_prices table for backwards compatibility
-            $product_data['hotel_prices'] = db_get_array(
-                "SELECT price_id, hotel_id, room_id, room_type, board_id, age_type, acc_type,
-                        price_1, price_2, price_3, price_4, price_5, price_6, price_7,
-                        price_8, price_9, price_10, min_price, from_days, to_days
-                 FROM ?:novoton_hotel_prices
-                 WHERE product_id = ?i
-                 ORDER BY room_id, board_id, age_type, min_price",
-                $product_id
-            );
+            // V3: Get packages with priceinfo from packages table
+            $product_data['hotel_packages'] = fn_novoton_get_hotel_prices($product_id);
         }
 
         $product_data['is_hotel_product'] = true;
@@ -341,8 +292,7 @@ function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $la
 function fn_novoton_holidays_delete_product_post($product_id, $product_deleted)
 {
     if ($product_deleted) {
-        // Clean up hotel data when product is deleted
-        db_query("DELETE FROM ?:novoton_hotel_prices WHERE product_id = ?i", $product_id);
+        // Clean up booking data when product is deleted
         db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
     }
 }

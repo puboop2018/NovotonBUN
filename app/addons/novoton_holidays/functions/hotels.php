@@ -93,17 +93,6 @@ function fn_novoton_get_hotel_data($hotel_id, $force = false)
             }
         }
 
-        // Backwards compatibility: decode legacy JSON fields if V3 data not available
-        if (empty($hotel['rooms']) && !empty($hotel['rooms_data'])) {
-            $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
-        }
-        if (empty($hotel['boards']) && !empty($hotel['board_data'])) {
-            $hotel['boards'] = json_decode($hotel['board_data'], true);
-        }
-        if (empty($hotel['packages']) && !empty($hotel['packages_data'])) {
-            $hotel['packages'] = json_decode($hotel['packages_data'], true);
-        }
-
         $cache[$hotel_id] = $hotel;
     }
 
@@ -138,12 +127,6 @@ function fn_novoton_get_hotel_prices($product_id, $force = false)
     );
 
     if (empty($packages)) {
-        // Fallback to old structure
-        $hotel = fn_novoton_get_hotel_data($hotel_id, $force);
-        if (!empty($hotel['packages'])) {
-            $cache[$product_id] = $hotel['packages'];
-            return $hotel['packages'];
-        }
         return [];
     }
 
