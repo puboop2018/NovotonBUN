@@ -2,6 +2,27 @@
 {* Hook: orders:notification — adds terms to order notification emails *}
 {* Supports multiple hotels with different terms *}
 
+<!-- NOVOTON DEBUG: notification.post.tpl LOADED -->
+
+{* STATIC DEBUG BLOCK - Always visible to test template loading *}
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 20px; border: 2px solid red;">
+    <tr>
+        <td style="padding: 15px; background-color: #ffe0e0;">
+            <strong style="color: red;">DEBUG: Novoton Email Hook Loaded</strong><br>
+            Order ID: {$order_info.order_id|default:"N/A"}<br>
+            Products count: {$order_info.products|@count|default:"0"}<br>
+            {if $order_info.products}
+                {foreach from=$order_info.products item=_dbg_product name=dbg_loop}
+                    {if $smarty.foreach.dbg_loop.first}
+                        First product novoton_booking: {if !empty($_dbg_product.extra.novoton_booking)}YES{else}NO{/if}<br>
+                        terms_of_payment_formatted: {$_dbg_product.extra.terms_of_payment_formatted|default:"EMPTY"}<br>
+                    {/if}
+                {/foreach}
+            {/if}
+        </td>
+    </tr>
+</table>
+
 {$_nv_hotels_terms = []}
 
 {* Collect terms from all hotel bookings *}
