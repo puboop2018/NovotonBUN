@@ -10,6 +10,46 @@
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+use Tygh\Registry;
+
+/**
+ * Format date using CS-Cart's default date format from settings
+ *
+ * @param string|int $date Date string or timestamp
+ * @return string Formatted date
+ */
+function fn_novoton_format_date($date)
+{
+    if (empty($date)) {
+        return '';
+    }
+
+    // Convert to timestamp if string
+    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    if (!$timestamp) {
+        return $date;
+    }
+
+    // Get CS-Cart date format from settings
+    $date_format = Registry::get('settings.Appearance.date_format');
+    if (empty($date_format)) {
+        $date_format = '%d.%m.%Y'; // fallback
+    }
+
+    // Use CS-Cart's fn_date_format function
+    if (function_exists('fn_date_format')) {
+        return fn_date_format($timestamp, $date_format);
+    }
+
+    // Fallback to PHP date with converted format
+    $php_format = str_replace(
+        ['%d', '%m', '%Y', '%y', '%B', '%b'],
+        ['d', 'm', 'Y', 'y', 'F', 'M'],
+        $date_format
+    );
+    return date($php_format, $timestamp);
+}
+
 /**
  * Format board name for display
  * 
@@ -383,9 +423,9 @@ function fn_novoton_format_payment_terms($xml_string)
     foreach ($terms as $term) {
         $percent = isset($term['percent']) ? number_format($term['percent'], 0) : '0';
         $date = $term['date'] ?? '';
-        
+
         if (!empty($date)) {
-            $formatted_date = date('d.m.Y', strtotime($date));
+            $formatted_date = fn_novoton_format_date($date);
             $lines[] = "{$percent}% până la {$formatted_date}";
         } elseif (!empty($term['is_on_booking'])) {
             $lines[] = "{$percent}% la rezervare";
@@ -412,23 +452,6 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
         return '';
     }
 
-    // Romanian month names
-    $ro_months = [
-        1 => 'ianuarie', 2 => 'februarie', 3 => 'martie', 4 => 'aprilie',
-        5 => 'mai', 6 => 'iunie', 7 => 'iulie', 8 => 'august',
-        9 => 'septembrie', 10 => 'octombrie', 11 => 'noiembrie', 12 => 'decembrie',
-    ];
-
-    // Helper: format date as "25 iulie 2026"
-    $formatDateRo = function ($dateStr) use ($ro_months) {
-        $ts = strtotime($dateStr);
-        if (!$ts) return $dateStr;
-        $day = (int)date('j', $ts);
-        $month = $ro_months[(int)date('n', $ts)] ?? date('F', $ts);
-        $year = date('Y', $ts);
-        return "{$day} {$month} {$year}";
-    };
-
     $lines = [];
     $prev_till_date = null;
 
@@ -441,7 +464,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
         if ($value === 'FREE' || $value == 0) {
             // Free cancellation tier
             if (!empty($tillDate)) {
-                $lines[] = "Anulare gratuită până la " . date('d.m.Y', strtotime($tillDate));
+                $lines[] = "Anulare gratuită până la " . fn_novoton_format_date($tillDate);
             } else {
                 $lines[] = "Anulare gratuită";
             }
@@ -462,11 +485,11 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
             }
 
             if (!empty($prev_till_date) && !empty($tillDate)) {
-                $from_str = $formatDateRo(date('Y-m-d', strtotime($prev_till_date . ' +1 day')));
-                $to_str = $formatDateRo($tillDate);
+                $from_str = fn_novoton_format_date(strtotime($prev_till_date . ' +1 day'));
+                $to_str = fn_novoton_format_date($tillDate);
                 $lines[] = "Între {$from_str} - {$to_str}: {$penalty_str}";
             } elseif (!empty($tillDate)) {
-                $lines[] = "Până la " . date('d.m.Y', strtotime($tillDate)) . ": {$penalty_str}";
+                $lines[] = "Până la " . fn_novoton_format_date($tillDate) . ": {$penalty_str}";
             } else {
                 $lines[] = ucfirst($penalty_str);
             }
