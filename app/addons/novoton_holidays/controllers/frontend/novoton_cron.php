@@ -47,10 +47,13 @@ $cron_start_time = microtime(true);
 
 header('Content-Type: text/plain; charset=utf-8');
 
+// Get timezone from CS-Cart settings
+$cron_timezone = Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
+
 echo "===========================================\n";
 echo "NOVOTON HOLIDAYS CRON - " . strtoupper($mode) . "\n";
 echo "===========================================\n";
-echo "Time: " . date('Y-m-d H:i:s') . "\n\n";
+echo "Time: " . (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d H:i:s') . " ({$cron_timezone})\n\n";
 
 // Load API
 $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
@@ -569,10 +572,11 @@ try {
         }
         
         echo "Country: {$country}\n";
-        echo "Last product import: {$last_product_import}\n";
+        $last_import_display = (new DateTime($last_product_import))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
+        echo "Last product import: {$last_import_display}\n";
         echo "Checking offers added/modified after this time...\n\n";
-        
-        $sync_start_time = date('Y-m-d\TH:i:s');
+
+        $sync_start_time = (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d\TH:i:s');
         
         $response = $api->getOffersUpdate($last_product_import, $country);
         
@@ -979,9 +983,13 @@ try {
 
             if (!empty($last_hotelinfo_sync)) {
                 // Incremental: use offers_update API to find changed hotels
+                // API parameter uses server time for consistency with DB
                 $datetime_param = date('Y-m-d\TH:i:s', strtotime($last_hotelinfo_sync));
-                echo "Last hotelinfo sync: {$last_hotelinfo_sync}\n";
-                echo "Calling offers_update since {$datetime_param}...\n\n";
+                // Display uses configured timezone
+                $last_sync_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
+                $datetime_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d\TH:i:s');
+                echo "Last hotelinfo sync: {$last_sync_display}\n";
+                echo "Calling offers_update since {$datetime_display}...\n\n";
 
                 $changed_ids = [];
                 foreach ($countries as $country) {
@@ -1313,7 +1321,7 @@ try {
 }
 
 echo "\n===========================================\n";
-echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
+echo "Completed at: " . (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d H:i:s') . " ({$cron_timezone})\n";
 echo "===========================================\n";
 
 exit;

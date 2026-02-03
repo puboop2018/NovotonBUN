@@ -117,7 +117,7 @@
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}
                 {else}
-                    [OK] {__("novoton_holidays.available")}
+                    ✓ {__("novoton_holidays.available")}
                 {/if}
             </span>
             <h1>{$hotel_name|default:'Hotel'} {if $hotel_stars}{$hotel_stars}{/if}</h1>
@@ -1025,7 +1025,7 @@ function acceptRoomChangeInline() {
     var notif = document.createElement('div');
     notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
     var roomLabel = roomNum ? '{__("novoton_holidays.room_number")|default:"Camera"} ' + roomNum + ': ' : '';
-    notif.innerHTML = '[OK] <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + roomLabel + (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' EUR';
+    notif.innerHTML = '✓ <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + roomLabel + (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' EUR';
     
     var section = document.querySelector('.guest-names-section h3');
     if (section && section.parentNode) {

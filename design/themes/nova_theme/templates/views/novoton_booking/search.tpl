@@ -145,7 +145,7 @@
                         {/if}
                     {/foreach}
                     <span style="background: #28a745; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                        [OK] {__("novoton_holidays.available")}: {if $total_quota > 0}{$total_quota}{else}{$novoton_results|@count}{/if} {__("novoton_holidays.rooms")}, {$novoton_results|@count} {if $novoton_results|@count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
+                        ✓ {__("novoton_holidays.available")}: {if $total_quota > 0}{$total_quota}{else}{$novoton_results|@count}{/if} {__("novoton_holidays.rooms")}, {$novoton_results|@count} {if $novoton_results|@count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
                     </span>
                     {/if}
                 </div>
@@ -620,7 +620,7 @@
                                 </span>
                             {elseif $result.rooms_available > 5}
                                 <span style="display: inline-block; background: #d4edda; color: #155724; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
-                                    [OK] {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
+                                    ✓ {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
                                 </span>
                             {/if}
                             
@@ -806,39 +806,15 @@
             </div>
             {/if}
             
-            {if $parsed_cancellation_terms|@count > 0 || $terms_of_cancellation || $terms_of_cancellation_raw}
+            {if $terms_of_cancellation || $terms_of_cancellation_raw}
             <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
                 <h4 style="margin: 0 0 15px; font-size: 16px; color: #333;">
-                    📋 {__("novoton_holidays.cancellation_terms")|default:"Politica de anulare"}
+                    📋 {__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}
                 </h4>
-                {if $parsed_cancellation_terms && $parsed_cancellation_terms|@count > 0}
-                    <ul style="margin: 0; padding-left: 0; list-style: none;">
-                    {foreach from=$parsed_cancellation_terms item=term}
-                        <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; {if $term.is_penalty}color: #dc3545;{else}color: #28a745;{/if}">
-                            {if $term.value === 'FREE' || $term.value == 0}
-                                <span style="color: #28a745; font-weight: bold;">✓</span> 
-                                {if $term.till_date}
-                                    {__("novoton_holidays.until")|default:"Până la"} <strong>{$term.till_date|date_format:"%d.%m.%Y"}</strong>: {__("novoton_holidays.free_cancellation")|default:"anulare gratuită"}
-                                {else}
-                                    {__("novoton_holidays.free_cancellation")|default:"Anulare gratuită"}
-                                {/if}
-                            {else}
-                                {if $term.till_date}
-                                    {__("novoton_holidays.until")|default:"Până la"} <strong>{$term.till_date|date_format:"%d.%m.%Y"}</strong>: 
-                                {/if}
-                                {if $term.type == 'Over Nights' || $term.type == 'Overnights'}
-                                    {__("novoton_holidays.penalty")|default:"penalizare"} <strong>{$term.value}</strong> {if $term.value == 1}{__("novoton_holidays.night")|default:"noapte"}{else}{__("novoton_holidays.nights")|default:"nopți"}{/if}
-                                {else}
-                                    {__("novoton_holidays.penalty")|default:"penalizare"} <strong>{$term.value}%</strong>
-                                {/if}
-                            {/if}
-                        </li>
-                    {/foreach}
-                    </ul>
-                {elseif $terms_of_cancellation}
-                    <div style="font-size: 13px; color: #555; line-height: 1.6;">{$terms_of_cancellation|nl2br nofilter}</div>
+                {if $terms_of_cancellation}
+                    <div style="font-size: 14px; color: #555; line-height: 1.8;">{$terms_of_cancellation|nl2br nofilter}</div>
                 {else}
-                    <div style="font-size: 13px; color: #888;">Politica de anulare disponibilă</div>
+                    <div style="font-size: 13px; color: #888;">{__("novoton_holidays.cancellation_terms_available")|default:"Condiții de anulare disponibile"}</div>
                 {/if}
             </div>
             {/if}

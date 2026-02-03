@@ -35,7 +35,7 @@
     {/if}
 
     {if $_nv_cancel}
-    <p><strong>{__("novoton_holidays.cancellation_policy")|default:"Politica de anulare"}</strong><br>
+    <p><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
     {$_nv_cancel|strip_tags|trim|nl2br}</p>
     {/if}
 {/if}
