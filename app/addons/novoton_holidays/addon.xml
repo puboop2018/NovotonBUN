@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>2.8.0-A80D</version>
+    <version>3.0.0-A81</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
@@ -440,25 +440,29 @@
         </item>
 
         <!-- Hotels cache - stores hotel info from API -->
+        <!-- V3 Architecture: Simplified - main hotel info, hotelinfo JSON -->
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_hotels` (
                 `hotel_id` varchar(50) NOT NULL,
                 `product_id` int(11) unsigned DEFAULT NULL,
                 `hotel_name` varchar(255) DEFAULT NULL,
-                `package_name` varchar(255) DEFAULT NULL,
+                `package_name` varchar(255) DEFAULT NULL COMMENT 'Primary package name',
                 `city` varchar(100) DEFAULT NULL,
                 `region` varchar(100) DEFAULT NULL,
                 `country` varchar(100) DEFAULT NULL,
-                `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart',
+                `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart (from API)',
+                `star_rating` tinyint(1) DEFAULT NULL COMMENT 'Numeric star rating 1-5',
                 `latitude` varchar(20) DEFAULT NULL,
                 `longitude` varchar(20) DEFAULT NULL,
-                `hotel_data` longtext COMMENT 'JSON: full hotel info from API',
-                `rooms_data` longtext COMMENT 'JSON: rooms array from API',
-                `board_data` longtext COMMENT 'JSON: board types from API',
-                `packages_data` longtext COMMENT 'JSON: available packages',
-                `ages_data` longtext COMMENT 'JSON: age categories from hotelinfo',
+                `hotel_data` longtext COMMENT 'JSON: full hotelinfo API response',
+                `hotelinfo_data` longtext COMMENT 'JSON: full hotelinfo API response (alias)',
+                `rooms_data` longtext COMMENT 'DEPRECATED: use hotel_data->rooms',
+                `board_data` longtext COMMENT 'DEPRECATED: use hotel_data->boards',
+                `packages_data` longtext COMMENT 'DEPRECATED: use novoton_hotel_packages',
+                `ages_data` longtext COMMENT 'DEPRECATED: use hotel_data->ages',
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date',
-                `has_prices` enum('Y','N') DEFAULT NULL COMMENT 'Has active room prices',
+                `has_prices` enum('Y','N') DEFAULT NULL COMMENT 'Has active packages with prices',
+                `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last price check date',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date',
                 `created_at` datetime DEFAULT NULL,
@@ -466,8 +470,34 @@
                 PRIMARY KEY (`hotel_id`),
                 KEY `idx_product_id` (`product_id`),
                 KEY `idx_has_prices` (`has_prices`),
-                KEY `idx_country` (`country`)
+                KEY `idx_country` (`country`),
+                KEY `idx_star_rating` (`star_rating`),
+                KEY `idx_city_country` (`city`, `country`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+
+        <!-- V3 Architecture: Hotel Packages - stores priceinfo per package -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotel_packages` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `hotel_id` varchar(50) NOT NULL COMMENT 'FK to novoton_hotels.hotel_id',
+                `package_id` varchar(50) NOT NULL COMMENT 'IdCont from hotelinfo API',
+                `package_name` varchar(255) NOT NULL COMMENT 'PackageName from API',
+                `priceinfo_data` longtext COMMENT 'JSON: full priceinfo API response',
+                `seasons_count` int(3) DEFAULT 0 COMMENT 'Number of seasons in priceinfo',
+                `has_early_booking` enum('Y','N') DEFAULT 'N' COMMENT 'Has EB discounts',
+                `min_price` decimal(10,2) DEFAULT NULL COMMENT 'Lowest adult price',
+                `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+                `synced_at` datetime DEFAULT NULL COMMENT 'Last priceinfo sync date',
+                `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `idx_hotel_package` (`hotel_id`, `package_id`),
+                KEY `idx_hotel_id` (`hotel_id`),
+                KEY `idx_package_name` (`package_name`(100)),
+                KEY `idx_min_price` (`min_price`),
+                KEY `idx_synced_at` (`synced_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Package-specific priceinfo data'
         </item>
 
         <!-- Bookings table -->
@@ -654,6 +684,7 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_early_booking`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_seasons`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_prices`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_packages`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotels`</item>
     </queries>
     

@@ -14,7 +14,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 /**
  * Get hotel data by hotel_id
- * 
+ * V3 Architecture: Reads from hotelinfo_data JSON + packages from novoton_hotel_packages
+ *
  * @param string $hotel_id Novoton hotel ID
  * @param bool $force Force refresh from database
  * @return array|null Hotel data or null
@@ -22,61 +23,225 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 function fn_novoton_get_hotel_data($hotel_id, $force = false)
 {
     static $cache = [];
-    
+
     if (!$force && isset($cache[$hotel_id])) {
         return $cache[$hotel_id];
     }
-    
+
     $hotel = db_get_row(
         "SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
-    
+
     if ($hotel) {
-        // Decode JSON fields
-        if (!empty($hotel['packages_data'])) {
-            $hotel['packages'] = json_decode($hotel['packages_data'], true);
+        // V3: Decode hotelinfo_data (or hotel_data for backwards compatibility)
+        $hotelInfoJson = !empty($hotel['hotelinfo_data']) ? $hotel['hotelinfo_data'] : $hotel['hotel_data'];
+        if (!empty($hotelInfoJson)) {
+            $hotelInfo = json_decode($hotelInfoJson, true);
+            if ($hotelInfo) {
+                // Extract rooms from hotelinfo
+                if (isset($hotelInfo['rooms'])) {
+                    $hotel['rooms'] = $hotelInfo['rooms'];
+                    // Normalize single room to array
+                    if (isset($hotel['rooms']['IdRoom'])) {
+                        $hotel['rooms'] = [$hotel['rooms']];
+                    }
+                }
+
+                // Extract boards from hotelinfo
+                if (isset($hotelInfo['boards'])) {
+                    $hotel['boards'] = $hotelInfo['boards'];
+                    if (isset($hotel['boards']['IdBoard'])) {
+                        $hotel['boards'] = [$hotel['boards']];
+                    }
+                }
+
+                // Extract ages from hotelinfo
+                if (isset($hotelInfo['ages'])) {
+                    $hotel['ages'] = $hotelInfo['ages'];
+                }
+
+                // Store full hotelinfo for access
+                $hotel['full_data'] = $hotelInfo;
+            }
         }
-        if (!empty($hotel['rooms_data'])) {
+
+        // V3: Get packages from novoton_hotel_packages table
+        $packages = db_get_array(
+            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotel_id
+        );
+
+        if (!empty($packages)) {
+            $hotel['packages'] = [];
+            foreach ($packages as $pkg) {
+                $packageData = [
+                    'IdCont' => $pkg['package_id'],
+                    'PackageName' => $pkg['package_name'],
+                    'min_price' => $pkg['min_price'],
+                    'has_early_booking' => $pkg['has_early_booking'],
+                    'seasons_count' => $pkg['seasons_count'],
+                    'synced_at' => $pkg['synced_at']
+                ];
+
+                // Decode priceinfo if available
+                if (!empty($pkg['priceinfo_data'])) {
+                    $packageData['priceinfo'] = json_decode($pkg['priceinfo_data'], true);
+                }
+
+                $hotel['packages'][] = $packageData;
+            }
+        }
+
+        // Backwards compatibility: decode legacy JSON fields if V3 data not available
+        if (empty($hotel['rooms']) && !empty($hotel['rooms_data'])) {
             $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
         }
-        if (!empty($hotel['board_data'])) {
+        if (empty($hotel['boards']) && !empty($hotel['board_data'])) {
             $hotel['boards'] = json_decode($hotel['board_data'], true);
         }
-        
+        if (empty($hotel['packages']) && !empty($hotel['packages_data'])) {
+            $hotel['packages'] = json_decode($hotel['packages_data'], true);
+        }
+
         $cache[$hotel_id] = $hotel;
     }
-    
+
     return $hotel;
 }
 
 /**
  * Get hotel prices for a product
- * 
+ * V3 Architecture: Returns packages with priceinfo from novoton_hotel_packages
+ *
  * @param int $product_id Product ID
  * @param bool $force Force refresh
- * @return array Prices data
+ * @return array Packages with prices data
  */
 function fn_novoton_get_hotel_prices($product_id, $force = false)
 {
     static $cache = [];
-    
+
     if (!$force && isset($cache[$product_id])) {
         return $cache[$product_id];
     }
-    
+
     $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
     if (empty($hotel_id)) {
         return [];
     }
-    
-    $hotel = fn_novoton_get_hotel_data($hotel_id, $force);
-    if (empty($hotel['packages'])) {
+
+    // V3: Get packages directly from packages table
+    $packages = db_get_array(
+        "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+        $hotel_id
+    );
+
+    if (empty($packages)) {
+        // Fallback to old structure
+        $hotel = fn_novoton_get_hotel_data($hotel_id, $force);
+        if (!empty($hotel['packages'])) {
+            $cache[$product_id] = $hotel['packages'];
+            return $hotel['packages'];
+        }
         return [];
     }
-    
-    $cache[$product_id] = $hotel['packages'];
-    return $hotel['packages'];
+
+    $result = [];
+    foreach ($packages as $pkg) {
+        $packageData = [
+            'IdCont' => $pkg['package_id'],
+            'PackageName' => $pkg['package_name'],
+            'min_price' => $pkg['min_price'],
+            'has_early_booking' => $pkg['has_early_booking'],
+            'seasons_count' => $pkg['seasons_count'],
+            'synced_at' => $pkg['synced_at']
+        ];
+
+        // Decode priceinfo if available
+        if (!empty($pkg['priceinfo_data'])) {
+            $priceinfo = json_decode($pkg['priceinfo_data'], true);
+            if ($priceinfo) {
+                $packageData['priceinfo'] = $priceinfo;
+
+                // Extract seasons for display
+                if (isset($priceinfo['seasons']['season'])) {
+                    $packageData['seasons'] = $priceinfo['seasons']['season'];
+                    // Normalize single season to array
+                    if (isset($packageData['seasons']['IdSeason'])) {
+                        $packageData['seasons'] = [$packageData['seasons']];
+                    }
+                }
+
+                // Extract early booking for display
+                if (isset($priceinfo['early_booking'])) {
+                    $packageData['early_booking'] = $priceinfo['early_booking'];
+                }
+
+                // Extract season prices for display
+                if (isset($priceinfo['season_price'])) {
+                    $packageData['season_price'] = $priceinfo['season_price'];
+                    // Normalize single entry to array
+                    if (isset($packageData['season_price']['IdRoom'])) {
+                        $packageData['season_price'] = [$packageData['season_price']];
+                    }
+                }
+            }
+        }
+
+        $result[] = $packageData;
+    }
+
+    $cache[$product_id] = $result;
+    return $result;
+}
+
+/**
+ * Get priceinfo data for a specific package
+ * V3 Architecture: Returns decoded priceinfo JSON
+ *
+ * @param string $hotel_id Hotel ID
+ * @param string $package_id Package ID (IdCont)
+ * @return array|null Priceinfo data or null
+ */
+function fn_novoton_get_package_priceinfo($hotel_id, $package_id)
+{
+    $pkg = db_get_row(
+        "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+         WHERE hotel_id = ?s AND package_id = ?s",
+        $hotel_id,
+        $package_id
+    );
+
+    if (empty($pkg) || empty($pkg['priceinfo_data'])) {
+        return null;
+    }
+
+    return json_decode($pkg['priceinfo_data'], true);
+}
+
+/**
+ * Get priceinfo data by package name
+ * V3 Architecture: Returns decoded priceinfo JSON
+ *
+ * @param string $hotel_id Hotel ID
+ * @param string $package_name Package name
+ * @return array|null Priceinfo data or null
+ */
+function fn_novoton_get_package_priceinfo_by_name($hotel_id, $package_name)
+{
+    $pkg = db_get_row(
+        "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+         WHERE hotel_id = ?s AND package_name = ?s",
+        $hotel_id,
+        $package_name
+    );
+
+    if (empty($pkg) || empty($pkg['priceinfo_data'])) {
+        return null;
+    }
+
+    return json_decode($pkg['priceinfo_data'], true);
 }
 
 /**
