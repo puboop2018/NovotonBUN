@@ -1468,22 +1468,77 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         // Format Terms of Payment
         // Use _raw (XML) key first; terms_of_payment may already be formatted text
         $payment_raw = $product['extra']['terms_of_payment_raw'] ?? '';
-        if (!empty($payment_raw)) {
-            $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
-        } elseif (!empty($product['extra']['terms_of_payment'])) {
-            // Already formatted text — use as-is
-            $product['extra']['terms_of_payment_formatted'] = $product['extra']['terms_of_payment'];
+        $payment_text = $product['extra']['terms_of_payment'] ?? '';
+        $cancel_raw = $product['extra']['terms_of_cancellation_raw'] ?? '';
+        $cancel_text = $product['extra']['terms_of_cancellation'] ?? '';
+        $check_in = $product['extra']['check_in'] ?? '';
+
+        // Fallback: If no terms data in order, try to fetch from API
+        if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
+            $hotel_id = $product['extra']['hotel_id'] ?? '';
+            $check_out = $product['extra']['check_out'] ?? '';
+            $room_id = $product['extra']['room_id'] ?? '';
+            $adults = $product['extra']['adults'] ?? 2;
+            $children = $product['extra']['children'] ?? 0;
+
+            if (!empty($hotel_id) && !empty($check_in) && !empty($check_out)) {
+                // Debug
+                if (!empty($_REQUEST['debug'])) {
+                    fn_set_notification('N', 'DEBUG', "Fetching terms from API for hotel {$hotel_id}");
+                }
+
+                // Try to load NovotonApi and fetch terms
+                try {
+                    $src_dir = \Tygh\Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+                    if (file_exists($src_dir . 'NovotonApi.php')) {
+                        require_once($src_dir . 'NovotonApi.php');
+                        $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+
+                        $priceData = $api->getRoomPrice([
+                            'hotel_id' => $hotel_id,
+                            'check_in' => $check_in,
+                            'check_out' => $check_out,
+                            'adults' => $adults,
+                            'children' => $children,
+                            'room_id' => $room_id
+                        ]);
+
+                        if ($priceData && isset($priceData->hotel)) {
+                            // Extract terms from response
+                            if (isset($priceData->hotel->TermsOfPayment)) {
+                                $payment_raw = $priceData->hotel->TermsOfPayment->asXML();
+                            }
+                            if (isset($priceData->hotel->TermsOfCancellation)) {
+                                $cancel_raw = $priceData->hotel->TermsOfCancellation->asXML();
+                            }
+
+                            if (!empty($_REQUEST['debug'])) {
+                                fn_set_notification('N', 'DEBUG', 'API returned terms: payment=' . (!empty($payment_raw) ? 'YES' : 'NO') . ', cancel=' . (!empty($cancel_raw) ? 'YES' : 'NO'));
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    if (!empty($_REQUEST['debug'])) {
+                        fn_set_notification('W', 'DEBUG', 'API error: ' . $e->getMessage());
+                    }
+                }
+            }
         }
 
-        // Format Terms of Cancellation
-        // Use _raw (XML) key first; terms_of_cancellation may already be formatted text
-        $cancel_raw = $product['extra']['terms_of_cancellation_raw'] ?? '';
-        $check_in = $product['extra']['check_in'] ?? '';
+        // Format payment terms
+        if (!empty($payment_raw)) {
+            $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        } elseif (!empty($payment_text)) {
+            // Already formatted text — use as-is
+            $product['extra']['terms_of_payment_formatted'] = $payment_text;
+        }
+
+        // Format cancellation terms
         if (!empty($cancel_raw)) {
             $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_format_cancellation_terms($cancel_raw, $check_in);
-        } elseif (!empty($product['extra']['terms_of_cancellation'])) {
+        } elseif (!empty($cancel_text)) {
             // Already formatted text — use as-is
-            $product['extra']['terms_of_cancellation_formatted'] = $product['extra']['terms_of_cancellation'];
+            $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
         }
 
         // Debug: Show what was set
