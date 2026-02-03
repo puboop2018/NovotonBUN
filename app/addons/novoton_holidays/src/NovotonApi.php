@@ -35,14 +35,15 @@ class NovotonApi
         'search' => 300,           // 5 minutes - search results (combines live data)
     ];
     
-    /** 
+    /**
      * Functions that should NOT be cached (use database instead)
      * These are synced via cron and stored in database tables
+     * V3 Architecture: priceinfo stored in novoton_hotel_packages.priceinfo_data JSON
      */
     private $noCacheFunctions = [
         'hotel_list',    // Stored in novoton_hotels table
-        'hotelinfo',     // Stored in novoton_hotels table  
-        'priceinfo',     // Stored in novoton_hotel_prices table
+        'hotelinfo',     // Stored in novoton_hotels.hotel_data JSON
+        'priceinfo',     // Stored in novoton_hotel_packages.priceinfo_data JSON
     ];
     
     // Debug properties

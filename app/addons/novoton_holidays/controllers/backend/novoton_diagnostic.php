@@ -139,8 +139,8 @@ if ($mode == 'check') {
         echo "[ERROR] Addon not found in database\n";
     }
     
-    // Check tables
-    $tables = array('novoton_hotel_prices', 'novoton_bookings', 'novoton_sync_log');
+    // Check tables (V3 architecture)
+    $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
         $exists = db_get_field("SHOW TABLES LIKE ?s", 'cscart_' . $table);
         echo ($exists ? "[OK]" : "[MISSING]") . " Table: $table\n";
@@ -249,10 +249,10 @@ if ($mode == 'test') {
     echo "Selected Countries: " . $countries . "\n";
     echo "\n";
     
-    // 3. DATABASE CHECK
+    // 3. DATABASE CHECK (V3 Architecture)
     echo "3. DATABASE TABLES\n";
     echo "-------------------\n";
-    $tables = array('novoton_hotel_prices', 'novoton_seasons', 'novoton_early_booking', 'novoton_hotels', 'novoton_bookings', 'novoton_sync_log');
+    $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
         $count = db_get_field("SELECT COUNT(*) FROM ?:$table");
         echo "$table: $count records\n";
