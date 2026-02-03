@@ -61,15 +61,15 @@ if ($mode == 'view_hotels_to_add') {
     $hotelRepo = new HotelRepository();
     
     if ($filter == 'packages') {
+        // V3: Check for packages in novoton_hotel_packages table
         $hotels = db_get_array(
-            "SELECT h.*, p.product_id as existing_product 
+            "SELECT h.*, p.product_id as existing_product
              FROM ?:novoton_hotels h
+             INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
              LEFT JOIN ?:products p ON h.product_id = p.product_id
-             WHERE h.country = ?s 
-               AND h.packages_data IS NOT NULL 
-               AND h.packages_data != '' 
-               AND h.packages_data != '[]'
+             WHERE h.country = ?s
                AND (h.product_id IS NULL OR h.product_id = 0)
+             GROUP BY h.hotel_id
              ORDER BY h.hotel_name
              LIMIT 500",
             $country

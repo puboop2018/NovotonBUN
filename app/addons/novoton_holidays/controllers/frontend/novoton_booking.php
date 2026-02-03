@@ -1908,29 +1908,45 @@ if ($mode == 'booking_form') {
         }
     }
     
-    // Get all packages for display
+    // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
-    if (!empty($hotel_info['packages_data'])) {
-        $all_packages = json_decode($hotel_info['packages_data'], true) ?: [];
+    $db_packages = db_get_array(
+        "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+        $booking['hotel_id']
+    );
+    if (!empty($db_packages)) {
+        foreach ($db_packages as $pkg) {
+            $all_packages[] = [
+                'IdCont' => $pkg['package_id'],
+                'PackageName' => $pkg['package_name']
+            ];
+        }
     }
-    
-    // Get age categories and room limits from hotel info or fetch from API
+
+    // Get age categories and room limits from hotel_data JSON or API
     $age_categories = [];
     $room_limits = [];
-    
-    // Try to get from database first
-    if (!empty($hotel_info['ages_data'])) {
-        $age_categories = json_decode($hotel_info['ages_data'], true) ?: [];
-    }
-    if (!empty($hotel_info['rooms_data'])) {
-        $rooms_db = json_decode($hotel_info['rooms_data'], true) ?: [];
-        if (!empty($rooms_db) && isset($rooms_db[0])) {
+
+    // V3: Try to get from hotel_data JSON first
+    if (!empty($hotel_info['hotel_data'])) {
+        $hotelData = json_decode($hotel_info['hotel_data'], true);
+        if (!empty($hotelData['ages'])) {
+            $ages = isset($hotelData['ages']['IdAge']) ? [$hotelData['ages']] : $hotelData['ages'];
+            foreach ($ages as $age) {
+                $age_categories[] = [
+                    'id' => $age['IdAge'] ?? '',
+                    'is_child' => ($age['fAge'] ?? '0') === '1',
+                    'from_year' => floatval($age['FromYear'] ?? 0),
+                    'to_year' => floatval($age['ToYear'] ?? 99)
+                ];
+            }
+        }
+        if (!empty($hotelData['rooms'])) {
+            $rooms_db = isset($hotelData['rooms']['IdRoom']) ? [$hotelData['rooms']] : $hotelData['rooms'];
             foreach ($rooms_db as $r) {
-                $rid = $r['id'] ?? $r['IdRoom'] ?? '';
+                $rid = $r['IdRoom'] ?? $r['id'] ?? '';
                 if ($rid) $room_limits[$rid] = $r;
             }
-        } else {
-            $room_limits = $rooms_db;
         }
     }
     
@@ -2118,10 +2134,14 @@ if ($mode == 'add_to_cart') {
     
     // Get package name
     $package_name = $bookingData['package_name'] ?? '';
-    if (empty($package_name) && !empty($hotel_info['packages_data'])) {
-        $packages = json_decode($hotel_info['packages_data'], true);
-        if (!empty($packages[0]['PackageName'])) {
-            $package_name = $packages[0]['PackageName'];
+    if (empty($package_name) && !empty($booking['hotel_id'])) {
+        // V3: Get first package from novoton_hotel_packages table
+        $first_pkg = db_get_field(
+            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
+            $booking['hotel_id']
+        );
+        if (!empty($first_pkg)) {
+            $package_name = $first_pkg;
         }
     }
     
@@ -2639,10 +2659,14 @@ if ($mode == 'edit_booking') {
     
     // Get package name
     $package_name = $booking_record['package_name'];
-    if (empty($package_name) && !empty($hotel_info['packages_data'])) {
-        $packages = json_decode($hotel_info['packages_data'], true);
-        if (!empty($packages[0]['PackageName'])) {
-            $package_name = $packages[0]['PackageName'];
+    if (empty($package_name) && !empty($booking_record['hotel_id'])) {
+        // V3: Get first package from novoton_hotel_packages table
+        $first_pkg = db_get_field(
+            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
+            $booking_record['hotel_id']
+        );
+        if (!empty($first_pkg)) {
+            $package_name = $first_pkg;
         }
     }
     
@@ -2652,10 +2676,19 @@ if ($mode == 'edit_booking') {
         $hotel_stars = str_repeat('★', intval($hotel_info['star_rating']));
     }
     
-    // Get all packages for display
+    // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
-    if (!empty($hotel_info['packages_data'])) {
-        $all_packages = json_decode($hotel_info['packages_data'], true) ?: [];
+    $db_packages = db_get_array(
+        "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+        $booking_record['hotel_id']
+    );
+    if (!empty($db_packages)) {
+        foreach ($db_packages as $pkg) {
+            $all_packages[] = [
+                'IdCont' => $pkg['package_id'],
+                'PackageName' => $pkg['package_name']
+            ];
+        }
     }
     
     // Assign to view
