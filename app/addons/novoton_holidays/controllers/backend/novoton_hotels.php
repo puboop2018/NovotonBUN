@@ -123,8 +123,9 @@ if ($mode == 'add_hotels_as_products') {
             'total' => $hotelRepo->count(['country' => $country]),
             'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
             'with_packages' => db_get_field(
-                "SELECT COUNT(*) FROM ?:novoton_hotels 
-                 WHERE country = ?s AND packages_data IS NOT NULL AND packages_data != '' AND packages_data != '[]'",
+                "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
+                 INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+                 WHERE h.country = ?s",
                 $country
             ),
             'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),

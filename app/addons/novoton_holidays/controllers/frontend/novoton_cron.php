@@ -935,13 +935,13 @@ try {
     }
     
     // =========================================
-    // MODE: hotel_info (Hotel accommodation)
-    // Fetches hotelinfo API per hotel to populate
-    // rooms_data, board_data, packages_data, ages_data
-    // On subsequent runs uses offers_update to only
-    // refresh hotels that have changed.
+    // MODE: hotel_info (Hotel accommodation) - DEPRECATED
+    // Use mode=sync_hotels or mode=sync_hotelinfo instead (V3)
+    // This mode now stores data in V3 format (hotel_data JSON)
     // =========================================
     elseif ($mode == 'hotel_info') {
+        echo "WARNING: mode=hotel_info is deprecated. Use mode=sync_hotels or mode=sync_hotelinfo instead.\n";
+        echo "Continuing with V3-compatible storage...\n\n";
         $force = !empty($_REQUEST['force']);
         $limit = intval($_REQUEST['limit'] ?? 500);
         $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
@@ -1086,85 +1086,69 @@ try {
                         $update['package_name'] = $package_name;
                     }
 
-                    // Extract rooms_data: IdRoom, Type, RB, EB, maxADT, maxCHD, minPAX
-                    $rooms = [];
-                    if (isset($hotel_info->rooms) && isset($hotel_info->rooms->room)) {
-                        foreach ($hotel_info->rooms->room as $room) {
-                            $rooms[] = [
-                                'IdRoom' => (string)($room->IdRoom ?? ''),
-                                'Type' => (string)($room->Type ?? $room->Room ?? ''),
-                                'RB' => (string)($room->RB ?? ''),
-                                'EB' => (string)($room->EB ?? ''),
-                                'maxADT' => intval($room->maxADT ?? 0),
-                                'maxCHD' => intval($room->maxCHD ?? 0),
-                                'minPAX' => intval($room->minPAX ?? 0),
-                            ];
-                        }
-                    }
-                    if (!empty($rooms)) {
-                        $update['rooms_data'] = json_encode($rooms, JSON_UNESCAPED_UNICODE);
-                    }
+                    // V3: Store full hotelinfo in hotel_data JSON
+                    $update['hotel_data'] = json_encode($hotel_info);
+                    $update['hotelinfo_synced_at'] = date('Y-m-d H:i:s');
 
-                    // Extract board_data: IdBoard, Board name
-                    $boards = [];
-                    if (isset($hotel_info->boards) && isset($hotel_info->boards->board)) {
-                        foreach ($hotel_info->boards->board as $board) {
-                            $boards[] = [
-                                'IdBoard' => (string)($board->IdBoard ?? ''),
-                                'Board' => (string)($board->Board ?? ''),
-                            ];
-                        }
-                    }
-                    if (!empty($boards)) {
-                        $update['board_data'] = json_encode($boards, JSON_UNESCAPED_UNICODE);
-                    }
-
-                    // Extract packages_data
+                    // V3: Count packages for statistics
+                    $packages_count = 0;
                     $packages = [];
                     if (isset($hotel_info->packages)) {
-                        if (isset($hotel_info->packages->PackageName)) {
+                        if (isset($hotel_info->packages->IdCont)) {
                             // Single package
                             $packages[] = [
-                                'PackageName' => (string)$hotel_info->packages->PackageName,
+                                'IdCont' => (string)$hotel_info->packages->IdCont,
+                                'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
                             ];
                         }
-                        // Multiple packages
+                        // Multiple packages - check for both formats
                         if (isset($hotel_info->packages->package)) {
                             foreach ($hotel_info->packages->package as $pkg) {
                                 $packages[] = [
-                                    'PackageName' => (string)($pkg->PackageName ?? $pkg ?? ''),
+                                    'IdCont' => (string)($pkg->IdCont ?? ''),
+                                    'PackageName' => (string)($pkg->PackageName ?? ''),
                                 ];
                             }
                         }
+                        $packages_count = count($packages);
                     }
-                    if (!empty($packages)) {
-                        $update['packages_data'] = json_encode($packages, JSON_UNESCAPED_UNICODE);
-                    }
+                    $update['packages_count'] = $packages_count;
+                    $update['has_prices'] = $packages_count > 0 ? 'Y' : 'N';
 
-                    // Extract ages_data
-                    $ages = [];
-                    if (isset($hotel_info->ages) && isset($hotel_info->ages->age)) {
-                        foreach ($hotel_info->ages->age as $age) {
-                            $ages[] = [
-                                'IdAge' => (string)($age->IdAge ?? ''),
-                                'Age' => (string)($age->Age ?? ''),
-                                'FromYear' => (string)($age->FromYear ?? ''),
-                                'ToYear' => (string)($age->ToYear ?? ''),
-                            ];
-                        }
+                    // Extract counts for logging
+                    $rooms_count = 0;
+                    if (isset($hotel_info->rooms) && isset($hotel_info->rooms->room)) {
+                        $rooms_count = count($hotel_info->rooms->room);
                     }
-                    if (!empty($ages)) {
-                        $update['ages_data'] = json_encode($ages, JSON_UNESCAPED_UNICODE);
+                    $boards_count = 0;
+                    if (isset($hotel_info->boards) && isset($hotel_info->boards->board)) {
+                        $boards_count = count($hotel_info->boards->board);
                     }
 
                     db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel_id);
+
+                    // V3: Insert packages into novoton_hotel_packages table
+                    foreach ($packages as $pkg) {
+                        if (!empty($pkg['IdCont'])) {
+                            db_query(
+                                "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+                                 VALUES (?s, ?s, ?s, NOW())
+                                 ON DUPLICATE KEY UPDATE package_name = ?s",
+                                $hotel_id,
+                                $pkg['IdCont'],
+                                $pkg['PackageName'],
+                                $pkg['PackageName']
+                            );
+                        }
+                    }
+
                     $synced++;
 
                     $parts = [];
-                    if (!empty($rooms)) $parts[] = count($rooms) . ' rooms';
-                    if (!empty($boards)) $parts[] = count($boards) . ' boards';
+                    if ($rooms_count > 0) $parts[] = $rooms_count . ' rooms';
+                    if ($boards_count > 0) $parts[] = $boards_count . ' boards';
+                    if ($packages_count > 0) $parts[] = $packages_count . ' packages';
                     if (!empty($package_name)) $parts[] = 'pkg: ' . $package_name;
-                    if (!empty($ages)) $parts[] = count($ages) . ' ages';
                     echo "OK (" . (empty($parts) ? 'no detail data' : implode(', ', $parts)) . ")\n";
 
                 } catch (Exception $e) {

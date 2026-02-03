@@ -918,31 +918,53 @@ if ($mode == 'search') {
                 Tygh::$app['view']->assign('all_room_results', $all_room_results);
                 Tygh::$app['view']->assign('is_multi_room_search', true);
                 
-                // Fetch early booking discounts for this hotel from database
+                // V3: Fetch early booking discounts from novoton_hotel_packages.priceinfo_data JSON
                 $early_booking_discounts = [];
-                
-                // A73: Optimized query - select only needed columns, add LIMIT
-                $db_early_bookings = db_get_array(
-                    "SELECT reduction, room_types, package_id, min_stay, booking_to 
-                     FROM ?:novoton_early_booking 
-                     WHERE hotel_id = ?s 
-                     AND (booking_to IS NULL OR booking_to >= CURDATE())
-                     AND (stay_from IS NULL OR stay_from <= ?s)
-                     AND (stay_to IS NULL OR stay_to >= ?s)
-                     ORDER BY reduction DESC
-                     LIMIT 10",
-                    $hotelId, $checkOut, $checkIn
+
+                $eb_package = db_get_row(
+                    "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+                     WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
+                     ORDER BY synced_at DESC LIMIT 1",
+                    $hotelId
                 );
-                
-                // Parse DB early bookings
-                foreach ($db_early_bookings as $db_eb) {
-                    $early_booking_discounts[] = [
-                        'discount' => floatval($db_eb['reduction']),
-                        'room_types' => $db_eb['room_types'] ?? 'all',
-                        'package' => $db_eb['package_id'] ?? '',
-                        'min_stay' => intval($db_eb['min_stay'] ?? 0),
-                        'booking_to' => $db_eb['booking_to'] ?? ''
-                    ];
+
+                if (!empty($eb_package['priceinfo_data'])) {
+                    $priceinfo = json_decode($eb_package['priceinfo_data'], true);
+                    if (!empty($priceinfo['early_booking'])) {
+                        $eb_data = $priceinfo['early_booking'];
+                        // Normalize single entry to array
+                        if (isset($eb_data['Reduction'])) {
+                            $eb_data = [$eb_data];
+                        }
+
+                        $today = date('Y-m-d');
+                        foreach ($eb_data as $eb) {
+                            // Filter by booking dates and stay dates
+                            $bookTo = $eb['BookTo'] ?? '';
+                            $stayFrom = $eb['StayFrom'] ?? '';
+                            $stayTo = $eb['StayTo'] ?? '';
+
+                            if (!empty($bookTo) && $bookTo < $today) continue;
+                            if (!empty($stayFrom) && $stayFrom > $checkOut) continue;
+                            if (!empty($stayTo) && $stayTo < $checkIn) continue;
+
+                            $early_booking_discounts[] = [
+                                'discount' => floatval($eb['Reduction'] ?? 0),
+                                'room_types' => $eb['RoomTypes'] ?? 'all',
+                                'package' => $eb['PackageId'] ?? '',
+                                'min_stay' => intval($eb['MinStay'] ?? 0),
+                                'booking_to' => $bookTo
+                            ];
+                        }
+
+                        // Sort by discount DESC
+                        usort($early_booking_discounts, function($a, $b) {
+                            return $b['discount'] <=> $a['discount'];
+                        });
+
+                        // Limit to 10
+                        $early_booking_discounts = array_slice($early_booking_discounts, 0, 10);
+                    }
                 }
                 
                 // Calculate discount range (min and max)
@@ -1478,12 +1500,11 @@ if ($mode == 'search') {
     $hotel_city_display = '';
     $hotel_region_display = '';
     $hotel_country_display = '';
-    
+
     if (!empty($hotelId)) {
-        // A73: Optimized query - select only display columns, not JSON blobs
+        // V3: Optimized query - select only display columns
         $hotel_info = db_get_row(
-            "SELECT hotel_id, hotel_name, city, region, country, hotel_type,
-                    packages_data, ages_data
+            "SELECT hotel_id, hotel_name, city, region, country, hotel_type, hotel_data
              FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotelId
         );
@@ -1492,47 +1513,73 @@ if ($mode == 'search') {
             $hotel_city_display = $hotel_info['city'] ?? '';
             $hotel_region_display = $hotel_info['region'] ?? '';
             $hotel_country_display = $hotel_info['country'] ?? '';
-            
-            // Get package name
-            if (!empty($hotel_info['packages_data'])) {
-                $packages = json_decode($hotel_info['packages_data'], true);
-                if (!empty($packages)) {
-                    // Use first non-bracketed package or just first
-                    $package_name = '';
-                    foreach ($packages as $pkg) {
-                        $pname = is_array($pkg) ? ($pkg['PackageName'] ?? '') : '';
-                        if (!empty($pname) && substr($pname, -1) != ']') {
-                            $package_name = $pname;
-                            break;
-                        }
+
+            // V3: Get packages from packages table
+            $packages = db_get_array(
+                "SELECT package_id, package_name, min_price, has_early_booking, priceinfo_data
+                 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+                $hotelId
+            );
+
+            if (!empty($packages)) {
+                // Use first non-bracketed package or just first
+                $package_name = '';
+                foreach ($packages as $pkg) {
+                    $pname = $pkg['package_name'] ?? '';
+                    if (!empty($pname) && substr($pname, -1) != ']') {
+                        $package_name = $pname;
+                        break;
                     }
-                    if (empty($package_name) && !empty($packages[0])) {
-                        $package_name = is_array($packages[0]) ? ($packages[0]['PackageName'] ?? '') : '';
-                    }
-                    Tygh::$app['view']->assign('hotel_package_name', $package_name ?? '');
-                    
-                    // Also assign all packages for multi-room display
-                    Tygh::$app['view']->assign('hotel_all_packages', $packages);
-                } else {
-                    Tygh::$app['view']->assign('hotel_package_name', '');
-                    Tygh::$app['view']->assign('hotel_all_packages', []);
                 }
+                if (empty($package_name) && !empty($packages[0])) {
+                    $package_name = $packages[0]['package_name'] ?? '';
+                }
+                Tygh::$app['view']->assign('hotel_package_name', $package_name ?? '');
+
+                // Also assign all packages for multi-room display
+                Tygh::$app['view']->assign('hotel_all_packages', $packages);
             } else {
                 Tygh::$app['view']->assign('hotel_package_name', '');
                 Tygh::$app['view']->assign('hotel_all_packages', []);
             }
-            
-            // Check for active early booking
-            // A73: Optimized query - select only needed columns
+
+            // V3: Check for active early booking from priceinfo_data JSON
             $current_date = date('Y-m-d');
-            $active_eb = db_get_row(
-                "SELECT id, reduction, booking_from, booking_to, stay_from, stay_to,
-                        payment_date, payment_percent, room_types, min_stay
-                 FROM ?:novoton_early_booking 
-                 WHERE hotel_id = ?s AND booking_from <= ?s AND booking_to >= ?s 
-                 ORDER BY reduction DESC LIMIT 1",
-                $hotelId, $current_date, $current_date
-            );
+            $active_eb = null;
+
+            // Get first package with early booking
+            foreach ($packages as $pkg) {
+                if ($pkg['has_early_booking'] === 'Y' && !empty($pkg['priceinfo_data'])) {
+                    $priceinfo = json_decode($pkg['priceinfo_data'], true);
+                    if (!empty($priceinfo['early_booking'])) {
+                        $eb_data = $priceinfo['early_booking'];
+                        // Normalize single entry to array
+                        if (isset($eb_data['Reduction'])) {
+                            $eb_data = [$eb_data];
+                        }
+                        // Find active early booking
+                        foreach ($eb_data as $eb) {
+                            $book_from = $eb['BookFrom'] ?? '';
+                            $book_to = $eb['BookTo'] ?? '';
+                            if ($book_from <= $current_date && $book_to >= $current_date) {
+                                $active_eb = [
+                                    'reduction' => $eb['Reduction'] ?? 0,
+                                    'booking_from' => $book_from,
+                                    'booking_to' => $book_to,
+                                    'stay_from' => $eb['StayFrom'] ?? '',
+                                    'stay_to' => $eb['StayTo'] ?? '',
+                                    'payment_date' => $eb['PaymentDate'] ?? '',
+                                    'payment_percent' => $eb['PaymentPercent'] ?? 0,
+                                    'room_types' => $eb['RoomTypes'] ?? 'all',
+                                    'min_stay' => $eb['MinStay'] ?? 0
+                                ];
+                                break 2; // Found one, exit both loops
+                            }
+                        }
+                    }
+                }
+            }
+
             if ($active_eb) {
                 Tygh::$app['view']->assign('active_early_booking', $active_eb);
             }
@@ -1596,20 +1643,36 @@ if ($mode == 'search') {
     $terms_payment = fn_novoton_format_payment_terms($terms_payment_raw);
     $terms_cancellation = fn_novoton_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
-    // Get early booking details from database for tooltip
+    // V3: Get early booking details from novoton_hotel_packages.priceinfo_data JSON for tooltip
     if (!empty($hotelId)) {
-        $eb_list = db_get_array(
-            "SELECT * FROM ?:novoton_early_booking WHERE hotel_id = ?s ORDER BY booking_to",
+        $eb_package = db_get_row(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
             $hotelId
         );
-        if (!empty($eb_list)) {
-            $eb_details = [];
-            foreach ($eb_list as $eb) {
-                $eb_details[] = "-{$eb['reduction']}% Early Booking discount till {$eb['booking_to']} -- PAYMENT till " . 
-                    date('d.m.Y', strtotime($eb['booking_to'] . ' +5 days')) . 
-                    " -- STAY in {$eb['stay_from']} - {$eb['stay_to']}";
+
+        if (!empty($eb_package['priceinfo_data'])) {
+            $priceinfo = json_decode($eb_package['priceinfo_data'], true);
+            if (!empty($priceinfo['early_booking'])) {
+                $eb_data = $priceinfo['early_booking'];
+                // Normalize single entry to array
+                if (isset($eb_data['Reduction'])) {
+                    $eb_data = [$eb_data];
+                }
+
+                $eb_details = [];
+                foreach ($eb_data as $eb) {
+                    $reduction = $eb['Reduction'] ?? 0;
+                    $bookTo = $eb['BookTo'] ?? '';
+                    $stayFrom = $eb['StayFrom'] ?? '';
+                    $stayTo = $eb['StayTo'] ?? '';
+
+                    $paymentDate = !empty($bookTo) ? date('d.m.Y', strtotime($bookTo . ' +5 days')) : 'N/A';
+                    $eb_details[] = "-{$reduction}% Early Booking discount till {$bookTo} -- PAYMENT till {$paymentDate} -- STAY in {$stayFrom} - {$stayTo}";
+                }
+                $early_booking_details = implode("\n", $eb_details);
             }
-            $early_booking_details = implode("\n", $eb_details);
         }
     }
     

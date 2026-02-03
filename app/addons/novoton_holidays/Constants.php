@@ -118,13 +118,12 @@ final class Constants
     public const API_FUNCTION_RES_INFO = 'resinfo';
     public const API_FUNCTION_CANCEL = 'cancel_reservation';
     
-    // ========== Database Tables ==========
-    
+    // ========== Database Tables (V3 Architecture) ==========
+
     public const TABLE_HOTELS = 'novoton_hotels';
+    public const TABLE_PACKAGES = 'novoton_hotel_packages';  // V3: priceinfo stored per package
     public const TABLE_BOOKINGS = 'novoton_bookings';
-    public const TABLE_PRICES = 'novoton_hotel_prices';
-    public const TABLE_SEASONS = 'novoton_seasons';
-    public const TABLE_EARLY_BOOKING = 'novoton_early_booking';
+    public const TABLE_FACILITIES = 'novoton_hotel_facilities';
     public const TABLE_SYNC_LOG = 'novoton_sync_log';
     public const TABLE_CACHE = 'novoton_cache';
     

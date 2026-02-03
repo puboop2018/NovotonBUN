@@ -618,21 +618,27 @@ if ($mode == 'test_product') {
             }
         }
         
-        // Test price update
-        echo "\n=== STEP 2: Test Price Update ===\n";
-        if (function_exists('fn_novoton_holidays_update_product_prices')) {
-            $result = fn_novoton_holidays_update_product_prices($product['product_id']);
-            if ($result === true) {
-                echo "SUCCESS - Prices saved to database!\n";
-                $count = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_prices WHERE product_id = ?i", $product['product_id']);
-                echo "Records saved: $count\n";
-            } elseif ($result === 'no_data') {
-                echo "NO DATA - No valid prices found\n";
-            } else {
-                echo "FAILED - Error saving prices\n";
+        // Test price data (V3: stored in novoton_hotel_packages)
+        echo "\n=== STEP 2: Check Package Data ===\n";
+        $packages_count = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
+            $hotel_id
+        );
+        echo "Packages in database: $packages_count\n";
+
+        if ($packages_count > 0) {
+            $packages = db_get_array(
+                "SELECT package_name, has_early_booking, min_price, synced_at
+                 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+                $hotel_id
+            );
+            echo "\nStored packages:\n";
+            foreach ($packages as $pkg) {
+                echo "  - {$pkg['package_name']}: min €{$pkg['min_price']}, " .
+                     "early_booking={$pkg['has_early_booking']}, synced={$pkg['synced_at']}\n";
             }
         } else {
-            echo "Function fn_novoton_holidays_update_product_prices not found\n";
+            echo "No packages found. Run sync_hotels cron to populate.\n";
         }
         
     } catch (Exception $e) {
