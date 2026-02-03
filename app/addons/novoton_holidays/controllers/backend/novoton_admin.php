@@ -5,7 +5,7 @@
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\PriceSync;
+use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -16,7 +16,7 @@ if ($mode == 'update_prices') {
         // Update single product
         $productId = intval($_REQUEST['product_id']);
         
-        $sync = new PriceSync();
+        $sync = new PriceInfoSync();
         $stats = [
             'updated' => [],
             'failed' => [],
@@ -43,7 +43,7 @@ if ($mode == 'update_prices') {
         // Start the sync process
         fn_set_progress('init', __('novoton_holidays.updating_prices'));
         
-        $sync = new PriceSync();
+        $sync = new PriceInfoSync();
         
         try {
             $stats = $sync->syncAllProducts();
@@ -287,8 +287,8 @@ if ($mode == 'run_cron') {
         if (file_exists($addon_path . 'src/NovotonApi.php')) {
             require_once($addon_path . 'src/NovotonApi.php');
         }
-        if (file_exists($addon_path . 'src/PriceSync.php')) {
-            require_once($addon_path . 'src/PriceSync.php');
+        if (file_exists($addon_path . 'src/PriceInfoSync.php')) {
+            require_once($addon_path . 'src/PriceInfoSync.php');
         }
         
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
