@@ -32,12 +32,12 @@
 <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
     {if $_nv_payment}
     <p style="margin: 0 0 10px 0;"><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong><br>
-    {$_nv_payment|trim nofilter}</p>
+    <span style="white-space: pre-line;">{$_nv_payment|replace:"<br />":"\n"|replace:"<br>":"\n"|replace:"<br/>":"\n"|trim}</span></p>
     {/if}
 
     {if $_nv_cancel}
     <p style="margin: 0;"><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
-    {$_nv_cancel|trim nofilter}</p>
+    <span style="white-space: pre-line;">{$_nv_cancel|replace:"<br />":"\n"|replace:"<br>":"\n"|replace:"<br/>":"\n"|trim}</span></p>
     {/if}
 </div>
 {/if}
