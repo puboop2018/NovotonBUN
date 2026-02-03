@@ -346,8 +346,8 @@
                             
                             <div class="guest-entry guest-entry-child" data-room="{$room_num}" data-child="{$i}" data-original-age="{$child_age_at_checkin}">
                                 <div class="guest-entry-header">
-                                    {$guest_num}. {__("novoton_holidays.child")} {$i} 
-                                    <span class="child-age-display" id="child_age_display_r{$room_num}_c{$i}">({$child_age_at_checkin} {__("novoton_holidays.age_label")|default:"ani"})</span>
+                                    {$guest_num}. {__("novoton_holidays.child")} {$i}
+                                    <span class="child-age-display" id="child_age_display_r{$room_num}_c{$i}">({$child_age_at_checkin} {if $child_age_at_checkin == 1}{__("novoton_holidays.age_label_singular")|default:"an"}{else}{__("novoton_holidays.age_label")|default:"ani"}{/if})</span>
                                     {if count($booking_data.rooms_data) > 1}
                                         <small style="color: #666; font-weight: normal;">- {__("novoton_holidays.room_number")} {$room_num}</small>
                                     {/if}
@@ -461,7 +461,8 @@ window.NovotonTranslations.priceIncreased = '{__("novoton_holidays.price_increas
 window.NovotonTranslations.priceDecreased = '{__("novoton_holidays.price_decreased")|default:"Price decreased"|escape:"javascript"}';
 window.NovotonTranslations.priceRecalculating = '{__("novoton_holidays.price_recalculating")|default:"Recalculating price..."|escape:"javascript"}';
 window.NovotonTranslations.priceUpdated = '{__("novoton_holidays.price_updated")|default:"Pretul a fost actualizat:"|escape:"javascript"}';
-window.NovotonTranslations.ageLabel = '{__("novoton_holidays.age_label")|default:"Age"|escape:"javascript"}';
+window.NovotonTranslations.ageLabel = '{__("novoton_holidays.age_label")|default:"ani"|escape:"javascript"}';
+window.NovotonTranslations.ageLabelSingular = '{__("novoton_holidays.age_label_singular")|default:"an"|escape:"javascript"}';
 window.NovotonTranslations.childMustBeUnder18 = '{__("novoton_holidays.child_must_be_under_18")|default:"Child must be under 18"|escape:"javascript"}';
 window.NovotonTranslations.dobCannotBeFuture = '{__("novoton_holidays.dob_cannot_be_future")|default:"Date of birth cannot be in the future"|escape:"javascript"}';
 window.NovotonTranslations.roomChangedTitle = '{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"|escape:"javascript"}';
@@ -617,9 +618,14 @@ function validateAndCheckAge(id, originalAge) {
     // Update hidden field
     if (calcAgeInput) calcAgeInput.value = calculatedAge;
     
-    // Update age display - use translation (Romanian format: "6 ani")
+    // Update age display - use translation with singular/plural (Romanian: "1 an", "2 ani")
     if (ageDisplay) {
-        var ageLabel = window.NovotonTranslations && window.NovotonTranslations.ageLabel ? window.NovotonTranslations.ageLabel : 'ani';
+        var ageLabel;
+        if (calculatedAge === 1) {
+            ageLabel = window.NovotonTranslations && window.NovotonTranslations.ageLabelSingular ? window.NovotonTranslations.ageLabelSingular : 'an';
+        } else {
+            ageLabel = window.NovotonTranslations && window.NovotonTranslations.ageLabel ? window.NovotonTranslations.ageLabel : 'ani';
+        }
         ageDisplay.textContent = '(' + calculatedAge + ' ' + ageLabel + ')';
     }
     
