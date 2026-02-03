@@ -36,6 +36,18 @@ function fn_novoton_ensure_tables_exist()
         db_query("DROP TABLE IF EXISTS `?:novoton_resorts`");
     }
 
+    // Drop redundant resort column — city field is the resort (City = Resort in API)
+    $resort_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'resort'");
+    if (!empty($resort_col)) {
+        db_query("ALTER TABLE `?:novoton_hotels` DROP COLUMN `resort`");
+    }
+
+    // Drop redundant stars column — hotel_type stores the original value (e.g. "4*", "Apart")
+    $stars_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'stars'");
+    if (!empty($stars_col)) {
+        db_query("ALTER TABLE `?:novoton_hotels` DROP COLUMN `stars`");
+    }
+
     // Rename synced_at -> hotel_list_synced_at if old column still exists
     $old_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'synced_at'");
     if (!empty($old_col)) {

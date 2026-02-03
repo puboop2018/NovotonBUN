@@ -310,27 +310,44 @@ if ($mode === 'manage') {
                 }
                 
                 if ($extra && is_array($extra)) {
-                    // Get price from order_details
-                    if (empty($booking['total_price']) && $order_detail['price'] > 0) {
-                        $booking['total_price'] = $order_detail['price'];
+                    // Get price from order_details row or from cart extra
+                    if (empty($booking['total_price'])) {
+                        if ($order_detail['price'] > 0) {
+                            $booking['total_price'] = $order_detail['price'];
+                        } elseif (!empty($extra['total_price'])) {
+                            $booking['total_price'] = floatval($extra['total_price']);
+                        }
                     }
-                    
+
+                    // Get base_price / api_price from cart extra
+                    if (empty($booking['base_price']) && !empty($extra['base_price'])) {
+                        $booking['base_price'] = floatval($extra['base_price']);
+                    }
+
                     // Get hotel_name from extra
                     if ((empty($booking['hotel_name']) || strpos($booking['hotel_name'], 'Hotel #') === 0) && !empty($extra['hotel_name'])) {
                         $booking['hotel_name'] = $extra['hotel_name'];
                     }
-                    
+
                     // Get room_type_display from extra
                     if (!empty($extra['room_type_display'])) {
                         $booking['room_type_display'] = $extra['room_type_display'];
                     }
-                    
+
+                    // Get room_name from extra (for room_id display)
+                    if (!empty($extra['room_name'])) {
+                        $booking['room_name_extra'] = $extra['room_name'];
+                    }
+
                     // Get rooms_data from extra (for multi-room)
                     if (!empty($extra['rooms_data']) && is_array($extra['rooms_data'])) {
                         $room_types = [];
                         $board_names = [];
                         foreach ($extra['rooms_data'] as $room) {
                             $room_display = $room['room_type_display'] ?? $room['room_name'] ?? $room['room_id'] ?? 'Room';
+                            if ($room_display === 'Room' && !empty($room['room_id'])) {
+                                $room_display = fn_novoton_format_room_type($room['room_id']);
+                            }
                             $room_display = str_replace(['%2b', '%2B'], '+', $room_display);
                             $room_types[] = $room_display;
                             if (!empty($room['board_name'])) {
@@ -346,7 +363,7 @@ if ($mode === 'manage') {
                     } elseif (!empty($extra['room_type_display'])) {
                         $booking['room_types_list'] = str_replace(['%2b', '%2B'], '+', $extra['room_type_display']);
                     }
-                    
+
                     // Get board_name from extra
                     if (empty($booking['board_display']) && !empty($extra['board_name'])) {
                         $booking['board_display'] = $extra['board_name'];
@@ -391,6 +408,10 @@ if ($mode === 'manage') {
                 foreach ($rooms as $room) {
                     // Use room_type_display if available, then room_name, then room_id
                     $room_display = $room['room_type_display'] ?? $room['room_name'] ?? $room['room_id'] ?? 'Room';
+                    // If generic "Room", try formatting the room_id instead
+                    if ($room_display === 'Room' && !empty($room['room_id'])) {
+                        $room_display = fn_novoton_format_room_type($room['room_id']);
+                    }
                     // Decode URL encoding
                     $room_display = str_replace(['%2b', '%2B'], '+', $room_display);
                     $room_types[] = $room_display;
@@ -406,49 +427,19 @@ if ($mode === 'manage') {
                 
                 // Format board name consistently
                 if (!empty($board_names)) {
-                    $board = $board_names[0];
-                    $board_upper = strtoupper(trim($board));
-                    $board_map = [
-                        'AI' => 'All Inclusive',
-                        'ALL INCL' => 'All Inclusive',
-                        'ALLINC' => 'All Inclusive',
-                        'UAI' => 'Ultra All Inclusive',
-                        'ULTRA ALL' => 'Ultra All Inclusive',
-                        'FB' => 'Full Board',
-                        'FULL BOARD' => 'Full Board',
-                        'HB' => 'Half Board',
-                        'HALF BOARD' => 'Half Board',
-                        'BB' => 'Bed & Breakfast',
-                        'B&B' => 'Bed & Breakfast',
-                        'BED BREAKFAST' => 'Bed & Breakfast',
-                        'RO' => 'Room Only',
-                        'ROOM ONLY' => 'Room Only'
-                    ];
-                    $booking['board_display'] = $board_map[$board_upper] ?? $board;
+                    $booking['board_display'] = fn_novoton_format_board_name($board_names[0]);
                 }
             }
         }
-        
+
+        // Final fallback for room_types_list: if still "Room" or empty, use room_id column
+        if ((empty($booking['room_types_list']) || $booking['room_types_list'] === 'Room') && !empty($booking['room_id'])) {
+            $booking['room_types_list'] = fn_novoton_format_room_type($booking['room_id']);
+        }
+
         // Format board_id if no board_display yet
         if (empty($booking['board_display']) && !empty($booking['board_id'])) {
-            $board_upper = strtoupper(trim($booking['board_id']));
-            $board_map = [
-                'AI' => 'All Inclusive',
-                'ALL INCL' => 'All Inclusive',
-                'ALLINC' => 'All Inclusive',
-                'UAI' => 'Ultra All Inclusive',
-                'ULTRA ALL' => 'Ultra All Inclusive',
-                'FB' => 'Full Board',
-                'FULL BOARD' => 'Full Board',
-                'HB' => 'Half Board',
-                'HALF BOARD' => 'Half Board',
-                'BB' => 'Bed & Breakfast',
-                'B&B' => 'Bed & Breakfast',
-                'BED BREAKFAST' => 'Bed & Breakfast',
-                'RO' => 'Room Only',
-                'ROOM ONLY' => 'Room Only'
-            ];
-            $booking['board_display'] = $board_map[$board_upper] ?? $booking['board_id'];
+            $booking['board_display'] = fn_novoton_format_board_name($booking['board_id']);
         }
     }
     unset($booking);

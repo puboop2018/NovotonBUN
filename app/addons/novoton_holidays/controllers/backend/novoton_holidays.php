@@ -211,6 +211,7 @@ if ($mode == 'manage' || empty($mode)) {
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+        'check_packages' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=check_packages",
     ];
     
     // Assign to view
@@ -306,8 +307,8 @@ if ($mode == 'view_hotel') {
     if (!empty($hotel['rooms_data'])) {
         $hotel['rooms'] = json_decode($hotel['rooms_data'], true);
     }
-    if (!empty($hotel['boards_data'])) {
-        $hotel['boards'] = json_decode($hotel['boards_data'], true);
+    if (!empty($hotel['board_data'])) {
+        $hotel['boards'] = json_decode($hotel['board_data'], true);
     }
     
     // Get facilities

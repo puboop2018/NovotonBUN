@@ -278,6 +278,8 @@ class BookingService
             'special_requests' => $booking['special_requests'],
             'terms_of_payment' => $bookingData['terms_of_payment'] ?? '',
             'terms_of_cancellation' => $bookingData['terms_of_cancellation'] ?? '',
+            'terms_of_payment_raw' => $bookingData['terms_of_payment_raw'] ?? '',
+            'terms_of_cancellation_raw' => $bookingData['terms_of_cancellation_raw'] ?? '',
         ];
     }
     

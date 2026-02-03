@@ -215,6 +215,13 @@
                 <td>Every hour</td>
                 <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
+            <tr>
+                <td>8</td>
+                <td><strong>Check Packages</strong></td>
+                <td><div class="novoton-cron-url">{$cron_urls.check_packages}</div></td>
+                <td>After Hotel List</td>
+                <td><a href="{$cron_urls.check_packages}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
         </table>
         {else}
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; color: #856404;">

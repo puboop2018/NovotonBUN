@@ -78,7 +78,7 @@
             <th width="25%">Hotel Name</th>
             <th width="15%">City</th>
             <th width="10%">Region</th>
-            <th width="5%">Stars</th>
+            <th width="5%">Type</th>
             <th width="37%">Page Title Preview</th>
         </tr>
     </thead>
@@ -90,7 +90,7 @@
             <td>{$hotel.hotel_name}</td>
             <td>{$hotel.city}</td>
             <td>{$hotel.region}</td>
-            <td>{$hotel.stars}</td>
+            <td>{$hotel.hotel_type}</td>
             <td>
                 <small class="muted">
                     {* Build preview title *}

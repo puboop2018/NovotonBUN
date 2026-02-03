@@ -204,15 +204,15 @@ if ($mode == 'check_prices') {
 
     echo '<div class="log">';
 
-    // Step 1: Get all distinct resorts for this country from our database
+    // Step 1: Get all distinct resorts (= city) for this country from our database
     $resorts = db_get_fields(
-        "SELECT DISTINCT resort FROM ?:novoton_hotels WHERE country = ?s AND resort != '' AND resort IS NOT NULL ORDER BY resort",
+        "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city IS NOT NULL ORDER BY city",
         $country
     );
 
     // Also get all hotels for this country (to map hotel_id -> hotel_name and mark results)
     $all_hotels = db_get_hash_array(
-        "SELECT hotel_id, hotel_name, resort, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+        "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
         'hotel_id',
         $country
     );
@@ -314,8 +314,8 @@ if ($mode == 'check_prices') {
 
         if (!empty($unknown_hotels)) {
             echo "<br><span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
-            foreach ($unknown_hotels as $hid => $resort) {
-                echo "<span class='error'>  Hotel ID {$hid} (resort: {$resort}) - not synced</span><br>\n";
+            foreach ($unknown_hotels as $hid => $resort_name) {
+                echo "<span class='error'>  Hotel ID {$hid} (resort: {$resort_name}) - not synced</span><br>\n";
             }
             echo "<br><span style='color:#666;'>These hotels have prices in the API but are missing from your hotel list. Run Hotel Sync to add them.</span><br>";
         }
@@ -382,21 +382,21 @@ if ($mode == 'download_active_prices_csv') {
     $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
     
     $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name, city, stars, has_prices, product_id, last_price_check
-         FROM ?:novoton_hotels 
+        "SELECT hotel_id, hotel_name, city, hotel_type, has_prices, product_id, last_price_check
+         FROM ?:novoton_hotels
          WHERE country = ?s AND has_prices = 'Y'
          ORDER BY city, hotel_name",
         $country
     );
     
-    $csv = "Hotel ID;Hotel Name;City;Stars;Product ID;Last Check\n";
-    
+    $csv = "Hotel ID;Hotel Name;City;Hotel Type;Product ID;Last Check\n";
+
     foreach ($hotels as $hotel) {
         $csv .= implode(';', [
             $hotel['hotel_id'],
             '"' . str_replace('"', '""', $hotel['hotel_name']) . '"',
             $hotel['city'],
-            $hotel['stars'],
+            $hotel['hotel_type'],
             $hotel['product_id'] ?: '',
             $hotel['last_price_check'] ?: ''
         ]) . "\n";

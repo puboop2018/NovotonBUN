@@ -305,10 +305,7 @@ function fn_novoton_cron_resinfo()
         return ['success' => false, 'error' => 'API not available'];
     }
     
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $countries = !empty($addon_settings['selected_countries']) 
-        ? explode(',', $addon_settings['selected_countries']) 
-        : ['BULGARIA'];
+    $countries = fn_novoton_parse_countries();
     
     $result = [
         'success' => true,
@@ -337,8 +334,6 @@ function fn_novoton_cron_resinfo()
                         'hotel_name' => (string)($hotel['HotelName'] ?? $hotel['hotelName'] ?? ''),
                         'country' => $country,
                         'city' => (string)($hotel['City'] ?? $hotel['city'] ?? ''),
-                        'resort' => (string)($hotel['Resort'] ?? $hotel['resort'] ?? ''),
-                        'stars' => intval($hotel['Stars'] ?? $hotel['stars'] ?? 0),
                         'hotel_type' => (string)($hotel['HotelType'] ?? $hotel['hotelType'] ?? ''),
                         'last_sync' => date('Y-m-d H:i:s')
                     ];

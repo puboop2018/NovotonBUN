@@ -9,12 +9,12 @@
             <strong>Hotel:</strong> {$oi.extra.hotel_name}{if $oi.extra.hotel_city} ({$oi.extra.hotel_city}){/if}<br>
             {/if}
             
-            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} | 
-            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:"%d.%m.%Y"} | 
-            <strong>Nights:</strong> {$oi.extra.nights}<br>
-            
+            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} |
+            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:"%d.%m.%Y"} |
+            <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$oi.extra.nights}<br>
+
             {if $oi.extra.package_name}
-            <strong>Package:</strong> {$oi.extra.package_name}<br>
+            <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$oi.extra.package_name}<br>
             {/if}
             
             {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}

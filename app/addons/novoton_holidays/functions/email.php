@@ -93,6 +93,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
         'offers_update'  => 'Offers Update',
         'facilities'     => 'Facilities Sync',
         'resinfo'        => 'Booking Status Check',
+        'check_packages' => 'Check Hotel Packages',
         'manual'         => 'Manual Import',
         'cron'           => 'Cron Sync',
     ];
@@ -201,7 +202,7 @@ function fn_novoton_generate_hotel_features_csv()
     try {
         // Get all hotels with products
         $hotels = db_get_array(
-            "SELECT h.hotel_id, h.hotel_name, h.stars, h.product_id, h.boards_data, p.product_code
+            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, h.board_data, p.product_code
              FROM ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              WHERE h.product_id > 0
@@ -230,17 +231,22 @@ function fn_novoton_generate_hotel_features_csv()
         
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
-            $stars = intval($hotel['stars']);
+            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
             
-            // Parse boards data
-            $boards = [];
-            if (!empty($hotel['boards_data'])) {
-                $boards_arr = json_decode($hotel['boards_data'], true);
+            // Parse boards data — board_data JSON is [{IdBoard, Board}, ...]
+            $board_names = [];
+            if (!empty($hotel['board_data'])) {
+                $boards_arr = json_decode($hotel['board_data'], true);
                 if (is_array($boards_arr)) {
-                    $boards = array_values(array_unique($boards_arr));
+                    foreach ($boards_arr as $b) {
+                        $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : $b;
+                        if (!empty($code)) {
+                            $board_names[] = fn_novoton_format_board_name($code);
+                        }
+                    }
                 }
             }
-            $boards_str = implode(',', array_map('fn_novoton_format_board_name', $boards));
+            $boards_str = implode(',', array_unique($board_names));
             
             // Romanian row
             $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';

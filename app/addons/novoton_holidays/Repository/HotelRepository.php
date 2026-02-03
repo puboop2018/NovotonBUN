@@ -138,7 +138,7 @@ class HotelRepository
         $data = [
             'packages_data' => json_encode($packages),
             'rooms_data' => json_encode($rooms),
-            'boards_data' => json_encode($boards),
+            'board_data' => json_encode($boards),
             'has_prices' => !empty($packages) ? 'Y' : 'N',
             'last_price_check' => date('Y-m-d H:i:s')
         ];
@@ -173,17 +173,17 @@ class HotelRepository
     }
     
     /**
-     * Get distinct resorts for a country
+     * Get distinct resorts (= city) for a country
      */
     public function getResorts(string $country = ''): array
     {
         if (!empty($country)) {
             return db_get_fields(
-                "SELECT DISTINCT resort FROM ?:novoton_hotels WHERE country = ?s AND resort != '' ORDER BY resort",
+                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' ORDER BY city",
                 $country
             );
         }
-        return db_get_fields("SELECT DISTINCT resort FROM ?:novoton_hotels WHERE resort != '' ORDER BY resort");
+        return db_get_fields("SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' ORDER BY city");
     }
     
     /**
@@ -200,7 +200,7 @@ class HotelRepository
             $conditions[] = db_quote("city = ?s", $filters['city']);
         }
         if (!empty($filters['resort'])) {
-            $conditions[] = db_quote("resort = ?s", $filters['resort']);
+            $conditions[] = db_quote("city = ?s", $filters['resort']);
         }
         if (!empty($filters['has_prices'])) {
             $conditions[] = db_quote("has_prices = ?s", $filters['has_prices']);
@@ -215,7 +215,7 @@ class HotelRepository
             $conditions[] = "(packages_data IS NOT NULL AND packages_data != '' AND packages_data != '[]')";
         }
         if (!empty($filters['stars'])) {
-            $conditions[] = db_quote("stars = ?i", $filters['stars']);
+            $conditions[] = db_quote("hotel_type = ?s", $filters['stars'] . '*');
         }
         
         return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';

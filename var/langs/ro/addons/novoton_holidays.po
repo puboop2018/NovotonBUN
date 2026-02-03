@@ -172,6 +172,10 @@ msgctxt "Languages::novoton_holidays.nights"
 msgid "nights"
 msgstr "nopți"
 
+msgctxt "Languages::novoton_holidays.package"
+msgid "Package"
+msgstr "Pachet"
+
 msgctxt "Languages::novoton_holidays.night"
 msgid "night"
 msgstr "noapte"
@@ -945,7 +949,7 @@ msgstr "Termeni de plată"
 
 msgctxt "Languages::novoton_holidays.cancellation_policy"
 msgid "Cancellation Policy"
-msgstr "Politica de anulare"
+msgstr "Condiții de anulare"
 
 msgctxt "Languages::novoton_holidays.edit_guest_details"
 msgid "Edit Guest Details"

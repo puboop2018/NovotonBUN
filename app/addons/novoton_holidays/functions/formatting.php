@@ -112,8 +112,9 @@ function fn_novoton_format_room_type($roomId, $roomType = '')
     }
 
     // Fallback: parse IdRoom code when no hotelinfo Type available
+    // Normalize: "DBL 2 1" -> "DBL 2+1"
     $roomIdNorm = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomId);
-    $parts = preg_split('/[\s\+]+/', $roomIdNorm);
+    $parts = preg_split('/[\s]+/', $roomIdNorm, 2);
     $base = strtoupper($parts[0] ?? '');
 
     $room_name = $room_map[$base] ?? null;
@@ -124,29 +125,12 @@ function fn_novoton_format_room_type($roomId, $roomType = '')
     }
 
     if ($room_name === null) {
-        $room_name = $base;
+        // Unknown base code — return original roomId as-is
+        return $roomId;
     }
 
-    // Build occupancy string
-    $adults = isset($parts[1]) ? intval($parts[1]) : 0;
-    $children = isset($parts[2]) ? intval($parts[2]) : 0;
-
-    if ($adults > 0) {
-        $occupancy = " ({$adults}";
-        if ($children > 0) {
-            $occupancy .= "+{$children}";
-        }
-        $occupancy .= ")";
-        $room_name .= $occupancy;
-    }
-
-    // Append additional descriptors (DELUXE, SEA VIEW, etc.)
-    if (count($parts) > 3) {
-        $extra = array_slice($parts, 3);
-        $room_name .= ' ' . implode(' ', $extra);
-    }
-    
-    return $room_name;
+    // Return: "Camera Dubla (DBL 2+1)" — translated name + original code
+    return $room_name . ' (' . $roomIdNorm . ')';
 }
 
 /**
@@ -413,48 +397,74 @@ function fn_novoton_format_payment_terms($xml_string)
 function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
 {
     $terms = fn_novoton_parse_cancellation_terms($xml_string, $check_in);
-    
+
     if (empty($terms)) {
         return '';
     }
-    
+
+    // Romanian month names
+    $ro_months = [
+        1 => 'ianuarie', 2 => 'februarie', 3 => 'martie', 4 => 'aprilie',
+        5 => 'mai', 6 => 'iunie', 7 => 'iulie', 8 => 'august',
+        9 => 'septembrie', 10 => 'octombrie', 11 => 'noiembrie', 12 => 'decembrie',
+    ];
+
+    // Helper: format date as "25 iulie 2026"
+    $formatDateRo = function ($dateStr) use ($ro_months) {
+        $ts = strtotime($dateStr);
+        if (!$ts) return $dateStr;
+        $day = (int)date('j', $ts);
+        $month = $ro_months[(int)date('n', $ts)] ?? date('F', $ts);
+        $year = date('Y', $ts);
+        return "{$day} {$month} {$year}";
+    };
+
     $lines = [];
-    
-    foreach ($terms as $term) {
+    $prev_till_date = null;
+
+    foreach ($terms as $idx => $term) {
         $value = $term['value'] ?? 0;
         $type = $term['type'] ?? 'Percent';
         $tillDate = $term['till_date'] ?? '';
-        
+        $is_last = ($idx === count($terms) - 1);
+
         if ($value === 'FREE' || $value == 0) {
+            // Free cancellation tier
             if (!empty($tillDate)) {
-                $formatted_date = date('d.m.Y', strtotime($tillDate));
-                $lines[] = "Până la {$formatted_date}: anulare gratuită";
+                $lines[] = "Anulare gratuită până la " . date('d.m.Y', strtotime($tillDate));
             } else {
                 $lines[] = "Anulare gratuită";
             }
+            $prev_till_date = $tillDate;
+        } elseif ($is_last && $type === 'Percent' && (float)$value >= 100) {
+            // Final 100% tier = No Show
+            $lines[] = "Neprezentare: penalizare 100%";
         } else {
-            $formatted_date = !empty($tillDate) ? date('d.m.Y', strtotime($tillDate)) : '';
-            
+            // Middle tier: show date range from [prev_tillDate + 1 day] to [current_tillDate]
+            $penalty_str = '';
             if ($type === 'Over Nights' || $type === 'Overnights') {
                 $nights = (int)$value;
                 $night_word = ($nights == 1) ? 'noapte' : 'nopți';
-                if (!empty($formatted_date)) {
-                    $lines[] = "Până la {$formatted_date}: penalizare {$nights} {$night_word}";
-                } else {
-                    $lines[] = "Penalizare {$nights} {$night_word}";
-                }
+                $penalty_str = "penalizare {$nights} {$night_word}";
             } else {
-                // Percent type
                 $percent = number_format((float)$value, 0);
-                if (!empty($formatted_date)) {
-                    $lines[] = "Până la {$formatted_date}: penalizare {$percent}%";
-                } else {
-                    $lines[] = "Penalizare {$percent}%";
-                }
+                $penalty_str = "penalizare {$percent}%";
             }
+
+            if (!empty($prev_till_date) && !empty($tillDate)) {
+                $from_str = $formatDateRo(date('Y-m-d', strtotime($prev_till_date . ' +1 day')));
+                $to_str = $formatDateRo($tillDate);
+                $lines[] = "Între {$from_str} - {$to_str}: {$penalty_str}";
+            } elseif (!empty($tillDate)) {
+                $lines[] = "Până la " . date('d.m.Y', strtotime($tillDate)) . ": {$penalty_str}";
+            } else {
+                $lines[] = ucfirst($penalty_str);
+            }
+
+            $prev_till_date = $tillDate;
         }
     }
-    
+
     return implode("\n", $lines);
 }
 
