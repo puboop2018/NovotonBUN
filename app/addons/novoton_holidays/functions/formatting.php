@@ -464,32 +464,45 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
         if ($value === 'FREE' || $value == 0) {
             // Free cancellation tier
             if (!empty($tillDate)) {
-                $lines[] = "Anulare gratuită până la " . fn_novoton_format_date($tillDate);
+                // "Free cancellation before [date]" / "Anulare gratuită până la [date]"
+                $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => fn_novoton_format_date($tillDate)]);
             } else {
-                $lines[] = "Anulare gratuită";
+                // "Free cancellation" / "Anulare gratuită"
+                $lines[] = __('novoton_holidays.cancel_free');
             }
             $prev_till_date = $tillDate;
         } elseif ($is_last && $type === 'Percent' && (float)$value >= 100) {
             // Final 100% tier = No Show
-            $lines[] = "Neprezentare: penalizare 100%";
+            // "No show: 100% penalty" / "Neprezentare: penalizare 100%"
+            $lines[] = __('novoton_holidays.cancel_no_show');
         } else {
             // Middle tier: show date range from [prev_tillDate + 1 day] to [current_tillDate]
             $penalty_str = '';
             if ($type === 'Over Nights' || $type === 'Overnights') {
                 $nights = (int)$value;
-                $night_word = ($nights == 1) ? 'noapte' : 'nopți';
-                $penalty_str = "penalizare {$nights} {$night_word}";
+                // "X night(s) penalty" / "penalizare X noapte/nopți"
+                $penalty_str = __('novoton_holidays.cancel_nights_penalty', ['[nights]' => $nights]);
             } else {
                 $percent = number_format((float)$value, 0);
-                $penalty_str = "penalizare {$percent}%";
+                // "X% penalty" / "penalizare X%"
+                $penalty_str = __('novoton_holidays.cancel_percent_penalty', ['[percent]' => $percent]);
             }
 
             if (!empty($prev_till_date) && !empty($tillDate)) {
                 $from_str = fn_novoton_format_date(strtotime($prev_till_date . ' +1 day'));
                 $to_str = fn_novoton_format_date($tillDate);
-                $lines[] = "Între {$from_str} - {$to_str}: {$penalty_str}";
+                // "Between [from] - [to]: [penalty]" / "Între [from] - [to]: [penalty]"
+                $lines[] = __('novoton_holidays.cancel_between_dates', [
+                    '[from]' => $from_str,
+                    '[to]' => $to_str,
+                    '[penalty]' => $penalty_str
+                ]);
             } elseif (!empty($tillDate)) {
-                $lines[] = "Până la " . fn_novoton_format_date($tillDate) . ": {$penalty_str}";
+                // "Until [date]: [penalty]" / "Până la [date]: [penalty]"
+                $lines[] = __('novoton_holidays.cancel_until_date', [
+                    '[date]' => fn_novoton_format_date($tillDate),
+                    '[penalty]' => $penalty_str
+                ]);
             } else {
                 $lines[] = ucfirst($penalty_str);
             }
