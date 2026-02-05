@@ -164,6 +164,10 @@ msgctxt "Languages::novoton_holidays.recommended"
 msgid "recommended"
 msgstr "recommended"
 
+msgctxt "Languages::novoton_holidays.requires_admin_login"
+msgid "requires admin login"
+msgstr "requires admin login"
+
 msgctxt "Languages::novoton_holidays.cron_command"
 msgid "Cron Command (daily at 13:05)"
 msgstr "Cron Command (daily at 13:05)"

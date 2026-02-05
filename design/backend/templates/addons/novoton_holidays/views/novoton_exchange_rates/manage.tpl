@@ -78,27 +78,29 @@
 
     <p class="muted">{__("novoton_holidays.cron_setup_description")}</p>
 
-    {if $cron_password}
-        <div class="well">
-            <p><strong>{__("novoton_holidays.cron_url_frontend")}:</strong> <span class="muted">({__("novoton_holidays.recommended")})</span></p>
+    <div class="well">
+        <p><strong>{__("novoton_holidays.cron_url_frontend")}:</strong> <span class="muted">({__("novoton_holidays.recommended")})</span></p>
+        {if $cron_password}
             <code style="word-break: break-all;">{$cron_url_frontend}</code>
+        {else}
+            <div class="alert alert-warning" style="margin: 5px 0;">
+                {__("novoton_holidays.cron_password_not_set")}
+                <a href="{"addons.update?addon=novoton_holidays"|fn_url}">{__("novoton_holidays.configure_settings")}</a>
+            </div>
+        {/if}
 
-            <p class="top-padding"><strong>{__("novoton_holidays.cron_url_admin")}:</strong></p>
-            <code style="word-break: break-all;">{$cron_url_admin}</code>
+        <p class="top-padding"><strong>{__("novoton_holidays.cron_url_admin")}:</strong> <span class="muted">({__("novoton_holidays.requires_admin_login")})</span></p>
+        <code style="word-break: break-all;">{$cron_url_admin}</code>
 
-            <p class="top-padding"><strong>{__("novoton_holidays.cron_command")}:</strong></p>
-            <code>5 13 * * * curl -s "{$cron_url_frontend}" > /dev/null 2>&1</code>
+        {if $cron_password}
+        <p class="top-padding"><strong>{__("novoton_holidays.cron_command")}:</strong></p>
+        <code>5 13 * * * curl -s "{$cron_url_frontend}" > /dev/null 2>&1</code>
 
-            <p class="muted top-padding">
-                {__("novoton_holidays.cron_schedule_note")}
-            </p>
-        </div>
-    {else}
-        <div class="alert alert-warning">
-            {__("novoton_holidays.cron_password_not_set")}
-            <a href="{"addons.update?addon=novoton_holidays"|fn_url}">{__("novoton_holidays.configure_settings")}</a>
-        </div>
-    {/if}
+        <p class="muted top-padding">
+            {__("novoton_holidays.cron_schedule_note")}
+        </p>
+        {/if}
+    </div>
 </div>
 
 <div class="control-group">
