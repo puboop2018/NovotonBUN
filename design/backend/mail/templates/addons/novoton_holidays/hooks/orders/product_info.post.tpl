@@ -6,8 +6,8 @@
     <tr>
         <td>
             {if $oi.extra.check_in && $oi.extra.check_out}
-            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} |
-            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:"%d.%m.%Y"} |
+            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
+            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
             <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$oi.extra.nights}<br>
             {/if}
 
@@ -24,8 +24,8 @@
             {/if}
 
             <strong>{__("novoton_holidays.guests")|default:"Oaspeți"}:</strong>
-            {$oi.extra.adults|default:2} {__("novoton_holidays.adults")|default:"Adulți"}
-            {if $oi.extra.children > 0}, {$oi.extra.children} {__("novoton_holidays.children")|default:"Copii"} ({$oi.extra.children_ages}){/if}
+            {$oi.extra.adults|default:2} {if $oi.extra.adults == 1}{__("novoton_holidays.adult")|default:"Adult"}{else}{__("novoton_holidays.adults")|default:"Adulți"}{/if}
+            {if $oi.extra.children > 0}, {$oi.extra.children} {if $oi.extra.children == 1}{__("novoton_holidays.child")|default:"Copil"}{else}{__("novoton_holidays.children")|default:"Copii"}{/if} ({$oi.extra.children_ages}){/if}
             <br>
 
             {if $oi.extra.holder_name}
