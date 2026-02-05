@@ -86,8 +86,12 @@
         <div class="novoton-stat-card">
             <h3>[S] Last Sync</h3>
             <div class="novoton-stat-row">
-                <span>Hotels (ResInfo)</span>
-                <span>{if $last_syncs.resinfo}{$last_syncs.resinfo|date_format:"%d.%m %H:%M"}{else}Never{/if}</span>
+                <span>Hotel List</span>
+                <span>{if $last_syncs.hotellist}{$last_syncs.hotellist|date_format:"%d.%m %H:%M"}{else}Never{/if}</span>
+            </div>
+            <div class="novoton-stat-row">
+                <span>Hotel Info</span>
+                <span>{if $last_syncs.hotelinfo}{$last_syncs.hotelinfo|date_format:"%d.%m %H:%M"}{else}Never{/if}</span>
             </div>
             <div class="novoton-stat-row">
                 <span>Prices</span>

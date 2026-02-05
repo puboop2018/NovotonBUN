@@ -978,13 +978,13 @@ try {
     }
     
     // =========================================
-    // MODE: hotel_info (Hotel accommodation) - DEPRECATED
-    // Use mode=sync_hotels or mode=sync_hotelinfo instead (V3)
-    // This mode now stores data in V3 format (hotel_data JSON)
+    // MODE: hotel_info (Hotel accommodation)
+    // Syncs hotel details (rooms, boards, packages) from hotelinfo API
+    // Also available: mode=sync_hotels for full hotel sync
     // =========================================
     elseif ($mode == 'hotel_info') {
-        echo "WARNING: mode=hotel_info is deprecated. Use mode=sync_hotels or mode=sync_hotelinfo instead.\n";
-        echo "Continuing with V3-compatible storage...\n\n";
+        echo "Hotel Info Sync (hotelinfo API)\n";
+        echo "Syncing rooms, boards, packages for hotels...\n\n";
         $force = !empty($_REQUEST['force']);
         $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
         $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
@@ -1215,13 +1215,20 @@ try {
             echo "Errors: {$errors}\n";
             echo "Total processed: " . count($hotel_ids_to_sync) . "\n";
 
+            // Log to sync_log table for dashboard display
+            $duration = round(microtime(true) - $cron_start_time, 1);
+            db_query(
+                "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotelinfo', sync_date = NOW(),
+                 products_total = ?i, products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
+                count($hotel_ids_to_sync), $synced, $errors, $duration
+            );
+
             // Send email report
-            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
             fn_novoton_send_import_report_email([], 'hotel_info', [
                 'updated'  => $synced,
                 'errors'   => $errors,
                 'skipped'  => count($hotel_ids_to_sync) - $synced - $errors,
-                'duration' => $duration,
+                'duration' => $duration . 's',
             ], implode(', ', $countries));
         }
     }
