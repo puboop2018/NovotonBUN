@@ -180,9 +180,49 @@ msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
 msgid "Exchange Rates Help"
 msgstr "Ajutor Cursuri Valutare"
 
+msgctxt "Languages::menu.novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Rezervări Hoteluri"
+
+msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Cereri Alternative"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_sync"
+msgid "Hotels Sync"
+msgstr "Sincronizare Hoteluri"
+
+msgctxt "Languages::menu.novoton_holidays_menu.room_price"
+msgid "Room Price Check"
+msgstr "Verificare Preț Cameră"
+
+msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
+msgid "Add Hotels as Products"
+msgstr "Adaugă Hoteluri ca Produse"
+
+msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
+msgid "Facilities"
+msgstr "Facilități"
+
 msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
 msgid "Exchange Rates"
 msgstr "Cursuri Valutare"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_diagnostic"
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_hotel_request"
+msgid "Test Hotel Request"
+msgstr "Test Cerere Hotel"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_alternative_rs"
+msgid "Test Alternative RS"
+msgstr "Test RS Alternative"
 
 msgctxt "SettingsOptions::novoton_holidays::selected_countries"
 msgid "Selected Countries"

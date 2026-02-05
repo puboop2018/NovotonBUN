@@ -208,9 +208,49 @@ msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
 msgid "Exchange Rates Help"
 msgstr "Exchange Rates Help"
 
+msgctxt "Languages::menu.novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Hotel Bookings"
+
+msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Alternative Requests"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_sync"
+msgid "Hotels Sync"
+msgstr "Hotels Sync"
+
+msgctxt "Languages::menu.novoton_holidays_menu.room_price"
+msgid "Room Price Check"
+msgstr "Room Price Check"
+
+msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
+msgid "Add Hotels as Products"
+msgstr "Add Hotels as Products"
+
+msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
+msgid "Facilities"
+msgstr "Facilities"
+
 msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
 msgid "Exchange Rates"
 msgstr "Exchange Rates"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_diagnostic"
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_hotel_request"
+msgid "Test Hotel Request"
+msgstr "Test Hotel Request"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_alternative_rs"
+msgid "Test Alternative RS"
+msgstr "Test Alternative RS"
 
 msgctxt "SettingsOptions::novoton_holidays::selected_countries"
 msgid "Selected Countries"
