@@ -2489,7 +2489,7 @@ if ($mode == 'add_to_cart') {
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
     fn_save_cart_content($cart, $auth['user_id'] ?? 0);
     
-    fn_set_notification('N', __('success'), __('novoton_holidays.added_to_cart'));
+    fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
     
     return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
 }

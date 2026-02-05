@@ -107,10 +107,8 @@ if ($mode == 'view_hotels_to_add') {
  * Import hotels as CS-Cart products
  */
 if ($mode == 'add_hotels_as_products') {
-    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-        return [CONTROLLER_STATUS_DENIED];
-    }
-    
+    // Permission check handled by schema in admin.post.php
+
     $run_process = isset($_REQUEST['run']);
     
     if (!$run_process) {

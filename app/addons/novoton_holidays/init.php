@@ -67,7 +67,7 @@ function fn_novoton_ensure_tables_exist()
 
     // Check if sync_log table exists
     $sync_log_exists = db_get_field("SHOW TABLES LIKE '?:novoton_sync_log'");
-    
+
     if (empty($sync_log_exists)) {
         db_query("CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
             `log_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -77,13 +77,35 @@ function fn_novoton_ensure_tables_exist()
             `hotels_added` int(11) DEFAULT 0,
             `hotels_updated` int(11) DEFAULT 0,
             `errors` int(11) DEFAULT 0,
-            `duration` int(11) DEFAULT 0,
+            `duration` decimal(10,2) DEFAULT 0,
             `details` longtext,
             `status` enum('running','completed','failed') DEFAULT 'running',
             PRIMARY KEY (`log_id`),
             KEY `idx_sync_type` (`sync_type`),
             KEY `idx_sync_date` (`sync_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    } else {
+        // Add missing columns to existing table
+        $columns = db_get_hash_array("SHOW COLUMNS FROM ?:novoton_sync_log", 'Field');
+
+        if (!isset($columns['hotels_synced'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `hotels_synced` int(11) DEFAULT 0 AFTER `sync_date`");
+        }
+        if (!isset($columns['hotels_added'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `hotels_added` int(11) DEFAULT 0 AFTER `hotels_synced`");
+        }
+        if (!isset($columns['hotels_updated'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `hotels_updated` int(11) DEFAULT 0 AFTER `hotels_added`");
+        }
+        if (!isset($columns['errors'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `errors` int(11) DEFAULT 0 AFTER `hotels_updated`");
+        }
+        if (!isset($columns['duration'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `duration` decimal(10,2) DEFAULT 0 AFTER `errors`");
+        }
+        if (!isset($columns['details'])) {
+            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `details` longtext AFTER `duration`");
+        }
     }
 }
 

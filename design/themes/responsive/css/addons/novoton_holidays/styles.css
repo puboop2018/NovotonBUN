@@ -5038,6 +5038,17 @@ body.modal-open {
 
 .novoton-search-form-wrapper {
     margin-bottom: 20px;
+    background: transparent !important;
+}
+
+/* Ensure search form has no dark blue background for single room */
+.novoton-search-form-wrapper .nvt-booking-engine,
+.novoton-search-form-wrapper .nvt-form-container {
+    background: transparent !important;
+}
+
+.novoton-search-form-wrapper .nvt-form-container.nvt-mode-homepage {
+    background: transparent !important;
 }
 
 .novoton-debug-panel {
@@ -5643,4 +5654,19 @@ div.novoton-desktop-only,
     background: #fff5f5;
     border-radius: 4px;
     border: 1px solid #f5c6cb;
+}
+
+/* ===== Fix child age select dropdown width ===== */
+.nvt-child-age-select {
+    min-width: 140px !important;
+    width: auto;
+}
+
+.nvt-child-age-row {
+    gap: 10px;
+}
+
+/* Ensure guest picker dropdown is wide enough */
+.nvt-guest-picker-dropdown {
+    min-width: 340px;
 }

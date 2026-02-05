@@ -479,7 +479,7 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
     // Get CS-Cart date format setting
     $date_format = Registry::get('settings.Appearance.date_format');
     if (empty($date_format)) {
-        $date_format = '%d/%m/%Y'; // fallback
+        $date_format = '%d.%m.%Y'; // fallback
     }
     
     // Format dates for display using CS-Cart format

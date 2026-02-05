@@ -246,7 +246,7 @@
                     <div class="room-section-header room-card" data-room-num="{$room_num}" style="background: #003580; color: #fff; padding: 12px 15px; margin: 20px -15px 15px; font-weight: 600;">
                         <span style="font-size: 16px;"> {__("novoton_holidays.room_number")} {$room_num}</span>
                         <span style="float: right; font-weight: normal; font-size: 14px;">
-                            {$room.adults} {__("novoton_holidays.adults")}{if $room.children > 0}, {$room.children} {__("novoton_holidays.children")}{/if}
+                            {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
                             <span class="room-price" style="margin-left: 10px; font-weight: 600;">{$room.price|default:0|number_format:0} EUR</span>
                         </span>
                     </div>
