@@ -750,7 +750,7 @@ try {
     // =========================================
     elseif ($mode == 'add_hotels_as_products') {
         $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-        $limit = intval($_REQUEST['limit'] ?? 50);
+        $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
         
         // Get excluded resorts - priority: URL parameter > addon setting
         $exclude_resorts = [];
@@ -785,7 +785,7 @@ try {
         
         echo "Adding hotels as products...\n\n";
         echo "Country: {$country}\n";
-        echo "Limit: {$limit}\n";
+        echo "Limit: " . ($limit > 0 ? $limit : "No limit") . "\n";
         if (!empty($exclude_resorts)) {
             echo "Excluding resorts (" . count($exclude_resorts) . "): " . implode(', ', $exclude_resorts) . "\n";
         } else {
@@ -805,10 +805,13 @@ try {
             $query .= " AND (city NOT IN (?a) OR city IS NULL)";
             $query_params[] = $exclude_resorts;
         }
-        
-        $query .= " ORDER BY hotel_name LIMIT ?i";
-        $query_params[] = $limit;
-        
+
+        $query .= " ORDER BY hotel_name";
+        if ($limit > 0) {
+            $query .= " LIMIT ?i";
+            $query_params[] = $limit;
+        }
+
         $hotels = db_get_array($query, ...$query_params);
         
         echo "Found " . count($hotels) . " hotels to add.\n\n";
@@ -974,7 +977,7 @@ try {
         echo "Hotel Accommodation Sync (hotelinfo)\n";
         echo "Countries: " . implode(', ', $countries) . "\n";
         echo "Force full sync: " . ($force ? 'YES' : 'NO') . "\n";
-        echo "Limit: {$limit}\n\n";
+        echo "Limit: " . ($limit > 0 ? $limit : "No limit") . "\n\n";
 
         // Determine which hotels to sync
         $hotel_ids_to_sync = [];
@@ -1049,8 +1052,8 @@ try {
         } else {
             echo "Processing " . count($hotel_ids_to_sync) . " hotel(s)...\n\n";
 
-            // Apply limit
-            if (count($hotel_ids_to_sync) > $limit) {
+            // Apply limit only if limit > 0
+            if ($limit > 0 && count($hotel_ids_to_sync) > $limit) {
                 $hotel_ids_to_sync = array_slice($hotel_ids_to_sync, 0, $limit);
                 echo "(Limited to {$limit})\n\n";
             }
@@ -1563,6 +1566,22 @@ try {
         }
 
         echo "Packages to sync: " . count($packages) . "\n\n";
+
+        if (empty($packages)) {
+            // Check if there are ANY packages in the database
+            $total_packages = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_packages");
+            if ($total_packages == 0) {
+                echo "NOTE: No packages found in database.\n";
+                echo "You need to run 'mode=hotel_info' or 'mode=sync_hotels' first to populate packages.\n\n";
+                echo "Recommended workflow:\n";
+                echo "  1. mode=hotel_list (sync hotel list from API)\n";
+                echo "  2. mode=hotel_info (sync hotelinfo to get packages)\n";
+                echo "  3. mode=sync_priceinfo (sync prices for packages)\n";
+            } else {
+                echo "All {$total_packages} packages are up-to-date (synced within 24 hours).\n";
+                echo "Use &force=1 to force re-sync all packages.\n";
+            }
+        }
 
         $synced = 0;
         $errors = 0;
