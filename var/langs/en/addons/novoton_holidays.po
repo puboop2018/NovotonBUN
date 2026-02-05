@@ -152,6 +152,18 @@ msgctxt "Languages::novoton_holidays.cron_url"
 msgid "Cron URL"
 msgstr "Cron URL"
 
+msgctxt "Languages::novoton_holidays.cron_url_frontend"
+msgid "Frontend Cron URL"
+msgstr "Frontend Cron URL"
+
+msgctxt "Languages::novoton_holidays.cron_url_admin"
+msgid "Admin Cron URL"
+msgstr "Admin Cron URL"
+
+msgctxt "Languages::novoton_holidays.recommended"
+msgid "recommended"
+msgstr "recommended"
+
 msgctxt "Languages::novoton_holidays.cron_command"
 msgid "Cron Command (daily at 13:05)"
 msgstr "Cron Command (daily at 13:05)"

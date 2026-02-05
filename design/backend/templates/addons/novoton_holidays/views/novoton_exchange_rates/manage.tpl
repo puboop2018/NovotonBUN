@@ -80,11 +80,14 @@
 
     {if $cron_password}
         <div class="well">
-            <p><strong>{__("novoton_holidays.cron_url")}:</strong></p>
-            <code style="word-break: break-all;">{$cron_url}</code>
+            <p><strong>{__("novoton_holidays.cron_url_frontend")}:</strong> <span class="muted">({__("novoton_holidays.recommended")})</span></p>
+            <code style="word-break: break-all;">{$cron_url_frontend}</code>
+
+            <p class="top-padding"><strong>{__("novoton_holidays.cron_url_admin")}:</strong></p>
+            <code style="word-break: break-all;">{$cron_url_admin}</code>
 
             <p class="top-padding"><strong>{__("novoton_holidays.cron_command")}:</strong></p>
-            <code>5 13 * * * curl -s "{$cron_url}" > /dev/null 2>&1</code>
+            <code>5 13 * * * curl -s "{$cron_url_frontend}" > /dev/null 2>&1</code>
 
             <p class="muted top-padding">
                 {__("novoton_holidays.cron_schedule_note")}
