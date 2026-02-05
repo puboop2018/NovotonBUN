@@ -212,7 +212,7 @@
                     </item>
                     <item id="currency_risk_commission">
                         <type>input</type>
-                        <default_value>0</default_value>
+                        <default_value>1.8</default_value>
                         <variants/>
                     </item>
                     <item id="last_exchange_rate_update">

@@ -57,8 +57,8 @@ msgid "Currency risk commission %"
 msgstr "Comision risc valutar %"
 
 msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
-msgid "Percentage to add to exchange rates (e.g., 2 for 2%). This protects against currency fluctuation risk."
-msgstr "Procentaj adăugat la cursul de schimb (ex: 2 pentru 2%). Protejează împotriva fluctuațiilor valutare."
+msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
+msgstr "Procentaj adăugat la cursul de schimb (0-5%, implicit 1.8%). Protejează împotriva fluctuațiilor valutare."
 
 msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
 msgid "Last exchange rate update"
@@ -135,6 +135,10 @@ msgstr "URL Cron Admin"
 msgctxt "Languages::novoton_holidays.recommended"
 msgid "recommended"
 msgstr "recomandat"
+
+msgctxt "Languages::novoton_holidays.requires_admin_login"
+msgid "requires admin login"
+msgstr "necesită autentificare admin"
 
 msgctxt "Languages::novoton_holidays.cron_command"
 msgid "Cron Command (daily at 13:05)"

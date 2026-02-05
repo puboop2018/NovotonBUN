@@ -101,7 +101,11 @@ function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GB
                     $value = (float) $rate;
 
                     // Handle multiplier (e.g., HUF has multiplier=100)
-                    $multiplier = (int) ($rate['multiplier'] ?? 1);
+                    // Note: SimpleXML returns empty object for missing attributes, not null
+                    $multiplier = 1;
+                    if (isset($rate['multiplier']) && (string)$rate['multiplier'] !== '') {
+                        $multiplier = (int) $rate['multiplier'];
+                    }
                     if ($multiplier > 1) {
                         $value = $value / $multiplier;
                     }
@@ -259,15 +263,21 @@ function fn_novoton_update_exchange_rates($return_details = false)
         $result['message'] = 'Failed to parse BNR exchange rates';
         return $return_details ? $result : false;
     }
+
+    // EUR is required for coefficient calculations (primary currency)
+    if (empty($bnr_rates['EUR'])) {
+        $result['message'] = 'EUR rate not found in BNR response';
+        return $return_details ? $result : false;
+    }
     $result['bnr_rates'] = $bnr_rates;
 
-    // Step 3: Get commission setting
+    // Step 3: Get commission setting (0-5% range)
     $commission = (float) Registry::get('addons.novoton_holidays.currency_risk_commission');
     if ($commission < 0) {
         $commission = 0;
     }
-    if ($commission > 50) {
-        $commission = 50; // Sanity limit
+    if ($commission > 5) {
+        $commission = 5; // Maximum 5%
     }
     $result['commission'] = $commission;
 
@@ -285,9 +295,20 @@ function fn_novoton_update_exchange_rates($return_details = false)
 
     // Step 6: Update last sync timestamp in addon settings
     $timestamp = date('Y-m-d H:i:s');
-    db_query(
-        "UPDATE ?:settings_objects SET value = ?s WHERE name = 'last_exchange_rate_update' AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')"
-    , $timestamp);
+
+    // Use CS-Cart's Settings class if available, otherwise direct query
+    if (class_exists('\\Tygh\\Settings')) {
+        \Tygh\Settings::instance()->updateValue('last_exchange_rate_update', $timestamp, 'novoton_holidays');
+    } else {
+        // Fallback: direct query with JOIN for reliability
+        db_query(
+            "UPDATE ?:settings_objects o "
+            . "INNER JOIN ?:settings_sections s ON o.section_id = s.section_id "
+            . "SET o.value = ?s "
+            . "WHERE o.name = 'last_exchange_rate_update' AND s.name = 'novoton_holidays'",
+            $timestamp
+        );
+    }
 
     // Also update in Registry for immediate display
     Registry::set('addons.novoton_holidays.last_exchange_rate_update', $timestamp);
@@ -340,7 +361,9 @@ function fn_novoton_get_exchange_rate_info()
 
 /**
  * Cron handler for daily exchange rate updates
- * Called via: php admin.php --dispatch=novoton_exchange_rates.cron&cron_password=XXX
+ * Called via:
+ *   - Frontend: index.php?dispatch=novoton_exchange_rates.cron&cron_password=XXX
+ *   - Admin: admin.php?dispatch=novoton_exchange_rates.cron (requires admin login)
  *
  * @return bool Success status
  */

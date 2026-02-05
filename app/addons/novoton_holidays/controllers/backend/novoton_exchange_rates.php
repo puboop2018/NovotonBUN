@@ -19,22 +19,11 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Cron mode - called via system cron
- * URL: admin.php?dispatch=novoton_exchange_rates.cron&cron_password=XXX
+ * Cron mode - called via admin panel (no password needed, admin auth required)
+ * URL: admin.php?dispatch=novoton_exchange_rates.cron
  */
 if ($mode == 'cron') {
-    // Verify cron password
-    $cron_password = Registry::get('addons.novoton_holidays.cron_access_key');
-
-    if (empty($cron_password)) {
-        echo "Error: Cron access key not configured in addon settings.\n";
-        exit;
-    }
-
-    if (empty($_REQUEST['cron_password']) || $_REQUEST['cron_password'] !== $cron_password) {
-        echo "Error: Invalid cron password.\n";
-        exit;
-    }
+    // No password check needed - admin.php already requires admin authentication
 
     // Run exchange rate update
     $result = fn_novoton_update_exchange_rates(true);
@@ -87,13 +76,14 @@ if ($mode == 'manage') {
     $cron_password = Registry::get('addons.novoton_holidays.cron_access_key');
     Tygh::$app['view']->assign('cron_password', $cron_password);
 
-    // Build cron URLs for display (frontend and admin)
+    // Build cron URLs for display
+    // Frontend URL requires password (no session)
     $cron_url_frontend = fn_url('novoton_exchange_rates.cron', 'C');
     $cron_url_frontend .= '&cron_password=' . $cron_password;
     Tygh::$app['view']->assign('cron_url_frontend', $cron_url_frontend);
 
+    // Admin URL doesn't need password (requires admin login)
     $cron_url_admin = fn_url('novoton_exchange_rates.cron', 'A');
-    $cron_url_admin .= '&cron_password=' . $cron_password;
     Tygh::$app['view']->assign('cron_url_admin', $cron_url_admin);
 }
 
