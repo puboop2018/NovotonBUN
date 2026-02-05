@@ -102,7 +102,15 @@ msgstr "camere"
 
 msgctxt "Languages::novoton_holidays.room"
 msgid "Room"
-msgstr "cameră"
+msgstr "Camera"
+
+msgctxt "Languages::novoton_holidays.booking_leader"
+msgid "Booking leader"
+msgstr "Lider rezervare"
+
+msgctxt "Languages::novoton_holidays.years_short"
+msgid "years"
+msgstr "ani"
 
 msgctxt "Languages::novoton_holidays.search"
 msgid "Search"
