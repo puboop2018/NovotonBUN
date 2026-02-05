@@ -76,6 +76,138 @@ msgctxt "SettingsOptions::novoton_holidays::round_prices"
 msgid "Round hotel prices"
 msgstr "Round hotel prices"
 
+msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
+msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
+msgid "Currency risk commission %"
+msgstr "Currency risk commission %"
+
+msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
+msgid "Percentage to add to exchange rates (e.g., 2 for 2%). This protects against currency fluctuation risk."
+msgstr "Percentage to add to exchange rates (e.g., 2 for 2%). This protects against currency fluctuation risk."
+
+msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
+msgid "Last exchange rate update"
+msgstr "Last exchange rate update"
+
+msgctxt "Languages::novoton_holidays.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_info"
+msgid "Current Exchange Rates"
+msgstr "Current Exchange Rates"
+
+msgctxt "Languages::novoton_holidays.coefficient"
+msgid "Coefficient"
+msgstr "Coefficient"
+
+msgctxt "Languages::novoton_holidays.is_primary"
+msgid "Primary"
+msgstr "Primary"
+
+msgctxt "Languages::novoton_holidays.primary_currency"
+msgid "primary currency"
+msgstr "primary currency"
+
+msgctxt "Languages::novoton_holidays.update_info"
+msgid "Update Information"
+msgstr "Update Information"
+
+msgctxt "Languages::novoton_holidays.last_update"
+msgid "Last Update"
+msgstr "Last Update"
+
+msgctxt "Languages::novoton_holidays.data_source"
+msgid "Data Source"
+msgstr "Data Source"
+
+msgctxt "Languages::novoton_holidays.manual_update"
+msgid "Manual Update"
+msgstr "Manual Update"
+
+msgctxt "Languages::novoton_holidays.manual_update_description"
+msgid "Click the button below to fetch the latest exchange rates from BNR and update CS-Cart currencies."
+msgstr "Click the button below to fetch the latest exchange rates from BNR and update CS-Cart currencies."
+
+msgctxt "Languages::novoton_holidays.update_rates_now"
+msgid "Update Rates Now"
+msgstr "Update Rates Now"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_updated"
+msgid "Exchange rates have been updated successfully."
+msgstr "Exchange rates have been updated successfully."
+
+msgctxt "Languages::novoton_holidays.cron_setup"
+msgid "Automatic Updates (Cron)"
+msgstr "Automatic Updates (Cron)"
+
+msgctxt "Languages::novoton_holidays.cron_setup_description"
+msgid "Set up a cron job to automatically update exchange rates daily. BNR publishes new rates around 1:00 PM Romanian time."
+msgstr "Set up a cron job to automatically update exchange rates daily. BNR publishes new rates around 1:00 PM Romanian time."
+
+msgctxt "Languages::novoton_holidays.cron_url"
+msgid "Cron URL"
+msgstr "Cron URL"
+
+msgctxt "Languages::novoton_holidays.cron_url_frontend"
+msgid "Frontend Cron URL"
+msgstr "Frontend Cron URL"
+
+msgctxt "Languages::novoton_holidays.cron_url_admin"
+msgid "Admin Cron URL"
+msgstr "Admin Cron URL"
+
+msgctxt "Languages::novoton_holidays.recommended"
+msgid "recommended"
+msgstr "recommended"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Cron Command (daily at 13:05)"
+msgstr "Cron Command (daily at 13:05)"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_note"
+msgid "This runs daily at 13:05 (1:05 PM) to fetch rates after BNR publishes them."
+msgstr "This runs daily at 13:05 (1:05 PM) to fetch rates after BNR publishes them."
+
+msgctxt "Languages::novoton_holidays.cron_password_not_set"
+msgid "Cron access key is not configured. Please set it in addon settings first."
+msgstr "Cron access key is not configured. Please set it in addon settings first."
+
+msgctxt "Languages::novoton_holidays.configure_settings"
+msgid "Configure Settings"
+msgstr "Configure Settings"
+
+msgctxt "Languages::novoton_holidays.how_it_works"
+msgid "How It Works"
+msgstr "How It Works"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step1"
+msgid "Fetches exchange rates from BNR (National Bank of Romania) API"
+msgstr "Fetches exchange rates from BNR (National Bank of Romania) API"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step2"
+msgid "Extracts rates for EUR, USD, GBP (relative to RON)"
+msgstr "Extracts rates for EUR, USD, GBP (relative to RON)"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step3"
+msgid "Calculates EUR-based coefficients and applies commission"
+msgstr "Calculates EUR-based coefficients and applies commission"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step4"
+msgid "Updates CS-Cart currency rates automatically"
+msgstr "Updates CS-Cart currency rates automatically"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
+msgid "Exchange Rates Help"
+msgstr "Exchange Rates Help"
+
+msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
 msgctxt "SettingsOptions::novoton_holidays::selected_countries"
 msgid "Selected Countries"
 msgstr "Selected Countries"
