@@ -52,6 +52,8 @@ if (in_array($mode, $hotels_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 if (in_array($mode, $prices_modes)) {
@@ -59,6 +61,8 @@ if (in_array($mode, $prices_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 if (in_array($mode, $tools_modes)) {
@@ -66,6 +70,8 @@ if (in_array($mode, $tools_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 // ============================================================================
