@@ -790,8 +790,10 @@
                         <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #555;">
                             {if $term.is_on_booking}
                                 {$term.percent|string_format:"%d"}% {__("novoton_holidays.on_booking")|default:"la rezervare"}
+                            {elseif $term.date_formatted}
+                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date_formatted}
                             {elseif $term.date}
-                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date|date_format:"%d.%m.%Y"}
+                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date}
                             {else}
                                 {$term.percent|string_format:"%d"}%
                             {/if}

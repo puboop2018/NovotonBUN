@@ -256,6 +256,7 @@ function fn_novoton_parse_payment_terms($xml_string)
                     $terms[] = [
                         'percent' => $percent,
                         'date' => $tillDate,
+                        'date_formatted' => !empty($tillDate) ? fn_novoton_format_date($tillDate) : '',
                         'is_on_booking' => empty($tillDate),
                     ];
                 }
@@ -265,9 +266,11 @@ function fn_novoton_parse_payment_terms($xml_string)
             $paymentRules = $xml->xpath('//PaymentRule') ?: $xml->xpath('//paymentRule') ?: [];
 
             foreach ($paymentRules as $rule) {
+                $rawDate = (string)($rule['DateTo'] ?? $rule['tillDate'] ?? $rule['to'] ?? '');
                 $term = [
                     'percent' => (int)round((float)($rule['PerCent'] ?? $rule['percent'] ?? (string)$rule ?? 0)),
-                    'date' => (string)($rule['DateTo'] ?? $rule['tillDate'] ?? $rule['to'] ?? ''),
+                    'date' => $rawDate,
+                    'date_formatted' => !empty($rawDate) ? fn_novoton_format_date($rawDate) : '',
                     'is_on_booking' => false,
                 ];
 
