@@ -5655,3 +5655,18 @@ div.novoton-desktop-only,
     border-radius: 4px;
     border: 1px solid #f5c6cb;
 }
+
+/* ===== Fix child age select dropdown width ===== */
+.nvt-child-age-select {
+    min-width: 140px !important;
+    width: auto;
+}
+
+.nvt-child-age-row {
+    gap: 10px;
+}
+
+/* Ensure guest picker dropdown is wide enough */
+.nvt-guest-picker-dropdown {
+    min-width: 340px;
+}
