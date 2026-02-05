@@ -2251,3 +2251,11 @@ msgstr "[percent]% until [date]"
 msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
 msgid "[percent]% on booking"
 msgstr "[percent]% on booking"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_until"
+msgid "[percent]% ([amount]) - due by [date]"
+msgstr "[percent]% ([amount]) - due by [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
+msgid "[percent]% ([amount]) on booking"
+msgstr "[percent]% ([amount]) on booking"

@@ -1747,3 +1747,11 @@ msgstr "[percent]% până la [date]"
 msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
 msgid "[percent]% on booking"
 msgstr "[percent]% la rezervare"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_until"
+msgid "[percent]% ([amount]) - due by [date]"
+msgstr "[percent]% ([amount]) - până la [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
+msgid "[percent]% ([amount]) on booking"
+msgstr "[percent]% ([amount]) la rezervare"

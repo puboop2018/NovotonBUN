@@ -55,11 +55,17 @@
             {/if}
             
             {* Payment and Cancellation Terms *}
-            {$payment_terms = $oi.extra.terms_of_payment|default:$oi.extra.payment_terms|default:$oi.extra.remark|default:''}
+            {$payment_terms_xml = $oi.extra.terms_of_payment|default:$oi.extra.payment_terms|default:''}
             {$cancel_terms = $oi.extra.terms_of_cancellation|default:$oi.extra.cancellation_terms|default:$oi.extra.important|default:''}
-            
-            {if $payment_terms}
-            <strong>Terms of Payment:</strong> {$payment_terms|escape:'html'|nl2br nofilter}<br>
+
+            {if $payment_terms_xml}
+                {$booking_price = $oi.extra.price|default:$oi.price|default:0}
+                {$currency = $oi.extra.currency|default:'EUR'}
+                {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_xml, $booking_price, $currency)}{/capture}
+                {if $smarty.capture.payment_terms_formatted}
+                    <strong>{__("novoton_holidays.payment_terms")|default:"Terms of Payment"}:</strong><br>
+                    {$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
+                {/if}
             {/if}
             
             {if $cancel_terms}

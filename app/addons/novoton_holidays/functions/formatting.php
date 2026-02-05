@@ -408,8 +408,70 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = '')
 }
 
 /**
+ * Format payment terms with calculated amounts for display
+ *
+ * Format: "10% (150.00€) - due by 05.03.2026"
+ *
+ * @param string $xml_string Raw XML string with payment terms
+ * @param float $total_price Total booking price to calculate amounts from
+ * @param string $currency_code Currency code (default: EUR)
+ * @return string Formatted payment terms with amounts
+ */
+function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR')
+{
+    $terms = fn_novoton_parse_payment_terms($xml_string);
+
+    if (empty($terms)) {
+        return '';
+    }
+
+    // Get rounding setting from addon
+    $round_prices = Registry::get('addons.novoton_holidays.round_prices');
+    $round_prices = ($round_prices === 'Y' || $round_prices === true);
+
+    $lines = [];
+
+    foreach ($terms as $term) {
+        $percent = isset($term['percent']) ? (float)$term['percent'] : 0;
+        $date = $term['date'] ?? '';
+
+        // Calculate amount from percentage
+        $amount = ($percent / 100) * (float)$total_price;
+
+        // Round if setting is enabled
+        if ($round_prices) {
+            $amount = round($amount);
+        }
+
+        // Format amount using CS-Cart's currency formatting
+        $formatted_amount = fn_format_price($amount, $currency_code);
+        $percent_display = number_format($percent, 0);
+
+        if (!empty($date)) {
+            $formatted_date = fn_novoton_format_date($date);
+            // "[percent]% ([amount]) - due by [date]" / "[percent]% ([amount]) - până la [date]"
+            $lines[] = __('novoton_holidays.payment_percent_amount_until', [
+                '[percent]' => $percent_display,
+                '[amount]' => $formatted_amount,
+                '[date]' => $formatted_date
+            ]);
+        } elseif (!empty($term['is_on_booking'])) {
+            // "[percent]% ([amount]) on booking" / "[percent]% ([amount]) la rezervare"
+            $lines[] = __('novoton_holidays.payment_percent_amount_on_booking', [
+                '[percent]' => $percent_display,
+                '[amount]' => $formatted_amount
+            ]);
+        } else {
+            $lines[] = "{$percent_display}% ({$formatted_amount})";
+        }
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
  * Format payment terms for display
- * 
+ *
  * @param string $xml_string Raw XML string
  * @return string Formatted HTML
  */
