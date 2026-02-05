@@ -5038,6 +5038,17 @@ body.modal-open {
 
 .novoton-search-form-wrapper {
     margin-bottom: 20px;
+    background: transparent !important;
+}
+
+/* Ensure search form has no dark blue background for single room */
+.novoton-search-form-wrapper .nvt-booking-engine,
+.novoton-search-form-wrapper .nvt-form-container {
+    background: transparent !important;
+}
+
+.novoton-search-form-wrapper .nvt-form-container.nvt-mode-homepage {
+    background: transparent !important;
 }
 
 .novoton-debug-panel {
