@@ -290,7 +290,7 @@
                             <div>
                                 <strong style="font-size: 16px; color: #003580;">#{$room_num}</strong>
                                 <span style="color: #333; margin-left: 8px; font-size: 14px;">
-                                    {$room.adults} {__("novoton_holidays.adults")}{if $room.children > 0} + {$room.children} {__("novoton_holidays.children")}{/if}
+                                    {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0} + {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
                                 </span>
                             </div>
                             <div id="room-{$room_num}-price" style="font-size: 18px; font-weight: 700; color: #003580;">-- EUR</div>
@@ -641,7 +641,7 @@
                             
                             {if $result.free_cancellation_date}
                                 <span style="display: inline-flex; align-items: center; gap: 4px; color: #008009;">
-                                     {__("novoton_holidays.free_cancel")|default:"Anulare gratuita"} {$result.free_cancellation_date|date_format:"%d %b"}
+                                     {__("novoton_holidays.free_cancel")|default:"Anulare gratuita"} {$result.free_cancellation_date|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
                                 </span>
                             {/if}
                             
@@ -723,7 +723,7 @@
                         {* Free Cancellation Date *}
                         {if $result.free_cancellation_date}
                             <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">
-                                <span style="color: #008009;">✓</span> {__("novoton_holidays.free_cancellation_until")|default:"Anulare gratuită până la"} <strong>{$result.free_cancellation_date|date_format:"%d.%m.%Y"}</strong>
+                                <span style="color: #008009;">✓</span> {__("novoton_holidays.free_cancellation_until")|default:"Anulare gratuită până la"} <strong>{$result.free_cancellation_date|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}</strong>
                             </div>
                         {/if}
                         

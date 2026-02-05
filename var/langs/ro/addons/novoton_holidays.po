@@ -364,6 +364,10 @@ msgctxt "Languages::novoton_holidays.booking_added_to_cart"
 msgid "Booking added to cart"
 msgstr "Rezervarea a fost adăugată în coș"
 
+msgctxt "Languages::novoton_holidays.added_to_cart"
+msgid "Booking added to cart successfully"
+msgstr "Rezervarea a fost adăugată în coș cu succes!"
+
 msgctxt "Languages::novoton_holidays.booking_confirmed"
 msgid "Booking Confirmed"
 msgstr "Rezervare Confirmată"

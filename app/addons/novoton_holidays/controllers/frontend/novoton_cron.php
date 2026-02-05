@@ -947,7 +947,7 @@ try {
         echo "WARNING: mode=hotel_info is deprecated. Use mode=sync_hotels or mode=sync_hotelinfo instead.\n";
         echo "Continuing with V3-compatible storage...\n\n";
         $force = !empty($_REQUEST['force']);
-        $limit = intval($_REQUEST['limit'] ?? 500);
+        $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
         $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
         $countries = [];
 
@@ -1016,9 +1016,10 @@ try {
                 }
 
                 // Also include hotels that have never had hotelinfo synced
+                $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
                 $unsyced = db_get_fields(
-                    "SELECT hotel_id FROM ?:novoton_hotels WHERE hotelinfo_synced_at IS NULL AND country IN (?a) LIMIT ?i",
-                    $countries, $limit
+                    "SELECT hotel_id FROM ?:novoton_hotels WHERE hotelinfo_synced_at IS NULL AND country IN (?a) {$limit_clause}",
+                    $countries
                 );
                 if (!empty($unsyced)) {
                     echo "Also syncing " . count($unsyced) . " hotel(s) that never had hotelinfo.\n\n";
@@ -1027,17 +1028,19 @@ try {
             } else {
                 // First run ever — sync all hotels
                 echo "First run: syncing all hotels...\n\n";
+                $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
                 $hotel_ids_to_sync = db_get_fields(
-                    "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name LIMIT ?i",
-                    $countries, $limit
+                    "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name {$limit_clause}",
+                    $countries
                 );
             }
         } else {
             // Force: re-sync all hotels
             echo "Forced full sync: fetching all hotels...\n\n";
+            $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
             $hotel_ids_to_sync = db_get_fields(
-                "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name LIMIT ?i",
-                $countries, $limit
+                "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name {$limit_clause}",
+                $countries
             );
         }
 
