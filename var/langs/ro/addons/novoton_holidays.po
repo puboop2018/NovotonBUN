@@ -82,7 +82,7 @@ msgstr "Selectează datele"
 
 msgctxt "Languages::novoton_holidays.guests"
 msgid "Guests"
-msgstr "Oaspeți"
+msgstr "Turiști"
 
 msgctxt "Languages::novoton_holidays.adults"
 msgid "novoton_holidays.adults"
@@ -266,11 +266,11 @@ msgstr "Reducere"
 
 msgctxt "Languages::novoton_holidays.guest_details"
 msgid "Guest Details"
-msgstr "Detalii Oaspeți"
+msgstr "Detalii Turiști"
 
 msgctxt "Languages::novoton_holidays.guest_name"
 msgid "Guest Name"
-msgstr "Nume Oaspete"
+msgstr "Nume Turist"
 
 msgctxt "Languages::novoton_holidays.first_name"
 msgid "First Name"
@@ -342,15 +342,15 @@ msgstr "cameră"
 
 msgctxt "Languages::novoton_holidays.enter_guest_details"
 msgid "Enter guest details"
-msgstr "Introduceți detaliile oaspeților"
+msgstr "Introduceți detaliile turiștilor"
 
 msgctxt "Languages::novoton_holidays.main_guest"
 msgid "Main Guest"
-msgstr "Oaspete Principal"
+msgstr "Turist Principal"
 
 msgctxt "Languages::novoton_holidays.additional_guest"
 msgid "Additional Guest"
-msgstr "Oaspete Suplimentar"
+msgstr "Turist Suplimentar"
 
 msgctxt "Languages::novoton_holidays.required_field"
 msgid "This field is required"
@@ -850,7 +850,7 @@ msgstr "Condiții de anulare"
 
 msgctxt "Languages::novoton_holidays.edit_guest_details"
 msgid "Edit Guest Details"
-msgstr "Editează detalii oaspeți"
+msgstr "Editează detalii turiști"
 
 msgctxt "Languages::novoton_holidays.we_have_left"
 msgid "We have [count] left"
@@ -1518,7 +1518,7 @@ msgstr "persoane per cameră"
 
 msgctxt "Languages::novoton_holidays.suggestion_split_rooms"
 msgid "Split your group into more rooms with fewer guests each"
-msgstr "Împărțiți grupul în mai multe camere cu mai puțini oaspeți"
+msgstr "Împărțiți grupul în mai multe camere cu mai puțini turiști"
 
 msgctxt "Languages::novoton_holidays.email_alternatives_title"
 msgid "Great news! We found alternatives for you!"
