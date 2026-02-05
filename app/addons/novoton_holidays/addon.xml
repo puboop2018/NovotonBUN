@@ -204,7 +204,23 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
-                    
+
+                    <!-- Exchange Rates Header -->
+                    <item id="exchange_rates_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="currency_risk_commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="last_exchange_rate_update">
+                        <type>info</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Products Header -->
                     <item id="products_header">
                         <type>header</type>
@@ -614,6 +630,10 @@
                     <item id="list_facilities">
                         <href>novoton_holidays.list_facilities</href>
                         <position>27</position>
+                    </item>
+                    <item id="exchange_rates">
+                        <href>novoton_exchange_rates.manage</href>
+                        <position>28</position>
                     </item>
                     <item id="novoton_diagnostic">
                         <href>novoton_diagnostic.test</href>

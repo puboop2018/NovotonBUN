@@ -1,0 +1,350 @@
+<?php
+/**
+ * Novoton Holidays - Exchange Rates Functions
+ *
+ * Handles automatic exchange rate updates from BNR (National Bank of Romania).
+ * Updates CS-Cart currency coefficients with rates + commission.
+ *
+ * @package NovotonHolidays
+ * @since 3.0.0
+ */
+
+use Tygh\Registry;
+
+if (!defined('BOOTSTRAP')) { die('Access denied'); }
+
+/**
+ * Fetch exchange rates XML from BNR (National Bank of Romania)
+ *
+ * @return string|false XML content or false on failure
+ */
+function fn_novoton_fetch_bnr_rates()
+{
+    $url = 'https://curs.bnr.ro/nbrfxrates.xml';
+
+    // Use cURL with TLS 1.2 as required by BNR
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/xml',
+            'User-Agent: CS-Cart/NovotonHolidays'
+        ],
+    ]);
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'BNR exchange rate fetch failed: ' . $error
+        ]);
+        return false;
+    }
+
+    if ($http_code !== 200) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'BNR exchange rate fetch failed with HTTP ' . $http_code
+        ]);
+        return false;
+    }
+
+    return $response;
+}
+
+/**
+ * Parse BNR XML and extract rates for specified currencies
+ *
+ * @param string $xml_content Raw XML from BNR
+ * @param array $currencies Currency codes to extract (default: EUR, USD, GBP)
+ * @return array Associative array of currency => rate (relative to RON)
+ */
+function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'])
+{
+    $rates = [];
+
+    if (empty($xml_content)) {
+        return $rates;
+    }
+
+    // Suppress XML errors and handle them manually
+    libxml_use_internal_errors(true);
+
+    try {
+        $xml = new SimpleXMLElement($xml_content);
+
+        // Register namespace for XPath queries
+        $xml->registerXPathNamespace('bnr', 'http://www.bnr.ro/xsd');
+
+        // Get the latest Cube (contains rates)
+        $cubes = $xml->xpath('//bnr:Cube');
+        if (empty($cubes)) {
+            // Try without namespace
+            $cubes = $xml->Body->Cube;
+        }
+
+        if (!empty($cubes)) {
+            // Get the first (latest) cube
+            $cube = is_array($cubes) ? $cubes[0] : $cubes;
+
+            foreach ($cube->Rate as $rate) {
+                $currency = (string) $rate['currency'];
+
+                if (in_array($currency, $currencies)) {
+                    $value = (float) $rate;
+
+                    // Handle multiplier (e.g., HUF has multiplier=100)
+                    $multiplier = (int) ($rate['multiplier'] ?? 1);
+                    if ($multiplier > 1) {
+                        $value = $value / $multiplier;
+                    }
+
+                    $rates[$currency] = $value;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'BNR XML parsing error: ' . $e->getMessage()
+        ]);
+    }
+
+    libxml_clear_errors();
+
+    return $rates;
+}
+
+/**
+ * Calculate CS-Cart currency coefficients from BNR rates
+ *
+ * Assumes EUR is the primary currency in CS-Cart.
+ * Converts BNR rates (RON-based) to EUR-based coefficients.
+ *
+ * @param array $bnr_rates Rates from BNR (currency => RON rate)
+ * @param float $commission Commission percentage to add (e.g., 2 for 2%)
+ * @return array Currency coefficients for CS-Cart
+ */
+function fn_novoton_calculate_currency_coefficients($bnr_rates, $commission = 0)
+{
+    $coefficients = [];
+
+    if (empty($bnr_rates['EUR'])) {
+        return $coefficients;
+    }
+
+    $eur_rate = $bnr_rates['EUR'];
+    $commission_multiplier = 1 + ($commission / 100);
+
+    // RON coefficient = EUR rate from BNR (1 EUR = X RON)
+    $coefficients['RON'] = round($eur_rate * $commission_multiplier, 4);
+
+    // USD coefficient = EUR/USD cross rate
+    if (!empty($bnr_rates['USD'])) {
+        $coefficients['USD'] = round(($eur_rate / $bnr_rates['USD']) * $commission_multiplier, 4);
+    }
+
+    // GBP coefficient = EUR/GBP cross rate
+    if (!empty($bnr_rates['GBP'])) {
+        $coefficients['GBP'] = round(($eur_rate / $bnr_rates['GBP']) * $commission_multiplier, 4);
+    }
+
+    return $coefficients;
+}
+
+/**
+ * Update CS-Cart currency rates using native functions
+ *
+ * @param array $coefficients Currency coefficients to update
+ * @return array Results with success/error info per currency
+ */
+function fn_novoton_update_cscart_currencies($coefficients)
+{
+    $results = [];
+
+    foreach ($coefficients as $currency_code => $coefficient) {
+        // Get existing currency data
+        $currency = db_get_row(
+            "SELECT * FROM ?:currencies WHERE currency_code = ?s",
+            $currency_code
+        );
+
+        if (empty($currency)) {
+            $results[$currency_code] = [
+                'success' => false,
+                'error' => 'Currency not found in CS-Cart'
+            ];
+            continue;
+        }
+
+        // Skip primary currency (EUR should have coefficient = 1)
+        if ($currency['is_primary'] == 'Y') {
+            $results[$currency_code] = [
+                'success' => true,
+                'message' => 'Primary currency - coefficient unchanged',
+                'old_rate' => $currency['coefficient'],
+                'new_rate' => 1.0
+            ];
+            continue;
+        }
+
+        $old_coefficient = $currency['coefficient'];
+
+        // Update using CS-Cart's fn_update_currency if available
+        if (function_exists('fn_update_currency')) {
+            $currency['coefficient'] = $coefficient;
+            fn_update_currency($currency, $currency['currency_id']);
+        } else {
+            // Direct update as fallback
+            db_query(
+                "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
+                $coefficient,
+                $currency_code
+            );
+        }
+
+        $results[$currency_code] = [
+            'success' => true,
+            'old_rate' => $old_coefficient,
+            'new_rate' => $coefficient
+        ];
+    }
+
+    // Clear currency cache
+    if (function_exists('fn_clear_cache')) {
+        fn_clear_cache('currencies');
+    }
+
+    // Also clear registry cache for currencies
+    Registry::del('currencies');
+
+    return $results;
+}
+
+/**
+ * Main function to update exchange rates from BNR
+ *
+ * Fetches rates from BNR, applies commission, and updates CS-Cart currencies.
+ *
+ * @param bool $return_details If true, returns detailed results instead of just success/fail
+ * @return array|bool Results array or bool success
+ */
+function fn_novoton_update_exchange_rates($return_details = false)
+{
+    $result = [
+        'success' => false,
+        'message' => '',
+        'bnr_rates' => [],
+        'coefficients' => [],
+        'updates' => [],
+        'timestamp' => date('Y-m-d H:i:s'),
+    ];
+
+    // Step 1: Fetch BNR XML
+    $xml = fn_novoton_fetch_bnr_rates();
+    if ($xml === false) {
+        $result['message'] = 'Failed to fetch exchange rates from BNR';
+        return $return_details ? $result : false;
+    }
+
+    // Step 2: Parse XML for EUR, USD, GBP
+    $bnr_rates = fn_novoton_parse_bnr_xml($xml, ['EUR', 'USD', 'GBP']);
+    if (empty($bnr_rates)) {
+        $result['message'] = 'Failed to parse BNR exchange rates';
+        return $return_details ? $result : false;
+    }
+    $result['bnr_rates'] = $bnr_rates;
+
+    // Step 3: Get commission setting
+    $commission = (float) Registry::get('addons.novoton_holidays.currency_risk_commission');
+    if ($commission < 0) {
+        $commission = 0;
+    }
+    if ($commission > 50) {
+        $commission = 50; // Sanity limit
+    }
+    $result['commission'] = $commission;
+
+    // Step 4: Calculate coefficients (EUR is primary)
+    $coefficients = fn_novoton_calculate_currency_coefficients($bnr_rates, $commission);
+    if (empty($coefficients)) {
+        $result['message'] = 'Failed to calculate currency coefficients';
+        return $return_details ? $result : false;
+    }
+    $result['coefficients'] = $coefficients;
+
+    // Step 5: Update CS-Cart currencies
+    $updates = fn_novoton_update_cscart_currencies($coefficients);
+    $result['updates'] = $updates;
+
+    // Step 6: Update last sync timestamp in addon settings
+    $timestamp = date('Y-m-d H:i:s');
+    db_query(
+        "UPDATE ?:settings_objects SET value = ?s WHERE name = 'last_exchange_rate_update' AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')"
+    , $timestamp);
+
+    // Also update in Registry for immediate display
+    Registry::set('addons.novoton_holidays.last_exchange_rate_update', $timestamp);
+
+    $result['success'] = true;
+    $result['message'] = 'Exchange rates updated successfully';
+    $result['timestamp'] = $timestamp;
+
+    // Log success
+    fn_log_event('general', 'runtime', [
+        'message' => sprintf(
+            'Exchange rates updated: RON=%s, USD=%s, GBP=%s (commission: %s%%)',
+            $coefficients['RON'] ?? 'N/A',
+            $coefficients['USD'] ?? 'N/A',
+            $coefficients['GBP'] ?? 'N/A',
+            $commission
+        )
+    ]);
+
+    return $return_details ? $result : true;
+}
+
+/**
+ * Get current exchange rate info for display
+ *
+ * @return array Exchange rate information
+ */
+function fn_novoton_get_exchange_rate_info()
+{
+    $info = [
+        'last_update' => Registry::get('addons.novoton_holidays.last_exchange_rate_update') ?: 'Never',
+        'commission' => Registry::get('addons.novoton_holidays.currency_risk_commission') ?: '0',
+        'currencies' => [],
+    ];
+
+    // Get current currency rates from CS-Cart
+    $currencies = db_get_array(
+        "SELECT currency_code, coefficient, is_primary FROM ?:currencies WHERE currency_code IN ('EUR', 'RON', 'USD', 'GBP') ORDER BY is_primary DESC, currency_code ASC"
+    );
+
+    foreach ($currencies as $currency) {
+        $info['currencies'][$currency['currency_code']] = [
+            'coefficient' => $currency['coefficient'],
+            'is_primary' => $currency['is_primary'] == 'Y',
+        ];
+    }
+
+    return $info;
+}
+
+/**
+ * Cron handler for daily exchange rate updates
+ * Called via: php admin.php --dispatch=novoton_exchange_rates.cron&cron_password=XXX
+ *
+ * @return bool Success status
+ */
+function fn_novoton_cron_update_exchange_rates()
+{
+    return fn_novoton_update_exchange_rates(false);
+}
