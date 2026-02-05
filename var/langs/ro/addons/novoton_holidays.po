@@ -92,6 +92,10 @@ msgctxt "Languages::novoton_holidays.last_update"
 msgid "Last Update"
 msgstr "Ultima Actualizare"
 
+msgctxt "Languages::novoton_holidays.currency_risk_commission"
+msgid "Currency Risk Commission"
+msgstr "Comision Risc Valutar"
+
 msgctxt "Languages::novoton_holidays.data_source"
 msgid "Data Source"
 msgstr "Sursă Date"

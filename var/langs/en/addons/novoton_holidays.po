@@ -120,6 +120,10 @@ msgctxt "Languages::novoton_holidays.last_update"
 msgid "Last Update"
 msgstr "Last Update"
 
+msgctxt "Languages::novoton_holidays.currency_risk_commission"
+msgid "Currency Risk Commission"
+msgstr "Currency Risk Commission"
+
 msgctxt "Languages::novoton_holidays.data_source"
 msgid "Data Source"
 msgstr "Data Source"
