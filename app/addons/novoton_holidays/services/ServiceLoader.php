@@ -28,15 +28,17 @@ use Tygh\Addons\NovotonHolidays\Services\ValidationHelper;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 // Auto-load service classes
 $services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
 $repository_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Repository/';
+$helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
 
 // Load services
-foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService', 
+foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService',
           'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService'] as $class) {
     $file = $services_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Services\\{$class}")) {
@@ -48,6 +50,14 @@ foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService',
 foreach (['HotelRepository', 'BookingRepository', 'FacilityRepository', 'SyncLogRepository'] as $class) {
     $file = $repository_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Repository\\{$class}")) {
+        require_once $file;
+    }
+}
+
+// Load helpers
+foreach (['DatabaseIterator'] as $class) {
+    $file = $helpers_dir . $class . '.php';
+    if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Helpers\\{$class}")) {
         require_once $file;
     }
 }
@@ -181,13 +191,33 @@ function _nvt_hotel_repo() {
 /**
  * Get BookingRepository singleton
  * Database access for booking data
- * 
+ *
  * @return BookingRepository
  */
 function _nvt_booking_repo() {
     static $instance = null;
     if ($instance === null) {
         $instance = new BookingRepository();
+    }
+    return $instance;
+}
+
+/**
+ * Get DatabaseIterator singleton
+ * Memory-efficient iteration over large datasets using PHP generators
+ *
+ * Usage:
+ *   $iterator = _nvt_db_iterator();
+ *   foreach ($iterator->iterateHotels(['country' => 'BULGARIA']) as $hotel) {
+ *       // Process each hotel - only one row in memory at a time
+ *   }
+ *
+ * @return DatabaseIterator
+ */
+function _nvt_db_iterator() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new DatabaseIterator();
     }
     return $instance;
 }
