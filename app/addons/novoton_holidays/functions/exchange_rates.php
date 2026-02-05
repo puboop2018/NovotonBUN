@@ -271,13 +271,13 @@ function fn_novoton_update_exchange_rates($return_details = false)
     }
     $result['bnr_rates'] = $bnr_rates;
 
-    // Step 3: Get commission setting
+    // Step 3: Get commission setting (0-5% range)
     $commission = (float) Registry::get('addons.novoton_holidays.currency_risk_commission');
     if ($commission < 0) {
         $commission = 0;
     }
-    if ($commission > 50) {
-        $commission = 50; // Sanity limit
+    if ($commission > 5) {
+        $commission = 5; // Maximum 5%
     }
     $result['commission'] = $commission;
 

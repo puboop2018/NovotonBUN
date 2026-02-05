@@ -85,8 +85,8 @@ msgid "Currency risk commission %"
 msgstr "Currency risk commission %"
 
 msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
-msgid "Percentage to add to exchange rates (e.g., 2 for 2%). This protects against currency fluctuation risk."
-msgstr "Percentage to add to exchange rates (e.g., 2 for 2%). This protects against currency fluctuation risk."
+msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
+msgstr "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
 
 msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
 msgid "Last exchange rate update"
