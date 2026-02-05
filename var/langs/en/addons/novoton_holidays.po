@@ -1564,6 +1564,10 @@ msgctxt "Languages::novoton_holidays.cancellation_terms_apply"
 msgid "Cancellation terms apply"
 msgstr "Cancellation terms apply"
 
+msgctxt "Languages::novoton_holidays.payment_and_cancellation_terms_apply"
+msgid "Payment and cancellation terms apply"
+msgstr "Payment and cancellation terms apply"
+
 msgctxt "Languages::novoton_holidays.includes_taxes"
 msgid "Includes taxes and charges"
 msgstr "Includes taxes and charges"
