@@ -789,11 +789,11 @@
                     {foreach from=$parsed_payment_terms item=term}
                         <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #555;">
                             {if $term.is_on_booking}
-                                <strong>{$term.percent}%</strong> {__("novoton_holidays.on_booking")|default:"la rezervare"}
+                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.on_booking")|default:"la rezervare"}
                             {elseif $term.date}
-                                <strong>{$term.percent}%</strong> {__("novoton_holidays.until")|default:"până la"} <strong>{$term.date|date_format:"%d.%m.%Y"}</strong>
+                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date|date_format:"%d.%m.%Y"}
                             {else}
-                                <strong>{$term.percent}%</strong>
+                                {$term.percent|string_format:"%d"}%
                             {/if}
                         </li>
                     {/foreach}
