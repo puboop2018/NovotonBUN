@@ -2908,11 +2908,3 @@ msgstr "[percent]% until [date]"
 msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
 msgid "[percent]% on booking"
 msgstr "[percent]% on booking"
-
-msgctxt "Languages::novoton_holidays.booking_leader"
-msgid "Booking leader"
-msgstr "Booking leader"
-
-msgctxt "Languages::novoton_holidays.years_short"
-msgid "years"
-msgstr "years"

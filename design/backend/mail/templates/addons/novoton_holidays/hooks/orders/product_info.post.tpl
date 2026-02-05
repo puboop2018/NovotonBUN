@@ -47,7 +47,7 @@
                                 {if $guest.room == $room_num}
                                     {$guest_number = $guest_number + 1}
                                     {$guest_name = $guest.name|default:"`$guest.last_name` `$guest.first_name`"|trim}
-                                    &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.booking_leader")|default:"Lider rezervare"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years_short")|default:"ani"}){/if}<br>
+                                    &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years")}){/if}<br>
                                 {/if}
                             {/foreach}
                         {/for}
@@ -56,7 +56,7 @@
                         {foreach from=$guests_list item=guest}
                             {$guest_number = $guest_number + 1}
                             {$guest_name = $guest.name|default:"`$guest.last_name` `$guest.first_name`"|trim}
-                            &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.booking_leader")|default:"Lider rezervare"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years_short")|default:"ani"}){/if}<br>
+                            &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years")}){/if}<br>
                         {/foreach}
                     {/if}
                 {/if}
