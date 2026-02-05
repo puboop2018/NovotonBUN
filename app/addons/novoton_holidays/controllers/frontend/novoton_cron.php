@@ -124,14 +124,22 @@ try {
             }
         }
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        $bookings_checked = isset($ask_bookings) ? count($ask_bookings) : 0;
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'resinfo', sync_date = NOW(),
+             products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $bookings_checked, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'resinfo', [
-            'updated'  => isset($ask_bookings) ? count($ask_bookings) : 0,
-            'duration' => $duration,
+            'updated'  => $bookings_checked,
+            'duration' => $duration . 's',
         ]);
     }
-    
+
     // =========================================
     // MODE: hotel_list
     // =========================================
@@ -207,15 +215,22 @@ try {
         echo "\nTotal hotels: {$total_hotels}\n";
         echo "Synced: {$synced_hotels} (new: {$new_hotels})\n";
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotellist', sync_date = NOW(),
+             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $total_hotels, $synced_hotels, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'hotel_list', [
             'added'    => $new_hotels,
             'updated'  => $synced_hotels - $new_hotels,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ], implode(', ', $countries));
     }
-    
+
     // =========================================
     // MODE: update_prices
     // =========================================
@@ -295,12 +310,19 @@ try {
         echo "Hotels WITHOUT prices: {$without_prices}\n";
         echo "Total checked: " . ($with_prices + $without_prices) . "\n";
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'prices', sync_date = NOW(),
+             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $with_prices + $without_prices, $with_prices, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'room_price', [
             'updated'  => $with_prices,
             'skipped'  => $without_prices,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ], $country ?: 'ALL');
     }
     
@@ -727,18 +749,25 @@ try {
             echo "\nNew hotels synced: {$new_hotels}\n";
             echo "Added to CS-Cart: {$added_to_cart}\n";
 
+            // Log to sync_log table for dashboard display
+            $duration = round(microtime(true) - $cron_start_time, 1);
+            db_query(
+                "INSERT INTO ?:novoton_sync_log SET sync_type = 'offers_update', sync_date = NOW(),
+                 products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+                count($offers), $added_to_cart, $duration
+            );
+
             // Send email report
-            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
             fn_novoton_send_import_report_email([], 'offers_update', [
                 'added'    => $added_to_cart,
                 'updated'  => $new_hotels,
-                'duration' => $duration,
+                'duration' => $duration . 's',
             ], $country);
         }
 
         // Save sync timestamp for future offers_update calls
         if (isset($sync_start_time)) {
-            db_query("INSERT INTO ?:novoton_sync_log (sync_type, sync_date, status, products_updated) VALUES ('product_import', NOW(), 'completed', ?i)", 
+            db_query("INSERT INTO ?:novoton_sync_log (sync_type, sync_date, status, products_updated) VALUES ('product_import', NOW(), 'completed', ?i)",
                 $added_to_cart ?? 0
             );
             echo "\nSync timestamp saved: {$sync_start_time}\n";
@@ -910,9 +939,9 @@ try {
     // =========================================
     elseif ($mode == 'list_facilities') {
         echo "Syncing facilities list from Novoton API...\n\n";
-        
+
         $result = fn_novoton_sync_facilities_list();
-        
+
         $fac_added = 0;
         $fac_updated = 0;
         $fac_errors = 0;
@@ -931,13 +960,20 @@ try {
             echo "Synced {$result} facilities.\n";
         }
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'facilities', sync_date = NOW(),
+             products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
+            $fac_added + $fac_updated, $fac_errors, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'facilities', [
             'added'    => $fac_added,
             'updated'  => $fac_updated,
             'errors'   => $fac_errors,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ]);
     }
     
