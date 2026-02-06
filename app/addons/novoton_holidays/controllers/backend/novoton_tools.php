@@ -70,8 +70,8 @@ if ($mode == 'download_hotel_features_csv') {
         return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
     }
     
-    // Security: only allow files from novoton_reports directory
-    $dir = fn_get_files_dir_path() . 'novoton_reports/';
+    // Security: only allow files from exim directory
+    $dir = fn_get_files_dir_path() . 'exim/';
     $file_path = $dir . basename($file);
     
     if (!file_exists($file_path)) {

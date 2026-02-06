@@ -270,14 +270,14 @@ function fn_novoton_generate_hotel_features_csv()
             $result['count']++;
         }
         
-        // Save to file
-        $filename = 'novoton_hotel_features_' . date('Y-m-d_H-i-s') . '.csv';
-        $dir = fn_get_files_dir_path() . 'novoton_reports/';
-        
+        // Save to file in exim directory (standard CS-Cart import/export folder)
+        $filename = 'novoton_hotel_features_' . date('Ymd_His') . '.csv';
+        $dir = fn_get_files_dir_path() . 'exim/';
+
         if (!is_dir($dir)) {
             fn_mkdir($dir);
         }
-        
+
         $file_path = $dir . $filename;
         $csv_content = implode("\n", $csv_lines);
         
