@@ -106,24 +106,6 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
-MODE: hotel_info (Legacy)
---------------------------------------------------------------------------------
-Description: Sync hotel accommodation details (rooms, boards, packages)
-Duration:    Variable (depends on hotel count)
-Frequency:   Use hotel_info_batched instead
-
-Note: This is the legacy mode without resume capability.
-      Use hotel_info_batched for production.
-
-Parameters:
-  &force=1           Force re-sync all hotels
-  &limit=N           Limit number of hotels to process
-
-Crontab:
-  Not recommended - use hotel_info_batched instead
-
-
---------------------------------------------------------------------------------
 MODE: sync_priceinfo
 --------------------------------------------------------------------------------
 Description: Sync price info for hotel packages
@@ -141,19 +123,6 @@ Parameters:
 
 Crontab:
   0 */6 * * * curl -s "...&mode=sync_priceinfo&limit=200"
-
-
---------------------------------------------------------------------------------
-MODE: sync_hotels
---------------------------------------------------------------------------------
-Description: V3 full sync (hotel_list + hotelinfo + priceinfo combined)
-Duration:    30-120+ minutes
-Frequency:   Rarely needed (use individual modes instead)
-
-Parameters:
-  &limit=N           Limit per step (default: 100)
-
-Note: This is a heavy operation. Prefer using individual modes.
 
 
 --------------------------------------------------------------------------------

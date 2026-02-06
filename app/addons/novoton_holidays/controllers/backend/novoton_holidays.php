@@ -223,9 +223,6 @@ if ($mode == 'manage' || empty($mode)) {
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
-        // Legacy modes
-        'sync_hotels' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_hotels",
-        'hotel_info' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info",
     ];
     
     // Assign to view

@@ -7,7 +7,7 @@
  *
  * V3 Architecture:
  * - Season prices are stored in novoton_hotel_packages.priceinfo_data JSON
- * - Synced via cron job (mode=sync_hotels or mode=sync_priceinfo)
+ * - Synced via cron job (mode=hotel_info_batched or mode=sync_priceinfo)
  * - NO CACHE needed - database is the source of truth
  *
  * Use Cases:

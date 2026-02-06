@@ -231,23 +231,6 @@
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
         </table>
-
-        {* Legacy modes - collapsed *}
-        <details style="margin-top: 15px;">
-            <summary style="cursor: pointer; color: #666; font-size: 13px;">Legacy Cron Jobs (not recommended)</summary>
-            <table class="novoton-table" style="margin-top: 10px;">
-                <tr>
-                    <td style="width: 180px;"><strong>Full Sync (V3)</strong><br><small style="color:#999;">Use hotel_info_batched instead</small></td>
-                    <td><div class="novoton-cron-url">{$cron_urls.sync_hotels}</div></td>
-                    <td style="width: 60px;"><a href="{$cron_urls.sync_hotels}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-                </tr>
-                <tr>
-                    <td><strong>Hotel Info (Legacy)</strong><br><small style="color:#999;">No resume capability</small></td>
-                    <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
-                    <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-                </tr>
-            </table>
-        </details>
         {else}
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; color: #856404;">
             <strong>[!] Cron Access Key Not Set</strong><br>
