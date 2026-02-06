@@ -270,9 +270,9 @@ function fn_novoton_generate_hotel_features_csv()
             $result['count']++;
         }
         
-        // Save to file in exim directory (standard CS-Cart import/export folder)
+        // Save to file in novoton_reports directory
         $filename = 'novoton_hotel_features_' . date('Ymd_His') . '.csv';
-        $dir = fn_get_files_dir_path() . 'exim/';
+        $dir = fn_get_files_dir_path() . 'novoton_reports/';
 
         if (!is_dir($dir)) {
             fn_mkdir($dir);
