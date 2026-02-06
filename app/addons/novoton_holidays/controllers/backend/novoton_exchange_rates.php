@@ -77,8 +77,8 @@ if ($mode == 'manage') {
     Tygh::$app['view']->assign('cron_password', $cron_password);
 
     // Build cron URLs for display
-    // Frontend URL requires password (no session)
-    $cron_url_frontend = fn_url('novoton_exchange_rates.cron', 'C');
+    // Frontend URL requires password (no session) - uses main cron controller
+    $cron_url_frontend = fn_url('novoton_cron.exchange_rates', 'C');
     $cron_url_frontend .= '&cron_password=' . $cron_password;
     Tygh::$app['view']->assign('cron_url_frontend', $cron_url_frontend);
 
