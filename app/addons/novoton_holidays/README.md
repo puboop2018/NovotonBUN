@@ -1,7 +1,7 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.0
-**Last Updated:** February 5, 2026
+**Version:** 2.9.2
+**Last Updated:** February 6, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
 
@@ -144,9 +144,9 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 
 | Mode | Sync Type | Description |
 |------|-----------|-------------|
-| `hotel_info_batched` | `hotelinfo` | **[RECOMMENDED]** Smart batched sync with resume |
+| `hotel_info_batched` | `hotelinfo` | **[RECOMMENDED]** Smart batched hotel sync with resume |
+| `sync_priceinfo_batched` | `priceinfo` | **[RECOMMENDED]** Smart batched priceinfo sync with resume |
 | `hotel_list` | `hotellist` | Sync hotel list from API |
-| `sync_priceinfo` | `sync_priceinfo` | Sync price info for packages |
 | `list_facilities` | `facilities` | Update hotel facilities list |
 | `resinfo` | `resinfo` | Check ASK bookings status |
 | `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
@@ -177,9 +177,49 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 
 # Shared hosting settings (smaller batches, shorter timeout)
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&batch_size=50&max_time=120"
+
+# CLI PHP with unlimited mode (no time limit - processes all in one run)
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=hotel_info_batched unlimited=1 force_full=1
 ```
 
-#### 3. Price Check
+**Parameters:**
+- `&status=1` - Check progress without processing
+- `&force_full=1` - Force full sync of all hotels
+- `&reset=1` - Cancel/reset in-progress sync
+- `&batch_size=N` - Hotels per batch (default: 100)
+- `&max_time=N` - Max seconds per run (default: 300)
+- `&unlimited=1` - No time limit (for CLI PHP usage)
+
+#### 3. Price Info Batched Sync (Recommended)
+Smart priceinfo sync with resume capability. Full sync every 7 days, incremental for stale packages (>24h).
+
+```bash
+# Auto-detect sync type (recommended)
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched"
+
+# Check progress
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched&status=1"
+
+# Force full sync (all packages)
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched&force_full=1"
+
+# Shared hosting settings
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched&batch_size=30&max_time=120"
+
+# CLI PHP with unlimited mode (no time limit - processes all in one run)
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
+```
+
+**Parameters:**
+- `&status=1` - Check progress without processing
+- `&force_full=1` - Force full sync of all packages
+- `&reset=1` - Cancel/reset in-progress sync
+- `&batch_size=N` - Packages per batch (default: 50)
+- `&max_time=N` - Max seconds per run (default: 300)
+- `&stale_hours=N` - Re-sync packages older than N hours (default: 24)
+- `&unlimited=1` - No time limit (for CLI PHP usage)
+
+#### 4. Price Check
 Checks which hotels have active prices.
 
 ```bash
@@ -190,21 +230,21 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=room_price&country=BULGARIA"
 ```
 
-#### 4. Offers Update (Delta Sync)
+#### 5. Offers Update (Delta Sync)
 Syncs only changed offers since last update.
 
 ```bash
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=offers_update"
 ```
 
-#### 5. Facilities Sync
+#### 6. Facilities Sync
 Updates hotel facilities list.
 
 ```bash
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=list_facilities"
 ```
 
-#### 6. Add Hotels as Products
+#### 7. Add Hotels as Products
 Imports hotels as CS-Cart products (no limit by default).
 
 ```bash
@@ -219,10 +259,10 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 
 ```crontab
 # Hotel Info Batched - every 5 minutes (self-manages sync type)
-*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched" > /dev/null 2>&1
+*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&batch_size=50&max_time=120" > /dev/null 2>&1
 
-# Sync Priceinfo - every 6 hours
-0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo&limit=200" > /dev/null 2>&1
+# Price Info Batched - every 5 minutes (self-manages sync type)
+*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched&batch_size=30&max_time=120" > /dev/null 2>&1
 
 # Hotel list sync - daily at 2 AM
 0 2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list" > /dev/null 2>&1
@@ -236,6 +276,26 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 # Exchange rates - daily at 13:05 (after BNR publishes)
 5 13 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_exchange_rates.cron&cron_password=YOUR_KEY" > /dev/null 2>&1
 ```
+
+### CLI PHP Usage (Unlimited Mode)
+
+For running full syncs from command line without time limits:
+
+```bash
+cd /path/to/cscart
+
+# Full hotel info sync (no time limit)
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=hotel_info_batched unlimited=1 force_full=1
+
+# Full priceinfo sync (no time limit)
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
+```
+
+Benefits of CLI with `unlimited=1`:
+- No time limits - processes ALL items in one run
+- No HTTP timeout issues
+- Better for initial setup or full re-syncs
+- Memory-efficient (still uses batched processing internally)
 
 ---
 
@@ -479,6 +539,11 @@ app/addons/novoton_holidays/
 │   ├── HotelSync.php         # V3 Hotel synchronization
 │   └── PriceInfoSync.php     # Priceinfo synchronization
 │
+├── Helpers/                  # Helper classes
+│   ├── DatabaseIterator.php  # PHP Generators for memory-efficient iteration
+│   ├── BatchedHotelInfoSync.php  # Batched hotel sync with resume
+│   └── BatchedPriceInfoSync.php  # Batched priceinfo sync with resume
+│
 └── schemas/                  # CS-Cart schemas
     └── block_manager/
 ```
@@ -575,6 +640,18 @@ Addon logs events to CS-Cart's logging system:
 
 ## Changelog
 
+### Version 2.9.2 (February 6, 2026)
+- **Removed:** Legacy `sync_priceinfo` mode - use `sync_priceinfo_batched` instead
+- **Cleaned:** Removed all legacy mode references from cron controller, backend, and documentation
+
+### Version 2.9.1 (February 6, 2026)
+- **Added:** `sync_priceinfo_batched` mode - Smart batched priceinfo sync with resume capability
+- **Added:** `&unlimited=1` parameter for CLI PHP usage (no time limits)
+- **Added:** PHP Generators for memory-efficient large dataset processing
+- **Added:** CLI PHP usage documentation for running full syncs
+- **Updated:** Recommended crontab now uses batched modes for both hotel info and priceinfo
+- **Updated:** CRON_JOBS.txt with comprehensive documentation for all modes
+
 ### Version 2.9.0 (February 5, 2026)
 - **Added:** Exchange rate auto-update from BNR (National Bank of Romania) API
 - **Added:** Currency risk commission setting (0-5%, default 1.8%)
@@ -623,4 +700,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 5, 2026 - Version 2.9.0*
+*Documentation last updated: February 6, 2026 - Version 2.9.1*

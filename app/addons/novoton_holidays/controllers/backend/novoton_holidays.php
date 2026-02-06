@@ -205,7 +205,6 @@ if ($mode == 'manage' || empty($mode)) {
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
         'sync_hotels' => $syncLogRepo->getLastSyncDate('sync_hotels'),
-        'sync_priceinfo' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
     ];
     
     // Build cron URLs
@@ -217,8 +216,7 @@ if ($mode == 'manage' || empty($mode)) {
         // Recommended batched sync (with resume)
         'hotel_info_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info_batched",
         'sync_priceinfo_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo_batched",
-        // Other sync modes (legacy)
-        'sync_priceinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo",
+        // Other sync modes
         'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",

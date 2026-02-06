@@ -1747,126 +1747,6 @@ try {
     }
 
     // =========================================
-    // MODE: sync_priceinfo (V3 - Priceinfo only)
-    // =========================================
-    elseif ($mode == 'sync_priceinfo') {
-        echo "V3 Priceinfo Sync\n\n";
-
-        $start_time = microtime(true);
-        $limit = intval($_REQUEST['limit'] ?? 200);
-        $force = !empty($_REQUEST['force']);
-        $countries = fn_novoton_parse_countries();
-
-        echo "Countries: " . implode(', ', $countries) . "\n";
-        echo "Limit: {$limit}\n";
-        echo "Force re-sync: " . ($force ? 'YES' : 'NO') . "\n\n";
-
-        // Get packages to sync
-        if ($force) {
-            $packages = db_get_array(
-                "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
-                 FROM ?:novoton_hotel_packages p
-                 JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
-                 WHERE h.country IN (?a)
-                 ORDER BY p.synced_at ASC LIMIT ?i",
-                $countries, $limit
-            );
-        } else {
-            $packages = db_get_array(
-                "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
-                 FROM ?:novoton_hotel_packages p
-                 JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
-                 WHERE h.country IN (?a) AND (p.priceinfo_data IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL 24 HOUR))
-                 ORDER BY p.synced_at ASC LIMIT ?i",
-                $countries, $limit
-            );
-        }
-
-        echo "Packages to sync: " . count($packages) . "\n\n";
-
-        if (empty($packages)) {
-            // Check if there are ANY packages in the database
-            $total_packages = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_packages");
-            if ($total_packages == 0) {
-                echo "NOTE: No packages found in database.\n";
-                echo "You need to run 'mode=hotel_info' or 'mode=sync_hotels' first to populate packages.\n\n";
-                echo "Recommended workflow:\n";
-                echo "  1. mode=hotel_list (sync hotel list from API)\n";
-                echo "  2. mode=hotel_info (sync hotelinfo to get packages)\n";
-                echo "  3. mode=sync_priceinfo (sync prices for packages)\n";
-            } else {
-                echo "All {$total_packages} packages are up-to-date (synced within 24 hours).\n";
-                echo "Use &force=1 to force re-sync all packages.\n";
-            }
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($packages as $pkg) {
-            echo "[{$pkg['hotel_id']}] {$pkg['hotel_name']} / {$pkg['package_name']} ... ";
-
-            $priceinfo = $api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
-            if (!$priceinfo) {
-                echo "SKIP\n";
-                $errors++;
-                continue;
-            }
-
-            $priceinfo_data = json_decode(json_encode($priceinfo), true);
-
-            // Calculate metadata
-            $has_eb = !empty($priceinfo_data['early_booking']) ? 'Y' : 'N';
-            $seasons = 0;
-            $min_price = null;
-
-            if (isset($priceinfo_data['seasons']['season'])) {
-                $s = $priceinfo_data['seasons']['season'];
-                $seasons = isset($s['IdSeason']) ? 1 : count($s);
-            }
-
-            if (isset($priceinfo_data['season_price'])) {
-                $sp = $priceinfo_data['season_price'];
-                if (isset($sp['Code'])) $sp = [$sp];
-                foreach ($sp as $row) {
-                    for ($i = 1; $i <= 20; $i++) {
-                        $p = floatval($row['Price' . $i] ?? 0);
-                        if ($p > 0 && ($min_price === null || $p < $min_price)) {
-                            $min_price = $p;
-                        }
-                    }
-                }
-            }
-
-            db_query(
-                "UPDATE ?:novoton_hotel_packages SET
-                 priceinfo_data = ?s, has_early_booking = ?s, seasons_count = ?i, min_price = ?d, synced_at = NOW()
-                 WHERE hotel_id = ?s AND package_id = ?s",
-                json_encode($priceinfo_data), $has_eb, $seasons, $min_price,
-                $pkg['hotel_id'], $pkg['package_id']
-            );
-
-            $synced++;
-            echo "OK (€" . ($min_price ?? 0) . ", {$seasons} seasons, EB={$has_eb})\n";
-
-            usleep(100000); // 100ms delay
-        }
-
-        $duration = round(microtime(true) - $start_time, 1);
-        echo "\n=== SUMMARY ===\n";
-        echo "Synced: {$synced}\n";
-        echo "Errors: {$errors}\n";
-        echo "Duration: {$duration}s\n";
-
-        // Log sync
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = 'sync_priceinfo', sync_date = NOW(),
-             hotels_synced = ?i, errors = ?i, duration = ?d, status = 'completed'",
-            $synced, $errors, $duration
-        );
-    }
-
-    // =========================================
     // UNKNOWN MODE
     // =========================================
     else {
@@ -1889,7 +1769,6 @@ try {
         echo "    &stale_hours=24    - Re-sync packages older than N hours\n";
         echo "    &unlimited=1       - No time limit (for CLI PHP usage)\n";
         echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
-        echo "- sync_priceinfo: Priceinfo sync (legacy, no resume, use batched)\n";
         echo "- resinfo: Check ASK bookings status\n";
         echo "- hotel_list: Hotel list sync from API\n";
         echo "- hotel_info: Sync hotel accommodation (legacy, no resume)\n";

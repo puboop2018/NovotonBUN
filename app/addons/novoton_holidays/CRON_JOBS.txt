@@ -1,8 +1,8 @@
 ================================================================================
 NOVOTON HOLIDAYS ADDON - CRON JOBS & MODES REFERENCE
 ================================================================================
-Version: 2.9.0
-Last Updated: 2024-02-06
+Version: 2.9.2
+Last Updated: 2026-02-06
 
 ================================================================================
 WHERE TO FIND YOUR CRON URLS
@@ -146,29 +146,6 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
-MODE: sync_priceinfo [LEGACY - Use sync_priceinfo_batched instead]
---------------------------------------------------------------------------------
-Description: Sync price info for hotel packages (no resume capability)
-Duration:    Variable (depends on package count)
-Frequency:   Every 6 hours
-
-NOTE: This is the legacy mode. Use sync_priceinfo_batched for better
-      performance with resume capability.
-
-What it syncs:
-  - Season prices
-  - Early booking discounts
-  - Minimum prices
-
-Parameters:
-  &force=1           Force re-sync all packages (ignore 24h cache)
-  &limit=N           Limit number of packages (default: 200)
-
-Crontab:
-  0 */6 * * * curl -s "...&mode=sync_priceinfo&limit=200"
-
-
---------------------------------------------------------------------------------
 MODE: list_facilities
 --------------------------------------------------------------------------------
 Description: Sync facilities list from API
@@ -308,7 +285,6 @@ list_facilities         | 5-10s       | 0 3 * * 0      | LOW
 offers_update           | 10-30s      | 0 */2 * * *    | LOW
 add_hotels_as_products  | 5-30min     | Manual/Daily   | LOW
 expire_requests         | 1-5s        | 0 0 * * *      | LOW
-sync_priceinfo          | Variable    | (Legacy)       | LOW
 
 
 ================================================================================
