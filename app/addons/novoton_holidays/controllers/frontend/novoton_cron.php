@@ -976,7 +976,88 @@ try {
             'duration' => $duration . 's',
         ]);
     }
-    
+
+    // =========================================
+    // MODE: hotel_info_batched (Recommended)
+    // Batched hotel info sync with resume capability
+    // - First run: syncs all hotels (batched, resumable)
+    // - Daily: checks offers_update API for new/changed hotels
+    // - Full sync: every 6 months automatically
+    // =========================================
+    elseif ($mode == 'hotel_info_batched') {
+        echo "Batched Hotel Info Sync\n";
+        echo "========================\n\n";
+
+        // Load the batched sync helper
+        $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+        require_once($helpers_dir . 'BatchedHotelInfoSync.php');
+
+        $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
+
+        // Configure from request parameters
+        if (!empty($_REQUEST['batch_size'])) {
+            $sync->setBatchSize(intval($_REQUEST['batch_size']));
+        }
+        if (!empty($_REQUEST['max_time'])) {
+            $sync->setMaxExecutionTime(intval($_REQUEST['max_time']));
+        }
+
+        // Check status only
+        if (!empty($_REQUEST['status'])) {
+            $status = $sync->getStatus();
+            echo "Status: {$status['status']}\n";
+            if ($status['status'] === 'in_progress') {
+                echo "Sync Type: {$status['sync_type']}\n";
+                echo "Started: {$status['started_at']}\n";
+                echo "Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)\n";
+                echo "Synced: {$status['synced']}, Errors: {$status['errors']}\n";
+                echo "Elapsed: {$status['elapsed']}\n";
+                echo "ETA: {$status['eta']}\n";
+            } elseif ($status['status'] === 'idle') {
+                echo "Last Sync: " . ($status['last_sync'] ?? 'Never') . "\n";
+                echo "Last Type: {$status['last_sync_type']}\n";
+            }
+            exit;
+        }
+
+        // Determine options
+        $options = [];
+        if (!empty($_REQUEST['force_full'])) {
+            $options['force_full'] = true;
+            echo "Mode: FORCED FULL SYNC\n\n";
+        }
+        if (!empty($_REQUEST['reset'])) {
+            $options['reset'] = true;
+        }
+
+        // Run the sync
+        $result = $sync->run($options);
+
+        echo "\n";
+        echo "Result: {$result['status']}\n";
+
+        if ($result['status'] === 'in_progress') {
+            echo "Processed this run: " . ($result['synced_this_run'] ?? 0) . "\n";
+            echo "Total progress: {$result['processed']}/{$result['total']}\n";
+            echo "Remaining: {$result['remaining']}\n";
+            echo "Estimated runs remaining: {$result['estimated_runs_remaining']}\n";
+            echo "\nRun this cron again to continue.\n";
+        } elseif ($result['status'] === 'completed') {
+            echo "Total synced: {$result['synced']}\n";
+            echo "Errors: {$result['errors']}\n";
+            echo "Duration: " . round($result['duration'] / 60, 1) . " minutes\n";
+
+            // Send email report
+            fn_novoton_send_import_report_email([], 'hotel_info_batched', [
+                'sync_type' => $result['sync_type'],
+                'total'     => $result['total'],
+                'synced'    => $result['synced'],
+                'errors'    => $result['errors'],
+                'duration'  => round($result['duration'] / 60, 1) . ' min',
+            ]);
+        }
+    }
+
     // =========================================
     // MODE: hotel_info (Hotel accommodation)
     // Syncs hotel details (rooms, boards, packages) from hotelinfo API
@@ -1699,18 +1780,27 @@ try {
         $mode_found = false;
         echo "Unknown mode: {$mode}\n";
         echo "\nAvailable modes:\n";
+        echo "- hotel_info_batched: [RECOMMENDED] Batched hotel info sync with resume\n";
+        echo "    &status=1          - Check progress\n";
+        echo "    &force_full=1      - Force full sync (all hotels)\n";
+        echo "    &reset=1           - Reset/cancel in-progress sync\n";
+        echo "    &batch_size=100    - Hotels per batch (default: 100)\n";
+        echo "    &max_time=300      - Max seconds per run (default: 300)\n";
         echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
         echo "- sync_priceinfo: V3 priceinfo sync only (&force=1&limit=200)\n";
         echo "- resinfo: Check ASK bookings status\n";
         echo "- hotel_list: Hotel list sync from API\n";
-        echo "- hotel_info: Sync hotel accommodation (rooms, boards, packages)\n";
+        echo "- hotel_info: Sync hotel accommodation (legacy, no resume)\n";
         echo "- offers_update: Check for new/updated offers (&country=BULGARIA)\n";
         echo "- add_hotels_as_products: Add hotels as products\n";
         echo "- list_facilities: Sync facilities list from API\n";
-        echo "\nRecommended V3 workflow:\n";
-        echo "  1. sync_hotels (daily) - Full sync of hotels, packages, and prices\n";
-        echo "  2. sync_priceinfo (every 6h) - Update prices for existing packages\n";
-        echo "  3. offers_update (every 2h) - Track changed hotels\n";
+        echo "\nRecommended workflow:\n";
+        echo "  1. hotel_info_batched (daily) - Smart sync with resume\n";
+        echo "     - First run: syncs all hotels (batched)\n";
+        echo "     - Daily: only new/changed hotels from offers_update\n";
+        echo "     - Every 6 months: automatic full re-sync\n";
+        echo "  2. sync_priceinfo (every 6h) - Update prices for packages\n";
+        echo "  3. list_facilities (weekly) - Sync facilities list\n";
     }
     
 } catch (Exception $e) {

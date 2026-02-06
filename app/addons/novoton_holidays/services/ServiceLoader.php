@@ -55,7 +55,7 @@ foreach (['HotelRepository', 'BookingRepository', 'FacilityRepository', 'SyncLog
 }
 
 // Load helpers
-foreach (['DatabaseIterator'] as $class) {
+foreach (['DatabaseIterator', 'BatchedHotelInfoSync'] as $class) {
     $file = $helpers_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Helpers\\{$class}")) {
         require_once $file;
@@ -220,4 +220,20 @@ function _nvt_db_iterator() {
         $instance = new DatabaseIterator();
     }
     return $instance;
+}
+
+/**
+ * Get BatchedHotelInfoSync instance
+ * Handles batched hotel info synchronization with resume capability
+ *
+ * Usage:
+ *   $sync = _nvt_batched_hotelinfo_sync();
+ *   $result = $sync->run();              // Auto-detect sync type
+ *   $result = $sync->run(['force_full' => true]); // Force full sync
+ *   $status = $sync->getStatus();        // Check progress
+ *
+ * @return \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync
+ */
+function _nvt_batched_hotelinfo_sync() {
+    return new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
 }
