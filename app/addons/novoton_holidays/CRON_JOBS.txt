@@ -75,12 +75,17 @@ Parameters:
   &reset=1           Cancel/reset in-progress sync
   &batch_size=N      Hotels per batch (default: 100, shared hosting: 50)
   &max_time=N        Max seconds per run (default: 300, shared hosting: 120)
+  &unlimited=1       No time limit - processes ALL hotels in one run (CLI usage)
 
 Examples:
   mode=hotel_info_batched                              # Auto-detect sync type
   mode=hotel_info_batched&status=1                     # Check progress
   mode=hotel_info_batched&force_full=1                 # Force full sync
   mode=hotel_info_batched&batch_size=50&max_time=120   # Shared hosting settings
+  mode=hotel_info_batched&unlimited=1&force_full=1     # CLI: full sync, no time limit
+
+CLI PHP usage:
+  php index.php dispatch=novoton_cron.run access_key=KEY mode=hotel_info_batched unlimited=1 force_full=1
 
 Crontab:
   */5 * * * * curl -s "...&mode=hotel_info_batched&batch_size=50&max_time=120"
@@ -105,12 +110,17 @@ Parameters:
   &batch_size=N      Packages per batch (default: 50, shared hosting: 30)
   &max_time=N        Max seconds per run (default: 300, shared hosting: 120)
   &stale_hours=N     Re-sync packages older than N hours (default: 24)
+  &unlimited=1       No time limit - processes ALL packages in one run (CLI usage)
 
 Examples:
   mode=sync_priceinfo_batched                              # Auto-detect sync type
   mode=sync_priceinfo_batched&status=1                     # Check progress
   mode=sync_priceinfo_batched&force_full=1                 # Force full sync
   mode=sync_priceinfo_batched&batch_size=30&max_time=120   # Shared hosting settings
+  mode=sync_priceinfo_batched&unlimited=1&force_full=1     # CLI: full sync, no time limit
+
+CLI PHP usage:
+  php index.php dispatch=novoton_cron.run access_key=KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
 
 Crontab:
   */5 * * * * curl -s "...&mode=sync_priceinfo_batched&batch_size=30&max_time=120"
@@ -299,6 +309,26 @@ offers_update           | 10-30s      | 0 */2 * * *    | LOW
 add_hotels_as_products  | 5-30min     | Manual/Daily   | LOW
 expire_requests         | 1-5s        | 0 0 * * *      | LOW
 sync_priceinfo          | Variable    | (Legacy)       | LOW
+
+
+================================================================================
+CLI PHP USAGE (Unlimited Mode)
+================================================================================
+
+For running from command line without time limits (processes everything in one run):
+
+# Full hotel info sync from CLI:
+cd /path/to/cscart
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=hotel_info_batched unlimited=1 force_full=1
+
+# Full priceinfo sync from CLI:
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
+
+Benefits of CLI with unlimited=1:
+  - No time limits - processes ALL items in one run
+  - No HTTP timeout issues
+  - Better for initial setup or full re-syncs
+  - Memory-efficient (still uses batched processing internally)
 
 
 ================================================================================

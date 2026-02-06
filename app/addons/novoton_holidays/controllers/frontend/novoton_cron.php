@@ -1001,6 +1001,10 @@ try {
         if (!empty($_REQUEST['max_time'])) {
             $sync->setMaxExecutionTime(intval($_REQUEST['max_time']));
         }
+        if (!empty($_REQUEST['unlimited'])) {
+            $sync->setUnlimited(true);
+            echo "Mode: UNLIMITED (no time limit - for CLI usage)\n\n";
+        }
 
         // Check status only
         if (!empty($_REQUEST['status'])) {
@@ -1680,6 +1684,10 @@ try {
         if (!empty($_REQUEST['stale_hours'])) {
             $sync->setStaleHours(intval($_REQUEST['stale_hours']));
         }
+        if (!empty($_REQUEST['unlimited'])) {
+            $sync->setUnlimited(true);
+            echo "Mode: UNLIMITED (no time limit - for CLI usage)\n\n";
+        }
 
         // Check status only
         if (!empty($_REQUEST['status'])) {
@@ -1871,6 +1879,7 @@ try {
         echo "    &reset=1           - Reset/cancel in-progress sync\n";
         echo "    &batch_size=100    - Hotels per batch (default: 100)\n";
         echo "    &max_time=300      - Max seconds per run (default: 300)\n";
+        echo "    &unlimited=1       - No time limit (for CLI PHP usage)\n";
         echo "- sync_priceinfo_batched: [RECOMMENDED] Batched priceinfo sync with resume\n";
         echo "    &status=1          - Check progress\n";
         echo "    &force_full=1      - Force full sync (all packages)\n";
@@ -1878,6 +1887,7 @@ try {
         echo "    &batch_size=50     - Packages per batch (default: 50)\n";
         echo "    &max_time=300      - Max seconds per run (default: 300)\n";
         echo "    &stale_hours=24    - Re-sync packages older than N hours\n";
+        echo "    &unlimited=1       - No time limit (for CLI PHP usage)\n";
         echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
         echo "- sync_priceinfo: Priceinfo sync (legacy, no resume, use batched)\n";
         echo "- resinfo: Check ASK bookings status\n";

@@ -44,6 +44,11 @@ class BatchedPriceInfoSync
     private int $max_execution_time = 300; // 5 minutes
 
     /**
+     * Unlimited mode - no time limit (for CLI usage)
+     */
+    private bool $unlimited = false;
+
+    /**
      * Stale threshold - packages older than this need re-sync (hours)
      */
     private int $stale_hours = 24;
@@ -108,6 +113,14 @@ class BatchedPriceInfoSync
     public function setStaleHours(int $hours): void
     {
         $this->stale_hours = max(1, min(168, $hours)); // 1 hour to 7 days
+    }
+
+    /**
+     * Set unlimited mode (no time limit - for CLI usage)
+     */
+    public function setUnlimited(bool $unlimited): void
+    {
+        $this->unlimited = $unlimited;
     }
 
     /**
@@ -222,19 +235,21 @@ class BatchedPriceInfoSync
         $now = date('Y-m-d H:i:s');
 
         while ($offset < $state['total']) {
-            // Check time limit
-            $elapsed = time() - $start_time;
-            if ($elapsed > $this->max_execution_time) {
-                $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
-                break;
+            // Check time limit (skip if unlimited mode)
+            if (!$this->unlimited) {
+                $elapsed = time() - $start_time;
+                if ($elapsed > $this->max_execution_time) {
+                    $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
+                    break;
+                }
             }
 
             // Get next batch
             $batch = array_slice($state['packages'], $offset, $this->batch_size);
 
             foreach ($batch as $pkg) {
-                // Check time limit within batch
-                if ((time() - $start_time) > $this->max_execution_time) {
+                // Check time limit within batch (skip if unlimited mode)
+                if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                     break 2; // Exit both loops
                 }
 

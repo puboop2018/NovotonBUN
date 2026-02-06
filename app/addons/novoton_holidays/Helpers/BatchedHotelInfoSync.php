@@ -45,6 +45,11 @@ class BatchedHotelInfoSync
     private int $max_execution_time = 300; // 5 minutes
 
     /**
+     * Unlimited mode - no time limit (for CLI usage)
+     */
+    private bool $unlimited = false;
+
+    /**
      * Full sync interval (seconds) - 6 months
      */
     private int $full_sync_interval = 180 * 24 * 3600; // 180 days
@@ -96,6 +101,14 @@ class BatchedHotelInfoSync
     public function setMaxExecutionTime(int $seconds): void
     {
         $this->max_execution_time = max(60, min(3600, $seconds));
+    }
+
+    /**
+     * Set unlimited mode (no time limit - for CLI usage)
+     */
+    public function setUnlimited(bool $unlimited): void
+    {
+        $this->unlimited = $unlimited;
     }
 
     /**
@@ -205,19 +218,21 @@ class BatchedHotelInfoSync
         $now = date('Y-m-d H:i:s');
 
         while ($offset < $state['total']) {
-            // Check time limit
-            $elapsed = time() - $start_time;
-            if ($elapsed > $this->max_execution_time) {
-                $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
-                break;
+            // Check time limit (skip if unlimited mode)
+            if (!$this->unlimited) {
+                $elapsed = time() - $start_time;
+                if ($elapsed > $this->max_execution_time) {
+                    $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
+                    break;
+                }
             }
 
             // Get next batch
             $batch = array_slice($state['hotel_ids'], $offset, $this->batch_size);
 
             foreach ($batch as $hotel_id) {
-                // Check time limit within batch
-                if ((time() - $start_time) > $this->max_execution_time) {
+                // Check time limit within batch (skip if unlimited mode)
+                if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                     break 2; // Exit both loops
                 }
 
