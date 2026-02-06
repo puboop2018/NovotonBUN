@@ -5,35 +5,52 @@ Version: 2.9.0
 Last Updated: 2024-02-06
 
 ================================================================================
+WHERE TO FIND YOUR CRON URLS
+================================================================================
+
+Your actual cron URLs are displayed in the CS-Cart admin panel:
+
+  Admin → Novoton Holidays → Dashboard → [C] Cron URLs section
+
+The URLs include your site domain and access key automatically.
+Copy them directly from there for use in cPanel.
+
+
+================================================================================
 BASE URL FORMAT
 ================================================================================
 
-https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=MODE_NAME
+{SITE_URL}/index.php?dispatch=novoton_cron.run&access_key={ACCESS_KEY}&mode=MODE_NAME
 
-Replace:
-  - yoursite.com     → Your domain
-  - YOUR_KEY         → Cron access key from addon settings
-  - MODE_NAME        → One of the modes listed below
+Where:
+  {SITE_URL}     → Your site URL (e.g., https://example.com)
+  {ACCESS_KEY}   → Cron access key from: Admin → Addons → Novoton Holidays → Settings
+  MODE_NAME      → One of the modes listed below
+
+Note: The complete URLs with your domain and key are shown in:
+      Admin → Novoton Holidays → Dashboard → Cron URLs
 
 
 ================================================================================
 RECOMMENDED CRON SCHEDULE (cPanel / Shared Hosting)
 ================================================================================
 
+Copy URLs from Admin Dashboard, then add to cPanel like this:
+
 # Hotel Info - Smart batched sync (every 5 minutes)
-*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=KEY&mode=hotel_info_batched&batch_size=50&max_time=120" > /dev/null 2>&1
+*/5 * * * * curl -s "{YOUR_HOTEL_INFO_BATCHED_URL}&batch_size=50&max_time=120" > /dev/null 2>&1
 
 # Price Info - Update package prices (every 6 hours)
-0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=KEY&mode=sync_priceinfo&limit=200" > /dev/null 2>&1
+0 */6 * * * curl -s "{YOUR_SYNC_PRICEINFO_URL}&limit=200" > /dev/null 2>&1
 
 # Hotel List - Sync hotel list from API (daily at 2 AM)
-0 2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=KEY&mode=hotel_list" > /dev/null 2>&1
+0 2 * * * curl -s "{YOUR_HOTEL_LIST_URL}" > /dev/null 2>&1
 
 # Facilities - Sync facilities list (weekly on Sunday at 3 AM)
-0 3 * * 0 curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=KEY&mode=list_facilities" > /dev/null 2>&1
+0 3 * * 0 curl -s "{YOUR_LIST_FACILITIES_URL}" > /dev/null 2>&1
 
 # Booking Status - Check ASK bookings (every 2 hours)
-0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=KEY&mode=resinfo" > /dev/null 2>&1
+0 */2 * * * curl -s "{YOUR_RESINFO_URL}" > /dev/null 2>&1
 
 
 ================================================================================
