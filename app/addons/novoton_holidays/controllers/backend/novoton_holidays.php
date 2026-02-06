@@ -221,6 +221,7 @@ if ($mode == 'manage' || empty($mode)) {
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+        'exchange_rates' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=exchange_rates",
     ];
     
     // Assign to view

@@ -978,6 +978,60 @@ try {
     }
 
     // =========================================
+    // MODE: exchange_rates
+    // Update currency exchange rates from BNR
+    // =========================================
+    elseif ($mode == 'exchange_rates') {
+        echo "Exchange Rates Update (BNR)\n";
+        echo "===========================\n\n";
+
+        // Call the exchange rate update function
+        $result = fn_novoton_update_exchange_rates(true);
+
+        echo "Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED') . "\n";
+        echo "Message: " . $result['message'] . "\n\n";
+
+        if (!empty($result['bnr_rates'])) {
+            echo "BNR Rates (RON-based):\n";
+            foreach ($result['bnr_rates'] as $currency => $rate) {
+                echo "  {$currency}: {$rate}\n";
+            }
+            echo "\n";
+        }
+
+        if (!empty($result['coefficients'])) {
+            $commission = $result['commission'] ?? 0;
+            echo "Calculated Coefficients (EUR-based, commission: {$commission}%):\n";
+            foreach ($result['coefficients'] as $currency => $coefficient) {
+                echo "  {$currency}: {$coefficient}\n";
+            }
+            echo "\n";
+        }
+
+        if (!empty($result['updates'])) {
+            echo "Update Results:\n";
+            foreach ($result['updates'] as $currency => $update) {
+                if ($update['success']) {
+                    $old = $update['old_rate'] ?? '-';
+                    $new = $update['new_rate'] ?? '-';
+                    echo "  {$currency}: {$old} -> {$new}\n";
+                } else {
+                    $error = $update['error'] ?? 'Unknown error';
+                    echo "  {$currency}: FAILED - {$error}\n";
+                }
+            }
+        }
+
+        // Log to sync_log table
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'exchange_rates', sync_date = NOW(),
+             products_updated = ?i, duration_seconds = ?i, status = ?s",
+            count($result['updates'] ?? []), $duration, $result['success'] ? 'completed' : 'failed'
+        );
+    }
+
+    // =========================================
     // MODE: hotel_info_batched (Recommended)
     // Batched hotel info sync with resume capability
     // - First run: syncs all hotels (batched, resumable)
@@ -1178,6 +1232,7 @@ try {
         echo "- offers_update: Check for new/updated offers (&country=BULGARIA)\n";
         echo "- add_hotels_as_products: Add hotels as products\n";
         echo "- list_facilities: Sync facilities list from API\n";
+        echo "- exchange_rates: Update currency rates from BNR (daily)\n";
         echo "\nRecommended workflow:\n";
         echo "  1. hotel_info_batched (every 5 min) - Smart hotel info sync with resume\n";
         echo "     - First run: syncs all hotels (batched)\n";
@@ -1188,6 +1243,7 @@ try {
         echo "     - Daily: only stale packages (older than 24h)\n";
         echo "     - Every 7 days: automatic full re-sync\n";
         echo "  3. list_facilities (weekly) - Sync facilities list\n";
+        echo "  4. exchange_rates (daily) - Update BNR exchange rates\n";
     }
     
 } catch (Exception $e) {

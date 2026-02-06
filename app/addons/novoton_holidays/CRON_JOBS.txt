@@ -164,6 +164,37 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
+MODE: exchange_rates
+--------------------------------------------------------------------------------
+Description: Update currency exchange rates from BNR (National Bank of Romania)
+Duration:    2-5 seconds
+Frequency:   Daily (once per day, after BNR publishes new rates ~1:00 PM)
+
+What it does:
+  - Fetches latest exchange rates from BNR XML API
+  - Calculates EUR-based coefficients for RON, USD, GBP
+  - Applies commission percentage from addon settings
+  - Updates CS-Cart currency coefficients
+
+Output example:
+  BNR Rates (RON-based):
+    EUR: 4.9750
+    USD: 4.5680
+    GBP: 5.8420
+
+  Calculated Coefficients (EUR-based, commission: 1.8%):
+    RON: 5.0645
+    USD: 0.9178
+    GBP: 1.1734
+
+Parameters:
+  (none)
+
+Crontab:
+  0 14 * * * curl -s "...&mode=exchange_rates"
+
+
+--------------------------------------------------------------------------------
 MODE: offers_update
 --------------------------------------------------------------------------------
 Description: Check for new/updated hotel offers
@@ -281,6 +312,7 @@ hotel_info_batched      | 5 min/run   | */5 * * * *    | HIGH
 sync_priceinfo_batched  | 5 min/run   | */5 * * * *    | HIGH
 hotel_list              | 10-30s      | 0 2 * * *      | MEDIUM
 resinfo                 | 5-15s       | 0 */2 * * *    | MEDIUM
+exchange_rates          | 2-5s        | 0 8 * * *      | MEDIUM
 list_facilities         | 5-10s       | 0 3 * * 0      | LOW
 offers_update           | 10-30s      | 0 */2 * * *    | LOW
 add_hotels_as_products  | 5-30min     | Manual/Daily   | LOW
