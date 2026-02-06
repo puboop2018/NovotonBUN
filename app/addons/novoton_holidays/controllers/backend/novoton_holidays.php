@@ -212,15 +212,17 @@ if ($mode == 'manage' || empty($mode)) {
     $cron_key = $addon_settings['cron_access_key'] ?? '';
     $base_url = Registry::get('config.http_location') . '/';
     
-    // V3 Architecture cron URLs
+    // Cron URLs - organized by priority
     $cron_urls = [
-        'sync_hotels' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_hotels",
-        'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
-        'hotel_info' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info",
+        // Recommended batched sync (with resume)
+        'hotel_info_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info_batched",
+        'sync_priceinfo_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo_batched",
+        // Other sync modes (legacy)
         'sync_priceinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo",
-        'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
+        'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
         'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
+        'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
     ];
     

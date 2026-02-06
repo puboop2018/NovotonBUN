@@ -1,0 +1,410 @@
+================================================================================
+NOVOTON HOLIDAYS ADDON - CRON JOBS & MODES REFERENCE
+================================================================================
+Version: 2.9.0
+Last Updated: 2024-02-06
+
+================================================================================
+WHERE TO FIND YOUR CRON URLS
+================================================================================
+
+Your actual cron URLs are displayed in the CS-Cart admin panel:
+
+  Admin → Novoton Holidays → Dashboard → [C] Cron URLs section
+
+The URLs include your site domain and access key automatically.
+Copy them directly from there for use in cPanel.
+
+
+================================================================================
+BASE URL FORMAT
+================================================================================
+
+{SITE_URL}/index.php?dispatch=novoton_cron.run&access_key={ACCESS_KEY}&mode=MODE_NAME
+
+Where:
+  {SITE_URL}     → Your site URL (e.g., https://example.com)
+  {ACCESS_KEY}   → Cron access key from: Admin → Addons → Novoton Holidays → Settings
+  MODE_NAME      → One of the modes listed below
+
+Note: The complete URLs with your domain and key are shown in:
+      Admin → Novoton Holidays → Dashboard → Cron URLs
+
+
+================================================================================
+RECOMMENDED CRON SCHEDULE (cPanel / Shared Hosting)
+================================================================================
+
+Copy URLs from Admin Dashboard, then add to cPanel like this:
+
+# Hotel Info - Smart batched sync (every 5 minutes)
+*/5 * * * * curl -s "{YOUR_HOTEL_INFO_BATCHED_URL}&batch_size=50&max_time=120" > /dev/null 2>&1
+
+# Price Info - Smart batched sync (every 5 minutes)
+*/5 * * * * curl -s "{YOUR_SYNC_PRICEINFO_BATCHED_URL}&batch_size=30&max_time=120" > /dev/null 2>&1
+
+# Hotel List - Sync hotel list from API (daily at 2 AM)
+0 2 * * * curl -s "{YOUR_HOTEL_LIST_URL}" > /dev/null 2>&1
+
+# Facilities - Sync facilities list (weekly on Sunday at 3 AM)
+0 3 * * 0 curl -s "{YOUR_LIST_FACILITIES_URL}" > /dev/null 2>&1
+
+# Booking Status - Check ASK bookings (every 2 hours)
+0 */2 * * * curl -s "{YOUR_RESINFO_URL}" > /dev/null 2>&1
+
+
+================================================================================
+ALL AVAILABLE MODES
+================================================================================
+
+--------------------------------------------------------------------------------
+MODE: hotel_info_batched [RECOMMENDED]
+--------------------------------------------------------------------------------
+Description: Smart batched hotel info sync with resume capability
+Duration:    5 minutes per run (configurable)
+Frequency:   Every 5 minutes (self-manages when to sync)
+
+Behavior:
+  - First run: Syncs ALL hotels in batches (resumable if interrupted)
+  - Daily: Checks offers_update API, syncs only new/changed hotels
+  - Every 6 months: Automatic full re-sync
+
+Parameters:
+  &status=1          Check current progress (no processing)
+  &force_full=1      Force full sync of all hotels
+  &reset=1           Cancel/reset in-progress sync
+  &batch_size=N      Hotels per batch (default: 100, shared hosting: 50)
+  &max_time=N        Max seconds per run (default: 300, shared hosting: 120)
+  &unlimited=1       No time limit - processes ALL hotels in one run (CLI usage)
+
+Examples:
+  mode=hotel_info_batched                              # Auto-detect sync type
+  mode=hotel_info_batched&status=1                     # Check progress
+  mode=hotel_info_batched&force_full=1                 # Force full sync
+  mode=hotel_info_batched&batch_size=50&max_time=120   # Shared hosting settings
+  mode=hotel_info_batched&unlimited=1&force_full=1     # CLI: full sync, no time limit
+
+CLI PHP usage:
+  php index.php dispatch=novoton_cron.run access_key=KEY mode=hotel_info_batched unlimited=1 force_full=1
+
+Crontab:
+  */5 * * * * curl -s "...&mode=hotel_info_batched&batch_size=50&max_time=120"
+
+
+--------------------------------------------------------------------------------
+MODE: sync_priceinfo_batched [RECOMMENDED]
+--------------------------------------------------------------------------------
+Description: Smart batched priceinfo sync with resume capability
+Duration:    5 minutes per run (configurable)
+Frequency:   Every 5 minutes (self-manages when to sync)
+
+Behavior:
+  - First run: Syncs ALL packages in batches (resumable if interrupted)
+  - Daily: Re-syncs stale packages (older than 24 hours)
+  - Every 7 days: Automatic full re-sync
+
+Parameters:
+  &status=1          Check current progress (no processing)
+  &force_full=1      Force full sync of all packages
+  &reset=1           Cancel/reset in-progress sync
+  &batch_size=N      Packages per batch (default: 50, shared hosting: 30)
+  &max_time=N        Max seconds per run (default: 300, shared hosting: 120)
+  &stale_hours=N     Re-sync packages older than N hours (default: 24)
+  &unlimited=1       No time limit - processes ALL packages in one run (CLI usage)
+
+Examples:
+  mode=sync_priceinfo_batched                              # Auto-detect sync type
+  mode=sync_priceinfo_batched&status=1                     # Check progress
+  mode=sync_priceinfo_batched&force_full=1                 # Force full sync
+  mode=sync_priceinfo_batched&batch_size=30&max_time=120   # Shared hosting settings
+  mode=sync_priceinfo_batched&unlimited=1&force_full=1     # CLI: full sync, no time limit
+
+CLI PHP usage:
+  php index.php dispatch=novoton_cron.run access_key=KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
+
+Crontab:
+  */5 * * * * curl -s "...&mode=sync_priceinfo_batched&batch_size=30&max_time=120"
+
+
+--------------------------------------------------------------------------------
+MODE: hotel_list
+--------------------------------------------------------------------------------
+Description: Sync hotel list from Novoton API (basic hotel data)
+Duration:    10-30 seconds
+Frequency:   Daily
+
+What it syncs:
+  - Hotel ID, name, city, region, country
+  - Hotel type, coordinates
+  - Does NOT sync detailed info (rooms, boards, packages)
+
+Parameters:
+  (none)
+
+Crontab:
+  0 2 * * * curl -s "...&mode=hotel_list"
+
+
+--------------------------------------------------------------------------------
+MODE: sync_priceinfo [LEGACY - Use sync_priceinfo_batched instead]
+--------------------------------------------------------------------------------
+Description: Sync price info for hotel packages (no resume capability)
+Duration:    Variable (depends on package count)
+Frequency:   Every 6 hours
+
+NOTE: This is the legacy mode. Use sync_priceinfo_batched for better
+      performance with resume capability.
+
+What it syncs:
+  - Season prices
+  - Early booking discounts
+  - Minimum prices
+
+Parameters:
+  &force=1           Force re-sync all packages (ignore 24h cache)
+  &limit=N           Limit number of packages (default: 200)
+
+Crontab:
+  0 */6 * * * curl -s "...&mode=sync_priceinfo&limit=200"
+
+
+--------------------------------------------------------------------------------
+MODE: list_facilities
+--------------------------------------------------------------------------------
+Description: Sync facilities list from API
+Duration:    5-10 seconds
+Frequency:   Weekly
+
+What it syncs:
+  - Facility IDs and names
+  - Facility categories
+
+Parameters:
+  (none)
+
+Crontab:
+  0 3 * * 0 curl -s "...&mode=list_facilities"
+
+
+--------------------------------------------------------------------------------
+MODE: offers_update
+--------------------------------------------------------------------------------
+Description: Check for new/updated hotel offers
+Duration:    10-30 seconds
+Frequency:   Every 2 hours (optional)
+
+What it does:
+  - Calls offers_update API
+  - Identifies hotels with changed offers
+  - Can auto-add new hotels as products
+
+Parameters:
+  &country=COUNTRY   Filter by country (default: BULGARIA)
+
+Note: hotel_info_batched uses this internally for incremental sync.
+
+Crontab:
+  0 */2 * * * curl -s "...&mode=offers_update&country=BULGARIA"
+
+
+--------------------------------------------------------------------------------
+MODE: add_hotels_as_products
+--------------------------------------------------------------------------------
+Description: Add hotels with prices as CS-Cart products
+Duration:    5-30+ minutes
+Frequency:   As needed (manual or after hotel_list sync)
+
+What it does:
+  - Creates CS-Cart products for hotels with prices
+  - Downloads and attaches hotel images
+  - Syncs hotel facilities as product features
+
+Parameters:
+  &country=COUNTRY           Filter by country (default: BULGARIA)
+  &limit=N                   Limit number of hotels (0 = no limit)
+  &exclude_resorts=A,B,C     Exclude specific resorts/cities
+
+Crontab:
+  0 4 * * * curl -s "...&mode=add_hotels_as_products&country=BULGARIA"
+
+
+--------------------------------------------------------------------------------
+MODE: resinfo
+--------------------------------------------------------------------------------
+Description: Check status of ASK (on-request) bookings
+Duration:    5-15 seconds
+Frequency:   Every 2 hours
+
+What it does:
+  - Queries API for booking status updates
+  - Updates booking status (confirmed/cancelled)
+  - Processes up to 50 bookings per run
+
+Parameters:
+  (none)
+
+Crontab:
+  0 */2 * * * curl -s "...&mode=resinfo"
+
+
+--------------------------------------------------------------------------------
+MODE: room_price
+--------------------------------------------------------------------------------
+Description: Check which hotels have active prices
+Duration:    Variable (API call per hotel)
+Frequency:   Weekly or as needed
+
+Parameters:
+  &check_in=YYYY-MM-DD    Check-in date (default: +7 days)
+  &nights=N               Number of nights (default: 7)
+  &limit=N                Limit hotels to check (default: 500)
+  &country=COUNTRY        Filter by country
+
+Crontab:
+  0 5 * * 1 curl -s "...&mode=room_price&limit=500"
+
+
+--------------------------------------------------------------------------------
+MODE: alternative_rs
+--------------------------------------------------------------------------------
+Description: Check alternative offers for pending requests
+Duration:    Variable
+Frequency:   Every 4 hours
+
+What it does:
+  - Checks pending alternative requests older than 24 hours
+  - Fetches alternatives from API
+  - Sends email notifications to customers
+
+Crontab:
+  0 */4 * * * curl -s "...&mode=alternative_rs"
+
+
+--------------------------------------------------------------------------------
+MODE: expire_requests
+--------------------------------------------------------------------------------
+Description: Expire old alternative requests
+Duration:    1-5 seconds
+Frequency:   Daily
+
+Parameters:
+  &days=N              Expire requests older than N days (default: 30)
+
+Crontab:
+  0 0 * * * curl -s "...&mode=expire_requests&days=30"
+
+
+================================================================================
+QUICK REFERENCE TABLE
+================================================================================
+
+Mode                    | Duration    | Frequency      | Priority
+------------------------|-------------|----------------|----------
+hotel_info_batched      | 5 min/run   | */5 * * * *    | HIGH
+sync_priceinfo_batched  | 5 min/run   | */5 * * * *    | HIGH
+hotel_list              | 10-30s      | 0 2 * * *      | MEDIUM
+resinfo                 | 5-15s       | 0 */2 * * *    | MEDIUM
+list_facilities         | 5-10s       | 0 3 * * 0      | LOW
+offers_update           | 10-30s      | 0 */2 * * *    | LOW
+add_hotels_as_products  | 5-30min     | Manual/Daily   | LOW
+expire_requests         | 1-5s        | 0 0 * * *      | LOW
+sync_priceinfo          | Variable    | (Legacy)       | LOW
+
+
+================================================================================
+CLI PHP USAGE (Unlimited Mode)
+================================================================================
+
+For running from command line without time limits (processes everything in one run):
+
+# Full hotel info sync from CLI:
+cd /path/to/cscart
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=hotel_info_batched unlimited=1 force_full=1
+
+# Full priceinfo sync from CLI:
+php index.php dispatch=novoton_cron.run access_key=YOUR_KEY mode=sync_priceinfo_batched unlimited=1 force_full=1
+
+Benefits of CLI with unlimited=1:
+  - No time limits - processes ALL items in one run
+  - No HTTP timeout issues
+  - Better for initial setup or full re-syncs
+  - Memory-efficient (still uses batched processing internally)
+
+
+================================================================================
+SHARED HOSTING SETTINGS
+================================================================================
+
+For cPanel / shared hosting with limited resources:
+
+  batch_size=50      # Process fewer hotels per run
+  max_time=120       # Stop after 2 minutes (safe for most hosts)
+
+Example:
+  mode=hotel_info_batched&batch_size=50&max_time=120
+
+
+================================================================================
+MONITORING & STATUS
+================================================================================
+
+Check hotel info batched sync status:
+  curl "...&mode=hotel_info_batched&status=1"
+
+Check priceinfo batched sync status:
+  curl "...&mode=sync_priceinfo_batched&status=1"
+
+Output example:
+  Status: in_progress
+  Sync Type: full
+  Started: 2024-02-05 10:00:00
+  Progress: 1500/5000 (30%)
+  Synced: 1488, Errors: 12
+  Elapsed: 45m 30s
+  ETA: 1h 45m
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+1. Cron not running?
+   - Check access_key is correct
+   - Test URL in browser first
+   - Check cPanel cron logs
+
+2. Timeout errors?
+   - Reduce batch_size (try 25-50)
+   - Reduce max_time (try 60-120)
+   - Check PHP max_execution_time
+
+3. Memory errors?
+   - Reduce batch_size
+   - Check PHP memory_limit
+
+4. Stuck sync?
+   - Reset hotel info: mode=hotel_info_batched&reset=1
+   - Reset priceinfo: mode=sync_priceinfo_batched&reset=1
+   - Check state files: var/cache/novoton/batch_*_state.json
+
+5. API errors?
+   - Check API credentials in addon settings
+   - Verify API is accessible from server
+
+
+================================================================================
+FILE LOCATIONS
+================================================================================
+
+State files (batched sync):
+  var/cache/novoton/batch_hotelinfo_state.json
+  var/cache/novoton/batch_priceinfo_state.json
+
+Sync logs:
+  Database table: cscart_novoton_sync_log
+
+Cache files:
+  var/cache/novoton/
+
+
+================================================================================

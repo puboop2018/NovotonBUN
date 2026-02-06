@@ -160,69 +160,89 @@
     <div class="novoton-section">
         <h3>[C] Cron Job URLs</h3>
         {if $cron_key}
-        <p style="color: #666; margin-bottom: 15px;">Use these URLs in your server's crontab:</p>
-        
-        <p style="color: #28a745; margin-bottom: 10px;"><strong>V3 Architecture</strong> - Hotels, packages, and priceinfo stored in optimized tables</p>
+        <p style="color: #666; margin-bottom: 15px;">Copy these URLs for use in cPanel cron jobs or external cron services:</p>
+
+        {* Recommended Batched Sync - Highlighted *}
+        <div style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">RECOMMENDED</span>
+                <strong style="font-size: 16px;">Hotel Info Batched</strong>
+            </div>
+            <p style="color: #155724; margin-bottom: 10px; font-size: 13px;">
+                Smart sync with resume capability. First run syncs all hotels, then daily syncs only new/changed hotels.
+                Automatically does full re-sync every 6 months.
+            </p>
+            <div class="novoton-cron-url" style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 10px;">{$cron_urls.hotel_info_batched}</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{$cron_urls.hotel_info_batched}" target="_blank" class="novoton-btn novoton-btn-success">Run Now</a>
+                <a href="{$cron_urls.hotel_info_batched}&status=1" target="_blank" class="novoton-btn">Check Status</a>
+                <a href="{$cron_urls.hotel_info_batched}&force_full=1" target="_blank" class="novoton-btn">Force Full Sync</a>
+                <a href="{$cron_urls.hotel_info_batched}&reset=1" target="_blank" class="novoton-btn" style="background: #dc3545; color: white;">Reset</a>
+            </div>
+            <p style="color: #666; margin-top: 10px; font-size: 12px;">
+                <strong>cPanel:</strong> <code>*/5 * * * *</code> (every 5 min) |
+                <strong>Shared hosting:</strong> Add <code>&batch_size=50&max_time=120</code>
+            </p>
+        </div>
+
+        {* Recommended Batched Priceinfo Sync - Highlighted *}
+        <div style="background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%); border: 2px solid #0066cc; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="background: #0066cc; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">RECOMMENDED</span>
+                <strong style="font-size: 16px;">Price Info Batched</strong>
+            </div>
+            <p style="color: #004085; margin-bottom: 10px; font-size: 13px;">
+                Smart price sync with resume capability. Syncs all package prices in batches.
+                Automatically re-syncs stale packages (older than 24h) and does full re-sync every 7 days.
+            </p>
+            <div class="novoton-cron-url" style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 10px;">{$cron_urls.sync_priceinfo_batched}</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{$cron_urls.sync_priceinfo_batched}" target="_blank" class="novoton-btn" style="background: #0066cc;">Run Now</a>
+                <a href="{$cron_urls.sync_priceinfo_batched}&status=1" target="_blank" class="novoton-btn">Check Status</a>
+                <a href="{$cron_urls.sync_priceinfo_batched}&force_full=1" target="_blank" class="novoton-btn">Force Full Sync</a>
+                <a href="{$cron_urls.sync_priceinfo_batched}&reset=1" target="_blank" class="novoton-btn" style="background: #dc3545; color: white;">Reset</a>
+            </div>
+            <p style="color: #666; margin-top: 10px; font-size: 12px;">
+                <strong>cPanel:</strong> <code>*/5 * * * *</code> (every 5 min) |
+                <strong>Shared hosting:</strong> Add <code>&batch_size=30&max_time=120</code>
+            </p>
+        </div>
+
+        {* Other Cron Jobs Table *}
+        <p style="color: #666; margin-bottom: 10px;"><strong>Other Cron Jobs:</strong></p>
         <table class="novoton-table">
             <tr>
-                <th style="width: 30px;">#</th>
                 <th style="width: 180px;">Job</th>
                 <th>URL</th>
-                <th style="width: 100px;">Recommended</th>
+                <th style="width: 100px;">Schedule</th>
                 <th style="width: 60px;">Run</th>
             </tr>
-            <tr style="background: #e8f5e9;">
-                <td>1</td>
-                <td><strong>Full Sync (V3)</strong><br><small style="color:#666;">hotel_list + hotelinfo + priceinfo</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.sync_hotels}</div></td>
-                <td>Daily 3 AM</td>
-                <td><a href="{$cron_urls.sync_hotels}" target="_blank" class="novoton-btn novoton-btn-success" style="font-size:11px;padding:4px 10px;">Run</a></td>
-            </tr>
             <tr>
-                <td>2</td>
-                <td><strong>Hotel List Only</strong></td>
+                <td><strong>Hotel List</strong><br><small style="color:#666;">Basic hotel data</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
-                <td>-</td>
+                <td>Daily</td>
                 <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
-                <td>3</td>
-                <td><strong>Hotelinfo Only</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.hotel_info}</div></td>
-                <td>-</td>
-                <td><a href="{$cron_urls.hotel_info}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td><strong>Priceinfo Only</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.sync_priceinfo}</div></td>
-                <td>Every 6 hours</td>
-                <td><a href="{$cron_urls.sync_priceinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-            </tr>
-            <tr>
-                <td>5</td>
-                <td><strong>Offers Update</strong></td>
-                <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
-                <td>Every 2 hours</td>
-                <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
-            </tr>
-            <tr>
-                <td>6</td>
-                <td><strong>Facilities</strong></td>
+                <td><strong>Facilities</strong><br><small style="color:#666;">Sync facilities list</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
                 <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
-                <td>7</td>
-                <td><strong>Booking Status</strong></td>
+                <td><strong>Booking Status</strong><br><small style="color:#666;">Check ASK bookings</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
-                <td>Every hour</td>
+                <td>Every 2 hours</td>
                 <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
-                <td>8</td>
-                <td><strong>Add Products</strong></td>
+                <td><strong>Offers Update</strong><br><small style="color:#666;">Check new offers</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
+                <td>Every 2 hours</td>
+                <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Add Products</strong><br><small style="color:#666;">Create CS-Cart products</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
                 <td>After sync</td>
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>

@@ -144,15 +144,14 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 
 | Mode | Sync Type | Description |
 |------|-----------|-------------|
+| `hotel_info_batched` | `hotelinfo` | **[RECOMMENDED]** Smart batched sync with resume |
 | `hotel_list` | `hotellist` | Sync hotel list from API |
-| `hotel_info` | `hotelinfo` | Sync hotel details (rooms, boards, packages) |
-| `room_price` | `prices` | Check which hotels have active prices |
-| `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
-| `list_facilities` | `facilities` | Update hotel facilities list |
-| `add_hotels_as_products` | - | Import hotels as CS-Cart products |
-| `sync_hotels` | `sync_hotels` | Full V3 hotel sync |
 | `sync_priceinfo` | `sync_priceinfo` | Sync price info for packages |
+| `list_facilities` | `facilities` | Update hotel facilities list |
 | `resinfo` | `resinfo` | Check ASK bookings status |
+| `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
+| `add_hotels_as_products` | - | Import hotels as CS-Cart products |
+| `room_price` | `prices` | Check which hotels have active prices |
 
 ### Cron URL Examples
 
@@ -163,18 +162,21 @@ Syncs basic hotel information from Novoton API.
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list"
 ```
 
-#### 2. Hotel Info Sync
-Syncs detailed hotel data (rooms, boards, packages).
+#### 2. Hotel Info Batched Sync (Recommended)
+Smart sync with resume capability. First run syncs all hotels, then daily syncs only new/changed hotels.
 
 ```bash
-# All countries
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info"
+# Auto-detect sync type (recommended)
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched"
 
-# With limit
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info&limit=100"
+# Check progress
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&status=1"
 
-# Force full sync
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info&force=1"
+# Force full sync (all hotels)
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&force_full=1"
+
+# Shared hosting settings (smaller batches, shorter timeout)
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&batch_size=50&max_time=120"
 ```
 
 #### 3. Price Check
@@ -216,17 +218,17 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 ### Recommended Crontab
 
 ```crontab
+# Hotel Info Batched - every 5 minutes (self-manages sync type)
+*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched" > /dev/null 2>&1
+
+# Sync Priceinfo - every 6 hours
+0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo&limit=200" > /dev/null 2>&1
+
 # Hotel list sync - daily at 2 AM
 0 2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list" > /dev/null 2>&1
 
-# Hotel info sync - daily at 3 AM
-0 3 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info" > /dev/null 2>&1
-
-# Price check - every 6 hours
-0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=room_price" > /dev/null 2>&1
-
-# Offers update - every 2 hours
-0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=offers_update" > /dev/null 2>&1
+# Booking status check - every 2 hours
+0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=resinfo" > /dev/null 2>&1
 
 # Facilities sync - weekly on Sunday at 4 AM
 0 4 * * 0 curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=list_facilities" > /dev/null 2>&1
