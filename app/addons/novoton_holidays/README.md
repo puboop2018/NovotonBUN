@@ -1,6 +1,6 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.2
+**Version:** 2.9.3
 **Last Updated:** February 6, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
@@ -639,6 +639,12 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 2.9.3 (February 6, 2026)
+- **Removed:** Legacy `hotel_info` mode - use `hotel_info_batched` instead
+- **Removed:** Legacy `sync_hotels` mode - use batched modes instead
+- **Removed:** Legacy `check_packages` mode - redundant with `hotel_info_batched`
+- **Simplified:** Cron architecture now uses only batched modes with resume capability
 
 ### Version 2.9.2 (February 6, 2026)
 - **Removed:** Legacy `sync_priceinfo` mode - use `sync_priceinfo_batched` instead
