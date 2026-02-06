@@ -40,8 +40,8 @@ Copy URLs from Admin Dashboard, then add to cPanel like this:
 # Hotel Info - Smart batched sync (every 5 minutes)
 */5 * * * * curl -s "{YOUR_HOTEL_INFO_BATCHED_URL}&batch_size=50&max_time=120" > /dev/null 2>&1
 
-# Price Info - Update package prices (every 6 hours)
-0 */6 * * * curl -s "{YOUR_SYNC_PRICEINFO_URL}&limit=200" > /dev/null 2>&1
+# Price Info - Smart batched sync (every 5 minutes)
+*/5 * * * * curl -s "{YOUR_SYNC_PRICEINFO_BATCHED_URL}&batch_size=30&max_time=120" > /dev/null 2>&1
 
 # Hotel List - Sync hotel list from API (daily at 2 AM)
 0 2 * * * curl -s "{YOUR_HOTEL_LIST_URL}" > /dev/null 2>&1
@@ -87,6 +87,36 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
+MODE: sync_priceinfo_batched [RECOMMENDED]
+--------------------------------------------------------------------------------
+Description: Smart batched priceinfo sync with resume capability
+Duration:    5 minutes per run (configurable)
+Frequency:   Every 5 minutes (self-manages when to sync)
+
+Behavior:
+  - First run: Syncs ALL packages in batches (resumable if interrupted)
+  - Daily: Re-syncs stale packages (older than 24 hours)
+  - Every 7 days: Automatic full re-sync
+
+Parameters:
+  &status=1          Check current progress (no processing)
+  &force_full=1      Force full sync of all packages
+  &reset=1           Cancel/reset in-progress sync
+  &batch_size=N      Packages per batch (default: 50, shared hosting: 30)
+  &max_time=N        Max seconds per run (default: 300, shared hosting: 120)
+  &stale_hours=N     Re-sync packages older than N hours (default: 24)
+
+Examples:
+  mode=sync_priceinfo_batched                              # Auto-detect sync type
+  mode=sync_priceinfo_batched&status=1                     # Check progress
+  mode=sync_priceinfo_batched&force_full=1                 # Force full sync
+  mode=sync_priceinfo_batched&batch_size=30&max_time=120   # Shared hosting settings
+
+Crontab:
+  */5 * * * * curl -s "...&mode=sync_priceinfo_batched&batch_size=30&max_time=120"
+
+
+--------------------------------------------------------------------------------
 MODE: hotel_list
 --------------------------------------------------------------------------------
 Description: Sync hotel list from Novoton API (basic hotel data)
@@ -106,11 +136,14 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
-MODE: sync_priceinfo
+MODE: sync_priceinfo [LEGACY - Use sync_priceinfo_batched instead]
 --------------------------------------------------------------------------------
-Description: Sync price info for hotel packages
+Description: Sync price info for hotel packages (no resume capability)
 Duration:    Variable (depends on package count)
 Frequency:   Every 6 hours
+
+NOTE: This is the legacy mode. Use sync_priceinfo_batched for better
+      performance with resume capability.
 
 What it syncs:
   - Season prices
@@ -258,13 +291,14 @@ QUICK REFERENCE TABLE
 Mode                    | Duration    | Frequency      | Priority
 ------------------------|-------------|----------------|----------
 hotel_info_batched      | 5 min/run   | */5 * * * *    | HIGH
-sync_priceinfo          | Variable    | 0 */6 * * *    | HIGH
+sync_priceinfo_batched  | 5 min/run   | */5 * * * *    | HIGH
 hotel_list              | 10-30s      | 0 2 * * *      | MEDIUM
 resinfo                 | 5-15s       | 0 */2 * * *    | MEDIUM
 list_facilities         | 5-10s       | 0 3 * * 0      | LOW
 offers_update           | 10-30s      | 0 */2 * * *    | LOW
 add_hotels_as_products  | 5-30min     | Manual/Daily   | LOW
 expire_requests         | 1-5s        | 0 0 * * *      | LOW
+sync_priceinfo          | Variable    | (Legacy)       | LOW
 
 
 ================================================================================
@@ -284,8 +318,11 @@ Example:
 MONITORING & STATUS
 ================================================================================
 
-Check batched sync status:
+Check hotel info batched sync status:
   curl "...&mode=hotel_info_batched&status=1"
+
+Check priceinfo batched sync status:
+  curl "...&mode=sync_priceinfo_batched&status=1"
 
 Output example:
   Status: in_progress
@@ -316,8 +353,9 @@ TROUBLESHOOTING
    - Check PHP memory_limit
 
 4. Stuck sync?
-   - Reset with: mode=hotel_info_batched&reset=1
-   - Check state file: var/cache/novoton/batch_hotelinfo_state.json
+   - Reset hotel info: mode=hotel_info_batched&reset=1
+   - Reset priceinfo: mode=sync_priceinfo_batched&reset=1
+   - Check state files: var/cache/novoton/batch_*_state.json
 
 5. API errors?
    - Check API credentials in addon settings
@@ -328,8 +366,9 @@ TROUBLESHOOTING
 FILE LOCATIONS
 ================================================================================
 
-State file (batched sync):
+State files (batched sync):
   var/cache/novoton/batch_hotelinfo_state.json
+  var/cache/novoton/batch_priceinfo_state.json
 
 Sync logs:
   Database table: cscart_novoton_sync_log

@@ -1654,6 +1654,91 @@ try {
     }
 
     // =========================================
+    // MODE: sync_priceinfo_batched (Recommended)
+    // Batched priceinfo sync with resume capability
+    // - Syncs prices for all packages in batches
+    // - Full sync: every 7 days automatically
+    // - Incremental: stale packages (older than 24h)
+    // =========================================
+    elseif ($mode == 'sync_priceinfo_batched') {
+        echo "Batched Price Info Sync\n";
+        echo "========================\n\n";
+
+        // Load the batched sync helper
+        $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+        require_once($helpers_dir . 'BatchedPriceInfoSync.php');
+
+        $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSync();
+
+        // Configure from request parameters
+        if (!empty($_REQUEST['batch_size'])) {
+            $sync->setBatchSize(intval($_REQUEST['batch_size']));
+        }
+        if (!empty($_REQUEST['max_time'])) {
+            $sync->setMaxExecutionTime(intval($_REQUEST['max_time']));
+        }
+        if (!empty($_REQUEST['stale_hours'])) {
+            $sync->setStaleHours(intval($_REQUEST['stale_hours']));
+        }
+
+        // Check status only
+        if (!empty($_REQUEST['status'])) {
+            $status = $sync->getStatus();
+            echo "Status: {$status['status']}\n";
+            if ($status['status'] === 'in_progress') {
+                echo "Sync Type: {$status['sync_type']}\n";
+                echo "Started: {$status['started_at']}\n";
+                echo "Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)\n";
+                echo "Synced: {$status['synced']}, Errors: {$status['errors']}\n";
+                echo "Elapsed: {$status['elapsed']}\n";
+                echo "ETA: {$status['eta']}\n";
+            } elseif ($status['status'] === 'idle') {
+                echo "Last Sync: " . ($status['last_sync'] ?? 'Never') . "\n";
+                echo "Last Type: {$status['last_sync_type']}\n";
+                echo "Last Total: {$status['last_total']}\n";
+            }
+            exit;
+        }
+
+        // Determine options
+        $options = [];
+        if (!empty($_REQUEST['force_full'])) {
+            $options['force_full'] = true;
+            echo "Mode: FORCED FULL SYNC\n\n";
+        }
+        if (!empty($_REQUEST['reset'])) {
+            $options['reset'] = true;
+        }
+
+        // Run the sync
+        $result = $sync->run($options);
+
+        echo "\n";
+        echo "Result: {$result['status']}\n";
+
+        if ($result['status'] === 'in_progress') {
+            echo "Processed this run: " . ($result['synced_this_run'] ?? 0) . "\n";
+            echo "Total progress: {$result['processed']}/{$result['total']}\n";
+            echo "Remaining: {$result['remaining']}\n";
+            echo "Estimated runs remaining: {$result['estimated_runs_remaining']}\n";
+            echo "\nRun this cron again to continue.\n";
+        } elseif ($result['status'] === 'completed') {
+            echo "Total synced: {$result['synced']}\n";
+            echo "Errors: {$result['errors']}\n";
+            echo "Duration: " . round($result['duration'] / 60, 1) . " minutes\n";
+
+            // Send email report
+            fn_novoton_send_import_report_email([], 'sync_priceinfo_batched', [
+                'sync_type' => $result['sync_type'],
+                'total'     => $result['total'],
+                'synced'    => $result['synced'],
+                'errors'    => $result['errors'],
+                'duration'  => round($result['duration'] / 60, 1) . ' min',
+            ]);
+        }
+    }
+
+    // =========================================
     // MODE: sync_priceinfo (V3 - Priceinfo only)
     // =========================================
     elseif ($mode == 'sync_priceinfo') {
@@ -1786,8 +1871,15 @@ try {
         echo "    &reset=1           - Reset/cancel in-progress sync\n";
         echo "    &batch_size=100    - Hotels per batch (default: 100)\n";
         echo "    &max_time=300      - Max seconds per run (default: 300)\n";
+        echo "- sync_priceinfo_batched: [RECOMMENDED] Batched priceinfo sync with resume\n";
+        echo "    &status=1          - Check progress\n";
+        echo "    &force_full=1      - Force full sync (all packages)\n";
+        echo "    &reset=1           - Reset/cancel in-progress sync\n";
+        echo "    &batch_size=50     - Packages per batch (default: 50)\n";
+        echo "    &max_time=300      - Max seconds per run (default: 300)\n";
+        echo "    &stale_hours=24    - Re-sync packages older than N hours\n";
         echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
-        echo "- sync_priceinfo: V3 priceinfo sync only (&force=1&limit=200)\n";
+        echo "- sync_priceinfo: Priceinfo sync (legacy, no resume, use batched)\n";
         echo "- resinfo: Check ASK bookings status\n";
         echo "- hotel_list: Hotel list sync from API\n";
         echo "- hotel_info: Sync hotel accommodation (legacy, no resume)\n";
@@ -1795,11 +1887,14 @@ try {
         echo "- add_hotels_as_products: Add hotels as products\n";
         echo "- list_facilities: Sync facilities list from API\n";
         echo "\nRecommended workflow:\n";
-        echo "  1. hotel_info_batched (daily) - Smart sync with resume\n";
+        echo "  1. hotel_info_batched (every 5 min) - Smart hotel info sync with resume\n";
         echo "     - First run: syncs all hotels (batched)\n";
         echo "     - Daily: only new/changed hotels from offers_update\n";
         echo "     - Every 6 months: automatic full re-sync\n";
-        echo "  2. sync_priceinfo (every 6h) - Update prices for packages\n";
+        echo "  2. sync_priceinfo_batched (every 5 min) - Smart priceinfo sync with resume\n";
+        echo "     - First run: syncs all packages (batched)\n";
+        echo "     - Daily: only stale packages (older than 24h)\n";
+        echo "     - Every 7 days: automatic full re-sync\n";
         echo "  3. list_facilities (weekly) - Sync facilities list\n";
     }
     
