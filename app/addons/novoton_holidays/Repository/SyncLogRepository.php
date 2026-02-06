@@ -127,6 +127,43 @@ class SyncLogRepository
         }
         return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_sync_log");
     }
+
+    /**
+     * Find logs with pagination (for AJAX)
+     *
+     * @param int $page Current page (1-based)
+     * @param int $per_page Items per page
+     * @param string $type Optional sync type filter
+     * @return array ['items' => array, 'total' => int, 'pages' => int]
+     */
+    public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array
+    {
+        $page = max(1, $page);
+        $per_page = max(1, min(100, $per_page));
+        $offset = ($page - 1) * $per_page;
+
+        $where = '';
+        if (!empty($type)) {
+            $where = db_quote("WHERE sync_type = ?s", $type);
+        }
+
+        $items = db_get_array(
+            "SELECT * FROM ?:novoton_sync_log {$where} ORDER BY sync_date DESC LIMIT ?i OFFSET ?i",
+            $per_page,
+            $offset
+        );
+
+        $total = $this->count($type);
+        $pages = (int) ceil($total / $per_page);
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'pages' => $pages,
+            'page' => $page,
+            'per_page' => $per_page,
+        ];
+    }
     
     /**
      * Get sync statistics

@@ -727,12 +727,15 @@
                             </div>
                         {/if}
                         
-                        {if $result.terms_of_payment || $terms_of_payment}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.payment_terms_apply")|default:"Condiții de plată"}</div>
-                        {/if}
-                        
-                        {if $result.terms_of_cancellation || $terms_of_cancellation}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.cancellation_terms_apply")|default:"Politica de anulare"}</div>
+                        {$has_payment_terms = $result.terms_of_payment || $terms_of_payment}
+                        {$has_cancel_terms = $result.terms_of_cancellation || $terms_of_cancellation}
+
+                        {if $has_payment_terms && $has_cancel_terms}
+                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.payment_and_cancellation_terms_apply")}</div>
+                        {elseif $has_payment_terms}
+                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.payment_terms_apply")}</div>
+                        {elseif $has_cancel_terms}
+                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.cancellation_terms_apply")}</div>
                         {/if}
                         
                         {if $result.remark || $result.more_info || $result.important}

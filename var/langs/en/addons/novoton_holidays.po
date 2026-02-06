@@ -120,6 +120,10 @@ msgctxt "Languages::novoton_holidays.last_update"
 msgid "Last Update"
 msgstr "Last Update"
 
+msgctxt "Languages::novoton_holidays.currency_risk_commission"
+msgid "Currency Risk Commission"
+msgstr "Currency Risk Commission"
+
 msgctxt "Languages::novoton_holidays.data_source"
 msgid "Data Source"
 msgstr "Data Source"
@@ -208,9 +212,49 @@ msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
 msgid "Exchange Rates Help"
 msgstr "Exchange Rates Help"
 
+msgctxt "Languages::menu.novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Hotel Bookings"
+
+msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Alternative Requests"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_sync"
+msgid "Hotels Sync"
+msgstr "Hotels Sync"
+
+msgctxt "Languages::menu.novoton_holidays_menu.room_price"
+msgid "Room Price Check"
+msgstr "Room Price Check"
+
+msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
+msgid "Add Hotels as Products"
+msgstr "Add Hotels as Products"
+
+msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
+msgid "Facilities"
+msgstr "Facilities"
+
 msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
 msgid "Exchange Rates"
 msgstr "Exchange Rates"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_diagnostic"
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_hotel_request"
+msgid "Test Hotel Request"
+msgstr "Test Hotel Request"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_alternative_rs"
+msgid "Test Alternative RS"
+msgstr "Test Alternative RS"
 
 msgctxt "SettingsOptions::novoton_holidays::selected_countries"
 msgid "Selected Countries"
@@ -1563,6 +1607,10 @@ msgstr "Payment terms apply"
 msgctxt "Languages::novoton_holidays.cancellation_terms_apply"
 msgid "Cancellation terms apply"
 msgstr "Cancellation terms apply"
+
+msgctxt "Languages::novoton_holidays.payment_and_cancellation_terms_apply"
+msgid "Payment and cancellation terms apply"
+msgstr "Payment and cancellation terms apply"
 
 msgctxt "Languages::novoton_holidays.includes_taxes"
 msgid "Includes taxes and charges"

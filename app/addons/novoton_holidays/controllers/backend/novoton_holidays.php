@@ -52,6 +52,8 @@ if (in_array($mode, $hotels_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 if (in_array($mode, $prices_modes)) {
@@ -59,6 +61,8 @@ if (in_array($mode, $prices_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 if (in_array($mode, $tools_modes)) {
@@ -66,6 +70,8 @@ if (in_array($mode, $tools_modes)) {
     if (is_array($__result)) {
         return $__result;
     }
+    // Sub-controller handled the mode - don't continue to other handlers
+    return;
 }
 
 // ============================================================================
@@ -193,10 +199,13 @@ if ($mode == 'manage' || empty($mode)) {
     
     // Last sync dates by type
     $last_syncs = [
-        'resinfo' => $syncLogRepo->getLastSyncDate('resinfo'),
+        'hotellist' => $syncLogRepo->getLastSyncDate('hotellist'),
+        'hotelinfo' => $syncLogRepo->getLastSyncDate('hotelinfo'),
         'prices' => $syncLogRepo->getLastSyncDate('prices'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
+        'sync_hotels' => $syncLogRepo->getLastSyncDate('sync_hotels'),
+        'sync_priceinfo' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
     ];
     
     // Build cron URLs

@@ -13,7 +13,10 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 use Tygh\Registry;
 
 /**
- * Format date using CS-Cart's default date format from settings
+ * Format date using CS-Cart's date format from Admin > Settings > Appearance
+ *
+ * Uses Registry::get('settings.Appearance.date_format') for consistent formatting
+ * across the entire store.
  *
  * @param string|int $date Date string or timestamp
  * @return string Formatted date
@@ -30,23 +33,22 @@ function fn_novoton_format_date($date)
         return $date;
     }
 
-    // Get CS-Cart date format from settings
+    // Get date format from CS-Cart settings (Admin > Settings > Appearance > Date format)
     $date_format = Registry::get('settings.Appearance.date_format');
+
+    // Fallback to DD.MM.YYYY if not set
     if (empty($date_format)) {
-        $date_format = '%d.%m.%Y'; // fallback
+        $date_format = '%d.%m.%Y';
     }
 
-    // Use CS-Cart's fn_date_format function
-    if (function_exists('fn_date_format')) {
-        return fn_date_format($timestamp, $date_format);
-    }
-
-    // Fallback to PHP date with converted format
+    // CS-Cart uses strftime format (%d, %m, %Y), convert to PHP date format
+    // Common CS-Cart formats: %d/%m/%Y, %m/%d/%Y, %d.%m.%Y, %Y-%m-%d
     $php_format = str_replace(
-        ['%d', '%m', '%Y', '%y', '%B', '%b'],
-        ['d', 'm', 'Y', 'y', 'F', 'M'],
+        ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a'],
+        ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D'],
         $date_format
     );
+
     return date($php_format, $timestamp);
 }
 

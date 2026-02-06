@@ -1,8 +1,8 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.8.0-A80D  
-**Last Updated:** January 30, 2026  
-**Compatibility:** CS-Cart 4.x  
+**Version:** 2.9.0
+**Last Updated:** February 5, 2026
+**Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
 
 Complete hotel booking integration with Novoton XML API for CS-Cart.
@@ -14,6 +14,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - [Configuration](#configuration)
 - [Admin Panel Pages](#admin-panel-pages)
 - [Cron Jobs](#cron-jobs)
+- [Exchange Rates](#exchange-rates)
 - [API Functions](#api-functions)
 - [Database Schema](#database-schema)
 - [Architecture](#architecture)
@@ -45,16 +46,18 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - Room Type with package name, MoreInfo, and Important warnings
 - Board name formatting (Ultra All Inclusive, All Inclusive, etc.)
 - Choices column with free cancellation date
-- Payment and cancellation terms display
+- Payment terms with calculated amounts (e.g., "10% (150.00€) - due by 05.03.2026")
+- Cancellation terms display
 - Price per person and total price columns
 
 ### Admin Features
 - Booking management with Novoton sync
-- Hotel import wizard
-- Sync logs and diagnostics
+- Hotel import wizard (admin + cron)
+- Sync logs and diagnostics dashboard
 - Excluded resorts management
 - API response caching
 - Email notifications with CSV reports
+- **Automatic exchange rate updates from BNR API**
 
 ### Technical
 - Service-based architecture
@@ -81,6 +84,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 | API URL | Novoton API endpoint |
 | Commission % | Markup percentage on prices |
 | Cron Access Key | Secret key for cron job authentication |
+| Currency Risk Commission % | Exchange rate markup (0-5%, default 1.8%) |
 
 ---
 
@@ -97,6 +101,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 3. **Countries** - Select countries to sync
 4. **Excluded Resorts** - Resorts to skip during sync
 5. **Cron** - Cron access key and URLs
+6. **Exchange Rates** - Currency risk commission percentage
 
 ---
 
@@ -106,21 +111,26 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 
 | Page | URL | Description |
 |------|-----|-------------|
-| Dashboard | `novoton_holidays.manage` | Overview and quick actions |
-| Hotels List | `novoton_holidays.hotels` | View synced hotels |
+| Dashboard | `novoton_holidays.manage` | Overview, stats, and quick actions |
+| Hotel Bookings | `novoton_bookings.manage` | Manage customer bookings |
+| Alternative Requests | `novoton_alternatives.manage` | Alternative room requests |
+| Hotels Sync | `novoton_sync.manage` | Hotel synchronization |
+| Room Price Check | `novoton_prices.room_price` | Check hotel prices |
 | Add Hotels as Products | `novoton_holidays.add_hotels_as_products` | Import hotels to CS-Cart |
-| Bookings | `novoton_bookings.manage` | Manage customer bookings |
 | Facilities | `novoton_holidays.list_facilities` | Hotel facilities list |
-| Alternatives | `novoton_alternatives.manage` | Alternative room requests |
-
-### Tools & Diagnostics
-
-| Page | URL | Description |
-|------|-----|-------------|
-| Sync Logs | `novoton_admin.sync_logs` | View synchronization history |
-| API Diagnostics | `novoton_diagnostic.index` | Test API connectivity |
+| **Exchange Rates** | `novoton_exchange_rates.manage` | Currency rate management |
+| Diagnostic | `novoton_diagnostic.index` | API connectivity test |
 | Test Hotel Request | `novoton_holidays.test_hotel_request` | Debug hotel API calls |
-| Test Alternatives | `novoton_holidays.test_alternative_rs` | Debug alternative search |
+| Test Alternative RS | `novoton_holidays.test_alternative_rs` | Debug alternative search |
+
+### Dashboard Features
+
+The dashboard (`novoton_holidays.manage`) displays:
+- **Hotels Statistics** - Total, with prices, with packages, as products
+- **Bookings Overview** - Pending, confirmed, cancelled counts
+- **Last Sync Times** - Hotel List, Hotel Info, Prices, Offers Update, Facilities
+- **Quick Actions** - Check Prices, Check Packages, Add Hotels, Manage Bookings
+- **Recent Sync Activity** - Last 10 sync operations with details
 
 ---
 
@@ -132,74 +142,141 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 
 ### Available Cron Modes
 
-#### 1. Hotel Sync (ResInfo)
-Syncs hotel list from Novoton API.
+| Mode | Sync Type | Description |
+|------|-----------|-------------|
+| `hotel_list` | `hotellist` | Sync hotel list from API |
+| `hotel_info` | `hotelinfo` | Sync hotel details (rooms, boards, packages) |
+| `room_price` | `prices` | Check which hotels have active prices |
+| `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
+| `list_facilities` | `facilities` | Update hotel facilities list |
+| `add_hotels_as_products` | - | Import hotels as CS-Cart products |
+| `sync_hotels` | `sync_hotels` | Full V3 hotel sync |
+| `sync_priceinfo` | `sync_priceinfo` | Sync price info for packages |
+| `resinfo` | `resinfo` | Check ASK bookings status |
+
+### Cron URL Examples
+
+#### 1. Hotel List Sync
+Syncs basic hotel information from Novoton API.
 
 ```bash
-# URL method
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=resinfo"
-
-# CLI method
-php /path/to/cscart/app/addons/novoton_holidays/cron.php access_key=YOUR_KEY mode=resinfo
-
-# With country filter
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=resinfo&country=BULGARIA"
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list"
 ```
 
-#### 2. Price Sync
-Updates hotel prices.
+#### 2. Hotel Info Sync
+Syncs detailed hotel data (rooms, boards, packages).
 
 ```bash
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=prices"
+# All countries
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info"
+
+# With limit
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info&limit=100"
+
+# Force full sync
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info&force=1"
 ```
 
-#### 3. Offers Update (Delta Sync)
+#### 3. Price Check
+Checks which hotels have active prices.
+
+```bash
+# All countries
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=room_price"
+
+# Specific country
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=room_price&country=BULGARIA"
+```
+
+#### 4. Offers Update (Delta Sync)
 Syncs only changed offers since last update.
 
 ```bash
 curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=offers_update"
 ```
 
-#### 4. Facilities Sync
+#### 5. Facilities Sync
 Updates hotel facilities list.
 
 ```bash
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=facilities"
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=list_facilities"
 ```
 
-#### 5. Detailed Info Sync
-Fetches detailed info for hotels without packages data.
+#### 6. Add Hotels as Products
+Imports hotels as CS-Cart products (no limit by default).
 
 ```bash
-# Fetch all hotels without data
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=detailed_info"
+# All hotels for Bulgaria
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=add_hotels_as_products&country=BULGARIA"
 
 # With limit
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=detailed_info&detail_limit=100"
-```
-
-#### 6. CSV Export
-Exports hotel features to CSV.
-
-```bash
-curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=export_csv"
+curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=add_hotels_as_products&country=GREECE&limit=50"
 ```
 
 ### Recommended Crontab
 
 ```crontab
-# Hotel sync - daily at 3 AM
-0 3 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=resinfo"
+# Hotel list sync - daily at 2 AM
+0 2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list" > /dev/null 2>&1
 
-# Price sync - every 6 hours
-0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=prices"
+# Hotel info sync - daily at 3 AM
+0 3 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info" > /dev/null 2>&1
+
+# Price check - every 6 hours
+0 */6 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=room_price" > /dev/null 2>&1
 
 # Offers update - every 2 hours
-0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=offers_update"
+0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=offers_update" > /dev/null 2>&1
 
 # Facilities sync - weekly on Sunday at 4 AM
-0 4 * * 0 curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=facilities"
+0 4 * * 0 curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=list_facilities" > /dev/null 2>&1
+
+# Exchange rates - daily at 13:05 (after BNR publishes)
+5 13 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_exchange_rates.cron&cron_password=YOUR_KEY" > /dev/null 2>&1
 ```
+
+---
+
+## Exchange Rates
+
+The addon includes automatic exchange rate updates from BNR (National Bank of Romania) API.
+
+### Features
+
+- Fetches EUR, USD, GBP rates from BNR XML API
+- Applies configurable "Currency Risk Commission" (0-5%, default 1.8%)
+- Updates CS-Cart currency coefficients automatically
+- EUR is the primary currency (coefficient = 1)
+- RON, USD, GBP coefficients are calculated relative to EUR
+
+### Admin Page
+
+**Admin → Novoton Holidays → Exchange Rates** (`novoton_exchange_rates.manage`)
+
+Shows:
+- Current currency coefficients
+- Last update timestamp
+- Commission percentage
+- Manual update button
+- Cron URLs for automation
+
+### Cron URLs
+
+```bash
+# Frontend cron (requires cron_password)
+curl "https://yoursite.com/index.php?dispatch=novoton_exchange_rates.cron&cron_password=YOUR_KEY"
+
+# Admin cron (requires admin login)
+# Access via browser when logged in as admin
+```
+
+### How It Works
+
+1. Fetches XML from `https://www.bnr.ro/nbrfxrates.xml`
+2. Parses EUR, USD, GBP rates (in RON)
+3. Calculates coefficients relative to EUR
+4. Applies commission percentage
+5. Updates `cscart_currencies` table via `fn_update_currency()`
 
 ---
 
@@ -224,6 +301,7 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 | `getRoomPrice($params)` | Get room price with terms |
 | `getHotelQuota($hotelId, $roomId, $checkIn, $checkOut)` | Get room availability |
 | `getHotelQuotaAll($hotelId, $checkIn, $checkOut)` | Get all rooms availability |
+| `getPriceInfo($hotelId, $packageName)` | Get price info for package |
 
 ### Booking
 
@@ -258,16 +336,32 @@ Stores synced hotel information.
 | product_id | int | Linked CS-Cart product ID |
 | hotel_name | varchar(255) | Hotel name |
 | country | varchar(100) | Country |
-| city | varchar(100) | City |
+| city | varchar(100) | City/Resort |
 | region | varchar(100) | Region |
-| stars | tinyint | Star rating (1-5) |
+| hotel_type | varchar(10) | Star rating |
 | description_en | text | English description |
 | description_ro | text | Romanian description |
-| packages_data | text | JSON packages info |
-| rooms_data | text | JSON rooms info |
-| boards_data | text | JSON board types |
+| hotel_data | longtext | JSON hotel details (V3) |
 | has_prices | enum('Y','N') | Has active prices |
-| last_sync | datetime | Last sync timestamp |
+| packages_count | int | Number of packages |
+| hotelinfo_synced_at | datetime | Last hotelinfo sync |
+| last_price_check | datetime | Last price check |
+| created_at | datetime | Created timestamp |
+| updated_at | datetime | Updated timestamp |
+
+#### `cscart_novoton_hotel_packages`
+Stores hotel packages (V3 architecture).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| hotel_id | varchar(50) | Hotel ID (FK) |
+| package_id | varchar(100) | Package ID |
+| package_name | varchar(255) | Package name |
+| min_price | decimal(10,2) | Minimum price |
+| has_early_booking | tinyint | Has early booking |
+| priceinfo_data | longtext | JSON price info |
+| synced_at | datetime | Last sync timestamp |
+| created_at | datetime | Created timestamp |
 
 #### `cscart_novoton_bookings`
 Stores customer bookings.
@@ -314,38 +408,19 @@ Stores facility definitions.
 | facility_name_en | varchar(255) | English name |
 | facility_name_ro | varchar(255) | Romanian name |
 
-#### `cscart_novoton_hotel_facilities`
-Links hotels to facilities.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| hotel_id | varchar(50) | Hotel ID (FK) |
-| facility_id | int | Facility ID (FK) |
-
 #### `cscart_novoton_sync_log`
 Logs synchronization history.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | log_id | int | Auto-increment PK |
-| sync_type | varchar(50) | Type of sync |
+| sync_type | varchar(50) | Type: hotellist, hotelinfo, prices, offers_update, facilities |
 | sync_date | datetime | Sync timestamp |
-| hotels_synced | int | Hotels processed |
-| hotels_added | int | Hotels added |
-| hotels_updated | int | Hotels updated |
-| errors | int | Error count |
-| duration | int | Duration seconds |
-| details | text | JSON details |
-
-#### `cscart_novoton_cache`
-Stores API response cache.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| cache_key | varchar(255) | Cache key (PK) |
-| cache_data | longtext | Cached data |
-| expires_at | datetime | Expiration time |
-| created_at | datetime | Created timestamp |
+| products_total | int | Total items processed |
+| products_updated | int | Items updated |
+| products_failed | int | Items failed |
+| duration_seconds | int | Duration in seconds |
+| status | varchar(20) | Status: completed, failed |
 
 ---
 
@@ -364,28 +439,38 @@ app/addons/novoton_holidays/
 │
 ├── controllers/
 │   ├── backend/              # Admin controllers
-│   │   ├── novoton_holidays.php
-│   │   ├── novoton_bookings.php
-│   │   ├── novoton_admin.php
-│   │   ├── novoton_alternatives.php
-│   │   └── novoton_diagnostic.php
+│   │   ├── novoton_holidays.php      # Main + dashboard
+│   │   ├── novoton_hotels.php        # Hotel management
+│   │   ├── novoton_prices.php        # Price management
+│   │   ├── novoton_tools.php         # Tools & tests
+│   │   ├── novoton_bookings.php      # Bookings
+│   │   ├── novoton_alternatives.php  # Alternatives
+│   │   ├── novoton_exchange_rates.php # Exchange rates
+│   │   └── novoton_diagnostic.php    # Diagnostics
 │   └── frontend/             # Customer controllers
 │       ├── novoton_booking.php
 │       ├── novoton_cron.php
-│       └── novoton_holidays.php
+│       ├── novoton_holidays.php
+│       └── novoton_exchange_rates.php # Exchange rates cron
+│
+├── functions/                # Helper function files
+│   ├── formatting.php        # Date/text formatting
+│   ├── email.php             # Email helpers
+│   └── exchange_rates.php    # BNR exchange rate functions
+│
+├── Repository/               # Data repositories
+│   ├── HotelRepository.php
+│   ├── BookingRepository.php
+│   └── SyncLogRepository.php
 │
 ├── services/                 # Service classes
 │   ├── BookingService.php
 │   ├── CacheService.php
 │   ├── DateHelper.php
-│   ├── ErrorHandler.php
 │   ├── GuestDataService.php
-│   ├── LoggerTrait.php
-│   ├── PriceInfoService.php
 │   ├── PriceService.php
 │   ├── SearchService.php
-│   ├── SecurityService.php
-│   └── ValidationHelper.php
+│   └── SecurityService.php
 │
 ├── src/                      # Core classes
 │   ├── NovotonApi.php        # API client
@@ -393,8 +478,7 @@ app/addons/novoton_holidays/
 │   └── PriceInfoSync.php     # Priceinfo synchronization
 │
 └── schemas/                  # CS-Cart schemas
-    ├── block_manager/
-    └── static_templates/
+    └── block_manager/
 ```
 
 ### Service Classes
@@ -408,7 +492,6 @@ app/addons/novoton_holidays/
 | `SearchService` | Search parameter parsing |
 | `SecurityService` | Input validation and CSRF |
 | `DateHelper` | Date formatting and calculations |
-| `ErrorHandler` | Centralized error handling |
 
 ---
 
@@ -444,13 +527,6 @@ The addon includes a React 19-based booking form for an enhanced user experience
 - Yellow border design (Booking.com style)
 - CSS variables for easy customization
 
-### Loading Locations
-
-The React bundle loads on:
-1. Product detail pages (booking block)
-2. Search results page (search form modification)
-3. Homepage booking widget (optional)
-
 ---
 
 ## Troubleshooting
@@ -458,10 +534,6 @@ The React bundle loads on:
 ### Debug Mode
 
 Add `?debug_novoton=1` to any page URL to see debug information.
-
-**Examples:**
-- Order details: `orders.details&order_id=123&debug_novoton=1`
-- Booking form: `novoton_booking.booking_form&product_id=456&debug_novoton=1`
 
 ### Common Issues
 
@@ -471,11 +543,11 @@ Add `?debug_novoton=1` to any page URL to see debug information.
 
 #### Hotels not syncing
 - Check API credentials in addon settings
-- View sync logs: `novoton_admin.sync_logs`
-- Test API: `novoton_diagnostic.index`
+- View sync logs on Dashboard
+- Test API: **Novoton Holidays → Diagnostic**
 
 #### Prices showing 0
-- Run price sync cron job
+- Run price sync cron job (`mode=room_price`)
 - Check if hotel has `has_prices = 'Y'`
 - Verify commission setting is not 0%
 
@@ -483,56 +555,61 @@ Add `?debug_novoton=1` to any page URL to see debug information.
 - Room may have sold out between search and booking
 - Try different dates or room type
 
-#### Smarty template errors with curly braces
-- Ensure CSS/JS are in external files, not inline
-- Use `{literal}...{/literal}` for any inline scripts
+#### Dashboard shows "Never" for Last Sync
+- Run the corresponding cron job
+- Check if cron jobs have the correct `access_key`
+
+#### Exchange rates not updating
+- Check BNR API connectivity
+- Verify `cron_password` parameter
+- Check commission is between 0-5%
 
 ### Log Files
 
 Addon logs events to CS-Cart's logging system:
 - **Administration → Logs** - Filter by "novoton"
 
-### API Debugging
-
-Use the diagnostic page to test API calls:
-- **Novoton Holidays → API Diagnostics**
-
-Or use test pages:
-- `novoton_holidays.test_hotel_request` - Test hotel info requests
-- `novoton_holidays.test_alternative_rs` - Test alternative search
-
 ---
 
 ## Changelog
 
+### Version 2.9.0 (February 5, 2026)
+- **Added:** Exchange rate auto-update from BNR (National Bank of Romania) API
+- **Added:** Currency risk commission setting (0-5%, default 1.8%)
+- **Added:** Exchange rates admin page with manual update button
+- **Added:** Payment terms with calculated amounts display (e.g., "10% (150.00€)")
+- **Added:** Cancellation terms display on order details and emails
+- **Added:** All menu items with proper language keys (EN/RO)
+- **Fixed:** 404 error on Add Hotels as Products admin page
+- **Fixed:** Cron hotel_info mode limit=0 causing no processing
+- **Fixed:** Cron add_hotels_as_products default limit (now unlimited)
+- **Fixed:** Sync log entries now recorded for all cron modes
+- **Fixed:** Dashboard Last Sync section showing correct sync types
+- **Fixed:** Removed incorrect "deprecated" warning from hotel_info mode
+- **Updated:** Dashboard shows Hotel List, Hotel Info, Prices, Offers Update, Facilities
+- **Updated:** Date formatting to use CS-Cart settings
+
 ### Version 2.8.0-A80D (January 30, 2026)
-- **Added:** Important field display in Room Type column with warning styling (⚠️ yellow box)
-- **Added:** MoreInfo field display in Room Type column with green checkmark (✓)
+- **Added:** Important field display in Room Type column with warning styling
+- **Added:** MoreInfo field display in Room Type column with green checkmark
 - **Fixed:** Board name formatting without emoji in Choices column
-- **Fixed:** Payment and cancellation terms XML parsing for Novoton API format
-- **Enhanced:** Choices column shows only free cancellation date
+- **Fixed:** Payment and cancellation terms XML parsing
 
 ### Version 2.8.0-A80A (January 29, 2026)
-- **Fixed:** Payment/cancellation terms variable naming (`payment_terms`, `cancellation_terms`)
+- **Fixed:** Payment/cancellation terms variable naming
 - **Fixed:** XML parsing rewrite for `<conditions>` structure
 
 ### Version 2.8.0-A79Y (January 28, 2026)
 - **Added:** Payment Terms and Cancellation Terms columns in search results
 - **Enhanced:** Choices column with 8 features including board name
 
-### Version 2.8.0-A79X (January 27, 2026)
-- **Fixed:** Facilities sync array handling error
-- **Fixed:** Country selection logic in admin settings
-
-### Previous Versions (A79T-A79W)
+### Previous Versions
 - Dashboard 404 fixes
 - Cron mapping corrections
 - Database column additions
 - API test error handling
 - Excluded resorts UI
 - Room code regex improvements
-- Booking view template fixes
-- SQL NULLS FIRST compatibility
 - URL encoding for API parameters
 
 ---
@@ -544,4 +621,4 @@ Or use test pages:
 
 ---
 
-*Documentation last updated: January 30, 2026 - Version 2.8.0-A80D*
+*Documentation last updated: February 5, 2026 - Version 2.9.0*

@@ -124,14 +124,22 @@ try {
             }
         }
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        $bookings_checked = isset($ask_bookings) ? count($ask_bookings) : 0;
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'resinfo', sync_date = NOW(),
+             products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $bookings_checked, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'resinfo', [
-            'updated'  => isset($ask_bookings) ? count($ask_bookings) : 0,
-            'duration' => $duration,
+            'updated'  => $bookings_checked,
+            'duration' => $duration . 's',
         ]);
     }
-    
+
     // =========================================
     // MODE: hotel_list
     // =========================================
@@ -207,15 +215,22 @@ try {
         echo "\nTotal hotels: {$total_hotels}\n";
         echo "Synced: {$synced_hotels} (new: {$new_hotels})\n";
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotellist', sync_date = NOW(),
+             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $total_hotels, $synced_hotels, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'hotel_list', [
             'added'    => $new_hotels,
             'updated'  => $synced_hotels - $new_hotels,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ], implode(', ', $countries));
     }
-    
+
     // =========================================
     // MODE: update_prices
     // =========================================
@@ -295,12 +310,19 @@ try {
         echo "Hotels WITHOUT prices: {$without_prices}\n";
         echo "Total checked: " . ($with_prices + $without_prices) . "\n";
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'prices', sync_date = NOW(),
+             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+            $with_prices + $without_prices, $with_prices, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'room_price', [
             'updated'  => $with_prices,
             'skipped'  => $without_prices,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ], $country ?: 'ALL');
     }
     
@@ -727,18 +749,25 @@ try {
             echo "\nNew hotels synced: {$new_hotels}\n";
             echo "Added to CS-Cart: {$added_to_cart}\n";
 
+            // Log to sync_log table for dashboard display
+            $duration = round(microtime(true) - $cron_start_time, 1);
+            db_query(
+                "INSERT INTO ?:novoton_sync_log SET sync_type = 'offers_update', sync_date = NOW(),
+                 products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
+                count($offers), $added_to_cart, $duration
+            );
+
             // Send email report
-            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
             fn_novoton_send_import_report_email([], 'offers_update', [
                 'added'    => $added_to_cart,
                 'updated'  => $new_hotels,
-                'duration' => $duration,
+                'duration' => $duration . 's',
             ], $country);
         }
 
         // Save sync timestamp for future offers_update calls
         if (isset($sync_start_time)) {
-            db_query("INSERT INTO ?:novoton_sync_log (sync_type, sync_date, status, products_updated) VALUES ('product_import', NOW(), 'completed', ?i)", 
+            db_query("INSERT INTO ?:novoton_sync_log (sync_type, sync_date, status, products_updated) VALUES ('product_import', NOW(), 'completed', ?i)",
                 $added_to_cart ?? 0
             );
             echo "\nSync timestamp saved: {$sync_start_time}\n";
@@ -750,7 +779,7 @@ try {
     // =========================================
     elseif ($mode == 'add_hotels_as_products') {
         $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-        $limit = intval($_REQUEST['limit'] ?? 50);
+        $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
         
         // Get excluded resorts - priority: URL parameter > addon setting
         $exclude_resorts = [];
@@ -785,7 +814,7 @@ try {
         
         echo "Adding hotels as products...\n\n";
         echo "Country: {$country}\n";
-        echo "Limit: {$limit}\n";
+        echo "Limit: " . ($limit > 0 ? $limit : "No limit") . "\n";
         if (!empty($exclude_resorts)) {
             echo "Excluding resorts (" . count($exclude_resorts) . "): " . implode(', ', $exclude_resorts) . "\n";
         } else {
@@ -805,10 +834,13 @@ try {
             $query .= " AND (city NOT IN (?a) OR city IS NULL)";
             $query_params[] = $exclude_resorts;
         }
-        
-        $query .= " ORDER BY hotel_name LIMIT ?i";
-        $query_params[] = $limit;
-        
+
+        $query .= " ORDER BY hotel_name";
+        if ($limit > 0) {
+            $query .= " LIMIT ?i";
+            $query_params[] = $limit;
+        }
+
         $hotels = db_get_array($query, ...$query_params);
         
         echo "Found " . count($hotels) . " hotels to add.\n\n";
@@ -907,9 +939,9 @@ try {
     // =========================================
     elseif ($mode == 'list_facilities') {
         echo "Syncing facilities list from Novoton API...\n\n";
-        
+
         $result = fn_novoton_sync_facilities_list();
-        
+
         $fac_added = 0;
         $fac_updated = 0;
         $fac_errors = 0;
@@ -928,24 +960,31 @@ try {
             echo "Synced {$result} facilities.\n";
         }
 
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'facilities', sync_date = NOW(),
+             products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
+            $fac_added + $fac_updated, $fac_errors, $duration
+        );
+
         // Send email report
-        $duration = round(microtime(true) - $cron_start_time, 1) . 's';
         fn_novoton_send_import_report_email([], 'facilities', [
             'added'    => $fac_added,
             'updated'  => $fac_updated,
             'errors'   => $fac_errors,
-            'duration' => $duration,
+            'duration' => $duration . 's',
         ]);
     }
     
     // =========================================
-    // MODE: hotel_info (Hotel accommodation) - DEPRECATED
-    // Use mode=sync_hotels or mode=sync_hotelinfo instead (V3)
-    // This mode now stores data in V3 format (hotel_data JSON)
+    // MODE: hotel_info (Hotel accommodation)
+    // Syncs hotel details (rooms, boards, packages) from hotelinfo API
+    // Also available: mode=sync_hotels for full hotel sync
     // =========================================
     elseif ($mode == 'hotel_info') {
-        echo "WARNING: mode=hotel_info is deprecated. Use mode=sync_hotels or mode=sync_hotelinfo instead.\n";
-        echo "Continuing with V3-compatible storage...\n\n";
+        echo "Hotel Info Sync (hotelinfo API)\n";
+        echo "Syncing rooms, boards, packages for hotels...\n\n";
         $force = !empty($_REQUEST['force']);
         $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
         $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
@@ -974,7 +1013,7 @@ try {
         echo "Hotel Accommodation Sync (hotelinfo)\n";
         echo "Countries: " . implode(', ', $countries) . "\n";
         echo "Force full sync: " . ($force ? 'YES' : 'NO') . "\n";
-        echo "Limit: {$limit}\n\n";
+        echo "Limit: " . ($limit > 0 ? $limit : "No limit") . "\n\n";
 
         // Determine which hotels to sync
         $hotel_ids_to_sync = [];
@@ -1049,8 +1088,8 @@ try {
         } else {
             echo "Processing " . count($hotel_ids_to_sync) . " hotel(s)...\n\n";
 
-            // Apply limit
-            if (count($hotel_ids_to_sync) > $limit) {
+            // Apply limit only if limit > 0
+            if ($limit > 0 && count($hotel_ids_to_sync) > $limit) {
                 $hotel_ids_to_sync = array_slice($hotel_ids_to_sync, 0, $limit);
                 echo "(Limited to {$limit})\n\n";
             }
@@ -1176,13 +1215,20 @@ try {
             echo "Errors: {$errors}\n";
             echo "Total processed: " . count($hotel_ids_to_sync) . "\n";
 
+            // Log to sync_log table for dashboard display
+            $duration = round(microtime(true) - $cron_start_time, 1);
+            db_query(
+                "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotelinfo', sync_date = NOW(),
+                 products_total = ?i, products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
+                count($hotel_ids_to_sync), $synced, $errors, $duration
+            );
+
             // Send email report
-            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
             fn_novoton_send_import_report_email([], 'hotel_info', [
                 'updated'  => $synced,
                 'errors'   => $errors,
                 'skipped'  => count($hotel_ids_to_sync) - $synced - $errors,
-                'duration' => $duration,
+                'duration' => $duration . 's',
             ], implode(', ', $countries));
         }
     }
@@ -1563,6 +1609,22 @@ try {
         }
 
         echo "Packages to sync: " . count($packages) . "\n\n";
+
+        if (empty($packages)) {
+            // Check if there are ANY packages in the database
+            $total_packages = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_packages");
+            if ($total_packages == 0) {
+                echo "NOTE: No packages found in database.\n";
+                echo "You need to run 'mode=hotel_info' or 'mode=sync_hotels' first to populate packages.\n\n";
+                echo "Recommended workflow:\n";
+                echo "  1. mode=hotel_list (sync hotel list from API)\n";
+                echo "  2. mode=hotel_info (sync hotelinfo to get packages)\n";
+                echo "  3. mode=sync_priceinfo (sync prices for packages)\n";
+            } else {
+                echo "All {$total_packages} packages are up-to-date (synced within 24 hours).\n";
+                echo "Use &force=1 to force re-sync all packages.\n";
+            }
+        }
 
         $synced = 0;
         $errors = 0;
