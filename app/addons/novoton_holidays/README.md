@@ -1,6 +1,6 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.1
+**Version:** 2.9.2
 **Last Updated:** February 6, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
@@ -145,9 +145,8 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 | Mode | Sync Type | Description |
 |------|-----------|-------------|
 | `hotel_info_batched` | `hotelinfo` | **[RECOMMENDED]** Smart batched hotel sync with resume |
-| `sync_priceinfo_batched` | `sync_priceinfo` | **[RECOMMENDED]** Smart batched priceinfo sync with resume |
+| `sync_priceinfo_batched` | `priceinfo` | **[RECOMMENDED]** Smart batched priceinfo sync with resume |
 | `hotel_list` | `hotellist` | Sync hotel list from API |
-| `sync_priceinfo` | `sync_priceinfo` | Legacy priceinfo sync (use batched instead) |
 | `list_facilities` | `facilities` | Update hotel facilities list |
 | `resinfo` | `resinfo` | Check ASK bookings status |
 | `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
@@ -640,6 +639,10 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 2.9.2 (February 6, 2026)
+- **Removed:** Legacy `sync_priceinfo` mode - use `sync_priceinfo_batched` instead
+- **Cleaned:** Removed all legacy mode references from cron controller, backend, and documentation
 
 ### Version 2.9.1 (February 6, 2026)
 - **Added:** `sync_priceinfo_batched` mode - Smart batched priceinfo sync with resume capability
