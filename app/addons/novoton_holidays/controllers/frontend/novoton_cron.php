@@ -50,6 +50,7 @@ if (!CronHelper::validateAccessKey($provided_access_key)) {
 }
 
 $mode = $_REQUEST['mode'] ?? 'resinfo';
+$cron_start_time = microtime(true);
 
 header('Content-Type: text/plain; charset=utf-8');
 

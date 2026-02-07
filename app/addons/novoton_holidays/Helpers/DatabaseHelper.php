@@ -42,23 +42,23 @@ class DatabaseHelper
         $updated = 0;
 
         if (!empty($withPrices)) {
-            $result = db_query(
+            $result = \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withPrices
             );
-            $updated += db_affected_rows();
+            $updated += \db_affected_rows();
         }
 
         if (!empty($withoutPrices)) {
-            $result = db_query(
+            $result = \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withoutPrices
             );
-            $updated += db_affected_rows();
+            $updated += \db_affected_rows();
         }
 
         return $updated;
@@ -82,7 +82,7 @@ class DatabaseHelper
         }, $hotelIds);
 
         // Single query to get all existing products
-        $results = db_get_hash_array(
+        $results = \db_get_hash_array(
             "SELECT product_code, product_id
              FROM ?:products
              WHERE product_code IN (?a)",
@@ -114,7 +114,7 @@ class DatabaseHelper
             return [];
         }
 
-        return db_get_fields(
+        return \db_get_fields(
             "SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
             $hotelIds
         );
@@ -143,7 +143,7 @@ class DatabaseHelper
 
             $hotel['updated_at'] = $now;
 
-            $result = db_query(
+            $result = \db_query(
                 "INSERT INTO ?:novoton_hotels ?e
                  ON DUPLICATE KEY UPDATE ?u",
                 array_merge($hotel, ['created_at' => $now]),
@@ -152,7 +152,7 @@ class DatabaseHelper
 
             if ($result) {
                 // Check if insert or update (affected_rows = 1 for insert, 2 for update)
-                $affected = db_affected_rows();
+                $affected = \db_affected_rows();
                 if ($affected === 1) {
                     $inserted++;
                 } else {
@@ -187,7 +187,7 @@ class DatabaseHelper
                 continue;
             }
 
-            db_query(
+            \db_query(
                 "INSERT INTO ?:novoton_hotel_packages
                  (hotel_id, package_id, package_name, created_at)
                  VALUES (?s, ?s, ?s, NOW())
@@ -223,7 +223,7 @@ class DatabaseHelper
                 continue;
             }
 
-            db_query(
+            \db_query(
                 "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
                 $link['product_id'],
                 $link['hotel_id']
@@ -275,7 +275,7 @@ class DatabaseHelper
 
         $query = "SELECT {$fieldList} FROM ?:novoton_hotels {$whereClause} ORDER BY hotel_name {$limitClause}";
 
-        return db_get_array($query, ...$params);
+        return \db_get_array($query, ...$params);
     }
 
     /**
@@ -296,7 +296,7 @@ class DatabaseHelper
             $params[] = '%"sync_type":"' . $subType . '"%';
         }
 
-        return db_get_field($query, ...$params) ?: null;
+        return \db_get_field($query, ...$params) ?: null;
     }
 
     /**
@@ -308,7 +308,7 @@ class DatabaseHelper
      */
     public static function getSyncStats(string $syncType, int $days = 30): array
     {
-        $stats = db_get_row(
+        $stats = \db_get_row(
             "SELECT
                 COUNT(*) as total_runs,
                 SUM(products_updated) as total_updated,
@@ -339,13 +339,13 @@ class DatabaseHelper
      */
     public static function cleanupOldLogs(int $days = 90): int
     {
-        $result = db_query(
+        $result = \db_query(
             "DELETE FROM ?:novoton_sync_log
              WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)",
             $days
         );
 
-        return db_affected_rows();
+        return \db_affected_rows();
     }
 
     /**
