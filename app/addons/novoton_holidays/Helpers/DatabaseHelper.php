@@ -48,7 +48,7 @@ class DatabaseHelper
                  WHERE hotel_id IN (?a)",
                 $withPrices
             );
-            $updated += \db_affected_rows();
+            $updated += \db_get_row_count();
         }
 
         if (!empty($withoutPrices)) {
@@ -58,7 +58,7 @@ class DatabaseHelper
                  WHERE hotel_id IN (?a)",
                 $withoutPrices
             );
-            $updated += \db_affected_rows();
+            $updated += \db_get_row_count();
         }
 
         return $updated;
@@ -152,7 +152,7 @@ class DatabaseHelper
 
             if ($result) {
                 // Check if insert or update (affected_rows = 1 for insert, 2 for update)
-                $affected = \db_affected_rows();
+                $affected = \db_get_row_count();
                 if ($affected === 1) {
                     $inserted++;
                 } else {
@@ -345,7 +345,7 @@ class DatabaseHelper
             $days
         );
 
-        return \db_affected_rows();
+        return \db_get_row_count();
     }
 
     /**
