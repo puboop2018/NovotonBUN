@@ -33,7 +33,7 @@ $hotels_modes = [
 ];
 
 $prices_modes = [
-    'update_prices', 'check_prices', 'room_price', 'download_active_prices_csv',
+    'update_prices', 'check_prices', 'check_prices_hotel', 'room_price', 'download_active_prices_csv',
     'cron_offers_update'
 ];
 

@@ -16,6 +16,7 @@ $schema['novoton_holidays'] = [
         'check_packages'          => ['permissions' => 'manage_catalog'],
         'update_prices'           => ['permissions' => 'manage_catalog'],
         'check_prices'            => ['permissions' => 'manage_catalog'],
+        'check_prices_hotel'      => ['permissions' => 'manage_catalog'],
         'room_price'              => ['permissions' => 'manage_catalog'],
         'download_active_prices_csv' => ['permissions' => 'manage_catalog'],
         'cron_offers_update'      => ['permissions' => 'manage_catalog'],
