@@ -112,18 +112,6 @@ class BatchedHotelInfoSync
     }
 
     /**
-     * Output message
-     */
-    private function output(string $message): void
-    {
-        if ($this->output_callback) {
-            call_user_func($this->output_callback, $message);
-        } else {
-            echo $message . "\n";
-        }
-    }
-
-    /**
      * Get API instance
      */
     private function getApi(): NovotonApi
