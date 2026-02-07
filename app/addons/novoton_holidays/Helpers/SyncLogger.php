@@ -301,7 +301,7 @@ class SyncLogger
         $duration = round($this->getElapsedTime(), 1);
         $stats = $this->stats;
 
-        $notes = !empty($extra) ? json_encode($extra) : null;
+        $notes = !empty($extra) ? json_encode($extra) : '';
 
         return db_query(
             "INSERT INTO ?:novoton_sync_log SET

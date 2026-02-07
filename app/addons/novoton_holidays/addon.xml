@@ -495,7 +495,7 @@
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
                 `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo') NOT NULL DEFAULT 'hotels',
+                `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels',
                 `sync_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `products_total` int(11) NOT NULL DEFAULT 0,
                 `products_updated` int(11) NOT NULL DEFAULT 0,
@@ -505,11 +505,21 @@
                 `duration_seconds` int(11) DEFAULT NULL,
                 `log_file` varchar(255) DEFAULT NULL,
                 `error_message` text,
+                `notes` text DEFAULT NULL COMMENT 'Extra JSON data for sync details',
                 `status` enum('running','completed','failed') NOT NULL DEFAULT 'running',
                 PRIMARY KEY (`log_id`),
                 KEY `idx_date` (`sync_date`),
                 KEY `idx_status` (`status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sync operation logs'
+        </item>
+        <!-- Add notes column and resinfo to sync_type enum for existing installations -->
+        <item for="install">
+            ALTER TABLE `?:novoton_sync_log`
+            MODIFY COLUMN `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels'
+        </item>
+        <item for="install">
+            ALTER TABLE `?:novoton_sync_log`
+            ADD COLUMN IF NOT EXISTS `notes` text DEFAULT NULL COMMENT 'Extra JSON data for sync details' AFTER `error_message`
         </item>
 
         <!-- API Response Cache table -->
