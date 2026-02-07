@@ -33,7 +33,7 @@ $hotels_modes = [
 ];
 
 $prices_modes = [
-    'update_prices', 'check_prices', 'room_price', 'download_active_prices_csv',
+    'update_prices', 'check_prices', 'check_prices_hotel', 'room_price', 'download_active_prices_csv',
     'cron_offers_update'
 ];
 
@@ -204,7 +204,6 @@ if ($mode == 'manage' || empty($mode)) {
         'prices' => $syncLogRepo->getLastSyncDate('prices'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
-        'sync_hotels' => $syncLogRepo->getLastSyncDate('sync_hotels'),
     ];
     
     // Build cron URLs
@@ -222,6 +221,7 @@ if ($mode == 'manage' || empty($mode)) {
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+        'exchange_rates' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=exchange_rates",
     ];
     
     // Assign to view

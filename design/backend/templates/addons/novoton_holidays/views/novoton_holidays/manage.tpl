@@ -247,6 +247,12 @@
                 <td>After sync</td>
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
+            <tr>
+                <td><strong>Exchange Rates</strong><br><small style="color:#666;">Update BNR rates</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.exchange_rates}</div></td>
+                <td>Daily</td>
+                <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
         </table>
         {else}
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; color: #856404;">

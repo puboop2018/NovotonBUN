@@ -1,6 +1,6 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.2
+**Version:** 2.9.3
 **Last Updated:** February 6, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
@@ -148,6 +148,7 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 | `sync_priceinfo_batched` | `priceinfo` | **[RECOMMENDED]** Smart batched priceinfo sync with resume |
 | `hotel_list` | `hotellist` | Sync hotel list from API |
 | `list_facilities` | `facilities` | Update hotel facilities list |
+| `exchange_rates` | `exchange_rates` | Update BNR currency rates (daily) |
 | `resinfo` | `resinfo` | Check ASK bookings status |
 | `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
 | `add_hotels_as_products` | - | Import hotels as CS-Cart products |
@@ -639,6 +640,14 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 2.9.3 (February 6, 2026)
+- **Added:** `exchange_rates` mode to main cron controller for BNR rate updates
+- **Removed:** Legacy `hotel_info` mode - use `hotel_info_batched` instead
+- **Removed:** Legacy `sync_hotels` mode - use batched modes instead
+- **Removed:** Legacy `check_packages` mode - redundant with `hotel_info_batched`
+- **Simplified:** Cron architecture now uses only batched modes with resume capability
+- **Improved:** All cron jobs now use consistent URL pattern (`novoton_cron.run&mode=XXX`)
 
 ### Version 2.9.2 (February 6, 2026)
 - **Removed:** Legacy `sync_priceinfo` mode - use `sync_priceinfo_batched` instead

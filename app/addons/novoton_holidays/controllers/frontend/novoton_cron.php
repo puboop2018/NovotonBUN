@@ -1,10 +1,10 @@
 <?php
 /**
  * Novoton Holidays - Public Cron Controller
- * 
+ *
  * This controller handles cron jobs without requiring admin authentication.
  * Access via: index.php?dispatch=novoton_cron.run&access_key=YOUR_ACCESS_KEY
- * 
+ *
  * Modes:
  * - resinfo: Check ASK bookings status
  * - hotel_list: Hotel list sync from API
@@ -18,45 +18,47 @@
  * - add_hotels_as_products: Add hotels with prices as CS-Cart products
  * - list_facilities: Sync facilities list from API
  * - hotel_info: Sync hotel accommodation data (rooms, boards, packages, ages) from hotelinfo API
+ *
+ * @since 3.1.0 - Refactored to use centralized Helpers (Config, SyncLogger, DatabaseHelper)
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Helpers\Config;
+use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
+use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
+use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+// Load helpers
+$helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+require_once($helpers_dir . 'Config.php');
+require_once($helpers_dir . 'SyncLogger.php');
+require_once($helpers_dir . 'DatabaseHelper.php');
+require_once($helpers_dir . 'CronHelper.php');
+
 // Authentication: Require access_key parameter
 $provided_access_key = $_REQUEST['access_key'] ?? '';
-$stored_access_key = Registry::get('addons.novoton_holidays.cron_access_key') ?? '';
 
-if (empty($stored_access_key)) {
-    header('Content-Type: text/plain');
-    http_response_code(403);
-    echo "ERROR: Cron Access Key not configured in addon settings.\n";
-    exit;
-}
-
-if (empty($provided_access_key) || $provided_access_key !== $stored_access_key) {
-    header('Content-Type: text/plain');
-    http_response_code(403);
-    echo "ERROR: Invalid or missing API key.\n";
-    exit;
+if (!CronHelper::validateAccessKey($provided_access_key)) {
+    $storedKey = Config::getCronAccessKey();
+    if (empty($storedKey)) {
+        CronHelper::sendAuthError('Cron Access Key not configured in addon settings.');
+    } else {
+        CronHelper::sendAuthError('Invalid or missing API key.');
+    }
 }
 
 $mode = $_REQUEST['mode'] ?? 'resinfo';
-$cron_start_time = microtime(true);
 
 header('Content-Type: text/plain; charset=utf-8');
 
-// Get timezone from CS-Cart settings
-$cron_timezone = Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
-
-echo "===========================================\n";
-echo "NOVOTON HOLIDAYS CRON - " . strtoupper($mode) . "\n";
-echo "===========================================\n";
-echo "Time: " . (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d H:i:s') . " ({$cron_timezone})\n\n";
+// Initialize logger with mode
+$logger = new SyncLogger($mode);
+$logger->outputHeader($mode);
 
 // Load API
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+$src_dir = Config::getPath('src');
 if (file_exists($src_dir . 'NovotonApi.php')) {
     require_once($src_dir . 'NovotonApi.php');
 }
@@ -69,166 +71,135 @@ try {
     // MODE: resinfo
     // =========================================
     if ($mode == 'resinfo') {
-        echo "Checking ASK bookings status...\n\n";
-        
+        $logger->output("Checking ASK bookings status...");
+        $logger->output("");
+
         // Query uses novoton_status = 'ASK' for on-request bookings
         $ask_bookings = db_get_array(
             "SELECT * FROM ?:novoton_bookings WHERE novoton_status = 'ASK' AND status IN ('pending', 'ask') ORDER BY created_at DESC LIMIT 50"
         );
-        
+
         if (empty($ask_bookings)) {
-            echo "No pending ASK bookings found.\n";
+            $logger->output("No pending ASK bookings found.");
         } else {
-            echo "Found " . count($ask_bookings) . " pending ASK bookings.\n\n";
-            
+            $logger->output("Found " . count($ask_bookings) . " pending ASK bookings.");
+            $logger->output("");
+
             foreach ($ask_bookings as $booking) {
-                echo "Booking #{$booking['booking_id']} (Order #{$booking['order_id']})...\n";
-                
+                $logger->output("Booking #{$booking['booking_id']} (Order #{$booking['order_id']})...");
+
                 // Use novoton_confirm_id or novoton_res_num for API lookup
                 $reservation_id = $booking['novoton_confirm_id'] ?: $booking['novoton_res_num'];
-                
+
                 if (!empty($reservation_id)) {
                     // Use the public getReservationInfo method to check booking status
                     $response = $api->getReservationInfo($reservation_id);
-                    
+
                     if ($response && isset($response->Status)) {
                         $new_status = (string)$response->Status;
-                        echo "  API Status: {$new_status}\n";
-                        
+                        $logger->output("  API Status: {$new_status}");
+
                         if (strtolower($new_status) === 'confirmed' || strtolower($new_status) === 'ok') {
                             db_query(
                                 "UPDATE ?:novoton_bookings SET status = 'confirmed', novoton_status = 'OK', last_status_check = NOW(), updated_at = NOW() WHERE booking_id = ?i",
                                 $booking['booking_id']
                             );
-                            echo "  -> Updated to CONFIRMED\n";
+                            $logger->output("  -> Updated to CONFIRMED");
+                            $logger->increment('updated');
                         } elseif (strtolower($new_status) === 'cancelled' || strtolower($new_status) === 'rejected') {
                             db_query(
                                 "UPDATE ?:novoton_bookings SET status = 'cancelled', novoton_status = 'CX', last_status_check = NOW(), updated_at = NOW() WHERE booking_id = ?i",
                                 $booking['booking_id']
                             );
-                            echo "  -> Updated to CANCELLED\n";
+                            $logger->output("  -> Updated to CANCELLED");
+                            $logger->increment('updated');
                         } else {
                             // Update last check time even if status unchanged
                             db_query(
                                 "UPDATE ?:novoton_bookings SET last_status_check = NOW() WHERE booking_id = ?i",
                                 $booking['booking_id']
                             );
-                            echo "  -> Status unchanged: {$new_status}\n";
+                            $logger->output("  -> Status unchanged: {$new_status}");
                         }
                     } else {
-                        echo "  No response from API\n";
+                        $logger->output("  No response from API");
                     }
                 } else {
-                    echo "  No reservation ID - skipping\n";
+                    $logger->output("  No reservation ID - skipping");
                 }
             }
         }
 
-        // Log to sync_log table for dashboard display
-        $duration = round(microtime(true) - $cron_start_time, 1);
-        $bookings_checked = isset($ask_bookings) ? count($ask_bookings) : 0;
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = 'resinfo', sync_date = NOW(),
-             products_updated = ?i, duration_seconds = ?i, status = 'completed'",
-            $bookings_checked, $duration
-        );
-
-        // Send email report
-        fn_novoton_send_import_report_email([], 'resinfo', [
-            'updated'  => $bookings_checked,
-            'duration' => $duration . 's',
-        ]);
+        // Log and send email using SyncLogger
+        $logger->setStat('total', count($ask_bookings ?? []));
+        $logger->complete(true);
     }
 
     // =========================================
     // MODE: hotel_list
     // =========================================
     elseif ($mode == 'hotel_list') {
-        echo "Syncing hotels from API (hotel_list)...\n\n";
+        $logger->output("Syncing hotels from API (hotel_list)...");
+        $logger->output("");
 
         // Get countries from settings (or all if none selected)
-        $countries = fn_novoton_parse_countries();
+        $countries = Config::getSelectedCountries();
 
-        echo "Countries: " . implode(', ', $countries) . "\n";
+        $logger->output("Countries: " . implode(', ', $countries));
         if (count($countries) > 3) {
-            echo "(All available countries - none specifically selected in settings)\n";
+            $logger->output("(All available countries - none specifically selected in settings)");
         }
-        echo "\n";
-
-        $total_hotels = 0;
-        $synced_hotels = 0;
-        $new_hotels = 0;
+        $logger->output("");
 
         foreach ($countries as $country) {
-            echo "Fetching {$country}... ";
+            $logger->output("Fetching {$country}... ", false);
 
             $hotels = $api->getHotelList($country);
 
             if (!empty($hotels)) {
                 $count = count($hotels);
-                $total_hotels += $count;
-                echo "{$count} hotels\n";
+                $logger->increment('total', $count);
+                $logger->output("{$count} hotels");
 
+                // Prepare batch data for upsert
+                $hotelBatch = [];
                 foreach ($hotels as $hotel) {
                     $hotel_id = (string)($hotel->IdHotel ?? '');
-                    $hotel_name = (string)($hotel->Hotel ?? '');
-                    $city = (string)($hotel->City ?? '');
-
                     if (empty($hotel_id)) continue;
 
-                    $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-
-                    // Extract all available fields from hotel_list response
-                    $hotelType = (string)($hotel->HotelType ?? '');
-
-                    $data = [
+                    $hotelBatch[] = [
                         'hotel_id' => $hotel_id,
-                        'hotel_name' => $hotel_name,
-                        'city' => $city,
+                        'hotel_name' => (string)($hotel->Hotel ?? ''),
+                        'city' => (string)($hotel->City ?? ''),
                         'region' => (string)($hotel->Region ?? ''),
                         'country' => (string)($hotel->Country ?? $country),
-                        'hotel_type' => $hotelType,
+                        'hotel_type' => (string)($hotel->HotelType ?? ''),
                         'latitude' => (string)($hotel->Lat ?? ''),
                         'longitude' => (string)($hotel->Lng ?? ''),
                         'hotel_list_synced_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s')
                     ];
-
-                    if ($exists) {
-                        db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
-                    } else {
-                        $data['created_at'] = date('Y-m-d H:i:s');
-                        db_query("INSERT INTO ?:novoton_hotels ?e", $data);
-                        $new_hotels++;
-                    }
-
-                    $synced_hotels++;
-                    echo "  [{$hotel_id}] {$hotel_name} | {$city} | {$data['region']} | {$hotelType}";
-                    if (!empty($data['latitude'])) echo " | {$data['latitude']},{$data['longitude']}";
-                    echo "\n";
                 }
+
+                // Batch upsert
+                $result = DatabaseHelper::upsertHotels($hotelBatch);
+                $logger->increment('added', $result['inserted']);
+                $logger->increment('updated', $result['updated']);
+                $logger->increment('synced', $result['inserted'] + $result['updated']);
+
+                // Output summary for this country
+                $logger->output("  -> Inserted: {$result['inserted']}, Updated: {$result['updated']}");
             } else {
-                echo "0 hotels (or error)\n";
+                $logger->output("0 hotels (or error)");
             }
         }
 
-        echo "\nTotal hotels: {$total_hotels}\n";
-        echo "Synced: {$synced_hotels} (new: {$new_hotels})\n";
+        $stats = $logger->getStats();
+        $logger->output("");
+        $logger->output("Total hotels: {$stats['total']}");
+        $logger->output("Synced: {$stats['synced']} (new: {$stats['added']})");
 
-        // Log to sync_log table for dashboard display
-        $duration = round(microtime(true) - $cron_start_time, 1);
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotellist', sync_date = NOW(),
-             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
-            $total_hotels, $synced_hotels, $duration
-        );
-
-        // Send email report
-        fn_novoton_send_import_report_email([], 'hotel_list', [
-            'added'    => $new_hotels,
-            'updated'  => $synced_hotels - $new_hotels,
-            'duration' => $duration . 's',
-        ], implode(', ', $countries));
+        // Log and send email
+        $logger->complete(true, implode(', ', $countries));
     }
 
     // =========================================
@@ -250,19 +221,18 @@ try {
         $country = strtoupper($_REQUEST['country'] ?? '');
         $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
 
-        echo "Checking hotels with active prices...\n";
-        echo "Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}\n";
-        if ($country) echo "Country: {$country}\n";
-        echo "\n";
+        $logger->output("Checking hotels with active prices...");
+        $logger->output("Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}");
+        if ($country) $logger->output("Country: {$country}");
+        $logger->output("");
 
-        $where = $country ? db_quote("WHERE country = ?s", $country) : "";
-        $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels {$where} ORDER BY country, hotel_name LIMIT ?i",
-            $limit
-        );
+        // Use DatabaseHelper for optimized query
+        $conditions = $country ? ['country' => $country] : [];
+        $hotels = DatabaseHelper::getHotelsForSync($conditions, $limit, ['hotel_id', 'hotel_name', 'country']);
 
-        $with_prices = 0;
-        $without_prices = 0;
+        // Collect results for batch update
+        $withPricesIds = [];
+        $withoutPricesIds = [];
 
         foreach ($hotels as $idx => $hotel) {
             $params = [
@@ -290,40 +260,45 @@ try {
             }
 
             if ($best_price > 0) {
-                $with_prices++;
-                db_query("UPDATE ?:novoton_hotels SET has_prices = 'Y', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
-                echo "NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2) . "\n";
+                $withPricesIds[] = $hotel['hotel_id'];
+                $logger->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2));
             } else {
-                $without_prices++;
-                db_query("UPDATE ?:novoton_hotels SET has_prices = 'N', last_price_check = NOW() WHERE hotel_id = ?s", $hotel['hotel_id']);
+                $withoutPricesIds[] = $hotel['hotel_id'];
             }
 
+            // Progress indicator every 25 hotels
             if (($idx + 1) % 25 == 0) {
-                echo "Checked " . ($idx + 1) . "/" . count($hotels) . " hotels...\n";
+                // Batch update has_prices flag for collected hotel IDs
+                DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+                $logger->increment('updated', count($withPricesIds));
+                $logger->increment('skipped', count($withoutPricesIds));
+                $withPricesIds = [];
+                $withoutPricesIds = [];
+
+                $logger->outputProgress($idx + 1, count($hotels), "Checked");
             }
 
-            usleep(100000); // 100ms delay
+            usleep(Config::API_DELAY_MS * 1000);
         }
 
-        echo "\nResults:\n";
-        echo "Hotels WITH prices: {$with_prices}\n";
-        echo "Hotels WITHOUT prices: {$without_prices}\n";
-        echo "Total checked: " . ($with_prices + $without_prices) . "\n";
+        // Final batch update of has_prices flag
+        if (!empty($withPricesIds) || !empty($withoutPricesIds)) {
+            DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+            $logger->increment('updated', count($withPricesIds));
+            $logger->increment('skipped', count($withoutPricesIds));
+        }
 
-        // Log to sync_log table for dashboard display
-        $duration = round(microtime(true) - $cron_start_time, 1);
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = 'prices', sync_date = NOW(),
-             products_total = ?i, products_updated = ?i, duration_seconds = ?i, status = 'completed'",
-            $with_prices + $without_prices, $with_prices, $duration
-        );
+        $stats = $logger->getStats();
+        $logger->setStat('total', $stats['updated'] + $stats['skipped']);
 
-        // Send email report
-        fn_novoton_send_import_report_email([], 'room_price', [
-            'updated'  => $with_prices,
-            'skipped'  => $without_prices,
-            'duration' => $duration . 's',
-        ], $country ?: 'ALL');
+        $logger->output("");
+        $logger->output("Results:");
+        $logger->output("Hotels WITH prices: {$stats['updated']}");
+        $logger->output("Hotels WITHOUT prices: {$stats['skipped']}");
+        $logger->output("Total checked: {$stats['total']}");
+
+        // Log and send email
+        $logger->complete(true, $country ?: 'ALL');
     }
     
     // =========================================
@@ -978,6 +953,60 @@ try {
     }
 
     // =========================================
+    // MODE: exchange_rates
+    // Update currency exchange rates from BNR
+    // =========================================
+    elseif ($mode == 'exchange_rates') {
+        echo "Exchange Rates Update (BNR)\n";
+        echo "===========================\n\n";
+
+        // Call the exchange rate update function
+        $result = fn_novoton_update_exchange_rates(true);
+
+        echo "Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED') . "\n";
+        echo "Message: " . $result['message'] . "\n\n";
+
+        if (!empty($result['bnr_rates'])) {
+            echo "BNR Rates (RON-based):\n";
+            foreach ($result['bnr_rates'] as $currency => $rate) {
+                echo "  {$currency}: {$rate}\n";
+            }
+            echo "\n";
+        }
+
+        if (!empty($result['coefficients'])) {
+            $commission = $result['commission'] ?? 0;
+            echo "Calculated Coefficients (EUR-based, commission: {$commission}%):\n";
+            foreach ($result['coefficients'] as $currency => $coefficient) {
+                echo "  {$currency}: {$coefficient}\n";
+            }
+            echo "\n";
+        }
+
+        if (!empty($result['updates'])) {
+            echo "Update Results:\n";
+            foreach ($result['updates'] as $currency => $update) {
+                if ($update['success']) {
+                    $old = $update['old_rate'] ?? '-';
+                    $new = $update['new_rate'] ?? '-';
+                    echo "  {$currency}: {$old} -> {$new}\n";
+                } else {
+                    $error = $update['error'] ?? 'Unknown error';
+                    echo "  {$currency}: FAILED - {$error}\n";
+                }
+            }
+        }
+
+        // Log to sync_log table
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'exchange_rates', sync_date = NOW(),
+             products_updated = ?i, duration_seconds = ?i, status = ?s",
+            count($result['updates'] ?? []), $duration, $result['success'] ? 'completed' : 'failed'
+        );
+    }
+
+    // =========================================
     // MODE: hotel_info_batched (Recommended)
     // Batched hotel info sync with resume capability
     // - First run: syncs all hotels (batched, resumable)
@@ -985,14 +1014,16 @@ try {
     // - Full sync: every 6 months automatically
     // =========================================
     elseif ($mode == 'hotel_info_batched') {
-        echo "Batched Hotel Info Sync\n";
-        echo "========================\n\n";
+        $logger->output("Batched Hotel Info Sync");
+        $logger->output("========================");
+        $logger->output("");
 
         // Load the batched sync helper
-        $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+        $helpers_dir = Config::getPath('helpers');
         require_once($helpers_dir . 'BatchedHotelInfoSync.php');
 
         $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
+        $sync->setOutputCallback(function($msg) use ($logger) { $logger->output(rtrim($msg, "\n")); });
 
         // Configure from request parameters
         if (!empty($_REQUEST['batch_size'])) {
@@ -1063,601 +1094,6 @@ try {
     }
 
     // =========================================
-    // MODE: hotel_info (Hotel accommodation)
-    // Syncs hotel details (rooms, boards, packages) from hotelinfo API
-    // Also available: mode=sync_hotels for full hotel sync
-    // =========================================
-    elseif ($mode == 'hotel_info') {
-        echo "Hotel Info Sync (hotelinfo API)\n";
-        echo "Syncing rooms, boards, packages for hotels...\n\n";
-        $force = !empty($_REQUEST['force']);
-        $limit = intval($_REQUEST['limit'] ?? 0); // 0 = no limit
-        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-        $countries = [];
-
-        // Parse countries from settings
-        if (!empty($addon_settings['selected_countries'])) {
-            $sel = $addon_settings['selected_countries'];
-            if (is_array($sel)) {
-                foreach ($sel as $k => $v) {
-                    if ($v === 'Y' || $v === '1' || $v === 1) {
-                        $countries[] = strtoupper(trim($k));
-                    } elseif (is_string($v) && strlen($v) > 2) {
-                        $countries[] = strtoupper(trim($v));
-                    }
-                }
-            } elseif (is_string($sel)) {
-                $countries = array_map(function($c) { return strtoupper(trim($c)); }, explode(',', $sel));
-            }
-        }
-        $countries = array_filter($countries);
-        if (empty($countries)) {
-            $countries = ['BULGARIA', 'GREECE', 'TURKEY', 'EGYPT', 'CYPRUS', 'SPAIN', 'ALBANIA', 'ITALY', 'MALDIVES', 'FRANCE', 'UNITED ARAB EMIRATES', 'UNITED KINGDOM'];
-        }
-
-        echo "Hotel Accommodation Sync (hotelinfo)\n";
-        echo "Countries: " . implode(', ', $countries) . "\n";
-        echo "Force full sync: " . ($force ? 'YES' : 'NO') . "\n";
-        echo "Limit: " . ($limit > 0 ? $limit : "No limit") . "\n\n";
-
-        // Determine which hotels to sync
-        $hotel_ids_to_sync = [];
-
-        if (!$force) {
-            // Check if we have any previous hotelinfo sync
-            $last_hotelinfo_sync = db_get_field(
-                "SELECT MAX(hotelinfo_synced_at) FROM ?:novoton_hotels WHERE hotelinfo_synced_at IS NOT NULL"
-            );
-
-            if (!empty($last_hotelinfo_sync)) {
-                // Incremental: use offers_update API to find changed hotels
-                // API parameter uses server time for consistency with DB
-                $datetime_param = date('Y-m-d\TH:i:s', strtotime($last_hotelinfo_sync));
-                // Display uses configured timezone
-                $last_sync_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
-                $datetime_display = (new DateTime($last_hotelinfo_sync))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d\TH:i:s');
-                echo "Last hotelinfo sync: {$last_sync_display}\n";
-                echo "Calling offers_update since {$datetime_display}...\n\n";
-
-                $changed_ids = [];
-                foreach ($countries as $country) {
-                    $response = $api->getOffersUpdate($datetime_param, $country);
-                    if ($response && isset($response->Offer)) {
-                        foreach ($response->Offer as $offer) {
-                            $hid = (string)($offer->IdHotel ?? '');
-                            if (!empty($hid)) {
-                                $changed_ids[$hid] = true;
-                            }
-                        }
-                    }
-                }
-
-                if (!empty($changed_ids)) {
-                    $hotel_ids_to_sync = array_keys($changed_ids);
-                    echo "offers_update returned " . count($hotel_ids_to_sync) . " changed hotel(s).\n\n";
-                } else {
-                    echo "offers_update returned 0 changes. Nothing to sync.\n";
-                }
-
-                // Also include hotels that have never had hotelinfo synced
-                $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
-                $unsyced = db_get_fields(
-                    "SELECT hotel_id FROM ?:novoton_hotels WHERE hotelinfo_synced_at IS NULL AND country IN (?a) {$limit_clause}",
-                    $countries
-                );
-                if (!empty($unsyced)) {
-                    echo "Also syncing " . count($unsyced) . " hotel(s) that never had hotelinfo.\n\n";
-                    $hotel_ids_to_sync = array_unique(array_merge($hotel_ids_to_sync, $unsyced));
-                }
-            } else {
-                // First run ever — sync all hotels
-                echo "First run: syncing all hotels...\n\n";
-                $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
-                $hotel_ids_to_sync = db_get_fields(
-                    "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name {$limit_clause}",
-                    $countries
-                );
-            }
-        } else {
-            // Force: re-sync all hotels
-            echo "Forced full sync: fetching all hotels...\n\n";
-            $limit_clause = $limit > 0 ? "LIMIT " . intval($limit) : "";
-            $hotel_ids_to_sync = db_get_fields(
-                "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name {$limit_clause}",
-                $countries
-            );
-        }
-
-        if (empty($hotel_ids_to_sync)) {
-            echo "No hotels to sync.\n";
-        } else {
-            echo "Processing " . count($hotel_ids_to_sync) . " hotel(s)...\n\n";
-
-            // Apply limit only if limit > 0
-            if ($limit > 0 && count($hotel_ids_to_sync) > $limit) {
-                $hotel_ids_to_sync = array_slice($hotel_ids_to_sync, 0, $limit);
-                echo "(Limited to {$limit})\n\n";
-            }
-
-            $synced = 0;
-            $errors = 0;
-            $now = date('Y-m-d H:i:s');
-
-            foreach ($hotel_ids_to_sync as $hotel_id) {
-                $hotel_name = db_get_field("SELECT hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-                echo "[{$hotel_id}] " . ($hotel_name ?: '?') . " ... ";
-
-                try {
-                    $hotel_info = $api->getHotelInfo($hotel_id);
-
-                    if (!$hotel_info) {
-                        echo "API returned empty\n";
-                        $errors++;
-                        continue;
-                    }
-
-                    $update = [
-                        'hotelinfo_synced_at' => $now,
-                    ];
-
-                    // Extract package_name
-                    $package_name = '';
-                    if (isset($hotel_info->packages->PackageName)) {
-                        $package_name = (string)$hotel_info->packages->PackageName;
-                    } elseif (isset($hotel_info->packages->Package)) {
-                        $package_name = (string)$hotel_info->packages->Package;
-                    }
-                    if (empty($package_name)) {
-                        $pn = $hotel_info->xpath('//PackageName');
-                        if (!empty($pn)) {
-                            $package_name = (string)$pn[0];
-                        }
-                    }
-                    if (!empty($package_name)) {
-                        $update['package_name'] = $package_name;
-                    }
-
-                    // V3: Store full hotelinfo in hotel_data JSON
-                    $update['hotel_data'] = json_encode($hotel_info);
-                    $update['hotelinfo_synced_at'] = date('Y-m-d H:i:s');
-
-                    // V3: Count packages for statistics
-                    $packages_count = 0;
-                    $packages = [];
-                    if (isset($hotel_info->packages)) {
-                        if (isset($hotel_info->packages->IdCont)) {
-                            // Single package
-                            $packages[] = [
-                                'IdCont' => (string)$hotel_info->packages->IdCont,
-                                'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
-                            ];
-                        }
-                        // Multiple packages - check for both formats
-                        if (isset($hotel_info->packages->package)) {
-                            foreach ($hotel_info->packages->package as $pkg) {
-                                $packages[] = [
-                                    'IdCont' => (string)($pkg->IdCont ?? ''),
-                                    'PackageName' => (string)($pkg->PackageName ?? ''),
-                                ];
-                            }
-                        }
-                        $packages_count = count($packages);
-                    }
-                    $update['packages_count'] = $packages_count;
-                    $update['has_prices'] = $packages_count > 0 ? 'Y' : 'N';
-
-                    // Extract counts for logging
-                    $rooms_count = 0;
-                    if (isset($hotel_info->rooms) && isset($hotel_info->rooms->room)) {
-                        $rooms_count = count($hotel_info->rooms->room);
-                    }
-                    $boards_count = 0;
-                    if (isset($hotel_info->boards) && isset($hotel_info->boards->board)) {
-                        $boards_count = count($hotel_info->boards->board);
-                    }
-
-                    db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel_id);
-
-                    // V3: Insert packages into novoton_hotel_packages table
-                    foreach ($packages as $pkg) {
-                        if (!empty($pkg['IdCont'])) {
-                            db_query(
-                                "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
-                                 VALUES (?s, ?s, ?s, NOW())
-                                 ON DUPLICATE KEY UPDATE package_name = ?s",
-                                $hotel_id,
-                                $pkg['IdCont'],
-                                $pkg['PackageName'],
-                                $pkg['PackageName']
-                            );
-                        }
-                    }
-
-                    $synced++;
-
-                    $parts = [];
-                    if ($rooms_count > 0) $parts[] = $rooms_count . ' rooms';
-                    if ($boards_count > 0) $parts[] = $boards_count . ' boards';
-                    if ($packages_count > 0) $parts[] = $packages_count . ' packages';
-                    if (!empty($package_name)) $parts[] = 'pkg: ' . $package_name;
-                    echo "OK (" . (empty($parts) ? 'no detail data' : implode(', ', $parts)) . ")\n";
-
-                } catch (Exception $e) {
-                    echo "ERROR: " . $e->getMessage() . "\n";
-                    $errors++;
-                }
-
-                usleep(100000); // 100ms delay between API calls
-
-                if ($synced % 50 == 0 && $synced > 0) {
-                    echo "--- Progress: {$synced} synced ---\n";
-                    flush();
-                }
-            }
-
-            echo "\nSummary:\n";
-            echo "Synced: {$synced}\n";
-            echo "Errors: {$errors}\n";
-            echo "Total processed: " . count($hotel_ids_to_sync) . "\n";
-
-            // Log to sync_log table for dashboard display
-            $duration = round(microtime(true) - $cron_start_time, 1);
-            db_query(
-                "INSERT INTO ?:novoton_sync_log SET sync_type = 'hotelinfo', sync_date = NOW(),
-                 products_total = ?i, products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
-                count($hotel_ids_to_sync), $synced, $errors, $duration
-            );
-
-            // Send email report
-            fn_novoton_send_import_report_email([], 'hotel_info', [
-                'updated'  => $synced,
-                'errors'   => $errors,
-                'skipped'  => count($hotel_ids_to_sync) - $synced - $errors,
-                'duration' => $duration . 's',
-            ], implode(', ', $countries));
-        }
-    }
-
-    // =========================================
-    // MODE: check_packages (V3)
-    // =========================================
-    elseif ($mode == 'check_packages') {
-        echo "Check Hotel Packages - V3 (hotelinfo API)\n\n";
-
-        // Get countries from addon settings
-        $countries = fn_novoton_parse_countries();
-
-        echo "Countries: " . implode(', ', $countries) . "\n\n";
-
-        // V3: Select hotels without package_name column (it's now in novoton_hotel_packages)
-        $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY country, hotel_name",
-            $countries
-        );
-
-        if (empty($hotels)) {
-            echo "No hotels found in database.\n";
-        } else {
-            echo "Processing " . count($hotels) . " hotels...\n\n";
-
-            $total = 0;
-            $with_packages = 0;
-            $packages_added = 0;
-            $updated = 0;
-            $errors = 0;
-            $current_country = '';
-
-            foreach ($hotels as $hotel) {
-                $total++;
-
-                if ($hotel['country'] !== $current_country) {
-                    $current_country = $hotel['country'];
-                    echo "\n--- {$current_country} ---\n";
-                }
-
-                try {
-                    $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
-
-                    // V3: Extract all packages from hotelinfo
-                    $packages = [];
-                    if ($hotel_info && isset($hotel_info->packages)) {
-                        // Single package format
-                        if (isset($hotel_info->packages->IdCont)) {
-                            $packages[] = [
-                                'id' => (string)$hotel_info->packages->IdCont,
-                                'name' => (string)($hotel_info->packages->PackageName ?? '')
-                            ];
-                        }
-                        // Multiple packages format
-                        if (isset($hotel_info->packages->package)) {
-                            foreach ($hotel_info->packages->package as $pkg) {
-                                $packages[] = [
-                                    'id' => (string)($pkg->IdCont ?? ''),
-                                    'name' => (string)($pkg->PackageName ?? '')
-                                ];
-                            }
-                        }
-                    }
-
-                    if (!empty($packages)) {
-                        $with_packages++;
-                        $pkg_names = [];
-
-                        // V3: Store packages in novoton_hotel_packages table
-                        foreach ($packages as $pkg) {
-                            if (!empty($pkg['id'])) {
-                                db_query(
-                                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
-                                     VALUES (?s, ?s, ?s, NOW())
-                                     ON DUPLICATE KEY UPDATE package_name = ?s",
-                                    $hotel['hotel_id'], $pkg['id'], $pkg['name'], $pkg['name']
-                                );
-                                $packages_added++;
-                                $pkg_names[] = $pkg['name'];
-                            }
-                        }
-
-                        // Update hotel packages_count
-                        db_query(
-                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
-                            count($packages), $hotel['hotel_id']
-                        );
-
-                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} -> " . count($packages) . " pkg: " . implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '') . "\n";
-                    } else {
-                        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - no packages\n";
-                    }
-                } catch (Exception $e) {
-                    $errors++;
-                    echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} - ERROR: " . $e->getMessage() . "\n";
-                }
-
-                usleep(100000); // 100ms delay
-
-                if ($total % 50 == 0) {
-                    echo "\n--- Progress: {$total}/" . count($hotels) . " ({$with_packages} with packages) ---\n";
-                }
-            }
-
-            echo "\n\nSummary:\n";
-            echo "Total checked: {$total}\n";
-            echo "With packages: {$with_packages}\n";
-            echo "Packages added/updated: {$packages_added}\n";
-            echo "Updated: {$updated}\n";
-            echo "Errors: {$errors}\n";
-
-            // Send email report
-            $duration = round(microtime(true) - $cron_start_time, 1) . 's';
-            fn_novoton_send_import_report_email([], 'check_packages', [
-                'added'    => $with_packages,
-                'updated'  => $updated,
-                'skipped'  => $total - $with_packages - $errors,
-                'errors'   => $errors,
-                'duration' => $duration,
-            ], implode(', ', $countries));
-        }
-    }
-
-    // =========================================
-    // MODE: sync_hotels (V3 - Full sync)
-    // =========================================
-    elseif ($mode == 'sync_hotels') {
-        echo "V3 Full Sync: hotel_list + hotelinfo + priceinfo\n\n";
-
-        $start_time = microtime(true);
-        $limit = intval($_REQUEST['limit'] ?? 100);
-        $countries = fn_novoton_parse_countries();
-
-        echo "Countries: " . implode(', ', $countries) . "\n";
-        echo "Limit per step: {$limit}\n\n";
-
-        // Step 1: Hotel List
-        echo "=== STEP 1: Hotel List ===\n";
-        $hotels_added = 0;
-        $hotels_updated = 0;
-
-        foreach ($countries as $country) {
-            echo "\n[{$country}] Fetching hotel list... ";
-            $result = $api->getHotelList($country, '%', '%', '%');
-
-            if (!$result) {
-                echo "FAILED\n";
-                continue;
-            }
-
-            $count = 0;
-            foreach ($result as $hotel) {
-                $count++;
-                $hotel_id = (string)($hotel->IdHotel ?? '');
-                if (empty($hotel_id)) continue;
-
-                $hotel_data = [
-                    'hotel_id' => $hotel_id,
-                    'hotel_name' => (string)($hotel->Hotel ?? ''),
-                    'city' => (string)($hotel->City ?? ''),
-                    'country' => $country,
-                    'hotel_type' => (string)($hotel->HotelType ?? ''),
-                    'latitude' => (string)($hotel->Latitude ?? ''),
-                    'longitude' => (string)($hotel->Longitude ?? ''),
-                ];
-
-                // Parse star rating
-                $stars = (string)($hotel->Stars ?? '');
-                if (preg_match('/(\d)/', $stars, $m)) {
-                    $hotel_data['star_rating'] = intval($m[1]);
-                }
-
-                $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-                if ($exists) {
-                    db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $hotel_data, $hotel_id);
-                    $hotels_updated++;
-                } else {
-                    $hotel_data['created_at'] = date('Y-m-d H:i:s');
-                    db_query("INSERT INTO ?:novoton_hotels ?e", $hotel_data);
-                    $hotels_added++;
-                }
-            }
-            echo "{$count} hotels\n";
-        }
-
-        echo "\nHotels: +{$hotels_added} added, {$hotels_updated} updated\n";
-
-        // Step 2: Hotelinfo (for hotels without hotel_data)
-        echo "\n=== STEP 2: Hotelinfo ===\n";
-        $hotels_to_sync = db_get_array(
-            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
-             WHERE country IN (?a) AND (hotel_data IS NULL OR hotel_data = '')
-             ORDER BY hotel_name LIMIT ?i",
-            $countries, $limit
-        );
-
-        echo "Hotels needing hotelinfo: " . count($hotels_to_sync) . "\n\n";
-        $info_synced = 0;
-        $packages_created = 0;
-
-        foreach ($hotels_to_sync as $hotel) {
-            echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']} ... ";
-
-            $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
-            if (!$hotel_info) {
-                echo "SKIP\n";
-                continue;
-            }
-
-            // Store hotel_data JSON
-            $update = [
-                'hotel_data' => json_encode($hotel_info),
-                'hotelinfo_synced_at' => date('Y-m-d H:i:s'),
-            ];
-
-            // Extract and store packages
-            $packages = [];
-            if (isset($hotel_info->packages)) {
-                if (isset($hotel_info->packages->IdCont)) {
-                    $packages[] = [
-                        'IdCont' => (string)$hotel_info->packages->IdCont,
-                        'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
-                    ];
-                }
-                if (isset($hotel_info->packages->package)) {
-                    foreach ($hotel_info->packages->package as $pkg) {
-                        $packages[] = [
-                            'IdCont' => (string)($pkg->IdCont ?? ''),
-                            'PackageName' => (string)($pkg->PackageName ?? ''),
-                        ];
-                    }
-                }
-            }
-
-            $update['packages_count'] = count($packages);
-            $update['has_prices'] = count($packages) > 0 ? 'Y' : 'N';
-            if (!empty($packages[0]['PackageName'])) {
-                $update['package_name'] = $packages[0]['PackageName'];
-            }
-
-            db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel['hotel_id']);
-
-            // Insert packages into novoton_hotel_packages
-            foreach ($packages as $pkg) {
-                if (!empty($pkg['IdCont'])) {
-                    db_query(
-                        "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
-                         VALUES (?s, ?s, ?s, NOW())
-                         ON DUPLICATE KEY UPDATE package_name = ?s",
-                        $hotel['hotel_id'], $pkg['IdCont'], $pkg['PackageName'], $pkg['PackageName']
-                    );
-                    $packages_created++;
-                }
-            }
-
-            $info_synced++;
-            echo count($packages) . " pkg\n";
-
-            usleep(100000); // 100ms delay
-        }
-
-        echo "\nHotelinfo: {$info_synced} synced, {$packages_created} packages\n";
-
-        // Step 3: Priceinfo (for packages without priceinfo_data)
-        echo "\n=== STEP 3: Priceinfo ===\n";
-        $packages_to_sync = db_get_array(
-            "SELECT p.hotel_id, p.package_id, p.package_name, h.hotel_name
-             FROM ?:novoton_hotel_packages p
-             JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
-             WHERE h.country IN (?a) AND (p.priceinfo_data IS NULL OR p.priceinfo_data = '')
-             ORDER BY h.hotel_name LIMIT ?i",
-            $countries, $limit
-        );
-
-        echo "Packages needing priceinfo: " . count($packages_to_sync) . "\n\n";
-        $prices_synced = 0;
-
-        foreach ($packages_to_sync as $pkg) {
-            echo "[{$pkg['hotel_id']}] {$pkg['hotel_name']} / {$pkg['package_name']} ... ";
-
-            $priceinfo = $api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
-            if (!$priceinfo) {
-                echo "SKIP\n";
-                continue;
-            }
-
-            $priceinfo_data = json_decode(json_encode($priceinfo), true);
-
-            // Calculate metadata
-            $has_eb = !empty($priceinfo_data['early_booking']) ? 'Y' : 'N';
-            $seasons = 0;
-            $min_price = null;
-
-            if (isset($priceinfo_data['seasons']['season'])) {
-                $s = $priceinfo_data['seasons']['season'];
-                $seasons = isset($s['IdSeason']) ? 1 : count($s);
-            }
-
-            if (isset($priceinfo_data['season_price'])) {
-                $sp = $priceinfo_data['season_price'];
-                if (isset($sp['Code'])) $sp = [$sp];
-                foreach ($sp as $row) {
-                    for ($i = 1; $i <= 20; $i++) {
-                        $p = floatval($row['Price' . $i] ?? 0);
-                        if ($p > 0 && ($min_price === null || $p < $min_price)) {
-                            $min_price = $p;
-                        }
-                    }
-                }
-            }
-
-            db_query(
-                "UPDATE ?:novoton_hotel_packages SET
-                 priceinfo_data = ?s, has_early_booking = ?s, seasons_count = ?i, min_price = ?d, synced_at = NOW()
-                 WHERE hotel_id = ?s AND package_id = ?s",
-                json_encode($priceinfo_data), $has_eb, $seasons, $min_price,
-                $pkg['hotel_id'], $pkg['package_id']
-            );
-
-            $prices_synced++;
-            echo "OK (€" . ($min_price ?? 0) . ")\n";
-
-            usleep(100000); // 100ms delay
-        }
-
-        echo "\nPriceinfo: {$prices_synced} synced\n";
-
-        $duration = round(microtime(true) - $start_time, 1);
-        echo "\n=== SUMMARY ===\n";
-        echo "Hotels: +{$hotels_added} added, {$hotels_updated} updated\n";
-        echo "Hotelinfo: {$info_synced} synced\n";
-        echo "Priceinfo: {$prices_synced} synced\n";
-        echo "Duration: {$duration}s\n";
-
-        // Log sync
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = 'sync_hotels', sync_date = NOW(),
-             hotels_synced = ?i, hotels_added = ?i, hotels_updated = ?i, duration = ?d, status = 'completed'",
-            $info_synced + $prices_synced, $hotels_added, $hotels_updated, $duration
-        );
-    }
-
-    // =========================================
     // MODE: sync_priceinfo_batched (Recommended)
     // Batched priceinfo sync with resume capability
     // - Syncs prices for all packages in batches
@@ -1665,14 +1101,16 @@ try {
     // - Incremental: stale packages (older than 24h)
     // =========================================
     elseif ($mode == 'sync_priceinfo_batched') {
-        echo "Batched Price Info Sync\n";
-        echo "========================\n\n";
+        $logger->output("Batched Price Info Sync");
+        $logger->output("========================");
+        $logger->output("");
 
         // Load the batched sync helper
-        $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+        $helpers_dir = Config::getPath('helpers');
         require_once($helpers_dir . 'BatchedPriceInfoSync.php');
 
         $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSync();
+        $sync->setOutputCallback(function($msg) use ($logger) { $logger->output(rtrim($msg, "\n")); });
 
         // Configure from request parameters
         if (!empty($_REQUEST['batch_size'])) {
@@ -1751,48 +1189,16 @@ try {
     // =========================================
     else {
         $mode_found = false;
-        echo "Unknown mode: {$mode}\n";
-        echo "\nAvailable modes:\n";
-        echo "- hotel_info_batched: [RECOMMENDED] Batched hotel info sync with resume\n";
-        echo "    &status=1          - Check progress\n";
-        echo "    &force_full=1      - Force full sync (all hotels)\n";
-        echo "    &reset=1           - Reset/cancel in-progress sync\n";
-        echo "    &batch_size=100    - Hotels per batch (default: 100)\n";
-        echo "    &max_time=300      - Max seconds per run (default: 300)\n";
-        echo "    &unlimited=1       - No time limit (for CLI PHP usage)\n";
-        echo "- sync_priceinfo_batched: [RECOMMENDED] Batched priceinfo sync with resume\n";
-        echo "    &status=1          - Check progress\n";
-        echo "    &force_full=1      - Force full sync (all packages)\n";
-        echo "    &reset=1           - Reset/cancel in-progress sync\n";
-        echo "    &batch_size=50     - Packages per batch (default: 50)\n";
-        echo "    &max_time=300      - Max seconds per run (default: 300)\n";
-        echo "    &stale_hours=24    - Re-sync packages older than N hours\n";
-        echo "    &unlimited=1       - No time limit (for CLI PHP usage)\n";
-        echo "- sync_hotels: V3 full sync (hotel_list + hotelinfo + priceinfo)\n";
-        echo "- resinfo: Check ASK bookings status\n";
-        echo "- hotel_list: Hotel list sync from API\n";
-        echo "- hotel_info: Sync hotel accommodation (legacy, no resume)\n";
-        echo "- offers_update: Check for new/updated offers (&country=BULGARIA)\n";
-        echo "- add_hotels_as_products: Add hotels as products\n";
-        echo "- list_facilities: Sync facilities list from API\n";
-        echo "\nRecommended workflow:\n";
-        echo "  1. hotel_info_batched (every 5 min) - Smart hotel info sync with resume\n";
-        echo "     - First run: syncs all hotels (batched)\n";
-        echo "     - Daily: only new/changed hotels from offers_update\n";
-        echo "     - Every 6 months: automatic full re-sync\n";
-        echo "  2. sync_priceinfo_batched (every 5 min) - Smart priceinfo sync with resume\n";
-        echo "     - First run: syncs all packages (batched)\n";
-        echo "     - Daily: only stale packages (older than 24h)\n";
-        echo "     - Every 7 days: automatic full re-sync\n";
-        echo "  3. list_facilities (weekly) - Sync facilities list\n";
+        $logger->output("Unknown mode: {$mode}");
+        $logger->output("");
+        CronHelper::printAvailableModes($logger);
     }
-    
+
 } catch (Exception $e) {
-    echo "ERROR: " . $e->getMessage() . "\n";
+    $logger->output("ERROR: " . $e->getMessage());
+    $logger->logEvent('cron_error', ['error' => $e->getMessage()]);
 }
 
-echo "\n===========================================\n";
-echo "Completed at: " . (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d H:i:s') . " ({$cron_timezone})\n";
-echo "===========================================\n";
+$logger->outputFooter();
 
 exit;
