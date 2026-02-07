@@ -268,8 +268,8 @@ try {
 
             // Progress indicator every 25 hotels
             if (($idx + 1) % 25 == 0) {
-                // Batch update collected IDs
-                DatabaseHelper::batchUpdateHotelPrices($withPricesIds, $withoutPricesIds);
+                // Batch update has_prices flag for collected hotel IDs
+                DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
                 $logger->increment('updated', count($withPricesIds));
                 $logger->increment('skipped', count($withoutPricesIds));
                 $withPricesIds = [];
@@ -281,9 +281,9 @@ try {
             usleep(Config::API_DELAY_MS * 1000);
         }
 
-        // Final batch update
+        // Final batch update of has_prices flag
         if (!empty($withPricesIds) || !empty($withoutPricesIds)) {
-            DatabaseHelper::batchUpdateHotelPrices($withPricesIds, $withoutPricesIds);
+            DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
             $logger->increment('updated', count($withPricesIds));
             $logger->increment('skipped', count($withoutPricesIds));
         }

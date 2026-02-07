@@ -28,13 +28,16 @@ class DatabaseHelper
     private static array $hotelCache = [];
 
     /**
-     * Batch update hotels with has_prices flag
+     * Batch update hotels has_prices flag after room_price API checks
      *
-     * @param array $withPrices Array of hotel_ids that have prices
-     * @param array $withoutPrices Array of hotel_ids without prices
-     * @return int Number of updates
+     * Used after calling room_price API to mark which hotels have available prices.
+     * Updates the has_prices column (Y/N) and last_price_check timestamp.
+     *
+     * @param array $withPrices Array of hotel_ids that have prices (set has_prices = 'Y')
+     * @param array $withoutPrices Array of hotel_ids without prices (set has_prices = 'N')
+     * @return int Number of rows updated
      */
-    public static function batchUpdateHotelPrices(array $withPrices, array $withoutPrices): int
+    public static function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
     {
         $updated = 0;
 
