@@ -1,0 +1,422 @@
+<?php
+/**
+ * Novoton Holidays - State Manager
+ *
+ * Unified state file management for batched sync operations.
+ * Provides:
+ * - Atomic file operations with locking
+ * - Consistent state structure
+ * - Progress tracking
+ * - Resume capability
+ *
+ * @package NovotonHolidays
+ * @since 3.1.0
+ */
+
+namespace Tygh\Addons\NovotonHolidays\Helpers;
+
+class StateManager
+{
+    /**
+     * State file path
+     * @var string
+     */
+    private string $stateFile;
+
+    /**
+     * State name identifier
+     * @var string
+     */
+    private string $stateName;
+
+    /**
+     * Lock file handle
+     * @var resource|null
+     */
+    private $lockHandle = null;
+
+    /**
+     * Default state structure
+     */
+    const DEFAULT_STATE = [
+        'status' => 'idle',
+        'sync_type' => null,
+        'started_at' => null,
+        'last_run_at' => null,
+        'total' => 0,
+        'processed' => 0,
+        'synced' => 0,
+        'errors' => 0,
+        'error_ids' => [],
+        'item_ids' => [],
+        'metadata' => [],
+    ];
+
+    /**
+     * Constructor
+     *
+     * @param string $stateName Unique name for this state file (e.g., 'hotelinfo', 'priceinfo')
+     */
+    public function __construct(string $stateName)
+    {
+        $this->stateName = $stateName;
+
+        // Ensure cache directory exists
+        Config::ensureCacheDir();
+
+        $cacheDir = Config::getPath('cache');
+        $this->stateFile = $cacheDir . "batch_{$stateName}_state.json";
+    }
+
+    /**
+     * Load state from file
+     *
+     * @return array State array
+     */
+    public function load(): array
+    {
+        if (!file_exists($this->stateFile)) {
+            return self::DEFAULT_STATE;
+        }
+
+        $content = @file_get_contents($this->stateFile);
+        if ($content === false) {
+            return self::DEFAULT_STATE;
+        }
+
+        $state = json_decode($content, true);
+        if (!is_array($state)) {
+            return self::DEFAULT_STATE;
+        }
+
+        return array_merge(self::DEFAULT_STATE, $state);
+    }
+
+    /**
+     * Save state to file with locking
+     *
+     * @param array $state State array
+     * @return bool Success
+     */
+    public function save(array $state): bool
+    {
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+
+        $content = json_encode($state, JSON_PRETTY_PRINT);
+        if ($content === false) {
+            return false;
+        }
+
+        // Write to temp file first for atomic operation
+        $tempFile = $this->stateFile . '.tmp';
+
+        if (@file_put_contents($tempFile, $content, LOCK_EX) === false) {
+            return false;
+        }
+
+        // Atomically replace the state file
+        if (!@rename($tempFile, $this->stateFile)) {
+            @unlink($tempFile);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Clear state file
+     *
+     * @return bool Success
+     */
+    public function clear(): bool
+    {
+        if (file_exists($this->stateFile)) {
+            return @unlink($this->stateFile);
+        }
+        return true;
+    }
+
+    /**
+     * Check if a sync is in progress
+     *
+     * @return bool
+     */
+    public function isInProgress(): bool
+    {
+        $state = $this->load();
+        return $state['status'] === 'in_progress';
+    }
+
+    /**
+     * Start a new sync
+     *
+     * @param string $syncType Type of sync (e.g., 'full', 'incremental')
+     * @param array $itemIds Array of item IDs to process
+     * @param array $metadata Additional metadata
+     * @return array New state
+     */
+    public function start(string $syncType, array $itemIds, array $metadata = []): array
+    {
+        $state = [
+            'status' => 'in_progress',
+            'sync_type' => $syncType,
+            'started_at' => date('Y-m-d H:i:s'),
+            'last_run_at' => date('Y-m-d H:i:s'),
+            'total' => count($itemIds),
+            'processed' => 0,
+            'synced' => 0,
+            'errors' => 0,
+            'error_ids' => [],
+            'item_ids' => $itemIds,
+            'metadata' => $metadata,
+        ];
+
+        $this->save($state);
+        return $state;
+    }
+
+    /**
+     * Update progress
+     *
+     * @param int $processed Number of items processed
+     * @param int $synced Number of items successfully synced
+     * @param int $errors Number of errors
+     * @param array $errorIds IDs of items with errors
+     * @return array Updated state
+     */
+    public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array
+    {
+        $state = $this->load();
+
+        $state['processed'] = $processed;
+        $state['synced'] = $synced;
+        $state['errors'] = $errors;
+
+        if (!empty($errorIds)) {
+            $state['error_ids'] = array_unique(array_merge($state['error_ids'], $errorIds));
+        }
+
+        $this->save($state);
+        return $state;
+    }
+
+    /**
+     * Increment counters
+     *
+     * @param int $processed Increment processed by
+     * @param int $synced Increment synced by
+     * @param int $errors Increment errors by
+     * @param string|null $errorId Optional error ID to add
+     * @return array Updated state
+     */
+    public function increment(int $processed = 0, int $synced = 0, int $errors = 0, ?string $errorId = null): array
+    {
+        $state = $this->load();
+
+        $state['processed'] += $processed;
+        $state['synced'] += $synced;
+        $state['errors'] += $errors;
+
+        if ($errorId !== null) {
+            $state['error_ids'][] = $errorId;
+        }
+
+        $this->save($state);
+        return $state;
+    }
+
+    /**
+     * Mark sync as completed
+     *
+     * @return array Final state
+     */
+    public function complete(): array
+    {
+        $state = $this->load();
+        $state['status'] = 'completed';
+        $state['completed_at'] = date('Y-m-d H:i:s');
+
+        // Calculate duration
+        if (!empty($state['started_at'])) {
+            $state['duration_seconds'] = time() - strtotime($state['started_at']);
+        }
+
+        $this->save($state);
+
+        // Clear item_ids to save space (keep other data for reference)
+        $state['item_ids'] = [];
+        $this->save($state);
+
+        return $state;
+    }
+
+    /**
+     * Get current status with calculated fields
+     *
+     * @return array Status with percent, eta, etc.
+     */
+    public function getStatus(): array
+    {
+        $state = $this->load();
+
+        $status = [
+            'status' => $state['status'],
+            'sync_type' => $state['sync_type'],
+            'total' => $state['total'],
+            'processed' => $state['processed'],
+            'synced' => $state['synced'],
+            'errors' => $state['errors'],
+        ];
+
+        if ($state['status'] === 'in_progress') {
+            $status['started_at'] = $state['started_at'];
+            $status['last_run_at'] = $state['last_run_at'];
+
+            // Calculate percent
+            $status['percent'] = $state['total'] > 0
+                ? round($state['processed'] / $state['total'] * 100, 1)
+                : 0;
+
+            // Calculate remaining
+            $status['remaining'] = $state['total'] - $state['processed'];
+
+            // Calculate elapsed time
+            $elapsed = time() - strtotime($state['started_at']);
+            $status['elapsed'] = $this->formatDuration($elapsed);
+
+            // Calculate ETA
+            if ($state['processed'] > 0) {
+                $rate = $state['processed'] / max(1, $elapsed);
+                $remaining_seconds = $status['remaining'] / max(0.001, $rate);
+                $status['eta'] = $this->formatDuration((int)$remaining_seconds);
+            } else {
+                $status['eta'] = 'Calculating...';
+            }
+        } elseif ($state['status'] === 'completed') {
+            $status['completed_at'] = $state['completed_at'] ?? null;
+            $status['duration'] = isset($state['duration_seconds'])
+                ? $this->formatDuration($state['duration_seconds'])
+                : null;
+        }
+
+        // Add metadata
+        if (!empty($state['metadata'])) {
+            $status['metadata'] = $state['metadata'];
+        }
+
+        return $status;
+    }
+
+    /**
+     * Get the next batch of item IDs to process
+     *
+     * @param int $batchSize Number of items to get
+     * @return array Array of item IDs
+     */
+    public function getNextBatch(int $batchSize): array
+    {
+        $state = $this->load();
+
+        if ($state['status'] !== 'in_progress') {
+            return [];
+        }
+
+        return array_slice($state['item_ids'], $state['processed'], $batchSize);
+    }
+
+    /**
+     * Check if sync should be resumed
+     *
+     * @return bool
+     */
+    public function shouldResume(): bool
+    {
+        $state = $this->load();
+
+        if ($state['status'] !== 'in_progress') {
+            return false;
+        }
+
+        return $state['processed'] < $state['total'];
+    }
+
+    /**
+     * Acquire an exclusive lock
+     *
+     * @param int $timeout Seconds to wait for lock
+     * @return bool Success
+     */
+    public function acquireLock(int $timeout = 5): bool
+    {
+        $lockFile = $this->stateFile . '.lock';
+        $this->lockHandle = @fopen($lockFile, 'c');
+
+        if (!$this->lockHandle) {
+            return false;
+        }
+
+        $startTime = time();
+        while (!flock($this->lockHandle, LOCK_EX | LOCK_NB)) {
+            if (time() - $startTime >= $timeout) {
+                fclose($this->lockHandle);
+                $this->lockHandle = null;
+                return false;
+            }
+            usleep(100000); // 100ms
+        }
+
+        return true;
+    }
+
+    /**
+     * Release the lock
+     */
+    public function releaseLock(): void
+    {
+        if ($this->lockHandle) {
+            flock($this->lockHandle, LOCK_UN);
+            fclose($this->lockHandle);
+            $this->lockHandle = null;
+        }
+    }
+
+    /**
+     * Format duration in human readable format
+     *
+     * @param int $seconds
+     * @return string
+     */
+    private function formatDuration(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return "{$seconds}s";
+        }
+        if ($seconds < 3600) {
+            $m = floor($seconds / 60);
+            $s = $seconds % 60;
+            return "{$m}m {$s}s";
+        }
+
+        $h = floor($seconds / 3600);
+        $m = floor(($seconds % 3600) / 60);
+        return "{$h}h {$m}m";
+    }
+
+    /**
+     * Get state file path
+     *
+     * @return string
+     */
+    public function getStateFilePath(): string
+    {
+        return $this->stateFile;
+    }
+
+    /**
+     * Destructor - ensure lock is released
+     */
+    public function __destruct()
+    {
+        $this->releaseLock();
+    }
+}
