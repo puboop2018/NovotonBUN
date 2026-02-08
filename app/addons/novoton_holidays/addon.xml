@@ -512,15 +512,6 @@
                 KEY `idx_status` (`status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sync operation logs'
         </item>
-        <!-- Add notes column and resinfo to sync_type enum for existing installations -->
-        <item for="install">
-            ALTER TABLE `?:novoton_sync_log`
-            MODIFY COLUMN `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels'
-        </item>
-        <item for="install">
-            ALTER TABLE `?:novoton_sync_log`
-            ADD COLUMN IF NOT EXISTS `notes` text DEFAULT NULL COMMENT 'Extra JSON data for sync details' AFTER `error_message`
-        </item>
 
         <!-- API Response Cache table -->
         <item for="install">
