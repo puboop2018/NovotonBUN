@@ -200,8 +200,10 @@
                         
                         <span class="info-label">{__("novoton_holidays.board")}:</span>
                         <span class="info-value">
-                            {if $booking_data.board_id == 'AI' || $booking_data.board_id == 'ALL INCL'}
+                            {if $booking_data.board_id == 'AI' || $booking_data.board_id == 'ALL INCL' || $booking_data.board_id == 'ALLINC'}
                                 {__("novoton_holidays.all_inclusive")}
+                            {elseif $booking_data.board_id == 'UAI' || $booking_data.board_id == 'ULTRA ALL INCL' || $booking_data.board_id == 'ULTRA ALL INCLUSIVE'}
+                                {__("novoton_holidays.ultra_all_inclusive")}
                             {elseif $booking_data.board_id == 'FB'}
                                 {__("novoton_holidays.full_board")}
                             {elseif $booking_data.board_id == 'HB'}
