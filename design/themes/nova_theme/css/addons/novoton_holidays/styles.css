@@ -3856,7 +3856,7 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     .novoton-search-results-page {
-        background: #1a1a2e;
+        background: #fff;
     }
     
     .novoton-room-section {
