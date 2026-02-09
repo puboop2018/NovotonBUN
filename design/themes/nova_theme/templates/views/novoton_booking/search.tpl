@@ -651,11 +651,25 @@
                                 </span>
                             {/if}
                             
-                            {if $result.remark || $result.more_info || $result.important}
+                            {if $result.remark || $result.more_info || $result.important || $result.terms_of_payment || $result.terms_of_cancellation}
                                 <a href="#" onclick="openInfoModal({$row_id}); return false;" style="display: inline-flex; align-items: center; gap: 4px; color: #0071c2; text-decoration: none;">
                                      {__("novoton_holidays.details")|default:"Detalii"}
                                 </a>
                                 <div id="modal-content-{$row_id}-mobile" style="display: none;">
+                                    {* Payment Terms - displayed first *}
+                                    {if $result.terms_of_payment}
+                                        {capture name="payment_terms_mobile"}{fn_novoton_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, 'EUR')}{/capture}
+                                        {if $smarty.capture.payment_terms_mobile}
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$smarty.capture.payment_terms_mobile|nl2br nofilter}</div>
+                                        {/if}
+                                    {/if}
+                                    {* Cancellation Terms - displayed second *}
+                                    {if $result.terms_of_cancellation}
+                                        {capture name="cancel_terms_mobile"}{fn_novoton_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}{/capture}
+                                        {if $smarty.capture.cancel_terms_mobile}
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_mobile|nl2br nofilter}</div>
+                                        {/if}
+                                    {/if}
                                     {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                     {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                     {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong> Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
@@ -738,11 +752,25 @@
                             <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.cancellation_terms_apply")}</div>
                         {/if}
                         
-                        {if $result.remark || $result.more_info || $result.important}
+                        {if $result.remark || $result.more_info || $result.important || $result.terms_of_payment || $result.terms_of_cancellation}
                             <div style="margin-top: 8px;">
                                 <a href="#" onclick="openInfoModal({$row_id}); return false;" style="font-size: 12px; color: #0071c2; text-decoration: none; border-bottom: 1px dashed #0071c2;">ℹ️ {__("novoton_holidays.more_info")|default:"Mai multe informații"}</a>
                             </div>
                             <div id="modal-content-{$row_id}" style="display: none;">
+                                {* Payment Terms - displayed first *}
+                                {if $result.terms_of_payment}
+                                    {capture name="payment_terms_desktop"}{fn_novoton_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, 'EUR')}{/capture}
+                                    {if $smarty.capture.payment_terms_desktop}
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$smarty.capture.payment_terms_desktop|nl2br nofilter}</div>
+                                    {/if}
+                                {/if}
+                                {* Cancellation Terms - displayed second *}
+                                {if $result.terms_of_cancellation}
+                                    {capture name="cancel_terms_desktop"}{fn_novoton_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}{/capture}
+                                    {if $smarty.capture.cancel_terms_desktop}
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_desktop|nl2br nofilter}</div>
+                                    {/if}
+                                {/if}
                                 {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                 {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                 {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>⚠️ Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}

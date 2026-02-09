@@ -916,6 +916,10 @@ msgctxt "Languages::novoton_holidays.terms_of_payment"
 msgid "Terms of payment"
 msgstr "Terms of payment"
 
+msgctxt "Languages::novoton_holidays.payment_cancellation_terms_link"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
 msgctxt "Languages::novoton_holidays.up_to"
 msgid "Up to"
 msgstr "Up to"
