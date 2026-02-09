@@ -42,23 +42,23 @@ class DatabaseHelper
         $updated = 0;
 
         if (!empty($withPrices)) {
-            $result = \db_query(
+            // db_query returns affected rows count for UPDATE
+            $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withPrices
             );
-            $updated += \db_get_row_count();
         }
 
         if (!empty($withoutPrices)) {
-            $result = \db_query(
+            // db_query returns affected rows count for UPDATE
+            $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withoutPrices
             );
-            $updated += \db_get_row_count();
         }
 
         return $updated;
@@ -143,21 +143,18 @@ class DatabaseHelper
 
             $hotel['updated_at'] = $now;
 
-            $result = \db_query(
+            // db_query returns affected rows: 1 for insert, 2 for update with changes, 0 for no change
+            $affected = (int) \db_query(
                 "INSERT INTO ?:novoton_hotels ?e
                  ON DUPLICATE KEY UPDATE ?u",
                 array_merge($hotel, ['created_at' => $now]),
                 $hotel
             );
 
-            if ($result) {
-                // Check if insert or update (affected_rows = 1 for insert, 2 for update)
-                $affected = \db_get_row_count();
-                if ($affected === 1) {
-                    $inserted++;
-                } else {
-                    $updated++;
-                }
+            if ($affected === 1) {
+                $inserted++;
+            } elseif ($affected >= 2) {
+                $updated++;
             }
         }
 
@@ -339,13 +336,12 @@ class DatabaseHelper
      */
     public static function cleanupOldLogs(int $days = 90): int
     {
-        $result = \db_query(
+        // db_query returns affected rows count for DELETE
+        return (int) \db_query(
             "DELETE FROM ?:novoton_sync_log
              WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)",
             $days
         );
-
-        return \db_get_row_count();
     }
 
     /**
