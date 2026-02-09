@@ -1,8 +1,9 @@
 {* Novoton Holidays - Order Details Hook - Terms of Payment & Cancellation *}
 {* Hook: orders:details — fires after the products table *}
-{* Supports multiple hotels with different terms *}
+{* Groups by hotel_id so multiple products from same hotel show terms only once *}
 
 {$_nv_hotels_terms = []}
+{$_nv_hotels_prices = []}
 
 {* Debug output when ?debug=1 *}
 {if $smarty.request.debug}
@@ -16,39 +17,58 @@
         - hotel_id: {$dbg_product.extra.hotel_id|default:'(empty)'}<br>
         - hotel_name: {$dbg_product.extra.hotel_name|default:'(empty)'}<br>
         - price: {$dbg_product.extra.price|default:$dbg_product.price|default:'(empty)'}<br>
-        - terms_of_payment: {if $dbg_product.extra.terms_of_payment}"{$dbg_product.extra.terms_of_payment|truncate:80}"{else}(empty){/if}<br>
         - terms_of_payment_raw: {if $dbg_product.extra.terms_of_payment_raw}"{$dbg_product.extra.terms_of_payment_raw|truncate:80}"{else}(empty){/if}<br>
-        - terms_of_cancellation: {if $dbg_product.extra.terms_of_cancellation}"{$dbg_product.extra.terms_of_cancellation|truncate:80}"{else}(empty){/if}<br>
         - terms_of_cancellation_raw: {if $dbg_product.extra.terms_of_cancellation_raw}"{$dbg_product.extra.terms_of_cancellation_raw|truncate:80}"{else}(empty){/if}<br>
         - extra keys: {$dbg_product.extra|@array_keys|@implode:", "}<br>
     {/foreach}
 </div>
 {/if}
 
-{* Collect terms from all hotel bookings *}
+{* First pass: collect prices per hotel *}
+{if $order_info.products}
+    {foreach from=$order_info.products item=product key=item_id}
+        {if !empty($product.extra.novoton_booking) && $product.extra.hotel_id}
+            {$_hotel_id = $product.extra.hotel_id}
+            {$_price = $product.extra.price|default:$product.price|default:0}
+            {if isset($_nv_hotels_prices[$_hotel_id])}
+                {$_nv_hotels_prices[$_hotel_id] = $_nv_hotels_prices[$_hotel_id] + $_price}
+            {else}
+                {$_nv_hotels_prices[$_hotel_id] = $_price}
+            {/if}
+        {/if}
+    {/foreach}
+{/if}
+
+{* Second pass: collect terms per hotel (only first occurrence) *}
 {if $order_info.products}
     {foreach from=$order_info.products item=product key=item_id}
         {if !empty($product.extra.novoton_booking)}
-            {* Use item_id as unique key to ensure each booking shows its terms *}
-            {$_booking_key = $item_id}
-            {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
+            {* Use hotel_id as key to group by hotel *}
+            {$_hotel_id = $product.extra.hotel_id|default:$item_id}
 
-            {* Get raw XML terms and format on-the-fly for consistent date format *}
-            {$_payment = ""}
-            {$_cancel = ""}
+            {* Skip if we already have terms for this hotel *}
+            {if isset($_nv_hotels_terms[$_hotel_id])}
+                {continue}
+            {/if}
+
+            {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
             {$_payment_raw = $product.extra.terms_of_payment_raw|default:$product.extra.terms_of_payment|default:''}
             {$_cancel_raw = $product.extra.terms_of_cancellation_raw|default:$product.extra.terms_of_cancellation|default:''}
             {$_check_in = $product.extra.check_in|default:''}
-            {$_price = $product.extra.price|default:$product.price|default:0}
             {$_currency = $product.extra.currency|default:'EUR'}
 
-            {* Format payment terms with amounts using current date format *}
+            {* Use aggregated price for this hotel *}
+            {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}
+
+            {* Format payment terms with amounts *}
+            {$_payment = ""}
             {if $_payment_raw}
-                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($_payment_raw, $_price, $_currency)}{/capture}
+                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($_payment_raw, $_total_price, $_currency)}{/capture}
                 {$_payment = $smarty.capture.payment_fmt}
             {/if}
 
-            {* Format cancellation terms using current date format *}
+            {* Format cancellation terms *}
+            {$_cancel = ""}
             {if $_cancel_raw}
                 {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($_cancel_raw, $_check_in)}{/capture}
                 {$_cancel = $smarty.capture.cancel_fmt}
@@ -56,7 +76,7 @@
 
             {* Add if we have terms *}
             {if $_payment || $_cancel}
-                {$_nv_hotels_terms[$_booking_key] = [
+                {$_nv_hotels_terms[$_hotel_id] = [
                     'hotel_name' => $_hotel_name,
                     'payment' => $_payment,
                     'cancel' => $_cancel

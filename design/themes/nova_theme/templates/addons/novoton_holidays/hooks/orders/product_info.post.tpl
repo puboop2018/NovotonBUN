@@ -56,28 +56,7 @@
     <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests}<br>
     {/if}
 
-    {* Payment Terms with calculated amounts per hotel *}
-    {$_payment_raw = $product.extra.terms_of_payment_raw|default:$product.extra.terms_of_payment|default:''}
-    {if $_payment_raw}
-        {$_price = $product.extra.price|default:$product.price|default:0}
-        {$_currency = $product.extra.currency|default:'EUR'}
-        {capture name="payment_terms"}{fn_novoton_format_payment_terms_with_amounts($_payment_raw, $_price, $_currency)}{/capture}
-        {if $smarty.capture.payment_terms}
-        <br><strong>{__("novoton_holidays.terms_of_payment")|default:"Condiții de plată"}:</strong><br>
-        <span style="white-space: pre-line; margin-left: 10px;">{$smarty.capture.payment_terms|escape:'html'|nl2br nofilter}</span>
-        {/if}
-    {/if}
-
-    {* Cancellation Terms per hotel *}
-    {$_cancel_raw = $product.extra.terms_of_cancellation_raw|default:$product.extra.terms_of_cancellation|default:''}
-    {if $_cancel_raw}
-        {$_check_in = $product.extra.check_in|default:''}
-        {capture name="cancel_terms"}{fn_novoton_format_cancellation_terms($_cancel_raw, $_check_in)}{/capture}
-        {if $smarty.capture.cancel_terms}
-        <br><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
-        <span style="white-space: pre-line; margin-left: 10px;">{$smarty.capture.cancel_terms|escape:'html'|nl2br nofilter}</span>
-        {/if}
-    {/if}
+    {* Terms of Payment/Cancellation - displayed in details.post.tpl hook (grouped by hotel) *}
 
     {* DEBUG *}
     {if $smarty.request.debug_novoton}
