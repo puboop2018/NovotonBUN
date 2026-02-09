@@ -401,7 +401,7 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotels from Novoton API'
         </item>
 
-        <!-- Hotel Packages - stores priceinfo per package (V3 core table) -->
+        <!-- Hotel Packages - stores packages from hotelinfo API with priceinfo data -->
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_hotel_packages` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -422,7 +422,7 @@
                 KEY `idx_package_name` (`package_name`(100)),
                 KEY `idx_min_price` (`min_price`),
                 KEY `idx_synced_at` (`synced_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Package priceinfo data (V3 core)'
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel packages from hotelinfo API with priceinfo'
         </item>
 
         <!-- Bookings table - stores all booking records -->

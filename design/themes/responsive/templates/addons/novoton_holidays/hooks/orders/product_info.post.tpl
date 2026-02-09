@@ -56,7 +56,7 @@
     <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests}<br>
     {/if}
 
-    {* Terms of Payment/Cancellation - displayed in details.post.tpl hook instead *}
+    {* Terms of Payment/Cancellation - displayed in details.post.tpl hook (grouped by hotel) *}
 
     {* DEBUG *}
     {if $smarty.request.debug_novoton}

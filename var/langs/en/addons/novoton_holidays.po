@@ -1996,6 +1996,10 @@ msgctxt "Languages::novoton_holidays.age_label"
 msgid "Age"
 msgstr "years"
 
+msgctxt "Languages::novoton_holidays.age_label_singular"
+msgid "year"
+msgstr "year"
+
 msgctxt "Languages::novoton_holidays.age_format"
 msgid "Age {n}"
 msgstr "{n} years"
