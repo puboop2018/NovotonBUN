@@ -64,14 +64,16 @@ function fn_novoton_fetch_bnr_rates()
  *
  * @param string $xml_content Raw XML from BNR
  * @param array $currencies Currency codes to extract (default: EUR, USD, GBP)
- * @return array Associative array of currency => rate (relative to RON)
+ * @param bool $include_date If true, returns array with 'rates' and 'publishing_date' keys
+ * @return array Associative array of currency => rate (relative to RON), or ['rates' => [...], 'publishing_date' => '...']
  */
-function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'])
+function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'], $include_date = false)
 {
     $rates = [];
+    $publishing_date = '';
 
     if (empty($xml_content)) {
-        return $rates;
+        return $include_date ? ['rates' => $rates, 'publishing_date' => $publishing_date] : $rates;
     }
 
     // Suppress XML errors and handle them manually
@@ -93,6 +95,11 @@ function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GB
         if (!empty($cubes)) {
             // Get the first (latest) cube
             $cube = is_array($cubes) ? $cubes[0] : $cubes;
+
+            // Extract publishing date from Cube's date attribute
+            if (isset($cube['date'])) {
+                $publishing_date = (string) $cube['date'];
+            }
 
             foreach ($cube->Rate as $rate) {
                 $currency = (string) $rate['currency'];
@@ -122,7 +129,7 @@ function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GB
 
     libxml_clear_errors();
 
-    return $rates;
+    return $include_date ? ['rates' => $rates, 'publishing_date' => $publishing_date] : $rates;
 }
 
 /**
@@ -245,6 +252,7 @@ function fn_novoton_update_exchange_rates($return_details = false)
         'success' => false,
         'message' => '',
         'bnr_rates' => [],
+        'publishing_date' => '',
         'coefficients' => [],
         'updates' => [],
         'timestamp' => date('Y-m-d H:i:s'),
@@ -257,8 +265,11 @@ function fn_novoton_update_exchange_rates($return_details = false)
         return $return_details ? $result : false;
     }
 
-    // Step 2: Parse XML for EUR, USD, GBP
-    $bnr_rates = fn_novoton_parse_bnr_xml($xml, ['EUR', 'USD', 'GBP']);
+    // Step 2: Parse XML for EUR, USD, GBP (with publishing date)
+    $parsed = fn_novoton_parse_bnr_xml($xml, ['EUR', 'USD', 'GBP'], true);
+    $bnr_rates = $parsed['rates'];
+    $result['publishing_date'] = $parsed['publishing_date'];
+
     if (empty($bnr_rates)) {
         $result['message'] = 'Failed to parse BNR exchange rates';
         return $return_details ? $result : false;

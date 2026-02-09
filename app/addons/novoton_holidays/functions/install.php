@@ -150,6 +150,12 @@ function fn_novoton_holidays_post_install()
     // Upgrade database schema
     fn_novoton_holidays_upgrade_db();
 
+    // Create novoton_reports directory for report storage
+    $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
+    if (!is_dir($reports_dir)) {
+        fn_mkdir($reports_dir);
+    }
+
     // Note: Email templates are registered via addon.xml <email_templates> section.
     // Do NOT call fn_novoton_holidays_install_email_templates() here — it would
     // create duplicates in cscart_template_emails since CS-Cart already processes
