@@ -1,5 +1,6 @@
 {* Novoton Holidays - Order Email Product Info Hook *}
 {* Hook: orders:product_info — adds booking details to each product in order emails *}
+{* Terms are displayed once per package (not per room) *}
 
 {if !empty($oi.extra.novoton_booking)}
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 5px; font-size: 12px; color: #666;">
@@ -62,28 +63,43 @@
                 {/if}
             {/if}
 
-            {* Payment Terms with Amounts - use raw XML for consistent date format *}
+            {* Payment and Cancellation Terms - show once per package *}
+            {* Create unique key based on package_name to track which packages have shown terms *}
+            {$package_key = $oi.extra.package_name|default:'default'}
             {$payment_terms_raw = $oi.extra.terms_of_payment_raw|default:$oi.extra.terms_of_payment|default:''}
-            {if $payment_terms_raw}
-                {$booking_price = $oi.extra.price|default:$oi.price|default:0}
-                {$currency = $oi.extra.currency|default:'EUR'}
-                {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}{/capture}
-                {if $smarty.capture.payment_terms_formatted}
-                    <br>
-                    <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
-                    {$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}
-                {/if}
+            {$cancel_terms_raw = $oi.extra.terms_of_cancellation_raw|default:$oi.extra.terms_of_cancellation|default:''}
+
+            {* Initialize tracking array if not exists *}
+            {if !isset($novoton_shown_packages)}
+                {$novoton_shown_packages = []}
             {/if}
 
-            {* Cancellation Terms - use raw XML for consistent date format *}
-            {$cancel_terms_raw = $oi.extra.terms_of_cancellation_raw|default:$oi.extra.terms_of_cancellation|default:''}
-            {if $cancel_terms_raw}
-                {$check_in = $oi.extra.check_in|default:''}
-                {capture name="cancel_terms_formatted"}{fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}{/capture}
-                {if $smarty.capture.cancel_terms_formatted}
-                    <br>
-                    <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
-                    {$smarty.capture.cancel_terms_formatted|escape:'html'|nl2br nofilter}
+            {* Only show terms if this package hasn't been shown yet *}
+            {if ($payment_terms_raw || $cancel_terms_raw) && !in_array($package_key, $novoton_shown_packages)}
+                {* Mark this package as shown *}
+                {$novoton_shown_packages[] = $package_key}
+
+                {* Payment Terms with Amounts *}
+                {if $payment_terms_raw}
+                    {$booking_price = $oi.extra.price|default:$oi.price|default:0}
+                    {$currency = $oi.extra.currency|default:'EUR'}
+                    {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}{/capture}
+                    {if $smarty.capture.payment_terms_formatted}
+                        <br>
+                        <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
+                        {$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}
+                    {/if}
+                {/if}
+
+                {* Cancellation Terms *}
+                {if $cancel_terms_raw}
+                    {$check_in = $oi.extra.check_in|default:''}
+                    {capture name="cancel_terms_formatted"}{fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}{/capture}
+                    {if $smarty.capture.cancel_terms_formatted}
+                        <br>
+                        <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
+                        {$smarty.capture.cancel_terms_formatted|escape:'html'|nl2br nofilter}
+                    {/if}
                 {/if}
             {/if}
         </td>

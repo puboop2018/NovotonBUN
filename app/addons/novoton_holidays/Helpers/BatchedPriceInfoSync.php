@@ -260,7 +260,8 @@ class BatchedPriceInfoSync
                 $this->output("[{$hotel_id}/{$package_id}] {$package_name} ... ", false);
 
                 try {
-                    $priceinfo = $api->getPriceInfo($hotel_id, $package_id);
+                    // API requires PackageName, not package_id (IdCont)
+                    $priceinfo = $api->getPriceInfo($hotel_id, $package_name);
 
                     if (!$priceinfo) {
                         $this->output("API returned empty");

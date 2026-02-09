@@ -965,7 +965,11 @@ try {
         $result = fn_novoton_update_exchange_rates(true);
 
         echo "Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED') . "\n";
-        echo "Message: " . $result['message'] . "\n\n";
+        echo "Message: " . $result['message'] . "\n";
+        if (!empty($result['publishing_date'])) {
+            echo "Publishing Date: " . $result['publishing_date'] . "\n";
+        }
+        echo "\n";
 
         if (!empty($result['bnr_rates'])) {
             echo "BNR Rates (RON-based):\n";
