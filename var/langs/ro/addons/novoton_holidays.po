@@ -1492,6 +1492,10 @@ msgctxt "Languages::novoton_holidays.age_label"
 msgid "Age"
 msgstr "ani"
 
+msgctxt "Languages::novoton_holidays.age_label_singular"
+msgid "year"
+msgstr "an"
+
 msgctxt "Languages::novoton_holidays.age_format"
 msgid "Age {n}"
 msgstr "{n} ani"
