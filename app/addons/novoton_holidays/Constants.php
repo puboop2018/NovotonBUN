@@ -121,7 +121,7 @@ final class Constants
     // ========== Database Tables (V3 Architecture) ==========
 
     public const TABLE_HOTELS = 'novoton_hotels';
-    public const TABLE_PACKAGES = 'novoton_hotel_packages';  // V3: priceinfo stored per package
+    public const TABLE_PACKAGES = 'novoton_hotel_packages';  // Packages from hotelinfo API with priceinfo
     public const TABLE_BOOKINGS = 'novoton_bookings';
     public const TABLE_FACILITIES = 'novoton_hotel_facilities';
     public const TABLE_SYNC_LOG = 'novoton_sync_log';

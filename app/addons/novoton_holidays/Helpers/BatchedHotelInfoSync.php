@@ -362,20 +362,33 @@ class BatchedHotelInfoSync
         $packages = [];
 
         if (isset($hotel_info->packages)) {
-            // Single package format
+            // Single package format (IdCont directly under packages)
             if (isset($hotel_info->packages->IdCont)) {
                 $packages[] = [
                     'IdCont' => (string)$hotel_info->packages->IdCont,
                     'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
                 ];
             }
-            // Multiple packages format
-            if (isset($hotel_info->packages->package)) {
-                foreach ($hotel_info->packages->package as $pkg) {
-                    $packages[] = [
-                        'IdCont' => (string)($pkg->IdCont ?? ''),
-                        'PackageName' => (string)($pkg->PackageName ?? ''),
-                    ];
+
+            // Multiple packages format - check both lowercase and uppercase
+            // API returns <Package> (uppercase P)
+            $packageElements = null;
+            if (isset($hotel_info->packages->Package)) {
+                $packageElements = $hotel_info->packages->Package;
+            } elseif (isset($hotel_info->packages->package)) {
+                $packageElements = $hotel_info->packages->package;
+            }
+
+            if ($packageElements) {
+                // Handle both single and multiple Package elements
+                foreach ($packageElements as $pkg) {
+                    $idCont = (string)($pkg->IdCont ?? '');
+                    if (!empty($idCont)) {
+                        $packages[] = [
+                            'IdCont' => $idCont,
+                            'PackageName' => (string)($pkg->PackageName ?? ''),
+                        ];
+                    }
                 }
             }
         }
