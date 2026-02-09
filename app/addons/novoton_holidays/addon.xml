@@ -512,15 +512,28 @@
                 KEY `idx_status` (`status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sync operation logs'
         </item>
-        <!-- Add notes column and resinfo to sync_type enum for existing installations -->
+        <!-- Migration: Update sync_type enum to include resinfo (safe for both MySQL and MariaDB) -->
         <item for="install">
             ALTER TABLE `?:novoton_sync_log`
             MODIFY COLUMN `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels'
         </item>
+        <!-- Migration: Add notes column if missing (using procedure for MySQL compatibility) -->
         <item for="install">
-            ALTER TABLE `?:novoton_sync_log`
-            ADD COLUMN IF NOT EXISTS `notes` text DEFAULT NULL COMMENT 'Extra JSON data for sync details' AFTER `error_message`
+            DROP PROCEDURE IF EXISTS `?:novoton_add_notes_column`
         </item>
+        <item for="install">
+            CREATE PROCEDURE `?:novoton_add_notes_column`()
+            BEGIN
+                DECLARE col_exists INT DEFAULT 0;
+                SELECT COUNT(*) INTO col_exists FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '?:novoton_sync_log' AND COLUMN_NAME = 'notes';
+                IF col_exists = 0 THEN
+                    ALTER TABLE `?:novoton_sync_log` ADD COLUMN `notes` text DEFAULT NULL AFTER `error_message`;
+                END IF;
+            END
+        </item>
+        <item for="install">CALL `?:novoton_add_notes_column`()</item>
+        <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_notes_column`</item>
 
         <!-- API Response Cache table -->
         <item for="install">
