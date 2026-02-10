@@ -944,6 +944,26 @@ msgctxt "Languages::novoton_holidays.room"
 msgid "Room"
 msgstr "Room"
 
+msgctxt "Languages::novoton_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adults"
+
+msgctxt "Languages::novoton_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Child|[n] Children"
+
+msgctxt "Languages::novoton_holidays.n_nights"
+msgid "[n] Night|[n] Nights"
+msgstr "[n] Night|[n] Nights"
+
+msgctxt "Languages::novoton_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Room|[n] Rooms"
+
+msgctxt "Languages::novoton_holidays.n_years"
+msgid "[n] year|[n] years"
+msgstr "[n] year|[n] years"
+
 msgctxt "Languages::novoton_holidays.total_price"
 msgid "Total Price"
 msgstr "Total Price"
