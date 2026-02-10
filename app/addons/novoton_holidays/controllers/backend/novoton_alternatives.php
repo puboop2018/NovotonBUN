@@ -11,7 +11,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Check alternatives for a request
-    if ($mode === 'alternative_rs') {
+    if ($mode === 'check_alternatives' || $mode === 'alternative_rs') {
         $request_id = intval($_REQUEST['request_id'] ?? 0);
         
         if ($request_id > 0) {

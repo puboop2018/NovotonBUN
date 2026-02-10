@@ -78,6 +78,7 @@ class BookingService
             'room_id' => $room_info['room_id'],
             'room_type' => $room_info['room_type'],
             'board_id' => $bookingData['board_id'] ?? 'BB',
+            'board_name' => $bookingData['board_name'] ?? '',
             'check_in' => $bookingData['check_in'],
             'check_out' => $bookingData['check_out'],
             'nights' => $this->calculateNights($bookingData['check_in'], $bookingData['check_out']),

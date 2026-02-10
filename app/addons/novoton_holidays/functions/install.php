@@ -521,4 +521,32 @@ function fn_novoton_holidays_upgrade_db()
              MODIFY COLUMN `sync_type` VARCHAR(50) NOT NULL DEFAULT 'hotels'"
         );
     }
+
+    // Add nights column to alternative_requests (v2.9.4)
+    $nights_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_alternative_requests'
+         AND COLUMN_NAME = 'nights'"
+    );
+    if (!$nights_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_alternative_requests
+             ADD COLUMN `nights` INT(3) DEFAULT NULL AFTER `check_out`"
+        );
+    }
+
+    // Add num_rooms column to alternative_requests (v2.9.4)
+    $num_rooms_alt_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_alternative_requests'
+         AND COLUMN_NAME = 'num_rooms'"
+    );
+    if (!$num_rooms_alt_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_alternative_requests
+             ADD COLUMN `num_rooms` INT(2) NOT NULL DEFAULT 1 AFTER `nights`"
+        );
+    }
 }

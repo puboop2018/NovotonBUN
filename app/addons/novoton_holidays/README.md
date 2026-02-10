@@ -440,6 +440,8 @@ Stores customer bookings.
 | room_id | varchar(100) | Room type code |
 | room_type | varchar(255) | Room type name |
 | board_id | varchar(20) | Board type code |
+| board_name | varchar(100) | Board type display name |
+| item_id | varchar(32) | CS-Cart order item ID |
 | check_in | date | Check-in date |
 | check_out | date | Check-out date |
 | nights | int | Number of nights |
