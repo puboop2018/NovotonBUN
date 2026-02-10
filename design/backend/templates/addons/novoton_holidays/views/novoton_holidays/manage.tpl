@@ -116,6 +116,7 @@
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[L] Manage Bookings</a>
+            <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-warning">[R] Alternative Requests</a>
             <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Export Hotel Features</a>
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
         </div>
