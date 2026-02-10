@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>3.0.0-A82</version>
+    <version>3.0.0-A83</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
@@ -444,6 +444,8 @@
                 `room_id` varchar(100) NOT NULL,
                 `room_type` varchar(255) DEFAULT NULL,
                 `board_id` varchar(50) NOT NULL,
+                `board_name` varchar(100) DEFAULT NULL COMMENT 'Board type display name',
+                `item_id` varchar(32) DEFAULT NULL COMMENT 'CS-Cart order_details.item_id',
                 `check_in` date NOT NULL,
                 `check_out` date NOT NULL,
                 `nights` int(3) NOT NULL,
@@ -487,7 +489,8 @@
                 KEY `idx_order_status` (`order_id`, `status`),
                 KEY `idx_session_id` (`session_id`),
                 KEY `idx_user_created` (`user_id`, `created_at`),
-                KEY `idx_hotel_status` (`hotel_id`, `status`)
+                KEY `idx_hotel_status` (`hotel_id`, `status`),
+                KEY `idx_item_id` (`item_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Booking records'
         </item>
 
@@ -495,7 +498,7 @@
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
                 `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels',
+                `sync_type` varchar(50) NOT NULL DEFAULT 'hotels' COMMENT 'Type: hotel_list, hotelinfo, sync_priceinfo, facilities, offers_update, exchange_rates, resinfo',
                 `sync_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `products_total` int(11) NOT NULL DEFAULT 0,
                 `products_updated` int(11) NOT NULL DEFAULT 0,
@@ -509,13 +512,14 @@
                 `status` enum('running','completed','failed') NOT NULL DEFAULT 'running',
                 PRIMARY KEY (`log_id`),
                 KEY `idx_date` (`sync_date`),
-                KEY `idx_status` (`status`)
+                KEY `idx_status` (`status`),
+                KEY `idx_sync_type` (`sync_type`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sync operation logs'
         </item>
-        <!-- Migration: Update sync_type enum to include resinfo (safe for both MySQL and MariaDB) -->
+        <!-- Migration: Update sync_type to varchar for flexibility (safe for both MySQL and MariaDB) -->
         <item for="install">
             ALTER TABLE `?:novoton_sync_log`
-            MODIFY COLUMN `sync_type` enum('prices','hotels','full','hotellist','hotelinfo','priceinfo','resinfo') NOT NULL DEFAULT 'hotels'
+            MODIFY COLUMN `sync_type` varchar(50) NOT NULL DEFAULT 'hotels'
         </item>
         <!-- Migration: Add notes column if missing (using procedure for MySQL compatibility) -->
         <item for="install">
