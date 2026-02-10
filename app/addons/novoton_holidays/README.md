@@ -1,6 +1,6 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.4
+**Version:** 3.0.0
 **Last Updated:** February 10, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
@@ -383,6 +383,38 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 | `getLastRequest()` | Debug: last API request |
 | `getLastResponse()` | Debug: last API response |
 | `getLastError()` | Debug: last error message |
+| `getCircuitStatus()` | Get circuit breaker status |
+
+### API Resilience Features
+
+The API client includes built-in resilience patterns:
+
+#### Retry with Exponential Backoff
+- **Max Retries:** 3 attempts
+- **Initial Delay:** 1 second
+- **Backoff Multiplier:** 2x (delays: 1s, 2s, 4s)
+- **Retryable Errors:** Network timeouts, connection refused, 5xx errors, 429 rate limiting
+
+#### Circuit Breaker Pattern
+- **Threshold:** 5 consecutive failures opens circuit
+- **Timeout:** 60 seconds before half-open retry
+- **Auto-Recovery:** Successful request resets failure counter
+- Monitor status: `$api->getCircuitStatus()`
+
+### Webhook Callbacks (Not Supported)
+
+The Novoton API does **not** support webhook callbacks. Based on analysis of all 27 API functions:
+
+1. **No callback URL parameters** in any API request
+2. **Polling-based architecture** - use `alternative_RS` to check for alternatives
+3. **Manual status checks** - use `resinfo` to check booking status
+
+**Recommended Polling Strategy:**
+- Check `resinfo` for booking status changes every 30 minutes via cron
+- Check `alternative_RS` for alternative offers every 6 hours
+- Check `offers_update` for price changes daily
+
+If Novoton adds webhook support in the future, contact them directly for documentation.
 
 ---
 
@@ -640,6 +672,39 @@ The addon includes a React 19-based booking form for an enhanced user experience
 
 ## Troubleshooting
 
+### Health Check Endpoint
+
+Access: `admin.php?dispatch=novoton_diagnostic.health`
+
+Returns JSON response for automated monitoring:
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-02-10T12:00:00+00:00",
+  "version": "3.0.0-A84",
+  "components": {
+    "database": { "status": "healthy", "response_time_ms": 2.5 },
+    "api": { "status": "healthy", "circuit_breaker": {...} },
+    "cache": { "status": "healthy", "persistent_items": 42 },
+    "sync": { "status": "healthy", "hours_since_sync": 2.5 }
+  },
+  "metrics": {
+    "bookings_24h": 15,
+    "pending_bookings": 3,
+    "failed_bookings_24h": 0,
+    "failure_rate_24h": "0%"
+  }
+}
+```
+
+**Status Values:**
+- `healthy` - All systems operational
+- `degraded` - Non-critical issues detected
+- `unhealthy` - Critical system failure
+
+Use this endpoint with monitoring tools (Uptime Robot, Pingdom, etc.) to track addon health.
+
 ### Debug Mode
 
 Add `?debug_novoton=1` to any page URL to see debug information.
@@ -681,6 +746,18 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 3.0.0 (February 10, 2026)
+- **API Resilience:** Added retry logic with exponential backoff (3 attempts, 1s/2s/4s delays)
+- **API Resilience:** Added circuit breaker pattern (5 failures opens circuit for 60s)
+- **Monitoring:** Added structured health check endpoint (`novoton_diagnostic.health`)
+  - JSON response for automated monitoring
+  - Component health: database, API, cache, sync
+  - Key metrics: bookings, failures, hotels with prices
+- **API:** Added `getCircuitStatus()` method to check circuit breaker state
+- **Documentation:** Added webhook callback explanation (not supported by Novoton API)
+- **Documentation:** Added API resilience features section
+- **Fixed:** All code leftovers and inconsistencies from previous refactor
 
 ### Version 2.9.4 (February 10, 2026)
 - **Architecture:** Implemented Single Source of Truth for booking data
@@ -766,4 +843,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 10, 2026 - Version 2.9.4*
+*Documentation last updated: February 10, 2026 - Version 3.0.0*
