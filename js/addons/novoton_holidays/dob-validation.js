@@ -407,11 +407,17 @@
         if (roomMatch && childMatch) {
             var ageDisplayId = 'child_age_display_r' + roomMatch[1] + '_c' + childMatch[1];
             var ageDisplay = document.getElementById(ageDisplayId);
-            
+
             if (ageDisplay) {
-                var ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabel) || 'Age';
-                ageDisplay.textContent = '(' + ageLabel + ' ' + age + ')';
-                
+                // Use singular/plural form (Romanian: "1 an", "2 ani")
+                var ageLabel;
+                if (age === 1) {
+                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabelSingular) || 'an';
+                } else {
+                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabel) || 'ani';
+                }
+                ageDisplay.textContent = '(' + age + ' ' + ageLabel + ')';
+
                 // Show warning if age is 18+
                 if (age >= 18) {
                     ageDisplay.style.color = '#dc3545';
