@@ -360,34 +360,33 @@ class BatchedHotelInfoSync
     private function extractPackages($hotel_info): array
     {
         $packages = [];
+        $seen_ids = [];
 
+        // Handle multiple <packages> elements at the same level
+        // XML structure: <hotel><packages>...</packages><packages>...</packages></hotel>
+        // In SimpleXML, iterating over $hotel_info->packages yields all <packages> siblings
         if (isset($hotel_info->packages)) {
-            // Single package format (IdCont directly under packages)
-            if (isset($hotel_info->packages->IdCont)) {
-                $packages[] = [
-                    'IdCont' => (string)$hotel_info->packages->IdCont,
-                    'PackageName' => (string)($hotel_info->packages->PackageName ?? ''),
-                ];
-            }
+            foreach ($hotel_info->packages as $pkg) {
+                $idCont = (string)($pkg->IdCont ?? '');
+                if (!empty($idCont) && !isset($seen_ids[$idCont])) {
+                    $packages[] = [
+                        'IdCont' => $idCont,
+                        'PackageName' => (string)($pkg->PackageName ?? $pkg->Package ?? ''),
+                    ];
+                    $seen_ids[$idCont] = true;
+                }
 
-            // Multiple packages format - check both lowercase and uppercase
-            // API returns <Package> (uppercase P)
-            $packageElements = null;
-            if (isset($hotel_info->packages->Package)) {
-                $packageElements = $hotel_info->packages->Package;
-            } elseif (isset($hotel_info->packages->package)) {
-                $packageElements = $hotel_info->packages->package;
-            }
-
-            if ($packageElements) {
-                // Handle both single and multiple Package elements
-                foreach ($packageElements as $pkg) {
-                    $idCont = (string)($pkg->IdCont ?? '');
-                    if (!empty($idCont)) {
-                        $packages[] = [
-                            'IdCont' => $idCont,
-                            'PackageName' => (string)($pkg->PackageName ?? ''),
-                        ];
+                // Also check for nested <Package> elements within each <packages>
+                if (isset($pkg->Package) && is_object($pkg->Package)) {
+                    foreach ($pkg->Package as $nestedPkg) {
+                        $nestedIdCont = (string)($nestedPkg->IdCont ?? '');
+                        if (!empty($nestedIdCont) && !isset($seen_ids[$nestedIdCont])) {
+                            $packages[] = [
+                                'IdCont' => $nestedIdCont,
+                                'PackageName' => (string)($nestedPkg->PackageName ?? ''),
+                            ];
+                            $seen_ids[$nestedIdCont] = true;
+                        }
                     }
                 }
             }
