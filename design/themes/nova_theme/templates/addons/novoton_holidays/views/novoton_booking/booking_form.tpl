@@ -224,6 +224,9 @@
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
                     <div class="price-total" id="novoton-total-price">{$booking_data.total_price|number_format:2}</div>
                     <div class="price-currency">EUR</div>
+                    <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
+                        ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
+                    </span>
                     <a href="#" id="refresh-price-link" onclick="refreshPrice(); return false;" style="display: none; font-size: 12px; color: #0071c2; margin-top: 5px;">
                         🔄 {__("novoton_holidays.refresh_price")|default:"Actualizează prețul"}
                     </a>
@@ -448,7 +451,7 @@
                 <a href="{fn_url("novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`")}" class="btn-back">
                     <- {__("novoton_holidays.back_to_results")}
                 </a>
-                <button type="submit" class="btn-submit">
+                <button type="submit" class="btn-submit" id="booking-submit-btn">
                     {__("novoton_holidays.add_to_cart")}
                 </button>
             </div>
@@ -876,21 +879,23 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             
         } else {
             console.log('[Novoton] Recalculation failed:', data.message);
-            showPriceError(data.message || '{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
+            showPriceError(data.message || '{__("novoton_holidays.price_not_available_for_ages")|default:"Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."}');
         }
     })
     .catch(function(error) {
         console.error('[Novoton] AJAX error:', error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        showPriceError('{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
+        showPriceError('{__("novoton_holidays.price_not_available_for_ages")|default:"Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."}');
     });
 }
 
-// Show price error and refresh link
+// Show price error, refresh link, unverified badge, and disable submit
 function showPriceError(message) {
     var errorEl = document.getElementById('price-error-message');
     var refreshLink = document.getElementById('refresh-price-link');
+    var unverifiedBadge = document.getElementById('price-unverified-badge');
+    var submitBtn = document.getElementById('booking-submit-btn');
 
     if (errorEl) {
         errorEl.textContent = message;
@@ -899,15 +904,33 @@ function showPriceError(message) {
     if (refreshLink) {
         refreshLink.style.display = 'block';
     }
+    if (unverifiedBadge) {
+        unverifiedBadge.style.display = 'inline-block';
+    }
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
+        submitBtn.title = '{__("novoton_holidays.price_must_be_verified")|default:"Prețul trebuie verificat înainte de a continua"}';
+    }
 }
 
-// Hide price error
+// Hide price error, refresh link, unverified badge, and re-enable submit
 function hidePriceError() {
     var errorEl = document.getElementById('price-error-message');
     var refreshLink = document.getElementById('refresh-price-link');
+    var unverifiedBadge = document.getElementById('price-unverified-badge');
+    var submitBtn = document.getElementById('booking-submit-btn');
 
     if (errorEl) errorEl.style.display = 'none';
     if (refreshLink) refreshLink.style.display = 'none';
+    if (unverifiedBadge) unverifiedBadge.style.display = 'none';
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.title = '';
+    }
 }
 
 // Refresh price manually

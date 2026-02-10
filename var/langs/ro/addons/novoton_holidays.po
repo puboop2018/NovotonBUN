@@ -884,6 +884,26 @@ msgctxt "Languages::novoton_holidays.refresh_price"
 msgid "Refresh price"
 msgstr "Actualizează prețul"
 
+msgctxt "Languages::novoton_holidays.price_unverified"
+msgid "unverified"
+msgstr "neconfirmat"
+
+msgctxt "Languages::novoton_holidays.price_must_be_verified"
+msgid "Price must be verified before proceeding"
+msgstr "Prețul trebuie verificat înainte de a continua"
+
+msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
+msgid "Price could not be verified for the entered ages. Please try refreshing the price."
+msgstr "Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."
+
+msgctxt "Languages::novoton_holidays.price_verification_failed"
+msgid "Price verification failed. The booking cannot proceed."
+msgstr "Verificarea prețului a eșuat. Rezervarea nu poate continua."
+
+msgctxt "Languages::novoton_holidays.price_changed_on_submit"
+msgid "The price has changed. Please review the new price and try again."
+msgstr "Prețul s-a modificat. Vă rugăm să verificați noul preț și să încercați din nou."
+
 msgctxt "Languages::novoton_holidays.try_different_dates"
 msgid "Please try different dates or check back later"
 msgstr "Vă rugăm încercați alte date sau reveniți mai târziu"
