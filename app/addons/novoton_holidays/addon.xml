@@ -892,13 +892,15 @@
     </table>
     {# Show terms only once per hotel (not duplicated for each room) #}
     {% if hotel_id not in seen_hotels %}
-      {% if product.extra.terms_of_payment_formatted %}
+      {% set payment_terms = product.extra.terms_of_payment_formatted|default(product.extra.terms_of_payment)|default('') %}
+      {% set cancel_terms = product.extra.terms_of_cancellation_formatted|default(product.extra.terms_of_cancellation)|default('') %}
+      {% if payment_terms %}
     <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.terms_of_payment")|default("Payment Terms") }}</strong></p>
-    <p style="margin: 0; color: #555; white-space: pre-line;">{{ product.extra.terms_of_payment_formatted }}</p>
+    <p style="margin: 0; color: #555; white-space: pre-line;">{{ payment_terms }}</p>
       {% endif %}
-      {% if product.extra.terms_of_cancellation_formatted %}
+      {% if cancel_terms %}
     <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.cancellation_terms")|default("Cancellation Terms") }}</strong></p>
-    <p style="margin: 0; color: #555; white-space: pre-line;">{{ product.extra.terms_of_cancellation_formatted }}</p>
+    <p style="margin: 0; color: #555; white-space: pre-line;">{{ cancel_terms }}</p>
       {% endif %}
       {% set seen_hotels = seen_hotels|merge([hotel_id]) %}
     {% endif %}
