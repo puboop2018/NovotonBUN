@@ -541,15 +541,19 @@ class NovotonApi
 
     /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
-     * 
+     *
      * Per API docs:
-     * - IdHotel is required (or Resort)
+     * - IdHotel OR Resort - use one, not both (we use IdHotel for hotel-specific searches)
+     * - PackageName - leave empty to get ALL packages, or specify to filter
      * - IdRoom - leave empty to get ALL room types
-     * - IdBoard - leave empty to get ALL board types  
+     * - IdBoard - leave empty to get ALL board types
+     * - IdExtBoard - extended board options (leave empty)
+     * - IdStar - star rating filter (leave empty)
      * - CheckIn/CheckOut in YYYY-MM-DD format
-     * - Remark=Yes and Important=Yes to get additional info
-     * 
-     * The API automatically returns the correct package based on dates
+     * - Currency - EUR
+     * - Adt - number of adults (integer)
+     * - Chd - children ages as <Age> elements, e.g. <Chd><Age>2</Age><Age>7</Age></Chd>
+     * - Remark=Yes and Important=Yes to get additional booking info
      */
     public function getRoomPrice($params)
     {
@@ -587,16 +591,13 @@ class NovotonApi
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
 
-        // Build adult ages XML (default age 33 for each adult)
+        // Ensure adults count is at least 1
         $adultsCount = intval($params['adults'] ?? 2);
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
-            $adultsXml .= '<Age>' . $age . '</Age>';
+        if ($adultsCount < 1) {
+            $adultsCount = 2;  // Default to 2 adults
         }
 
-        // Build children ages XML
+        // Build children ages XML - API expects <Age> elements inside <Chd>
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
@@ -609,13 +610,15 @@ class NovotonApi
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
             <psw>' . htmlspecialchars($this->apiPassword) . '</psw>
             <IdHotel>' . htmlspecialchars($params['hotel_id']) . '</IdHotel>
+            <PackageName></PackageName>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
+            <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adultsXml . '</Adt>
+            <Adt>' . $adultsCount . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>Yes</Remark>
             <Important>Yes</Important>
