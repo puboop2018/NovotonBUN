@@ -313,6 +313,23 @@ class BatchedHotelInfoSync
             'hotel_data' => json_encode($hotel_info),
         ];
 
+        // Link product if not already linked - find by product_code pattern NVT{hotel_id}
+        $current_product_id = db_get_field(
+            "SELECT product_id FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotel_id
+        );
+
+        if (empty($current_product_id)) {
+            // Try to find product by code pattern NVT{hotel_id}
+            $product_id = db_get_field(
+                "SELECT product_id FROM ?:products WHERE product_code LIKE ?l",
+                'NVT' . $hotel_id . '%'
+            );
+            if (!empty($product_id)) {
+                $update['product_id'] = $product_id;
+            }
+        }
+
         // Extract package_name
         $package_name = '';
         if (isset($hotel_info->packages->PackageName)) {
