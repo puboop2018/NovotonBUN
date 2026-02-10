@@ -1,0 +1,562 @@
+================================================================================
+                    PRICEINFO CALCULATION ALGORITHM
+================================================================================
+
+Document Version: 1.0
+Last Updated: 2026-02-10
+Repository: NovotonAddonRepoA
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. OVERVIEW
+2. CORE FILES
+3. DATA STRUCTURES
+4. CALCULATION FLOW (Step-by-Step)
+5. BASE PRICE CALCULATION
+6. SUPPLEMENTS/FEES CALCULATION
+7. DISCOUNT CALCULATION (Early Booking & Reduction)
+8. PRIORITY RULES
+9. COMMISSION APPLICATION
+10. EXTRAS DAILY TYPE HANDLING
+11. PERSON MATCHING ALGORITHM
+12. RESULT STRUCTURE
+13. FORMULA SUMMARY
+
+================================================================================
+1. OVERVIEW
+================================================================================
+
+The PriceInfo calculation system computes hotel package prices based on:
+- Occupancy (adults, children, ages)
+- Stay duration and dates
+- Room and board types
+- Seasonal pricing
+- Various supplements (extras, fees)
+- Discounts (Early Booking, Free Nights)
+- Commission
+
+Primary Class: PriceInfoCalculation
+Location: /app/addons/novoton_holidays/services/PriceInfoCalculation.php
+
+================================================================================
+2. CORE FILES
+================================================================================
+
+CALCULATION FILES:
+------------------
+- PriceInfoCalculation.php  - Main calculation engine (~1,722 lines)
+- PriceInfoService.php      - Retrieval and formatting of stored priceinfo
+- PriceService.php          - Utility service for price calculations
+- PriceInfoSync.php         - Synchronizes priceinfo from API to database
+
+DATA STORAGE:
+-------------
+- Table: novoton_hotel_packages
+- Column: priceinfo_data (JSON-encoded structure)
+- Contains: seasons, season_price, extras, handling_fee, company_fee,
+            early_booking, reduction data
+
+TESTING/VERIFICATION:
+---------------------
+- novoton_price_compare.php - Admin tool for price comparison
+
+================================================================================
+3. DATA STRUCTURES
+================================================================================
+
+PRICEINFO JSON STRUCTURE:
+-------------------------
+{
+    "seasons": [
+        {
+            "SeasonNr": "1",
+            "FromDate": "2026-01-01",
+            "ToDate": "2026-03-31",
+            "Price": "Price1"
+        }
+    ],
+    "season_price": [
+        {
+            "Room": "DBL",
+            "Board": "BB",
+            "Code": "Base",
+            "IdAge": "ADULT",
+            "AccType": "RB",
+            "Price1": "50.00",
+            "Price2": "55.00",
+            "RoomPrice": "No"
+        }
+    ],
+    "extras_daily": [...],
+    "extras_single": [...],
+    "extras_rooms": [...],
+    "extras_board": [...],
+    "handling_fee": [...],
+    "company_fee": [...],
+    "early_booking": [...],
+    "reduction": [...]
+}
+
+OCCUPANCY STRUCTURE:
+--------------------
+{
+    "adults": [
+        {"age_type": "ADULT", "acc_type": "RB", "position": 1},
+        {"age_type": "ADULT", "acc_type": "RB", "position": 2},
+        {"age_type": "3RD ADULT", "acc_type": "EB", "position": 3}
+    ],
+    "children": [
+        {"age": 5, "age_type": "1ST CHD 2-11,99", "acc_type": "EB", "position": 1}
+    ]
+}
+
+================================================================================
+4. CALCULATION FLOW (Step-by-Step)
+================================================================================
+
+The main calculate() method executes in this order:
+
+STEP 1: LOAD DATA
+-----------------
+- Load priceinfo from database (priceinfo_data JSON)
+- Load hotelinfo for room capacities (RB, EB, maxADT, maxCHD, minPAX)
+
+STEP 2: VALIDATE & BUILD OCCUPANCY
+----------------------------------
+- Validate occupancy against room capacity constraints
+- Build occupancy structure showing Regular Beds (RB) vs Extra Beds (EB)
+- Assign adults to regular beds first
+- Extra adults become "3RD ADULT", "4TH ADULT"
+- Assign children to remaining regular beds, then extra beds
+- Each occupant marked with age_type (e.g., "1ST CHD 2-11,99", "ADULT")
+
+STEP 3: MAP SEASONS TO NIGHTS
+-----------------------------
+- For each night of stay, determine applicable season based on date ranges
+- Seasons define Price1, Price2, Price3, etc. columns per night
+- Returns mapping: night index -> date -> season number -> price key
+
+STEP 4: CALCULATE BASE PRICE
+----------------------------
+Method: calculateBasePrice()
+- Query season_price table for matching room/board/age combinations
+- For each night:
+  - Find matching price row (room, board, age_type, acc_type, stay length)
+  - Get price from appropriate Price column (Price1, Price2, etc.)
+  - Handle percentage prices (e.g., "80%") - calculate from Base code row
+  - Handle RoomPrice='Yes' flag (charge once per room, not per person)
+  - Sum all person prices for the night
+- Result: Total base price broken down by night and person
+
+STEP 5: CALCULATE FEES
+----------------------
+Method: calculateFees()
+Aggregates all supplements:
+- extras_daily  - Daily charges with type handling (Arrival/Stay/Day/Night)
+- extras_single - Single supplement for 1 adult in double room
+- extras_rooms  - Per-room charges (views, facilities, etc.)
+- extras_board  - Board upgrades (FB, AI, UAI packages)
+- handling_fee  - Based on stay length (Price1 for short, Price2 for longer)
+- company_fee   - Per-room flat fee
+
+STEP 6: CALCULATE EARLY BOOKING (EB) DISCOUNT
+---------------------------------------------
+Method: calculateEarlyBookingDiscount()
+- Check if booking date falls within EB period
+- Check if check-in date falls within EB travel date range
+- Apply EB discount percentage to:
+  - Base price (always)
+  - extras_daily (if EBToDaily='Yes')
+  - extras_rooms (if EBToRooms='Yes')
+  - extras_board (if EBToBoard='Yes')
+- Result: Discount amount and breakdown by component
+
+STEP 7: CALCULATE REDUCTION (Free Nights)
+-----------------------------------------
+Method: calculateReduction()
+- Check if stay length falls within reduction range
+- Check if check-in falls within reduction date range
+- Determine free nights (End = last N nights, Start = first N nights)
+- Calculate discount from free nights' base prices
+- Apply proportional reduction to supplements:
+  - If EXTToDaily='Yes', reduce extras_daily proportionally
+  - If EXTToRooms='Yes', reduce extras_rooms proportionally
+  - If EXTToBoard='Yes', reduce extras_board proportionally
+
+STEP 8: APPLY PRIORITY RULES
+----------------------------
+Method: applyPriorityRules()
+- Evaluate all discount scenarios:
+  - Scenario 1: No discount (full price)
+  - Scenario 2: EB only
+  - Scenario 3: Reduction only
+  - Scenario 4: Combined (if allowed)
+- Apply Priority rules to select best scenario
+- Result: Best final price, applied discount type, discount amount
+
+STEP 9: APPLY COMMISSION
+------------------------
+- Multiply final price by (1 + commission/100)
+- Returns price with commission for display
+
+================================================================================
+5. BASE PRICE CALCULATION
+================================================================================
+
+ALGORITHM:
+----------
+For each night of stay:
+    1. Determine season for this date
+    2. Get price column (Price1, Price2, etc.) from season
+    3. For each person (adults + children):
+        a. Find matching season_price row:
+           - Room matches
+           - Board matches
+           - IdAge matches person's age_type
+           - AccType matches person's acc_type (RB/EB)
+           - Stay length within FromDays-ToDays range
+        b. Get price value from row:
+           - If numeric: use directly
+           - If percentage string (e.g., "80%"):
+             Calculate from Base row's price
+           - If Code is percentage type:
+             Calculate from Base row's price
+        c. Handle RoomPrice='Yes':
+           - Charge once per room, not per person
+           - Only first matching person pays
+    4. Sum all person prices for the night
+
+Total Base Price = Sum of all night totals
+
+PERCENTAGE CALCULATION:
+-----------------------
+Base Price = 100.00
+Percentage = "80%"
+Result = 100.00 * (80 / 100) = 80.00
+
+================================================================================
+6. SUPPLEMENTS/FEES CALCULATION
+================================================================================
+
+EXTRAS_DAILY:
+-------------
+- Per-person daily charges
+- Has Type handling (see Section 10)
+- Has date range restrictions (FromDate/ToDate)
+- Person matching via IdAge field
+Formula: price * matching_persons * applicable_nights
+
+EXTRAS_SINGLE:
+--------------
+- Single supplement for 1 adult in double+ room
+- Only applies when exactly 1 adult in room
+- Per-night charge
+Formula: price * nights
+
+EXTRAS_ROOMS:
+-------------
+- Per-room charges (e.g., sea view, balcony)
+- Charged once per room, not per person
+- May have date range restrictions
+Formula: price * number_of_rooms * applicable_nights
+
+EXTRAS_BOARD:
+-------------
+- Board upgrade charges
+- Can be per-person or per-room
+- Tied to specific board codes
+Formula: price * applicable_persons_or_rooms * nights
+
+HANDLING_FEE:
+-------------
+- Tiered fee based on stay length
+- Uses FromDays/ToDays and FromDate/ToDate for matching
+- Price1 for shorter stays, Price2 for longer stays
+- Applied once per booking
+Formula: matching_fee_price
+
+COMPANY_FEE:
+------------
+- Flat per-room fee
+- Applied once per room
+Formula: price * number_of_rooms
+
+================================================================================
+7. DISCOUNT CALCULATION
+================================================================================
+
+EARLY BOOKING (EB) DISCOUNT:
+----------------------------
+Eligibility Check:
+1. Booking date must be within EB booking period (FromDate-ToDate)
+2. Check-in date must be within EB travel period (BookFrom-BookTo)
+3. Stay length must meet minimum stay requirement (if any)
+
+Calculation:
+- EB% applied to base_price (always)
+- EB% applied to extras_daily (if EBToDaily='Yes')
+- EB% applied to extras_rooms (if EBToRooms='Yes')
+- EB% applied to extras_board (if EBToBoard='Yes')
+
+Formula:
+EB_discount = (base_price * EB% / 100)
+            + (extras_daily * EB% / 100) [if EBToDaily='Yes']
+            + (extras_rooms * EB% / 100) [if EBToRooms='Yes']
+            + (extras_board * EB% / 100) [if EBToBoard='Yes']
+
+REDUCTION (Free Nights) DISCOUNT:
+---------------------------------
+Eligibility Check:
+1. Stay length within FromDays-ToDays range
+2. Check-in date within FromDate-ToDate range
+
+Free Night Selection:
+- Type='End': Last N nights are free
+- Type='Start': First N nights are free
+
+Calculation:
+- Calculate actual base price of free nights (per-season)
+- Apply proportional reduction to supplements:
+  Ratio = free_nights / total_nights
+
+Formula:
+reduction_base = sum of free nights' base prices
+reduction_daily = extras_daily * ratio [if EXTToDaily='Yes']
+reduction_rooms = extras_rooms * ratio [if EXTToRooms='Yes']
+reduction_board = extras_board * ratio [if EXTToBoard='Yes']
+total_reduction = reduction_base + reduction_daily + reduction_rooms + reduction_board
+
+================================================================================
+8. PRIORITY RULES
+================================================================================
+
+The Priority field determines if discounts can be combined:
+
+PRIORITY = 'Yes' (NOT Combinable):
+----------------------------------
+Only ONE discount can apply. Selection order:
+
+1. If PriorityEB = 'Yes':
+   -> Early Booking has priority (use EB even if Reduction is better)
+
+2. If PriorityEXT = 'Yes':
+   -> Reduction has priority (use Reduction even if EB is better)
+
+3. If neither priority is set:
+   -> Pick the one with BETTER SAVINGS (larger discount)
+
+PRIORITY = 'No' (Combinable):
+-----------------------------
+Both discounts can apply together.
+Total discount = EB discount + Reduction discount
+
+SCENARIO EVALUATION:
+--------------------
+Scenario 1: No discount        -> price = base + fees
+Scenario 2: EB only            -> price = base + fees - EB_discount
+Scenario 3: Reduction only     -> price = base + fees - reduction
+Scenario 4: Combined           -> price = base + fees - EB - reduction
+
+Select scenario with lowest final price (respecting priority rules).
+
+================================================================================
+9. COMMISSION APPLICATION
+================================================================================
+
+Commission is applied as final step:
+
+Formula:
+final_price = calculated_price * (1 + commission / 100)
+
+Example:
+Calculated price: 1000.00
+Commission: 15%
+Final price: 1000.00 * 1.15 = 1150.00
+
+================================================================================
+10. EXTRAS DAILY TYPE HANDLING
+================================================================================
+
+The Type field in extras_daily determines charge behavior:
+
+TYPE = 'Arrival':
+-----------------
+- If check-in date is within FromDate-ToDate, charge applies to WHOLE stay
+- All nights are charged, not just overlapping nights
+Formula: price * count * total_nights
+
+TYPE = 'Stay':
+--------------
+- Charged for each day that falls within the date range
+- Only overlapping nights are charged
+Formula: price * count * overlapping_nights
+
+TYPE = 'Day' or 'Night' (default):
+----------------------------------
+- Charged per overlapping night
+- Standard behavior
+Formula: price * count * overlapping_nights
+
+================================================================================
+11. PERSON MATCHING ALGORITHM
+================================================================================
+
+The countMatchingPersons() method supports complex IdAge patterns:
+
+ADULT MATCHING:
+---------------
+- "ADULT" or "ADT"      -> All regular adults (1st, 2nd position)
+- "3RD ADULT"           -> Only 3rd adult (if present)
+- "4TH ADULT"           -> Only 4th adult (if present)
+- "3RD ADULT|4TH ADULT" -> 3rd or 4th adult
+
+CHILD MATCHING:
+---------------
+- "CHD 0-1" / "CHILD 0-1"     -> Children age 0-1.99 (infants)
+- "CHD 2-11" / "CHILD 2-11"   -> Children age 2-11.99
+- "1ST CHD" / "1ST CHILD"     -> First child only
+- "2ND CHD" / "2ND CHILD"     -> Second child only
+- "INFANT" / "INF"            -> Age < 2
+
+POSITION-BASED MATCHING:
+------------------------
+IdAge values like "1ST CHD 2-11,99" are positional:
+- Position is extracted from the string
+- Only the child at that specific position is matched
+- Age range is still validated
+
+================================================================================
+12. RESULT STRUCTURE
+================================================================================
+
+The calculate() method returns:
+
+{
+    "success": true,
+    "price": 1234.56,                    // Final price WITH commission
+    "price_without_commission": 1073.57, // Price before commission
+    "commission": 15,                    // Commission percentage
+    "breakdown": {
+        "base_price": 700.00,
+        "base_per_night": [              // By-night breakdown
+            {"date": "2026-03-01", "price": 100.00, ...},
+            {"date": "2026-03-02", "price": 100.00, ...}
+        ],
+        "fees": {
+            "extras_daily": 50.00,
+            "extras_single": 0,
+            "extras_rooms": 30.00,
+            "extras_board": 20.00,
+            "handling_fee": 10.00,
+            "company_fee": 10.00,
+            "total_fees": 120.00
+        },
+        "discounts": {
+            "early_booking": {
+                "percentage": 10,
+                "base_discount": 70.00,
+                "daily_discount": 5.00,
+                "rooms_discount": 3.00,
+                "board_discount": 2.00,
+                "total": 80.00
+            },
+            "reduction": {
+                "free_nights": 1,
+                "type": "End",
+                "base_reduction": 100.00,
+                "daily_reduction": 7.14,
+                "rooms_reduction": 4.29,
+                "board_reduction": 2.86,
+                "total": 114.29
+            }
+        },
+        "applied_discount": "reduction",  // Which discount was used
+        "discount_amount": 114.29
+    },
+    "occupancy": {...},                  // Guest structure
+    "debug_log": [...]                   // If debug enabled
+}
+
+================================================================================
+13. FORMULA SUMMARY
+================================================================================
+
+MASTER FORMULA:
+---------------
+
+Price = (BasePrice
+         + extras_single
+         + extras_daily
+         + extras_rooms
+         + extras_board
+         + handling_fee
+         + company_fee
+        ) - Applied_Discounts
+
+Where Applied_Discounts depends on Priority Rules:
+
+If Priority='No' (combinable):
+    Applied_Discounts = EB_discount + Reduction_discount
+
+If Priority='Yes' (not combinable):
+    If PriorityEB='Yes':
+        Applied_Discounts = EB_discount
+    Else If PriorityEXT='Yes':
+        Applied_Discounts = Reduction_discount
+    Else:
+        Applied_Discounts = MAX(EB_discount, Reduction_discount)
+
+FINAL PRICE:
+------------
+Final_Price = Price * (1 + commission / 100)
+
+--------------------------------------------------------------------------------
+
+EB DISCOUNT FORMULA:
+--------------------
+EB_discount = (base_price * EB% / 100)
+            + (extras_daily * EB% / 100)  [if EBToDaily='Yes']
+            + (extras_rooms * EB% / 100)  [if EBToRooms='Yes']
+            + (extras_board * EB% / 100)  [if EBToBoard='Yes']
+
+--------------------------------------------------------------------------------
+
+REDUCTION FORMULA:
+------------------
+ratio = free_nights / total_nights
+
+Reduction = base_price_of_free_nights
+          + (extras_daily * ratio)  [if EXTToDaily='Yes']
+          + (extras_rooms * ratio)  [if EXTToRooms='Yes']
+          + (extras_board * ratio)  [if EXTToBoard='Yes']
+
+================================================================================
+KEY METHODS REFERENCE
+================================================================================
+
+| Method                        | Purpose                                    |
+|-------------------------------|-------------------------------------------|
+| calculate()                   | Main entry - orchestrates calculation     |
+| calculateBasePrice()          | Sums per-night prices for all occupants   |
+| calculateFees()               | Aggregates all supplements                |
+| calculateExtrasDaily()        | Daily charges with type handling          |
+| calculateExtrasSingle()       | Single supplement (1 adult in double)     |
+| calculateExtrasRooms()        | Per-room charges                          |
+| calculateExtrasBoard()        | Board upgrades per person/stay            |
+| calculateHandlingFee()        | Tiered fee based on stay length           |
+| calculateCompanyFee()         | Per-room flat fee                         |
+| calculateEarlyBookingDiscount()| EB discount with supplement flags        |
+| calculateReduction()          | Free nights with proportional reduction   |
+| applyPriorityRules()          | Selects best discount scenario            |
+| buildOccupancyStructure()     | Maps guests to bed types                  |
+| getSeasonsByNight()           | Maps nights to seasons                    |
+| countMatchingPersons()        | Counts guests matching IdAge criteria     |
+| countOverlappingNights()      | Counts nights within date range           |
+| findSeasonPriceRow()          | Finds applicable price row                |
+| getPriceFromRow()             | Extracts price, handles percentages       |
+
+================================================================================
+END OF DOCUMENT
+================================================================================
