@@ -157,9 +157,9 @@ class SearchService
         
         // Build API parameters
         $api_params = $this->buildApiParams($params);
-        
-        // Call API
-        $response = $this->api->getAvailability($api_params);
+
+        // Call API - use searchAvailability method
+        $response = $this->api->searchAvailability($api_params);
         
         if (!$response) {
             $this->log('Search API returned empty', ['params' => $api_params]);
