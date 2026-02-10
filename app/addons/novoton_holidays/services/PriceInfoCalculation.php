@@ -1144,31 +1144,87 @@ class PriceInfoCalculation
     }
 
     /**
-     * Count persons matching an age type
+     * Count persons matching the IdAge specification
+     *
+     * IdAge examples from hotelinfo:
+     * - "ADULT" = regular adults (1st, 2nd)
+     * - "3RD ADULT" = only the 3rd adult if present
+     * - "4TH ADULT" = only the 4th adult if present
+     * - "CHD 0-1" or "CHILD 0-1" = infants (age 0-1)
+     * - "CHD 2-11" or "CHILD 2-11" = children (age 2-11)
+     * - "1ST CHD" = 1st child
+     * - "2ND CHD" = 2nd child
+     *
+     * Age definitions from hotelinfo <age> element:
+     * - IdAge: identifier
+     * - FromYear/ToYear: age range
      */
     private function countMatchingPersons(array $occupancy, string $idAge): int
     {
         $count = 0;
         $idAge = strtoupper(trim($idAge));
+        $numAdults = count($occupancy['adults']);
+        $numChildren = count($occupancy['children']);
 
-        // Adults
-        if (strpos($idAge, 'ADULT') !== false || $idAge === 'ADT') {
-            $count += count($occupancy['adults']);
+        // Check for specific adult positions (3RD ADULT, 4TH ADULT, etc.)
+        if (preg_match('/(\d+)(ST|ND|RD|TH)\s*ADULT/i', $idAge, $matches)) {
+            $position = intval($matches[1]);
+            // Only count if we have that many adults
+            if ($numAdults >= $position) {
+                $count = 1; // Only 1 person at that position
+            }
+            return $count;
         }
 
-        // Children - check age bands
+        // Regular adults (not positional)
+        if ($idAge === 'ADULT' || $idAge === 'ADT' || $idAge === 'ADULTS') {
+            return $numAdults;
+        }
+
+        // Check for specific child positions (1ST CHD, 2ND CHD, etc.)
+        if (preg_match('/(\d+)(ST|ND|RD|TH)\s*(CHD|CHILD)/i', $idAge, $matches)) {
+            $position = intval($matches[1]);
+            // Only count if we have that many children
+            if ($numChildren >= $position) {
+                $count = 1;
+            }
+            return $count;
+        }
+
+        // Children with age bands
         if (strpos($idAge, 'CHD') !== false || strpos($idAge, 'CHILD') !== false) {
+            // Try to extract age range from IdAge (e.g., "CHD 2-11", "CHILD 0-1")
+            $fromAge = 0;
+            $toAge = 17; // Default max child age
+
+            if (preg_match('/(\d+)\s*-\s*(\d+)/', $idAge, $ageMatches)) {
+                $fromAge = intval($ageMatches[1]);
+                $toAge = intval($ageMatches[2]);
+            } elseif (strpos($idAge, '0-1') !== false || strpos($idAge, 'INFANT') !== false) {
+                $fromAge = 0;
+                $toAge = 1;
+            } elseif (strpos($idAge, '2-11') !== false) {
+                $fromAge = 2;
+                $toAge = 11;
+            }
+
             foreach ($occupancy['children'] as $child) {
-                // Check if age band matches
-                if (strpos($idAge, '0-1') !== false && $child['age'] < 2) {
-                    $count++;
-                } elseif (strpos($idAge, '2-11') !== false && $child['age'] >= 2) {
-                    $count++;
-                } elseif (strpos($idAge, '0-1') === false && strpos($idAge, '2-11') === false) {
-                    // Generic child
+                $childAge = $child['age'] ?? 0;
+                if ($childAge >= $fromAge && $childAge <= $toAge) {
                     $count++;
                 }
             }
+            return $count;
+        }
+
+        // Infant specific
+        if (strpos($idAge, 'INFANT') !== false || strpos($idAge, 'INF') !== false) {
+            foreach ($occupancy['children'] as $child) {
+                if (($child['age'] ?? 0) < 2) {
+                    $count++;
+                }
+            }
+            return $count;
         }
 
         return $count;
