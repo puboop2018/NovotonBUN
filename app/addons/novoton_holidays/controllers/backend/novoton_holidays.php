@@ -202,9 +202,9 @@ if ($mode == 'manage' || empty($mode)) {
     
     // Last sync dates by type
     $last_syncs = [
-        'hotellist' => $syncLogRepo->getLastSyncDate('hotellist'),
+        'hotellist' => $syncLogRepo->getLastSyncDate('hotel_list'),
         'hotelinfo' => $syncLogRepo->getLastSyncDate('hotelinfo'),
-        'prices' => $syncLogRepo->getLastSyncDate('prices'),
+        'prices' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
     ];
