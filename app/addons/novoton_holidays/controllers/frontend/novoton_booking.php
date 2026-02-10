@@ -2269,14 +2269,21 @@ if ($mode == 'add_to_cart') {
                 $total_price = $api_price;
             }
         }
-        
-        // Extract terms from API response
-        if (isset($priceData->TermsOfPayment)) {
-            $terms_of_payment = $priceData->TermsOfPayment->asXML();
+
+        // Extract terms from API response using xpath (more reliable than direct property access)
+        if ($priceData instanceof \SimpleXMLElement) {
+            $termsPayment = $priceData->xpath('//TermsOfPayment');
+            $termsCancellation = $priceData->xpath('//TermsOfCancellation');
+
+            if (!empty($termsPayment[0])) {
+                $terms_of_payment = $termsPayment[0]->asXML();
+            }
+            if (!empty($termsCancellation[0])) {
+                $terms_of_cancellation = $termsCancellation[0]->asXML();
+            }
         }
-        if (isset($priceData->TermsOfCancellation)) {
-            $terms_of_cancellation = $priceData->TermsOfCancellation->asXML();
-        }
+
+        // Extract remark and important info
         if (isset($priceData->remark)) {
             $remark = (string)$priceData->remark;
         }

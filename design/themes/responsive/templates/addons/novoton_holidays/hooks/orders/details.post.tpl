@@ -18,7 +18,9 @@
         - hotel_name: {$dbg_product.extra.hotel_name|default:'(empty)'}<br>
         - price: {$dbg_product.extra.price|default:$dbg_product.price|default:'(empty)'}<br>
         - terms_of_payment_raw: {if $dbg_product.extra.terms_of_payment_raw}"{$dbg_product.extra.terms_of_payment_raw|truncate:80}"{else}(empty){/if}<br>
+        - terms_of_payment_formatted: {if $dbg_product.extra.terms_of_payment_formatted}"{$dbg_product.extra.terms_of_payment_formatted|truncate:80}"{else}(empty){/if}<br>
         - terms_of_cancellation_raw: {if $dbg_product.extra.terms_of_cancellation_raw}"{$dbg_product.extra.terms_of_cancellation_raw|truncate:80}"{else}(empty){/if}<br>
+        - terms_of_cancellation_formatted: {if $dbg_product.extra.terms_of_cancellation_formatted}"{$dbg_product.extra.terms_of_cancellation_formatted|truncate:80}"{else}(empty){/if}<br>
         - extra keys: {if is_array($dbg_product.extra)}{implode(", ", array_keys($dbg_product.extra))}{else}(not array){/if}<br>
     {/foreach}
 </div>
@@ -52,25 +54,33 @@
             {/if}
 
             {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
-            {$_payment_raw = $product.extra.terms_of_payment_raw|default:$product.extra.terms_of_payment|default:''}
-            {$_cancel_raw = $product.extra.terms_of_cancellation_raw|default:$product.extra.terms_of_cancellation|default:''}
             {$_check_in = $product.extra.check_in|default:''}
             {$_currency = $product.extra.currency|default:'EUR'}
 
             {* Use aggregated price for this hotel *}
             {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}
 
-            {* Format payment terms with amounts *}
+            {* Get payment terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
             {$_payment = ""}
-            {if $_payment_raw}
-                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($_payment_raw, $_total_price, $_currency)}{/capture}
+            {if $product.extra.terms_of_payment_formatted}
+                {$_payment = $product.extra.terms_of_payment_formatted}
+            {elseif $product.extra.terms_of_payment_raw}
+                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}{/capture}
+                {$_payment = $smarty.capture.payment_fmt}
+            {elseif $product.extra.terms_of_payment}
+                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}{/capture}
                 {$_payment = $smarty.capture.payment_fmt}
             {/if}
 
-            {* Format cancellation terms *}
+            {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
             {$_cancel = ""}
-            {if $_cancel_raw}
-                {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($_cancel_raw, $_check_in)}{/capture}
+            {if $product.extra.terms_of_cancellation_formatted}
+                {$_cancel = $product.extra.terms_of_cancellation_formatted}
+            {elseif $product.extra.terms_of_cancellation_raw}
+                {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}{/capture}
+                {$_cancel = $smarty.capture.cancel_fmt}
+            {elseif $product.extra.terms_of_cancellation}
+                {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}{/capture}
                 {$_cancel = $smarty.capture.cancel_fmt}
             {/if}
 
