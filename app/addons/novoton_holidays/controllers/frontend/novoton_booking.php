@@ -768,7 +768,7 @@ if ($mode == 'search') {
             // This matches how Novoton's website works
 
             $all_room_results = []; // Store results per room
-            
+
             if ($num_rooms > 1 && count($rooms_data) > 1) {
                 // MULTI-ROOM MODE: Make separate API call for each room
                 if ($debug_mode) {
@@ -801,7 +801,7 @@ if ($mode == 'search') {
                         'adults' => $room_adults,
                         'children' => $room_children_ages
                     ];
-                    
+
                     if ($debug_mode) {
                         $debug_log[] = "--- Room #{$room_num}: {$room_adults} adults, {$room_children_count} children ---";
                         if (!empty($room_children_ages)) {
@@ -1096,7 +1096,7 @@ if ($mode == 'search') {
                 if (empty($single_room_children) && !empty($rooms_data[0]['childrenAges'])) {
                     $single_room_children = $rooms_data[0]['childrenAges'];
                 }
-                
+
                 $priceParams = [
                     'hotel_id' => $hotelId,
                     'room_id' => '',      // Empty = return all room types
@@ -1107,7 +1107,7 @@ if ($mode == 'search') {
                     'adults' => $adults,
                     'children' => $single_room_children
                 ];
-                
+
                 if ($debug_mode) {
                     $debug_log[] = "=== SINGLE ROOM SEARCH MODE ===";
                     $debug_log[] = "Adults: {$adults}, Children count: " . count($single_room_children);
@@ -1123,7 +1123,15 @@ if ($mode == 'search') {
             if ($debug_mode) {
                 $api = fn_novoton_get_api();
                 $lastReq = $api->getLastRequestFormatted();
-                $debug_log[] = "  -> API Request: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}";
+                $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
+                $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
+                // Show full XML request
+                $fullRequest = $api->getLastRequest();
+                if ($fullRequest) {
+                    // Mask password in debug output
+                    $maskedRequest = preg_replace('/<psw>[^<]*<\/psw>/', '<psw>***</psw>', $fullRequest);
+                    $debug_log[] = "  -> Full XML Request: " . substr(htmlspecialchars($maskedRequest), 0, 1500);
+                }
                 $rawResponse = $api->getLastResponse();
                 if ($rawResponse) {
                     $debug_log[] = "  -> Raw Response (first 2000 chars): " . substr(htmlspecialchars($rawResponse), 0, 2000);
@@ -1486,7 +1494,7 @@ if ($mode == 'search') {
                                 'adults' => $adults,
                                 'children' => $children
                             ];
-                            
+
                             $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
                             
                             if ($priceData && isset($priceData->Price)) {
