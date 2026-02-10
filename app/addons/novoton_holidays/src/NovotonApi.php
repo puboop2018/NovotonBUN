@@ -606,7 +606,6 @@ class NovotonApi
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
             <psw>' . htmlspecialchars($this->apiPassword) . '</psw>
             <IdHotel>' . htmlspecialchars($params['hotel_id']) . '</IdHotel>
-            <Resort></Resort>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
