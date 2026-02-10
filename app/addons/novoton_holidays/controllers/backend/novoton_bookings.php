@@ -126,7 +126,7 @@ if ($mode === 'manage') {
     }
     $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
 
-    // List all bookings using unified approach (order_details.extra as primary source)
+    // List all bookings from novoton_bookings (single source of truth)
     $params = $_REQUEST;
     $params['items_per_page'] = Registry::get('settings.Appearance.admin_elements_per_page');
 
@@ -136,7 +136,7 @@ if ($mode === 'manage') {
     $sort_order_toggle = ($sort_order === 'ASC') ? 'desc' : 'asc';
     Tygh::$app['view']->assign('sort_order_toggle', $sort_order_toggle);
 
-    // Get unified bookings from order_details.extra (primary) + novoton_bookings (fallback)
+    // Get unified bookings from novoton_bookings table
     $bookings = $bookingRepo->getUnifiedBookings($params);
 
     // Apply sorting
