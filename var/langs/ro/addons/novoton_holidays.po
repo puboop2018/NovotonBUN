@@ -880,6 +880,10 @@ msgctxt "Languages::novoton_holidays.payment_cancellation_terms_link"
 msgid "Payment and cancellation terms"
 msgstr "Condiții de Anulare și Plată"
 
+msgctxt "Languages::novoton_holidays.refresh_price"
+msgid "Refresh price"
+msgstr "Actualizează prețul"
+
 msgctxt "Languages::novoton_holidays.try_different_dates"
 msgid "Please try different dates or check back later"
 msgstr "Vă rugăm încercați alte date sau reveniți mai târziu"

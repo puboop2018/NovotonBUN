@@ -220,9 +220,13 @@
                 </div>
                 
                 <div class="booking-price-box">
+                    <div id="price-error-message" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
                     <div class="price-total" id="novoton-total-price">{$booking_data.total_price|number_format:2}</div>
                     <div class="price-currency">EUR</div>
+                    <a href="#" id="refresh-price-link" onclick="refreshPrice(); return false;" style="display: none; font-size: 12px; color: #0071c2; margin-top: 5px;">
+                        🔄 {__("novoton_holidays.refresh_price")|default:"Actualizează prețul"}
+                    </a>
                 </div>
             </div>
             
@@ -779,6 +783,9 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
         if (priceEl) priceEl.style.opacity = '1';
         
         if (data.success) {
+            // Hide any previous error message
+            hidePriceError();
+
             var newPrice = parseFloat(data.new_price) || 0;
             console.log('[Novoton] New price for room ' + roomNum + ':', newPrice);
             
@@ -854,15 +861,56 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             
         } else {
             console.log('[Novoton] Recalculation failed:', data.message);
-            showInfoNotice(data.message || '{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
+            showPriceError(data.message || '{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
         }
     })
     .catch(function(error) {
         console.error('[Novoton] AJAX error:', error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        showInfoNotice('{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
+        showPriceError('{__("novoton_holidays.price_verify_on_submit")|default:"Pretul va fi verificat la finalizare."}');
     });
+}
+
+// Show price error and refresh link
+function showPriceError(message) {
+    var errorEl = document.getElementById('price-error-message');
+    var refreshLink = document.getElementById('refresh-price-link');
+
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+    if (refreshLink) {
+        refreshLink.style.display = 'block';
+    }
+}
+
+// Hide price error
+function hidePriceError() {
+    var errorEl = document.getElementById('price-error-message');
+    var refreshLink = document.getElementById('refresh-price-link');
+
+    if (errorEl) errorEl.style.display = 'none';
+    if (refreshLink) refreshLink.style.display = 'none';
+}
+
+// Refresh price manually
+function refreshPrice() {
+    console.log('[Novoton] Manual price refresh triggered');
+    hidePriceError();
+
+    // Collect all children ages from the form
+    var childrenAges = [];
+    document.querySelectorAll('[id^="child_calc_age_"]').forEach(function(input) {
+        var age = parseInt(input.value, 10);
+        if (!isNaN(age) && age >= 0 && age < 18) {
+            childrenAges.push(age);
+        }
+    });
+
+    console.log('[Novoton] Refreshing with children ages:', childrenAges);
+    triggerPriceRecalculationInline(childrenAges, 1);
 }
 
 function showPriceNotification(difference) {
