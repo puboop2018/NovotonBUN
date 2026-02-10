@@ -6,14 +6,27 @@
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 5px; font-size: 12px; color: #666;">
     <tr>
         <td>
+            {* Hotel name with location - Capitalize Case *}
+            {if $oi.extra.hotel_name}
+                {$hotel_display = $oi.extra.hotel_name|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
+                {$location_parts = []}
+                {if $oi.extra.hotel_city}
+                    {$location_parts[] = $oi.extra.hotel_city|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
+                {/if}
+                {if $oi.extra.hotel_region}
+                    {$location_parts[] = $oi.extra.hotel_region|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
+                {/if}
+                {if $oi.extra.hotel_country}
+                    {$location_parts[] = $oi.extra.hotel_country|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
+                {/if}
+                <strong>{$hotel_display}{if $location_parts}, {", "|implode:$location_parts}{/if}</strong><br>
+            {/if}
+
+            {* Check-in, Check-out, Nights - aligned on one line *}
             {if $oi.extra.check_in && $oi.extra.check_out}
             <strong>Check-in:</strong> {$oi.extra.check_in|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
             <strong>Check-out:</strong> {$oi.extra.check_out|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
-            <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$oi.extra.nights}<br>
-            {/if}
-
-            {if $oi.extra.package_name}
-            <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$oi.extra.package_name}<br>
+            <strong>{__("novoton_holidays.nights")|default:"Nopți"|capitalize}:</strong> {$oi.extra.nights}<br>
             {/if}
 
             {if $oi.extra.room_type_display || $oi.extra.room_name}
@@ -24,8 +37,8 @@
             <strong>{__("novoton_holidays.board")|default:"Masă"}:</strong> {$oi.extra.board_name}<br>
             {/if}
 
-            <strong>{__("novoton_holidays.guests")|default:"Oaspeți"}:</strong>
-            {$oi.extra.adults|default:2} {if $oi.extra.adults == 1}{__("novoton_holidays.adult")|default:"Adult"}{else}{__("novoton_holidays.adults")|default:"Adulți"}{/if}{if $oi.extra.children > 0}, {$oi.extra.children} {if $oi.extra.children == 1}{__("novoton_holidays.child")|default:"Copil"}{else}{__("novoton_holidays.children")|default:"Copii"}{/if}{/if}
+            <strong>{__("novoton_holidays.guests")|default:"Turiști"}:</strong>
+            {__("novoton_holidays.n_adults", [$oi.extra.adults|default:2])}{if $oi.extra.children > 0}, {__("novoton_holidays.n_children", [$oi.extra.children])}{/if}
             <br>
 
             {* Guest Names List *}
@@ -40,15 +53,17 @@
                     {$num_rooms = $oi.extra.num_rooms|default:1}
                     {$guest_number = 0}
 
+                    <strong>{__("novoton_holidays.guest_names")|default:"Nume turiști"}:</strong><br>
+
                     {if $num_rooms > 1}
                         {* Multiple rooms - group by room *}
                         {for $room_num=1 to $num_rooms}
-                            <br><strong>{__("novoton_holidays.room")|default:"Camera"} {$room_num}:</strong><br>
+                            <strong>{__("novoton_holidays.room")|default:"Camera"} {$room_num}:</strong><br>
                             {foreach from=$guests_list item=guest}
                                 {if $guest.room == $room_num}
                                     {$guest_number = $guest_number + 1}
-                                    {$guest_name = $guest.name|default:"`$guest.last_name` `$guest.first_name`"|trim}
-                                    &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years")}){/if}<br>
+                                    {$guest_name = $guest.name|default:"`$guest.last_name`, `$guest.first_name`"|trim}
+                                    &nbsp;&nbsp;{$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
                                 {/if}
                             {/foreach}
                         {/for}
@@ -56,8 +71,8 @@
                         {* Single room - simple list *}
                         {foreach from=$guests_list item=guest}
                             {$guest_number = $guest_number + 1}
-                            {$guest_name = $guest.name|default:"`$guest.last_name` `$guest.first_name`"|trim}
-                            &nbsp;&nbsp;{$guest_number}. {$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {$guest.age} {__("novoton_holidays.years")}){/if}<br>
+                            {$guest_name = $guest.name|default:"`$guest.last_name`, `$guest.first_name`"|trim}
+                            &nbsp;&nbsp;{$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
                         {/foreach}
                     {/if}
                 {/if}
@@ -86,7 +101,7 @@
                     {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}{/capture}
                     {if $smarty.capture.payment_terms_formatted}
                         <br>
-                        <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
+                        <strong>{__("novoton_holidays.terms_of_payment")|default:"Condiții de plată"}</strong><br>
                         {$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}
                     {/if}
                 {/if}
@@ -97,7 +112,7 @@
                     {capture name="cancel_terms_formatted"}{fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}{/capture}
                     {if $smarty.capture.cancel_terms_formatted}
                         <br>
-                        <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
+                        <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
                         {$smarty.capture.cancel_terms_formatted|escape:'html'|nl2br nofilter}
                     {/if}
                 {/if}

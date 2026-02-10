@@ -284,6 +284,26 @@ msgctxt "Languages::novoton_holidays.room"
 msgid "Room"
 msgstr "Cameră"
 
+msgctxt "Languages::novoton_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adulți"
+
+msgctxt "Languages::novoton_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Copil|[n] Copii"
+
+msgctxt "Languages::novoton_holidays.n_nights"
+msgid "[n] Night|[n] Nights"
+msgstr "[n] Noapte|[n] Nopți"
+
+msgctxt "Languages::novoton_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Cameră|[n] Camere"
+
+msgctxt "Languages::novoton_holidays.n_years"
+msgid "[n] year|[n] years"
+msgstr "[n] an|[n] ani"
+
 msgctxt "Languages::novoton_holidays.search"
 msgid "Search"
 msgstr "Caută"
@@ -879,6 +899,30 @@ msgstr "Condiții de plată"
 msgctxt "Languages::novoton_holidays.payment_cancellation_terms_link"
 msgid "Payment and cancellation terms"
 msgstr "Condiții de Anulare și Plată"
+
+msgctxt "Languages::novoton_holidays.refresh_price"
+msgid "Refresh price"
+msgstr "Actualizează prețul"
+
+msgctxt "Languages::novoton_holidays.price_unverified"
+msgid "unverified"
+msgstr "neconfirmat"
+
+msgctxt "Languages::novoton_holidays.price_must_be_verified"
+msgid "Price must be verified before proceeding"
+msgstr "Prețul trebuie verificat înainte de a continua"
+
+msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
+msgid "Price could not be verified for the entered ages. Please try refreshing the price."
+msgstr "Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."
+
+msgctxt "Languages::novoton_holidays.price_verification_failed"
+msgid "Price verification failed. The booking cannot proceed."
+msgstr "Verificarea prețului a eșuat. Rezervarea nu poate continua."
+
+msgctxt "Languages::novoton_holidays.price_changed_on_submit"
+msgid "The price has changed. Please review the new price and try again."
+msgstr "Prețul s-a modificat. Vă rugăm să verificați noul preț și să încercați din nou."
 
 msgctxt "Languages::novoton_holidays.try_different_dates"
 msgid "Please try different dates or check back later"

@@ -46,32 +46,35 @@ $tools_modes = [
 
 // Route to appropriate sub-controller
 $addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/controllers/backend/';
+$_routed = false;
 
 if (in_array($mode, $hotels_modes)) {
     $__result = include($addon_dir . 'novoton_hotels.php');
     if (is_array($__result)) {
         return $__result;
     }
-    // Sub-controller handled the mode - don't continue to other handlers
-    return;
+    $_routed = true;
 }
 
-if (in_array($mode, $prices_modes)) {
+if (!$_routed && in_array($mode, $prices_modes)) {
     $__result = include($addon_dir . 'novoton_prices.php');
     if (is_array($__result)) {
         return $__result;
     }
-    // Sub-controller handled the mode - don't continue to other handlers
-    return;
+    $_routed = true;
 }
 
-if (in_array($mode, $tools_modes)) {
+if (!$_routed && in_array($mode, $tools_modes)) {
     $__result = include($addon_dir . 'novoton_tools.php');
     if (is_array($__result)) {
         return $__result;
     }
-    // Sub-controller handled the mode - don't continue to other handlers
-    return;
+    $_routed = true;
+}
+
+// If routed to a sub-controller, stop here (let template render)
+if ($_routed) {
+    return [CONTROLLER_STATUS_OK];
 }
 
 // ============================================================================
@@ -199,9 +202,9 @@ if ($mode == 'manage' || empty($mode)) {
     
     // Last sync dates by type
     $last_syncs = [
-        'hotellist' => $syncLogRepo->getLastSyncDate('hotellist'),
+        'hotellist' => $syncLogRepo->getLastSyncDate('hotel_list'),
         'hotelinfo' => $syncLogRepo->getLastSyncDate('hotelinfo'),
-        'prices' => $syncLogRepo->getLastSyncDate('prices'),
+        'prices' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
     ];

@@ -274,18 +274,15 @@
 {/capture}
 
 {capture name="buttons"}
-    <a class="btn" href="{"novoton_bookings.manage"|fn_url}">&larr; Back to Bookings</a>
-    
+<a class="btn" href="{"novoton_bookings.manage"|fn_url}">&larr; Back to Bookings</a>
+{if $booking}
     {if $booking.novoton_status == 'ASK' || $booking.novoton_invoice_id}
-    <form action="{"novoton_bookings.resinfo"|fn_url}" method="post" style="display: inline;">
-        <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
-        <button type="submit" class="btn btn-primary">Check Status</button>
-    </form>
+        <a href="{"novoton_bookings.resinfo?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-primary">Check Status</a>
     {/if}
-    
     {if $booking.novoton_status == 'RQ' || $booking.alternatives_requested}
-    <a href="{"novoton_bookings.alternatives?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-success">View Alternatives</a>
+        <a href="{"novoton_bookings.alternatives?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-success">View Alternatives</a>
     {/if}
+{/if}
 {/capture}
 
 {include file="common/mainbox.tpl" 

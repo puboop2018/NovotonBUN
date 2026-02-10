@@ -2151,7 +2151,40 @@ if ($mode == 'add_to_cart') {
     ];
     
     $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
-    
+
+    // A80: Server-side price validation - safety net
+    // If we have children and API returns no data, abort booking
+    // This prevents bookings with incorrect prices when room doesn't accept certain child ages
+    if (!$priceData || !isset($priceData->Price)) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton add_to_cart: PRICE VERIFICATION FAILED - API returned no price',
+            'hotel_id' => $bookingData['hotel_id'],
+            'room_id' => $bookingData['room_id'],
+            'children_ages' => $all_child_ages,
+            'adults' => intval($bookingData['adults'] ?? 2)
+        ]);
+
+        fn_set_notification('E', __('error'), __('novoton_holidays.price_verification_failed', [
+            '[default]' => 'Price verification failed. The booking cannot proceed. Please go back and try refreshing the price, or contact support.'
+        ]));
+
+        // Build return URL to booking form with all parameters
+        $return_params = [
+            'hotel_id' => $bookingData['hotel_id'],
+            'product_id' => $product_id,
+            'check_in' => $bookingData['check_in'],
+            'check_out' => $bookingData['check_out'],
+            'nights' => $bookingData['nights'] ?? '',
+            'adults' => $bookingData['adults'] ?? 2,
+            'children' => $bookingData['children'] ?? 0,
+            'children_ages' => $children_ages,
+            'rooms' => $bookingData['num_rooms'] ?? 1
+        ];
+        $return_url = 'novoton_booking.form?' . http_build_query($return_params);
+
+        return [CONTROLLER_STATUS_REDIRECT, $return_url];
+    }
+
     // Initialize terms
     $terms_of_payment = '';
     $terms_of_cancellation = '';
@@ -2427,6 +2460,7 @@ if ($mode == 'add_to_cart') {
             'hotel_id' => $bookingData['hotel_id'],
             'hotel_name' => $hotel_info['hotel_name'] ?? '',
             'hotel_city' => $hotel_info['city'] ?? '',
+            'hotel_region' => $hotel_info['region'] ?? '',
             'hotel_country' => $hotel_info['country'] ?? 'BULGARIA',
             'package_name' => $package_name,
             'room_id' => $bookingData['room_id'],

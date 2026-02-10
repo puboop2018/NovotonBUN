@@ -1,7 +1,7 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 2.9.3
-**Last Updated:** February 6, 2026
+**Version:** 2.9.4
+**Last Updated:** February 10, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
 
@@ -447,6 +447,8 @@ Stores customer bookings.
 | children | int | Number of children |
 | children_ages | varchar(100) | Children ages JSON |
 | num_rooms | int | Number of rooms |
+| room_number | int | Room group number (for multi-group) |
+| total_rooms | int | Total room groups in booking |
 | rooms_data | text | JSON room details |
 | guests_data | text | JSON guest details |
 | holder_name | varchar(255) | Main guest name |
@@ -561,6 +563,43 @@ app/addons/novoton_holidays/
 | `SecurityService` | Input validation and CSRF |
 | `DateHelper` | Date formatting and calculations |
 
+### Booking Data Architecture (Single Source of Truth)
+
+The addon uses `novoton_bookings` table as the **single source of truth** for all booking data.
+
+#### Data Flow
+
+```
+Cart Add → novoton_bookings (order_id=0, pending)
+     ↓
+Checkout → place_order hook → UPDATE novoton_bookings (set order_id)
+     ↓
+API Submit → UPDATE novoton_bookings (novoton_status, novoton_invoice_id)
+```
+
+#### Key Principles
+
+1. **One Canonical Source**: All booking data lives in `novoton_bookings` table
+2. **No Duplicates**: place_order hook always UPDATEs existing bookings instead of INSERT
+3. **Order Details for Display**: `order_details.extra` stores reference data for order display only
+4. **Admin Reads from DB**: `getUnifiedBookings()` reads directly from `novoton_bookings` table
+
+#### BookingRepository Methods
+
+| Method | Description |
+|--------|-------------|
+| `findById($id)` | Find booking by ID |
+| `findByOrderId($orderId)` | Find bookings for an order |
+| `findByUserId($userId)` | Find bookings for a user |
+| `getUnifiedBookings($params)` | Get bookings with filters and joins |
+| `create($data)` | Create new booking |
+| `update($id, $data)` | Update existing booking |
+| `deleteOrphans($hours)` | Delete abandoned cart bookings |
+
+#### Orphan Cleanup
+
+Orphan bookings (order_id=0, older than 24h) are abandoned cart items that can be safely deleted via the "Cleanup Orphan Bookings" button in admin.
+
 ---
 
 ## React Booking Engine
@@ -641,6 +680,22 @@ Addon logs events to CS-Cart's logging system:
 
 ## Changelog
 
+### Version 2.9.4 (February 10, 2026)
+- **Architecture:** Implemented Single Source of Truth for booking data
+  - `novoton_bookings` table is now the canonical source for all booking data
+  - `getUnifiedBookings()` reads directly from database instead of parsing order_details.extra
+  - place_order hook now UPDATEs existing bookings instead of creating duplicates
+  - Simplified orphan cleanup (just DELETE old records without order_id)
+- **Fixed:** XML packages extraction - multiple `<packages>` siblings now correctly iterated
+- **Fixed:** XML seasons extraction - multiple `<seasons>` siblings now correctly iterated
+- **Fixed:** 404 error on "Add Hotels as Products" admin page (controller return status)
+- **Fixed:** Dashboard "Last Sync" showing "Never" for Hotel List and Prices
+- **Fixed:** Smarty template error "Not matching {capture}{/capture}" in booking view
+- **Fixed:** Booking view template now properly displays Order ID and prices
+- **Added:** `room_number` and `total_rooms` fields for multi-group booking display
+- **Updated:** BookingRepository with new methods and optimized queries
+- **Updated:** Documentation with architecture details and database schema
+
 ### Version 2.9.3 (February 6, 2026)
 - **Added:** `exchange_rates` mode to main cron controller for BNR rate updates
 - **Removed:** Legacy `hotel_info` mode - use `hotel_info_batched` instead
@@ -709,4 +764,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 6, 2026 - Version 2.9.1*
+*Documentation last updated: February 10, 2026 - Version 2.9.4*

@@ -338,21 +338,40 @@ class BatchedPriceInfoSync
         $min_price = null;
         $has_early_booking = 'N';
 
-        // Extract seasons and find minimum price
-        if (isset($priceinfo->season)) {
-            $seasons = is_array($priceinfo->season) ? $priceinfo->season : [$priceinfo->season];
-            $seasons_count = count($seasons);
+        // Extract seasons - handle multiple <seasons> siblings
+        // XML structure: <priceinfo><seasons>...</seasons><seasons>...</seasons></priceinfo>
+        if (isset($priceinfo->seasons)) {
+            foreach ($priceinfo->seasons as $season) {
+                $seasons_count++;
 
-            foreach ($seasons as $season) {
                 // Check for early booking
                 if (!empty($season->EarlyBooking) || !empty($season->early_booking)) {
                     $has_early_booking = 'Y';
                 }
+            }
+        }
 
-                // Find minimum price
-                $price = floatval($season->Price ?? $season->price ?? 0);
-                if ($price > 0 && ($min_price === null || $price < $min_price)) {
-                    $min_price = $price;
+        // Extract season_price for minimum price calculation
+        // XML structure: <priceinfo><season_price>...</season_price><season_price>...</season_price></priceinfo>
+        if (isset($priceinfo->season_price)) {
+            foreach ($priceinfo->season_price as $sp) {
+                // Only consider ADULT prices for minimum (not percentages like "80%")
+                $id_age = (string)($sp->IdAge ?? '');
+                if (stripos($id_age, 'ADULT') !== false && stripos($id_age, '3 RD') === false) {
+                    // Check Price1 through Price20 for numeric values
+                    for ($i = 1; $i <= 20; $i++) {
+                        $price_key = "Price{$i}";
+                        if (isset($sp->$price_key)) {
+                            $price_val = (string)$sp->$price_key;
+                            // Skip percentages
+                            if (strpos($price_val, '%') === false) {
+                                $price = floatval($price_val);
+                                if ($price > 0 && ($min_price === null || $price < $min_price)) {
+                                    $min_price = $price;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -361,11 +380,13 @@ class BatchedPriceInfoSync
         db_query(
             "UPDATE ?:novoton_hotel_packages SET
              priceinfo_data = ?s,
+             seasons_count = ?i,
              min_price = ?d,
              has_early_booking = ?s,
              synced_at = ?s
              WHERE hotel_id = ?s AND package_id = ?s",
             json_encode($priceinfo),
+            $seasons_count,
             $min_price,
             $has_early_booking,
             $now,
