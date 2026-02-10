@@ -128,8 +128,11 @@ if ($mode == 'compare') {
         echo '<tr><td>Base Price</td><td>' . number_format($calcResult['breakdown']['base_price'], 2) . '</td></tr>';
         echo '<tr><td>Fees Total</td><td>' . number_format($calcResult['breakdown']['fees']['total_fees'], 2) . '</td></tr>';
         echo '<tr><td>&nbsp;&nbsp;- extras_daily</td><td>' . number_format($calcResult['breakdown']['fees']['extras_daily'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- handling_fee</td><td>' . number_format($calcResult['breakdown']['fees']['handling_fee'], 2) . '</td></tr>';
         echo '<tr><td>&nbsp;&nbsp;- extras_single</td><td>' . number_format($calcResult['breakdown']['fees']['extras_single'], 2) . '</td></tr>';
+        echo '<tr><td>&nbsp;&nbsp;- extras_rooms</td><td>' . number_format($calcResult['breakdown']['fees']['extras_rooms'], 2) . '</td></tr>';
+        echo '<tr><td>&nbsp;&nbsp;- extras_board</td><td>' . number_format($calcResult['breakdown']['fees']['extras_board'], 2) . '</td></tr>';
+        echo '<tr><td>&nbsp;&nbsp;- handling_fee</td><td>' . number_format($calcResult['breakdown']['fees']['handling_fee'], 2) . '</td></tr>';
+        echo '<tr><td>&nbsp;&nbsp;- company_fee</td><td>' . number_format($calcResult['breakdown']['fees']['company_fee'] ?? 0, 2) . '</td></tr>';
         echo '<tr><td>Applied Discount</td><td>' . $calcResult['breakdown']['applied_discount'] . ' (-' . number_format($calcResult['breakdown']['discount_amount'], 2) . ')</td></tr>';
         echo '<tr style="font-weight:bold;"><td>Total (before commission)</td><td>' . number_format($calcResult['price_without_commission'], 2) . '</td></tr>';
         echo '<tr style="font-weight:bold;"><td>Total (with commission)</td><td>' . number_format($calcResult['price'], 2) . '</td></tr>';
@@ -290,6 +293,167 @@ if ($mode == 'compare') {
         echo '<div class="debug-section">';
         echo '<pre>' . htmlspecialchars($api->getLastResponse()) . '</pre>';
         echo '</div>';
+    }
+
+    echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
+    echo '</div></body></html>';
+    exit;
+}
+
+/**
+ * Mode: verify
+ * Verify season-to-price correlation
+ */
+if ($mode == 'verify') {
+    header('Content-Type: text/html; charset=utf-8');
+
+    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $package_name = $_REQUEST['package_name'] ?? '';
+    $room_id = $_REQUEST['room_id'] ?? '';
+    $board_id = $_REQUEST['board_id'] ?? '';
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+    $nights = intval($_REQUEST['nights'] ?? 7);
+
+    echo '<!DOCTYPE html><html><head><title>Season-Price Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        h1 { color: #003580; margin-bottom: 5px; }
+        h2 { color: #555; margin-top: 25px; border-bottom: 2px solid #003580; padding-bottom: 5px; }
+        .params { background: #f0f0f0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .params strong { display: inline-block; width: 120px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #003580; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .highlight { background: #fff3cd !important; font-weight: bold; }
+        .info-box { background: #e3f2fd; padding: 15px; border-radius: 6px; margin: 15px 0; }
+        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 11px; }
+        .season-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin: 2px; }
+        .season-1 { background: #4caf50; color: white; }
+        .season-2 { background: #2196f3; color: white; }
+        .season-3 { background: #ff9800; color: white; }
+        .season-4 { background: #e91e63; color: white; }
+        .season-5 { background: #9c27b0; color: white; }
+    </style></head><body><div class="container">';
+
+    echo '<h1>Season-Price Verification</h1>';
+
+    echo '<div class="params">';
+    echo "<strong>Hotel ID:</strong> {$hotel_id}<br>";
+    echo "<strong>Package:</strong> {$package_name}<br>";
+    echo "<strong>Room:</strong> " . rawurldecode($room_id) . "<br>";
+    echo "<strong>Board:</strong> {$board_id}<br>";
+    echo "<strong>Check-in:</strong> {$check_in}<br>";
+    echo "<strong>Nights:</strong> {$nights}<br>";
+    echo '</div>';
+
+    // Load priceinfo
+    $priceinfo_json = db_get_field(
+        "SELECT priceinfo_data FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_name = ?s",
+        $hotel_id,
+        $package_name
+    );
+
+    if (empty($priceinfo_json)) {
+        echo '<div class="info-box" style="background: #ffebee;">No priceinfo data found for this package.</div>';
+    } else {
+        $calculator = new PriceInfoCalculation();
+
+        // We need to set priceinfo directly for verification
+        // Create a reflection to set private property
+        $reflection = new ReflectionClass($calculator);
+        $propPriceinfo = $reflection->getProperty('priceinfo');
+        $propPriceinfo->setAccessible(true);
+        $propPriceinfo->setValue($calculator, json_decode($priceinfo_json, true));
+
+        // 1. Show season mapping
+        echo '<h2>1. Season Mapping for Each Night</h2>';
+        echo '<div class="info-box">This shows which Price column (Price1, Price2, etc.) is used for each night based on the season date ranges.</div>';
+
+        $mapping = $calculator->verifySeasonPriceMapping($check_in, $nights);
+
+        echo '<p><strong>Total seasons found:</strong> ' . $mapping['total_seasons_found'] . '</p>';
+
+        if (!empty($mapping['seasons_raw'])) {
+            echo '<h3>Season Date Ranges</h3>';
+            echo '<table>';
+            echo '<tr><th>Season #</th><th>From Date</th><th>To Date</th><th>Price Column</th></tr>';
+            foreach ($mapping['seasons_raw'] as $season) {
+                $seasonNum = $season['Season'] ?? $season['IdSeason'] ?? '?';
+                echo '<tr>';
+                echo '<td><span class="season-badge season-' . $seasonNum . '">Season ' . $seasonNum . '</span></td>';
+                echo '<td>' . ($season['FromDate'] ?? '-') . '</td>';
+                echo '<td>' . ($season['ToDate'] ?? '-') . '</td>';
+                echo '<td><strong>Price' . $seasonNum . '</strong></td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        echo '<h3>Night-by-Night Mapping</h3>';
+        echo '<table>';
+        echo '<tr><th>Night #</th><th>Date</th><th>Season</th><th>Price Column</th><th>Date Range</th></tr>';
+        foreach ($mapping['night_mapping'] as $night) {
+            $seasonClass = 'season-' . $night['season_num'];
+            echo '<tr>';
+            echo '<td>' . $night['night'] . '</td>';
+            echo '<td>' . $night['date'] . '</td>';
+            echo '<td><span class="season-badge ' . $seasonClass . '">Season ' . $night['season_num'] . '</span></td>';
+            echo '<td><strong>' . $night['price_key'] . '</strong></td>';
+            echo '<td>' . $night['matched_range'] . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+
+        // 2. Show sample prices
+        echo '<h2>2. Season Prices for Selected Room/Board</h2>';
+        echo '<div class="info-box">These are the raw price values from season_price data. Percentages (e.g., "80%") are calculated from the Base code row.</div>';
+
+        $samples = $calculator->getSamplePrices($room_id, $board_id);
+
+        if (empty($samples)) {
+            echo '<p><em>No prices found for the selected room/board combination.</em></p>';
+        } else {
+            // Find all used price columns
+            $usedPriceColumns = [];
+            foreach ($samples as $sample) {
+                for ($i = 1; $i <= 20; $i++) {
+                    if (isset($sample['Price' . $i])) {
+                        $usedPriceColumns[$i] = true;
+                    }
+                }
+            }
+            ksort($usedPriceColumns);
+
+            echo '<table>';
+            echo '<tr><th>IdAge</th><th>IdAcc</th><th>Code</th><th>Base</th><th>RoomPrice</th>';
+            foreach (array_keys($usedPriceColumns) as $col) {
+                echo '<th class="highlight">Price' . $col . '</th>';
+            }
+            echo '</tr>';
+
+            foreach ($samples as $sample) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($sample['IdAge']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['IdAcc']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Code']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Base']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['RoomPrice']) . '</td>';
+                foreach (array_keys($usedPriceColumns) as $col) {
+                    $val = $sample['Price' . $col] ?? '-';
+                    echo '<td class="highlight">' . htmlspecialchars($val) . '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        // 3. Show raw priceinfo structure
+        echo '<h2>3. Raw Priceinfo Structure (seasons only)</h2>';
+        $priceinfo = json_decode($priceinfo_json, true);
+        echo '<pre>' . htmlspecialchars(json_encode($priceinfo['seasons'] ?? [], JSON_PRETTY_PRINT)) . '</pre>';
     }
 
     echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';

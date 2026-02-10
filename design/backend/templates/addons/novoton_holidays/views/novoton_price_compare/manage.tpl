@@ -108,8 +108,11 @@
             </label>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="display: flex; gap: 15px;">
             <button type="submit" class="btn-compare">Compare Prices</button>
+            <button type="button" class="btn-compare" style="background: #ff9800;" onclick="verifySeasons()">
+                Verify Season-Price Mapping
+            </button>
         </div>
     </form>
 </div>
@@ -141,6 +144,30 @@ function loadPackages(hotelId) {
         .catch(error => {
             packageSelect.innerHTML = '<option value="">Error loading packages</option>';
         });
+}
+
+function verifySeasons() {
+    var hotelId = document.getElementById('hotel_id').value;
+    var packageName = document.getElementById('package_name').value;
+    var roomId = document.getElementById('room_id').value;
+    var boardId = document.getElementById('board_id').value;
+    var checkIn = document.getElementById('check_in').value;
+    var nights = document.getElementById('nights').value;
+
+    if (!hotelId || !packageName) {
+        alert('Please select a hotel and package first.');
+        return;
+    }
+
+    var url = '{""|fn_url}' + '&dispatch=novoton_price_compare.verify' +
+              '&hotel_id=' + encodeURIComponent(hotelId) +
+              '&package_name=' + encodeURIComponent(packageName) +
+              '&room_id=' + encodeURIComponent(roomId) +
+              '&board_id=' + encodeURIComponent(boardId) +
+              '&check_in=' + encodeURIComponent(checkIn) +
+              '&nights=' + encodeURIComponent(nights);
+
+    window.location.href = url;
 }
 </script>
 

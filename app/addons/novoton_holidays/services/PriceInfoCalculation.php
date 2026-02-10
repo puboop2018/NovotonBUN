@@ -173,6 +173,7 @@ class PriceInfoCalculation
                     'extras_rooms' => round($fees['extras_rooms'] ?? 0, 2),
                     'extras_board' => round($fees['extras_board'] ?? 0, 2),
                     'handling_fee' => round($fees['handling_fee'] ?? 0, 2),
+                    'company_fee' => round($fees['company_fee'] ?? 0, 2),
                     'total_fees' => round($fees['total'] ?? 0, 2)
                 ],
                 'discounts' => [
@@ -1431,5 +1432,118 @@ class PriceInfoCalculation
     public function getDebugLog(): array
     {
         return $this->debugLog;
+    }
+
+    /**
+     * Verify season-to-price correlation
+     *
+     * This method helps debug if seasons are correctly mapped to prices.
+     * Call this to see which Price column is used for each date.
+     *
+     * @param string $checkIn Check-in date
+     * @param int $nights Number of nights
+     * @return array Debug info showing date → season → priceKey mapping
+     */
+    public function verifySeasonPriceMapping(string $checkIn, int $nights): array
+    {
+        $seasons = $this->priceinfo['seasons'] ?? [];
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+
+        // Parse seasons
+        $parsedSeasons = [];
+        if (isset($seasons['Season'])) {
+            $parsedSeasons = [$seasons];
+        } elseif (isset($seasons[0]['Season'])) {
+            $parsedSeasons = $seasons;
+        } elseif (isset($seasons[0]) && isset($seasons[0]['Season'])) {
+            $parsedSeasons = $seasons;
+        }
+
+        // Get season mapping for each night
+        $mapping = [];
+        $checkInDate = new \DateTime($checkIn);
+
+        for ($night = 0; $night < $nights; $night++) {
+            $currentDate = clone $checkInDate;
+            $currentDate->modify("+{$night} days");
+            $dateStr = $currentDate->format('Y-m-d');
+
+            $seasonNum = 1;
+            $matchedSeason = null;
+
+            foreach ($parsedSeasons as $season) {
+                $from = $season['FromDate'] ?? '';
+                $to = $season['ToDate'] ?? '';
+                $id = intval($season['Season'] ?? $season['IdSeason'] ?? 1);
+
+                if ($dateStr >= $from && $dateStr <= $to) {
+                    $seasonNum = $id;
+                    $matchedSeason = $season;
+                    break;
+                }
+            }
+
+            $priceKey = 'Price' . $seasonNum;
+
+            $mapping[] = [
+                'night' => $night + 1,
+                'date' => $dateStr,
+                'season_num' => $seasonNum,
+                'price_key' => $priceKey,
+                'matched_range' => $matchedSeason ? ($matchedSeason['FromDate'] . ' to ' . $matchedSeason['ToDate']) : 'DEFAULT'
+            ];
+        }
+
+        return [
+            'total_seasons_found' => count($parsedSeasons),
+            'seasons_raw' => $parsedSeasons,
+            'night_mapping' => $mapping
+        ];
+    }
+
+    /**
+     * Get a sample price for verification
+     *
+     * Returns the raw price values from season_price for a specific room/board
+     * to help verify the Price1, Price2, etc. values.
+     *
+     * @param string $roomId Room ID
+     * @param string $boardId Board ID
+     * @return array Price values by column
+     */
+    public function getSamplePrices(string $roomId, string $boardId): array
+    {
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        $samples = [];
+        foreach ($seasonPrices as $row) {
+            $rowRoom = $row['IdRoom'] ?? '';
+            $rowBoard = $row['IdBoard'] ?? '';
+
+            if ($this->matchRoom($rowRoom, $roomId) && $this->matchBoard($rowBoard, $boardId)) {
+                $sample = [
+                    'IdAge' => $row['IdAge'] ?? '',
+                    'IdAcc' => $row['IdAcc'] ?? '',
+                    'Code' => $row['Code'] ?? '',
+                    'Base' => $row['Base'] ?? '',
+                    'RoomPrice' => $row['RoomPrice'] ?? 'No',
+                ];
+
+                // Add all Price columns
+                for ($i = 1; $i <= 20; $i++) {
+                    $key = 'Price' . $i;
+                    if (isset($row[$key]) && $row[$key] !== '') {
+                        $sample[$key] = $row[$key];
+                    }
+                }
+
+                $samples[] = $sample;
+            }
+        }
+
+        return $samples;
     }
 }
