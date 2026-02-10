@@ -128,7 +128,7 @@ function loadPackages(hotelId) {
     }
 
     // AJAX call to get packages for this hotel
-    fetch('{""|fn_url}' + '&dispatch=novoton_price_compare.get_packages&hotel_id=' + hotelId)
+    fetch('{"novoton_price_compare.get_packages"|fn_url}' + '&hotel_id=' + hotelId)
         .then(response => response.json())
         .then(data => {
             packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
