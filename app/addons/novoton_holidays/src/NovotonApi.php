@@ -54,10 +54,22 @@ class NovotonApi
     public $lastError = '';
     public $lastHttpCode = 0;
 
+    // Retry configuration (loaded from addon settings)
+    private $maxRetries;
+    private $retryDelayMs;
+    private $retryMultiplier;
+
+    // Circuit breaker configuration (loaded from addon settings)
+    private $circuitBreakerThreshold;
+    private $circuitBreakerTimeout;
+    private static $failureCount = 0;
+    private static $lastFailureTime = 0;
+    private static $circuitOpen = false;
+
     public function __construct()
     {
         $settings = Registry::get('addons.novoton_holidays') ?? [];
-        
+
         $this->apiUrl = !empty($settings['api_url']) ? $settings['api_url'] : 'b2b.allinclusivebg.com';
         $this->apiKey = !empty($settings['api_key']) ? $settings['api_key'] : 'TEST-TEST-TEST-TEST-TEST';
         $this->apiId = !empty($settings['api_id']) ? $settings['api_id'] : '713';
@@ -65,12 +77,19 @@ class NovotonApi
         $this->apiPassword = !empty($settings['api_password']) ? $settings['api_password'] : 'EUP359YJX';
         $this->commission = floatval($settings['commission'] ?? 8);
         $this->roundPrices = $settings['round_prices'] ?? 'Y';
-        
+
         // Initialize cache service
         $this->enableCache = ($settings['enable_api_cache'] ?? 'Y') === 'Y';
         if ($this->enableCache) {
             $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
         }
+
+        // Load API resilience settings (with defaults)
+        $this->maxRetries = (int)($settings['api_max_retries'] ?? 3);
+        $this->retryDelayMs = (int)($settings['api_retry_delay_ms'] ?? 1000);
+        $this->retryMultiplier = (int)($settings['api_retry_multiplier'] ?? 2);
+        $this->circuitBreakerThreshold = (int)($settings['circuit_breaker_threshold'] ?? 5);
+        $this->circuitBreakerTimeout = (int)($settings['circuit_breaker_timeout'] ?? 60);
     }
     
     /**
@@ -147,67 +166,221 @@ class NovotonApi
     }
 
     /**
-     * Send POST request to Novoton API
+     * Check if circuit breaker allows requests
+     *
+     * @return bool True if requests are allowed
+     */
+    private function isCircuitClosed(): bool
+    {
+        if (!self::$circuitOpen) {
+            return true;
+        }
+
+        // Check if timeout has passed
+        if (time() - self::$lastFailureTime >= $this->circuitBreakerTimeout) {
+            // Half-open state - allow one request to test
+            self::$circuitOpen = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Record API failure for circuit breaker
+     */
+    private function recordFailure(): void
+    {
+        self::$failureCount++;
+        self::$lastFailureTime = time();
+
+        if (self::$failureCount >= $this->circuitBreakerThreshold) {
+            self::$circuitOpen = true;
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API circuit breaker OPENED after ' . self::$failureCount . ' failures',
+                'threshold' => $this->circuitBreakerThreshold,
+                'timeout_seconds' => $this->circuitBreakerTimeout
+            ]);
+        }
+    }
+
+    /**
+     * Record API success - reset circuit breaker
+     */
+    private function recordSuccess(): void
+    {
+        if (self::$failureCount > 0 || self::$circuitOpen) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API circuit breaker RESET after success',
+                'previous_failures' => self::$failureCount
+            ]);
+        }
+        self::$failureCount = 0;
+        self::$circuitOpen = false;
+    }
+
+    /**
+     * Get circuit breaker status (for monitoring)
+     *
+     * @return array Circuit breaker status
+     */
+    public function getCircuitStatus(): array
+    {
+        return [
+            'is_open' => self::$circuitOpen,
+            'failure_count' => self::$failureCount,
+            'threshold' => $this->circuitBreakerThreshold,
+            'last_failure' => self::$lastFailureTime > 0 ? date('Y-m-d H:i:s', self::$lastFailureTime) : null,
+            'timeout_seconds' => $this->circuitBreakerTimeout,
+            'seconds_until_retry' => self::$circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - self::$lastFailureTime)) : 0
+        ];
+    }
+
+    /**
+     * Send POST request to Novoton API with retry and circuit breaker
      */
     private function sendRequest($function, $xml = '', $lang = 'UK')
     {
-        $ch = curl_init();
-        
-        // IMPORTANT: Add /index.php to URL (like working code)
+        // Check circuit breaker
+        if (!$this->isCircuitClosed()) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API request blocked by circuit breaker',
+                'function' => $function,
+                'seconds_until_retry' => $this->circuitBreakerTimeout - (time() - self::$lastFailureTime)
+            ]);
+            $this->lastError = 'Circuit breaker open - API temporarily unavailable';
+            return false;
+        }
+
         $url = 'http://' . $this->apiUrl . '/index.php';
-        
-        // Use KEY authentication (not usr/psw in XML)
-        // Based on working code that uses: fn, key, id, xml
         $key = $this->apiKey;
         $id = $this->apiId;
-        
+
         $postData = [
             'fn' => $function,
             'key' => $key,
             'id' => $id,
             'xml' => $xml,
-            'lang' => $lang  // Add language parameter for English responses
+            'lang' => $lang
         ];
-        
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-        curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");  // From working code
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 120);  // 2 minutes for large resorts like GOLDEN SANDS
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        
+
+        $lastError = '';
+        $lastHttpCode = 0;
+        $response = false;
+
+        // Retry loop with exponential backoff
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+            curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+            $response = curl_exec($ch);
+            $lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $lastError = curl_error($ch);
+
+            curl_close($ch);
+
+            // Success - break retry loop
+            if (!$lastError && $lastHttpCode >= 200 && $lastHttpCode < 300) {
+                $this->recordSuccess();
+                break;
+            }
+
+            // Determine if error is retryable
+            $isRetryable = $this->isRetryableError($lastError, $lastHttpCode);
+
+            if ($isRetryable && $attempt < $this->maxRetries) {
+                // Calculate delay with exponential backoff
+                $delayMs = $this->retryDelayMs * pow($this->retryMultiplier, $attempt - 1);
+
+                fn_log_event('general', 'runtime', [
+                    'message' => "Novoton API retry attempt $attempt/$this->maxRetries",
+                    'function' => $function,
+                    'error' => $lastError,
+                    'http_code' => $lastHttpCode,
+                    'delay_ms' => $delayMs
+                ]);
+
+                usleep($delayMs * 1000); // Convert to microseconds
+            } else if (!$isRetryable) {
+                // Non-retryable error - break immediately
+                break;
+            }
+        }
+
         // Store for debugging
-        $this->lastHttpCode = $httpCode;
-        $this->lastError = $error;
-        
-        // Store raw response BEFORE cleaning
+        $this->lastHttpCode = $lastHttpCode;
+        $this->lastError = $lastError;
         $this->lastResponseRaw = $response;
-        
-        curl_close($ch);
-        
-        if ($error) {
+
+        if ($lastError || $lastHttpCode < 200 || $lastHttpCode >= 300) {
+            $this->recordFailure();
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton API Error: ' . $error,
+                'message' => 'Novoton API Error after ' . min($attempt, $this->maxRetries) . ' attempts: ' . $lastError,
                 'function' => $function,
-                'http_code' => $httpCode
+                'http_code' => $lastHttpCode,
+                'circuit_status' => $this->getCircuitStatus()
             ]);
             return false;
         }
-        
-        // Clean XML response (from working code)
+
+        // Clean XML response
         $response = $this->xmlEntities($response);
-        
-        // Store cleaned response
         $this->lastResponse = $response;
-        
+
         return $response;
+    }
+
+    /**
+     * Determine if an error is retryable
+     *
+     * @param string $error cURL error message
+     * @param int $httpCode HTTP status code
+     * @return bool True if error should be retried
+     */
+    private function isRetryableError(string $error, int $httpCode): bool
+    {
+        // Network errors are retryable
+        $retryableErrors = [
+            'Connection timed out',
+            'Connection refused',
+            'Could not resolve host',
+            'Operation timed out',
+            'SSL connection timeout',
+            'Network is unreachable',
+            'Empty reply from server'
+        ];
+
+        foreach ($retryableErrors as $retryable) {
+            if (stripos($error, $retryable) !== false) {
+                return true;
+            }
+        }
+
+        // Server errors (5xx) are retryable
+        if ($httpCode >= 500 && $httpCode < 600) {
+            return true;
+        }
+
+        // Rate limiting (429) is retryable
+        if ($httpCode === 429) {
+            return true;
+        }
+
+        // 0 usually means connection failed
+        if ($httpCode === 0 && !empty($error)) {
+            return true;
+        }
+
+        return false;
     }
     
     /**

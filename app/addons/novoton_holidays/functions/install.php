@@ -60,7 +60,7 @@ function fn_novoton_holidays_uninstall()
         }
     }
     
-    // Drop all addon tables
+    // Drop all addon tables (in correct order due to foreign key constraints)
     db_query("DROP TABLE IF EXISTS ?:novoton_resorts");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_facilities");
     db_query("DROP TABLE IF EXISTS ?:novoton_facilities");
@@ -68,9 +68,12 @@ function fn_novoton_holidays_uninstall()
     db_query("DROP TABLE IF EXISTS ?:novoton_cache");
     db_query("DROP TABLE IF EXISTS ?:novoton_sync_log");
     db_query("DROP TABLE IF EXISTS ?:novoton_bookings");
+    db_query("DROP TABLE IF EXISTS ?:novoton_hotel_packages");
+    // Legacy tables (from older versions, may not exist)
     db_query("DROP TABLE IF EXISTS ?:novoton_early_booking");
     db_query("DROP TABLE IF EXISTS ?:novoton_seasons");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_prices");
+    // Hotels table last (other tables may reference it)
     db_query("DROP TABLE IF EXISTS ?:novoton_hotels");
     
     return true;
@@ -446,5 +449,104 @@ function fn_novoton_holidays_upgrade_db()
     // Copy existing facility_name data to facility_name_en if it was populated
     if (in_array('facility_name', $facilities_columns)) {
         db_query("UPDATE ?:novoton_facilities SET facility_name_en = facility_name WHERE facility_name_en = '' AND facility_name != ''");
+    }
+
+    // Add board_name column to bookings (v2.9.4)
+    $board_name_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_bookings'
+         AND COLUMN_NAME = 'board_name'"
+    );
+    if (!$board_name_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_bookings
+             ADD COLUMN `board_name` VARCHAR(100) DEFAULT NULL AFTER `board_id`"
+        );
+    }
+
+    // Add item_id column to bookings (v2.9.4)
+    $item_id_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_bookings'
+         AND COLUMN_NAME = 'item_id'"
+    );
+    if (!$item_id_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_bookings
+             ADD COLUMN `item_id` VARCHAR(32) DEFAULT NULL AFTER `board_name`,
+             ADD KEY idx_item_id (item_id)"
+        );
+    }
+
+    // Add room_number column to bookings (v2.9.4)
+    $room_number_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_bookings'
+         AND COLUMN_NAME = 'room_number'"
+    );
+    if (!$room_number_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_bookings
+             ADD COLUMN `room_number` INT(2) DEFAULT 1 AFTER `rooms_data`"
+        );
+    }
+
+    // Add total_rooms column to bookings (v2.9.4)
+    $total_rooms_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_bookings'
+         AND COLUMN_NAME = 'total_rooms'"
+    );
+    if (!$total_rooms_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_bookings
+             ADD COLUMN `total_rooms` INT(2) DEFAULT 1 AFTER `room_number`"
+        );
+    }
+
+    // Update sync_type column to varchar if it's still an enum (v2.9.4)
+    $sync_type_info = db_get_row(
+        "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_sync_log'
+         AND COLUMN_NAME = 'sync_type'"
+    );
+    if ($sync_type_info && strpos($sync_type_info['COLUMN_TYPE'], 'enum') !== false) {
+        @db_query(
+            "ALTER TABLE ?:novoton_sync_log
+             MODIFY COLUMN `sync_type` VARCHAR(50) NOT NULL DEFAULT 'hotels'"
+        );
+    }
+
+    // Add nights column to alternative_requests (v2.9.4)
+    $nights_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_alternative_requests'
+         AND COLUMN_NAME = 'nights'"
+    );
+    if (!$nights_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_alternative_requests
+             ADD COLUMN `nights` INT(3) DEFAULT NULL AFTER `check_out`"
+        );
+    }
+
+    // Add num_rooms column to alternative_requests (v2.9.4)
+    $num_rooms_alt_exists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = '?:novoton_alternative_requests'
+         AND COLUMN_NAME = 'num_rooms'"
+    );
+    if (!$num_rooms_alt_exists) {
+        @db_query(
+            "ALTER TABLE ?:novoton_alternative_requests
+             ADD COLUMN `num_rooms` INT(2) NOT NULL DEFAULT 1 AFTER `nights`"
+        );
     }
 }

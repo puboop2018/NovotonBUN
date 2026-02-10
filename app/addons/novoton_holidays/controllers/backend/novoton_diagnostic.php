@@ -13,6 +13,205 @@ use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+/**
+ * Health Check Endpoint - JSON response for automated monitoring
+ * Access: admin.php?dispatch=novoton_diagnostic.health
+ *
+ * Returns:
+ * - status: "healthy", "degraded", or "unhealthy"
+ * - components: status of each subsystem
+ * - metrics: key performance indicators
+ */
+if ($mode == 'health') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+
+    $health = [
+        'status' => 'healthy',
+        'timestamp' => date('c'),
+        'version' => Registry::get('addons.novoton_holidays.version') ?? 'unknown',
+        'components' => [],
+        'metrics' => []
+    ];
+
+    $issues = [];
+
+    // 1. Database connectivity
+    try {
+        $db_start = microtime(true);
+        $hotels_count = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
+        $bookings_count = db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings");
+        $db_time = round((microtime(true) - $db_start) * 1000, 2);
+
+        $health['components']['database'] = [
+            'status' => 'healthy',
+            'response_time_ms' => $db_time,
+            'hotels_count' => (int)$hotels_count,
+            'bookings_count' => (int)$bookings_count
+        ];
+    } catch (Exception $e) {
+        $health['components']['database'] = [
+            'status' => 'unhealthy',
+            'error' => $e->getMessage()
+        ];
+        $issues[] = 'database';
+    }
+
+    // 2. API connectivity (circuit breaker status)
+    try {
+        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        if (file_exists($src_dir . 'NovotonApi.php')) {
+            require_once($src_dir . 'NovotonApi.php');
+            $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+            $circuit_status = $api->getCircuitStatus();
+
+            $api_status = 'healthy';
+            if ($circuit_status['is_open']) {
+                $api_status = 'unhealthy';
+                $issues[] = 'api_circuit_open';
+            } elseif ($circuit_status['failure_count'] > 0) {
+                $api_status = 'degraded';
+            }
+
+            $health['components']['api'] = [
+                'status' => $api_status,
+                'circuit_breaker' => $circuit_status
+            ];
+        } else {
+            $health['components']['api'] = [
+                'status' => 'unhealthy',
+                'error' => 'NovotonApi.php not found'
+            ];
+            $issues[] = 'api_missing';
+        }
+    } catch (Exception $e) {
+        $health['components']['api'] = [
+            'status' => 'unhealthy',
+            'error' => $e->getMessage()
+        ];
+        $issues[] = 'api_error';
+    }
+
+    // 3. Cache status
+    try {
+        $cache_service_file = Registry::get('config.dir.addons') . 'novoton_holidays/services/CacheService.php';
+        if (file_exists($cache_service_file)) {
+            require_once($cache_service_file);
+            $cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
+            $cache_stats = $cache->getStats();
+
+            $health['components']['cache'] = [
+                'status' => 'healthy',
+                'storage' => $cache_stats['storage'] ?? 'file',
+                'memory_items' => $cache_stats['memory_items'] ?? 0,
+                'persistent_items' => $cache_stats['persistent_items'] ?? 0
+            ];
+        } else {
+            $health['components']['cache'] = [
+                'status' => 'degraded',
+                'error' => 'CacheService not available'
+            ];
+        }
+    } catch (Exception $e) {
+        $health['components']['cache'] = [
+            'status' => 'degraded',
+            'error' => $e->getMessage()
+        ];
+    }
+
+    // 4. Recent sync status
+    try {
+        $last_sync = db_get_row(
+            "SELECT sync_type, sync_date, status, duration_seconds
+             FROM ?:novoton_sync_log
+             ORDER BY sync_date DESC LIMIT 1"
+        );
+
+        if ($last_sync) {
+            $sync_age_hours = (time() - strtotime($last_sync['sync_date'])) / 3600;
+
+            $sync_status = 'healthy';
+            if ($sync_age_hours > 48) {
+                $sync_status = 'degraded';
+            }
+            if ($last_sync['status'] === 'failed') {
+                $sync_status = 'unhealthy';
+                $issues[] = 'last_sync_failed';
+            }
+
+            $health['components']['sync'] = [
+                'status' => $sync_status,
+                'last_sync_type' => $last_sync['sync_type'],
+                'last_sync_date' => $last_sync['sync_date'],
+                'last_sync_status' => $last_sync['status'],
+                'hours_since_sync' => round($sync_age_hours, 1)
+            ];
+        } else {
+            $health['components']['sync'] = [
+                'status' => 'degraded',
+                'message' => 'No sync history found'
+            ];
+        }
+    } catch (Exception $e) {
+        $health['components']['sync'] = [
+            'status' => 'unhealthy',
+            'error' => $e->getMessage()
+        ];
+        $issues[] = 'sync';
+    }
+
+    // 5. Key metrics
+    try {
+        // Bookings in last 24 hours
+        $recent_bookings = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        );
+
+        // Pending bookings
+        $pending_bookings = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings WHERE status = 'pending'"
+        );
+
+        // Failed bookings in last 24 hours
+        $failed_bookings = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE status = 'failed' AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        );
+
+        // Hotels with prices
+        $hotels_with_prices = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE has_prices = 'Y'"
+        );
+
+        $health['metrics'] = [
+            'bookings_24h' => (int)$recent_bookings,
+            'pending_bookings' => (int)$pending_bookings,
+            'failed_bookings_24h' => (int)$failed_bookings,
+            'hotels_with_prices' => (int)$hotels_with_prices,
+            'failure_rate_24h' => $recent_bookings > 0
+                ? round(($failed_bookings / $recent_bookings) * 100, 1) . '%'
+                : '0%'
+        ];
+    } catch (Exception $e) {
+        $health['metrics'] = ['error' => $e->getMessage()];
+    }
+
+    // Determine overall status
+    if (!empty($issues)) {
+        $critical_issues = array_intersect($issues, ['database', 'api_circuit_open', 'api_missing']);
+        if (!empty($critical_issues)) {
+            $health['status'] = 'unhealthy';
+        } else {
+            $health['status'] = 'degraded';
+        }
+        $health['issues'] = $issues;
+    }
+
+    echo json_encode($health, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 if ($mode == 'check') {
     
     header('Content-Type: text/plain; charset=utf-8');
