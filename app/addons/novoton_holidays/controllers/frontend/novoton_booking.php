@@ -2460,6 +2460,7 @@ if ($mode == 'add_to_cart') {
             'hotel_id' => $bookingData['hotel_id'],
             'hotel_name' => $hotel_info['hotel_name'] ?? '',
             'hotel_city' => $hotel_info['city'] ?? '',
+            'hotel_region' => $hotel_info['region'] ?? '',
             'hotel_country' => $hotel_info['country'] ?? 'BULGARIA',
             'package_name' => $package_name,
             'room_id' => $bookingData['room_id'],
