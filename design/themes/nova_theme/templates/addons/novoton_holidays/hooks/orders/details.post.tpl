@@ -19,7 +19,7 @@
         - price: {$dbg_product.extra.price|default:$dbg_product.price|default:'(empty)'}<br>
         - terms_of_payment_raw: {if $dbg_product.extra.terms_of_payment_raw}"{$dbg_product.extra.terms_of_payment_raw|truncate:80}"{else}(empty){/if}<br>
         - terms_of_cancellation_raw: {if $dbg_product.extra.terms_of_cancellation_raw}"{$dbg_product.extra.terms_of_cancellation_raw|truncate:80}"{else}(empty){/if}<br>
-        - extra keys: {$dbg_product.extra|@array_keys|@implode:", "}<br>
+        - extra keys: {if is_array($dbg_product.extra)}{","|implode:$dbg_product.extra|@array_keys}{else}(not array){/if}<br>
     {/foreach}
 </div>
 {/if}
