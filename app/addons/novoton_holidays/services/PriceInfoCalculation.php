@@ -148,8 +148,8 @@ class PriceInfoCalculation
         $ebDiscount = $this->calculateEarlyBookingDiscount($bookingDate, $checkIn, $nights, $basePrice);
         $this->log('Early Booking discount', $ebDiscount);
 
-        // Step 7: Get Reduction (free nights)
-        $reduction = $this->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId);
+        // Step 7: Get Reduction (free nights) - pass basePrice for accurate multi-season calculation
+        $reduction = $this->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice);
         $this->log('Reduction', $reduction);
 
         // Step 8: Apply Priority rules and pick best scenario
@@ -1221,12 +1221,15 @@ class PriceInfoCalculation
 
     /**
      * Calculate Reduction (free nights)
+     *
+     * For multi-season stays, this calculates the actual value of free nights
+     * based on their season prices, not just an average.
      */
-    private function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId): array
+    private function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId, array $basePrice = []): array
     {
         $reductions = $this->priceinfo['reduction'] ?? [];
         if (empty($reductions)) {
-            return ['applicable' => false, 'discount' => 0, 'free_nights' => 0];
+            return ['applicable' => false, 'discount' => 0, 'free_nights' => 0, 'free_night_indices' => []];
         }
 
         if (isset($reductions['FreeNights'])) {
@@ -1235,6 +1238,7 @@ class PriceInfoCalculation
 
         $bestDiscount = 0;
         $bestFreeNights = 0;
+        $bestFreeNightIndices = [];
         $applicable = false;
 
         foreach ($reductions as $red) {
@@ -1277,21 +1281,32 @@ class PriceInfoCalculation
                 }
             }
 
-            // Calculate discount as sum of free nights' prices
-            // This would require recalculating prices for those specific nights
-            // For simplicity, estimate as (freeNights / nights) * basePrice
-            // TODO: Implement exact calculation
+            // Calculate actual discount from the free nights' prices
+            $discount = 0;
+            if (!empty($basePrice['by_night'])) {
+                foreach ($freeNightIndices as $nightIdx) {
+                    if (isset($basePrice['by_night'][$nightIdx])) {
+                        $discount += $basePrice['by_night'][$nightIdx]['price'] ?? 0;
+                    }
+                }
+            } else {
+                // Fallback: estimate as proportional if by_night not available
+                $avgNightPrice = $basePrice['total'] / $nights;
+                $discount = $avgNightPrice * count($freeNightIndices);
+            }
 
-            if ($freeNights > $bestFreeNights) {
+            if ($discount > $bestDiscount) {
+                $bestDiscount = $discount;
                 $bestFreeNights = $freeNights;
-                // Rough estimate - should be calculated from actual night prices
+                $bestFreeNightIndices = $freeNightIndices;
             }
         }
 
         return [
             'applicable' => $applicable,
             'discount' => $bestDiscount,
-            'free_nights' => $bestFreeNights
+            'free_nights' => $bestFreeNights,
+            'free_night_indices' => $bestFreeNightIndices
         ];
     }
 
