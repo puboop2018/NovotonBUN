@@ -149,7 +149,7 @@
         {$dbl_rooms = []}
         {$other_rooms = []}
         {foreach from=$rooms_grouped key=k item=room}
-            {if strpos($room.room_id, 'DBL') !== false}
+            {if strpos($room.room_id|default:'', 'DBL') !== false}
                 {$dbl_rooms[$k] = $room}
             {else}
                 {$other_rooms[$k] = $room}
@@ -168,7 +168,7 @@
                 {$maxCHD = $capacity.maxCHD|default:2}
                 {$minPAX = $capacity.minPAX|default:1}
                 {$board_display = $room_data.board_id}
-                {$is_sgl = strpos($room_id, 'SGL') !== false}
+                {$is_sgl = strpos($room_id|default:'', 'SGL') !== false}
                 
                 {* Board name formatting *}
                 {if $board_display == 'AI' || $board_display == 'ALL INCL'}
@@ -185,7 +185,7 @@
                 
                 {* Expand first DBL room only *}
                 {$is_expanded = false}
-                {if $first_dbl && strpos($room_id, 'DBL') !== false}
+                {if $first_dbl && strpos($room_id|default:'', 'DBL') !== false}
                     {$is_expanded = true}
                     {$first_dbl = false}
                 {/if}
@@ -213,11 +213,11 @@
                         {foreach from=$room_data.prices item=p}
                             {if ($p.age_type == 'ADULT' || $p.age_type == 'ADULT ') && $p.acc_type == 'REGULAR'}
                                 {$adult_price = $p}
-                            {elseif strpos($p.age_type, 'CHD') !== false && strpos($p.age_type, '0-1') !== false}
+                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '0-1') !== false}
                                 {$child1_price = $p}
-                            {elseif strpos($p.age_type, 'CHD') !== false && strpos($p.age_type, '2-11') !== false}
+                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '2-11') !== false}
                                 {$child2_price = $p}
-                            {elseif strpos($p.age_type, 'CHD') !== false && !$child2_price}
+                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && !$child2_price}
                                 {$child2_price = $p}
                             {/if}
                         {/foreach}
