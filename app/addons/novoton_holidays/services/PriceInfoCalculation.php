@@ -742,7 +742,7 @@ class PriceInfoCalculation
         }
 
         // Calculate handling_fee
-        $fees['handling_fee'] = $this->calculateHandlingFee($occupancy, $nights);
+        $fees['handling_fee'] = $this->calculateHandlingFee($occupancy, $checkIn, $nights);
         if ($fees['handling_fee'] > 0) {
             $fees['details'][] = ['type' => 'handling_fee', 'amount' => $fees['handling_fee']];
         }
@@ -837,13 +837,22 @@ class PriceInfoCalculation
      *
      * Structure from XML:
      * <handling_fee>
+     *   <FromDate>2026-01-01</FromDate>
+     *   <ToDate>2026-12-31</ToDate>
+     *   <IdAge>ADULT</IdAge>
      *   <ToDays>3</ToDays>      <!-- Use Price1 for stays <= 3 days -->
      *   <Price1>5.5</Price1>
      *   <FromDays>4</FromDays>  <!-- Use Price2 for stays >= 4 days -->
      *   <Price2>7.5</Price2>
      * </handling_fee>
+     *
+     * For each handling_fee entry:
+     * - Check if stay overlaps with FromDate-ToDate
+     * - Choose Price1 if nights <= ToDays
+     * - Choose Price2 if nights >= FromDays
+     * - Multiply by number of people matching IdAge
      */
-    private function calculateHandlingFee(array $occupancy, int $nights): float
+    private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights): float
     {
         $handlingFees = $this->priceinfo['handling_fee'] ?? [];
         if (empty($handlingFees)) return 0;
@@ -853,14 +862,27 @@ class PriceInfoCalculation
             $handlingFees = [$handlingFees];
         }
 
+        $checkInDate = new \DateTime($checkIn);
+        $checkOutDate = clone $checkInDate;
+        $checkOutDate->modify("+{$nights} days");
+
         $total = 0;
 
         foreach ($handlingFees as $fee) {
+            $fromDate = $fee['FromDate'] ?? '';
+            $toDate = $fee['ToDate'] ?? '';
             $idAge = $fee['IdAge'] ?? '';
             $toDays = intval($fee['ToDays'] ?? 3);     // Use Price1 for stays <= this
             $fromDays = intval($fee['FromDays'] ?? 4); // Use Price2 for stays >= this
             $price1 = floatval($fee['Price1'] ?? 0);
             $price2 = floatval($fee['Price2'] ?? 0);
+
+            // Check date range overlap (if dates specified)
+            if (!empty($fromDate) && !empty($toDate)) {
+                if (!$this->datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
+                    continue;
+                }
+            }
 
             // Choose price based on stay length
             // Price1: stays <= ToDays
