@@ -389,18 +389,28 @@ class NovotonApi
         // Room ID and Board ID - empty = return all combinations
         $roomId = $params['room_id'] ?? '';
         $boardId = $params['board_id'] ?? '';
-        
+
         // Keep dates in YYYY-MM-DD format
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        
+
+        // Build adult ages XML (default age 33 for each adult)
+        $adultsCount = intval($params['adults'] ?? 2);
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = '';
+        for ($i = 0; $i < $adultsCount; $i++) {
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $adultsXml .= '<Age>' . $age . '</Age>';
+        }
+
+        // Build children ages XML
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
                 $childrenXml .= '<Age>' . intval($age) . '</Age>';
             }
         }
-        
+
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <room_price>
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
@@ -412,7 +422,7 @@ class NovotonApi
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . intval($params['adults'] ?? 2) . '</Adt>
+            <Adt>' . $adultsXml . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>Yes</Remark>
             <Important>Yes</Important>
@@ -655,6 +665,15 @@ class NovotonApi
      */
     public function searchAvailability($params)
     {
+        // Build adult ages XML (default age 33 for each adult)
+        $adultsCount = intval($params['adults'] ?? 2);
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = '';
+        for ($i = 0; $i < $adultsCount; $i++) {
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $adultsXml .= '<Age>' . $age . '</Age>';
+        }
+
         // Build XML for frmsearch - search by hotel name
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <frmsearch>
@@ -666,7 +685,7 @@ class NovotonApi
             <Arr1>' . htmlspecialchars($params['check_in'] ?? '') . '</Arr1>
             <Dep1>' . htmlspecialchars($params['check_out'] ?? '') . '</Dep1>
             <OfferType>hotel</OfferType>
-            <Adt>' . intval($params['adults'] ?? 2) . '</Adt>
+            <Adt>' . $adultsXml . '</Adt>
             <Currency>EUR</Currency>
         </frmsearch>';
         
@@ -1118,16 +1137,24 @@ class NovotonApi
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        $adults = intval($params['adults'] ?? 2);
+        $adultsCount = intval($params['adults'] ?? 2);
         $boardId = $params['board_id'] ?? '';
-        
+
+        // Build adult ages XML (default age 33 for each adult)
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = '';
+        for ($i = 0; $i < $adultsCount; $i++) {
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $adultsXml .= '<Age>' . $age . '</Age>';
+        }
+
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
                 $childrenXml .= '<Age>' . intval($age) . '</Age>';
             }
         }
-        
+
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <room_price>
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
@@ -1141,7 +1168,7 @@ class NovotonApi
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adults . '</Adt>
+            <Adt>' . $adultsXml . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>Yes</Remark>
             <Important>Yes</Important>
@@ -1177,16 +1204,24 @@ class NovotonApi
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        $adults = intval($params['adults'] ?? 2);
+        $adultsCount = intval($params['adults'] ?? 2);
         $boardId = $params['board_id'] ?? '';
-        
+
+        // Build adult ages XML (default age 33 for each adult)
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = '';
+        for ($i = 0; $i < $adultsCount; $i++) {
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $adultsXml .= '<Age>' . $age . '</Age>';
+        }
+
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
                 $childrenXml .= '<Age>' . intval($age) . '</Age>';
             }
         }
-        
+
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <room_price>
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
@@ -1200,7 +1235,7 @@ class NovotonApi
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adults . '</Adt>
+            <Adt>' . $adultsXml . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>No</Remark>
             <Important>No</Important>
