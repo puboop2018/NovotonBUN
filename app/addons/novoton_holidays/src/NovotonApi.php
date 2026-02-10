@@ -541,15 +541,19 @@ class NovotonApi
 
     /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
-     * 
+     *
      * Per API docs:
-     * - IdHotel is required (or Resort)
+     * - IdHotel OR Resort - use one, not both (we use IdHotel for hotel-specific searches)
+     * - PackageName - leave empty to get ALL packages, or specify to filter
      * - IdRoom - leave empty to get ALL room types
-     * - IdBoard - leave empty to get ALL board types  
+     * - IdBoard - leave empty to get ALL board types
+     * - IdExtBoard - extended board options (leave empty)
+     * - IdStar - star rating filter (leave empty)
      * - CheckIn/CheckOut in YYYY-MM-DD format
-     * - Remark=Yes and Important=Yes to get additional info
-     * 
-     * The API automatically returns the correct package based on dates
+     * - Currency - EUR
+     * - Adt - number of adults (integer)
+     * - Chd - children ages as <Age> elements, e.g. <Chd><Age>2</Age><Age>7</Age></Chd>
+     * - Remark=Yes and Important=Yes to get additional booking info
      */
     public function getRoomPrice($params)
     {
@@ -606,6 +610,7 @@ class NovotonApi
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
             <psw>' . htmlspecialchars($this->apiPassword) . '</psw>
             <IdHotel>' . htmlspecialchars($params['hotel_id']) . '</IdHotel>
+            <PackageName></PackageName>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
