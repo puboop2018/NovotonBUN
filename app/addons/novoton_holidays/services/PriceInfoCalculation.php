@@ -37,11 +37,11 @@ class PriceInfoCalculation
     private $debugLog = [];
 
     /**
-     * How to handle extras_daily with Type=Stay
-     * 'per_night' = apply for every night
-     * 'per_stay' = apply once if any date overlaps
+     * extras_daily Type handling (based on Novoton API specification):
+     * - 'Stay': Charged for each day that falls within the date range (FromDate - ToDate)
+     * - 'Arrival': If check-in date is within the period, charge applies to the whole stay (all nights)
+     * - 'Day'/'Night' (default): Charged per overlapping night
      */
-    const EXTRAS_DAILY_STAY_MODE = 'per_night';
 
     /**
      * Constructor
@@ -801,11 +801,18 @@ class PriceInfoCalculation
             $count = $this->countMatchingPersons($occupancy, $idAge);
 
             if ($count > 0) {
-                if ($type === 'Stay' && self::EXTRAS_DAILY_STAY_MODE === 'per_stay') {
-                    // Apply once per stay
-                    $total += $price * $count;
+                if ($type === 'Arrival') {
+                    // Arrival type: If check-in is within the period, charge applies to WHOLE stay (all nights)
+                    // Check if check-in date falls within FromDate-ToDate
+                    if ($checkIn >= $fromDate && $checkIn <= $toDate) {
+                        $total += $price * $count * $nights;
+                    }
+                } elseif ($type === 'Stay') {
+                    // Stay type: Charged for each day that falls within the date range (per overlapping night)
+                    $overlappingNights = $this->countOverlappingNights($checkIn, $nights, $fromDate, $toDate);
+                    $total += $price * $count * $overlappingNights;
                 } else {
-                    // Apply per night (or per_night mode for Stay)
+                    // Default (Day/Night): Apply per overlapping night
                     $overlappingNights = $this->countOverlappingNights($checkIn, $nights, $fromDate, $toDate);
                     $total += $price * $count * $overlappingNights;
                 }
