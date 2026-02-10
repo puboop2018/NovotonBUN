@@ -1200,31 +1200,47 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
                 'api_request' => json_encode($api_data),
                 'notes' => $disable_api ? 'API submission disabled - test mode' : ''
             ];
-            
-            // For first group, update existing record; others create new
+
+            // SINGLE SOURCE OF TRUTH: Always try to find existing booking
+            // Priority: 1) original_booking_id from cart, 2) match by order+hotel+dates
+            $booking_id = 0;
+            $order_info = fn_get_order_info($order_id);
+            $order_user_id = intval($order_info['user_id'] ?? 0);
+            $order_email = $order_info['email'] ?? '';
+
+            // Add user tracking fields
+            $booking_record['user_id'] = $order_user_id;
+            $booking_record['guest_email'] = $order_email;
+
             if ($group_num == 1 && $original_booking_id > 0) {
-                // Get user info from order to update booking
-                $order_info = fn_get_order_info($order_id);
-                $order_user_id = intval($order_info['user_id'] ?? 0);
-                $order_email = $order_info['email'] ?? '';
-                
-                // Add user tracking fields to update
-                $booking_record['user_id'] = $order_user_id;
-                $booking_record['guest_email'] = $order_email;
-                
-                db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", 
+                // Update existing booking from cart
+                db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
                     $booking_record, $original_booking_id);
                 $booking_id = $original_booking_id;
             } else {
-                // Get user info for new records too
-                $order_info = fn_get_order_info($order_id);
-                $booking_record['user_id'] = intval($order_info['user_id'] ?? 0);
-                $booking_record['guest_email'] = $order_info['email'] ?? '';
-                $booking_record['session_id'] = session_id();
-                
-                $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $booking_record);
+                // Try to find existing booking for this order to prevent duplicates
+                $existing_booking_id = db_get_field(
+                    "SELECT booking_id FROM ?:novoton_bookings
+                     WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
+                     LIMIT 1",
+                    $order_id,
+                    $booking_record['hotel_id'],
+                    $booking_record['check_in'],
+                    $booking_record['check_out']
+                );
+
+                if ($existing_booking_id) {
+                    // Update existing record instead of creating duplicate
+                    db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
+                        $booking_record, $existing_booking_id);
+                    $booking_id = $existing_booking_id;
+                } else {
+                    // No existing record found, create new
+                    $booking_record['session_id'] = session_id();
+                    $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $booking_record);
+                }
             }
-            
+
             $all_booking_ids[] = $booking_id;
             
             // Log the API request

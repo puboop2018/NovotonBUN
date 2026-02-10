@@ -211,131 +211,119 @@ class BookingRepository
     }
     
     /**
-     * Get unified booking list - combines order_details.extra with novoton_bookings
-     * This ensures complete data by preferring order_details.extra when available
+     * Get unified booking list - uses novoton_bookings as single source of truth
+     * Joins with orders table for order status information
      *
      * @param array $params Filter parameters
      * @return array Unified bookings list
      */
     public function getUnifiedBookings(array $params = []): array
     {
-        $bookings = [];
-        $seen_keys = []; // Track unique bookings by order_id + hotel_id + check_in
+        // Build WHERE conditions for novoton_bookings
+        $conditions = [];
 
-        // Build conditions for orders
-        $order_condition = '';
+        // By default, only show bookings linked to orders (exclude orphans)
+        if (empty($params['show_orphans'])) {
+            $conditions[] = "nb.order_id > 0";
+        }
+
         if (!empty($params['order_id'])) {
-            $order_condition .= db_quote(" AND o.order_id = ?i", $params['order_id']);
+            $conditions[] = db_quote("nb.order_id = ?i", $params['order_id']);
+        }
+        if (!empty($params['hotel_id'])) {
+            $conditions[] = db_quote("nb.hotel_id = ?s", $params['hotel_id']);
+        }
+        if (!empty($params['novoton_status'])) {
+            $conditions[] = db_quote("nb.novoton_status = ?s", $params['novoton_status']);
+        }
+        if (!empty($params['status'])) {
+            $conditions[] = db_quote("nb.status = ?s", $params['status']);
         }
         if (!empty($params['check_in_from'])) {
-            $order_condition .= db_quote(" AND od.extra LIKE ?l", '%"check_in":"' . $params['check_in_from'] . '%');
+            $conditions[] = db_quote("nb.check_in >= ?s", $params['check_in_from']);
+        }
+        if (!empty($params['check_in_to'])) {
+            $conditions[] = db_quote("nb.check_in <= ?s", $params['check_in_to']);
         }
 
-        // 1. Get bookings from order_details.extra (most complete source)
-        $order_details = db_get_array(
-            "SELECT od.order_id, od.product_id, od.item_id, od.extra, od.price, od.amount,
-                    o.status AS order_status, o.timestamp, o.total AS order_total,
-                    o.firstname, o.lastname, o.email, o.phone
-             FROM ?:order_details od
-             INNER JOIN ?:orders o ON od.order_id = o.order_id
-             WHERE od.extra LIKE '%novoton_booking%' {$order_condition}
-             ORDER BY o.order_id DESC"
+        $where_clause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        // Query novoton_bookings as primary source, LEFT JOIN orders for order status
+        $bookings_raw = db_get_array(
+            "SELECT nb.*,
+                    nh.hotel_name, nh.city AS hotel_city, nh.region AS hotel_region, nh.country AS hotel_country,
+                    o.status AS order_status, o.timestamp AS order_timestamp,
+                    o.firstname AS order_firstname, o.lastname AS order_lastname,
+                    o.email AS order_email, o.phone AS order_phone
+             FROM ?:novoton_bookings nb
+             LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
+             LEFT JOIN ?:orders o ON nb.order_id = o.order_id
+             {$where_clause}
+             ORDER BY nb.order_id DESC, nb.booking_id DESC"
         );
 
-        foreach ($order_details as $od) {
-            $extra = @unserialize($od['extra']);
-            if (!$extra) {
-                $extra = json_decode($od['extra'], true);
-            }
+        $bookings = [];
 
-            if (!$extra || !is_array($extra) || empty($extra['novoton_booking'])) {
-                continue;
-            }
-
-            // Build unique key
-            $hotel_id = $extra['hotel_id'] ?? '';
-            $check_in = $extra['check_in'] ?? '';
-            $unique_key = $od['order_id'] . '_' . $hotel_id . '_' . $check_in;
-
-            if (isset($seen_keys[$unique_key])) {
-                continue;
-            }
-            $seen_keys[$unique_key] = true;
-
-            // Get matching novoton_bookings record for API status
-            $nb_record = db_get_row(
-                "SELECT booking_id, novoton_status, novoton_invoice_id, novoton_confirm_id,
-                        api_request, api_response, status, alternatives_data
-                 FROM ?:novoton_bookings
-                 WHERE order_id = ?i AND hotel_id = ?s
-                 ORDER BY booking_id DESC LIMIT 1",
-                $od['order_id'],
-                $hotel_id
-            );
-
-            // Build unified booking record from order_details.extra
+        foreach ($bookings_raw as $nb) {
+            // Build unified booking record from novoton_bookings
             $booking = [
-                'booking_id' => $nb_record['booking_id'] ?? 0,
-                'order_id' => $od['order_id'],
-                'product_id' => $od['product_id'],
-                'item_id' => $od['item_id'],
-                'hotel_id' => $hotel_id,
-                'hotel_name' => $extra['hotel_name'] ?? '',
-                'city' => $extra['hotel_city'] ?? '',
-                'region' => $extra['hotel_region'] ?? '',
-                'country' => $extra['hotel_country'] ?? '',
-                'package_id' => $extra['package_id'] ?? '',
-                'package_name' => $extra['package_name'] ?? '',
-                'room_id' => $extra['room_id'] ?? '',
-                'room_type' => $extra['room_type_display'] ?? $extra['room_name'] ?? '',
-                'board_id' => $extra['board_id'] ?? '',
-                'board_name' => $extra['board_name'] ?? '',
-                'check_in' => $check_in,
-                'check_out' => $extra['check_out'] ?? '',
-                'nights' => $extra['nights'] ?? 0,
-                'adults' => $extra['adults'] ?? 0,
-                'children' => $extra['children'] ?? 0,
-                'children_ages' => is_array($extra['children_ages'] ?? null)
-                    ? implode(', ', $extra['children_ages'])
-                    : ($extra['children_ages'] ?? ''),
-                'num_rooms' => $extra['num_rooms'] ?? 1,
-                'rooms_data' => isset($extra['rooms_data']) ? json_encode($extra['rooms_data']) : null,
-                'guests_data' => isset($extra['guests_data']) ? json_encode($extra['guests_data']) : null,
-                'base_price' => $extra['base_price'] ?? $od['price'] ?? 0,
-                'api_price' => $extra['api_price'] ?? $extra['base_price'] ?? 0,
-                'total_price' => $od['price'] ?? $extra['total_price'] ?? 0,
-                'currency' => $extra['currency'] ?? 'EUR',
-                'holder_name' => $extra['holder_name'] ?? ($od['firstname'] . ' ' . $od['lastname']),
-                'guest_email' => $od['email'] ?? '',
-                'guest_phone' => $od['phone'] ?? '',
-                // From novoton_bookings record
-                'status' => $nb_record['status'] ?? 'pending',
-                'novoton_status' => $nb_record['novoton_status'] ?? '',
-                'novoton_invoice_id' => $nb_record['novoton_invoice_id'] ?? '',
-                'novoton_confirm_id' => $nb_record['novoton_confirm_id'] ?? '',
-                'api_request' => $nb_record['api_request'] ?? null,
-                'api_response' => $nb_record['api_response'] ?? null,
-                'alternatives_data' => $nb_record['alternatives_data'] ?? null,
-                // Order info
-                'order_status' => $od['order_status'],
-                'created_at' => date('Y-m-d H:i:s', $od['timestamp']),
+                'booking_id' => $nb['booking_id'],
+                'order_id' => $nb['order_id'],
+                'product_id' => $nb['product_id'] ?? 0,
+                'item_id' => $nb['item_id'] ?? '',
+                'hotel_id' => $nb['hotel_id'],
+                'hotel_name' => $nb['hotel_name'] ?? '',
+                'city' => $nb['hotel_city'] ?? $nb['city'] ?? '',
+                'region' => $nb['hotel_region'] ?? $nb['region'] ?? '',
+                'country' => $nb['hotel_country'] ?? $nb['country'] ?? '',
+                'package_id' => $nb['package_id'] ?? '',
+                'package_name' => $nb['package_name'] ?? '',
+                'room_id' => $nb['room_id'] ?? '',
+                'room_type' => $nb['room_type'] ?? '',
+                'board_id' => $nb['board_id'] ?? '',
+                'board_name' => $nb['board_name'] ?? '',
+                'check_in' => $nb['check_in'],
+                'check_out' => $nb['check_out'],
+                'nights' => $nb['nights'] ?? 0,
+                'adults' => $nb['adults'] ?? 0,
+                'children' => $nb['children'] ?? 0,
+                'children_ages' => $nb['children_ages'] ?? '',
+                'num_rooms' => $nb['num_rooms'] ?? 1,
+                'rooms_data' => $nb['rooms_data'] ?? null,
+                'guests_data' => $nb['guests_data'] ?? null,
+                'base_price' => $nb['base_price'] ?? 0,
+                'api_price' => $nb['api_price'] ?? $nb['base_price'] ?? 0,
+                'total_price' => $nb['total_price'] ?? $nb['base_price'] ?? 0,
+                'currency' => $nb['currency'] ?? 'EUR',
+                'holder_name' => $nb['holder_name'] ?? '',
+                'guest_email' => $nb['order_email'] ?? $nb['guest_email'] ?? '',
+                'guest_phone' => $nb['order_phone'] ?? $nb['guest_phone'] ?? '',
+                // Novoton API status
+                'status' => $nb['status'] ?? 'pending',
+                'novoton_status' => $nb['novoton_status'] ?? '',
+                'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
+                'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
+                'novoton_reservation_id' => $nb['novoton_reservation_id'] ?? '',
+                'api_request' => $nb['api_request'] ?? null,
+                'api_response' => $nb['api_response'] ?? null,
+                'alternatives_data' => $nb['alternatives_data'] ?? null,
+                // Order info from joined orders table
+                'order_status' => $nb['order_status'] ?? '',
+                'created_at' => $nb['created_at'] ?? ($nb['order_timestamp'] ? date('Y-m-d H:i:s', $nb['order_timestamp']) : ''),
                 // Source indicator
-                '_source' => 'order_details',
+                '_source' => ($nb['order_id'] > 0) ? 'novoton_bookings' : 'orphan',
             ];
 
-            // Apply filters
-            if (!empty($params['novoton_status']) && $booking['novoton_status'] != $params['novoton_status']) {
-                continue;
-            }
-            if (!empty($params['hotel_id']) && $booking['hotel_id'] != $params['hotel_id']) {
-                continue;
+            // Format room types list for display
+            $rooms_data = null;
+            if (!empty($nb['rooms_data'])) {
+                $rooms_data = is_string($nb['rooms_data']) ? json_decode($nb['rooms_data'], true) : $nb['rooms_data'];
             }
 
-            // Format room types list for display
-            if (!empty($extra['rooms_data']) && is_array($extra['rooms_data'])) {
+            if (!empty($rooms_data) && is_array($rooms_data)) {
                 $room_types = [];
                 $board_names = [];
-                foreach ($extra['rooms_data'] as $room) {
+                foreach ($rooms_data as $room) {
                     $room_display = $room['room_type_display'] ?? $room['room_name'] ?? $room['room_id'] ?? 'Room';
                     $room_display = str_replace(['%2b', '%2B'], '+', $room_display);
                     $room_types[] = $room_display;
@@ -346,16 +334,23 @@ class BookingRepository
                 $booking['room_types_list'] = implode(', ', $room_types);
                 if (!empty($board_names)) {
                     $booking['board_display'] = $board_names[0];
+                } else {
+                    $booking['board_display'] = $booking['board_name'];
                 }
             } else {
-                $booking['room_types_list'] = $booking['room_type'];
-                $booking['board_display'] = $booking['board_name'];
+                $booking['room_types_list'] = $booking['room_type'] ?: fn_novoton_format_room_type($booking['room_id']);
+                $booking['board_display'] = $booking['board_name'] ?: fn_novoton_format_board_name($booking['board_id']);
             }
 
             // Parse guests for display
-            if (!empty($extra['guests_data']) && is_array($extra['guests_data'])) {
+            $guests_data = null;
+            if (!empty($nb['guests_data'])) {
+                $guests_data = is_string($nb['guests_data']) ? json_decode($nb['guests_data'], true) : $nb['guests_data'];
+            }
+
+            if (!empty($guests_data) && is_array($guests_data)) {
                 $by_room = [];
-                foreach ($extra['guests_data'] as $guest) {
+                foreach ($guests_data as $guest) {
                     $room_num = $guest['room'] ?? 1;
                     if (!isset($by_room[$room_num])) {
                         $by_room[$room_num] = [];
@@ -367,54 +362,6 @@ class BookingRepository
 
             $bookings[] = $booking;
         }
-
-        // 2. Add orphan bookings (no order_id) if show_orphans is enabled
-        if (!empty($params['show_orphans'])) {
-            $orphans = db_get_array(
-                "SELECT nb.*, nh.city AS hotel_city, nh.region AS hotel_region, nh.country AS hotel_country
-                 FROM ?:novoton_bookings nb
-                 LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
-                 WHERE nb.order_id = 0
-                 ORDER BY nb.created_at DESC"
-            );
-
-            foreach ($orphans as $orphan) {
-                $unique_key = '0_' . $orphan['hotel_id'] . '_' . $orphan['check_in'];
-                if (isset($seen_keys[$unique_key])) {
-                    continue;
-                }
-
-                $orphan['_source'] = 'orphan';
-                $orphan['room_types_list'] = $orphan['room_type'] ?? fn_novoton_format_room_type($orphan['room_id'] ?? '');
-                $orphan['board_display'] = fn_novoton_format_board_name($orphan['board_id'] ?? '');
-                $orphan['city'] = $orphan['hotel_city'] ?? '';
-                $orphan['region'] = $orphan['hotel_region'] ?? '';
-                $orphan['country'] = $orphan['hotel_country'] ?? '';
-
-                // Parse guests
-                if (!empty($orphan['guests_data'])) {
-                    $guests = json_decode($orphan['guests_data'], true);
-                    if ($guests) {
-                        $by_room = [];
-                        foreach ($guests as $guest) {
-                            $room_num = $guest['room'] ?? 1;
-                            if (!isset($by_room[$room_num])) {
-                                $by_room[$room_num] = [];
-                            }
-                            $by_room[$room_num][] = $guest['name'] ?? 'Guest';
-                        }
-                        $orphan['guests_by_room'] = $by_room;
-                    }
-                }
-
-                $bookings[] = $orphan;
-            }
-        }
-
-        // Sort by order_id DESC (most recent first)
-        usort($bookings, function($a, $b) {
-            return ($b['order_id'] ?? 0) - ($a['order_id'] ?? 0);
-        });
 
         return $bookings;
     }

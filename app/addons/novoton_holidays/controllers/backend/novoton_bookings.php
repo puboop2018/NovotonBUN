@@ -68,66 +68,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Cleanup orphan bookings (no order_id and older than 24 hours)
+    // With single source of truth architecture, orphans are simply abandoned cart bookings
     if ($mode === 'cleanup_orphans') {
-        // First, try to merge orphan booking data into order-linked bookings
-        // This handles cases where an orphan has data (like price) that the order-linked booking is missing
-        $orphans = db_get_array(
-            "SELECT * FROM ?:novoton_bookings 
-             WHERE order_id = 0 
+        // Count before deleting
+        $count = db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE order_id = 0
              AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
         );
-        
-        $merged = 0;
-        foreach ($orphans as $orphan) {
-            // Find matching booking with order_id based on same details
-            $matching = db_get_row(
-                "SELECT booking_id, total_price, hotel_name, rooms_data 
-                 FROM ?:novoton_bookings 
-                 WHERE order_id > 0 
-                 AND hotel_id = ?s 
-                 AND check_in = ?s 
-                 AND check_out = ?s
-                 AND ABS(TIMESTAMPDIFF(HOUR, created_at, ?s)) < 2",
-                $orphan['hotel_id'],
-                $orphan['check_in'],
-                $orphan['check_out'],
-                $orphan['created_at']
+
+        if ($count > 0) {
+            db_query(
+                "DELETE FROM ?:novoton_bookings
+                 WHERE order_id = 0
+                 AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
             );
-            
-            if ($matching) {
-                // Update the order-linked booking with data from orphan if missing
-                $updates = [];
-                if (empty($matching['total_price']) && !empty($orphan['total_price'])) {
-                    $updates['total_price'] = $orphan['total_price'];
-                }
-                if ((empty($matching['hotel_name']) || strpos($matching['hotel_name'], 'Hotel #') === 0) && !empty($orphan['hotel_name'])) {
-                    $updates['hotel_name'] = $orphan['hotel_name'];
-                }
-                if (empty($matching['rooms_data']) && !empty($orphan['rooms_data'])) {
-                    $updates['rooms_data'] = $orphan['rooms_data'];
-                }
-                
-                if (!empty($updates)) {
-                    db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $updates, $matching['booking_id']);
-                    $merged++;
-                }
-            }
+            fn_set_notification('N', __('notice'),
+                "Cleaned up {$count} orphan booking(s) older than 24 hours.");
+        } else {
+            fn_set_notification('N', __('notice'),
+                "No orphan bookings to clean up.");
         }
-        
-        // Now delete the orphans
-        $deleted = db_query(
-            "DELETE FROM ?:novoton_bookings 
-             WHERE order_id = 0 
-             AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-        );
-        
-        $message = "Cleaned up {$deleted} orphan booking(s) older than 24 hours.";
-        if ($merged > 0) {
-            $message .= " Merged data from {$merged} orphan(s) into existing bookings.";
-        }
-        
-        fn_set_notification('N', __('notice'), $message);
-        
+
         return array(CONTROLLER_STATUS_OK, 'novoton_bookings.manage');
     }
     
