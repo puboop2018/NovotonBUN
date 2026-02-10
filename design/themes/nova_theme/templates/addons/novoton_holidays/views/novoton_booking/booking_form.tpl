@@ -665,14 +665,29 @@ function showDobError(input, errorDiv, message) {
     }
 }
 
+// Debounce timer for price recalculation
+var priceRecalcDebounceTimer = null;
+
 function collectAndRecalculate(roomNum) {
     roomNum = roomNum || 1;
-    
+
+    // Debounce: wait 600ms after last DOB change before recalculating
+    // This prevents multiple API calls when user enters DOBs for multiple children
+    if (priceRecalcDebounceTimer) {
+        clearTimeout(priceRecalcDebounceTimer);
+    }
+
+    priceRecalcDebounceTimer = setTimeout(function() {
+        doCollectAndRecalculate(roomNum);
+    }, 600);
+}
+
+function doCollectAndRecalculate(roomNum) {
     // For multi-room: collect only this room's children ages
     // For single room: collect all children ages
     var childrenAges = [];
     var isMultiRoom = window.bookingData.numRooms > 1;
-    
+
     if (isMultiRoom) {
         // Collect ages only for the specific room (format: child_calc_age_rX_cY)
         document.querySelectorAll('[id^="child_calc_age_r' + roomNum + '_c"]').forEach(function(input) {
@@ -692,7 +707,7 @@ function collectAndRecalculate(roomNum) {
         });
         console.log('[Novoton] Collected children ages:', childrenAges);
     }
-    
+
     if (childrenAges.length > 0) {
         triggerPriceRecalculationInline(childrenAges, roomNum);
     }
