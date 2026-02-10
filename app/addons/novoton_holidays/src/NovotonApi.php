@@ -54,14 +54,14 @@ class NovotonApi
     public $lastError = '';
     public $lastHttpCode = 0;
 
-    // Retry configuration
-    private $maxRetries = 3;
-    private $retryDelayMs = 1000; // Initial delay in milliseconds
-    private $retryMultiplier = 2; // Exponential backoff multiplier
+    // Retry configuration (loaded from addon settings)
+    private $maxRetries;
+    private $retryDelayMs;
+    private $retryMultiplier;
 
-    // Circuit breaker configuration
-    private $circuitBreakerThreshold = 5; // Failures before opening circuit
-    private $circuitBreakerTimeout = 60;  // Seconds before trying again
+    // Circuit breaker configuration (loaded from addon settings)
+    private $circuitBreakerThreshold;
+    private $circuitBreakerTimeout;
     private static $failureCount = 0;
     private static $lastFailureTime = 0;
     private static $circuitOpen = false;
@@ -69,7 +69,7 @@ class NovotonApi
     public function __construct()
     {
         $settings = Registry::get('addons.novoton_holidays') ?? [];
-        
+
         $this->apiUrl = !empty($settings['api_url']) ? $settings['api_url'] : 'b2b.allinclusivebg.com';
         $this->apiKey = !empty($settings['api_key']) ? $settings['api_key'] : 'TEST-TEST-TEST-TEST-TEST';
         $this->apiId = !empty($settings['api_id']) ? $settings['api_id'] : '713';
@@ -77,12 +77,19 @@ class NovotonApi
         $this->apiPassword = !empty($settings['api_password']) ? $settings['api_password'] : 'EUP359YJX';
         $this->commission = floatval($settings['commission'] ?? 8);
         $this->roundPrices = $settings['round_prices'] ?? 'Y';
-        
+
         // Initialize cache service
         $this->enableCache = ($settings['enable_api_cache'] ?? 'Y') === 'Y';
         if ($this->enableCache) {
             $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
         }
+
+        // Load API resilience settings (with defaults)
+        $this->maxRetries = (int)($settings['api_max_retries'] ?? 3);
+        $this->retryDelayMs = (int)($settings['api_retry_delay_ms'] ?? 1000);
+        $this->retryMultiplier = (int)($settings['api_retry_multiplier'] ?? 2);
+        $this->circuitBreakerThreshold = (int)($settings['circuit_breaker_threshold'] ?? 5);
+        $this->circuitBreakerTimeout = (int)($settings['circuit_breaker_timeout'] ?? 60);
     }
     
     /**

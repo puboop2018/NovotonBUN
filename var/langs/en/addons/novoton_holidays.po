@@ -92,6 +92,50 @@ msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
 msgid "Last exchange rate update"
 msgstr "Last exchange rate update"
 
+msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
+msgid "API Resilience"
+msgstr "API Resilience"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_retries"
+msgid "Max retries"
+msgstr "Max retries"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_retries"
+msgid "Number of retry attempts for failed API calls (recommended: 3)"
+msgstr "Number of retry attempts for failed API calls (recommended: 3)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_delay_ms"
+msgid "Retry delay (ms)"
+msgstr "Retry delay (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_delay_ms"
+msgid "Initial delay in milliseconds before first retry (recommended: 1000)"
+msgstr "Initial delay in milliseconds before first retry (recommended: 1000)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_multiplier"
+msgid "Retry multiplier"
+msgstr "Retry multiplier"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_multiplier"
+msgid "Exponential backoff multiplier for retries (recommended: 2, gives delays: 1s, 2s, 4s)"
+msgstr "Exponential backoff multiplier for retries (recommended: 2, gives delays: 1s, 2s, 4s)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_threshold"
+msgid "Circuit breaker threshold"
+msgstr "Circuit breaker threshold"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_threshold"
+msgid "Number of consecutive failures before circuit opens (recommended: 5)"
+msgstr "Number of consecutive failures before circuit opens (recommended: 5)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_timeout"
+msgid "Circuit breaker timeout (s)"
+msgstr "Circuit breaker timeout (s)"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_timeout"
+msgid "Seconds to wait before retrying after circuit opens (recommended: 60)"
+msgstr "Seconds to wait before retrying after circuit opens (recommended: 60)"
+
 msgctxt "Languages::novoton_holidays.exchange_rates"
 msgid "Exchange Rates"
 msgstr "Exchange Rates"

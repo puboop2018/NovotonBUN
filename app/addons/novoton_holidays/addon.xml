@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>3.0.0-A84</version>
+    <version>3.0.0-A85</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
@@ -218,6 +218,37 @@
                     <item id="last_exchange_rate_update">
                         <type>info</type>
                         <default_value></default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- API Resilience Header -->
+                    <item id="api_resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_delay_ms">
+                        <type>input</type>
+                        <default_value>1000</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_multiplier">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
                         <variants/>
                     </item>
 
