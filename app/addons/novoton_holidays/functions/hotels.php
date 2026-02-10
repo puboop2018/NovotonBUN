@@ -162,20 +162,87 @@ function fn_novoton_get_hotel_prices($product_id, $force = false)
         return [];
     }
 
-    // V3: Get packages directly from packages table
-    $packages = db_get_array(
-        "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+    // V3: Get first package with priceinfo_data (active package)
+    $package = db_get_row(
+        "SELECT * FROM ?:novoton_hotel_packages
+         WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+         ORDER BY synced_at DESC LIMIT 1",
         $hotel_id
     );
 
-    if (empty($packages)) {
+    if (empty($package) || empty($package['priceinfo_data'])) {
         return [];
     }
 
+    $priceinfo = json_decode($package['priceinfo_data'], true);
+    if (empty($priceinfo) || empty($priceinfo['season_price'])) {
+        return [];
+    }
+
+    // Transform season_price data into flat format for template
     $result = [];
-    foreach ($packages as $pkg) {
-        // Use shared helper with detailed priceinfo extraction
-        $result[] = fn_novoton_normalize_package($pkg, true);
+    $season_prices = $priceinfo['season_price'];
+
+    // Normalize single entry to array
+    if (isset($season_prices['IdRoom'])) {
+        $season_prices = [$season_prices];
+    }
+
+    // Map IdAge to age_type label
+    $age_type_map = [
+        '1' => 'ADULT',
+        '2' => 'CHD 0-1.99',
+        '3' => 'CHD 2-11.99',
+        '4' => 'CHD 12-17.99',
+        'ADULT' => 'ADULT',
+        'ADULT ' => 'ADULT',
+    ];
+
+    foreach ($season_prices as $sp) {
+        $room_id = $sp['IdRoom'] ?? '';
+        $board_id = $sp['IdBoard'] ?? '';
+        $id_age = $sp['IdAge'] ?? '1';
+        $id_acc = $sp['IdAcc'] ?? 'REGULAR';
+
+        if (empty($room_id) || empty($board_id)) {
+            continue;
+        }
+
+        // Determine age_type from IdAge or fAge field
+        $age_type = $age_type_map[$id_age] ?? $id_age;
+        if (isset($sp['fAge']) && !empty($sp['fAge'])) {
+            $age_type = $sp['fAge'];
+        }
+
+        // Build flat price entry
+        $entry = [
+            'room_id' => $room_id,
+            'room_type' => $room_id,  // Can be enhanced with room name lookup
+            'board_id' => $board_id,
+            'age_type' => $age_type,
+            'acc_type' => $id_acc,
+            'star_rating' => $sp['IdStar'] ?? '',
+            'code' => $sp['Code'] ?? '',
+            'base' => $sp['Base'] ?? '',
+            'room_price' => $sp['RoomPrice'] ?? 'No',
+        ];
+
+        // Add all Price columns (Price1 through Price20)
+        for ($i = 1; $i <= 20; $i++) {
+            $key = 'Price' . $i;
+            $target_key = 'price_' . $i;
+            if (isset($sp[$key])) {
+                $val = $sp[$key];
+                // Handle percentage values like "80%"
+                if (is_string($val) && strpos($val, '%') !== false) {
+                    $entry[$target_key] = $val; // Keep as string for template to handle
+                } else {
+                    $entry[$target_key] = floatval($val);
+                }
+            }
+        }
+
+        $result[] = $entry;
     }
 
     $cache[$product_id] = $result;
