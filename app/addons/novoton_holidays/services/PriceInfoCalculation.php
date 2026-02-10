@@ -5,11 +5,27 @@
  * Calculates prices from priceinfo data to match room_price API response.
  *
  * Formula:
- * Price - EB* + extras_single + (extras_daily - EB|reduction**) + (extras_rooms - EB|reduction**)
- *       + (extras_board - EB|reduction**) - reduction* - reduction_perc_additional + company_fee
+ * Price = BasePrice - EB* + extras_single + (extras_daily - EB|reduction**) + (extras_rooms - EB|reduction**)
+ *         + (extras_board - EB|reduction**) - reduction* - reduction_perc_additional + company_fee
  *
- * * If Priority='Yes', EB and reduction are NOT combinable - check PriorityEB and PriorityEXT
- * ** Check tags for EB and reductions to extras_daily, extras_rooms, extras_board
+ * Priority Rules:
+ * * If Priority='Yes', EB and reduction are NOT combinable
+ *   - PriorityEB='Yes': Early Booking has priority
+ *   - PriorityEXT='Yes': Extras/Reduction has priority
+ *   - If neither, pick the one with better savings
+ *
+ * ** EB/EXT application to supplements (check flags):
+ *   - EBToDaily='Yes': Apply EB discount to extras_daily
+ *   - EBToRooms='Yes': Apply EB discount to extras_rooms
+ *   - EBToBoard='Yes': Apply EB discount to extras_board
+ *   - EXTToDaily='Yes': Apply EXT reduction to extras_daily
+ *   - EXTToRooms='Yes': Apply EXT reduction to extras_rooms
+ *   - EXTToBoard='Yes': Apply EXT reduction to extras_board
+ *
+ * extras_daily Type handling:
+ *   - 'Stay': Charged for each day in FromDate-ToDate range (per overlapping night)
+ *   - 'Arrival': If check-in is within period, charge applies to whole stay (all nights)
+ *   - 'Day'/'Night' (default): Charged per overlapping night
  *
  * @package NovotonHolidays
  * @since 3.0.0
@@ -35,13 +51,6 @@ class PriceInfoCalculation
 
     /** @var array Debug log */
     private $debugLog = [];
-
-    /**
-     * extras_daily Type handling (based on Novoton API specification):
-     * - 'Stay': Charged for each day that falls within the date range (FromDate - ToDate)
-     * - 'Arrival': If check-in date is within the period, charge applies to the whole stay (all nights)
-     * - 'Day'/'Night' (default): Charged per overlapping night
-     */
 
     /**
      * Constructor
@@ -144,12 +153,13 @@ class PriceInfoCalculation
         $fees = $this->calculateFees($occupancy, $checkIn, $nights, $roomId, $boardId);
         $this->log('Fees', $fees);
 
-        // Step 6: Get Early Booking discount
-        $ebDiscount = $this->calculateEarlyBookingDiscount($bookingDate, $checkIn, $nights, $basePrice);
+        // Step 6: Get Early Booking discount (now includes extras based on EBToDaily/EBToRooms/EBToBoard)
+        $ebDiscount = $this->calculateEarlyBookingDiscount($bookingDate, $checkIn, $nights, $basePrice, $fees);
         $this->log('Early Booking discount', $ebDiscount);
 
-        // Step 7: Get Reduction (free nights) - pass basePrice for accurate multi-season calculation
-        $reduction = $this->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice);
+        // Step 7: Get Reduction (free nights) - pass basePrice and fees for accurate multi-season calculation
+        // Now includes extras based on EXTToDaily/EXTToRooms/EXTToBoard
+        $reduction = $this->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice, $fees);
         $this->log('Reduction', $reduction);
 
         // Step 8: Apply Priority rules and pick best scenario
@@ -1173,20 +1183,32 @@ class PriceInfoCalculation
 
     /**
      * Calculate Early Booking discount
+     *
+     * EB discount can apply to:
+     * - Base price (always)
+     * - extras_daily (if EBToDaily = 'Yes')
+     * - extras_rooms (if EBToRooms = 'Yes')
+     * - extras_board (if EBToBoard = 'Yes')
      */
-    private function calculateEarlyBookingDiscount(string $bookingDate, string $checkIn, int $nights, array $basePrice): array
+    private function calculateEarlyBookingDiscount(string $bookingDate, string $checkIn, int $nights, array $basePrice, array $fees): array
     {
         $ebData = $this->priceinfo['EB'] ?? $this->priceinfo['early_booking'] ?? [];
         if (empty($ebData)) {
-            return ['applicable' => false, 'discount' => 0, 'percent' => 0];
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'discount_breakdown' => []];
         }
 
         if (isset($ebData['Discount']) || isset($ebData['Reduction'])) {
             $ebData = [$ebData];
         }
 
+        // Get EB application flags from priceinfo
+        $ebToDaily = ($this->priceinfo['EBToDaily'] ?? 'No') === 'Yes';
+        $ebToRooms = ($this->priceinfo['EBToRooms'] ?? 'No') === 'Yes';
+        $ebToBoard = ($this->priceinfo['EBToBoard'] ?? 'No') === 'Yes';
+
         $bestDiscount = 0;
         $bestPercent = 0;
+        $bestBreakdown = [];
         $applicable = false;
 
         foreach ($ebData as $eb) {
@@ -1215,14 +1237,33 @@ class PriceInfoCalculation
             $applicable = true;
             if ($discount > $bestPercent) {
                 $bestPercent = $discount;
-                $bestDiscount = $basePrice['total'] * ($discount / 100);
+                $discountRate = $discount / 100;
+
+                // Calculate discount for each applicable component
+                $breakdown = [
+                    'base_price' => $basePrice['total'] * $discountRate,
+                    'extras_daily' => $ebToDaily ? ($fees['extras_daily'] ?? 0) * $discountRate : 0,
+                    'extras_rooms' => $ebToRooms ? ($fees['extras_rooms'] ?? 0) * $discountRate : 0,
+                    'extras_board' => $ebToBoard ? ($fees['extras_board'] ?? 0) * $discountRate : 0,
+                ];
+
+                $bestDiscount = array_sum($breakdown);
+                $bestBreakdown = $breakdown;
             }
         }
+
+        $this->log('EB flags', [
+            'EBToDaily' => $ebToDaily,
+            'EBToRooms' => $ebToRooms,
+            'EBToBoard' => $ebToBoard,
+            'breakdown' => $bestBreakdown
+        ]);
 
         return [
             'applicable' => $applicable,
             'discount' => $bestDiscount,
-            'percent' => $bestPercent
+            'percent' => $bestPercent,
+            'discount_breakdown' => $bestBreakdown
         ];
     }
 
@@ -1231,21 +1272,32 @@ class PriceInfoCalculation
      *
      * For multi-season stays, this calculates the actual value of free nights
      * based on their season prices, not just an average.
+     *
+     * EXT discount can also apply to supplements based on:
+     * - EXTToDaily: If Yes, proportional reduction applies to extras_daily
+     * - EXTToRooms: If Yes, proportional reduction applies to extras_rooms
+     * - EXTToBoard: If Yes, proportional reduction applies to extras_board
      */
-    private function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId, array $basePrice = []): array
+    private function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId, array $basePrice = [], array $fees = []): array
     {
         $reductions = $this->priceinfo['reduction'] ?? [];
         if (empty($reductions)) {
-            return ['applicable' => false, 'discount' => 0, 'free_nights' => 0, 'free_night_indices' => []];
+            return ['applicable' => false, 'discount' => 0, 'free_nights' => 0, 'free_night_indices' => [], 'discount_breakdown' => []];
         }
 
         if (isset($reductions['FreeNights'])) {
             $reductions = [$reductions];
         }
 
+        // Get EXT application flags from priceinfo
+        $extToDaily = ($this->priceinfo['EXTToDaily'] ?? 'No') === 'Yes';
+        $extToRooms = ($this->priceinfo['EXTToRooms'] ?? 'No') === 'Yes';
+        $extToBoard = ($this->priceinfo['EXTToBoard'] ?? 'No') === 'Yes';
+
         $bestDiscount = 0;
         $bestFreeNights = 0;
         $bestFreeNightIndices = [];
+        $bestBreakdown = [];
         $applicable = false;
 
         foreach ($reductions as $red) {
@@ -1288,32 +1340,53 @@ class PriceInfoCalculation
                 }
             }
 
-            // Calculate actual discount from the free nights' prices
-            $discount = 0;
+            // Calculate actual discount from the free nights' base prices
+            $basePriceDiscount = 0;
             if (!empty($basePrice['by_night'])) {
                 foreach ($freeNightIndices as $nightIdx) {
                     if (isset($basePrice['by_night'][$nightIdx])) {
-                        $discount += $basePrice['by_night'][$nightIdx]['price'] ?? 0;
+                        $basePriceDiscount += $basePrice['by_night'][$nightIdx]['price'] ?? 0;
                     }
                 }
             } else {
                 // Fallback: estimate as proportional if by_night not available
                 $avgNightPrice = $basePrice['total'] / $nights;
-                $discount = $avgNightPrice * count($freeNightIndices);
+                $basePriceDiscount = $avgNightPrice * count($freeNightIndices);
             }
 
-            if ($discount > $bestDiscount) {
-                $bestDiscount = $discount;
+            // Calculate proportional discount for extras (free_nights / total_nights)
+            $freeNightsRatio = count($freeNightIndices) / $nights;
+
+            $breakdown = [
+                'base_price' => $basePriceDiscount,
+                'extras_daily' => $extToDaily ? ($fees['extras_daily'] ?? 0) * $freeNightsRatio : 0,
+                'extras_rooms' => $extToRooms ? ($fees['extras_rooms'] ?? 0) * $freeNightsRatio : 0,
+                'extras_board' => $extToBoard ? ($fees['extras_board'] ?? 0) * $freeNightsRatio : 0,
+            ];
+
+            $totalDiscount = array_sum($breakdown);
+
+            if ($totalDiscount > $bestDiscount) {
+                $bestDiscount = $totalDiscount;
                 $bestFreeNights = $freeNights;
                 $bestFreeNightIndices = $freeNightIndices;
+                $bestBreakdown = $breakdown;
             }
         }
+
+        $this->log('EXT flags', [
+            'EXTToDaily' => $extToDaily,
+            'EXTToRooms' => $extToRooms,
+            'EXTToBoard' => $extToBoard,
+            'breakdown' => $bestBreakdown
+        ]);
 
         return [
             'applicable' => $applicable,
             'discount' => $bestDiscount,
             'free_nights' => $bestFreeNights,
-            'free_night_indices' => $bestFreeNightIndices
+            'free_night_indices' => $bestFreeNightIndices,
+            'discount_breakdown' => $bestBreakdown
         ];
     }
 
