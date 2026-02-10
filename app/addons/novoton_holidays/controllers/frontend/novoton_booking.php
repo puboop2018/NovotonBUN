@@ -535,6 +535,17 @@ if ($mode == 'search') {
     // Debug mode - enable to see API responses
     $debug_mode = !empty($searchParams['debug']) || defined('NOVOTON_DEBUG');
     $debug_log = [];
+
+    // Allow resetting circuit breaker in debug mode via &reset_circuit=1
+    if ($debug_mode && !empty($searchParams['reset_circuit'])) {
+        $api = fn_novoton_get_api();
+        if (method_exists($api, 'resetCircuitBreaker')) {
+            $api->resetCircuitBreaker();
+            $debug_log[] = "=== CIRCUIT BREAKER RESET ===";
+            $debug_log[] = "Circuit breaker has been manually reset.";
+            $debug_log[] = "";
+        }
+    }
     
     // If hotel_id is provided (product page), search for specific hotel
     if (!empty($searchParams['hotel_id'])) {
@@ -565,6 +576,23 @@ if ($mode == 'search') {
             $debug_log[] = "Children: " . json_encode($children);
             $debug_log[] = "Meal Plan: " . ($mealPlan ?: 'ALL');
             $debug_log[] = "";
+
+            // Check API circuit breaker status
+            $api = fn_novoton_get_api();
+            if (method_exists($api, 'getCircuitStatus')) {
+                $circuitStatus = $api->getCircuitStatus();
+                $debug_log[] = "=== API CIRCUIT BREAKER STATUS ===";
+                $debug_log[] = "Circuit Open: " . ($circuitStatus['is_open'] ? 'YES (BLOCKING REQUESTS!)' : 'NO');
+                $debug_log[] = "Failure Count: " . $circuitStatus['failure_count'] . "/" . $circuitStatus['threshold'];
+                if ($circuitStatus['last_failure']) {
+                    $debug_log[] = "Last Failure: " . $circuitStatus['last_failure'];
+                }
+                if ($circuitStatus['is_open']) {
+                    $debug_log[] = "Seconds Until Retry: " . $circuitStatus['seconds_until_retry'];
+                    $debug_log[] = "WARNING: API requests are being blocked! Wait for timeout or restart PHP-FPM.";
+                }
+                $debug_log[] = "";
+            }
         }
         
         // Get hotel services from B2B API (hotelinfo returns rooms/boards, not name/city)
@@ -782,20 +810,21 @@ if ($mode == 'search') {
                     }
                     
                     // Get prices from room_price API for this room
-                    $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
-                    
+                    $api = fn_novoton_get_api();
+                    $priceData = $api->getRoomPrice($priceParams);
+
                     $room_results = [];
-                    
+
                     if ($priceData) {
-                        $rawXml = fn_novoton_get_api()->getLastResponse();
-                        
+                        $rawXml = $api->getLastResponse();
+
                         if ($debug_mode) {
                             $debug_log[] = "  API Response received (parsing...)";
                         }
-                        
+
                         libxml_use_internal_errors(true);
                         $xml = simplexml_load_string($rawXml);
-                        
+
                         if ($xml !== false) {
                             // Parse results - handle both single and multiple results
                             $priceElements = $xml->xpath('//Price');
@@ -902,8 +931,23 @@ if ($mode == 'search') {
                                 }
                             }
                         }
+                    } else {
+                        // API returned empty or error
+                        if ($debug_mode) {
+                            $debug_log[] = "  API Response: EMPTY or FALSE";
+                            $lastError = $api->getLastError();
+                            if ($lastError) {
+                                $debug_log[] = "  API Error: " . $lastError;
+                            }
+                            if (method_exists($api, 'getCircuitStatus')) {
+                                $circuitStatus = $api->getCircuitStatus();
+                                if ($circuitStatus['is_open']) {
+                                    $debug_log[] = "  CIRCUIT BREAKER IS OPEN!";
+                                }
+                            }
+                        }
                     }
-                    
+
                     // Store results for this room
                     $all_room_results[$room_num] = $room_results;
                     
@@ -1077,13 +1121,26 @@ if ($mode == 'search') {
             
             // Show raw request/response in debug
             if ($debug_mode) {
-                $lastReq = fn_novoton_get_api()->getLastRequestFormatted();
+                $api = fn_novoton_get_api();
+                $lastReq = $api->getLastRequestFormatted();
                 $debug_log[] = "  -> API Request: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}";
-                $rawResponse = fn_novoton_get_api()->getLastResponse();
+                $rawResponse = $api->getLastResponse();
                 if ($rawResponse) {
                     $debug_log[] = "  -> Raw Response (first 2000 chars): " . substr(htmlspecialchars($rawResponse), 0, 2000);
                 } else {
                     $debug_log[] = "  -> Raw Response: EMPTY or FALSE";
+                    // Show detailed error info
+                    $lastError = $api->getLastError();
+                    if ($lastError) {
+                        $debug_log[] = "  -> API Error: " . $lastError;
+                    }
+                    // Check circuit breaker status again after the call
+                    if (method_exists($api, 'getCircuitStatus')) {
+                        $circuitStatus = $api->getCircuitStatus();
+                        if ($circuitStatus['is_open']) {
+                            $debug_log[] = "  -> CIRCUIT BREAKER IS OPEN! Requests are blocked.";
+                        }
+                    }
                 }
             }
             

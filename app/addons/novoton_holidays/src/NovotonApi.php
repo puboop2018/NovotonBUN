@@ -237,6 +237,26 @@ class NovotonApi
     }
 
     /**
+     * Manually reset circuit breaker (for admin use)
+     * Call this to force-reset the circuit breaker state
+     */
+    public function resetCircuitBreaker(): void
+    {
+        $wasOpen = self::$circuitOpen;
+        $previousFailures = self::$failureCount;
+
+        self::$failureCount = 0;
+        self::$lastFailureTime = 0;
+        self::$circuitOpen = false;
+
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton API circuit breaker manually reset',
+            'was_open' => $wasOpen,
+            'previous_failures' => $previousFailures
+        ]);
+    }
+
+    /**
      * Send POST request to Novoton API with retry and circuit breaker
      */
     private function sendRequest($function, $xml = '', $lang = 'UK')
