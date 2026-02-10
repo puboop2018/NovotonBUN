@@ -16,9 +16,9 @@
     {/if}
 
     {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
-        <strong>Rooms ({$product.extra.num_rooms}):</strong><br>
+        <strong>{if $product.extra.num_rooms == 1}{__("novoton_holidays.room")}{else}{__("novoton_holidays.rooms")|capitalize}{/if} ({$product.extra.num_rooms}):</strong><br>
         {foreach from=$product.extra.rooms_data item=room key=idx}
-            &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if} ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
+            &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if} ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
         {/foreach}
     {else}
         <strong>{__("novoton_holidays.room_type")}:</strong> {$product.extra.room_type_display|default:$product.extra.room_name|default:$product.extra.room_id}<br>
