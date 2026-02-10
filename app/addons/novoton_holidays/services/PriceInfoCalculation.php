@@ -415,9 +415,23 @@ class PriceInfoCalculation
      */
     private function getSeasonsByNight(string $checkIn, int $nights): array
     {
-        $seasons = $this->priceinfo['seasons']['season'] ?? [];
-        if (isset($seasons['IdSeason'])) {
+        // Seasons can be in different formats:
+        // 1. Array of seasons with 'Season', 'FromDate', 'ToDate'
+        // 2. Nested under 'seasons' key
+        $seasons = $this->priceinfo['seasons'] ?? [];
+
+        // Handle if seasons is directly an array of season objects
+        if (isset($seasons['Season'])) {
+            // Single season
             $seasons = [$seasons];
+        } elseif (isset($seasons[0]['Season'])) {
+            // Already an array
+        } elseif (isset($seasons['season'])) {
+            // Nested format
+            $seasons = $seasons['season'];
+            if (isset($seasons['Season'])) {
+                $seasons = [$seasons];
+            }
         }
 
         $result = [];
@@ -430,9 +444,10 @@ class PriceInfoCalculation
 
             $seasonNum = 1; // Default
             foreach ($seasons as $season) {
-                $from = $season['DateFrom'] ?? '';
-                $to = $season['DateTo'] ?? '';
-                $id = intval($season['IdSeason'] ?? 1);
+                $from = $season['FromDate'] ?? '';
+                $to = $season['ToDate'] ?? '';
+                // Field can be 'Season' or 'IdSeason'
+                $id = intval($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
                     $seasonNum = $id;
@@ -472,12 +487,23 @@ class PriceInfoCalculation
             $seasonNum = $nightInfo['season'];
             $priceKey = 'Price' . $seasonNum;
 
+            // Check if this is per-room pricing
+            $isRoomPrice = false;
+
             // Adults
             foreach ($occupancy['adults'] as $adult) {
                 $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adult['age_type'], $adult['acc_type'], $nights);
 
                 if ($row) {
-                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow);
+                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow, $seasonPrices);
+                    $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
+
+                    // If RoomPrice=Yes, only add once per room (not per person)
+                    if ($isRoomPrice && $adult['index'] > 1) {
+                        // Skip additional adults for room-priced rates
+                        continue;
+                    }
+
                     $nightTotal += $price;
 
                     if (!isset($byPerson['adult_' . $adult['index']])) {
@@ -492,8 +518,15 @@ class PriceInfoCalculation
                 // Try with "BY 1 AD" first if applicable
                 $row = null;
                 if ($child['by_1_ad']) {
+                    // Try both formats: "BY 1 AD" and "by 1 ad"
                     $ageTypeBy1Ad = $child['age_type'] . ' BY 1 AD';
                     $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1Ad, $child['acc_type'], $nights);
+
+                    if (!$row) {
+                        // Try lowercase variant
+                        $ageTypeBy1AdLower = $child['age_type'] . ' by 1 ad';
+                        $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1AdLower, $child['acc_type'], $nights);
+                    }
                 }
 
                 // Fallback to regular rate
@@ -502,7 +535,7 @@ class PriceInfoCalculation
                 }
 
                 if ($row) {
-                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow);
+                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow, $seasonPrices);
                     $nightTotal += $price;
 
                     if (!isset($byPerson['child_' . $child['index']])) {
@@ -575,25 +608,59 @@ class PriceInfoCalculation
 
     /**
      * Get price from row, handling percentages
+     *
+     * Percentages can be:
+     * - String with % sign: "80%", "50%"
+     * - Numeric value <= 100 when Code references Base
      */
-    private function getPriceFromRow(array $row, string $priceKey, ?array $baseCodeRow): float
+    private function getPriceFromRow(array $row, string $priceKey, ?array $baseCodeRow, array $allSeasonPrices = []): float
     {
         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? 0;
         $code = $row['Code'] ?? 'Base';
+        $baseRef = $row['Base'] ?? '';  // Reference to which Code is the base
         $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
 
-        // If percentage (Code != Base), calculate from base
-        if ($code !== 'Base' && $baseCodeRow) {
-            $basePrice = floatval($baseCodeRow[$priceKey] ?? $baseCodeRow['Price1'] ?? 0);
+        // Handle string percentage like "80%", "50%"
+        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+            $percentValue = floatval(str_replace('%', '', $rawPrice));
 
-            // Check if rawPrice is a percentage (0-100) or actual price
-            if (is_numeric($rawPrice) && $rawPrice > 0 && $rawPrice <= 100) {
-                $rawPrice = $basePrice * ($rawPrice / 100);
+            // Find the base row to calculate from
+            $basePrice = 0;
+            if (!empty($baseRef) && !empty($allSeasonPrices)) {
+                // Find row with Code matching our Base reference
+                foreach ($allSeasonPrices as $baseRow) {
+                    if (($baseRow['Code'] ?? '') == $baseRef) {
+                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
+                        break;
+                    }
+                }
+            } elseif ($baseCodeRow) {
+                $basePrice = floatval($baseCodeRow[$priceKey] ?? $baseCodeRow['Price1'] ?? 0);
             }
+
+            if ($basePrice > 0) {
+                return $basePrice * ($percentValue / 100);
+            }
+            // If no base found, return 0 (should not happen in valid data)
+            return 0;
         }
 
-        // If RoomPrice=Yes, price is per room not per person (handled differently in totals)
-        // For now, return as-is; the calling code handles room-level pricing
+        // If Code is not 'Base' and we have a Base reference, it might be a numeric percentage
+        if ($code !== 'Base' && !empty($baseRef) && is_numeric($rawPrice)) {
+            $numericPrice = floatval($rawPrice);
+            // If the value is small (0-100), it's likely a percentage
+            if ($numericPrice > 0 && $numericPrice <= 100 && !empty($allSeasonPrices)) {
+                foreach ($allSeasonPrices as $baseRow) {
+                    if (($baseRow['Code'] ?? '') == $baseRef) {
+                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
+                        if ($basePrice > 0) {
+                            return $basePrice * ($numericPrice / 100);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
 
         return floatval($rawPrice);
     }
@@ -642,7 +709,7 @@ class PriceInfoCalculation
     }
 
     /**
-     * Calculate fees (extras_daily, handling_fee, etc.)
+     * Calculate fees (extras_daily, handling_fee, company_fee, etc.)
      */
     private function calculateFees(array $occupancy, string $checkIn, int $nights, string $roomId, string $boardId): array
     {
@@ -652,6 +719,7 @@ class PriceInfoCalculation
             'extras_rooms' => 0,
             'extras_board' => 0,
             'handling_fee' => 0,
+            'company_fee' => 0,
             'total' => 0,
             'details' => []
         ];
@@ -686,8 +754,15 @@ class PriceInfoCalculation
             $fees['details'][] = ['type' => 'extras_board', 'amount' => $fees['extras_board']];
         }
 
+        // Calculate company_fee (per room)
+        $fees['company_fee'] = $this->calculateCompanyFee($roomId);
+        if ($fees['company_fee'] > 0) {
+            $fees['details'][] = ['type' => 'company_fee', 'amount' => $fees['company_fee']];
+        }
+
         $fees['total'] = $fees['extras_daily'] + $fees['extras_single'] +
-                         $fees['extras_rooms'] + $fees['extras_board'] + $fees['handling_fee'];
+                         $fees['extras_rooms'] + $fees['extras_board'] +
+                         $fees['handling_fee'] + $fees['company_fee'];
 
         return $fees;
     }
@@ -741,13 +816,22 @@ class PriceInfoCalculation
 
     /**
      * Calculate handling_fee
+     *
+     * Structure from XML:
+     * <handling_fee>
+     *   <ToDays>3</ToDays>      <!-- Use Price1 for stays <= 3 days -->
+     *   <Price1>5.5</Price1>
+     *   <FromDays>4</FromDays>  <!-- Use Price2 for stays >= 4 days -->
+     *   <Price2>7.5</Price2>
+     * </handling_fee>
      */
     private function calculateHandlingFee(array $occupancy, int $nights): float
     {
         $handlingFees = $this->priceinfo['handling_fee'] ?? [];
         if (empty($handlingFees)) return 0;
 
-        if (isset($handlingFees['IdAge'])) {
+        // Normalize to array
+        if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
             $handlingFees = [$handlingFees];
         }
 
@@ -755,16 +839,32 @@ class PriceInfoCalculation
 
         foreach ($handlingFees as $fee) {
             $idAge = $fee['IdAge'] ?? '';
-            $fromDays = intval($fee['FromDays'] ?? 1);
-            $toDays = intval($fee['ToDays'] ?? 3);
+            $toDays = intval($fee['ToDays'] ?? 3);     // Use Price1 for stays <= this
+            $fromDays = intval($fee['FromDays'] ?? 4); // Use Price2 for stays >= this
             $price1 = floatval($fee['Price1'] ?? 0);
             $price2 = floatval($fee['Price2'] ?? 0);
 
             // Choose price based on stay length
-            $price = ($nights <= $toDays) ? $price1 : $price2;
+            // Price1: stays <= ToDays
+            // Price2: stays >= FromDays
+            $price = 0;
+            if ($nights <= $toDays) {
+                $price = $price1;
+            } elseif ($nights >= $fromDays) {
+                $price = $price2;
+            } else {
+                // Between ToDays and FromDays - use Price1 as fallback
+                $price = $price1;
+            }
 
-            // Count matching persons
-            $count = $this->countMatchingPersons($occupancy, $idAge);
+            // Count matching persons (if IdAge specified, otherwise per person)
+            $count = 1;
+            if (!empty($idAge)) {
+                $count = $this->countMatchingPersons($occupancy, $idAge);
+            } else {
+                // Apply per person (adults + children)
+                $count = count($occupancy['adults']) + count($occupancy['children']);
+            }
 
             $total += $price * $count;
         }
@@ -969,6 +1069,38 @@ class PriceInfoCalculation
         }
 
         return $total;
+    }
+
+    /**
+     * Calculate company_fee (per room)
+     *
+     * Structure from XML:
+     * <company_fee>
+     *   <IdRoom>DBL</IdRoom>
+     *   <Price>10</Price>
+     * </company_fee>
+     */
+    private function calculateCompanyFee(string $roomId): float
+    {
+        $companyFees = $this->priceinfo['company_fee'] ?? [];
+        if (empty($companyFees)) return 0;
+
+        // Normalize to array
+        if (isset($companyFees['Price']) || isset($companyFees['IdRoom'])) {
+            $companyFees = [$companyFees];
+        }
+
+        foreach ($companyFees as $fee) {
+            $feeRoomId = $fee['IdRoom'] ?? '';
+            $price = floatval($fee['Price'] ?? 0);
+
+            // Match room or apply if no room specified (applies to all)
+            if (empty($feeRoomId) || $this->matchRoom($feeRoomId, $roomId)) {
+                return $price;
+            }
+        }
+
+        return 0;
     }
 
     /**
