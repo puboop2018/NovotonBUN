@@ -119,6 +119,7 @@
             <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-warning">[R] Alternative Requests</a>
             <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Export Hotel Features</a>
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
+            <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
         </div>
     </div>
     
