@@ -1499,19 +1499,16 @@ class PriceInfoCalculation
         $finalTotal = $totalNone;
 
         if ($priority === 'Yes') {
-            // Discounts not combinable
-            if ($priorityEXT === 'Yes' && $reduction['applicable']) {
-                // Reduction has priority
-                $finalTotal = $totalReduction;
-                $appliedDiscount = 'reduction';
-                $discountAmount = $reduction['discount'];
-            } elseif ($priorityEB === 'Yes' && $ebDiscount['applicable']) {
-                // EB has priority
+            // Discounts not combinable - EB and Reduction are mutually exclusive
+            // Case 1: PriorityEB='Yes', PriorityEXT='No' -> EB has forced priority
+            // Case 2: PriorityEB='No', PriorityEXT='Yes' -> Can choose best discount
+            if ($priorityEB === 'Yes' && $ebDiscount['applicable']) {
+                // EB has forced priority - use EB regardless of which gives better savings
                 $finalTotal = $totalEB;
                 $appliedDiscount = 'early_booking';
                 $discountAmount = $ebDiscount['discount'];
             } else {
-                // Pick the best
+                // PriorityEXT='Yes' or neither set - pick the best discount (lowest price)
                 if ($totalEB <= $totalReduction && $ebDiscount['applicable']) {
                     $finalTotal = $totalEB;
                     $appliedDiscount = 'early_booking';
