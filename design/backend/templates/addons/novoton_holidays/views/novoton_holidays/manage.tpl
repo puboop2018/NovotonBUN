@@ -110,7 +110,7 @@
     
     {** Quick Actions **}
     <div class="novoton-actions">
-        <h3>* Quick Actions</h3>
+        <h3>Actions</h3>
         <div class="novoton-btn-group">
             <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices</a>
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
@@ -120,6 +120,7 @@
             <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Export Hotel Features</a>
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
             <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
+            <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[C] Price Comparison Tool</a>
         </div>
     </div>
     
