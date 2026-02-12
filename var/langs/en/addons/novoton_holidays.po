@@ -492,6 +492,10 @@ msgctxt "Languages::novoton_holidays.no_prices_available"
 msgid "No prices available"
 msgstr "No prices available"
 
+msgctxt "Languages::novoton_holidays.prices_coming_soon"
+msgid "Prices will be available once price data is synced."
+msgstr "Prices will be available once price data is synced."
+
 msgctxt "Languages::novoton_holidays.use_booking_engine_to_search"
 msgid "Please use the booking engine to search for availability."
 msgstr "Please use the booking engine to search for availability."
