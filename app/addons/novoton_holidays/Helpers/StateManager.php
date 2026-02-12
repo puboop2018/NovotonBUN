@@ -79,17 +79,39 @@ class StateManager
             return self::DEFAULT_STATE;
         }
 
-        $content = @file_get_contents($this->stateFile);
-        if ($content === false) {
-            return self::DEFAULT_STATE;
-        }
+        $this->acquireLock();
+        try {
+            $content = @file_get_contents($this->stateFile);
+            if ($content === false) {
+                return self::DEFAULT_STATE;
+            }
 
-        $state = json_decode($content, true);
-        if (!is_array($state)) {
-            return self::DEFAULT_STATE;
-        }
+            $decoded = json_decode($content, true);
+            if (!is_array($decoded)) {
+                return $this->restoreFromBackup();
+            }
 
-        return array_merge(self::DEFAULT_STATE, $state);
+            // Handle checksummed format
+            if (isset($decoded['_checksum']) && isset($decoded['_data'])) {
+                $expectedChecksum = $decoded['_checksum'];
+                $actualChecksum = md5(json_encode($decoded['_data']));
+                if ($expectedChecksum !== $actualChecksum) {
+                    return $this->restoreFromBackup();
+                }
+                $state = $decoded['_data'];
+            } else {
+                // Legacy format (no checksum wrapper)
+                $state = $decoded;
+            }
+
+            if (!is_array($state)) {
+                return $this->restoreFromBackup();
+            }
+
+            return array_merge(self::DEFAULT_STATE, $state);
+        } finally {
+            $this->releaseLock();
+        }
     }
 
     /**
@@ -102,25 +124,43 @@ class StateManager
     {
         $state['last_run_at'] = date('Y-m-d H:i:s');
 
-        $content = json_encode($state, JSON_PRETTY_PRINT);
+        // Use compact JSON (no pretty print) to reduce I/O for large state files
+        $content = json_encode($state);
         if ($content === false) {
             return false;
         }
 
-        // Write to temp file first for atomic operation
-        $tempFile = $this->stateFile . '.tmp';
-
-        if (@file_put_contents($tempFile, $content, LOCK_EX) === false) {
-            return false;
+        // Add checksum for corruption detection
+        $checksum = md5($content);
+        $wrappedContent = json_encode(['_checksum' => $checksum, '_data' => $state]);
+        if ($wrappedContent === false) {
+            $wrappedContent = $content; // Fallback to unwrapped
         }
 
-        // Atomically replace the state file
-        if (!@rename($tempFile, $this->stateFile)) {
-            @unlink($tempFile);
-            return false;
-        }
+        $this->acquireLock();
+        try {
+            // Backup current state before overwriting
+            if (file_exists($this->stateFile)) {
+                @copy($this->stateFile, $this->stateFile . '.bak');
+            }
 
-        return true;
+            // Write to temp file first for atomic operation
+            $tempFile = $this->stateFile . '.tmp';
+
+            if (@file_put_contents($tempFile, $wrappedContent, LOCK_EX) === false) {
+                return false;
+            }
+
+            // Atomically replace the state file
+            if (!@rename($tempFile, $this->stateFile)) {
+                @unlink($tempFile);
+                return false;
+            }
+
+            return true;
+        } finally {
+            $this->releaseLock();
+        }
     }
 
     /**
@@ -134,6 +174,31 @@ class StateManager
             return @unlink($this->stateFile);
         }
         return true;
+    }
+
+    /**
+     * Attempt to restore state from backup file
+     *
+     * @return array Restored state or DEFAULT_STATE
+     */
+    private function restoreFromBackup(): array
+    {
+        $backupFile = $this->stateFile . '.bak';
+        if (file_exists($backupFile)) {
+            $backupContent = @file_get_contents($backupFile);
+            $decoded = json_decode($backupContent, true);
+            if (is_array($decoded)) {
+                // Handle checksummed backup
+                $state = (isset($decoded['_checksum']) && isset($decoded['_data']))
+                    ? $decoded['_data']
+                    : $decoded;
+                if (is_array($state)) {
+                    @file_put_contents($this->stateFile, $backupContent, LOCK_EX);
+                    return array_merge(self::DEFAULT_STATE, $state);
+                }
+            }
+        }
+        return self::DEFAULT_STATE;
     }
 
     /**
@@ -313,6 +378,14 @@ class StateManager
      * @param int $batchSize Number of items to get
      * @return array Array of item IDs
      */
+    /**
+     * Get the next batch of item IDs to process.
+     * If item_ids are stored in state (legacy), uses array_slice.
+     * Otherwise returns empty — callers should use DB-based pagination.
+     *
+     * @param int $batchSize Number of items to get
+     * @return array Array of item IDs
+     */
     public function getNextBatch(int $batchSize): array
     {
         $state = $this->load();
@@ -321,7 +394,13 @@ class StateManager
             return [];
         }
 
-        return array_slice($state['item_ids'], $state['processed'], $batchSize);
+        // Legacy mode: item_ids stored in state
+        if (!empty($state['item_ids'])) {
+            return array_slice($state['item_ids'], $state['processed'], $batchSize);
+        }
+
+        // New mode: callers use DB pagination directly
+        return [];
     }
 
     /**

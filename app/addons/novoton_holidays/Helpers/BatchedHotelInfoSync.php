@@ -153,6 +153,9 @@ class BatchedHotelInfoSync
             return $this->resumeSync($state, $start_time);
         }
 
+        // Reconcile: re-link hotels with NULL product_id whose products exist
+        $this->reconcileProductLinks();
+
         // Determine sync type needed
         $sync_type = $this->determineSyncType($options);
 
@@ -173,13 +176,17 @@ class BatchedHotelInfoSync
 
         $this->output("Found " . count($hotel_ids) . " hotels to sync.");
 
-        // Create new state
+        // Create new state — store only IDs (needed for resume ordering)
+        // For large sets (>5000), store only count and use DB pagination
+        $store_ids = count($hotel_ids) <= 5000;
+
         $state = [
             'sync_type' => $sync_type,
             'status' => 'in_progress',
             'started_at' => date('Y-m-d H:i:s'),
             'last_run_at' => date('Y-m-d H:i:s'),
-            'hotel_ids' => $hotel_ids,
+            'hotel_ids' => $store_ids ? $hotel_ids : [],
+            'use_db_pagination' => !$store_ids,
             'total' => count($hotel_ids),
             'processed' => 0,
             'synced' => 0,
@@ -215,8 +222,52 @@ class BatchedHotelInfoSync
                 }
             }
 
-            // Get next batch
-            $batch = array_slice($state['hotel_ids'], $offset, $this->batch_size);
+            // Get next batch — from state array or DB pagination
+            if (!empty($state['hotel_ids'])) {
+                $batch = array_slice($state['hotel_ids'], $offset, $this->batch_size);
+            } else {
+                // DB pagination mode for large hotel sets
+                $countries = $state['countries'] ?? $this->getConfiguredCountries();
+                $batch = db_get_fields(
+                    "SELECT hotel_id FROM ?:novoton_hotels WHERE country IN (?a) ORDER BY hotel_name LIMIT ?i OFFSET ?i",
+                    $countries, $this->batch_size, $offset
+                );
+            }
+
+            if (empty($batch)) {
+                break; // No more items (DB pagination exhausted)
+            }
+
+            // Pre-fetch hotel names and product_ids for entire batch (eliminates N+1)
+            $hotel_map = db_get_hash_array(
+                "SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+                'hotel_id', $batch
+            );
+
+            // Pre-fetch product_code -> product_id map for unlinked hotels
+            $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+            $prefixes = !empty($addon_settings['product_code_prefixes'])
+                ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
+                : ['NVT'];
+
+            $code_patterns = [];
+            foreach ($batch as $hid) {
+                if (empty($hotel_map[$hid]['product_id'])) {
+                    foreach ($prefixes as $pfx) {
+                        $code_patterns[] = $pfx . $hid;
+                    }
+                }
+            }
+            $product_code_map = [];
+            if (!empty($code_patterns)) {
+                $product_code_map = db_get_hash_single_array(
+                    "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                    ['product_code', 'product_id'], $code_patterns
+                );
+            }
+
+            // Fetch all hotel info in parallel using curl_multi
+            $batch_results = $api->getHotelInfoBatch($batch);
 
             foreach ($batch as $hotel_id) {
                 // Check time limit within batch (skip if unlimited mode)
@@ -224,24 +275,20 @@ class BatchedHotelInfoSync
                     break 2; // Exit both loops
                 }
 
-                $hotel_name = db_get_field(
-                    "SELECT hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                    $hotel_id
-                );
+                $hotel_name = $hotel_map[$hotel_id]['hotel_name'] ?? '?';
+                $hotel_info = $batch_results[$hotel_id] ?? false;
 
                 $this->output("[{$hotel_id}] " . ($hotel_name ?: '?') . " ... ", false);
 
                 try {
-                    $hotel_info = $api->getHotelInfo($hotel_id);
-
                     if (!$hotel_info) {
                         $this->output("API returned empty");
                         $state['errors']++;
                         $state['error_ids'][] = $hotel_id;
                         $errors_this_run++;
                     } else {
-                        // Process hotel info
-                        $this->processHotelInfo($hotel_id, $hotel_info, $now);
+                        // Process hotel info — pass pre-fetched maps to avoid N+1
+                        $this->processHotelInfo($hotel_id, $hotel_info, $now, $hotel_map, $product_code_map, $prefixes);
                         $state['synced']++;
                         $synced_this_run++;
 
@@ -258,9 +305,6 @@ class BatchedHotelInfoSync
 
                 $offset++;
                 $processed_this_run++;
-
-                // Small delay to avoid API rate limits
-                usleep(100000); // 100ms
             }
 
             // Update state after each batch
@@ -273,8 +317,39 @@ class BatchedHotelInfoSync
             $this->output("--- Progress: {$offset}/{$state['total']} ({$percent}%) ---");
         }
 
-        // Check if complete
+        // Check if complete — retry failed items before finishing
         if ($offset >= $state['total']) {
+            // Retry failed items (max 1 pass, with backoff)
+            if (!empty($state['error_ids']) && empty($state['retry_done'])) {
+                $retry_ids = array_unique($state['error_ids']);
+                $this->output("\nRetrying " . count($retry_ids) . " failed hotels...");
+                $recovered = 0;
+                foreach ($retry_ids as $retry_id) {
+                    if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
+                        break;
+                    }
+                    usleep(500000); // 500ms backoff for retries
+                    try {
+                        $hotel_info = $api->getHotelInfo($retry_id);
+                        if ($hotel_info) {
+                            $this->processHotelInfo($retry_id, $hotel_info, $now);
+                            $recovered++;
+                            $state['synced']++;
+                            $state['errors']--;
+                            $this->output("  [{$retry_id}] retry OK");
+                        }
+                    } catch (\Exception $e) {
+                        $this->output("  [{$retry_id}] retry failed: " . $e->getMessage());
+                    }
+                }
+                $state['error_ids'] = array_values(array_diff($state['error_ids'], array_slice($retry_ids, 0, $recovered)));
+                $state['retry_done'] = true;
+                $this->saveState($state);
+                if ($recovered > 0) {
+                    $this->output("Recovered {$recovered} hotels on retry.");
+                }
+            }
+
             $this->completeSync($state);
 
             return [
@@ -305,34 +380,29 @@ class BatchedHotelInfoSync
 
     /**
      * Process hotel info from API response
+     *
+     * @param string $hotel_id Hotel ID
+     * @param mixed $hotel_info SimpleXML hotel info
+     * @param string $now Current timestamp
+     * @param array $hotel_map Pre-fetched hotel_id => [hotel_name, product_id] map
+     * @param array $product_code_map Pre-fetched product_code => product_id map
+     * @param array $prefixes Product code prefixes
      */
-    private function processHotelInfo(string $hotel_id, $hotel_info, string $now): void
+    private function processHotelInfo(string $hotel_id, $hotel_info, string $now, array $hotel_map = [], array $product_code_map = [], array $prefixes = ['NVT']): void
     {
         $update = [
             'hotelinfo_synced_at' => $now,
             'hotel_data' => json_encode($hotel_info),
         ];
 
-        // Link product if not already linked - find by product_code pattern NVT{hotel_id}
-        $current_product_id = db_get_field(
-            "SELECT product_id FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotel_id
-        );
+        // Link product if not already linked — use pre-fetched maps (no extra queries)
+        $current_product_id = $hotel_map[$hotel_id]['product_id'] ?? null;
 
         if (empty($current_product_id)) {
-            // Try to find product by code pattern {prefix}{hotel_id} using configured prefixes
-            $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-            $prefixes = !empty($addon_settings['product_code_prefixes'])
-                ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
-                : ['NVT'];
-
             foreach ($prefixes as $prefix) {
-                $product_id = db_get_field(
-                    "SELECT product_id FROM ?:products WHERE product_code = ?s",
-                    $prefix . $hotel_id
-                );
-                if (!empty($product_id)) {
-                    $update['product_id'] = $product_id;
+                $pid = $product_code_map[$prefix . $hotel_id] ?? null;
+                if (!empty($pid)) {
+                    $update['product_id'] = $pid;
                     break;
                 }
             }
@@ -360,22 +430,33 @@ class BatchedHotelInfoSync
         $update['packages_count'] = count($packages);
         $update['has_prices'] = count($packages) > 0 ? 'Y' : 'N';
 
-        // Update hotel record
-        db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel_id);
+        // Wrap hotel + packages update in a transaction for atomicity
+        db_query("START TRANSACTION");
+        try {
+            // Update hotel record
+            db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotel_id);
 
-        // Insert/update packages in novoton_hotel_packages
-        foreach ($packages as $pkg) {
-            if (!empty($pkg['IdCont'])) {
-                db_query(
-                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
-                     VALUES (?s, ?s, ?s, NOW())
-                     ON DUPLICATE KEY UPDATE package_name = ?s",
-                    $hotel_id,
-                    $pkg['IdCont'],
-                    $pkg['PackageName'],
-                    $pkg['PackageName']
-                );
+            // Batch INSERT packages (multi-row upsert instead of N individual queries)
+            $valid_packages = array_filter($packages, fn($pkg) => !empty($pkg['IdCont']));
+            if (!empty($valid_packages)) {
+                $values = [];
+                $params = [];
+                foreach ($valid_packages as $pkg) {
+                    $values[] = "(?s, ?s, ?s, NOW())";
+                    $params[] = $hotel_id;
+                    $params[] = $pkg['IdCont'];
+                    $params[] = $pkg['PackageName'];
+                }
+                $sql = "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at) VALUES "
+                    . implode(', ', $values)
+                    . " ON DUPLICATE KEY UPDATE package_name = VALUES(package_name)";
+                call_user_func_array('db_query', array_merge([$sql], $params));
             }
+
+            db_query("COMMIT");
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            throw $e;
         }
     }
 
@@ -468,6 +549,68 @@ class BatchedHotelInfoSync
         $this->output("Errors: {$state['errors']}");
         $this->output("Duration: " . $this->formatDuration($duration));
         $this->output("========================================");
+    }
+
+    /**
+     * Re-link hotels that have NULL product_id but whose CS-Cart product exists.
+     * Uses configured product_code_prefixes to match products.
+     * Also clears stale product_id pointing to deleted products.
+     */
+    private function reconcileProductLinks(): void
+    {
+        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+        $prefixes = !empty($addon_settings['product_code_prefixes'])
+            ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
+            : ['NVT'];
+
+        // 1. Re-link: hotels with NULL product_id whose product exists (bulk approach)
+        $orphaned = db_get_fields(
+            "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0"
+        );
+
+        $linked = 0;
+        if (!empty($orphaned)) {
+            // Build all possible product_codes in one go, then bulk-fetch
+            $code_patterns = [];
+            foreach ($orphaned as $hotel_id) {
+                foreach ($prefixes as $prefix) {
+                    $code_patterns[] = $prefix . $hotel_id;
+                }
+            }
+
+            $product_map = [];
+            if (!empty($code_patterns)) {
+                $product_map = db_get_hash_single_array(
+                    "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                    ['product_code', 'product_id'], $code_patterns
+                );
+            }
+
+            // Now update matched hotels using the map (no per-hotel queries)
+            foreach ($orphaned as $hotel_id) {
+                foreach ($prefixes as $prefix) {
+                    $pid = $product_map[$prefix . $hotel_id] ?? null;
+                    if (!empty($pid)) {
+                        db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+                            $pid, $hotel_id);
+                        $linked++;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 2. Cleanup: clear product_id pointing to deleted products
+        $cleaned = db_query(
+            "UPDATE ?:novoton_hotels h
+             LEFT JOIN ?:products p ON h.product_id = p.product_id
+             SET h.product_id = NULL
+             WHERE h.product_id > 0 AND p.product_id IS NULL"
+        );
+
+        if ($linked > 0 || $cleaned > 0) {
+            $this->output("Reconciliation: re-linked {$linked} hotels, cleared {$cleaned} stale references.");
+        }
     }
 
     /**
@@ -605,37 +748,11 @@ class BatchedHotelInfoSync
     }
 
     /**
-     * Get configured countries from addon settings
+     * Get configured countries — delegates to Config::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-        $countries = [];
-
-        if (!empty($addon_settings['selected_countries'])) {
-            $sel = $addon_settings['selected_countries'];
-            if (is_array($sel)) {
-                foreach ($sel as $k => $v) {
-                    if ($v === 'Y' || $v === '1' || $v === 1) {
-                        $countries[] = strtoupper(trim($k));
-                    } elseif (is_string($v) && strlen($v) > 2) {
-                        $countries[] = strtoupper(trim($v));
-                    }
-                }
-            } elseif (is_string($sel)) {
-                $countries = array_map(function ($c) {
-                    return strtoupper(trim($c));
-                }, explode(',', $sel));
-            }
-        }
-
-        $countries = array_filter($countries);
-
-        if (empty($countries)) {
-            $countries = ['BULGARIA', 'GREECE', 'TURKEY', 'EGYPT'];
-        }
-
-        return $countries;
+        return Config::getSelectedCountries();
     }
 
     /**

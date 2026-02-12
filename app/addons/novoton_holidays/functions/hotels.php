@@ -432,8 +432,84 @@ function fn_novoton_get_or_create_category($path)
 }
 
 /**
+ * Sync resort list from API (resort_list endpoint)
+ * Stores the authoritative resort names that room_price API accepts.
+ *
+ * @param string $country Country name (default: BULGARIA)
+ * @return array Result with counts
+ */
+function fn_novoton_sync_resorts_list($country = 'BULGARIA')
+{
+    $api = fn_novoton_get_api();
+    if (!$api) {
+        return ['success' => false, 'error' => 'API not available'];
+    }
+
+    $result = [
+        'success' => true,
+        'added' => 0,
+        'updated' => 0,
+        'removed' => 0,
+        'total' => 0
+    ];
+
+    try {
+        $response = $api->getResortList($country);
+
+        if (empty($response)) {
+            return ['success' => false, 'error' => 'Empty API response'];
+        }
+
+        $resorts = $response->xpath('//Resort') ?: [];
+        $now = date('Y-m-d H:i:s');
+        $api_resort_names = [];
+
+        foreach ($resorts as $r) {
+            $name = trim((string)$r);
+            if (empty($name)) continue;
+
+            $result['total']++;
+            $api_resort_names[] = $name;
+
+            $exists = db_get_field(
+                "SELECT resort_name FROM ?:novoton_resorts WHERE resort_name = ?s AND country = ?s",
+                $name, $country
+            );
+
+            if ($exists) {
+                db_query(
+                    "UPDATE ?:novoton_resorts SET synced_at = ?s WHERE resort_name = ?s AND country = ?s",
+                    $now, $name, $country
+                );
+                $result['updated']++;
+            } else {
+                db_query(
+                    "INSERT INTO ?:novoton_resorts (resort_name, country, synced_at) VALUES (?s, ?s, ?s)",
+                    $name, $country, $now
+                );
+                $result['added']++;
+            }
+        }
+
+        // Remove resorts no longer in API response
+        if (!empty($api_resort_names)) {
+            $removed = db_query(
+                "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
+                $country, $api_resort_names
+            );
+            $result['removed'] = db_affected_rows();
+        }
+
+    } catch (\Exception $e) {
+        return ['success' => false, 'error' => $e->getMessage()];
+    }
+
+    return $result;
+}
+
+/**
  * Sync facilities list from API
- * 
+ *
  * @return array Result with counts
  */
 function fn_novoton_sync_facilities_list()

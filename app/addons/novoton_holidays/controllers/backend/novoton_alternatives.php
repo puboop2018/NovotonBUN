@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($request_id > 0) {
             $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-            
+            $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+
             if ($request && !empty($request['novoton_request_id'])) {
                 // Load API
                 $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
@@ -69,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($request_id > 0) {
             $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-            
+            $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+
             if ($request && !empty($request['alternatives_data'])) {
                 $alternatives = json_decode($request['alternatives_data'], true);
                 
@@ -192,10 +194,11 @@ if ($mode === 'manage') {
         $params[] = $status_filter;
     }
     
-    if (!empty($search_email)) {
-        $where[] = "contact_email LIKE ?l";
-        $params[] = '%' . $search_email . '%';
-    }
+    // Note: contact_email is AES-256 encrypted since v2.9.0.
+    // LIKE search no longer works on encrypted values. For new encrypted rows
+    // we must decrypt in PHP. For backward compat with pre-encryption rows,
+    // we keep the LIKE as a fallback and also filter decrypted results below.
+    $search_email_filter = $search_email;
     
     $where_sql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
     
@@ -212,13 +215,23 @@ if ($mode === 'manage') {
         ...array_merge($params, [$offset, $items_per_page])
     );
     
-    // Decode alternatives data
+    // Decrypt PII and decode alternatives data
+    $requests = fn_novoton_decrypt_requests_pii($requests);
+
+    // Post-decrypt email filter (LIKE doesn't work on encrypted data)
+    if (!empty($search_email_filter)) {
+        $requests = array_filter($requests, function($req) use ($search_email_filter) {
+            return stripos($req['contact_email'] ?? '', $search_email_filter) !== false;
+        });
+        $total_items = count($requests);
+    }
+
     foreach ($requests as &$req) {
         if (!empty($req['alternatives_data'])) {
             $req['alternatives'] = json_decode($req['alternatives_data'], true);
         }
     }
-    
+
     // Get status counts for tabs
     $status_counts = db_get_hash_single_array(
         "SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status",
@@ -240,7 +253,8 @@ if ($mode === 'view') {
     
     if ($request_id > 0) {
         $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-        
+        $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+
         if ($request) {
             if (!empty($request['alternatives_data'])) {
                 $request['alternatives'] = json_decode($request['alternatives_data'], true);

@@ -13,6 +13,66 @@ use Tygh\Registry;
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 /**
+ * Decrypt encrypted PII fields on an alternative request row.
+ *
+ * Since v2.9.0, contact_email, contact_phone and notes are stored
+ * AES-256-CBC encrypted via SecurityService::encrypt(). This helper
+ * transparently decrypts them so callers (admin views, cron, email
+ * sending) can work with plaintext.
+ *
+ * Safe to call on rows that were stored before encryption was introduced:
+ * decrypt() returns null on non-encrypted strings, and the helper falls
+ * back to the original value in that case.
+ *
+ * @param array $request  Single row from novoton_alternative_requests
+ * @return array          Same row with decrypted PII fields
+ */
+function fn_novoton_decrypt_request_pii(array $request): array
+{
+    // Lazy-load SecurityService (works in both controller and cron context)
+    static $security = null;
+    if ($security === null) {
+        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/services/ServiceLoader.php';
+        if (file_exists($loader)) {
+            require_once $loader;
+        }
+        if (function_exists('_nvt_security_service')) {
+            $security = _nvt_security_service();
+        }
+    }
+
+    if ($security === null) {
+        return $request;
+    }
+
+    foreach (['contact_email', 'contact_phone', 'notes'] as $field) {
+        if (!empty($request[$field])) {
+            $decrypted = $security->decrypt($request[$field]);
+            if ($decrypted !== null) {
+                $request[$field] = $decrypted;
+            }
+            // else: value was stored in plaintext (pre-encryption) — keep as-is
+        }
+    }
+
+    return $request;
+}
+
+/**
+ * Decrypt PII fields on an array of alternative request rows.
+ *
+ * @param array $requests  Array of rows from novoton_alternative_requests
+ * @return array           Same rows with decrypted PII fields
+ */
+function fn_novoton_decrypt_requests_pii(array $requests): array
+{
+    foreach ($requests as &$request) {
+        $request = fn_novoton_decrypt_request_pii($request);
+    }
+    return $requests;
+}
+
+/**
  * Check reservation status from Novoton API
  * 
  * @param int $booking_id Booking ID (0 = check all pending)

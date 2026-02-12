@@ -21,12 +21,12 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  */
 function fn_novoton_holidays_uninstall()
 {
-    // Remove AJAX price handler from CS-Cart root
+    // Clean up legacy AJAX price handler from CS-Cart root (if still present from older versions)
     $ajax_file = Registry::get('config.dir.root') . '/novoton_ajax_price.php';
     if (file_exists($ajax_file)) {
         @unlink($ajax_file);
     }
-    
+
     // Remove product tabs
     $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");
     if (!empty($tab_ids)) {
@@ -126,14 +126,13 @@ function fn_novoton_holidays_fix_tab_name($tab_id = null)
  */
 function fn_novoton_holidays_post_install()
 {
-    // Copy AJAX price handler to CS-Cart root
-    $source = Registry::get('config.dir.addons') . 'novoton_holidays/ajax_price.php';
-    $dest = Registry::get('config.dir.root') . '/novoton_ajax_price.php';
-    
-    if (file_exists($source) && !file_exists($dest)) {
-        @copy($source, $dest);
+    // Legacy: standalone ajax_price.php no longer needed — controller mode used instead.
+    // Clean up any leftover copy in CS-Cart root from prior versions.
+    $legacy_ajax = Registry::get('config.dir.root') . '/novoton_ajax_price.php';
+    if (file_exists($legacy_ajax)) {
+        @unlink($legacy_ajax);
     }
-    
+
     // Find the tab created by CS-Cart
     $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");
     

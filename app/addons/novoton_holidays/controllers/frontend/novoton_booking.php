@@ -46,6 +46,20 @@ function _nvt_get_cache_service() {
     return _nvt_cache_service();
 }
 
+// Service delegation helpers (wired up for gradual migration from inline code)
+function _nvt_get_search_service() {
+    return _nvt_search_service();
+}
+function _nvt_get_booking_service() {
+    return _nvt_booking_service();
+}
+function _nvt_get_price_service() {
+    return _nvt_price_service();
+}
+function _nvt_get_security_service() {
+    return _nvt_security_service();
+}
+
 //=============================================================================
 // CACHING HELPERS
 // A72: Use CacheService::remember() for caching. Example:
@@ -300,9 +314,11 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
 
 // Search availability
 if ($mode == 'search') {
-    
-    $searchParams = $_REQUEST;
-    
+
+    // Validate and sanitize search input via SecurityService
+    $security = _nvt_get_security_service();
+    $searchParams = $security->validateSearchParams($_REQUEST);
+
     // Validate required fields
     $check_in = !empty($searchParams['check_in']) ? $searchParams['check_in'] : '';
     
@@ -2095,15 +2111,25 @@ if ($mode == 'booking_form') {
 
 // Add to cart (with guest details from booking form)
 if ($mode == 'add_to_cart') {
-    
+
+    // --- Security: Rate limiting ---
+    $security = _nvt_get_security_service();
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : Tygh::$app['session']->getID();
+    if (!$security->checkBookingRateLimit($rate_limit_id)) {
+        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'add_to_cart', 'identifier' => $rate_limit_id]);
+        fn_set_notification('E', __('error'), 'Too many booking requests. Please try again later.');
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
     $bookingData = $_REQUEST;
-    
+
     // Fix room_id: PHP URL decoding converts + to space, restore it
     // Pattern: "DBL 2 1)" should be "DBL 2+1)"
     if (!empty($bookingData['room_id'])) {
         $bookingData['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $bookingData['room_id']);
     }
-    
+
     // Debug: Log RAW POST data for guests
     fn_log_event('general', 'runtime', [
         'message' => 'Novoton add_to_cart: RAW REQUEST DEBUG',
@@ -2114,7 +2140,7 @@ if ($mode == 'add_to_cart') {
         'REQUEST_guests_keys' => isset($_REQUEST['guests']) && is_array($_REQUEST['guests']) ? array_keys($_REQUEST['guests']) : 'NO KEYS',
         'REQUEST_guests_full' => isset($_REQUEST['guests']) ? $_REQUEST['guests'] : 'NO GUESTS IN REQUEST'
     ]);
-    
+
     // Debug: Log incoming data including guests
     fn_log_event('general', 'runtime', [
         'message' => 'Novoton add_to_cart: incoming data',
@@ -2124,10 +2150,21 @@ if ($mode == 'add_to_cart') {
         'guests_keys' => isset($bookingData['guests']) ? array_keys($bookingData['guests']) : 'NO GUESTS',
         'guests_data' => isset($bookingData['guests']) ? $bookingData['guests'] : 'NO GUESTS'
     ]);
-    
-    // Validate booking data
-    if (empty($bookingData['hotel_id']) || empty($bookingData['room_id']) || 
-        empty($bookingData['check_in']) || empty($bookingData['check_out'])) {
+
+    // --- Security: Validate booking data via SecurityService ---
+    $validation = $security->validateBookingData($bookingData);
+    if (!$validation['valid']) {
+        $security->logSecurityEvent('booking_validation_failed', [
+            'mode' => 'add_to_cart',
+            'errors' => $validation['errors'],
+            'hotel_id' => $bookingData['hotel_id'] ?? ''
+        ]);
+        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
+    // Validate room_id is also present (not checked by SecurityService)
+    if (empty($bookingData['room_id'])) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
@@ -2155,10 +2192,10 @@ if ($mode == 'add_to_cart') {
     // Get hotel info using repository
     $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
     
-    // Process guest information
-    $guests = $bookingData['guests'] ?? [];
+    // Process guest information — sanitize via SecurityService
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $special_requests = $bookingData['special_requests'] ?? '';
+    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000));
     
     // Parse guests (no full DOB validation needed at add_to_cart, that happens in update_booking)
     $parsed_guests = _nvt_parse_and_validate_guests($guests, '', 0, '');
@@ -2621,12 +2658,16 @@ if ($mode == 'edit_booking') {
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
     
-    // Get booking record from database
+    // Get booking record — verify ownership (user_id or session_id)
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_session_id = Tygh::$app['session']->getID();
+
     $booking_record = db_get_row(
-        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i",
-        $booking_id
+        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+        $booking_id, $current_user_id, $current_session_id
     );
-    
+
     if (empty($booking_record)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
@@ -2813,21 +2854,41 @@ if ($mode == 'edit_booking') {
 
 // Update booking - process edited guest details
 if ($mode == 'update_booking') {
-    
+
+    $security = _nvt_get_security_service();
     $bookingData = $_REQUEST;
     $booking_id = intval($bookingData['booking_id'] ?? 0);
     $cart_id = $bookingData['cart_id'] ?? '';
-    
+
     if (empty($booking_id)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
-    
-    // Process guest information using helper function
-    $guests = $bookingData['guests'] ?? [];
+
+    // Verify booking ownership before allowing update
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_session_id = Tygh::$app['session']->getID();
+
+    $ownership_check = db_get_field(
+        "SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+        $booking_id, $current_user_id, $current_session_id
+    );
+    if (empty($ownership_check)) {
+        $security->logSecurityEvent('unauthorized_booking_update', [
+            'booking_id' => $booking_id,
+            'user_id' => $current_user_id,
+            'session_id' => $current_session_id
+        ]);
+        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
+
+    // Process guest information — sanitize via SecurityService
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $special_requests = $bookingData['special_requests'] ?? '';
-    
+    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000));
+
     // Get check-in date for age validation
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
     $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
@@ -2937,27 +2998,47 @@ if ($mode == 'update_booking') {
  * Uses hotel_request API to request alternatives from Novoton
  */
 if ($mode == 'request_alternatives') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $hotel_name = $_REQUEST['hotel_name'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? '';
+    $security = _nvt_get_security_service();
+
+    // --- Rate limiting ---
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $rate_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : Tygh::$app['session']->getID();
+    if (!$security->checkBookingRateLimit($rate_id)) {
+        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'request_alternatives', 'identifier' => $rate_id]);
+        fn_set_notification('E', __('error'), 'Too many requests. Please try again later.');
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
+    // --- Validate and sanitize search params ---
+    $searchValidation = $security->validateSearchParams($_REQUEST);
+    $sanitized = $searchValidation['sanitized'] ?? [];
+
+    $hotel_id = $sanitized['hotel_id'] ?? '';
+    $hotel_name = strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200));
+    $check_in = $sanitized['check_in'] ?? '';
     $check_out = $_REQUEST['check_out'] ?? '';
-    $nights = intval($_REQUEST['nights'] ?? 7);
-    $adults = intval($_REQUEST['adults'] ?? 2);
-    $children = intval($_REQUEST['children'] ?? 0);
-    $num_rooms = intval($_REQUEST['num_rooms'] ?? 1);
+    $nights = $sanitized['nights'] ?? 7;
+    $adults = $sanitized['adults'] ?? 2;
+    $children = $sanitized['children'] ?? 0;
+    $num_rooms = $sanitized['rooms'] ?? 1;
     $contact_email = trim($_REQUEST['contact_email'] ?? '');
     $contact_phone = trim($_REQUEST['contact_phone'] ?? '');
-    $notes = trim($_REQUEST['notes'] ?? '');
-    
+    $notes = strip_tags(mb_substr(trim($_REQUEST['notes'] ?? ''), 0, 2000));
+
     if (empty($hotel_id) || empty($check_in) || empty($contact_email)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.missing_required_fields'));
-        return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . $hotel_id)];
+        return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];
     }
-    
+
     // Validate email
     if (!filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_email'));
-        return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . $hotel_id)];
+        return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];
+    }
+
+    // Validate check_out date format
+    if (!empty($check_out) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $check_out)) {
+        $check_out = '';
     }
     
     // Load API
@@ -3004,6 +3085,7 @@ if ($mode == 'request_alternatives') {
         $apiResult = $api->createHotelRequest($requestData, 'UK', true);
         
         // Store the request in database with XML sent
+        // Encrypt PII fields (contact email, phone, notes) for GDPR compliance
         $request_record = [
             'hotel_id' => $hotel_id,
             'hotel_name' => $hotel_name,
@@ -3013,15 +3095,20 @@ if ($mode == 'request_alternatives') {
             'adults' => $adults,
             'children' => $children,
             'num_rooms' => $num_rooms,
-            'contact_email' => $contact_email,
-            'contact_phone' => $contact_phone,
-            'notes' => $notes,
+            'contact_email' => $security->encrypt($contact_email),
+            'contact_phone' => !empty($contact_phone) ? $security->encrypt($contact_phone) : '',
+            'notes' => !empty($notes) ? $security->encrypt($notes) : '',
             'status' => 'pending',
             'api_request_xml' => $apiResult['xml_sent'] ?? '',
             'api_response' => $apiResult['xml_response'] ?? '',
             'novoton_request_id' => $apiResult['id_num'] ?? '',
             'created_at' => date('Y-m-d H:i:s')
         ];
+
+        $security->logSecurityEvent('alternative_request_created', [
+            'hotel_id' => $hotel_id,
+            'novoton_request_id' => $apiResult['id_num'] ?? ''
+        ]);
         
         db_query("INSERT INTO ?:novoton_alternative_requests ?e", $request_record);
         $request_id = db_get_field("SELECT LAST_INSERT_ID()");
@@ -3056,7 +3143,7 @@ if ($mode == 'request_alternatives') {
             'error' => $e->getMessage()
         ]);
         
-        // Still save the request even if API fails
+        // Still save the request even if API fails — encrypt PII
         $request_record = [
             'hotel_id' => $hotel_id,
             'hotel_name' => $hotel_name,
@@ -3066,9 +3153,9 @@ if ($mode == 'request_alternatives') {
             'adults' => $adults,
             'children' => $children,
             'num_rooms' => $num_rooms,
-            'contact_email' => $contact_email,
-            'contact_phone' => $contact_phone,
-            'notes' => $notes,
+            'contact_email' => $security->encrypt($contact_email),
+            'contact_phone' => !empty($contact_phone) ? $security->encrypt($contact_phone) : '',
+            'notes' => !empty($notes) ? $security->encrypt($notes) : '',
             'status' => 'pending_manual',
             'api_response' => $e->getMessage(),
             'created_at' => date('Y-m-d H:i:s')

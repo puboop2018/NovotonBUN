@@ -16,6 +16,26 @@ if (empty($mode)) {
     $mode = 'manage';
 }
 
+/**
+ * Validate return_url to prevent open redirects.
+ * Only allows relative URLs or same-origin URLs.
+ */
+function _nvt_validate_return_url($url)
+{
+    if (empty($url)) {
+        return '';
+    }
+    // Block absolute URLs with a different host
+    $parsed = parse_url($url);
+    if (!empty($parsed['scheme']) || !empty($parsed['host'])) {
+        // Absolute URL — only allow if same host
+        if (!empty($parsed['host']) && $parsed['host'] !== ($_SERVER['HTTP_HOST'] ?? '')) {
+            return '';
+        }
+    }
+    return $url;
+}
+
 // Check permissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -26,9 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $results = fn_novoton_check_reservation_status($booking_id);
         
         fn_set_notification('N', __('notice'), __('novoton_holidays.status_checked'));
-        
-        if (!empty($_REQUEST['return_url'])) {
-            return array(CONTROLLER_STATUS_REDIRECT, $_REQUEST['return_url']);
+
+        $return_url = _nvt_validate_return_url($_REQUEST['return_url'] ?? '');
+        if (!empty($return_url)) {
+            return array(CONTROLLER_STATUS_REDIRECT, $return_url);
         }
         return array(CONTROLLER_STATUS_OK, 'novoton_bookings.manage');
     }
@@ -47,8 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        if (!empty($_REQUEST['return_url'])) {
-            return array(CONTROLLER_STATUS_REDIRECT, $_REQUEST['return_url']);
+        $return_url = _nvt_validate_return_url($_REQUEST['return_url'] ?? '');
+        if (!empty($return_url)) {
+            return array(CONTROLLER_STATUS_REDIRECT, $return_url);
         }
         return array(CONTROLLER_STATUS_OK, 'novoton_bookings.manage');
     }
