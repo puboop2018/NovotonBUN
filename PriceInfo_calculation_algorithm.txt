@@ -2,8 +2,8 @@
                     PRICEINFO CALCULATION ALGORITHM
 ================================================================================
 
-Document Version: 1.0
-Last Updated: 2026-02-10
+Document Version: 1.1
+Last Updated: 2026-02-12
 Repository: NovotonAddonRepoA
 
 ================================================================================
@@ -46,7 +46,7 @@ Location: /app/addons/novoton_holidays/services/PriceInfoCalculation.php
 
 CALCULATION FILES:
 ------------------
-- PriceInfoCalculation.php  - Main calculation engine (~1,722 lines)
+- PriceInfoCalculation.php  - Main calculation engine
 - PriceInfoService.php      - Retrieval and formatting of stored priceinfo
 - PriceService.php          - Utility service for price calculations
 - PriceInfoSync.php         - Synchronizes priceinfo from API to database
@@ -60,7 +60,7 @@ DATA STORAGE:
 
 TESTING/VERIFICATION:
 ---------------------
-- novoton_price_compare.php - Admin tool for price comparison
+- novoton_price_compare.php - Admin tool for price comparison (shows all 9 steps)
 
 ================================================================================
 3. DATA STRUCTURES
@@ -103,14 +103,20 @@ OCCUPANCY STRUCTURE:
 --------------------
 {
     "adults": [
-        {"age_type": "ADULT", "acc_type": "RB", "position": 1},
-        {"age_type": "ADULT", "acc_type": "RB", "position": 2},
-        {"age_type": "3RD ADULT", "acc_type": "EB", "position": 3}
+        {"age_type": "ADULT", "acc_type": "RB", "bed_type": "REGULAR", "index": 1},
+        {"age_type": "ADULT", "acc_type": "RB", "bed_type": "REGULAR", "index": 2},
+        {"age_type": "3RD ADULT", "acc_type": "EB", "bed_type": "EXTRA BED", "index": 3}
     ],
     "children": [
-        {"age": 5, "age_type": "1ST CHD 2-11,99", "acc_type": "EB", "position": 1}
-    ]
+        {"age": 5, "age_type": "1ST CHD 2-11,99", "acc_type": "EB",
+         "age_band": "2-11,99", "by_1_ad": false, "index": 1}
+    ],
+    "children_as_adults": []
 }
+
+Note: Children whose age band has no pricing rows for the given room/board
+are reclassified into the "children_as_adults" array and priced as extra
+adults (3RD ADULT, 4TH ADULT, etc.).
 
 ================================================================================
 4. CALCULATION FLOW (Step-by-Step)
@@ -205,30 +211,56 @@ STEP 9: APPLY COMMISSION
 5. BASE PRICE CALCULATION
 ================================================================================
 
+INITIALIZATION:
+---------------
+Before calculation begins:
+- buildCodeIndex() creates a lookup map: code_number -> [rows]
+  Used for recursive Code/Base price resolution.
+- parseChildAgeBands() extracts hotel-specific age bands from hotelinfo.
+- idStar is set from params (e.g., '4*', '5*') for star-category filtering.
+
 ALGORITHM:
 ----------
 For each night of stay:
     1. Determine season for this date
     2. Get price column (Price1, Price2, etc.) from season
-    3. For each person (adults + children):
-        a. Find matching season_price row:
+    3. For each person (adults + children + children_as_adults):
+        a. Find matching season_price row via findSeasonPriceRow():
            - Room matches
            - Board matches
            - IdAge matches person's age_type
            - AccType matches person's acc_type (RB/EB)
            - Stay length within FromDays-ToDays range
-        b. Get price value from row:
+           - IdStar matches hotel's star category (if row has IdStar)
+        b. Resolve price via resolvePrice():
            - If numeric: use directly
            - If percentage string (e.g., "80%"):
-             Calculate from Base row's price
-           - If Code is percentage type:
-             Calculate from Base row's price
+             Calculate from Base code row's price
+           - If Code references another code number:
+             Recursively resolve through codeIndex until a numeric
+             Base price is found (loop detection prevents infinite cycles)
         c. Handle RoomPrice='Yes':
            - Charge once per room, not per person
            - Only first matching person pays
     4. Sum all person prices for the night
 
 Total Base Price = Sum of all night totals
+
+IDSTAR MATCHING:
+----------------
+Season_price rows may have an IdStar field (e.g., '3*', '4*', '5*').
+When present, the row is only used if it matches the hotel's star category.
+Rows without IdStar apply to all star categories.
+
+CODE/BASE RECURSIVE RESOLUTION:
+-------------------------------
+Some season_price rows have a Code that references another code number
+instead of containing a direct price. resolvePrice() follows the chain:
+
+  Row Code="Pct2" -> codeIndex["Pct2"] -> Row Code="Base" -> numeric price
+
+A visited-codes set prevents infinite loops. If no Base is found, the
+percentage is applied to 0 (resulting in 0).
 
 PERCENTAGE CALCULATION:
 -----------------------
@@ -240,12 +272,19 @@ Result = 100.00 * (80 / 100) = 80.00
 6. SUPPLEMENTS/FEES CALCULATION
 ================================================================================
 
+IDAGE NORMALIZATION FOR FEES (feeKey):
+--------------------------------------
+Before matching persons in extras_daily and handling_fee, the IdAge value
+is normalized by stripping any trailing "BY X AD" suffix.
+Example: "ADULT BY 1 AD" -> "ADULT"
+This ensures fee rows with the suffix still match the correct occupants.
+
 EXTRAS_DAILY:
 -------------
 - Per-person daily charges
 - Has Type handling (see Section 10)
 - Has date range restrictions (FromDate/ToDate)
-- Person matching via IdAge field
+- Person matching via IdAge field (normalized with feeKey)
 Formula: price * matching_persons * applicable_nights
 
 EXTRAS_SINGLE:
@@ -272,7 +311,10 @@ Formula: price * applicable_persons_or_rooms * nights
 HANDLING_FEE:
 -------------
 - Tiered fee based on stay length
-- Uses FromDays/ToDays and FromDate/ToDate for matching
+- Uses FromDays/ToDays for stay-length matching
+- FromDate/ToDate check is OPTIONAL: only validated if both dates are present
+  in the handling_fee entry; if missing, any date qualifies
+- Person matching via IdAge field (normalized with feeKey)
 - Price1 for shorter stays, Price2 for longer stays
 - Applied once per booking
 Formula: matching_fee_price
@@ -338,15 +380,12 @@ PRIORITY = 'Yes' (NOT Combinable):
 ----------------------------------
 Only ONE discount can apply. PriorityEB and PriorityEXT determine selection:
 
-Case 1: PriorityEB = 'Yes', PriorityEXT = 'No'
+Case 1: PriorityEB = 'Yes'
    -> Early Booking has FORCED priority (use EB regardless of which is better)
 
-Case 2: PriorityEB = 'No', PriorityEXT = 'Yes'
-   -> Can CHOOSE: pick the discount with BETTER SAVINGS (lower final price)
-
-Note: When PriorityEB = 'Yes', EB is always used if applicable.
-      When PriorityEXT = 'Yes' (and PriorityEB = 'No'), the system selects
-      whichever discount gives the customer a better deal.
+Case 2: PriorityEB = 'No' (or not set)
+   -> Compare scenario prices: pick whichever gives the lower final price
+   -> Tie-breaker: if both produce the same price, EB is preferred (<=)
 
 PRIORITY = 'No' (Combinable):
 -----------------------------
@@ -415,8 +454,8 @@ ADULT MATCHING:
 
 CHILD MATCHING:
 ---------------
-- "CHD 0-1" / "CHILD 0-1"     -> Children age 0-1.99 (infants)
-- "CHD 2-11" / "CHILD 2-11"   -> Children age 2-11.99
+- "CHD 0-1" / "CHILD 0-1"     -> Children in age range 0-1.99
+- "CHD 2-11" / "CHILD 2-11"   -> Children in age range 2-11.99
 - "1ST CHD" / "1ST CHILD"     -> First child only
 - "2ND CHD" / "2ND CHILD"     -> Second child only
 - "INFANT" / "INF"            -> Age < 2
@@ -424,9 +463,31 @@ CHILD MATCHING:
 POSITION-BASED MATCHING:
 ------------------------
 IdAge values like "1ST CHD 2-11,99" are positional:
-- Position is extracted from the string
+- Position is extracted from the ordinal prefix (1ST, 2ND, 3RD, etc.)
 - Only the child at that specific position is matched
-- Age range is still validated
+- Note: the age range portion is NOT validated for positional patterns;
+  only the position count matters
+
+DYNAMIC CHILD AGE BANDS:
+-------------------------
+Age bands are parsed from hotelinfo at calculation time, NOT hardcoded.
+
+parseChildAgeBands() reads from hotelinfo data:
+- Extracts age ranges per hotel (e.g., 0-1.99, 2-13.99, 14-17.99)
+- Different hotels can have different band definitions
+- Bands are sorted by starting age
+
+getAvailableChildAgeBands() checks which bands have pricing rows:
+- For the given room/board, queries season_price for matching IdAge rows
+- Only bands with at least one pricing row are considered "available"
+
+CHILD RECLASSIFICATION:
+-----------------------
+When a child's age band has NO pricing rows for the selected room/board:
+- The child is removed from the children array
+- Reclassified as an extra adult (3RD ADULT, 4TH ADULT, etc.)
+- Moved to the "children_as_adults" array in the occupancy structure
+- Priced using adult extra bed rates instead
 
 ================================================================================
 12. RESULT STRUCTURE
@@ -441,7 +502,7 @@ The calculate() method returns:
     "commission": 15,                    // Commission percentage
     "breakdown": {
         "base_price": 700.00,
-        "base_per_night": [              // By-night breakdown
+        "base_per_night": [
             {"date": "2026-03-01", "price": 100.00, ...},
             {"date": "2026-03-02", "price": 100.00, ...}
         ],
@@ -456,27 +517,34 @@ The calculate() method returns:
         },
         "discounts": {
             "early_booking": {
-                "percentage": 10,
-                "base_discount": 70.00,
-                "daily_discount": 5.00,
-                "rooms_discount": 3.00,
-                "board_discount": 2.00,
-                "total": 80.00
+                "applicable": true,
+                "discount": 80.00,
+                "percent": 10,
+                "discount_breakdown": {
+                    "base": 70.00,
+                    "daily": 5.00,
+                    "rooms": 3.00,
+                    "board": 2.00
+                }
             },
             "reduction": {
+                "applicable": true,
+                "discount": 114.29,
                 "free_nights": 1,
-                "type": "End",
-                "base_reduction": 100.00,
-                "daily_reduction": 7.14,
-                "rooms_reduction": 4.29,
-                "board_reduction": 2.86,
-                "total": 114.29
+                "free_night_indices": [6],
+                "discount_breakdown": {
+                    "base": 100.00,
+                    "daily": 7.14,
+                    "rooms": 4.29,
+                    "board": 2.86
+                }
             }
         },
-        "applied_discount": "reduction",  // Which discount was used
-        "discount_amount": 114.29
+        "applied_discount": "reduction",
+        "discount_amount": 114.29,
+        "child_age_bands": [...]         // Hotel-specific age band definitions
     },
-    "occupancy": {...},                  // Guest structure
+    "occupancy": {...},                  // Guest structure incl. children_as_adults
     "debug_log": [...]                   // If debug enabled
 }
 
@@ -503,11 +571,10 @@ If Priority='No' (combinable):
 
 If Priority='Yes' (not combinable):
     If PriorityEB='Yes':
-        Applied_Discounts = EB_discount
-    Else If PriorityEXT='Yes':
-        Applied_Discounts = Reduction_discount
+        Applied_Discounts = EB_discount (forced)
     Else:
-        Applied_Discounts = MAX(EB_discount, Reduction_discount)
+        Applied_Discounts = whichever of EB or Reduction gives lower price
+        (EB preferred when equal)
 
 FINAL PRICE:
 ------------
@@ -551,11 +618,19 @@ KEY METHODS REFERENCE
 | calculateEarlyBookingDiscount()| EB discount with supplement flags        |
 | calculateReduction()          | Free nights with proportional reduction   |
 | applyPriorityRules()          | Selects best discount scenario            |
-| buildOccupancyStructure()     | Maps guests to bed types                  |
+| buildOccupancyStructure()     | Maps guests to bed types + reclassifies   |
+| parseChildAgeBands()          | Extracts hotel-specific age bands         |
+| getAvailableChildAgeBands()   | Checks which bands have pricing rows      |
+| hasAdultExtraBedPricing()     | Checks if room has 3RD+ ADULT EB pricing  |
+| buildCodeIndex()              | Creates code->rows lookup for resolution  |
+| resolvePrice()                | Recursive Code/Base price resolution      |
+| feeKey()                      | Strips "BY X AD" suffix from IdAge        |
+| toScalar()                    | Extracts scalar from array/object fields  |
+| formatAgeBandLabel()          | Formats age band labels (comma decimal)   |
 | getSeasonsByNight()           | Maps nights to seasons                    |
 | countMatchingPersons()        | Counts guests matching IdAge criteria     |
 | countOverlappingNights()      | Counts nights within date range           |
-| findSeasonPriceRow()          | Finds applicable price row                |
+| findSeasonPriceRow()          | Finds price row (with IdStar filtering)   |
 | getPriceFromRow()             | Extracts price, handles percentages       |
 
 ================================================================================
