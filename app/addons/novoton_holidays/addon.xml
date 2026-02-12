@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>3.0.0-A85</version>
+    <version>3.0.0-A86</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
@@ -873,34 +873,89 @@
                     <ro><![CDATA[Detalii Rezervare Novoton]]></ro>
                 </name>
                 <default_template><![CDATA[{# Novoton Booking Details & Terms - Use: {{ snippet("novoton_booking") }} #}
-{# Handles multiple rooms/hotels: shows each booking, terms only once per hotel #}
+{# Enhanced format with hotel location, guest names, payment amounts #}
 {% set seen_hotels = [] %}
 {% for product in order_info.products %}
   {% if product.extra.novoton_booking %}
     {% set hotel_id = product.extra.hotel_id|default('unknown') %}
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 20px 0;">
-  <tr><td style="padding: 15px;">
-    <p style="margin: 0 0 10px; font-weight: bold; color: #003580; font-size: 15px;">{{ product.extra.hotel_name|default(product.product) }}</p>
-    <table cellpadding="3" cellspacing="0" border="0" style="font-size: 13px; color: #333;">
-      <tr><td style="padding-right:10px;"><strong>Check-in:</strong></td><td>{{ product.extra.check_in }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>Check-out:</strong></td><td>{{ product.extra.check_out }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.nights")|default("Nights") }}:</strong></td><td>{{ product.extra.nights }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.room_type")|default("Room") }}:</strong></td><td>{{ product.extra.room_type_display|default(product.extra.room_name)|default(product.extra.room_id) }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.board")|default("Board") }}:</strong></td><td>{{ product.extra.board_display|default(product.extra.board_name)|default(product.extra.board_id) }}</td></tr>
-      <tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.guests")|default("Guests") }}:</strong></td><td>{{ product.extra.adults }} {{ __("novoton_holidays.adults")|default("adults") }}{% if product.extra.children %}, {{ product.extra.children }} {{ __("novoton_holidays.children")|default("children") }}{% endif %}</td></tr>
-      {% if product.extra.holder_name %}<tr><td style="padding-right:10px;"><strong>{{ __("novoton_holidays.holder")|default("Holder") }}:</strong></td><td>{{ product.extra.holder_name }}</td></tr>{% endif %}
+    {% set total_price = product.extra.total_price|default(product.price)|default(0) %}
+    {% set currency = product.extra.currency|default(order_info.secondary_currency|default('EUR')) %}
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 20px 0; border: 1px solid #e0e0e0;">
+  <tr><td style="padding: 15px; background: #f8f9fa;">
+    {# [1] Hotel, City, Region, Country - Title Case #}
+    {% set hotel_name = product.extra.hotel_name|default(product.product)|title %}
+    {% set city = product.extra.city|default('')|title %}
+    {% set region = product.extra.region|default('')|title %}
+    {% set country = product.extra.country|default('')|title %}
+    {% set location_parts = [] %}
+    {% if city %}{% set location_parts = location_parts|merge([city]) %}{% endif %}
+    {% if region and region != city %}{% set location_parts = location_parts|merge([region]) %}{% endif %}
+    {% if country %}{% set location_parts = location_parts|merge([country]) %}{% endif %}
+    <p style="margin: 0 0 12px; font-weight: bold; color: #003580; font-size: 16px;">{{ hotel_name }}{% if location_parts|length > 0 %}, {{ location_parts|join(', ') }}{% endif %}</p>
+
+    {# [2] Check-in | Check-out | Nights - single line with separators #}
+    <p style="margin: 0 0 10px; font-size: 14px; color: #333;">
+      <strong>Check-in:</strong> {{ product.extra.check_in_formatted|default(product.extra.check_in) }} |
+      <strong>Check-out:</strong> {{ product.extra.check_out_formatted|default(product.extra.check_out) }} |
+      <strong>{{ __("novoton_holidays.nights")|default("Nopți")|title }}:</strong> {{ product.extra.nights }}
+    </p>
+
+    {# Room Type and Board #}
+    <table cellpadding="3" cellspacing="0" border="0" style="font-size: 13px; color: #333; margin-bottom: 10px;">
+      <tr>
+        <td style="padding-right:10px;"><strong>{{ __("novoton_holidays.room_type")|default("Tip Cameră") }}:</strong></td>
+        <td>{{ product.extra.room_type_display|default(product.extra.room_name)|default(product.extra.room_id) }}</td>
+      </tr>
+      <tr>
+        <td style="padding-right:10px;"><strong>{{ __("novoton_holidays.board")|default("Masă") }}:</strong></td>
+        <td>{{ product.extra.board_display|default(product.extra.board_name)|default(product.extra.board_id) }}</td>
+      </tr>
+      <tr>
+        <td style="padding-right:10px;"><strong>{{ __("novoton_holidays.tourists")|default("Turiști") }}:</strong></td>
+        <td>{{ product.extra.adults }} {{ __("novoton_holidays.adults_label")|default("Adulți") }}{% if product.extra.children %}, {{ product.extra.children }} {{ __("novoton_holidays.children_label")|default("Copii") }}{% endif %}</td>
+      </tr>
     </table>
-    {# Show terms only once per hotel (not duplicated for each room) #}
+
+    {# [3] Guest Names with type and age #}
+    {% set guests_data = product.extra.guests_data %}
+    {% if guests_data is iterable and guests_data|length > 0 %}
+    <p style="margin: 10px 0 5px; font-size: 13px;"><strong>{{ __("novoton_holidays.guest_names")|default("Nume turiști") }}:</strong></p>
+    <table cellpadding="2" cellspacing="0" border="0" style="font-size: 13px; color: #333; margin-left: 10px;">
+      {% for guest_key, guest in guests_data %}
+        {% set guest_name = guest.display_name|default(guest.name)|default('') %}
+        {% set guest_type = guest.type|default('adult') %}
+        {% set guest_age = guest.age|default(0) %}
+        {% set is_holder = guest.is_holder|default(false) %}
+        {% if guest_name %}
+        <tr>
+          <td style="padding: 2px 0;">
+            {{ guest_name }}
+            <span style="color: #666; font-size: 12px;">
+              ({{ guest_type|default('adult') }}{% if guest_type == 'child' and guest_age %}, {{ guest_age }} {{ __("novoton_holidays.years")|default("ani") }}{% endif %})
+            </span>
+            {% if is_holder or loop.first %}<strong style="color: #003580; margin-left: 5px;">Holder</strong>{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    {# Show terms only once per hotel #}
     {% if hotel_id not in seen_hotels %}
-      {% set payment_terms = product.extra.terms_of_payment_formatted|default(product.extra.terms_of_payment)|default('') %}
-      {% set cancel_terms = product.extra.terms_of_cancellation_formatted|default(product.extra.terms_of_cancellation)|default('') %}
+      {# [4] Payment Terms with calculated amounts #}
+      {% set payment_terms_with_amounts = product.extra.terms_of_payment_with_amounts|default('') %}
+      {% set payment_terms = payment_terms_with_amounts|default(product.extra.terms_of_payment_formatted)|default(product.extra.terms_of_payment)|default('') %}
       {% if payment_terms %}
-    <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.terms_of_payment")|default("Payment Terms") }}</strong></p>
-    <p style="margin: 0; color: #555; white-space: pre-line;">{{ payment_terms }}</p>
+    <p style="margin: 15px 0 5px; font-size: 13px;"><strong>{{ __("novoton_holidays.payment_conditions")|default("Condiții de plată") }}</strong></p>
+    <p style="margin: 0; color: #333; font-size: 13px; white-space: pre-line; line-height: 1.6;">{{ payment_terms|raw }}</p>
       {% endif %}
+
+      {# Cancellation Terms #}
+      {% set cancel_terms = product.extra.terms_of_cancellation_formatted|default(product.extra.terms_of_cancellation)|default('') %}
       {% if cancel_terms %}
-    <p style="margin: 15px 0 5px;"><strong>{{ __("novoton_holidays.cancellation_terms")|default("Cancellation Terms") }}</strong></p>
-    <p style="margin: 0; color: #555; white-space: pre-line;">{{ cancel_terms }}</p>
+    <p style="margin: 15px 0 5px; font-size: 13px;"><strong>{{ __("novoton_holidays.cancellation_conditions")|default("Condiții de anulare") }}</strong></p>
+    <p style="margin: 0; color: #333; font-size: 13px; white-space: pre-line; line-height: 1.6;">{{ cancel_terms|raw }}</p>
       {% endif %}
       {% set seen_hotels = seen_hotels|merge([hotel_id]) %}
     {% endif %}
