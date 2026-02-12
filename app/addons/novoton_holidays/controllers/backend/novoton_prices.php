@@ -213,7 +213,7 @@ if ($mode == 'check_prices') {
 
     // Also get all hotels for this country (to map hotel_id -> hotel_name and mark results)
     $all_hotels = db_get_hash_array(
-        "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+        "SELECT hotel_id, hotel_name, city, product_id, has_prices FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
         'hotel_id',
         $country
     );
@@ -281,17 +281,23 @@ if ($mode == 'check_prices') {
             flush();
         }
 
-        // Step 4: Fallback per-hotel check for hotels not found in any resort query.
-        // This catches hotels whose DB city doesn't match the API's resort mapping.
+        // Step 4: Targeted fallback for hotels not found in any resort query.
+        // Only re-check hotels that PREVIOUSLY had prices (has_prices = 'Y').
+        // These are the likely city/resort mismatches — avoids checking all ~692
+        // no-price hotels when only ~12 are actual mismatches.
         $not_found_in_resorts = array_diff_key($all_hotels, $hotels_with_prices);
+        $fallback_candidates = array_filter($not_found_in_resorts, function($h) {
+            return ($h['has_prices'] ?? '') === 'Y';
+        });
         $fallback_found = 0;
         $fallback_errors = 0;
+        $fallback_checked = count($fallback_candidates);
 
-        if (!empty($not_found_in_resorts)) {
-            echo "<br><div class='resort-header'>Fallback: checking " . count($not_found_in_resorts) . " hotels not found in any resort query...</div>\n";
+        if (!empty($fallback_candidates)) {
+            echo "<br><div class='resort-header'>Fallback: checking {$fallback_checked} hotels that previously had prices but weren't in any resort response...</div>\n";
             flush();
 
-            foreach ($not_found_in_resorts as $hotel_id => $hotel) {
+            foreach ($fallback_candidates as $hotel_id => $hotel) {
                 try {
                     $result = $api->getRoomPrice([
                         'hotel_id'  => $hotel_id,
@@ -310,7 +316,9 @@ if ($mode == 'check_prices') {
                     if ($has_prices) {
                         $hotels_with_prices[$hotel_id] = $hotel['city'] ?: '<no city>';
                         $fallback_found++;
-                        echo "<span class='success'>  ✓ {$hotel['hotel_name']} (city: " . htmlspecialchars($hotel['city'] ?: '<empty>') . ") — has prices but resort query missed it</span><br>\n";
+                        echo "<span class='success'>  ✓ {$hotel['hotel_name']} (city: " . htmlspecialchars($hotel['city'] ?: '<empty>') . ") — city/resort mismatch</span><br>\n";
+                    } else {
+                        echo "<span class='skip'>  ○ {$hotel['hotel_name']} — no longer has prices</span><br>\n";
                     }
                 } catch (Exception $e) {
                     $fallback_errors++;
@@ -321,11 +329,7 @@ if ($mode == 'check_prices') {
                 }
             }
 
-            if ($fallback_found > 0) {
-                echo "<span class='success'>  Fallback recovered {$fallback_found} hotels with prices</span><br>\n";
-            } else {
-                echo "<span class='skip'>  No additional hotels found via fallback</span><br>\n";
-            }
+            echo "<br><span class='success'>  Fallback: {$fallback_found}/{$fallback_checked} still have prices</span><br>\n";
         }
 
         // Step 5: Update database - mark hotels with/without prices
