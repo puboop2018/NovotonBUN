@@ -149,7 +149,7 @@ function fn_novoton_get_hotel_data($hotel_id, $force = false)
  * @param bool $force Force refresh
  * @return array Packages with prices data
  */
-function fn_novoton_get_hotel_prices($product_id, $force = false)
+function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = null)
 {
     static $cache = [];
 
@@ -157,8 +157,21 @@ function fn_novoton_get_hotel_prices($product_id, $force = false)
         return $cache[$product_id];
     }
 
-    $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
+    // Try product_id lookup first
     if (empty($hotel_id)) {
+        $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
+    }
+
+    // Fallback: extract hotel_id from product_code
+    if (empty($hotel_id)) {
+        $product_code = db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+        if (!empty($product_code) && preg_match('/\d+/', $product_code, $m)) {
+            $hotel_id = $m[0];
+        }
+    }
+
+    if (empty($hotel_id)) {
+        error_log("[Novoton Prices] No hotel_id found for product_id={$product_id}");
         return [];
     }
 
@@ -171,11 +184,19 @@ function fn_novoton_get_hotel_prices($product_id, $force = false)
     );
 
     if (empty($package) || empty($package['priceinfo_data'])) {
+        $total_pkgs = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s", $hotel_id);
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: no package with priceinfo_data (total packages: {$total_pkgs}). Run priceinfo sync.");
         return [];
     }
 
     $priceinfo = json_decode($package['priceinfo_data'], true);
-    if (empty($priceinfo) || empty($priceinfo['season_price'])) {
+    if (empty($priceinfo)) {
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: priceinfo_data JSON decode failed. Raw length: " . strlen($package['priceinfo_data']));
+        return [];
+    }
+    if (empty($priceinfo['season_price'])) {
+        $keys = implode(', ', array_keys($priceinfo));
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: priceinfo missing 'season_price'. Available keys: {$keys}");
         return [];
     }
 

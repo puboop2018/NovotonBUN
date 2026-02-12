@@ -320,13 +320,21 @@ class BatchedHotelInfoSync
         );
 
         if (empty($current_product_id)) {
-            // Try to find product by code pattern NVT{hotel_id}
-            $product_id = db_get_field(
-                "SELECT product_id FROM ?:products WHERE product_code LIKE ?l",
-                'NVT' . $hotel_id . '%'
-            );
-            if (!empty($product_id)) {
-                $update['product_id'] = $product_id;
+            // Try to find product by code pattern {prefix}{hotel_id} using configured prefixes
+            $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+            $prefixes = !empty($addon_settings['product_code_prefixes'])
+                ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
+                : ['NVT'];
+
+            foreach ($prefixes as $prefix) {
+                $product_id = db_get_field(
+                    "SELECT product_id FROM ?:products WHERE product_code = ?s",
+                    $prefix . $hotel_id
+                );
+                if (!empty($product_id)) {
+                    $update['product_id'] = $product_id;
+                    break;
+                }
             }
         }
 

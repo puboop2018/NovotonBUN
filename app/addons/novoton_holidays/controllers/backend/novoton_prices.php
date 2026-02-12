@@ -473,9 +473,18 @@ if ($mode == 'check_prices_hotel') {
 
                 // Check if result has any prices
                 $has_prices = false;
+                $min_price = 0;
                 if ($result instanceof \SimpleXMLElement) {
                     $prices = $result->xpath('//Price');
                     $has_prices = !empty($prices) && count($prices) > 0;
+                    if ($has_prices) {
+                        foreach ($prices as $p) {
+                            $pval = floatval((string)$p);
+                            if ($pval > 0 && ($min_price == 0 || $pval < $min_price)) {
+                                $min_price = $pval;
+                            }
+                        }
+                    }
                 }
 
                 // Update database
@@ -486,7 +495,8 @@ if ($mode == 'check_prices_hotel') {
 
                 if ($has_prices) {
                     $with_prices++;
-                    echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city})</span><br>\n";
+                    $price_display = $min_price > 0 ? ' | <strong>' . number_format($min_price, 2) . ' EUR</strong>' : '';
+                    echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city}){$price_display}</span><br>\n";
                 } else {
                     $no_prices++;
                     // Only show first 20 without prices to avoid clutter

@@ -915,7 +915,7 @@ function showPriceError(message) {
         submitBtn.title = '{__("novoton_holidays.price_must_be_verified")|default:"Prețul trebuie verificat înainte de a continua"}';
     }
     if (availBadge) {
-        availBadge.style.background = '#F59E0B';
+        availBadge.style.setProperty('background', '#F59E0B', 'important');
         availBadge.innerHTML = '<strong>{__("novoton_holidays.unavailable_for_child_age")|default:"Indisponibil"}</strong><br><span style="font-size:11px;">{__("novoton_holidays.unavailable_for_child_age_sub")|default:"pentru vârsta copilului"}</span>';
     }
 }
@@ -938,7 +938,7 @@ function hidePriceError() {
         submitBtn.title = '';
     }
     if (availBadge) {
-        availBadge.style.background = '#28a745';
+        availBadge.style.setProperty('background', '#28a745', 'important');
         availBadge.innerHTML = '✓ {__("novoton_holidays.available")|default:"Disponibil"}';
     }
 }

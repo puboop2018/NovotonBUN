@@ -48,45 +48,43 @@
             {* Use hotel_id as key to group by hotel *}
             {$_hotel_id = $product.extra.hotel_id|default:$item_id}
 
-            {* Skip if we already have terms for this hotel *}
-            {if isset($_nv_hotels_terms[$_hotel_id])}
-                {continue}
-            {/if}
+            {* Only process if we don't already have terms for this hotel *}
+            {if !isset($_nv_hotels_terms[$_hotel_id])}
+                {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
+                {$_check_in = $product.extra.check_in|default:''}
+                {$_currency = $product.extra.currency|default:'EUR'}
 
-            {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
-            {$_check_in = $product.extra.check_in|default:''}
-            {$_currency = $product.extra.currency|default:'EUR'}
+                {* Use aggregated price for this hotel *}
+                {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}
 
-            {* Use aggregated price for this hotel *}
-            {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}
+                {* Get payment terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
+                {$_payment = ""}
+                {if $product.extra.terms_of_payment_formatted}
+                    {$_payment = $product.extra.terms_of_payment_formatted}
+                {elseif $product.extra.terms_of_payment_raw}
+                    {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
+                {elseif $product.extra.terms_of_payment}
+                    {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
+                {/if}
 
-            {* Get payment terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
-            {$_payment = ""}
-            {if $product.extra.terms_of_payment_formatted}
-                {$_payment = $product.extra.terms_of_payment_formatted}
-            {elseif $product.extra.terms_of_payment_raw}
-                {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
-            {elseif $product.extra.terms_of_payment}
-                {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
-            {/if}
+                {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
+                {$_cancel = ""}
+                {if $product.extra.terms_of_cancellation_formatted}
+                    {$_cancel = $product.extra.terms_of_cancellation_formatted}
+                {elseif $product.extra.terms_of_cancellation_raw}
+                    {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
+                {elseif $product.extra.terms_of_cancellation}
+                    {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
+                {/if}
 
-            {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
-            {$_cancel = ""}
-            {if $product.extra.terms_of_cancellation_formatted}
-                {$_cancel = $product.extra.terms_of_cancellation_formatted}
-            {elseif $product.extra.terms_of_cancellation_raw}
-                {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
-            {elseif $product.extra.terms_of_cancellation}
-                {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
-            {/if}
-
-            {* Add if we have terms *}
-            {if $_payment || $_cancel}
-                {$_nv_hotels_terms[$_hotel_id] = [
-                    'hotel_name' => $_hotel_name,
-                    'payment' => $_payment,
-                    'cancel' => $_cancel
-                ]}
+                {* Add if we have terms *}
+                {if $_payment || $_cancel}
+                    {$_nv_hotels_terms[$_hotel_id] = [
+                        'hotel_name' => $_hotel_name,
+                        'payment' => $_payment,
+                        'cancel' => $_cancel
+                    ]}
+                {/if}
             {/if}
         {/if}
     {/foreach}

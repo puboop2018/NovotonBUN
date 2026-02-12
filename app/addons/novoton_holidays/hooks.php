@@ -54,28 +54,31 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     
     // Add hotel prices data if this is a hotel product
     if ($is_hotel_product) {
-        // Use cached prices function
-        $prices = fn_novoton_get_hotel_prices($product['product_id']);
-        
-        $product['novoton_prices'] = $prices;
         $product['is_hotel_product'] = true;
-        
-        // V3: Get last update time from packages table
-        $last_update_db = null;
-        preg_match('/\d+/', $product['product_code'], $matches);
-        if (!empty($matches[0])) {
-            $last_update_db = db_get_field(
-                "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-                $matches[0]
-            );
-        }
-        $product['novoton_last_update'] = $last_update_db;
-        
-        // Get hotel info using cached function
+
+        // Extract hotel_id from product_code first (used throughout)
         $hotel_id = null;
         preg_match('/\d+/', $product['product_code'], $matches);
         if (!empty($matches[0])) {
             $hotel_id = $matches[0];
+        }
+
+        // Use cached prices function - pass hotel_id to avoid lookup failure
+        $prices = fn_novoton_get_hotel_prices($product['product_id'], false, $hotel_id);
+        $product['novoton_prices'] = $prices;
+
+        // V3: Get last update time from packages table
+        $last_update_db = null;
+        if (!empty($hotel_id)) {
+            $last_update_db = db_get_field(
+                "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
+                $hotel_id
+            );
+        }
+        $product['novoton_last_update'] = $last_update_db;
+
+        // Get hotel info using cached function
+        if (!empty($hotel_id)) {
             
             // Use cached hotel data function
             $hotel_info = fn_novoton_get_hotel_data($hotel_id);
@@ -327,8 +330,8 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
         if (!empty($matches[0])) {
             $product_data['hotel_id'] = $matches[0];
 
-            // V3: Get packages with priceinfo from packages table
-            $product_data['hotel_packages'] = fn_novoton_get_hotel_prices($product_id);
+            // V3: Get packages with priceinfo from packages table - pass hotel_id directly
+            $product_data['hotel_packages'] = fn_novoton_get_hotel_prices($product_id, false, $matches[0]);
         }
 
         $product_data['is_hotel_product'] = true;

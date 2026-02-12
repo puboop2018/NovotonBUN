@@ -106,16 +106,16 @@
         <strong>Holder:</strong> {$oi.extra.holder_name}<br>
     {/if}
     
-    {* Payment and Cancellation Terms *}
-    {$payment_terms = $oi.extra.terms_of_payment|default:$oi.extra.payment_terms|default:$oi.extra.remark|default:''}
-    {$cancel_terms = $oi.extra.terms_of_cancellation|default:$oi.extra.cancellation_terms|default:$oi.extra.important|default:''}
-    
-    {if $payment_terms}
-    <strong>Terms of Payment:</strong> {$payment_terms|escape:'html'|nl2br nofilter}<br>
+    {* Payment and Cancellation Terms — use pre-formatted data from PHP hook *}
+    {$_payment_display = $oi.extra.terms_of_payment_with_amounts|default:$oi.extra.terms_of_payment_formatted|default:''}
+    {$_cancel_display = $oi.extra.terms_of_cancellation_formatted|default:''}
+
+    {if $_payment_display}
+    <strong>Terms of Payment:</strong> {$_payment_display|escape:'html'|nl2br nofilter}<br>
     {/if}
-    
-    {if $cancel_terms}
-    <strong>Cancellation Policy:</strong> {$cancel_terms|escape:'html'|nl2br nofilter}<br>
+
+    {if $_cancel_display}
+    <strong>Cancellation Policy:</strong> {$_cancel_display|escape:'html'|nl2br nofilter}<br>
     {/if}
     
     {if $oi.extra.special_requests}

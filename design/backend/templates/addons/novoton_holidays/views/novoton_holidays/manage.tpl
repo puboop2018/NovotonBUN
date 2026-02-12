@@ -53,11 +53,11 @@
             <h3>[H] Hotels</h3>
             <div class="novoton-stat-number">{$stats.hotels.total|default:0}</div>
             <div class="novoton-stat-row">
-                <span>With Prices</span>
+                <span>Real-time (room_price) available</span>
                 <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_prices|default:0}</span>
             </div>
             <div class="novoton-stat-row">
-                <span>With Packages</span>
+                <span>Season prices (priceinfo) available</span>
                 <span class="novoton-badge novoton-badge-success">{$stats.hotels.with_packages|default:0}</span>
             </div>
             <div class="novoton-stat-row">
@@ -138,11 +138,11 @@
                     <span><strong>{$country_stats.total}</strong></span>
                 </div>
                 <div class="novoton-stat-row">
-                    <span>With Prices</span>
+                    <span>Real-time (room_price) available</span>
                     <span class="novoton-badge novoton-badge-success">{$country_stats.with_prices}</span>
                 </div>
                 <div class="novoton-stat-row">
-                    <span>With Packages</span>
+                    <span>Season prices (priceinfo) available</span>
                     <span class="novoton-badge novoton-badge-success">{$country_stats.with_packages}</span>
                 </div>
                 <div class="novoton-stat-row">

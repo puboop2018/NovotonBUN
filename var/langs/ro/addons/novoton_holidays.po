@@ -1748,6 +1748,14 @@ msgctxt "Languages::novoton_holidays.child_must_be_under_18"
 msgid "Child must be under 18 years old at check-in"
 msgstr "Copilul trebuie să aibă sub 18 ani la check-in"
 
+msgctxt "Languages::novoton_holidays.not_child"
+msgid "At check-in, the child will be"
+msgstr "La check-in, copilul va avea"
+
+msgctxt "Languages::novoton_holidays.must_be_under_18"
+msgid "Must be under 18 years old."
+msgstr "Trebuie să fie sub 18 ani."
+
 msgctxt "Languages::novoton_holidays.price_increased"
 msgid "Price increased"
 msgstr "Prețul a crescut"
@@ -2047,3 +2055,15 @@ msgstr "[percent]% ([amount]) - până la [date]"
 msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
 msgid "[percent]% ([amount]) on booking"
 msgstr "[percent]% ([amount]) la rezervare"
+
+msgctxt "Languages::novoton_holidays.no_prices_available"
+msgid "No prices available"
+msgstr "Nu sunt prețuri disponibile"
+
+msgctxt "Languages::novoton_holidays.prices_coming_soon"
+msgid "Prices will be available once price data is synced."
+msgstr "Prețurile vor fi disponibile după sincronizarea datelor de preț."
+
+msgctxt "Languages::novoton_holidays.prices_include_commission"
+msgid "Prices include agency commission"
+msgstr "Prețurile includ comisionul agenției"

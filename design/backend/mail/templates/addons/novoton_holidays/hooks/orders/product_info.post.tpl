@@ -84,31 +84,25 @@
             {/if}
 
             {* Only show terms if this package hasn't been shown yet *}
-            {if ($payment_terms_raw || $cancel_terms_raw) && !in_array($package_key, $novoton_shown_packages)}
+            {$_payment_display = $oi.extra.terms_of_payment_with_amounts|default:$oi.extra.terms_of_payment_formatted|default:''}
+            {$_cancel_display = $oi.extra.terms_of_cancellation_formatted|default:''}
+
+            {if ($_payment_display || $_cancel_display) && !in_array($package_key, $novoton_shown_packages)}
                 {* Mark this package as shown *}
                 {$novoton_shown_packages[] = $package_key}
 
                 {* Payment Terms with Amounts *}
-                {if $payment_terms_raw}
-                    {$booking_price = $oi.extra.price|default:$oi.price|default:0}
-                    {$currency = $oi.extra.currency|default:'EUR'}
-                    {$_payment_terms_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}
-                    {if $_payment_terms_formatted}
-                        <br>
-                        <strong>{__("novoton_holidays.terms_of_payment")|default:"Condiții de plată"}</strong><br>
-                        {$_payment_terms_formatted|escape:'html'|nl2br nofilter}
-                    {/if}
+                {if $_payment_display}
+                    <br>
+                    <strong>{__("novoton_holidays.terms_of_payment")|default:"Condiții de plată"}</strong><br>
+                    {$_payment_display|escape:'html'|nl2br nofilter}
                 {/if}
 
                 {* Cancellation Terms *}
-                {if $cancel_terms_raw}
-                    {$check_in = $oi.extra.check_in|default:''}
-                    {$_cancel_terms_formatted = fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}
-                    {if $_cancel_terms_formatted}
-                        <br>
-                        <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
-                        {$_cancel_terms_formatted|escape:'html'|nl2br nofilter}
-                    {/if}
+                {if $_cancel_display}
+                    <br>
+                    <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong><br>
+                    {$_cancel_display|escape:'html'|nl2br nofilter}
                 {/if}
             {/if}
         </td>
