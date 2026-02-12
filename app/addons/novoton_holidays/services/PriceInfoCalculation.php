@@ -578,9 +578,9 @@ class PriceInfoCalculation
     private function findBaseCodeRow(array $seasonPrices, string $roomId, string $boardId): ?array
     {
         foreach ($seasonPrices as $row) {
-            $rowRoom = $row['IdRoom'] ?? '';
-            $rowBoard = $row['IdBoard'] ?? '';
-            $code = $row['Code'] ?? '';
+            $rowRoom = is_string($row['IdRoom'] ?? '') ? ($row['IdRoom'] ?? '') : '';
+            $rowBoard = is_string($row['IdBoard'] ?? '') ? ($row['IdBoard'] ?? '') : '';
+            $code = is_string($row['Code'] ?? '') ? ($row['Code'] ?? '') : '';
 
             if ($this->matchRoom($rowRoom, $roomId) && $this->matchBoard($rowBoard, $boardId) && $code === 'Base') {
                 return $row;
@@ -594,13 +594,38 @@ class PriceInfoCalculation
      */
     private function findSeasonPriceRow(array $seasonPrices, string $roomId, string $boardId, string $ageType, string $accType, int $nights): ?array
     {
+        // Map numeric IdAge to descriptive age types (same as hotels.php)
+        static $ageTypeMap = [
+            '1' => 'ADULT',
+            '2' => 'CHD 0-1.99',
+            '3' => 'CHD 2-11.99',
+            '4' => 'CHD 12-17.99',
+        ];
+
         foreach ($seasonPrices as $row) {
-            $rowRoom = $row['IdRoom'] ?? '';
-            $rowBoard = $row['IdBoard'] ?? '';
-            $rowAge = $row['IdAge'] ?? '';
-            $rowAcc = $row['IdAcc'] ?? '';
-            $fromDays = intval($row['FromDays'] ?? 1);
-            $toDays = intval($row['ToDays'] ?? 999);
+            $rowRoom = is_string($row['IdRoom'] ?? '') ? ($row['IdRoom'] ?? '') : '';
+            $rowBoard = is_string($row['IdBoard'] ?? '') ? ($row['IdBoard'] ?? '') : '';
+            $rowAcc = is_string($row['IdAcc'] ?? '') ? ($row['IdAcc'] ?? '') : '';
+
+            // Get age type: prefer fAge (descriptive), fallback to mapped IdAge
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = is_string($row['IdAge'] ?? '') ? ($row['IdAge'] ?? '') : '';
+                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            // Default empty IdAcc to 'REGULAR' (consistent with hotels.php)
+            if (empty($rowAcc) || !is_string($rowAcc)) {
+                $rowAcc = 'REGULAR';
+            }
+
+            // Handle FromDays/ToDays: empty strings should use defaults, not intval('') = 0
+            $rawFromDays = $row['FromDays'] ?? '';
+            $rawToDays = $row['ToDays'] ?? '';
+            $fromDays = (!empty($rawFromDays) && is_scalar($rawFromDays)) ? intval($rawFromDays) : 1;
+            $toDays = (!empty($rawToDays) && is_scalar($rawToDays)) ? intval($rawToDays) : 999;
 
             // Match room, board, age, acc
             if (!$this->matchRoom($rowRoom, $roomId)) continue;
@@ -620,18 +645,20 @@ class PriceInfoCalculation
     /**
      * Get price from row, handling percentages
      *
-     * Percentages can be:
-     * - String with % sign: "80%", "50%"
-     * - Numeric value <= 100 when Code references Base
+     * Percentages are ONLY values with explicit % sign: "80%", "50%"
+     * Numeric values are always treated as absolute prices (EUR).
      */
     private function getPriceFromRow(array $row, string $priceKey, ?array $baseCodeRow, array $allSeasonPrices = []): float
     {
         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? 0;
-        $code = $row['Code'] ?? 'Base';
         $baseRef = $row['Base'] ?? '';  // Reference to which Code is the base
-        $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
 
-        // Handle string percentage like "80%", "50%"
+        // Handle empty arrays from SimpleXML json_encode of empty elements
+        if (is_array($rawPrice) || is_object($rawPrice)) {
+            $rawPrice = 0;
+        }
+
+        // Handle string percentage like "80%", "50%" - ONLY explicit % sign
         if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
             $percentValue = floatval(str_replace('%', '', $rawPrice));
 
@@ -641,36 +668,24 @@ class PriceInfoCalculation
                 // Find row with Code matching our Base reference
                 foreach ($allSeasonPrices as $baseRow) {
                     if (($baseRow['Code'] ?? '') == $baseRef) {
-                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
+                        $basePriceRaw = $baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0;
+                        if (!is_array($basePriceRaw) && !is_object($basePriceRaw)) {
+                            $basePrice = floatval($basePriceRaw);
+                        }
                         break;
                     }
                 }
             } elseif ($baseCodeRow) {
-                $basePrice = floatval($baseCodeRow[$priceKey] ?? $baseCodeRow['Price1'] ?? 0);
+                $basePriceRaw = $baseCodeRow[$priceKey] ?? $baseCodeRow['Price1'] ?? 0;
+                if (!is_array($basePriceRaw) && !is_object($basePriceRaw)) {
+                    $basePrice = floatval($basePriceRaw);
+                }
             }
 
             if ($basePrice > 0) {
                 return $basePrice * ($percentValue / 100);
             }
-            // If no base found, return 0 (should not happen in valid data)
             return 0;
-        }
-
-        // If Code is not 'Base' and we have a Base reference, it might be a numeric percentage
-        if ($code !== 'Base' && !empty($baseRef) && is_numeric($rawPrice)) {
-            $numericPrice = floatval($rawPrice);
-            // If the value is small (0-100), it's likely a percentage
-            if ($numericPrice > 0 && $numericPrice <= 100 && !empty($allSeasonPrices)) {
-                foreach ($allSeasonPrices as $baseRow) {
-                    if (($baseRow['Code'] ?? '') == $baseRef) {
-                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
-                        if ($basePrice > 0) {
-                            return $basePrice * ($numericPrice / 100);
-                        }
-                        break;
-                    }
-                }
-            }
         }
 
         return floatval($rawPrice);
@@ -698,6 +713,11 @@ class PriceInfoCalculation
 
     /**
      * Match age type (with fuzzy matching)
+     *
+     * Handles multiple IdAge formats:
+     * - Descriptive: 'ADULT ', '1 ST CHD 2-11,99'
+     * - Numeric mapped: '1' → 'ADULT' (handled in findSeasonPriceRow)
+     * - Age band variations: '2-11,99' vs '2-11.99'
      */
     private function matchAgeType(string $rowAge, string $ageType): bool
     {
@@ -705,18 +725,59 @@ class PriceInfoCalculation
         $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
         $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
 
-        return strcasecmp($rowAge, $ageType) === 0;
+        if (strcasecmp($rowAge, $ageType) === 0) {
+            return true;
+        }
+
+        // Try matching with comma/dot variation in age bands (2-11,99 vs 2-11.99)
+        $rowAgeNorm = str_replace(',', '.', $rowAge);
+        $ageTypeNorm = str_replace(',', '.', $ageType);
+        if (strcasecmp($rowAgeNorm, $ageTypeNorm) === 0) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Match accommodation type
+     *
+     * Handles value variations: RB/REGULAR, EB/EXTRA BED/EXTRA_BED
      */
     private function matchAccType(string $rowAcc, string $accType): bool
     {
-        $rowAcc = trim($rowAcc);
-        $accType = trim($accType);
+        $rowAcc = strtoupper(trim($rowAcc));
+        $accType = strtoupper(trim($accType));
 
-        return strcasecmp($rowAcc, $accType) === 0;
+        if ($rowAcc === $accType) {
+            return true;
+        }
+
+        // Normalize both values to canonical form for comparison
+        $rowNorm = $this->normalizeAccType($rowAcc);
+        $accNorm = $this->normalizeAccType($accType);
+
+        return $rowNorm === $accNorm;
+    }
+
+    /**
+     * Normalize accommodation type to canonical form
+     */
+    private function normalizeAccType(string $acc): string
+    {
+        $acc = strtoupper(trim($acc));
+
+        // Map all regular bed variants to 'REGULAR'
+        if (in_array($acc, ['RB', 'REGULAR', 'REGULAR BED', 'REGULAR_BED'], true)) {
+            return 'REGULAR';
+        }
+
+        // Map all extra bed variants to 'EXTRA BED'
+        if (in_array($acc, ['EB', 'EXTRA BED', 'EXTRA_BED', 'EXTRABED'], true)) {
+            return 'EXTRA BED';
+        }
+
+        return $acc;
     }
 
     /**
@@ -985,7 +1046,7 @@ class PriceInfoCalculation
      * extras_rooms are typically additional fees per room (not per person)
      * E.g., sea view supplement, balcony fee, etc.
      */
-    private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights): float
+    private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
         $extrasRooms = $this->priceinfo['extras_rooms'] ?? [];
         if (empty($extrasRooms)) return 0;
@@ -1006,9 +1067,12 @@ class PriceInfoCalculation
             $type = $extra['Type'] ?? 'Day'; // Day, Stay, Night
             $idRoom = $extra['IdRoom'] ?? '';
 
-            // Skip if room doesn't match (if specified)
-            // Note: We don't have roomId in this context, so apply to all rooms
-            // TODO: Pass roomId to this function if needed
+            // Skip if room doesn't match (if specified in extras_rooms entry)
+            if (!empty($idRoom) && !empty($roomId)) {
+                if (!$this->matchRoom($idRoom, $roomId)) {
+                    continue;
+                }
+            }
 
             // Check date overlap
             if (!empty($fromDate) && !empty($toDate)) {
