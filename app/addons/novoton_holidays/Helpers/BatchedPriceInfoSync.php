@@ -376,7 +376,16 @@ class BatchedPriceInfoSync
             }
         }
 
-        // Update package record
+        // Update package record - convert SimpleXML to array for reliable JSON encoding.
+        // json_encode(SimpleXMLElement) can lose attributes and mishandle repeated siblings.
+        $priceinfo_array = self::simpleXmlToArray($priceinfo);
+        $priceinfo_json = json_encode($priceinfo_array);
+
+        if ($priceinfo_json === false || $priceinfo_json === 'null') {
+            // Fallback to direct encode if conversion failed
+            $priceinfo_json = json_encode($priceinfo);
+        }
+
         db_query(
             "UPDATE ?:novoton_hotel_packages SET
              priceinfo_data = ?s,
@@ -385,7 +394,7 @@ class BatchedPriceInfoSync
              has_early_booking = ?s,
              synced_at = ?s
              WHERE hotel_id = ?s AND package_id = ?s",
-            json_encode($priceinfo),
+            $priceinfo_json,
             $seasons_count,
             $min_price,
             $has_early_booking,
@@ -395,6 +404,42 @@ class BatchedPriceInfoSync
         );
 
         return $seasons_count;
+    }
+
+    /**
+     * Reliably convert SimpleXMLElement to associative array.
+     * Handles repeated siblings (same-named elements) as arrays,
+     * preserves text content, and includes attributes.
+     */
+    private static function simpleXmlToArray($xml): array
+    {
+        if (!($xml instanceof \SimpleXMLElement)) {
+            return [];
+        }
+
+        $result = [];
+
+        // Include attributes
+        foreach ($xml->attributes() as $attrName => $attrValue) {
+            $result['@' . $attrName] = (string)$attrValue;
+        }
+
+        // Process child elements
+        foreach ($xml->children() as $name => $child) {
+            $value = ($child->count() > 0) ? self::simpleXmlToArray($child) : (string)$child;
+
+            // Handle repeated siblings: convert to array
+            if (isset($result[$name])) {
+                if (!is_array($result[$name]) || !isset($result[$name][0])) {
+                    $result[$name] = [$result[$name]];
+                }
+                $result[$name][] = $value;
+            } else {
+                $result[$name] = $value;
+            }
+        }
+
+        return $result;
     }
 
     /**

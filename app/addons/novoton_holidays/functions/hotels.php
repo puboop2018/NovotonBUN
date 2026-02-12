@@ -171,6 +171,7 @@ function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = nu
     }
 
     if (empty($hotel_id)) {
+        error_log("[Novoton Prices] No hotel_id found for product_id={$product_id}");
         return [];
     }
 
@@ -183,11 +184,19 @@ function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = nu
     );
 
     if (empty($package) || empty($package['priceinfo_data'])) {
+        $total_pkgs = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s", $hotel_id);
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: no package with priceinfo_data (total packages: {$total_pkgs}). Run priceinfo sync.");
         return [];
     }
 
     $priceinfo = json_decode($package['priceinfo_data'], true);
-    if (empty($priceinfo) || empty($priceinfo['season_price'])) {
+    if (empty($priceinfo)) {
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: priceinfo_data JSON decode failed. Raw length: " . strlen($package['priceinfo_data']));
+        return [];
+    }
+    if (empty($priceinfo['season_price'])) {
+        $keys = implode(', ', array_keys($priceinfo));
+        error_log("[Novoton Prices] hotel_id={$hotel_id}: priceinfo missing 'season_price'. Available keys: {$keys}");
         return [];
     }
 
