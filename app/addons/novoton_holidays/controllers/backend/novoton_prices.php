@@ -205,30 +205,51 @@ if ($mode == 'check_prices') {
 
     echo '<div class="log">';
 
-    // Step 1: Get all distinct resorts (= city) for this country from our database
-    $resorts = db_get_fields(
-        "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city IS NOT NULL ORDER BY city",
-        $country
-    );
-
-    // Also get all hotels for this country (to map hotel_id -> hotel_name and mark results)
+    // Step 1: Get resort list from API (authoritative source) and fall back to DB cities
     $all_hotels = db_get_hash_array(
         "SELECT hotel_id, hotel_name, city, product_id, has_prices FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
         'hotel_id',
         $country
     );
-
     $total_hotels = count($all_hotels);
+
+    // Query the API's own resort_list — these are the exact names room_price accepts
+    $api = new NovotonApi();
+    $hotelRepo = new HotelRepository();
+    $api_resorts = [];
+    try {
+        $resort_list_response = $api->getResortList($country);
+        if ($resort_list_response) {
+            foreach ($resort_list_response->xpath('//Resort') as $r) {
+                $name = trim((string)$r);
+                if (!empty($name)) {
+                    $api_resorts[] = $name;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // Silently fall back to DB cities
+    }
+
+    // Merge: API resorts + any DB cities not already covered (belt and suspenders)
+    $db_cities = db_get_fields(
+        "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city IS NOT NULL ORDER BY city",
+        $country
+    );
+    $resorts = !empty($api_resorts) ? array_values(array_unique(array_merge($api_resorts, $db_cities))) : $db_cities;
+    sort($resorts);
+
     $total_resorts = count($resorts);
+    $source = !empty($api_resorts) ? 'resort_list API + DB cities' : 'DB cities only (API unavailable)';
 
     echo "Country: {$country} | Resorts: {$total_resorts} | Hotels in DB: {$total_hotels}<br>";
+    echo "Resort source: {$source}" . (!empty($api_resorts) ? " (API: " . count($api_resorts) . ", DB: " . count($db_cities) . ")" : "") . "<br>";
     echo "Check-in: {$check_in} | Check-out: {$check_out}<br>";
-    echo "Method: resort-based bulk query with regex <IdHotel> extraction<br><br>\n";
+    echo "Method: resort-based bulk query with regex &lt;IdHotel&gt; extraction<br><br>\n";
     flush();
 
     try {
-        $api = new NovotonApi();
-        $hotelRepo = new HotelRepository();
+        // $api and $hotelRepo already instantiated above (step 1)
 
         // Set of all hotel IDs that have prices (found via resort queries)
         $hotels_with_prices = [];
@@ -332,7 +353,25 @@ if ($mode == 'check_prices') {
             echo "<br><span class='success'>  Fallback: {$fallback_found}/{$fallback_checked} still have prices</span><br>\n";
         }
 
-        // Step 5: Update database - mark hotels with/without prices
+        // Step 5: Self-heal city/resort mismatches.
+        // $hotels_with_prices maps hotel_id => resort_name (the resort query that found it).
+        // If a hotel's DB city doesn't match, update it so future runs find it directly.
+        $city_corrections = 0;
+        foreach ($hotels_with_prices as $hid => $found_in_resort) {
+            if (isset($all_hotels[$hid]) && $found_in_resort !== '<no city>') {
+                $db_city = $all_hotels[$hid]['city'] ?? '';
+                if ($db_city !== $found_in_resort) {
+                    $hotelRepo->update($hid, ['city' => $found_in_resort]);
+                    $city_corrections++;
+                    echo "<span class='warning'>  ⟳ {$all_hotels[$hid]['hotel_name']}: city corrected \"{$db_city}\" → \"{$found_in_resort}\"</span><br>\n";
+                }
+            }
+        }
+        if ($city_corrections > 0) {
+            echo "<br><span class='warning'>  Auto-corrected {$city_corrections} city/resort mismatches (will be found by resort scan next run)</span><br>\n";
+        }
+
+        // Step 6: Update database - mark hotels with/without prices
         $with_prices_count = 0;
         $no_prices = 0;
         $now = date('Y-m-d H:i:s');
@@ -355,7 +394,7 @@ if ($mode == 'check_prices') {
             }
         }
 
-        // Step 6: Report hotels found by API but NOT in our database
+        // Step 7: Report hotels found by API but NOT in our database
         $unknown_hotels = array_diff_key($hotels_with_prices, $all_hotels);
 
         echo "<br><strong>Summary:</strong><br>";
@@ -367,6 +406,9 @@ if ($mode == 'check_prices') {
         }
         echo "With prices (total): <span class='success'><strong>{$with_prices_count}</strong></span><br>";
         echo "No prices: {$no_prices}<br>";
+        if ($city_corrections > 0) {
+            echo "City/resort corrections: <span class='warning'>{$city_corrections}</span> (self-healed for next run)<br>";
+        }
 
         if (!empty($unknown_hotels)) {
             echo "<br><span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
