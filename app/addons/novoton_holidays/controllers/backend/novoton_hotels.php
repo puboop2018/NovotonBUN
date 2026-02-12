@@ -55,8 +55,8 @@ if ($mode == 'view_hotels_to_add') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-    $filter = $_REQUEST['filter'] ?? 'prices'; // prices or packages
+    $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+    $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
     
     $hotelRepo = new HotelRepository();
     
@@ -114,7 +114,7 @@ if ($mode == 'add_hotels_as_products') {
     if (!$run_process) {
         // Show configuration form
         try {
-            $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
+            $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
             $hotelRepo = new HotelRepository();
 
@@ -185,12 +185,18 @@ if ($mode == 'add_hotels_as_products') {
             .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
         </style></head><body><div class="container"><h1>🏨 Adding Hotels as Products</h1><div class="log">';
         
-        $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
+        $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
         $category_id = intval($_REQUEST['category_id'] ?? 0);
-        $import_mode = $_REQUEST['import_mode'] ?? 'new_only';
-        $limit = intval($_REQUEST['limit'] ?? 0);
-        $selected_resorts = $_REQUEST['resorts'] ?? [];
-        $selected_languages = $_REQUEST['languages'] ?? ['en', 'ro'];
+        $import_mode = in_array($_REQUEST['import_mode'] ?? '', ['new_only', 'update']) ? $_REQUEST['import_mode'] : 'new_only';
+        $limit = max(0, min(5000, intval($_REQUEST['limit'] ?? 0)));
+        $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_map(function($r) {
+            return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr($r, 0, 100));
+        }, $_REQUEST['resorts']) : [];
+        // Whitelist language codes to 2-3 char lowercase alpha codes
+        $selected_languages = is_array($_REQUEST['languages'] ?? null) ? array_filter(array_map(function($l) {
+            $l = strtolower(trim($l));
+            return preg_match('/^[a-z]{2,3}$/', $l) ? $l : null;
+        }, $_REQUEST['languages'])) : ['en', 'ro'];
         
         // Build query based on import mode
         $condition = "country = ?s AND has_prices = 'Y'";
@@ -348,7 +354,7 @@ if ($mode == 'check_packages') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $limit = intval($_REQUEST['limit'] ?? 500);
+    $limit = max(1, min(2000, intval($_REQUEST['limit'] ?? 500)));
     $run = isset($_REQUEST['run']);
 
     echo '<!DOCTYPE html><html><head><title>Check Hotel Packages</title>
