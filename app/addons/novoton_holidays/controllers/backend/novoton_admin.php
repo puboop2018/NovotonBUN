@@ -588,10 +588,11 @@ function fn_novoton_admin_check_alternatives($api, $type) {
 
 function fn_novoton_admin_notify_alternatives() {
     $requests = db_get_array(
-        "SELECT * FROM ?:novoton_alternative_requests 
+        "SELECT * FROM ?:novoton_alternative_requests
          WHERE status = 'has_alternatives' AND notified = 0 LIMIT 50"
     );
-    
+    $requests = fn_novoton_decrypt_requests_pii($requests);
+
     $notified = 0;
     foreach ($requests as $request) {
         // Send notification email logic here

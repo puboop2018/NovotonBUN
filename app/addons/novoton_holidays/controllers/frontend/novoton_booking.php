@@ -3143,7 +3143,7 @@ if ($mode == 'request_alternatives') {
             'error' => $e->getMessage()
         ]);
         
-        // Still save the request even if API fails
+        // Still save the request even if API fails — encrypt PII
         $request_record = [
             'hotel_id' => $hotel_id,
             'hotel_name' => $hotel_name,
@@ -3153,9 +3153,9 @@ if ($mode == 'request_alternatives') {
             'adults' => $adults,
             'children' => $children,
             'num_rooms' => $num_rooms,
-            'contact_email' => $contact_email,
-            'contact_phone' => $contact_phone,
-            'notes' => $notes,
+            'contact_email' => $security->encrypt($contact_email),
+            'contact_phone' => !empty($contact_phone) ? $security->encrypt($contact_phone) : '',
+            'notes' => !empty($notes) ? $security->encrypt($notes) : '',
             'status' => 'pending_manual',
             'api_response' => $e->getMessage(),
             'created_at' => date('Y-m-d H:i:s')

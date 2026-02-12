@@ -318,6 +318,8 @@ try {
              LIMIT 50"
         );
         
+        $pending_requests = fn_novoton_decrypt_requests_pii($pending_requests);
+
         if (empty($pending_requests)) {
             echo "No pending requests older than 24 hours found.\n";
         } else {
@@ -472,12 +474,13 @@ try {
         echo "Sending notifications for found alternatives...\n\n";
         
         $requests = db_get_array(
-            "SELECT * FROM ?:novoton_alternative_requests 
-             WHERE status = 'alternatives_found' 
+            "SELECT * FROM ?:novoton_alternative_requests
+             WHERE status = 'alternatives_found'
              ORDER BY updated_at ASC
              LIMIT 20"
         );
-        
+        $requests = fn_novoton_decrypt_requests_pii($requests);
+
         if (empty($requests)) {
             echo "No requests with alternatives to notify.\n";
         } else {

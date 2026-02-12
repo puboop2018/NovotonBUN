@@ -134,6 +134,8 @@ class CronService
                AND novoton_request_id != ''
                AND novoton_request_id IS NOT NULL"
         );
+        // Decrypt encrypted PII (contact_email) for email sending
+        $pending = fn_novoton_decrypt_requests_pii($pending);
 
         foreach ($pending as $request) {
             $results['processed']++;
