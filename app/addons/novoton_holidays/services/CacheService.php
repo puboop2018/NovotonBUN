@@ -192,7 +192,7 @@ class CacheService
             return null;
         }
         
-        $data = @unserialize($content);
+        $data = @unserialize($content, ['allowed_classes' => false]);
         if ($data === false || !isset($data['expires']) || !isset($data['data'])) {
             @unlink($file);
             return null;
@@ -295,7 +295,7 @@ class CacheService
             return 0;
         }
         
-        $files = glob($this->cache_dir . '*.cache');
+        $files = glob($this->cache_dir . '*.cache') ?: [];
         
         foreach ($files as $file) {
             $filename = basename($file, '.cache');
@@ -348,7 +348,7 @@ class CacheService
             return null;
         }
         
-        $data = @unserialize($row['cache_data']);
+        $data = @unserialize($row['cache_data'], ['allowed_classes' => false]);
         
         // Store in memory
         self::$memory_cache[$key] = [
@@ -430,11 +430,11 @@ class CacheService
         
         if ($this->storage === 'file') {
             // Clean expired file cache
-            $files = glob($this->cache_dir . '*.cache');
+            $files = glob($this->cache_dir . '*.cache') ?: [];
             foreach ($files as $file) {
                 $content = @file_get_contents($file);
                 if ($content) {
-                    $data = @unserialize($content);
+                    $data = @unserialize($content, ['allowed_classes' => false]);
                     if ($data && isset($data['expires']) && $data['expires'] < time()) {
                         if (@unlink($file)) {
                             $count++;
@@ -467,7 +467,7 @@ class CacheService
         ];
         
         if ($this->storage === 'file') {
-            $files = glob($this->cache_dir . '*.cache');
+            $files = glob($this->cache_dir . '*.cache') ?: [];
             $stats['persistent_items'] = count($files);
             $stats['total_size'] = array_sum(array_map('filesize', $files));
         } else {

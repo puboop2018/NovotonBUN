@@ -113,6 +113,7 @@
         <h3>Actions</h3>
         <div class="novoton-btn-group">
             <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices</a>
+            <a href="{"novoton_prices.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices (Per-Hotel)</a>
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[L] Manage Bookings</a>

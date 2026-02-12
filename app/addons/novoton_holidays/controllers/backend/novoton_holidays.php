@@ -51,11 +51,9 @@ $_routed = false;
 if (in_array($mode, $hotels_modes)) {
     $__file = $addon_dir . 'novoton_hotels.php';
     if (!file_exists($__file)) {
-        error_log("[Novoton] ROUTING ERROR: Sub-controller not found: {$__file}");
         fn_set_notification('E', __('error'), "Controller file not found: novoton_hotels.php");
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
-    error_log("[Novoton] Routing mode={$mode} to novoton_hotels.php");
     $__result = include($__file);
     if (is_array($__result)) {
         return $__result;

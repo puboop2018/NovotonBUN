@@ -253,5 +253,8 @@ fn_register_hooks(
     'dispatch_before_display',                 // Ensure meta variables are set
     'get_cart_product_data_post',              // Add booking info to cart items
     'calculate_cart_items',                    // After cart calculation
-    'calculate_cart_items_post'                // After cart items calculation - for rooms_data
+    'calculate_cart_items_post',              // After cart items calculation - for rooms_data
+    'user_login_post',                         // Link session bookings to logged-in user
+    'create_user_post',                        // Link bookings to newly registered users
+    'checkout_pre_dispatch'                    // Debug info on checkout pages
 );
