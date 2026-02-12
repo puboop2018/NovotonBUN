@@ -58,6 +58,9 @@ class PriceInfoCalculation
     /** @var string IdStar for season_price matching */
     private $idStar = '4*';
 
+    /** @var array Hotel-specific child age bands parsed from hotelinfo ages, sorted by from_year */
+    private $childAgeBands = [];
+
     /**
      * Constructor
      */
@@ -107,6 +110,9 @@ class PriceInfoCalculation
 
         // Load hotelinfo for room capacities
         $this->hotelinfo = $this->loadHotelInfo($hotelId);
+
+        // Parse hotel-specific child age bands from hotelinfo
+        $this->parseChildAgeBands();
 
         // Extract parameters
         $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
@@ -249,6 +255,91 @@ class PriceInfoCalculation
         }
 
         return json_decode($json, true);
+    }
+
+    /**
+     * Parse child age bands from hotelinfo ages data.
+     *
+     * Each hotel defines its own age categories with FromYear/ToYear ranges.
+     * This method extracts the child categories (fAge=1) and builds a sorted
+     * list of age bands for use in getAgeBand().
+     *
+     * The band label is formatted to match what appears in season_price IdAge/fAge
+     * fields (e.g., "0-1,99", "2-11,99", "12-17,99").
+     *
+     * Falls back to standard bands if hotelinfo has no age data.
+     */
+    private function parseChildAgeBands(): void
+    {
+        $this->childAgeBands = [];
+
+        if (empty($this->hotelinfo)) {
+            return;
+        }
+
+        $ages = $this->hotelinfo['ages'] ?? [];
+
+        // Handle nested structure: ages.age
+        if (isset($ages['age'])) {
+            $ages = $ages['age'];
+        }
+
+        // Normalize single entry to array
+        if (isset($ages['IdAge'])) {
+            $ages = [$ages];
+        }
+
+        if (empty($ages) || !is_array($ages)) {
+            return;
+        }
+
+        foreach ($ages as $age) {
+            // fAge=1 means child, fAge=0 means adult
+            $isChild = ($age['fAge'] ?? '0') === '1' || ($age['fAge'] ?? 0) === 1;
+            if (!$isChild) {
+                continue;
+            }
+
+            $fromYear = floatval($age['FromYear'] ?? 0);
+            $toYear = floatval($age['ToYear'] ?? 0);
+            if ($toYear <= 0) {
+                continue;
+            }
+
+            // Build the band label in the format used by season_price data
+            // Convention: use comma as decimal separator (e.g., "2-11,99")
+            $label = $this->formatAgeBandLabel($fromYear, $toYear);
+
+            $this->childAgeBands[] = [
+                'from' => $fromYear,
+                'to' => $toYear,
+                'label' => $label,
+                'id_age' => $age['IdAge'] ?? ''
+            ];
+        }
+
+        // Sort by from_year ascending
+        usort($this->childAgeBands, function ($a, $b) {
+            return $a['from'] <=> $b['from'];
+        });
+
+        $this->log('Parsed hotel child age bands', $this->childAgeBands);
+    }
+
+    /**
+     * Format age band label to match season_price conventions.
+     *
+     * Produces labels like "0-1,99", "2-11,99", "12-17,99"
+     * using comma as decimal separator (matching API data format).
+     */
+    private function formatAgeBandLabel(float $from, float $to): string
+    {
+        // Integer part: no decimals (e.g., 0, 2, 12)
+        $fromStr = ($from == floor($from)) ? (string)intval($from) : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
+        // ToYear usually has decimals (e.g., 1.99, 11.99)
+        $toStr = ($to == floor($to)) ? (string)intval($to) : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
+
+        return $fromStr . '-' . $toStr;
     }
 
     /**
@@ -542,15 +633,33 @@ class PriceInfoCalculation
     }
 
     /**
-     * Get age band string
+     * Get age band string for a child's age.
      *
-     * Maps child age to the standard age band categories used in priceinfo:
+     * Uses the hotel's own age definitions (parsed from hotelinfo) to find
+     * the matching age band. Different hotels may define different ranges
+     * (e.g., one hotel may use 0-1.99/2-13.99/14-17.99 while another uses 0-2.99/3-11.99).
+     *
+     * Falls back to standard bands if no hotel-specific data is available:
      * - 0-1,99: Infants (age 0 to <2)
      * - 2-11,99: Children (age 2 to <12)
      * - 12-17,99: Teens (age 12 to <18)
      */
     private function getAgeBand(float $age): string
     {
+        // Use hotel-specific age bands if available
+        if (!empty($this->childAgeBands)) {
+            foreach ($this->childAgeBands as $band) {
+                if ($age >= $band['from'] && $age <= $band['to']) {
+                    return $band['label'];
+                }
+            }
+            // Age didn't match any defined child band — return a synthetic label
+            // This typically means the child is above all defined child ranges
+            // and should be treated as adult (handled by buildOccupancyStructure)
+            return $this->formatAgeBandLabel(floor($age), 17.99);
+        }
+
+        // Fallback to standard bands
         if ($age < 2.0) {
             return '0-1,99';
         }

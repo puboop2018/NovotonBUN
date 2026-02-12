@@ -192,7 +192,9 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         }
         
         // Build per-room child age bands availability map from price data
-        // This tells the template which child occupancy rows to display per room
+        // This tells the template which child occupancy rows to display per room.
+        // Age bands are extracted dynamically from actual price entries — not hardcoded —
+        // because different hotels define different age ranges (e.g., 0-2.99/3-13.99/14-17.99).
         $room_age_bands = [];
         if (!empty($prices)) {
             foreach ($prices as $p) {
@@ -202,32 +204,36 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 
                 if (!isset($room_age_bands[$rid])) {
                     $room_age_bands[$rid] = [
-                        'has_chd_0_1' => false,
-                        'has_chd_2_11' => false,
-                        'has_chd_12_17' => false,
                         'has_adult_eb' => false,
-                        'child_bands' => []
+                        'child_bands' => []  // [{from => '0', to => '1.99', label => '0-1.99', key => 'chd_0_1.99'}, ...]
                     ];
                 }
 
-                // Detect child age bands from price entries
+                // Detect child age bands from price entries (dynamic extraction)
                 if (strpos($age_type, 'CHD') !== false || strpos($age_type, 'CHILD') !== false) {
-                    if (strpos($age_type, '0-1') !== false || strpos($age_type, '0-1,99') !== false || strpos($age_type, '0-1.99') !== false) {
-                        $room_age_bands[$rid]['has_chd_0_1'] = true;
-                        if (!in_array('0-1.99', $room_age_bands[$rid]['child_bands'])) {
-                            $room_age_bands[$rid]['child_bands'][] = '0-1.99';
+                    // Extract the age range pattern (e.g., "2-11,99", "0-1.99", "14-17,99")
+                    if (preg_match('/(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)/', $age_type, $m)) {
+                        $from_raw = str_replace(',', '.', $m[1]);
+                        $to_raw = str_replace(',', '.', $m[2]);
+                        // Normalize label with dot decimal for display
+                        $band_label = $from_raw . '-' . $to_raw;
+                        $band_key = 'chd_' . $band_label;
+
+                        // Add if not already present
+                        $already = false;
+                        foreach ($room_age_bands[$rid]['child_bands'] as $existing) {
+                            if ($existing['key'] === $band_key) {
+                                $already = true;
+                                break;
+                            }
                         }
-                    }
-                    if (strpos($age_type, '2-11') !== false || strpos($age_type, '2-11,99') !== false || strpos($age_type, '2-11.99') !== false) {
-                        $room_age_bands[$rid]['has_chd_2_11'] = true;
-                        if (!in_array('2-11.99', $room_age_bands[$rid]['child_bands'])) {
-                            $room_age_bands[$rid]['child_bands'][] = '2-11.99';
-                        }
-                    }
-                    if (strpos($age_type, '12-17') !== false || strpos($age_type, '12-17,99') !== false || strpos($age_type, '12-17.99') !== false) {
-                        $room_age_bands[$rid]['has_chd_12_17'] = true;
-                        if (!in_array('12-17.99', $room_age_bands[$rid]['child_bands'])) {
-                            $room_age_bands[$rid]['child_bands'][] = '12-17.99';
+                        if (!$already) {
+                            $room_age_bands[$rid]['child_bands'][] = [
+                                'from' => $from_raw,
+                                'to' => $to_raw,
+                                'label' => $band_label,
+                                'key' => $band_key
+                            ];
                         }
                     }
                 }
@@ -239,6 +245,14 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
                     $room_age_bands[$rid]['has_adult_eb'] = true;
                 }
             }
+
+            // Sort each room's child bands by from_year ascending
+            foreach ($room_age_bands as &$rb) {
+                usort($rb['child_bands'], function ($a, $b) {
+                    return floatval($a['from']) <=> floatval($b['from']);
+                });
+            }
+            unset($rb);
         }
         \Tygh\Tygh::$app['view']->assign('room_age_bands', $room_age_bands);
 
