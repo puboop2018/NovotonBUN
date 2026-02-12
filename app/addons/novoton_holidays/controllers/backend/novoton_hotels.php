@@ -110,54 +110,64 @@ if ($mode == 'add_hotels_as_products') {
     // Permission check handled by schema in admin.post.php
 
     $run_process = isset($_REQUEST['run']);
-    
+
     if (!$run_process) {
         // Show configuration form
-        $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-        
-        $hotelRepo = new HotelRepository();
-        
-        $stats = [
-            'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
-            'with_packages' => db_get_field(
-                "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
-                 INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-                 WHERE h.country = ?s",
+        try {
+            $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
+
+            $hotelRepo = new HotelRepository();
+
+            $stats = [
+                'total' => $hotelRepo->count(['country' => $country]),
+                'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+                'with_packages' => db_get_field(
+                    "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
+                     INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+                     WHERE h.country = ?s",
+                    $country
+                ),
+                'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
+            ];
+            $stats['to_add'] = max(0, $stats['with_prices'] - $stats['already_products']);
+
+            // Get resorts
+            $resorts = db_get_array(
+                "SELECT city, COUNT(*) as hotel_count,
+                        SUM(CASE WHEN has_prices = 'Y' THEN 1 ELSE 0 END) as with_prices
+                 FROM ?:novoton_hotels
+                 WHERE country = ?s AND city IS NOT NULL AND city != ''
+                 GROUP BY city ORDER BY hotel_count DESC",
                 $country
-            ),
-            'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-        ];
-        $stats['to_add'] = $stats['with_prices'] - $stats['already_products'];
-        
-        // Get resorts
-        $resorts = db_get_array(
-            "SELECT city, COUNT(*) as hotel_count, 
-                    SUM(CASE WHEN has_prices = 'Y' THEN 1 ELSE 0 END) as with_prices
-             FROM ?:novoton_hotels 
-             WHERE country = ?s AND city IS NOT NULL AND city != ''
-             GROUP BY city ORDER BY hotel_count DESC",
-            $country
-        );
-        
-        // Get categories
-        $categories = db_get_array(
-            "SELECT c.category_id, cd.category, c.parent_id
-             FROM ?:categories c
-             LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
-             WHERE c.status = 'A'
-             ORDER BY cd.category",
-            CART_LANGUAGE
-        );
-        
-        // Get languages
-        $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
-        
-        Tygh::$app['view']->assign('country', $country);
-        Tygh::$app['view']->assign('stats', $stats);
-        Tygh::$app['view']->assign('resorts', $resorts);
-        Tygh::$app['view']->assign('categories', $categories);
-        Tygh::$app['view']->assign('languages', $languages);
+            );
+
+            // Get categories
+            $categories = db_get_array(
+                "SELECT c.category_id, cd.category, c.parent_id
+                 FROM ?:categories c
+                 LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
+                 WHERE c.status = 'A'
+                 ORDER BY cd.category",
+                CART_LANGUAGE
+            );
+
+            // Get languages
+            $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
+
+            // Debug: log what we're assigning to template
+            error_log("[Novoton] add_hotels_as_products: country={$country}, stats=" . json_encode($stats)
+                . ", resorts=" . count($resorts) . ", categories=" . count($categories) . ", languages=" . count($languages));
+
+            Tygh::$app['view']->assign('country', $country);
+            Tygh::$app['view']->assign('stats', $stats);
+            Tygh::$app['view']->assign('resorts', $resorts);
+            Tygh::$app['view']->assign('categories', $categories);
+            Tygh::$app['view']->assign('languages', $languages);
+        } catch (\Exception $e) {
+            error_log("[Novoton] add_hotels_as_products ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
+            return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+        }
         
     } else {
         // Process import

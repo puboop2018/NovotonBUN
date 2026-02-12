@@ -289,10 +289,10 @@ class HotelRepository
             $conditions[] = "product_id > 0";
         }
         if (!empty($filters['no_packages'])) {
-            $conditions[] = "has_prices = 'N'";
+            $conditions[] = "packages_count = 0";
         }
         if (!empty($filters['has_packages'])) {
-            $conditions[] = "has_prices = 'Y'";
+            $conditions[] = "packages_count > 0";
         }
         if (!empty($filters['stars'])) {
             $conditions[] = db_quote("star_rating = ?i", (int) $filters['stars']);
