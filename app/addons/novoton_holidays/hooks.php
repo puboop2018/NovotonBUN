@@ -1489,7 +1489,8 @@ function fn_novoton_holidays_create_user_post($user_data)
 /**
  * Hook: After getting order info - format Novoton booking terms for display
  * A69: Adds formatted payment and cancellation terms to order products
- * 
+ * A85: Enhanced with hotel location, formatted dates, payment amounts, guest names
+ *
  * @param array $order Order data
  * @param bool $additional_data Whether additional data was requested
  */
@@ -1504,6 +1505,15 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         return;
     }
 
+    // Get CS-Cart date format setting
+    $date_format = Registry::get('settings.Appearance.date_format');
+    if (empty($date_format)) {
+        $date_format = '%d %b %Y'; // fallback: "05 Mar 2026"
+    }
+
+    // Get currency for display
+    $currency_code = $order['secondary_currency'] ?? 'EUR';
+
     foreach ($order['products'] as &$product) {
         // Debug: Show extra keys
         if (!empty($_REQUEST['debug'])) {
@@ -1515,18 +1525,41 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
             continue;
         }
 
+        $hotel_id = $product['extra']['hotel_id'] ?? '';
+        $check_in = $product['extra']['check_in'] ?? '';
+        $check_out = $product['extra']['check_out'] ?? '';
+        $total_price = floatval($product['extra']['total_price'] ?? $product['price'] ?? 0);
+
+        // [1] Add hotel location data (city, region, country) from database
+        if (!empty($hotel_id) && empty($product['extra']['city'])) {
+            $hotel_data = db_get_row(
+                "SELECT city, region, country FROM ?:novoton_hotels WHERE hotel_id = ?s",
+                $hotel_id
+            );
+            if ($hotel_data) {
+                $product['extra']['city'] = $hotel_data['city'] ?? '';
+                $product['extra']['region'] = $hotel_data['region'] ?? '';
+                $product['extra']['country'] = $hotel_data['country'] ?? '';
+            }
+        }
+
+        // [2] Format dates using CS-Cart date format setting
+        if (!empty($check_in)) {
+            $product['extra']['check_in_formatted'] = fn_date_format(strtotime($check_in), $date_format);
+        }
+        if (!empty($check_out)) {
+            $product['extra']['check_out_formatted'] = fn_date_format(strtotime($check_out), $date_format);
+        }
+
         // Format Terms of Payment
         // Use _raw (XML) key first; terms_of_payment may already be formatted text
         $payment_raw = $product['extra']['terms_of_payment_raw'] ?? '';
         $payment_text = $product['extra']['terms_of_payment'] ?? '';
         $cancel_raw = $product['extra']['terms_of_cancellation_raw'] ?? '';
         $cancel_text = $product['extra']['terms_of_cancellation'] ?? '';
-        $check_in = $product['extra']['check_in'] ?? '';
 
         // Fallback: If no terms data in order, try to fetch from API
         if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
-            $hotel_id = $product['extra']['hotel_id'] ?? '';
-            $check_out = $product['extra']['check_out'] ?? '';
             $room_id = $product['extra']['room_id'] ?? '';
             $adults = $product['extra']['adults'] ?? 2;
             $children = $product['extra']['children'] ?? 0;
@@ -1587,8 +1620,15 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
             }
         }
 
-        // Format payment terms
-        if (!empty($payment_raw)) {
+        // [4] Format payment terms with calculated amounts
+        if (!empty($payment_raw) && $total_price > 0) {
+            $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_format_payment_terms_with_amounts(
+                $payment_raw,
+                $total_price,
+                $currency_code
+            );
+            $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        } elseif (!empty($payment_raw)) {
             $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
         } elseif (!empty($payment_text)) {
             // Already formatted text — use as-is
@@ -1609,11 +1649,69 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
             $product['extra']['board_display'] = fn_novoton_get_board_name($board_id);
         }
 
+        // [3] Format guests_data for email display with display_name, type, age, is_holder
+        $guests_data = $product['extra']['guests_data'] ?? null;
+        if (!empty($guests_data)) {
+            if (is_string($guests_data)) {
+                $guests_data = json_decode($guests_data, true);
+            }
+            if (is_array($guests_data)) {
+                $formatted_guests = [];
+                $holder_name = $product['extra']['holder_name'] ?? '';
+                $is_first = true;
+
+                foreach ($guests_data as $key => $guest) {
+                    if (!is_array($guest)) {
+                        continue;
+                    }
+
+                    // Get display name - prefer "Last, First" format for display
+                    $display_name = $guest['display_name'] ?? $guest['name'] ?? '';
+                    $api_name = $guest['api_name'] ?? '';
+
+                    // If we have api_name (First Last), convert to display format (Last, First)
+                    if (empty($display_name) && !empty($api_name)) {
+                        $parts = explode(' ', trim($api_name), 2);
+                        if (count($parts) == 2) {
+                            $display_name = $parts[1] . ', ' . $parts[0];
+                        } else {
+                            $display_name = $api_name;
+                        }
+                    }
+
+                    $guest_type = $guest['type'] ?? 'adult';
+                    $guest_age = intval($guest['age'] ?? 0);
+
+                    // Determine if this is the holder
+                    $is_holder = false;
+                    if ($is_first && $guest_type === 'adult') {
+                        $is_holder = true;
+                        $is_first = false;
+                    } elseif (!empty($holder_name) && stripos($display_name, $holder_name) !== false) {
+                        $is_holder = true;
+                    }
+
+                    $formatted_guests[$key] = [
+                        'display_name' => $display_name,
+                        'name' => $guest['name'] ?? $display_name,
+                        'type' => $guest_type,
+                        'age' => $guest_age,
+                        'is_holder' => $is_holder,
+                        'birthday' => $guest['birthday'] ?? '',
+                        'room' => $guest['room'] ?? 1
+                    ];
+                }
+
+                $product['extra']['guests_data'] = $formatted_guests;
+            }
+        }
+
         // Debug: Show what was set
         if (!empty($_REQUEST['debug'])) {
             $payment_set = !empty($product['extra']['terms_of_payment_formatted']) ? 'YES' : 'NO';
+            $payment_amounts = !empty($product['extra']['terms_of_payment_with_amounts']) ? 'YES' : 'NO';
             $cancel_set = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
-            fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, terms_of_cancellation_formatted: {$cancel_set}");
+            fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, with_amounts: {$payment_amounts}, cancellation: {$cancel_set}");
         }
     }
 }
