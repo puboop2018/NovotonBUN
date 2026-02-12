@@ -508,7 +508,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
                     $product['extra']['room_id'] = $booking['room_id'];
                     $product['extra']['room_name'] = fn_novoton_format_room_type($booking['room_id'], $booking['room_type'] ?? '');
                     $product['extra']['board_id'] = $booking['board_id'];
-                    $product['extra']['board_name'] = fn_novoton_get_board_name($booking['board_id']);
+                    $product['extra']['board_name'] = fn_novoton_format_board_name($booking['board_id']);
                     $product['extra']['check_in'] = $booking['check_in'];
                     $product['extra']['check_out'] = $booking['check_out'];
                     $product['extra']['nights'] = $booking['nights'];
@@ -602,7 +602,7 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
     
     // Get board name in readable format and write back to extra for templates
     $board_id = $product['extra']['board_id'] ?? '';
-    $board_name = fn_novoton_get_board_name($board_id);
+    $board_name = fn_novoton_format_board_name($board_id);
     $product['extra']['board_name'] = $board_name;
 
     // Format room name and write back to extra for templates
@@ -669,7 +669,7 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
         $first_board = null;
         
         foreach ($rooms_data as $room) {
-            $board = $room['board_name'] ?? fn_novoton_get_board_name($room['board_id'] ?? '');
+            $board = $room['board_name'] ?? fn_novoton_format_board_name($room['board_id'] ?? '');
             if (!empty($board)) {
                 if ($first_board === null) {
                     $first_board = $board;
@@ -1697,7 +1697,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         // Format board display name (e.g., "ULTRA ALL INCL" -> "Ultra All Inclusive")
         $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
         if (!empty($board_id)) {
-            $product['extra']['board_display'] = fn_novoton_get_board_name($board_id);
+            $product['extra']['board_display'] = fn_novoton_format_board_name($board_id);
         }
 
         // [3] Format guests_data for email display with display_name, type, age, is_holder
