@@ -1401,15 +1401,10 @@ class NovotonApi
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
         $adultsCount = intval($params['adults'] ?? 2);
-        $boardId = $params['board_id'] ?? '';
-
-        // Build adult ages XML (default age 33 for each adult)
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
-            $adultsXml .= '<Age>' . $age . '</Age>';
+        if ($adultsCount < 1) {
+            $adultsCount = 2;
         }
+        $boardId = $params['board_id'] ?? '';
 
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
@@ -1423,6 +1418,7 @@ class NovotonApi
             <usr>' . htmlspecialchars($this->apiUser) . '</usr>
             <psw>' . htmlspecialchars($this->apiPassword) . '</psw>
             <IdHotel></IdHotel>
+            <PackageName></PackageName>
             <Resort>' . htmlspecialchars($resort) . '</Resort>
             <IdRoom></IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
@@ -1431,7 +1427,7 @@ class NovotonApi
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adultsXml . '</Adt>
+            <Adt>' . $adultsCount . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>No</Remark>
             <Important>No</Important>
