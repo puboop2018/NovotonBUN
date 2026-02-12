@@ -362,6 +362,11 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted)
     if ($product_deleted) {
         // Clean up booking data when product is deleted
         db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
+
+        // Clear the product link in novoton_hotels so hotel_id lookup
+        // doesn't resolve to a deleted product. The hotel record stays
+        // (it's API data), only the CS-Cart link is removed.
+        db_query("UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i", $product_id);
     }
 }
 
