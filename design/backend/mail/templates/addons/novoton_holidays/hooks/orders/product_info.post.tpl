@@ -6,7 +6,7 @@
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 5px; font-size: 12px; color: #666;">
     <tr>
         <td>
-            {* Hotel name with location - Capitalize Case *}
+            {* 1. Hotel name with location - bold *}
             {if $oi.extra.hotel_name}
                 {$hotel_display = $oi.extra.hotel_name|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
                 {$location_parts = []}
@@ -22,24 +22,18 @@
                 <strong>{$hotel_display}{if $location_parts}, {", "|implode:$location_parts}{/if}</strong><br>
             {/if}
 
-            {* Check-in, Check-out, Nights - aligned on one line *}
+            {* 2. Dates and nights - bold values, format: "05 Jul 2026, 12 Jul 2026, 7" *}
             {if $oi.extra.check_in && $oi.extra.check_out}
-            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
-            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"} |
-            <strong>{__("novoton_holidays.nights")|default:"Nopți"|capitalize}:</strong> {$oi.extra.nights}<br>
+                <strong>{$oi.extra.check_in|date_format:"%d %b %Y"}, {$oi.extra.check_out|date_format:"%d %b %Y"}, {$oi.extra.nights}</strong><br>
             {/if}
 
-            {if $oi.extra.room_type_display || $oi.extra.room_name}
-            <strong>{__("novoton_holidays.room_type")|default:"Tip Cameră"}:</strong> {$oi.extra.room_type_display|default:$oi.extra.room_name}<br>
+            {* 3. Room type + Board on one line - bold *}
+            {if $oi.extra.room_type_display || $oi.extra.room_name || $oi.extra.board_name}
+                <strong>{$oi.extra.room_type_display|default:$oi.extra.room_name}{if $oi.extra.board_name}, {$oi.extra.board_name}{/if}</strong><br>
             {/if}
 
-            {if $oi.extra.board_name}
-            <strong>{__("novoton_holidays.board")|default:"Masă"}:</strong> {$oi.extra.board_name}<br>
-            {/if}
-
-            <strong>{__("novoton_holidays.guests")|default:"Turiști"}:</strong>
-            {__("novoton_holidays.n_adults", [$oi.extra.adults|default:2])}{if $oi.extra.children > 0}, {__("novoton_holidays.n_children", [$oi.extra.children])}{/if}
-            <br>
+            {* 4. Guest count - bold *}
+            <strong>{__("novoton_holidays.n_adults", [$oi.extra.adults|default:2])}{if $oi.extra.children > 0}, {__("novoton_holidays.n_children", [$oi.extra.children])}{/if}</strong><br>
 
             {* Guest Names List *}
             {if $oi.extra.guests_data}
