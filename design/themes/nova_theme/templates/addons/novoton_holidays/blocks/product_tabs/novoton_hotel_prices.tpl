@@ -83,6 +83,8 @@
         {$child_age_1_max = '1.99'}
         {$child_age_2_min = '2'}
         {$child_age_2_max = '11.99'}
+        {$child_age_3_min = '12'}
+        {$child_age_3_max = '17.99'}
         {if $hotel_full_data && $hotel_full_data.age_groups}
             {foreach from=$hotel_full_data.age_groups item=ag}
                 {if $ag.IdAge == 2 || strpos($ag.fAge|default:'', 'CHD') !== false}
@@ -90,6 +92,9 @@
                 {elseif $ag.IdAge == 3}
                     {$child_age_2_min = $ag.FromYear|default:'2'}
                     {$child_age_2_max = $ag.ToYear|default:'11.99'}
+                {elseif $ag.IdAge == 4}
+                    {$child_age_3_min = $ag.FromYear|default:'12'}
+                    {$child_age_3_max = $ag.ToYear|default:'17.99'}
                 {/if}
             {/foreach}
         {/if}
@@ -206,19 +211,32 @@
                     </div>
                     
                     <div class="room-content">
-                        {* Get base prices for adults and children *}
+                        {* Get base price for adults *}
                         {$adult_price = null}
-                        {$child1_price = null}
-                        {$child2_price = null}
                         {foreach from=$room_data.prices item=p}
                             {if ($p.age_type == 'ADULT' || $p.age_type == 'ADULT ') && $p.acc_type == 'REGULAR'}
                                 {$adult_price = $p}
-                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '0-1') !== false}
-                                {$child1_price = $p}
-                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '2-11') !== false}
-                                {$child2_price = $p}
-                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && !$child2_price}
-                                {$child2_price = $p}
+                            {/if}
+                        {/foreach}
+
+                        {* Get room age bands — dynamically detected from price data *}
+                        {$r_bands = $room_age_bands[$room_id]|default:[]}
+                        {$r_child_bands = $r_bands.child_bands|default:[]}
+
+                        {* Build child price map keyed by band label (e.g., "0-1.99" => price_entry) *}
+                        {$child_price_map = []}
+                        {foreach from=$room_data.prices item=p}
+                            {if strpos($p.age_type|default:'', 'CHD') !== false || strpos($p.age_type|default:'', 'CHILD') !== false}
+                                {foreach from=$r_child_bands item=cb}
+                                    {* Match price entry to band by checking if the age range appears in the age_type string *}
+                                    {$dash_label = "{$cb.from}-{$cb.to}"}
+                                    {$comma_label = $cb.from|replace:'.':','|cat:'-'|cat:$cb.to|replace:'.':','}
+                                    {if strpos($p.age_type|default:'', $dash_label) !== false || strpos($p.age_type|default:'', $comma_label) !== false}
+                                        {if !isset($child_price_map[$cb.key])}
+                                            {$child_price_map[$cb.key] = $p}
+                                        {/if}
+                                    {/if}
+                                {/foreach}
                             {/if}
                         {/foreach}
                         
@@ -270,18 +288,38 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {* Determine occupancy rows based on room type *}
+                                {* Determine occupancy rows based on room type and available age bands *}
+                                {$total_capacity = $capacity.RB|default:2 + $capacity.EB|default:1}
                                 {if $is_sgl}
                                     {* Single room: 1 Adult only *}
                                     {$occ_list = []}
-                                    {$occ_list[] = ['label' => "1 {__('novoton_holidays.adult')}", 'adults' => 1, 'children' => 0, 'child_age' => 0]}
+                                    {$occ_list[] = ['label' => "1 {__('novoton_holidays.adult')}", 'adults' => 1, 'children' => 0, 'child_band_key' => '']}
                                 {else}
-                                    {* Double/other rooms: 2 Adults, 2A+1C, 2A+2C *}
+                                    {* Build occupancy rows dynamically from detected child age bands *}
                                     {$occ_list = []}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')}", 'adults' => 2, 'children' => 0, 'child_age' => 0]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} (0-{$child_age_1_max})", 'adults' => 2, 'children' => 1, 'child_age' => 1]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_2_min}-{$child_age_2_max})", 'adults' => 2, 'children' => 1, 'child_age' => 2]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_age' => 0]}
+                                    {* Always show 2 Adults *}
+                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')}", 'adults' => 2, 'children' => 0, 'child_band_key' => '']}
+
+                                    {* Show 2A+1C for each detected child age band in this room *}
+                                    {if $r_child_bands|count > 0 && $total_capacity >= 3}
+                                        {foreach from=$r_child_bands item=cb}
+                                            {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$cb.from}-{$cb.to})", 'adults' => 2, 'children' => 1, 'child_band_key' => $cb.key]}
+                                        {/foreach}
+                                    {/if}
+
+                                    {* Show 2A+2C only if room has child pricing and capacity >= 4 *}
+                                    {if $r_child_bands|count > 0 && $total_capacity >= 4}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_band_key' => 'mixed']}
+                                    {/if}
+
+                                    {* Fallback: if no age bands detected, show default rows *}
+                                    {if $r_child_bands|count == 0 && $total_capacity >= 3}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} (0-{$child_age_1_max})", 'adults' => 2, 'children' => 1, 'child_band_key' => 'fallback_infant']}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_2_min}-{$child_age_2_max})", 'adults' => 2, 'children' => 1, 'child_band_key' => 'fallback_child']}
+                                        {if $total_capacity >= 4}
+                                            {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_band_key' => 'mixed']}
+                                        {/if}
+                                    {/if}
                                 {/if}
                                 
                                 {foreach from=$occ_list item=occ_config name=occ_loop}
@@ -320,44 +358,53 @@
                                                     {$base = $adult_per_night * $occ_config.adults * 5}
                                                 {/if}
                                                 
-                                                {* Add children *}
+                                                {* Add children — use dynamic child_band_key to look up price *}
                                                 {if $occ_config.children > 0}
-                                                    {if $occ_config.child_age == 1 && $child1_price}
-                                                        {$child_7n = $child1_price.$price_key|default:0}
+                                                    {if $occ_config.child_band_key != 'mixed' && isset($child_price_map[$occ_config.child_band_key])}
+                                                        {$cp = $child_price_map[$occ_config.child_band_key]}
+                                                        {$child_7n = $cp.$price_key|default:0}
                                                         {if $child_7n == 0}
-                                                            {$child_7n = $child1_price.$price_key_alt|default:0}
+                                                            {$child_7n = $cp.$price_key_alt|default:0}
                                                         {/if}
                                                         {$child_per_night = $child_7n / 7}
                                                         {$base = $base + ($child_per_night * $occ_config.children * 5)}
-                                                    {elseif $occ_config.child_age == 2 && $child2_price}
-                                                        {$child_7n = $child2_price.$price_key|default:0}
-                                                        {if $child_7n == 0}
-                                                            {$child_7n = $child2_price.$price_key_alt|default:0}
-                                                        {/if}
-                                                        {$child_per_night = $child_7n / 7}
-                                                        {$base = $base + ($child_per_night * $occ_config.children * 5)}
-                                                    {elseif $occ_config.children == 2}
-                                                        {* 2 children - use both age groups *}
-                                                        {if $child1_price}
-                                                            {$c1_7n = $child1_price.$price_key|default:0}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count >= 2}
+                                                        {* 2 children - use first two detected age bands *}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1_7n = $cp1.$price_key|default:0}
                                                             {if $c1_7n == 0}
-                                                                {$c1_7n = $child1_price.$price_key_alt|default:0}
+                                                                {$c1_7n = $cp1.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + (($c1_7n / 7) * 5)}
                                                         {/if}
-                                                        {if $child2_price}
-                                                            {$c2_7n = $child2_price.$price_key|default:0}
+                                                        {$cb2_key = $r_child_bands[1].key}
+                                                        {if isset($child_price_map[$cb2_key])}
+                                                            {$cp2 = $child_price_map[$cb2_key]}
+                                                            {$c2_7n = $cp2.$price_key|default:0}
                                                             {if $c2_7n == 0}
-                                                                {$c2_7n = $child2_price.$price_key_alt|default:0}
+                                                                {$c2_7n = $cp2.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + (($c2_7n / 7) * 5)}
                                                         {/if}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count == 1}
+                                                        {* 2 children but only 1 band - use same band for both *}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1_7n = $cp1.$price_key|default:0}
+                                                            {if $c1_7n == 0}
+                                                                {$c1_7n = $cp1.$price_key_alt|default:0}
+                                                            {/if}
+                                                            {$base = $base + (($c1_7n / 7) * 5 * 2)}
+                                                        {/if}
                                                     {/if}
                                                 {/if}
-                                                
+
                                                 {* Apply commission *}
                                                 {$total = $base * (1 + $commission / 100)}
-                                                
+
                                                 {if $total > 0}
                                                     <span class="price">{$total|number_format:0} EUR</span>
                                                 {else}
@@ -366,7 +413,7 @@
                                             </td>
                                         {/foreach}
                                     </tr>
-                                    
+
                                     {* Row for 7 nights *}
                                     <tr class="occupancy-row nights-row">
                                         <td class="col-nights highlight-nights">7</td>
@@ -385,7 +432,7 @@
                                                     {$price_key = 'price_4'}
                                                     {$price_key_alt = 'price_4'}
                                                 {/if}
-                                                
+
                                                 {$base = 0}
                                                 {if $adult_price}
                                                     {$adult_total = $adult_price.$price_key|default:0}
@@ -394,40 +441,49 @@
                                                     {/if}
                                                     {$base = $adult_total * $occ_config.adults}
                                                 {/if}
-                                                
+
                                                 {if $occ_config.children > 0}
-                                                    {if $occ_config.child_age == 1 && $child1_price}
-                                                        {$child_total = $child1_price.$price_key|default:0}
+                                                    {if $occ_config.child_band_key != 'mixed' && isset($child_price_map[$occ_config.child_band_key])}
+                                                        {$cp = $child_price_map[$occ_config.child_band_key]}
+                                                        {$child_total = $cp.$price_key|default:0}
                                                         {if $child_total == 0}
-                                                            {$child_total = $child1_price.$price_key_alt|default:0}
+                                                            {$child_total = $cp.$price_key_alt|default:0}
                                                         {/if}
                                                         {$base = $base + ($child_total * $occ_config.children)}
-                                                    {elseif $occ_config.child_age == 2 && $child2_price}
-                                                        {$child_total = $child2_price.$price_key|default:0}
-                                                        {if $child_total == 0}
-                                                            {$child_total = $child2_price.$price_key_alt|default:0}
-                                                        {/if}
-                                                        {$base = $base + ($child_total * $occ_config.children)}
-                                                    {elseif $occ_config.children == 2}
-                                                        {if $child1_price}
-                                                            {$c1 = $child1_price.$price_key|default:0}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count >= 2}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1 = $cp1.$price_key|default:0}
                                                             {if $c1 == 0}
-                                                                {$c1 = $child1_price.$price_key_alt|default:0}
+                                                                {$c1 = $cp1.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + $c1}
                                                         {/if}
-                                                        {if $child2_price}
-                                                            {$c2 = $child2_price.$price_key|default:0}
+                                                        {$cb2_key = $r_child_bands[1].key}
+                                                        {if isset($child_price_map[$cb2_key])}
+                                                            {$cp2 = $child_price_map[$cb2_key]}
+                                                            {$c2 = $cp2.$price_key|default:0}
                                                             {if $c2 == 0}
-                                                                {$c2 = $child2_price.$price_key_alt|default:0}
+                                                                {$c2 = $cp2.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + $c2}
                                                         {/if}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count == 1}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1 = $cp1.$price_key|default:0}
+                                                            {if $c1 == 0}
+                                                                {$c1 = $cp1.$price_key_alt|default:0}
+                                                            {/if}
+                                                            {$base = $base + ($c1 * 2)}
+                                                        {/if}
                                                     {/if}
                                                 {/if}
-                                                
+
                                                 {$total = $base * (1 + $commission / 100)}
-                                                
+
                                                 {if $total > 0}
                                                     <span class="price price-highlight">{$total|number_format:0} EUR</span>
                                                 {else}
@@ -436,7 +492,7 @@
                                             </td>
                                         {/foreach}
                                     </tr>
-                                    
+
                                     {* Row for 10 nights *}
                                     <tr class="occupancy-row nights-row last-nights-row">
                                         <td class="col-nights">10</td>
@@ -455,7 +511,7 @@
                                                     {$price_key = 'price_4'}
                                                     {$price_key_alt = 'price_4'}
                                                 {/if}
-                                                
+
                                                 {$base = 0}
                                                 {if $adult_price}
                                                     {$adult_7n = $adult_price.$price_key|default:0}
@@ -465,36 +521,44 @@
                                                     {$adult_per_night = $adult_7n / 7}
                                                     {$base = $adult_per_night * $occ_config.adults * 10}
                                                 {/if}
-                                                
+
                                                 {if $occ_config.children > 0}
-                                                    {if $occ_config.child_age == 1 && $child1_price}
-                                                        {$child_7n = $child1_price.$price_key|default:0}
+                                                    {if $occ_config.child_band_key != 'mixed' && isset($child_price_map[$occ_config.child_band_key])}
+                                                        {$cp = $child_price_map[$occ_config.child_band_key]}
+                                                        {$child_7n = $cp.$price_key|default:0}
                                                         {if $child_7n == 0}
-                                                            {$child_7n = $child1_price.$price_key_alt|default:0}
+                                                            {$child_7n = $cp.$price_key_alt|default:0}
                                                         {/if}
                                                         {$child_per_night = $child_7n / 7}
                                                         {$base = $base + ($child_per_night * $occ_config.children * 10)}
-                                                    {elseif $occ_config.child_age == 2 && $child2_price}
-                                                        {$child_7n = $child2_price.$price_key|default:0}
-                                                        {if $child_7n == 0}
-                                                            {$child_7n = $child2_price.$price_key_alt|default:0}
-                                                        {/if}
-                                                        {$child_per_night = $child_7n / 7}
-                                                        {$base = $base + ($child_per_night * $occ_config.children * 10)}
-                                                    {elseif $occ_config.children == 2}
-                                                        {if $child1_price}
-                                                            {$c1_7n = $child1_price.$price_key|default:0}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count >= 2}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1_7n = $cp1.$price_key|default:0}
                                                             {if $c1_7n == 0}
-                                                                {$c1_7n = $child1_price.$price_key_alt|default:0}
+                                                                {$c1_7n = $cp1.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + (($c1_7n / 7) * 10)}
                                                         {/if}
-                                                        {if $child2_price}
-                                                            {$c2_7n = $child2_price.$price_key|default:0}
+                                                        {$cb2_key = $r_child_bands[1].key}
+                                                        {if isset($child_price_map[$cb2_key])}
+                                                            {$cp2 = $child_price_map[$cb2_key]}
+                                                            {$c2_7n = $cp2.$price_key|default:0}
                                                             {if $c2_7n == 0}
-                                                                {$c2_7n = $child2_price.$price_key_alt|default:0}
+                                                                {$c2_7n = $cp2.$price_key_alt|default:0}
                                                             {/if}
                                                             {$base = $base + (($c2_7n / 7) * 10)}
+                                                        {/if}
+                                                    {elseif $occ_config.child_band_key == 'mixed' && $r_child_bands|count == 1}
+                                                        {$cb1_key = $r_child_bands[0].key}
+                                                        {if isset($child_price_map[$cb1_key])}
+                                                            {$cp1 = $child_price_map[$cb1_key]}
+                                                            {$c1_7n = $cp1.$price_key|default:0}
+                                                            {if $c1_7n == 0}
+                                                                {$c1_7n = $cp1.$price_key_alt|default:0}
+                                                            {/if}
+                                                            {$base = $base + (($c1_7n / 7) * 10 * 2)}
                                                         {/if}
                                                     {/if}
                                                 {/if}

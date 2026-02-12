@@ -670,7 +670,7 @@
                                             <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_mobile|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
-                                    {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                    {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
                                     {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                     {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong> Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                 </div>
@@ -771,7 +771,7 @@
                                         <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_desktop|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
-                                {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
                                 {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                 {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>⚠️ Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                             </div>

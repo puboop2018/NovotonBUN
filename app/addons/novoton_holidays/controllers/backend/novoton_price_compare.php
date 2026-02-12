@@ -60,48 +60,74 @@ if ($mode == 'compare') {
     echo '<!DOCTYPE html><html><head><title>Price Comparison Result</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         h1 { color: #003580; margin-bottom: 5px; }
-        h2 { color: #555; margin-top: 25px; border-bottom: 2px solid #003580; padding-bottom: 5px; }
-        .params { background: #f0f0f0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
-        .params strong { display: inline-block; width: 120px; }
+        h2 { color: #003580; margin-top: 30px; border-bottom: 2px solid #003580; padding-bottom: 5px; font-size: 16px; }
+        h3 { color: #555; margin-top: 15px; font-size: 14px; }
+        .params { background: #f0f4f8; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #003580; }
+        .params strong { display: inline-block; width: 120px; color: #333; }
         .result-box { padding: 20px; border-radius: 8px; margin: 15px 0; }
         .result-api { background: #e3f2fd; border: 2px solid #2196f3; }
         .result-calc { background: #e8f5e9; border: 2px solid #4caf50; }
-        .result-diff { background: #fff3e0; border: 2px solid #ff9800; }
         .result-match { background: #e8f5e9; border: 2px solid #4caf50; }
         .result-mismatch { background: #ffebee; border: 2px solid #f44336; }
         .price-big { font-size: 32px; font-weight: bold; }
         .price-label { font-size: 14px; color: #666; }
         .comparison-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #f5f5f5; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+        th, td { padding: 6px 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f5f5f5; font-weight: 600; }
         .match { color: green; font-weight: bold; }
         .mismatch { color: red; font-weight: bold; }
+        .step { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin: 12px 0; }
+        .step-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .step-num { background: #003580; color: white; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin-right: 10px; flex-shrink: 0; }
+        .step-title { font-weight: 600; color: #333; font-size: 14px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 0 3px; }
+        .badge-rb { background: #e3f2fd; color: #1565c0; }
+        .badge-eb { background: #fff3e0; color: #e65100; }
+        .badge-adult { background: #e8f5e9; color: #2e7d32; }
+        .badge-child { background: #fce4ec; color: #c62828; }
+        .badge-free { background: #c8e6c9; color: #1b5e20; }
+        .badge-active { background: #4caf50; color: white; }
+        .badge-inactive { background: #e0e0e0; color: #757575; }
+        .badge-season { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin: 2px; color: white; }
+        .season-1 { background: #4caf50; }
+        .season-2 { background: #2196f3; }
+        .season-3 { background: #ff9800; }
+        .season-4 { background: #e91e63; }
+        .season-5 { background: #9c27b0; }
+        .season-6 { background: #009688; }
+        .season-7 { background: #795548; }
+        .formula { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px 12px; font-family: monospace; font-size: 13px; margin: 8px 0; display: inline-block; }
+        .highlight-row { background: #fffde7 !important; }
+        .total-row { font-weight: bold; background: #e8eaf6 !important; }
+        .zero-value { color: #bbb; }
         .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-        .debug-section { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; }
+        .debug-section { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; }
         pre { white-space: pre-wrap; word-wrap: break-word; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-note { font-size: 12px; color: #888; margin-top: 4px; }
     </style></head><body><div class="container">';
 
     echo '<h1>Price Comparison Result</h1>';
 
     echo '<div class="params">';
-    echo "<strong>Hotel ID:</strong> {$hotel_id}<br>";
-    echo "<strong>Package:</strong> {$package_name}<br>";
-    echo "<strong>Room:</strong> " . rawurldecode($room_id) . "<br>";
-    echo "<strong>Board:</strong> {$board_id}<br>";
+    echo "<strong>Hotel ID:</strong> " . htmlspecialchars($hotel_id) . "<br>";
+    echo "<strong>Package:</strong> " . htmlspecialchars($package_name) . "<br>";
+    echo "<strong>Room:</strong> " . htmlspecialchars(rawurldecode($room_id)) . "<br>";
+    echo "<strong>Board:</strong> " . htmlspecialchars($board_id) . "<br>";
     echo "<strong>Check-in:</strong> {$check_in}<br>";
+    echo "<strong>Check-out:</strong> {$check_out}<br>";
     echo "<strong>Nights:</strong> {$nights}<br>";
     echo "<strong>Adults:</strong> {$adults}<br>";
     echo "<strong>Children:</strong> " . (empty($children_arr) ? 'None' : implode(', ', $children_arr) . ' years') . "<br>";
+    echo "<strong>Booking Date:</strong> " . date('Y-m-d') . "<br>";
     echo '</div>';
 
-    // 1. Calculate price using PriceInfoCalculation
-    echo '<h2>1. Calculated Price (from priceinfo)</h2>';
-
+    // Run calculation with debug always ON for full step display
     $calculator = new PriceInfoCalculation();
-    $calculator->setDebug($show_debug);
+    $calculator->setDebug(true);
 
     $calcResult = $calculator->calculate([
         'hotel_id' => $hotel_id,
@@ -115,36 +141,344 @@ if ($mode == 'compare') {
         'booking_date' => date('Y-m-d')
     ]);
 
-    if ($calcResult['success']) {
-        echo '<div class="result-box result-calc">';
-        echo '<div class="price-label">Calculated Price (with ' . $calcResult['commission'] . '% commission)</div>';
-        echo '<div class="price-big">' . number_format($calcResult['price'], 2) . ' EUR</div>';
-        echo '<div class="price-label">Base: ' . number_format($calcResult['price_without_commission'], 2) . ' EUR</div>';
-        echo '</div>';
-
-        // Breakdown
-        echo '<table>';
-        echo '<tr><th>Component</th><th>Amount (EUR)</th></tr>';
-        echo '<tr><td>Base Price</td><td>' . number_format($calcResult['breakdown']['base_price'], 2) . '</td></tr>';
-        echo '<tr><td>Fees Total</td><td>' . number_format($calcResult['breakdown']['fees']['total_fees'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- extras_daily</td><td>' . number_format($calcResult['breakdown']['fees']['extras_daily'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- extras_single</td><td>' . number_format($calcResult['breakdown']['fees']['extras_single'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- extras_rooms</td><td>' . number_format($calcResult['breakdown']['fees']['extras_rooms'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- extras_board</td><td>' . number_format($calcResult['breakdown']['fees']['extras_board'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- handling_fee</td><td>' . number_format($calcResult['breakdown']['fees']['handling_fee'], 2) . '</td></tr>';
-        echo '<tr><td>&nbsp;&nbsp;- company_fee</td><td>' . number_format($calcResult['breakdown']['fees']['company_fee'] ?? 0, 2) . '</td></tr>';
-        echo '<tr><td>Applied Discount</td><td>' . $calcResult['breakdown']['applied_discount'] . ' (-' . number_format($calcResult['breakdown']['discount_amount'], 2) . ')</td></tr>';
-        echo '<tr style="font-weight:bold;"><td>Total (before commission)</td><td>' . number_format($calcResult['price_without_commission'], 2) . '</td></tr>';
-        echo '<tr style="font-weight:bold;"><td>Total (with commission)</td><td>' . number_format($calcResult['price'], 2) . '</td></tr>';
-        echo '</table>';
-    } else {
+    if (!$calcResult['success']) {
         echo '<div class="result-box result-mismatch">';
         echo '<strong>Calculation Error:</strong> ' . htmlspecialchars($calcResult['error'] ?? 'Unknown error');
         echo '</div>';
+        echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
+        echo '</div></body></html>';
+        exit;
     }
 
-    // 2. Get price from room_price API
-    echo '<h2>2. API Price (room_price)</h2>';
+    // =========================================================================
+    // STEP 1: Room Capacity & Age Bands
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">1</span><span class="step-title">Room Capacity &amp; Hotel Age Bands</span></div>';
+
+    $roomCap = $calcResult['room_capacity'] ?? [];
+    echo '<div class="grid-2">';
+
+    // Room capacity
+    echo '<div>';
+    echo '<table>';
+    echo '<tr><th colspan="2">Room Capacity</th></tr>';
+    echo '<tr><td>Regular Beds (RB)</td><td>' . ($roomCap['RB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Extra Beds (EB)</td><td>' . ($roomCap['EB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Adults</td><td>' . ($roomCap['maxADT'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Children</td><td>' . ($roomCap['maxCHD'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Min Persons</td><td>' . ($roomCap['minPAX'] ?? '-') . '</td></tr>';
+    echo '</table>';
+    echo '</div>';
+
+    // Child age bands
+    echo '<div>';
+    $ageBands = $calcResult['child_age_bands'] ?? [];
+    echo '<table>';
+    echo '<tr><th colspan="3">Hotel Child Age Bands</th></tr>';
+    echo '<tr><th>Band</th><th>From</th><th>To</th></tr>';
+    if (!empty($ageBands)) {
+        foreach ($ageBands as $ab) {
+            echo '<tr>';
+            echo '<td><span class="badge badge-child">' . htmlspecialchars($ab['label']) . '</span></td>';
+            echo '<td>' . $ab['from'] . '</td>';
+            echo '<td>' . $ab['to'] . '</td>';
+            echo '</tr>';
+        }
+    } else {
+        echo '<tr><td colspan="3" class="zero-value">No hotel-specific age bands (using defaults: 0-1.99, 2-11.99, 12-17.99)</td></tr>';
+    }
+    echo '</table>';
+    echo '</div>';
+    echo '</div>'; // grid-2
+    echo '</div>'; // step
+
+    // =========================================================================
+    // STEP 2: Occupancy Structure
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">2</span><span class="step-title">Occupancy Structure (RB vs EB assignment)</span></div>';
+
+    $occupancy = $calcResult['occupancy'] ?? [];
+    echo '<table>';
+    echo '<tr><th>#</th><th>Type</th><th>Age Type</th><th>Bed Type</th><th>Details</th></tr>';
+
+    $personNum = 1;
+    if (!empty($occupancy['adults'])) {
+        foreach ($occupancy['adults'] as $a) {
+            $accBadge = ($a['acc_type'] ?? '') === 'REGULAR' ? 'badge-rb' : 'badge-eb';
+            $accLabel = ($a['acc_type'] ?? '') === 'REGULAR' ? 'RB' : 'EB';
+            echo '<tr>';
+            echo '<td>' . $personNum++ . '</td>';
+            echo '<td><span class="badge badge-adult">Adult</span></td>';
+            echo '<td>' . htmlspecialchars($a['age_type'] ?? 'ADULT') . '</td>';
+            echo '<td><span class="badge ' . $accBadge . '">' . $accLabel . '</span></td>';
+            echo '<td>Position ' . ($a['position'] ?? $a['index'] ?? '-') . '</td>';
+            echo '</tr>';
+        }
+    }
+    if (!empty($occupancy['children'])) {
+        foreach ($occupancy['children'] as $c) {
+            $accBadge = in_array(($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'badge-rb' : 'badge-eb';
+            $accLabel = in_array(($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'RB' : 'EB';
+            echo '<tr>';
+            echo '<td>' . $personNum++ . '</td>';
+            echo '<td><span class="badge badge-child">Child</span></td>';
+            echo '<td>' . htmlspecialchars($c['age_type'] ?? '-') . '</td>';
+            echo '<td><span class="badge ' . $accBadge . '">' . $accLabel . '</span></td>';
+            echo '<td>Age ' . ($c['age'] ?? '?') . ', Position ' . ($c['position'] ?? $c['index'] ?? '-') . '</td>';
+            echo '</tr>';
+        }
+    }
+    echo '</table>';
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 3: Season Mapping
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">3</span><span class="step-title">Season Mapping (date &rarr; season &rarr; price column)</span></div>';
+
+    $seasonsByNight = $calcResult['seasons_by_night'] ?? [];
+    if (!empty($seasonsByNight)) {
+        echo '<table>';
+        echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price Column</th></tr>';
+        foreach ($seasonsByNight as $idx => $sn) {
+            $sNum = $sn['season'] ?? '?';
+            echo '<tr>';
+            echo '<td>' . ($idx + 1) . '</td>';
+            echo '<td>' . ($sn['date'] ?? '-') . '</td>';
+            echo '<td><span class="badge badge-season season-' . $sNum . '">Season ' . $sNum . '</span></td>';
+            echo '<td><strong>Price' . $sNum . '</strong></td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    } else {
+        echo '<p class="zero-value">No season mapping available.</p>';
+    }
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 4: Base Price Calculation
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">4</span><span class="step-title">Base Price Calculation</span></div>';
+
+    $breakdown = $calcResult['breakdown'] ?? [];
+    $byNight = $breakdown['base_per_night'] ?? [];
+    $byPerson = $breakdown['base_per_person'] ?? [];
+
+    // Per-night breakdown
+    if (!empty($byNight)) {
+        echo '<h3>Per-Night Breakdown</h3>';
+        echo '<table>';
+        echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price (EUR)</th></tr>';
+        $nightTotal = 0;
+        foreach ($byNight as $idx => $n) {
+            $sNum = $n['season'] ?? '?';
+            $nightPrice = $n['price'] ?? 0;
+            $nightTotal += $nightPrice;
+            echo '<tr>';
+            echo '<td>' . ($idx + 1) . '</td>';
+            echo '<td>' . ($n['date'] ?? '-') . '</td>';
+            echo '<td><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span></td>';
+            echo '<td>' . number_format($nightPrice, 2) . '</td>';
+            echo '</tr>';
+        }
+        echo '<tr class="total-row"><td colspan="3">Total Base Price</td><td>' . number_format($nightTotal, 2) . '</td></tr>';
+        echo '</table>';
+    }
+
+    // Per-person totals
+    if (!empty($byPerson)) {
+        echo '<h3>Per-Person Totals (all nights)</h3>';
+        echo '<table>';
+        echo '<tr><th>Person</th><th>Total (EUR)</th></tr>';
+        foreach ($byPerson as $key => $amount) {
+            $label = str_replace('_', ' ', ucfirst($key));
+            echo '<tr><td>' . htmlspecialchars($label) . '</td><td>' . number_format($amount, 2) . '</td></tr>';
+        }
+        echo '</table>';
+    }
+
+    echo '<div class="formula">Base Price = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' EUR</div>';
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 5: Fees / Supplements
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">5</span><span class="step-title">Fees &amp; Supplements</span></div>';
+
+    $fees = $breakdown['fees'] ?? [];
+    echo '<table>';
+    echo '<tr><th>Fee Type</th><th>Amount (EUR)</th></tr>';
+
+    $feeTypes = [
+        'extras_daily' => 'Extras Daily (per-person daily charges)',
+        'extras_single' => 'Extras Single (single supplement)',
+        'extras_rooms' => 'Extras Rooms (per-room charges)',
+        'extras_board' => 'Extras Board (board upgrades)',
+        'handling_fee' => 'Handling Fee (tiered by stay length)',
+        'company_fee' => 'Company Fee (per-room flat fee)'
+    ];
+    foreach ($feeTypes as $fKey => $fLabel) {
+        $val = $fees[$fKey] ?? 0;
+        $cls = ($val == 0) ? ' class="zero-value"' : '';
+        echo '<tr' . $cls . '><td>' . $fLabel . '</td><td>' . number_format($val, 2) . '</td></tr>';
+    }
+    echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
+    echo '</table>';
+
+    $basePlusFees = ($breakdown['base_price'] ?? 0) + ($fees['total_fees'] ?? 0);
+    echo '<div class="formula">Subtotal (Base + Fees) = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' + ' . number_format($fees['total_fees'] ?? 0, 2) . ' = ' . number_format($basePlusFees, 2) . ' EUR</div>';
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 6: Early Booking Discount
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">6</span><span class="step-title">Early Booking (EB) Discount</span></div>';
+
+    $eb = $breakdown['discounts']['early_booking'] ?? [];
+    $ebApplicable = $eb['applicable'] ?? false;
+
+    if ($ebApplicable) {
+        echo '<p><span class="badge badge-active">APPLICABLE</span> Discount: <strong>' . ($eb['percent'] ?? 0) . '%</strong></p>';
+        $ebBd = $eb['discount_breakdown'] ?? [];
+        echo '<table>';
+        echo '<tr><th>Component</th><th>Discount (EUR)</th></tr>';
+        echo '<tr><td>Base Price discount</td><td>' . number_format($ebBd['base_price'] ?? 0, 2) . '</td></tr>';
+        $ebDaily = $ebBd['extras_daily'] ?? 0;
+        echo '<tr' . ($ebDaily == 0 ? ' class="zero-value"' : '') . '><td>Extras Daily discount (EBToDaily)</td><td>' . number_format($ebDaily, 2) . '</td></tr>';
+        $ebRooms = $ebBd['extras_rooms'] ?? 0;
+        echo '<tr' . ($ebRooms == 0 ? ' class="zero-value"' : '') . '><td>Extras Rooms discount (EBToRooms)</td><td>' . number_format($ebRooms, 2) . '</td></tr>';
+        $ebBoard = $ebBd['extras_board'] ?? 0;
+        echo '<tr' . ($ebBoard == 0 ? ' class="zero-value"' : '') . '><td>Extras Board discount (EBToBoard)</td><td>' . number_format($ebBoard, 2) . '</td></tr>';
+        echo '<tr class="total-row"><td>Total EB Discount</td><td>-' . number_format($eb['discount'] ?? 0, 2) . '</td></tr>';
+        echo '</table>';
+    } else {
+        echo '<p><span class="badge badge-inactive">NOT APPLICABLE</span> No early booking discount for this booking.</p>';
+    }
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 7: Reduction (Free Nights)
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">7</span><span class="step-title">Reduction (Free Nights)</span></div>';
+
+    $red = $breakdown['discounts']['reduction'] ?? [];
+    $redApplicable = $red['applicable'] ?? false;
+
+    if ($redApplicable) {
+        $freeNights = $red['free_nights'] ?? 0;
+        $freeIndices = $red['free_night_indices'] ?? [];
+        echo '<p><span class="badge badge-active">APPLICABLE</span> Free nights: <strong>' . $freeNights . '</strong></p>';
+
+        // Show which nights are free
+        if (!empty($freeIndices) && !empty($byNight)) {
+            echo '<table>';
+            echo '<tr><th>Night</th><th>Date</th><th>Status</th><th>Value (EUR)</th></tr>';
+            foreach ($byNight as $idx => $n) {
+                $isFree = in_array($idx, $freeIndices);
+                echo '<tr' . ($isFree ? ' class="highlight-row"' : '') . '>';
+                echo '<td>' . ($idx + 1) . '</td>';
+                echo '<td>' . ($n['date'] ?? '-') . '</td>';
+                echo '<td>' . ($isFree ? '<span class="badge badge-free">FREE</span>' : 'Paid') . '</td>';
+                echo '<td>' . ($isFree ? '-' . number_format($n['price'] ?? 0, 2) : number_format($n['price'] ?? 0, 2)) . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        $redBd = $red['discount_breakdown'] ?? [];
+        echo '<table>';
+        echo '<tr><th>Component</th><th>Discount (EUR)</th></tr>';
+        echo '<tr><td>Base Price of free nights</td><td>' . number_format($redBd['base_price'] ?? 0, 2) . '</td></tr>';
+        $redDaily = $redBd['extras_daily'] ?? 0;
+        echo '<tr' . ($redDaily == 0 ? ' class="zero-value"' : '') . '><td>Extras Daily reduction (EXTToDaily)</td><td>' . number_format($redDaily, 2) . '</td></tr>';
+        $redRooms = $redBd['extras_rooms'] ?? 0;
+        echo '<tr' . ($redRooms == 0 ? ' class="zero-value"' : '') . '><td>Extras Rooms reduction (EXTToRooms)</td><td>' . number_format($redRooms, 2) . '</td></tr>';
+        $redBoard = $redBd['extras_board'] ?? 0;
+        echo '<tr' . ($redBoard == 0 ? ' class="zero-value"' : '') . '><td>Extras Board reduction (EXTToBoard)</td><td>' . number_format($redBoard, 2) . '</td></tr>';
+        echo '<tr class="total-row"><td>Total Reduction Discount</td><td>-' . number_format($red['discount'] ?? 0, 2) . '</td></tr>';
+        echo '</table>';
+    } else {
+        echo '<p><span class="badge badge-inactive">NOT APPLICABLE</span> No free nights reduction for this stay.</p>';
+    }
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 8: Priority Rules & Scenario Evaluation
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">8</span><span class="step-title">Priority Rules &amp; Scenario Evaluation</span></div>';
+
+    $prioRules = $breakdown['priority_rules'] ?? [];
+    $scenarios = $prioRules['scenarios'] ?? [];
+    $appliedDiscount = $breakdown['applied_discount'] ?? 'none';
+
+    echo '<table>';
+    echo '<tr><th>Setting</th><th>Value</th></tr>';
+    echo '<tr><td>Priority (combinable?)</td><td>' . ($prioRules['priority'] ?? 'No') . ' <span class="info-note">(' . (($prioRules['priority'] ?? 'No') === 'Yes' ? 'NOT combinable' : 'Combinable') . ')</span></td></tr>';
+    echo '<tr><td>PriorityEB (EB forced?)</td><td>' . ($prioRules['priority_eb'] ?? 'No') . '</td></tr>';
+    echo '<tr><td>PriorityEXT</td><td>' . ($prioRules['priority_ext'] ?? 'No') . '</td></tr>';
+    echo '</table>';
+
+    if (!empty($scenarios)) {
+        echo '<h3>Scenario Comparison</h3>';
+        echo '<table>';
+        echo '<tr><th>Scenario</th><th>Price (EUR)</th><th>Savings</th><th></th></tr>';
+
+        $scenarioLabels = [
+            'none' => 'No discount',
+            'early_booking' => 'Early Booking only',
+            'reduction' => 'Reduction only',
+            'combined' => 'Combined (EB + Reduction)'
+        ];
+
+        foreach ($scenarioLabels as $sKey => $sLabel) {
+            $sVal = $scenarios[$sKey] ?? null;
+            if ($sVal === null) continue;
+            $isActive = ($sKey === $appliedDiscount);
+            $savings = ($scenarios['none'] ?? 0) - $sVal;
+            echo '<tr' . ($isActive ? ' class="highlight-row"' : '') . '>';
+            echo '<td>' . $sLabel . '</td>';
+            echo '<td>' . number_format($sVal, 2) . '</td>';
+            echo '<td>' . ($savings > 0 ? '-' . number_format($savings, 2) : '-') . '</td>';
+            echo '<td>' . ($isActive ? '<span class="badge badge-active">SELECTED</span>' : '') . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    }
+
+    echo '<div class="formula">Selected: ' . htmlspecialchars($appliedDiscount) . ' | Discount amount: -' . number_format($breakdown['discount_amount'] ?? 0, 2) . ' EUR</div>';
+    echo '</div>';
+
+    // =========================================================================
+    // STEP 9: Commission & Final Price
+    // =========================================================================
+    echo '<div class="step">';
+    echo '<div class="step-header"><span class="step-num">9</span><span class="step-title">Commission &amp; Final Price</span></div>';
+
+    echo '<table>';
+    echo '<tr><th>Component</th><th>Amount (EUR)</th></tr>';
+    echo '<tr><td>Base Price</td><td>' . number_format($breakdown['base_price'] ?? 0, 2) . '</td></tr>';
+    echo '<tr><td>+ Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
+    echo '<tr><td>- Discount (' . htmlspecialchars($appliedDiscount) . ')</td><td>-' . number_format($breakdown['discount_amount'] ?? 0, 2) . '</td></tr>';
+    echo '<tr class="total-row"><td>Price before commission</td><td>' . number_format($calcResult['price_without_commission'], 2) . '</td></tr>';
+    echo '<tr><td>Commission (' . $calcResult['commission'] . '%)</td><td>+' . number_format($calcResult['price'] - $calcResult['price_without_commission'], 2) . '</td></tr>';
+    echo '<tr class="total-row" style="font-size:16px;"><td>FINAL PRICE</td><td>' . number_format($calcResult['price'], 2) . ' EUR</td></tr>';
+    echo '</table>';
+
+    echo '<div class="formula">' . number_format($calcResult['price_without_commission'], 2) . ' &times; (1 + ' . $calcResult['commission'] . '% ) = ' . number_format($calcResult['price'], 2) . ' EUR</div>';
+    echo '</div>';
+
+    // =========================================================================
+    // API COMPARISON
+    // =========================================================================
+    echo '<h2>API Price Comparison</h2>';
 
     $api = new NovotonApi();
     $apiResult = $api->getRoomPrice([
@@ -162,7 +496,6 @@ if ($mode == 'compare') {
     $apiPriceFound = false;
 
     if ($apiResult) {
-        // Parse API response to find matching room/board price
         $prices = $apiResult->xpath('//Price');
         $idRooms = $apiResult->xpath('//IdRoom');
         $boards = $apiResult->xpath('//Board');
@@ -174,7 +507,6 @@ if ($mode == 'compare') {
             $resultRoom = rawurldecode((string)$idRooms[$i]);
             $resultBoard = (string)$boards[$i];
 
-            // Match room and board
             $roomMatches = empty($room_id) ||
                            $resultRoom === $room_id ||
                            $resultRoom === rawurldecode($room_id);
@@ -189,38 +521,20 @@ if ($mode == 'compare') {
             }
         }
 
-        // Fallback to first result if no exact match
         if (!$apiPriceFound && $numResults > 0) {
             $apiPrice = floatval((string)$prices[0]);
             $apiPriceFound = true;
         }
     }
 
-    // Apply commission to API price for fair comparison
     $commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? 0);
     $apiPriceWithCommission = $apiPrice * (1 + $commission / 100);
 
     if ($apiPriceFound) {
-        echo '<div class="result-box result-api">';
-        echo '<div class="price-label">API Price (with ' . $commission . '% commission)</div>';
-        echo '<div class="price-big">' . number_format($apiPriceWithCommission, 2) . ' EUR</div>';
-        echo '<div class="price-label">Base: ' . number_format($apiPrice, 2) . ' EUR</div>';
-        echo '</div>';
-    } else {
-        echo '<div class="result-box result-mismatch">';
-        echo '<strong>API Error:</strong> No price found for this room/board combination';
-        echo '</div>';
-    }
-
-    // 3. Comparison
-    echo '<h2>3. Comparison</h2>';
-
-    if ($calcResult['success'] && $apiPriceFound) {
         $calcPrice = $calcResult['price'];
         $difference = $calcPrice - $apiPriceWithCommission;
         $percentDiff = $apiPriceWithCommission > 0 ? ($difference / $apiPriceWithCommission) * 100 : 0;
-
-        $isMatch = abs($difference) < 1; // Within 1 EUR tolerance
+        $isMatch = abs($difference) < 1;
 
         echo '<div class="result-box ' . ($isMatch ? 'result-match' : 'result-mismatch') . '">';
         echo '<div class="comparison-grid">';
@@ -228,11 +542,13 @@ if ($mode == 'compare') {
         echo '<div>';
         echo '<div class="price-label">Calculated</div>';
         echo '<div class="price-big">' . number_format($calcPrice, 2) . '</div>';
+        echo '<div class="price-label">Base: ' . number_format($calcResult['price_without_commission'], 2) . '</div>';
         echo '</div>';
 
         echo '<div>';
-        echo '<div class="price-label">API</div>';
+        echo '<div class="price-label">API (room_price)</div>';
         echo '<div class="price-big">' . number_format($apiPriceWithCommission, 2) . '</div>';
+        echo '<div class="price-label">Base: ' . number_format($apiPrice, 2) . '</div>';
         echo '</div>';
 
         echo '<div>';
@@ -243,48 +559,26 @@ if ($mode == 'compare') {
         echo '</div>';
         echo '</div>';
 
-        echo '</div>';
+        echo '</div>'; // comparison-grid
 
         if ($isMatch) {
             echo '<p style="text-align:center;color:green;font-weight:bold;margin-top:15px;">PRICES MATCH (within 1 EUR tolerance)</p>';
         } else {
-            echo '<p style="text-align:center;color:red;font-weight:bold;margin-top:15px;">PRICES DO NOT MATCH - Algorithm needs adjustment</p>';
+            echo '<p style="text-align:center;color:red;font-weight:bold;margin-top:15px;">PRICES DO NOT MATCH - Check steps above for discrepancies</p>';
         }
-
         echo '</div>';
-
-        // Comparison without commission
-        echo '<h3>Comparison (without commission)</h3>';
-        echo '<table>';
-        echo '<tr><th></th><th>Calculated</th><th>API</th><th>Difference</th></tr>';
-        echo '<tr>';
-        echo '<td>Base Price</td>';
-        echo '<td>' . number_format($calcResult['price_without_commission'], 2) . '</td>';
-        echo '<td>' . number_format($apiPrice, 2) . '</td>';
-        $baseDiff = $calcResult['price_without_commission'] - $apiPrice;
-        echo '<td class="' . (abs($baseDiff) < 1 ? 'match' : 'mismatch') . '">' . ($baseDiff >= 0 ? '+' : '') . number_format($baseDiff, 2) . '</td>';
-        echo '</tr>';
-        echo '</table>';
     } else {
         echo '<div class="result-box result-mismatch">';
-        echo 'Cannot compare - one or both prices unavailable';
+        echo '<strong>API Error:</strong> No price found for this room/board combination';
         echo '</div>';
     }
 
-    // Debug section
-    if ($show_debug && $calcResult['success'] && !empty($calcResult['debug_log'])) {
-        echo '<h2>Debug Log</h2>';
+    // Debug Log (raw JSON, if debug checkbox was checked)
+    if ($show_debug && !empty($calcResult['debug_log'])) {
+        echo '<h2>Raw Debug Log</h2>';
         echo '<div class="debug-section">';
         echo '<pre>' . htmlspecialchars(json_encode($calcResult['debug_log'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
         echo '</div>';
-
-        // Show occupancy structure
-        if (!empty($calcResult['occupancy'])) {
-            echo '<h3>Occupancy Structure</h3>';
-            echo '<div class="debug-section">';
-            echo '<pre>' . htmlspecialchars(json_encode($calcResult['occupancy'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
-            echo '</div>';
-        }
     }
 
     // API raw response

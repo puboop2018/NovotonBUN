@@ -52,6 +52,15 @@ class PriceInfoCalculation
     /** @var array Debug log */
     private $debugLog = [];
 
+    /** @var array Code index for Code/Base resolution: code_number => [rows] */
+    private $codeIndex = [];
+
+    /** @var string IdStar for season_price matching */
+    private $idStar = '4*';
+
+    /** @var array Hotel-specific child age bands parsed from hotelinfo ages, sorted by from_year */
+    private $childAgeBands = [];
+
     /**
      * Constructor
      */
@@ -96,8 +105,14 @@ class PriceInfoCalculation
             return $this->errorResult('Priceinfo not found for hotel/package');
         }
 
+        // Build code index for Code/Base resolution (Code is numeric ID, Base references another Code)
+        $this->buildCodeIndex();
+
         // Load hotelinfo for room capacities
         $this->hotelinfo = $this->loadHotelInfo($hotelId);
+
+        // Parse hotel-specific child age bands from hotelinfo
+        $this->parseChildAgeBands();
 
         // Extract parameters
         $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
@@ -107,6 +122,7 @@ class PriceInfoCalculation
         $adults = intval($params['adults'] ?? 2);
         $childrenAges = $params['children_ages'] ?? [];
         $bookingDate = $params['booking_date'] ?? date('Y-m-d');
+        $this->idStar = $params['id_star'] ?? '4*';
 
         // Ensure children_ages is array
         if (!is_array($childrenAges)) {
@@ -138,7 +154,9 @@ class PriceInfoCalculation
         }
 
         // Step 2: Build occupancy structure (who uses RB vs EB)
-        $occupancy = $this->buildOccupancyStructure($adults, $childrenAges, $roomCapacity);
+        // Also checks if each child's age band has pricing in this room;
+        // children without matching child rates are reclassified as additional adults.
+        $occupancy = $this->buildOccupancyStructure($adults, $childrenAges, $roomCapacity, $roomId, $boardId);
         $this->log('Occupancy structure', $occupancy);
 
         // Step 3: Get season mapping for each night
@@ -177,6 +195,7 @@ class PriceInfoCalculation
             'breakdown' => [
                 'base_price' => round($basePrice['total'], 2),
                 'base_per_night' => $basePrice['by_night'] ?? [],
+                'base_per_person' => $basePrice['by_person'] ?? [],
                 'fees' => [
                     'extras_daily' => round($fees['extras_daily'] ?? 0, 2),
                     'extras_single' => round($fees['extras_single'] ?? 0, 2),
@@ -186,13 +205,23 @@ class PriceInfoCalculation
                     'company_fee' => round($fees['company_fee'] ?? 0, 2),
                     'total_fees' => round($fees['total'] ?? 0, 2)
                 ],
+                'fees_detail' => $fees,
                 'discounts' => [
                     'early_booking' => $ebDiscount,
                     'reduction' => $reduction
                 ],
+                'priority_rules' => [
+                    'priority' => $this->priceinfo['Priority'] ?? 'No',
+                    'priority_eb' => $this->priceinfo['PriorityEB'] ?? 'No',
+                    'priority_ext' => $this->priceinfo['PriorityEXT'] ?? 'No',
+                    'scenarios' => $finalPrice['scenarios'] ?? []
+                ],
                 'applied_discount' => $finalPrice['applied_discount'],
                 'discount_amount' => round($finalPrice['discount_amount'] ?? 0, 2)
             ],
+            'room_capacity' => $roomCapacity,
+            'child_age_bands' => $this->childAgeBands,
+            'seasons_by_night' => $seasonsByNight,
             'occupancy' => $occupancy,
             'params' => $params,
             'debug_log' => $this->debug ? $this->debugLog : null
@@ -237,6 +266,136 @@ class PriceInfoCalculation
         }
 
         return json_decode($json, true);
+    }
+
+    /**
+     * Parse child age bands from hotelinfo ages data.
+     *
+     * Each hotel defines its own age categories with FromYear/ToYear ranges.
+     * This method extracts the child categories (fAge=1) and builds a sorted
+     * list of age bands for use in getAgeBand().
+     *
+     * The band label is formatted to match what appears in season_price IdAge/fAge
+     * fields (e.g., "0-1,99", "2-11,99", "12-17,99").
+     *
+     * Falls back to standard bands if hotelinfo has no age data.
+     */
+    private function parseChildAgeBands(): void
+    {
+        $this->childAgeBands = [];
+
+        if (empty($this->hotelinfo)) {
+            return;
+        }
+
+        $ages = $this->hotelinfo['ages'] ?? [];
+
+        // Handle nested structure: ages.age
+        if (isset($ages['age'])) {
+            $ages = $ages['age'];
+        }
+
+        // Normalize single entry to array
+        if (isset($ages['IdAge'])) {
+            $ages = [$ages];
+        }
+
+        if (empty($ages) || !is_array($ages)) {
+            return;
+        }
+
+        foreach ($ages as $age) {
+            // fAge=1 means child, fAge=0 means adult
+            $isChild = ($age['fAge'] ?? '0') === '1' || ($age['fAge'] ?? 0) === 1;
+            if (!$isChild) {
+                continue;
+            }
+
+            $fromYear = floatval($age['FromYear'] ?? 0);
+            $toYear = floatval($age['ToYear'] ?? 0);
+            if ($toYear <= 0) {
+                continue;
+            }
+
+            // Build the band label in the format used by season_price data
+            // Convention: use comma as decimal separator (e.g., "2-11,99")
+            $label = $this->formatAgeBandLabel($fromYear, $toYear);
+
+            $this->childAgeBands[] = [
+                'from' => $fromYear,
+                'to' => $toYear,
+                'label' => $label,
+                'id_age' => $age['IdAge'] ?? ''
+            ];
+        }
+
+        // Sort by from_year ascending
+        usort($this->childAgeBands, function ($a, $b) {
+            return $a['from'] <=> $b['from'];
+        });
+
+        $this->log('Parsed hotel child age bands', $this->childAgeBands);
+    }
+
+    /**
+     * Format age band label to match season_price conventions.
+     *
+     * Produces labels like "0-1,99", "2-11,99", "12-17,99"
+     * using comma as decimal separator (matching API data format).
+     */
+    private function formatAgeBandLabel(float $from, float $to): string
+    {
+        // Integer part: no decimals (e.g., 0, 2, 12)
+        $fromStr = ($from == floor($from)) ? (string)intval($from) : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
+        // ToYear usually has decimals (e.g., 1.99, 11.99)
+        $toStr = ($to == floor($to)) ? (string)intval($to) : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
+
+        return $fromStr . '-' . $toStr;
+    }
+
+    /**
+     * Build code index for Code/Base resolution
+     *
+     * In the API, Code is a numeric ID and Base references another Code's ID.
+     * This allows recursive price resolution (e.g., child price = 80% of Code 1's price).
+     */
+    private function buildCodeIndex(): void
+    {
+        $this->codeIndex = [];
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        foreach ($seasonPrices as $row) {
+            $code = $this->toScalar($row['Code'] ?? '');
+            if ($code === '') continue;
+            if (!isset($this->codeIndex[$code])) {
+                $this->codeIndex[$code] = [];
+            }
+            $this->codeIndex[$code][] = $row;
+        }
+    }
+
+    /**
+     * Safely extract a scalar string value from a field that may be array/object
+     * (SimpleXML json_encode of empty elements produces [])
+     */
+    private function toScalar($value): string
+    {
+        if (is_array($value) || is_object($value)) return '';
+        return trim((string)$value);
+    }
+
+    /**
+     * Normalize IdAge for fee matching: strip trailing "BY X AD" suffix
+     * Fees (extras_daily, handling_fee) often use IdAge without the "BY X AD" part.
+     */
+    private function feeKey(string $idAge): string
+    {
+        $s = trim(preg_replace('/\s+/', ' ', $idAge));
+        $s = preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $s);
+        return trim($s);
     }
 
     /**
@@ -308,13 +467,19 @@ class PriceInfoCalculation
      * Build occupancy structure - who uses Regular Beds vs Extra Beds
      *
      * Adults take REGULAR beds first, extras become "3RD ADULT", "4TH ADULT"
-     * Children fill remaining REGULAR beds, then go to EXTRA BED
+     * Children fill remaining REGULAR beds, then go to EXTRA BED.
+     *
+     * If a child's age band (e.g., 12-17,99) has no matching price row in this room,
+     * the child is reclassified as an additional adult on EXTRA BED. This handles
+     * hotels that only define 0-1,99 and 2-11,99 child bands — older children (12+)
+     * are effectively charged at adult rates.
      */
-    private function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity): array
+    private function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity, string $roomId = '', string $boardId = ''): array
     {
         $occupancy = [
             'adults' => [],
             'children' => [],
+            'children_as_adults' => [],  // Children reclassified as adults (age band not in room)
             'total_rb_used' => 0,
             'total_eb_used' => 0
         ];
@@ -324,7 +489,19 @@ class PriceInfoCalculation
         $rbUsed = 0;
         $ebUsed = 0;
 
+        // Get available child age bands for this room (if room/board specified)
+        $availableBands = [];
+        if (!empty($roomId) && !empty($boardId) && !empty($this->priceinfo)) {
+            $availableBands = $this->getAvailableChildAgeBands($roomId, $boardId);
+            $this->log('Available child age bands for room', [
+                'room_id' => $roomId,
+                'board_id' => $boardId,
+                'bands' => $availableBands
+            ]);
+        }
+
         // Place adults
+        $adultCount = $adults;
         for ($i = 0; $i < $adults; $i++) {
             if ($rbUsed < $rbAvailable) {
                 // Regular bed
@@ -348,16 +525,72 @@ class PriceInfoCalculation
             }
         }
 
-        // Place children
+        // Place children — check if each child's age band has pricing in this room
+        $childOrdinalCounter = 0;
         foreach ($childrenAges as $idx => $age) {
-            $childNum = $idx + 1;
             $ageBand = $this->getAgeBand($age);
-            $ordinal = $this->getChildOrdinal($childNum);
+
+            // Check if this age band has pricing in the room
+            $bandHasPricing = true;
+            if (!empty($availableBands)) {
+                // Normalize for comparison (comma vs dot)
+                $bandNorm = str_replace(',', '.', $ageBand);
+                $hasBand = false;
+                foreach ($availableBands as $ab) {
+                    if (str_replace(',', '.', $ab) === $bandNorm) {
+                        $hasBand = true;
+                        break;
+                    }
+                }
+                $bandHasPricing = $hasBand;
+            }
+
+            if (!$bandHasPricing) {
+                // No child rate for this age band — reclassify as additional adult
+                $adultCount++;
+                $ordinal = $this->getOrdinal($adultCount);
+
+                $this->log('Child reclassified as adult (no pricing for age band)', [
+                    'child_age' => $age,
+                    'age_band' => $ageBand,
+                    'reclassified_as' => $ordinal . ' ADULT'
+                ]);
+
+                if ($rbUsed < $rbAvailable) {
+                    $entry = [
+                        'index' => $adultCount,
+                        'bed_type' => 'REGULAR',
+                        'age_type' => 'ADULT ',
+                        'acc_type' => 'REGULAR',
+                        'original_child_age' => $age,
+                        'reclassified' => true
+                    ];
+                    $rbUsed++;
+                } else {
+                    $entry = [
+                        'index' => $adultCount,
+                        'bed_type' => 'EXTRA BED',
+                        'age_type' => $ordinal . ' ADULT',
+                        'acc_type' => 'EXTRA BED',
+                        'original_child_age' => $age,
+                        'reclassified' => true
+                    ];
+                    $ebUsed++;
+                }
+
+                $occupancy['adults'][] = $entry;
+                $occupancy['children_as_adults'][] = $entry;
+                continue;
+            }
+
+            // Normal child placement
+            $childOrdinalCounter++;
+            $ordinal = $this->getChildOrdinal($childOrdinalCounter);
 
             if ($rbUsed < $rbAvailable) {
                 // Regular bed
                 $occupancy['children'][] = [
-                    'index' => $childNum,
+                    'index' => $childOrdinalCounter,
                     'age' => $age,
                     'age_band' => $ageBand,
                     'bed_type' => 'REGULAR',
@@ -369,7 +602,7 @@ class PriceInfoCalculation
             } else {
                 // Extra bed
                 $occupancy['children'][] = [
-                    'index' => $childNum,
+                    'index' => $childOrdinalCounter,
                     'age' => $age,
                     'age_band' => $ageBand,
                     'bed_type' => 'EXTRA BED',
@@ -411,14 +644,142 @@ class PriceInfoCalculation
     }
 
     /**
-     * Get age band string
+     * Get age band string for a child's age.
+     *
+     * Uses the hotel's own age definitions (parsed from hotelinfo) to find
+     * the matching age band. Different hotels may define different ranges
+     * (e.g., one hotel may use 0-1.99/2-13.99/14-17.99 while another uses 0-2.99/3-11.99).
+     *
+     * Falls back to standard bands if no hotel-specific data is available:
+     * - 0-1,99: Infants (age 0 to <2)
+     * - 2-11,99: Children (age 2 to <12)
+     * - 12-17,99: Teens (age 12 to <18)
      */
     private function getAgeBand(float $age): string
     {
+        // Use hotel-specific age bands if available
+        if (!empty($this->childAgeBands)) {
+            foreach ($this->childAgeBands as $band) {
+                if ($age >= $band['from'] && $age <= $band['to']) {
+                    return $band['label'];
+                }
+            }
+            // Age didn't match any defined child band — return a synthetic label
+            // This typically means the child is above all defined child ranges
+            // and should be treated as adult (handled by buildOccupancyStructure)
+            return $this->formatAgeBandLabel(floor($age), 17.99);
+        }
+
+        // Fallback to standard bands
         if ($age < 2.0) {
             return '0-1,99';
         }
-        return '2-11,99';
+        if ($age < 12.0) {
+            return '2-11,99';
+        }
+        return '12-17,99';
+    }
+
+    /**
+     * Get available child age bands for a specific room+board from season_price data.
+     *
+     * Scans season_price rows to find which child age bands (0-1,99 / 2-11,99 / 12-17,99)
+     * have pricing entries for the given room. This is used to determine whether a child
+     * of a certain age can be priced in this room, or if they need a different room.
+     *
+     * @param string $roomId Room ID
+     * @param string $boardId Board ID
+     * @return array Available age bands, e.g. ['0-1,99', '2-11,99']
+     */
+    private function getAvailableChildAgeBands(string $roomId, string $boardId): array
+    {
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        $bands = [];
+        foreach ($seasonPrices as $row) {
+            $rowRoom = $this->toScalar($row['IdRoom'] ?? '');
+            $rowBoard = $this->toScalar($row['IdBoard'] ?? '');
+
+            if (!$this->matchRoom($rowRoom, $roomId)) continue;
+            if (!$this->matchBoard($rowBoard, $boardId)) continue;
+
+            // Check age type for child bands
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = $this->toScalar($row['IdAge'] ?? '');
+                static $ageTypeMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
+                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            $rowAge = strtoupper(trim($rowAge));
+            if (strpos($rowAge, 'CHD') === false && strpos($rowAge, 'CHILD') === false) {
+                continue;
+            }
+
+            // Extract age band pattern from age type
+            if (preg_match('/(\d+[\-\.]\d+[,\.]?\d*)/', $rowAge, $m)) {
+                // Normalize to comma format (2-11,99)
+                $band = str_replace('.', ',', $m[1]);
+                // Normalize common variations
+                $band = preg_replace('/(\d+)-(\d+),(\d+)/', '$1-$2,$3', $band);
+                if (!in_array($band, $bands)) {
+                    $bands[] = $band;
+                }
+            }
+        }
+
+        return $bands;
+    }
+
+    /**
+     * Check if a room has adult extra bed pricing (e.g., 3RD ADULT on EXTRA BED).
+     *
+     * Used when a child's age band has no matching child rate — the child
+     * may need to be charged as an additional adult on extra bed.
+     *
+     * @param string $roomId Room ID
+     * @param string $boardId Board ID
+     * @return bool True if 3RD+ ADULT EXTRA BED pricing exists
+     */
+    private function hasAdultExtraBedPricing(string $roomId, string $boardId): bool
+    {
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        foreach ($seasonPrices as $row) {
+            $rowRoom = $this->toScalar($row['IdRoom'] ?? '');
+            $rowBoard = $this->toScalar($row['IdBoard'] ?? '');
+
+            if (!$this->matchRoom($rowRoom, $roomId)) continue;
+            if (!$this->matchBoard($rowBoard, $boardId)) continue;
+
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = $this->toScalar($row['IdAge'] ?? '');
+                static $ageMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
+                $rowAge = $ageMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            $rowAge = strtoupper(trim($rowAge));
+            $rowAcc = strtoupper(trim($this->toScalar($row['IdAcc'] ?? '')));
+
+            // Check for "3 RD ADULT" or "3RD ADULT" or similar on EXTRA BED
+            if (preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $rowAge) &&
+                ($rowAcc === 'EXTRA BED' || $rowAcc === 'EB' || $rowAcc === 'EXTRABED')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -489,32 +850,29 @@ class PriceInfoCalculation
         $byNight = [];
         $byPerson = [];
 
-        // Get base code row for percentage calculations
-        $baseCodeRow = $this->findBaseCodeRow($seasonPrices, $roomId, $boardId);
-
         // Calculate for each night
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
             $nightTotal = 0;
             $seasonNum = $nightInfo['season'];
             $priceKey = 'Price' . $seasonNum;
 
-            // Check if this is per-room pricing
-            $isRoomPrice = false;
+            // Track if a RoomPrice=Yes row already charged this night (per-room = once only)
+            $roomPriceCharged = false;
 
             // Adults
             foreach ($occupancy['adults'] as $adult) {
                 $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adult['age_type'], $adult['acc_type'], $nights);
 
                 if ($row) {
-                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow, $seasonPrices);
                     $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
 
-                    // If RoomPrice=Yes, only add once per room (not per person)
-                    if ($isRoomPrice && $adult['index'] > 1) {
-                        // Skip additional adults for room-priced rates
-                        continue;
+                    // If RoomPrice=Yes, only charge once per room (skip subsequent persons)
+                    if ($isRoomPrice) {
+                        if ($roomPriceCharged) continue;
+                        $roomPriceCharged = true;
                     }
 
+                    $price = $this->getPriceFromRow($row, $priceKey);
                     $nightTotal += $price;
 
                     if (!isset($byPerson['adult_' . $adult['index']])) {
@@ -546,7 +904,15 @@ class PriceInfoCalculation
                 }
 
                 if ($row) {
-                    $price = $this->getPriceFromRow($row, $priceKey, $baseCodeRow, $seasonPrices);
+                    $childRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
+
+                    // If RoomPrice=Yes and already charged, skip
+                    if ($childRoomPrice) {
+                        if ($roomPriceCharged) continue;
+                        $roomPriceCharged = true;
+                    }
+
+                    $price = $this->getPriceFromRow($row, $priceKey);
                     $nightTotal += $price;
 
                     if (!isset($byPerson['child_' . $child['index']])) {
@@ -578,9 +944,9 @@ class PriceInfoCalculation
     private function findBaseCodeRow(array $seasonPrices, string $roomId, string $boardId): ?array
     {
         foreach ($seasonPrices as $row) {
-            $rowRoom = $row['IdRoom'] ?? '';
-            $rowBoard = $row['IdBoard'] ?? '';
-            $code = $row['Code'] ?? '';
+            $rowRoom = is_string($row['IdRoom'] ?? '') ? ($row['IdRoom'] ?? '') : '';
+            $rowBoard = is_string($row['IdBoard'] ?? '') ? ($row['IdBoard'] ?? '') : '';
+            $code = is_string($row['Code'] ?? '') ? ($row['Code'] ?? '') : '';
 
             if ($this->matchRoom($rowRoom, $roomId) && $this->matchBoard($rowBoard, $boardId) && $code === 'Base') {
                 return $row;
@@ -591,16 +957,49 @@ class PriceInfoCalculation
 
     /**
      * Find season_price row matching criteria
+     *
+     * Collects all matching candidates then picks the most specific one
+     * (largest FromDays value = most specific stay-length match).
      */
     private function findSeasonPriceRow(array $seasonPrices, string $roomId, string $boardId, string $ageType, string $accType, int $nights): ?array
     {
+        // Map numeric IdAge to descriptive age types (same as hotels.php)
+        static $ageTypeMap = [
+            '1' => 'ADULT',
+            '2' => 'CHD 0-1.99',
+            '3' => 'CHD 2-11.99',
+            '4' => 'CHD 12-17.99',
+        ];
+
+        $candidates = [];
+
         foreach ($seasonPrices as $row) {
-            $rowRoom = $row['IdRoom'] ?? '';
-            $rowBoard = $row['IdBoard'] ?? '';
-            $rowAge = $row['IdAge'] ?? '';
-            $rowAcc = $row['IdAcc'] ?? '';
-            $fromDays = intval($row['FromDays'] ?? 1);
-            $toDays = intval($row['ToDays'] ?? 999);
+            $rowRoom = $this->toScalar($row['IdRoom'] ?? '');
+            $rowBoard = $this->toScalar($row['IdBoard'] ?? '');
+            $rowAcc = $this->toScalar($row['IdAcc'] ?? '');
+            $rowStar = $this->toScalar($row['IdStar'] ?? '');
+
+            // Get age type: prefer fAge (descriptive), fallback to mapped IdAge
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = $this->toScalar($row['IdAge'] ?? '');
+                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            // Default empty IdAcc to 'REGULAR' (consistent with hotels.php)
+            if ($rowAcc === '') {
+                $rowAcc = 'REGULAR';
+            }
+
+            // Handle FromDays/ToDays: extract digits, default 1/9999
+            $rawFromDays = $this->toScalar($row['FromDays'] ?? '');
+            $rawToDays = $this->toScalar($row['ToDays'] ?? '');
+            $fromDays = ($rawFromDays !== '') ? intval(preg_replace('/\D+/', '', $rawFromDays) ?: '1') : 1;
+            $toDays = ($rawToDays !== '') ? intval(preg_replace('/\D+/', '', $rawToDays) ?: '9999') : 9999;
+            if ($fromDays <= 0) $fromDays = 1;
+            if ($toDays <= 0) $toDays = 9999;
 
             // Match room, board, age, acc
             if (!$this->matchRoom($rowRoom, $roomId)) continue;
@@ -608,69 +1007,76 @@ class PriceInfoCalculation
             if (!$this->matchAgeType($rowAge, $ageType)) continue;
             if (!$this->matchAccType($rowAcc, $accType)) continue;
 
+            // Match IdStar if present in both data and params
+            if ($rowStar !== '' && $this->idStar !== '' && strcasecmp($rowStar, $this->idStar) !== 0) continue;
+
             // Validate stay length
             if ($nights < $fromDays || $nights > $toDays) continue;
 
-            return $row;
+            $candidates[] = ['row' => $row, 'fromDays' => $fromDays];
         }
 
-        return null;
+        if (empty($candidates)) {
+            return null;
+        }
+
+        // Pick most specific match (largest FromDays = most specific stay-length range)
+        usort($candidates, function($a, $b) {
+            return $b['fromDays'] <=> $a['fromDays'];
+        });
+
+        return $candidates[0]['row'];
     }
 
     /**
-     * Get price from row, handling percentages
+     * Get price from row, handling percentages via recursive Code/Base resolution
      *
-     * Percentages can be:
-     * - String with % sign: "80%", "50%"
-     * - Numeric value <= 100 when Code references Base
+     * Percentages are ONLY values with explicit % sign: "80%", "50%"
+     * Numeric values are always treated as absolute prices (EUR).
+     *
+     * Code/Base resolution: Code is a numeric ID, Base references another Code's ID.
+     * E.g., Code=2 Base=1 Price="80%" means 80% of Code 1's price.
+     * Resolution is recursive (Code 3 → Code 2 → Code 1).
      */
-    private function getPriceFromRow(array $row, string $priceKey, ?array $baseCodeRow, array $allSeasonPrices = []): float
+    private function getPriceFromRow(array $row, string $priceKey, ?array $baseCodeRow = null, array $allSeasonPrices = []): float
     {
+        $visited = [];
+        return $this->resolvePrice($row, $priceKey, $visited);
+    }
+
+    /**
+     * Recursively resolve price from a season_price row
+     *
+     * Handles percentage prices by looking up the Base Code in codeIndex
+     * and resolving recursively (with loop protection).
+     */
+    private function resolvePrice(array $row, string $priceKey, array &$visited): float
+    {
+        $code = $this->toScalar($row['Code'] ?? '');
+        $memoKey = $code . ':' . $priceKey;
+
+        // Prevent infinite recursion
+        if (isset($visited[$memoKey])) return 0;
+        $visited[$memoKey] = true;
+
         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? 0;
-        $code = $row['Code'] ?? 'Base';
-        $baseRef = $row['Base'] ?? '';  // Reference to which Code is the base
-        $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
 
-        // Handle string percentage like "80%", "50%"
-        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
-            $percentValue = floatval(str_replace('%', '', $rawPrice));
-
-            // Find the base row to calculate from
-            $basePrice = 0;
-            if (!empty($baseRef) && !empty($allSeasonPrices)) {
-                // Find row with Code matching our Base reference
-                foreach ($allSeasonPrices as $baseRow) {
-                    if (($baseRow['Code'] ?? '') == $baseRef) {
-                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
-                        break;
-                    }
-                }
-            } elseif ($baseCodeRow) {
-                $basePrice = floatval($baseCodeRow[$priceKey] ?? $baseCodeRow['Price1'] ?? 0);
-            }
-
-            if ($basePrice > 0) {
-                return $basePrice * ($percentValue / 100);
-            }
-            // If no base found, return 0 (should not happen in valid data)
+        // Handle empty arrays from SimpleXML json_encode of empty elements
+        if (is_array($rawPrice) || is_object($rawPrice)) {
             return 0;
         }
 
-        // If Code is not 'Base' and we have a Base reference, it might be a numeric percentage
-        if ($code !== 'Base' && !empty($baseRef) && is_numeric($rawPrice)) {
-            $numericPrice = floatval($rawPrice);
-            // If the value is small (0-100), it's likely a percentage
-            if ($numericPrice > 0 && $numericPrice <= 100 && !empty($allSeasonPrices)) {
-                foreach ($allSeasonPrices as $baseRow) {
-                    if (($baseRow['Code'] ?? '') == $baseRef) {
-                        $basePrice = floatval($baseRow[$priceKey] ?? $baseRow['Price1'] ?? 0);
-                        if ($basePrice > 0) {
-                            return $basePrice * ($numericPrice / 100);
-                        }
-                        break;
-                    }
-                }
+        // Handle explicit percentage (e.g., "80%", "50%")
+        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+            $percentValue = floatval(str_replace('%', '', $rawPrice));
+            $baseRef = $this->toScalar($row['Base'] ?? '');
+
+            if ($baseRef !== '' && isset($this->codeIndex[$baseRef])) {
+                $baseRow = $this->codeIndex[$baseRef][0];
+                $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited);
+                return round($basePrice * ($percentValue / 100), 4);
             }
+            return 0;
         }
 
         return floatval($rawPrice);
@@ -698,6 +1104,11 @@ class PriceInfoCalculation
 
     /**
      * Match age type (with fuzzy matching)
+     *
+     * Handles multiple IdAge formats:
+     * - Descriptive: 'ADULT ', '1 ST CHD 2-11,99'
+     * - Numeric mapped: '1' → 'ADULT' (handled in findSeasonPriceRow)
+     * - Age band variations: '2-11,99' vs '2-11.99'
      */
     private function matchAgeType(string $rowAge, string $ageType): bool
     {
@@ -705,18 +1116,59 @@ class PriceInfoCalculation
         $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
         $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
 
-        return strcasecmp($rowAge, $ageType) === 0;
+        if (strcasecmp($rowAge, $ageType) === 0) {
+            return true;
+        }
+
+        // Try matching with comma/dot variation in age bands (2-11,99 vs 2-11.99)
+        $rowAgeNorm = str_replace(',', '.', $rowAge);
+        $ageTypeNorm = str_replace(',', '.', $ageType);
+        if (strcasecmp($rowAgeNorm, $ageTypeNorm) === 0) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Match accommodation type
+     *
+     * Handles value variations: RB/REGULAR, EB/EXTRA BED/EXTRA_BED
      */
     private function matchAccType(string $rowAcc, string $accType): bool
     {
-        $rowAcc = trim($rowAcc);
-        $accType = trim($accType);
+        $rowAcc = strtoupper(trim($rowAcc));
+        $accType = strtoupper(trim($accType));
 
-        return strcasecmp($rowAcc, $accType) === 0;
+        if ($rowAcc === $accType) {
+            return true;
+        }
+
+        // Normalize both values to canonical form for comparison
+        $rowNorm = $this->normalizeAccType($rowAcc);
+        $accNorm = $this->normalizeAccType($accType);
+
+        return $rowNorm === $accNorm;
+    }
+
+    /**
+     * Normalize accommodation type to canonical form
+     */
+    private function normalizeAccType(string $acc): string
+    {
+        $acc = strtoupper(trim($acc));
+
+        // Map all regular bed variants to 'REGULAR'
+        if (in_array($acc, ['RB', 'REGULAR', 'REGULAR BED', 'REGULAR_BED'], true)) {
+            return 'REGULAR';
+        }
+
+        // Map all extra bed variants to 'EXTRA BED'
+        if (in_array($acc, ['EB', 'EXTRA BED', 'EXTRA_BED', 'EXTRABED'], true)) {
+            return 'EXTRA BED';
+        }
+
+        return $acc;
     }
 
     /**
@@ -798,7 +1250,7 @@ class PriceInfoCalculation
         foreach ($extrasDaily as $extra) {
             $fromDate = $extra['FromDate'] ?? '';
             $toDate = $extra['ToDate'] ?? '';
-            $idAge = $extra['IdAge'] ?? '';
+            $idAge = $this->toScalar($extra['IdAge'] ?? '');
             $price = floatval($extra['Price'] ?? 0);
             $type = $extra['Type'] ?? 'Day';
 
@@ -807,8 +1259,9 @@ class PriceInfoCalculation
                 continue;
             }
 
-            // Count matching persons
-            $count = $this->countMatchingPersons($occupancy, $idAge);
+            // Count matching persons (strip "BY X AD" suffix for fee matching)
+            $feeIdAge = $this->feeKey($idAge);
+            $count = $this->countMatchingPersons($occupancy, $feeIdAge);
 
             if ($count > 0) {
                 if ($type === 'Arrival') {
@@ -871,7 +1324,7 @@ class PriceInfoCalculation
         foreach ($handlingFees as $fee) {
             $fromDate = $fee['FromDate'] ?? '';
             $toDate = $fee['ToDate'] ?? '';
-            $idAge = $fee['IdAge'] ?? '';
+            $idAge = $this->toScalar($fee['IdAge'] ?? '');
             $toDays = intval($fee['ToDays'] ?? 3);     // Use Price1 for stays <= this
             $fromDays = intval($fee['FromDays'] ?? 4); // Use Price2 for stays >= this
             $price1 = floatval($fee['Price1'] ?? 0);
@@ -897,10 +1350,11 @@ class PriceInfoCalculation
                 $price = $price1;
             }
 
-            // Count matching persons (if IdAge specified, otherwise per person)
+            // Count matching persons (strip "BY X AD" suffix for fee matching)
             $count = 1;
-            if (!empty($idAge)) {
-                $count = $this->countMatchingPersons($occupancy, $idAge);
+            $feeIdAge = $this->feeKey($idAge);
+            if (!empty($feeIdAge)) {
+                $count = $this->countMatchingPersons($occupancy, $feeIdAge);
             } else {
                 // Apply per person (adults + children)
                 $count = count($occupancy['adults']) + count($occupancy['children']);
@@ -985,7 +1439,7 @@ class PriceInfoCalculation
      * extras_rooms are typically additional fees per room (not per person)
      * E.g., sea view supplement, balcony fee, etc.
      */
-    private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights): float
+    private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
         $extrasRooms = $this->priceinfo['extras_rooms'] ?? [];
         if (empty($extrasRooms)) return 0;
@@ -1006,9 +1460,12 @@ class PriceInfoCalculation
             $type = $extra['Type'] ?? 'Day'; // Day, Stay, Night
             $idRoom = $extra['IdRoom'] ?? '';
 
-            // Skip if room doesn't match (if specified)
-            // Note: We don't have roomId in this context, so apply to all rooms
-            // TODO: Pass roomId to this function if needed
+            // Skip if room doesn't match (if specified in extras_rooms entry)
+            if (!empty($idRoom) && !empty($roomId)) {
+                if (!$this->matchRoom($idRoom, $roomId)) {
+                    continue;
+                }
+            }
 
             // Check date overlap
             if (!empty($fromDate) && !empty($toDate)) {

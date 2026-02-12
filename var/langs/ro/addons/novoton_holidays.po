@@ -960,6 +960,18 @@ msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
 msgid "Price could not be verified for the entered ages. Please try refreshing the price."
 msgstr "Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."
 
+msgctxt "Languages::novoton_holidays.check_child_dob"
+msgid "Check date of birth"
+msgstr "Verifică data nașterii"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age"
+msgid "Unavailable"
+msgstr "Indisponibil"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age_sub"
+msgid "for child age"
+msgstr "pentru vârsta copilului"
+
 msgctxt "Languages::novoton_holidays.price_verification_failed"
 msgid "Price verification failed. The booking cannot proceed."
 msgstr "Verificarea prețului a eșuat. Rezervarea nu poate continua."
