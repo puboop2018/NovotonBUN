@@ -220,9 +220,15 @@ class DatabaseHelper
                 continue;
             }
 
+            // Reject invalid product_ids — must be a positive integer
+            $pid = intval($link['product_id']);
+            if ($pid <= 0) {
+                continue;
+            }
+
             \db_query(
                 "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
-                $link['product_id'],
+                $pid,
                 $link['hotel_id']
             );
 

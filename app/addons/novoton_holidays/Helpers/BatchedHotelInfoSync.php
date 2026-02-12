@@ -153,6 +153,9 @@ class BatchedHotelInfoSync
             return $this->resumeSync($state, $start_time);
         }
 
+        // Reconcile: re-link hotels with NULL product_id whose products exist
+        $this->reconcileProductLinks();
+
         // Determine sync type needed
         $sync_type = $this->determineSyncType($options);
 
@@ -468,6 +471,52 @@ class BatchedHotelInfoSync
         $this->output("Errors: {$state['errors']}");
         $this->output("Duration: " . $this->formatDuration($duration));
         $this->output("========================================");
+    }
+
+    /**
+     * Re-link hotels that have NULL product_id but whose CS-Cart product exists.
+     * Uses configured product_code_prefixes to match products.
+     * Also clears stale product_id pointing to deleted products.
+     */
+    private function reconcileProductLinks(): void
+    {
+        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+        $prefixes = !empty($addon_settings['product_code_prefixes'])
+            ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
+            : ['NVT'];
+
+        // 1. Re-link: hotels with NULL product_id whose product exists
+        $orphaned = db_get_array(
+            "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0"
+        );
+
+        $linked = 0;
+        foreach ($orphaned as $row) {
+            foreach ($prefixes as $prefix) {
+                $product_id = db_get_field(
+                    "SELECT product_id FROM ?:products WHERE product_code = ?s",
+                    $prefix . $row['hotel_id']
+                );
+                if (!empty($product_id)) {
+                    db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+                        $product_id, $row['hotel_id']);
+                    $linked++;
+                    break;
+                }
+            }
+        }
+
+        // 2. Cleanup: clear product_id pointing to deleted products
+        $cleaned = db_query(
+            "UPDATE ?:novoton_hotels h
+             LEFT JOIN ?:products p ON h.product_id = p.product_id
+             SET h.product_id = NULL
+             WHERE h.product_id > 0 AND p.product_id IS NULL"
+        );
+
+        if ($linked > 0 || $cleaned > 0) {
+            $this->output("Reconciliation: re-linked {$linked} hotels, cleared {$cleaned} stale references.");
+        }
     }
 
     /**
