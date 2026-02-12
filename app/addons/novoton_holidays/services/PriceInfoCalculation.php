@@ -195,6 +195,7 @@ class PriceInfoCalculation
             'breakdown' => [
                 'base_price' => round($basePrice['total'], 2),
                 'base_per_night' => $basePrice['by_night'] ?? [],
+                'base_per_person' => $basePrice['by_person'] ?? [],
                 'fees' => [
                     'extras_daily' => round($fees['extras_daily'] ?? 0, 2),
                     'extras_single' => round($fees['extras_single'] ?? 0, 2),
@@ -204,13 +205,23 @@ class PriceInfoCalculation
                     'company_fee' => round($fees['company_fee'] ?? 0, 2),
                     'total_fees' => round($fees['total'] ?? 0, 2)
                 ],
+                'fees_detail' => $fees,
                 'discounts' => [
                     'early_booking' => $ebDiscount,
                     'reduction' => $reduction
                 ],
+                'priority_rules' => [
+                    'priority' => $this->priceinfo['Priority'] ?? 'No',
+                    'priority_eb' => $this->priceinfo['PriorityEB'] ?? 'No',
+                    'priority_ext' => $this->priceinfo['PriorityEXT'] ?? 'No',
+                    'scenarios' => $finalPrice['scenarios'] ?? []
+                ],
                 'applied_discount' => $finalPrice['applied_discount'],
                 'discount_amount' => round($finalPrice['discount_amount'] ?? 0, 2)
             ],
+            'room_capacity' => $roomCapacity,
+            'child_age_bands' => $this->childAgeBands,
+            'seasons_by_night' => $seasonsByNight,
             'occupancy' => $occupancy,
             'params' => $params,
             'debug_log' => $this->debug ? $this->debugLog : null
