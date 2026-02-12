@@ -336,16 +336,17 @@ The Priority field determines if discounts can be combined:
 
 PRIORITY = 'Yes' (NOT Combinable):
 ----------------------------------
-Only ONE discount can apply. Selection order:
+Only ONE discount can apply. PriorityEB and PriorityEXT determine selection:
 
-1. If PriorityEB = 'Yes':
-   -> Early Booking has priority (use EB even if Reduction is better)
+Case 1: PriorityEB = 'Yes', PriorityEXT = 'No'
+   -> Early Booking has FORCED priority (use EB regardless of which is better)
 
-2. If PriorityEXT = 'Yes':
-   -> Reduction has priority (use Reduction even if EB is better)
+Case 2: PriorityEB = 'No', PriorityEXT = 'Yes'
+   -> Can CHOOSE: pick the discount with BETTER SAVINGS (lower final price)
 
-3. If neither priority is set:
-   -> Pick the one with BETTER SAVINGS (larger discount)
+Note: When PriorityEB = 'Yes', EB is always used if applicable.
+      When PriorityEXT = 'Yes' (and PriorityEB = 'No'), the system selects
+      whichever discount gives the customer a better deal.
 
 PRIORITY = 'No' (Combinable):
 -----------------------------
