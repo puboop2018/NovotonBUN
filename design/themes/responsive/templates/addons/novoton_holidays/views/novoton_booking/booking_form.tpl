@@ -113,7 +113,7 @@
         
         {* Header *}
         <div class="novoton-reservation-header">
-            <span class="availability-badge">
+            <span class="availability-badge" id="availability-badge">
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}
                 {else}
@@ -879,14 +879,14 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             
         } else {
             console.log('[Novoton] Recalculation failed:', data.message);
-            showPriceError(data.message || '{__("novoton_holidays.price_not_available_for_ages")|default:"Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."}');
+            showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
         }
     })
     .catch(function(error) {
         console.error('[Novoton] AJAX error:', error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        showPriceError('{__("novoton_holidays.price_not_available_for_ages")|default:"Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."}');
+        showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
     });
 }
 
@@ -896,6 +896,7 @@ function showPriceError(message) {
     var refreshLink = document.getElementById('refresh-price-link');
     var unverifiedBadge = document.getElementById('price-unverified-badge');
     var submitBtn = document.getElementById('booking-submit-btn');
+    var availBadge = document.getElementById('availability-badge');
 
     if (errorEl) {
         errorEl.textContent = message;
@@ -913,6 +914,10 @@ function showPriceError(message) {
         submitBtn.style.cursor = 'not-allowed';
         submitBtn.title = '{__("novoton_holidays.price_must_be_verified")|default:"Prețul trebuie verificat înainte de a continua"}';
     }
+    if (availBadge) {
+        availBadge.style.background = '#F59E0B';
+        availBadge.innerHTML = '<strong>{__("novoton_holidays.unavailable_for_child_age")|default:"Indisponibil"}</strong><br><span style="font-size:11px;">{__("novoton_holidays.unavailable_for_child_age_sub")|default:"pentru vârsta copilului"}</span>';
+    }
 }
 
 // Hide price error, refresh link, unverified badge, and re-enable submit
@@ -921,6 +926,7 @@ function hidePriceError() {
     var refreshLink = document.getElementById('refresh-price-link');
     var unverifiedBadge = document.getElementById('price-unverified-badge');
     var submitBtn = document.getElementById('booking-submit-btn');
+    var availBadge = document.getElementById('availability-badge');
 
     if (errorEl) errorEl.style.display = 'none';
     if (refreshLink) refreshLink.style.display = 'none';
@@ -930,6 +936,10 @@ function hidePriceError() {
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
         submitBtn.title = '';
+    }
+    if (availBadge) {
+        availBadge.style.background = '#28a745';
+        availBadge.innerHTML = '✓ {__("novoton_holidays.available")|default:"Disponibil"}';
     }
 }
 

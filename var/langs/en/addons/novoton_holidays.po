@@ -516,6 +516,34 @@ msgctxt "Languages::novoton_holidays.price_not_available"
 msgid "Price not available for this configuration."
 msgstr "Price not available for this configuration."
 
+msgctxt "Languages::novoton_holidays.refresh_price"
+msgid "Refresh price"
+msgstr "Refresh price"
+
+msgctxt "Languages::novoton_holidays.price_unverified"
+msgid "unverified"
+msgstr "unverified"
+
+msgctxt "Languages::novoton_holidays.price_must_be_verified"
+msgid "Price must be verified before proceeding"
+msgstr "Price must be verified before proceeding"
+
+msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
+msgid "Price could not be verified for the entered ages. Please try refreshing the price."
+msgstr "Price could not be verified for the entered ages. Please try refreshing the price."
+
+msgctxt "Languages::novoton_holidays.check_child_dob"
+msgid "Check date of birth"
+msgstr "Check date of birth"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age"
+msgid "Unavailable"
+msgstr "Unavailable"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age_sub"
+msgid "for child age"
+msgstr "for child age"
+
 msgctxt "Languages::novoton_holidays.added_to_cart"
 msgid "Booking added to cart successfully!"
 msgstr "Booking added to cart successfully!"
