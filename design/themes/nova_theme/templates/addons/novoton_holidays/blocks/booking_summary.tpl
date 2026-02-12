@@ -41,7 +41,7 @@
     {* Guests *}
     <div style="margin-bottom: 4px; font-size: 13px;">
         <strong style="color: #003580;"></strong> 
-        {$product.extra.adults|default:2} {__("novoton_holidays.adults")}{if $product.extra.children > 0}, {$product.extra.children} {if $product.extra.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
+        {__("novoton_holidays.n_adults", [$product.extra.adults|default:2])}{if $product.extra.children > 0}, {__("novoton_holidays.n_children", [$product.extra.children])}{/if}
     </div>
     
     {* Number of rooms if multi-room *}
