@@ -12,7 +12,7 @@
 .novoton-reservation-header { background: linear-gradient(135deg, #003580, #0057b8) !important; color: #fff !important; padding: 25px !important; border-radius: 8px 8px 0 0 !important; position: relative; }
 .novoton-reservation-header h1 { margin: 0 !important; font-size: 24px !important; font-weight: 600 !important; color: #ffffff !important; padding-right: 150px; }
 .novoton-reservation-header .hotel-location { font-size: 14px !important; color: rgba(255,255,255,0.9) !important; margin-top: 5px !important; }
-.novoton-reservation-header .availability-badge { position: absolute; top: 25px; right: 25px; background: #28a745; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; color: #fff !important; }
+.novoton-reservation-header .availability-badge { position: absolute; top: 25px; right: 25px; background: #28a745 !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; color: #fff !important; }
 .novoton-reservation-body { background: #fff !important; border: 1px solid #ddd !important; border-top: none !important; border-radius: 0 0 8px 8px !important; padding: 0 !important; }
 .booking-details-section { display: flex !important; flex-wrap: wrap !important; border-bottom: 1px solid #e0e0e0 !important; padding: 0 !important; }
 .booking-image { flex: 0 0 200px !important; padding: 20px !important; }
@@ -915,7 +915,7 @@ function showPriceError(message) {
         submitBtn.title = '{__("novoton_holidays.price_must_be_verified")|default:"Prețul trebuie verificat înainte de a continua"}';
     }
     if (availBadge) {
-        availBadge.style.background = '#F59E0B';
+        availBadge.style.setProperty('background', '#F59E0B', 'important');
         availBadge.innerHTML = '<strong>{__("novoton_holidays.unavailable_for_child_age")|default:"Indisponibil"}</strong><br><span style="font-size:11px;">{__("novoton_holidays.unavailable_for_child_age_sub")|default:"pentru vârsta copilului"}</span>';
     }
 }
@@ -938,7 +938,7 @@ function hidePriceError() {
         submitBtn.title = '';
     }
     if (availBadge) {
-        availBadge.style.background = '#28a745';
+        availBadge.style.setProperty('background', '#28a745', 'important');
         availBadge.innerHTML = '✓ {__("novoton_holidays.available")|default:"Disponibil"}';
     }
 }
