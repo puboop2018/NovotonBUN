@@ -65,11 +65,9 @@
             {if $product.extra.terms_of_payment_formatted}
                 {$_payment = $product.extra.terms_of_payment_formatted}
             {elseif $product.extra.terms_of_payment_raw}
-                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}{/capture}
-                {$_payment = $smarty.capture.payment_fmt}
+                {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
             {elseif $product.extra.terms_of_payment}
-                {capture name="payment_fmt"}{fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}{/capture}
-                {$_payment = $smarty.capture.payment_fmt}
+                {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
             {/if}
 
             {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
@@ -77,11 +75,9 @@
             {if $product.extra.terms_of_cancellation_formatted}
                 {$_cancel = $product.extra.terms_of_cancellation_formatted}
             {elseif $product.extra.terms_of_cancellation_raw}
-                {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}{/capture}
-                {$_cancel = $smarty.capture.cancel_fmt}
+                {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
             {elseif $product.extra.terms_of_cancellation}
-                {capture name="cancel_fmt"}{fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}{/capture}
-                {$_cancel = $smarty.capture.cancel_fmt}
+                {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
             {/if}
 
             {* Add if we have terms *}

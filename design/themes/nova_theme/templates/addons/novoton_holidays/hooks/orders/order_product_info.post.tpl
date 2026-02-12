@@ -59,10 +59,10 @@
             {if $payment_terms_raw}
                 {$booking_price = $oi.extra.price|default:$oi.price|default:0}
                 {$currency = $oi.extra.currency|default:'EUR'}
-                {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}{/capture}
-                {if $smarty.capture.payment_terms_formatted}
+                {$_payment_terms_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}
+                {if $_payment_terms_formatted}
                     <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
-                    &nbsp;&nbsp;{$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
+                    &nbsp;&nbsp;{$_payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
                 {/if}
             {/if}
 
@@ -70,10 +70,10 @@
             {$cancel_terms_raw = $oi.extra.terms_of_cancellation_raw|default:$oi.extra.terms_of_cancellation|default:''}
             {if $cancel_terms_raw}
                 {$check_in = $oi.extra.check_in|default:''}
-                {capture name="cancel_terms_formatted"}{fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}{/capture}
-                {if $smarty.capture.cancel_terms_formatted}
+                {$_cancel_terms_formatted = fn_novoton_format_cancellation_terms($cancel_terms_raw, $check_in)}
+                {if $_cancel_terms_formatted}
                     <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
-                    &nbsp;&nbsp;{$smarty.capture.cancel_terms_formatted|escape:'html'|nl2br nofilter}<br>
+                    &nbsp;&nbsp;{$_cancel_terms_formatted|escape:'html'|nl2br nofilter}<br>
                 {/if}
             {/if}
             

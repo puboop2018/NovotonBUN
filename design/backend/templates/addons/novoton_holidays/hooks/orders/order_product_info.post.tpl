@@ -107,10 +107,10 @@
             {if $payment_terms_xml}
                 {$booking_price = $oi.extra.price|default:$oi.price|default:0}
                 {$currency = $oi.extra.currency|default:'EUR'}
-                {capture name="payment_terms_formatted"}{fn_novoton_format_payment_terms_with_amounts($payment_terms_xml, $booking_price, $currency)}{/capture}
-                {if $smarty.capture.payment_terms_formatted}
+                {$_payment_terms_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_xml, $booking_price, $currency)}
+                {if $_payment_terms_formatted}
                     <strong>Terms of Payment:</strong><br>
-                    {$smarty.capture.payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
+                    {$_payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
                 {/if}
             {/if}
             
