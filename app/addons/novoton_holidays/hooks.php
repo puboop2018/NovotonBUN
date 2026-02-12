@@ -191,6 +191,57 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             \Tygh\Tygh::$app['view']->assign('early_booking', $early_booking);
         }
         
+        // Build per-room child age bands availability map from price data
+        // This tells the template which child occupancy rows to display per room
+        $room_age_bands = [];
+        if (!empty($prices)) {
+            foreach ($prices as $p) {
+                $rid = $p['room_id'] ?? '';
+                $age_type = strtoupper(trim($p['age_type'] ?? ''));
+                if (empty($rid) || empty($age_type)) continue;
+
+                if (!isset($room_age_bands[$rid])) {
+                    $room_age_bands[$rid] = [
+                        'has_chd_0_1' => false,
+                        'has_chd_2_11' => false,
+                        'has_chd_12_17' => false,
+                        'has_adult_eb' => false,
+                        'child_bands' => []
+                    ];
+                }
+
+                // Detect child age bands from price entries
+                if (strpos($age_type, 'CHD') !== false || strpos($age_type, 'CHILD') !== false) {
+                    if (strpos($age_type, '0-1') !== false || strpos($age_type, '0-1,99') !== false || strpos($age_type, '0-1.99') !== false) {
+                        $room_age_bands[$rid]['has_chd_0_1'] = true;
+                        if (!in_array('0-1.99', $room_age_bands[$rid]['child_bands'])) {
+                            $room_age_bands[$rid]['child_bands'][] = '0-1.99';
+                        }
+                    }
+                    if (strpos($age_type, '2-11') !== false || strpos($age_type, '2-11,99') !== false || strpos($age_type, '2-11.99') !== false) {
+                        $room_age_bands[$rid]['has_chd_2_11'] = true;
+                        if (!in_array('2-11.99', $room_age_bands[$rid]['child_bands'])) {
+                            $room_age_bands[$rid]['child_bands'][] = '2-11.99';
+                        }
+                    }
+                    if (strpos($age_type, '12-17') !== false || strpos($age_type, '12-17,99') !== false || strpos($age_type, '12-17.99') !== false) {
+                        $room_age_bands[$rid]['has_chd_12_17'] = true;
+                        if (!in_array('12-17.99', $room_age_bands[$rid]['child_bands'])) {
+                            $room_age_bands[$rid]['child_bands'][] = '12-17.99';
+                        }
+                    }
+                }
+
+                // Detect 3RD+ ADULT on EXTRA BED (for rooms where older children become adults)
+                $acc_type = strtoupper(trim($p['acc_type'] ?? ''));
+                if (preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $age_type) &&
+                    in_array($acc_type, ['EXTRA BED', 'EB', 'EXTRABED'])) {
+                    $room_age_bands[$rid]['has_adult_eb'] = true;
+                }
+            }
+        }
+        \Tygh\Tygh::$app['view']->assign('room_age_bands', $room_age_bands);
+
         // Assign to Smarty for the tab template
         \Tygh\Tygh::$app['view']->assign('prices', $prices);
         \Tygh\Tygh::$app['view']->assign('last_update', $product['novoton_last_update']);

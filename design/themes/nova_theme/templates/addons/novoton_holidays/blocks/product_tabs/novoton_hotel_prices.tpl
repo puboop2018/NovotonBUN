@@ -83,6 +83,8 @@
         {$child_age_1_max = '1.99'}
         {$child_age_2_min = '2'}
         {$child_age_2_max = '11.99'}
+        {$child_age_3_min = '12'}
+        {$child_age_3_max = '17.99'}
         {if $hotel_full_data && $hotel_full_data.age_groups}
             {foreach from=$hotel_full_data.age_groups item=ag}
                 {if $ag.IdAge == 2 || strpos($ag.fAge|default:'', 'CHD') !== false}
@@ -90,6 +92,9 @@
                 {elseif $ag.IdAge == 3}
                     {$child_age_2_min = $ag.FromYear|default:'2'}
                     {$child_age_2_max = $ag.ToYear|default:'11.99'}
+                {elseif $ag.IdAge == 4}
+                    {$child_age_3_min = $ag.FromYear|default:'12'}
+                    {$child_age_3_max = $ag.ToYear|default:'17.99'}
                 {/if}
             {/foreach}
         {/if}
@@ -210,6 +215,7 @@
                         {$adult_price = null}
                         {$child1_price = null}
                         {$child2_price = null}
+                        {$child3_price = null}
                         {foreach from=$room_data.prices item=p}
                             {if ($p.age_type == 'ADULT' || $p.age_type == 'ADULT ') && $p.acc_type == 'REGULAR'}
                                 {$adult_price = $p}
@@ -217,10 +223,18 @@
                                 {$child1_price = $p}
                             {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '2-11') !== false}
                                 {$child2_price = $p}
+                            {elseif strpos($p.age_type|default:'', 'CHD') !== false && strpos($p.age_type|default:'', '12-17') !== false}
+                                {$child3_price = $p}
                             {elseif strpos($p.age_type|default:'', 'CHD') !== false && !$child2_price}
                                 {$child2_price = $p}
                             {/if}
                         {/foreach}
+
+                        {* Get room age bands availability *}
+                        {$r_bands = $room_age_bands[$room_id]|default:[]}
+                        {$r_has_chd_0_1 = $r_bands.has_chd_0_1|default:false}
+                        {$r_has_chd_2_11 = $r_bands.has_chd_2_11|default:false}
+                        {$r_has_chd_12_17 = $r_bands.has_chd_12_17|default:false}
                         
                         <table class="prices-table-new">
                             <thead>
@@ -270,18 +284,46 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {* Determine occupancy rows based on room type *}
+                                {* Determine occupancy rows based on room type and available age bands *}
+                                {$total_capacity = $capacity.RB|default:2 + $capacity.EB|default:1}
                                 {if $is_sgl}
                                     {* Single room: 1 Adult only *}
                                     {$occ_list = []}
                                     {$occ_list[] = ['label' => "1 {__('novoton_holidays.adult')}", 'adults' => 1, 'children' => 0, 'child_age' => 0]}
                                 {else}
-                                    {* Double/other rooms: 2 Adults, 2A+1C, 2A+2C *}
+                                    {* Build occupancy rows dynamically based on available child age bands *}
                                     {$occ_list = []}
+                                    {* Always show 2 Adults *}
                                     {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')}", 'adults' => 2, 'children' => 0, 'child_age' => 0]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} (0-{$child_age_1_max})", 'adults' => 2, 'children' => 1, 'child_age' => 1]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_2_min}-{$child_age_2_max})", 'adults' => 2, 'children' => 1, 'child_age' => 2]}
-                                    {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_age' => 0]}
+
+                                    {* Show 2A+1C (0-1.99) only if room has infant pricing *}
+                                    {if $r_has_chd_0_1 && $total_capacity >= 3}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} (0-{$child_age_1_max})", 'adults' => 2, 'children' => 1, 'child_age' => 1]}
+                                    {/if}
+
+                                    {* Show 2A+1C (2-11.99) only if room has child pricing *}
+                                    {if $r_has_chd_2_11 && $total_capacity >= 3}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_2_min}-{$child_age_2_max})", 'adults' => 2, 'children' => 1, 'child_age' => 2]}
+                                    {/if}
+
+                                    {* Show 2A+1C (12-17.99) only if room has teen pricing *}
+                                    {if $r_has_chd_12_17 && $total_capacity >= 3}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_3_min}-{$child_age_3_max})", 'adults' => 2, 'children' => 1, 'child_age' => 3]}
+                                    {/if}
+
+                                    {* Show 2A+2C only if room has child pricing and capacity >= 4 *}
+                                    {if ($r_has_chd_0_1 || $r_has_chd_2_11 || $r_has_chd_12_17) && $total_capacity >= 4}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_age' => 0]}
+                                    {/if}
+
+                                    {* Fallback: if no age bands detected (room_age_bands empty), show default rows *}
+                                    {if !$r_has_chd_0_1 && !$r_has_chd_2_11 && !$r_has_chd_12_17 && $total_capacity >= 3}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} (0-{$child_age_1_max})", 'adults' => 2, 'children' => 1, 'child_age' => 1]}
+                                        {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 1 {__('novoton_holidays.child')} ({$child_age_2_min}-{$child_age_2_max})", 'adults' => 2, 'children' => 1, 'child_age' => 2]}
+                                        {if $total_capacity >= 4}
+                                            {$occ_list[] = ['label' => "2 {__('novoton_holidays.adults')} + 2 {__('novoton_holidays.children_short')}", 'adults' => 2, 'children' => 2, 'child_age' => 0]}
+                                        {/if}
+                                    {/if}
                                 {/if}
                                 
                                 {foreach from=$occ_list item=occ_config name=occ_loop}
@@ -336,6 +378,13 @@
                                                         {/if}
                                                         {$child_per_night = $child_7n / 7}
                                                         {$base = $base + ($child_per_night * $occ_config.children * 5)}
+                                                    {elseif $occ_config.child_age == 3 && $child3_price}
+                                                        {$child_7n = $child3_price.$price_key|default:0}
+                                                        {if $child_7n == 0}
+                                                            {$child_7n = $child3_price.$price_key_alt|default:0}
+                                                        {/if}
+                                                        {$child_per_night = $child_7n / 7}
+                                                        {$base = $base + ($child_per_night * $occ_config.children * 5)}
                                                     {elseif $occ_config.children == 2}
                                                         {* 2 children - use both age groups *}
                                                         {if $child1_price}
@@ -354,10 +403,10 @@
                                                         {/if}
                                                     {/if}
                                                 {/if}
-                                                
+
                                                 {* Apply commission *}
                                                 {$total = $base * (1 + $commission / 100)}
-                                                
+
                                                 {if $total > 0}
                                                     <span class="price">{$total|number_format:0} EUR</span>
                                                 {else}
@@ -366,7 +415,7 @@
                                             </td>
                                         {/foreach}
                                     </tr>
-                                    
+
                                     {* Row for 7 nights *}
                                     <tr class="occupancy-row nights-row">
                                         <td class="col-nights highlight-nights">7</td>
@@ -406,6 +455,12 @@
                                                         {$child_total = $child2_price.$price_key|default:0}
                                                         {if $child_total == 0}
                                                             {$child_total = $child2_price.$price_key_alt|default:0}
+                                                        {/if}
+                                                        {$base = $base + ($child_total * $occ_config.children)}
+                                                    {elseif $occ_config.child_age == 3 && $child3_price}
+                                                        {$child_total = $child3_price.$price_key|default:0}
+                                                        {if $child_total == 0}
+                                                            {$child_total = $child3_price.$price_key_alt|default:0}
                                                         {/if}
                                                         {$base = $base + ($child_total * $occ_config.children)}
                                                     {elseif $occ_config.children == 2}
@@ -478,6 +533,13 @@
                                                         {$child_7n = $child2_price.$price_key|default:0}
                                                         {if $child_7n == 0}
                                                             {$child_7n = $child2_price.$price_key_alt|default:0}
+                                                        {/if}
+                                                        {$child_per_night = $child_7n / 7}
+                                                        {$base = $base + ($child_per_night * $occ_config.children * 10)}
+                                                    {elseif $occ_config.child_age == 3 && $child3_price}
+                                                        {$child_7n = $child3_price.$price_key|default:0}
+                                                        {if $child_7n == 0}
+                                                            {$child_7n = $child3_price.$price_key_alt|default:0}
                                                         {/if}
                                                         {$child_per_night = $child_7n / 7}
                                                         {$base = $base + ($child_per_night * $occ_config.children * 10)}

@@ -148,7 +148,9 @@ class PriceInfoCalculation
         }
 
         // Step 2: Build occupancy structure (who uses RB vs EB)
-        $occupancy = $this->buildOccupancyStructure($adults, $childrenAges, $roomCapacity);
+        // Also checks if each child's age band has pricing in this room;
+        // children without matching child rates are reclassified as additional adults.
+        $occupancy = $this->buildOccupancyStructure($adults, $childrenAges, $roomCapacity, $roomId, $boardId);
         $this->log('Occupancy structure', $occupancy);
 
         // Step 3: Get season mapping for each night
@@ -363,13 +365,19 @@ class PriceInfoCalculation
      * Build occupancy structure - who uses Regular Beds vs Extra Beds
      *
      * Adults take REGULAR beds first, extras become "3RD ADULT", "4TH ADULT"
-     * Children fill remaining REGULAR beds, then go to EXTRA BED
+     * Children fill remaining REGULAR beds, then go to EXTRA BED.
+     *
+     * If a child's age band (e.g., 12-17,99) has no matching price row in this room,
+     * the child is reclassified as an additional adult on EXTRA BED. This handles
+     * hotels that only define 0-1,99 and 2-11,99 child bands — older children (12+)
+     * are effectively charged at adult rates.
      */
-    private function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity): array
+    private function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity, string $roomId = '', string $boardId = ''): array
     {
         $occupancy = [
             'adults' => [],
             'children' => [],
+            'children_as_adults' => [],  // Children reclassified as adults (age band not in room)
             'total_rb_used' => 0,
             'total_eb_used' => 0
         ];
@@ -379,7 +387,19 @@ class PriceInfoCalculation
         $rbUsed = 0;
         $ebUsed = 0;
 
+        // Get available child age bands for this room (if room/board specified)
+        $availableBands = [];
+        if (!empty($roomId) && !empty($boardId) && !empty($this->priceinfo)) {
+            $availableBands = $this->getAvailableChildAgeBands($roomId, $boardId);
+            $this->log('Available child age bands for room', [
+                'room_id' => $roomId,
+                'board_id' => $boardId,
+                'bands' => $availableBands
+            ]);
+        }
+
         // Place adults
+        $adultCount = $adults;
         for ($i = 0; $i < $adults; $i++) {
             if ($rbUsed < $rbAvailable) {
                 // Regular bed
@@ -403,16 +423,72 @@ class PriceInfoCalculation
             }
         }
 
-        // Place children
+        // Place children — check if each child's age band has pricing in this room
+        $childOrdinalCounter = 0;
         foreach ($childrenAges as $idx => $age) {
-            $childNum = $idx + 1;
             $ageBand = $this->getAgeBand($age);
-            $ordinal = $this->getChildOrdinal($childNum);
+
+            // Check if this age band has pricing in the room
+            $bandHasPricing = true;
+            if (!empty($availableBands)) {
+                // Normalize for comparison (comma vs dot)
+                $bandNorm = str_replace(',', '.', $ageBand);
+                $hasBand = false;
+                foreach ($availableBands as $ab) {
+                    if (str_replace(',', '.', $ab) === $bandNorm) {
+                        $hasBand = true;
+                        break;
+                    }
+                }
+                $bandHasPricing = $hasBand;
+            }
+
+            if (!$bandHasPricing) {
+                // No child rate for this age band — reclassify as additional adult
+                $adultCount++;
+                $ordinal = $this->getOrdinal($adultCount);
+
+                $this->log('Child reclassified as adult (no pricing for age band)', [
+                    'child_age' => $age,
+                    'age_band' => $ageBand,
+                    'reclassified_as' => $ordinal . ' ADULT'
+                ]);
+
+                if ($rbUsed < $rbAvailable) {
+                    $entry = [
+                        'index' => $adultCount,
+                        'bed_type' => 'REGULAR',
+                        'age_type' => 'ADULT ',
+                        'acc_type' => 'REGULAR',
+                        'original_child_age' => $age,
+                        'reclassified' => true
+                    ];
+                    $rbUsed++;
+                } else {
+                    $entry = [
+                        'index' => $adultCount,
+                        'bed_type' => 'EXTRA BED',
+                        'age_type' => $ordinal . ' ADULT',
+                        'acc_type' => 'EXTRA BED',
+                        'original_child_age' => $age,
+                        'reclassified' => true
+                    ];
+                    $ebUsed++;
+                }
+
+                $occupancy['adults'][] = $entry;
+                $occupancy['children_as_adults'][] = $entry;
+                continue;
+            }
+
+            // Normal child placement
+            $childOrdinalCounter++;
+            $ordinal = $this->getChildOrdinal($childOrdinalCounter);
 
             if ($rbUsed < $rbAvailable) {
                 // Regular bed
                 $occupancy['children'][] = [
-                    'index' => $childNum,
+                    'index' => $childOrdinalCounter,
                     'age' => $age,
                     'age_band' => $ageBand,
                     'bed_type' => 'REGULAR',
@@ -424,7 +500,7 @@ class PriceInfoCalculation
             } else {
                 // Extra bed
                 $occupancy['children'][] = [
-                    'index' => $childNum,
+                    'index' => $childOrdinalCounter,
                     'age' => $age,
                     'age_band' => $ageBand,
                     'bed_type' => 'EXTRA BED',
@@ -467,13 +543,123 @@ class PriceInfoCalculation
 
     /**
      * Get age band string
+     *
+     * Maps child age to the standard age band categories used in priceinfo:
+     * - 0-1,99: Infants (age 0 to <2)
+     * - 2-11,99: Children (age 2 to <12)
+     * - 12-17,99: Teens (age 12 to <18)
      */
     private function getAgeBand(float $age): string
     {
         if ($age < 2.0) {
             return '0-1,99';
         }
-        return '2-11,99';
+        if ($age < 12.0) {
+            return '2-11,99';
+        }
+        return '12-17,99';
+    }
+
+    /**
+     * Get available child age bands for a specific room+board from season_price data.
+     *
+     * Scans season_price rows to find which child age bands (0-1,99 / 2-11,99 / 12-17,99)
+     * have pricing entries for the given room. This is used to determine whether a child
+     * of a certain age can be priced in this room, or if they need a different room.
+     *
+     * @param string $roomId Room ID
+     * @param string $boardId Board ID
+     * @return array Available age bands, e.g. ['0-1,99', '2-11,99']
+     */
+    private function getAvailableChildAgeBands(string $roomId, string $boardId): array
+    {
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        $bands = [];
+        foreach ($seasonPrices as $row) {
+            $rowRoom = $this->toScalar($row['IdRoom'] ?? '');
+            $rowBoard = $this->toScalar($row['IdBoard'] ?? '');
+
+            if (!$this->matchRoom($rowRoom, $roomId)) continue;
+            if (!$this->matchBoard($rowBoard, $boardId)) continue;
+
+            // Check age type for child bands
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = $this->toScalar($row['IdAge'] ?? '');
+                static $ageTypeMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
+                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            $rowAge = strtoupper(trim($rowAge));
+            if (strpos($rowAge, 'CHD') === false && strpos($rowAge, 'CHILD') === false) {
+                continue;
+            }
+
+            // Extract age band pattern from age type
+            if (preg_match('/(\d+[\-\.]\d+[,\.]?\d*)/', $rowAge, $m)) {
+                // Normalize to comma format (2-11,99)
+                $band = str_replace('.', ',', $m[1]);
+                // Normalize common variations
+                $band = preg_replace('/(\d+)-(\d+),(\d+)/', '$1-$2,$3', $band);
+                if (!in_array($band, $bands)) {
+                    $bands[] = $band;
+                }
+            }
+        }
+
+        return $bands;
+    }
+
+    /**
+     * Check if a room has adult extra bed pricing (e.g., 3RD ADULT on EXTRA BED).
+     *
+     * Used when a child's age band has no matching child rate — the child
+     * may need to be charged as an additional adult on extra bed.
+     *
+     * @param string $roomId Room ID
+     * @param string $boardId Board ID
+     * @return bool True if 3RD+ ADULT EXTRA BED pricing exists
+     */
+    private function hasAdultExtraBedPricing(string $roomId, string $boardId): bool
+    {
+        $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        foreach ($seasonPrices as $row) {
+            $rowRoom = $this->toScalar($row['IdRoom'] ?? '');
+            $rowBoard = $this->toScalar($row['IdBoard'] ?? '');
+
+            if (!$this->matchRoom($rowRoom, $roomId)) continue;
+            if (!$this->matchBoard($rowBoard, $boardId)) continue;
+
+            $rowAge = '';
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $rowAge = $row['fAge'];
+            } else {
+                $rawIdAge = $this->toScalar($row['IdAge'] ?? '');
+                static $ageMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
+                $rowAge = $ageMap[$rawIdAge] ?? $rawIdAge;
+            }
+
+            $rowAge = strtoupper(trim($rowAge));
+            $rowAcc = strtoupper(trim($this->toScalar($row['IdAcc'] ?? '')));
+
+            // Check for "3 RD ADULT" or "3RD ADULT" or similar on EXTRA BED
+            if (preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $rowAge) &&
+                ($rowAcc === 'EXTRA BED' || $rowAcc === 'EB' || $rowAcc === 'EXTRABED')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
