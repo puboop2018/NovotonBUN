@@ -334,9 +334,16 @@
         };
         
         log('AJAX request', requestData);
-        
-        // A74k: Use root-level AJAX handler (app/ is blocked by CS-Cart)
-        var ajaxUrl = 'novoton_ajax_price.php';
+
+        // Use CS-Cart controller dispatch (replaces standalone novoton_ajax_price.php)
+        var ajaxUrl = '';
+        if (typeof window.fn_url === 'function') {
+            ajaxUrl = window.fn_url('novoton_booking.ajax_recalculate_price');
+        } else if (window.Tygh && window.Tygh.current_url) {
+            ajaxUrl = window.Tygh.current_url.replace(/dispatch=[^&]+/, 'dispatch=novoton_booking.ajax_recalculate_price');
+        } else {
+            ajaxUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.php?dispatch=novoton_booking.ajax_recalculate_price';
+        }
         log('AJAX URL', ajaxUrl);
         
         fetch(ajaxUrl, {
