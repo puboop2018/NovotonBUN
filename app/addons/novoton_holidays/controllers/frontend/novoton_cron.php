@@ -573,11 +573,12 @@ try {
         }
         
         echo "Country: {$country}\n";
-        $last_import_display = (new DateTime($last_product_import))->setTimezone(new DateTimeZone($cron_timezone))->format('Y-m-d H:i:s');
+        $tz = new DateTimeZone(date_default_timezone_get() ?: 'UTC');
+        $last_import_display = (new DateTime($last_product_import))->setTimezone($tz)->format('Y-m-d H:i:s');
         echo "Last product import: {$last_import_display}\n";
         echo "Checking offers added/modified after this time...\n\n";
 
-        $sync_start_time = (new DateTime('now', new DateTimeZone($cron_timezone)))->format('Y-m-d\TH:i:s');
+        $sync_start_time = (new DateTime('now', $tz))->format('Y-m-d\TH:i:s');
         
         $response = $api->getOffersUpdate($last_product_import, $country);
         

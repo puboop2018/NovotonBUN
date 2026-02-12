@@ -154,17 +154,12 @@ if ($mode == 'add_hotels_as_products') {
             // Get languages
             $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
 
-            // Debug: log what we're assigning to template
-            error_log("[Novoton] add_hotels_as_products: country={$country}, stats=" . json_encode($stats)
-                . ", resorts=" . count($resorts) . ", categories=" . count($categories) . ", languages=" . count($languages));
-
             Tygh::$app['view']->assign('country', $country);
             Tygh::$app['view']->assign('stats', $stats);
             Tygh::$app['view']->assign('resorts', $resorts);
             Tygh::$app['view']->assign('categories', $categories);
             Tygh::$app['view']->assign('languages', $languages);
         } catch (\Exception $e) {
-            error_log("[Novoton] add_hotels_as_products ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
             return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
         }

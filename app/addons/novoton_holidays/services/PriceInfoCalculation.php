@@ -1885,12 +1885,12 @@ class PriceInfoCalculation
                 }
             } else {
                 // Fallback: estimate as proportional if by_night not available
-                $avgNightPrice = $basePrice['total'] / $nights;
+                $avgNightPrice = $nights > 0 ? $basePrice['total'] / $nights : 0;
                 $basePriceDiscount = $avgNightPrice * count($freeNightIndices);
             }
 
             // Calculate proportional discount for extras (free_nights / total_nights)
-            $freeNightsRatio = count($freeNightIndices) / $nights;
+            $freeNightsRatio = $nights > 0 ? count($freeNightIndices) / $nights : 0;
 
             $breakdown = [
                 'base_price' => $basePriceDiscount,

@@ -745,28 +745,6 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
 }
 
 /**
- * Helper: Get readable board name from board ID
- */
-function fn_novoton_get_board_name($board_id)
-{
-    $board_map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        'UAI' => 'Ultra All Inclusive',
-        'ULTRA ALL INCL' => 'Ultra All Inclusive',
-        'FB' => 'Full Board',
-        'HB' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'RO' => 'Room Only',
-        'SC' => 'Self Catering',
-    ];
-
-    $board_upper = strtoupper(trim($board_id));
-    return $board_map[$board_upper] ?? $board_id;
-}
-
-/**
  * Hook: dispatch_before_display - Ensure meta variables are never null
  * This prevents "html_entity_decode(): Passing null" errors in meta.tpl
  */
