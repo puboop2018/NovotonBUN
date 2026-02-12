@@ -281,8 +281,55 @@ if ($mode == 'check_prices') {
             flush();
         }
 
-        // Step 4: Update database - mark hotels with/without prices
-        $with_prices = 0;
+        // Step 4: Fallback per-hotel check for hotels not found in any resort query.
+        // This catches hotels whose DB city doesn't match the API's resort mapping.
+        $not_found_in_resorts = array_diff_key($all_hotels, $hotels_with_prices);
+        $fallback_found = 0;
+        $fallback_errors = 0;
+
+        if (!empty($not_found_in_resorts)) {
+            echo "<br><div class='resort-header'>Fallback: checking " . count($not_found_in_resorts) . " hotels not found in any resort query...</div>\n";
+            flush();
+
+            foreach ($not_found_in_resorts as $hotel_id => $hotel) {
+                try {
+                    $result = $api->getRoomPrice([
+                        'hotel_id'  => $hotel_id,
+                        'check_in'  => $check_in,
+                        'check_out' => $check_out,
+                        'adults'    => 2,
+                        'nocache'   => true,
+                    ]);
+
+                    $has_prices = false;
+                    if ($result instanceof \SimpleXMLElement) {
+                        $prices = $result->xpath('//Price');
+                        $has_prices = !empty($prices) && count($prices) > 0;
+                    }
+
+                    if ($has_prices) {
+                        $hotels_with_prices[$hotel_id] = $hotel['city'] ?: '<no city>';
+                        $fallback_found++;
+                        echo "<span class='success'>  ✓ {$hotel['hotel_name']} (city: " . htmlspecialchars($hotel['city'] ?: '<empty>') . ") — has prices but resort query missed it</span><br>\n";
+                    }
+                } catch (Exception $e) {
+                    $fallback_errors++;
+                }
+
+                if (($fallback_found + $fallback_errors) % 10 == 0) {
+                    flush();
+                }
+            }
+
+            if ($fallback_found > 0) {
+                echo "<span class='success'>  Fallback recovered {$fallback_found} hotels with prices</span><br>\n";
+            } else {
+                echo "<span class='skip'>  No additional hotels found via fallback</span><br>\n";
+            }
+        }
+
+        // Step 5: Update database - mark hotels with/without prices
+        $with_prices_count = 0;
         $no_prices = 0;
         $now = date('Y-m-d H:i:s');
 
@@ -298,19 +345,23 @@ if ($mode == 'check_prices') {
             ]);
 
             if ($has) {
-                $with_prices++;
+                $with_prices_count++;
             } else {
                 $no_prices++;
             }
         }
 
-        // Step 5: Report hotels found by API but NOT in our database
+        // Step 6: Report hotels found by API but NOT in our database
         $unknown_hotels = array_diff_key($hotels_with_prices, $all_hotels);
 
         echo "<br><strong>Summary:</strong><br>";
         echo "Resorts queried: {$total_resorts}" . ($resort_errors > 0 ? " ({$resort_errors} errors)" : '') . "<br>";
         echo "Hotels in DB: {$total_hotels}<br>";
-        echo "With prices: <span class='success'>{$with_prices}</span><br>";
+        echo "With prices (resort scan): <span class='success'>" . ($with_prices_count - $fallback_found) . "</span><br>";
+        if ($fallback_found > 0) {
+            echo "With prices (fallback): <span class='success'>+{$fallback_found}</span> (city/resort mismatch)<br>";
+        }
+        echo "With prices (total): <span class='success'><strong>{$with_prices_count}</strong></span><br>";
         echo "No prices: {$no_prices}<br>";
 
         if (!empty($unknown_hotels)) {
