@@ -580,7 +580,7 @@
                 DECLARE idx_exists INT DEFAULT 0;
 
                 SELECT COUNT(*) INTO idx_exists FROM INFORMATION_SCHEMA.STATISTICS
-                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = CONCAT(DATABASE(), '_novoton_hotels')
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_hotels'
                 AND INDEX_NAME = 'idx_hotelinfo_synced';
                 IF idx_exists = 0 THEN
                     SET @tbl = CONCAT('`', DATABASE(), '`.`', (SELECT CONCAT(TABLE_NAME) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_hotels' LIMIT 1), '`');
