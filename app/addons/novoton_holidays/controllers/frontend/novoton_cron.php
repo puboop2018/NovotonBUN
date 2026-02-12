@@ -914,6 +914,52 @@ try {
     }
 
     // =========================================
+    // MODE: resort_list
+    // Sync resort names from API (authoritative
+    // names for room_price bulk queries)
+    // =========================================
+    elseif ($mode == 'resort_list') {
+        $country = $_REQUEST['country'] ?? 'BULGARIA';
+        echo "Syncing resort list from Novoton API (country: {$country})...\n\n";
+
+        $result = fn_novoton_sync_resorts_list($country);
+
+        $res_added = 0;
+        $res_updated = 0;
+        $res_removed = 0;
+        $res_errors = 0;
+
+        if (is_array($result)) {
+            if (!empty($result['success'])) {
+                $res_added = $result['added'] ?? 0;
+                $res_updated = $result['updated'] ?? 0;
+                $res_removed = $result['removed'] ?? 0;
+                echo "Synced {$result['total']} resorts ({$res_added} added, {$res_updated} updated, {$res_removed} removed).\n";
+            } else {
+                $res_errors = 1;
+                echo "Error: " . ($result['error'] ?? 'Unknown error') . "\n";
+            }
+        }
+
+        // Log to sync_log table for dashboard display
+        $duration = round(microtime(true) - $cron_start_time, 1);
+        db_query(
+            "INSERT INTO ?:novoton_sync_log SET sync_type = 'resort_list', sync_date = NOW(),
+             products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
+            $res_added + $res_updated, $res_errors, $duration
+        );
+
+        // Send email report
+        fn_novoton_send_import_report_email([], 'resort_list', [
+            'added'    => $res_added,
+            'updated'  => $res_updated,
+            'removed'  => $res_removed,
+            'total'    => $result['total'] ?? 0,
+            'duration' => $duration . 's',
+        ]);
+    }
+
+    // =========================================
     // MODE: list_facilities
     // =========================================
     elseif ($mode == 'list_facilities') {

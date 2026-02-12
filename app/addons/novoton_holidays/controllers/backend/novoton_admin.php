@@ -303,6 +303,11 @@ if ($mode == 'run_cron') {
                 $result = fn_novoton_admin_check_prices($api);
                 break;
                 
+            case 'resort_list':
+                $country = $params['country'] ?? 'BULGARIA';
+                $result = fn_novoton_sync_resorts_list($country);
+                break;
+
             case 'list_facilities':
                 $result = fn_novoton_admin_sync_facilities($api);
                 break;

@@ -674,6 +674,17 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel-facility relationships'
         </item>
 
+        <!-- Resorts list table (from resort_list API) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
+                `resort_name` varchar(100) NOT NULL,
+                `country` varchar(50) NOT NULL DEFAULT 'BULGARIA',
+                `synced_at` datetime DEFAULT NULL,
+                `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`resort_name`, `country`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort list from API (authoritative resort names for room_price queries)'
+        </item>
+
         <!-- Uninstall queries -->
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_booking_engine'</item>
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_homepage_booking'</item>
@@ -681,6 +692,7 @@
         <item for="uninstall">DELETE FROM ?:product_tabs WHERE addon = 'novoton_holidays'</item>
         <item for="uninstall">DELETE FROM ?:product_tabs_descriptions WHERE tab_id NOT IN (SELECT tab_id FROM ?:product_tabs)</item>
         <!-- Drop all addon tables -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_resorts`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_alternative_requests`</item>

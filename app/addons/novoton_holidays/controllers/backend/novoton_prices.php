@@ -205,7 +205,8 @@ if ($mode == 'check_prices') {
 
     echo '<div class="log">';
 
-    // Step 1: Get resort list from API (authoritative source) and fall back to DB cities
+    // Step 1: Build resort list from novoton_resorts table (synced via resort_list cron),
+    // merged with DB hotel cities as belt-and-suspenders fallback
     $all_hotels = db_get_hash_array(
         "SELECT hotel_id, hotel_name, city, product_id, has_prices FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
         'hotel_id',
@@ -213,37 +214,36 @@ if ($mode == 'check_prices') {
     );
     $total_hotels = count($all_hotels);
 
-    // Query the API's own resort_list — these are the exact names room_price accepts
     $api = new NovotonApi();
     $hotelRepo = new HotelRepository();
-    $api_resorts = [];
-    try {
-        $resort_list_response = $api->getResortList($country);
-        if ($resort_list_response) {
-            foreach ($resort_list_response->xpath('//Resort') as $r) {
-                $name = trim((string)$r);
-                if (!empty($name)) {
-                    $api_resorts[] = $name;
-                }
-            }
-        }
-    } catch (Exception $e) {
-        // Silently fall back to DB cities
-    }
 
-    // Merge: API resorts + any DB cities not already covered (belt and suspenders)
+    // Primary source: novoton_resorts table (authoritative resort names from API)
+    $synced_resorts = db_get_fields(
+        "SELECT resort_name FROM ?:novoton_resorts WHERE country = ?s ORDER BY resort_name",
+        $country
+    );
+
+    // Fallback: DB hotel cities (in case resort_list cron hasn't run yet)
     $db_cities = db_get_fields(
         "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city IS NOT NULL ORDER BY city",
         $country
     );
-    $resorts = !empty($api_resorts) ? array_values(array_unique(array_merge($api_resorts, $db_cities))) : $db_cities;
+
+    // Merge both sources, deduplicate
+    $resorts = array_values(array_unique(array_merge($synced_resorts, $db_cities)));
     sort($resorts);
 
     $total_resorts = count($resorts);
-    $source = !empty($api_resorts) ? 'resort_list API + DB cities' : 'DB cities only (API unavailable)';
+    $source = !empty($synced_resorts)
+        ? 'novoton_resorts table + DB cities'
+        : 'DB cities only (run resort_list cron to sync)';
 
     echo "Country: {$country} | Resorts: {$total_resorts} | Hotels in DB: {$total_hotels}<br>";
-    echo "Resort source: {$source}" . (!empty($api_resorts) ? " (API: " . count($api_resorts) . ", DB: " . count($db_cities) . ")" : "") . "<br>";
+    echo "Resort source: {$source}";
+    if (!empty($synced_resorts)) {
+        echo " (synced: " . count($synced_resorts) . ", DB cities: " . count($db_cities) . ")";
+    }
+    echo "<br>";
     echo "Check-in: {$check_in} | Check-out: {$check_out}<br>";
     echo "Method: resort-based bulk query with regex &lt;IdHotel&gt; extraction<br><br>\n";
     flush();

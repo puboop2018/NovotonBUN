@@ -286,6 +286,7 @@ class CronHelper
         $logger->output("- resinfo: Check ASK bookings status");
         $logger->output("- offers_update: Check for new/updated offers (&country=BULGARIA)");
         $logger->output("- add_hotels_as_products: Add hotels as products");
+        $logger->output("- resort_list: Sync resort names from API (authoritative names for room_price)");
         $logger->output("- list_facilities: Sync facilities list from API");
         $logger->output("- exchange_rates: Update currency rates from BNR (daily)");
         $logger->output("");
@@ -298,7 +299,8 @@ class CronHelper
         $logger->output("     - First run: syncs all packages (batched)");
         $logger->output("     - Daily: only stale packages (older than 24h)");
         $logger->output("     - Every 7 days: automatic full re-sync");
-        $logger->output("  3. list_facilities (weekly) - Sync facilities list");
-        $logger->output("  4. exchange_rates (daily) - Update BNR exchange rates");
+        $logger->output("  3. resort_list (weekly) - Sync resort names from API");
+        $logger->output("  4. list_facilities (weekly) - Sync facilities list");
+        $logger->output("  5. exchange_rates (daily) - Update BNR exchange rates");
     }
 }
