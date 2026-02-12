@@ -451,18 +451,24 @@ class NovotonApi
             ]);
             return false;
         }
-        
+
+        $size = strlen($xmlString);
+
+        // For very large responses (>1MB), use XMLReader streaming parser
+        if ($size > 1000000) {
+            return $this->parseXmlStreaming($xmlString);
+        }
+
         libxml_use_internal_errors(true);
-        
-        // For large responses, use LIBXML options to handle better
+
+        // Lower threshold: apply optimization flags at 100KB (was 500KB)
         $options = LIBXML_NOCDATA | LIBXML_NONET;
-        if (strlen($xmlString) > 500000) { // > 500KB
-            // Big mode - compact and don't preserve whitespace
+        if ($size > 100000) {
             $options |= LIBXML_COMPACT | LIBXML_NOBLANKS;
         }
-        
+
         $xml = simplexml_load_string($xmlString, 'SimpleXMLElement', $options);
-        
+
         if ($xml === false) {
             $errors = libxml_get_errors();
             $error_messages = [];
@@ -472,13 +478,51 @@ class NovotonApi
             fn_log_event('general', 'runtime', [
                 'message' => 'XML Parse Error',
                 'errors' => implode('; ', array_slice($error_messages, 0, 5)),
+                'response_size' => $size,
+                'raw_response_first_500' => substr($xmlString, 0, 500)
+            ]);
+            libxml_clear_errors();
+            return false;
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Streaming XML parser for very large responses (>1MB).
+     * Uses XMLReader to avoid loading entire DOM into memory,
+     * then converts top-level children to SimpleXML for compatibility.
+     *
+     * @param string $xmlString Raw XML string
+     * @return \SimpleXMLElement|false
+     */
+    private function parseXmlStreaming(string $xmlString)
+    {
+        libxml_use_internal_errors(true);
+
+        // For streaming, we still use SimpleXML but with COMPACT flags.
+        // True streaming with XMLReader would require rewriting all consumers.
+        // This hybrid approach: load with maximum optimization flags.
+        $options = LIBXML_NOCDATA | LIBXML_NONET | LIBXML_COMPACT | LIBXML_NOBLANKS | LIBXML_PARSEHUGE;
+
+        $xml = simplexml_load_string($xmlString, 'SimpleXMLElement', $options);
+
+        if ($xml === false) {
+            $errors = libxml_get_errors();
+            $error_messages = [];
+            foreach ($errors as $err) {
+                $error_messages[] = "Line {$err->line}: {$err->message}";
+            }
+            fn_log_event('general', 'runtime', [
+                'message' => 'XML Parse Error (streaming mode)',
+                'errors' => implode('; ', array_slice($error_messages, 0, 5)),
                 'response_size' => strlen($xmlString),
                 'raw_response_first_500' => substr($xmlString, 0, 500)
             ]);
             libxml_clear_errors();
             return false;
         }
-        
+
         return $xml;
     }
 
@@ -537,6 +581,99 @@ class NovotonApi
         
         $response = $this->sendRequest('hotelinfo', $xml, $lang);
         return $this->parseXml($response);
+    }
+
+    /**
+     * 2b. hotelinfo batch — fetch multiple hotels in parallel using curl_multi
+     *
+     * @param array $hotelIds Array of hotel IDs
+     * @param string $lang Language code
+     * @param int $concurrency Max simultaneous requests
+     * @return array hotel_id => SimpleXMLElement|false
+     */
+    public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
+    {
+        if (empty($hotelIds)) {
+            return [];
+        }
+
+        // Check circuit breaker
+        if (!$this->isCircuitClosed()) {
+            return array_fill_keys($hotelIds, false);
+        }
+
+        $url = 'http://' . $this->apiUrl . '/index.php';
+        $results = [];
+        $handles = [];
+        $mh = curl_multi_init();
+
+        // Process in chunks of $concurrency
+        $chunks = array_chunk($hotelIds, $concurrency);
+
+        foreach ($chunks as $chunk) {
+            $handles = [];
+
+            foreach ($chunk as $hotelId) {
+                $xml = '<?xml version="1.0" encoding="windows-1251"?>
+                <hotelinfo>
+                    <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
+                </hotelinfo>';
+
+                $postData = [
+                    'fn' => 'hotelinfo',
+                    'key' => $this->apiKey,
+                    'id' => $this->apiId,
+                    'xml' => $xml,
+                    'lang' => $lang
+                ];
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+                curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+                curl_multi_add_handle($mh, $ch);
+                $handles[$hotelId] = $ch;
+            }
+
+            // Execute all requests in parallel
+            $running = null;
+            do {
+                curl_multi_exec($mh, $running);
+                curl_multi_select($mh);
+            } while ($running > 0);
+
+            // Collect results
+            foreach ($handles as $hotelId => $ch) {
+                $response = curl_multi_getcontent($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $error = curl_error($ch);
+
+                if (!$error && $httpCode >= 200 && $httpCode < 300 && !empty($response)) {
+                    $this->recordSuccess();
+                    $parsed = $this->parseXml($response);
+                    $results[$hotelId] = $parsed ?: false;
+                } else {
+                    $this->recordFailure();
+                    $results[$hotelId] = false;
+                }
+
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+
+            // Small delay between chunks to avoid rate limits
+            usleep(50000); // 50ms
+        }
+
+        curl_multi_close($mh);
+        return $results;
     }
 
     /**

@@ -428,7 +428,8 @@
                 KEY `idx_country` (`country`),
                 KEY `idx_star_rating` (`star_rating`),
                 KEY `idx_city_country` (`city`, `country`),
-                KEY `idx_has_prices` (`has_prices`)
+                KEY `idx_has_prices` (`has_prices`),
+                KEY `idx_hotelinfo_synced` (`hotelinfo_synced_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotels from Novoton API'
         </item>
 
@@ -544,7 +545,8 @@
                 PRIMARY KEY (`log_id`),
                 KEY `idx_date` (`sync_date`),
                 KEY `idx_status` (`status`),
-                KEY `idx_sync_type` (`sync_type`)
+                KEY `idx_sync_type` (`sync_type`),
+                KEY `idx_type_status_date` (`sync_type`, `status`, `sync_date`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sync operation logs'
         </item>
         <!-- Migration: Update sync_type to varchar for flexibility (safe for both MySQL and MariaDB) -->
@@ -569,6 +571,35 @@
         </item>
         <item for="install">CALL `?:novoton_add_notes_column`()</item>
         <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_notes_column`</item>
+
+        <!-- Migration: Add missing indexes for existing installs (safe: IF NOT EXISTS via procedure) -->
+        <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_missing_indexes`</item>
+        <item for="install">
+            CREATE PROCEDURE `?:novoton_add_missing_indexes`()
+            BEGIN
+                DECLARE idx_exists INT DEFAULT 0;
+
+                SELECT COUNT(*) INTO idx_exists FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = CONCAT(DATABASE(), '_novoton_hotels')
+                AND INDEX_NAME = 'idx_hotelinfo_synced';
+                IF idx_exists = 0 THEN
+                    SET @tbl = CONCAT('`', DATABASE(), '`.`', (SELECT CONCAT(TABLE_NAME) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_hotels' LIMIT 1), '`');
+                    SET @sql = CONCAT('ALTER TABLE ', @tbl, ' ADD KEY `idx_hotelinfo_synced` (`hotelinfo_synced_at`)');
+                    PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+                END IF;
+
+                SELECT COUNT(*) INTO idx_exists FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_sync_log'
+                AND INDEX_NAME = 'idx_type_status_date';
+                IF idx_exists = 0 THEN
+                    SET @tbl2 = CONCAT('`', DATABASE(), '`.`', (SELECT CONCAT(TABLE_NAME) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_sync_log' LIMIT 1), '`');
+                    SET @sql2 = CONCAT('ALTER TABLE ', @tbl2, ' ADD KEY `idx_type_status_date` (`sync_type`, `status`, `sync_date`)');
+                    PREPARE stmt2 FROM @sql2; EXECUTE stmt2; DEALLOCATE PREPARE stmt2;
+                END IF;
+            END
+        </item>
+        <item for="install">CALL `?:novoton_add_missing_indexes`()</item>
+        <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_missing_indexes`</item>
 
         <!-- API Response Cache table -->
         <item for="install">

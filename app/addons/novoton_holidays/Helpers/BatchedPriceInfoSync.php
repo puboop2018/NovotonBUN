@@ -203,13 +203,18 @@ class BatchedPriceInfoSync
 
         $this->output("Found " . count($packages) . " packages to sync.");
 
+        // Store only minimal identifiers (hotel_id + package_id) to keep state file small
+        $package_keys = array_map(function ($p) {
+            return ['hotel_id' => $p['hotel_id'], 'package_id' => $p['package_id']];
+        }, $packages);
+
         // Create new state
         $state = [
             'sync_type' => $sync_type,
             'status' => 'in_progress',
             'started_at' => date('Y-m-d H:i:s'),
             'last_run_at' => date('Y-m-d H:i:s'),
-            'packages' => $packages,
+            'packages' => $package_keys,
             'total' => count($packages),
             'processed' => 0,
             'synced' => 0,
@@ -247,6 +252,34 @@ class BatchedPriceInfoSync
             // Get next batch
             $batch = array_slice($state['packages'], $offset, $this->batch_size);
 
+            if (empty($batch)) {
+                break;
+            }
+
+            // Pre-fetch package_names for the batch to avoid N+1
+            $batch_keys = [];
+            foreach ($batch as $pkg) {
+                $batch_keys[] = $pkg['hotel_id'] . '|' . $pkg['package_id'];
+            }
+            $pkg_name_map = [];
+            if (!empty($batch)) {
+                // Build OR conditions for batch lookup
+                $where_parts = [];
+                $where_params = [];
+                foreach ($batch as $pkg) {
+                    $where_parts[] = "(hotel_id = ?s AND package_id = ?s)";
+                    $where_params[] = $pkg['hotel_id'];
+                    $where_params[] = $pkg['package_id'];
+                }
+                $rows = call_user_func_array('db_get_array', array_merge(
+                    ["SELECT hotel_id, package_id, package_name FROM ?:novoton_hotel_packages WHERE " . implode(' OR ', $where_parts)],
+                    $where_params
+                ));
+                foreach ($rows as $r) {
+                    $pkg_name_map[$r['hotel_id'] . '|' . $r['package_id']] = $r['package_name'];
+                }
+            }
+
             foreach ($batch as $pkg) {
                 // Check time limit within batch (skip if unlimited mode)
                 if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
@@ -255,7 +288,9 @@ class BatchedPriceInfoSync
 
                 $hotel_id = $pkg['hotel_id'];
                 $package_id = $pkg['package_id'];
-                $package_name = $pkg['package_name'] ?? '?';
+                $package_name = $pkg_name_map[$hotel_id . '|' . $package_id]
+                    ?? $pkg['package_name']
+                    ?? '?';
 
                 $this->output("[{$hotel_id}/{$package_id}] {$package_name} ... ", false);
 
@@ -299,8 +334,46 @@ class BatchedPriceInfoSync
             $this->output("--- Progress: {$offset}/{$state['total']} ({$percent}%) ---");
         }
 
-        // Check if complete
+        // Check if complete — retry failed items before finishing
         if ($offset >= $state['total']) {
+            if (!empty($state['error_ids']) && empty($state['retry_done'])) {
+                $retry_ids = array_unique($state['error_ids']);
+                $this->output("\nRetrying " . count($retry_ids) . " failed packages...");
+                $recovered = 0;
+                foreach ($retry_ids as $retry_key) {
+                    if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
+                        break;
+                    }
+                    usleep(500000); // 500ms backoff
+                    $parts = explode('/', $retry_key, 2);
+                    if (count($parts) !== 2) continue;
+                    [$r_hotel_id, $r_package_id] = $parts;
+                    // Lookup package_name from DB
+                    $r_package_name = db_get_field(
+                        "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
+                        $r_hotel_id, $r_package_id
+                    );
+                    if (empty($r_package_name)) continue;
+                    try {
+                        $priceinfo = $api->getPriceInfo($r_hotel_id, $r_package_name);
+                        if ($priceinfo) {
+                            $this->processPriceInfo($r_hotel_id, $r_package_id, $priceinfo, $now);
+                            $recovered++;
+                            $state['synced']++;
+                            $state['errors']--;
+                            $this->output("  [{$retry_key}] retry OK");
+                        }
+                    } catch (\Exception $e) {
+                        $this->output("  [{$retry_key}] retry failed: " . $e->getMessage());
+                    }
+                }
+                $state['retry_done'] = true;
+                $this->saveState($state);
+                if ($recovered > 0) {
+                    $this->output("Recovered {$recovered} packages on retry.");
+                }
+            }
+
             $this->completeSync($state);
 
             return [
@@ -560,37 +633,11 @@ class BatchedPriceInfoSync
     }
 
     /**
-     * Get configured countries from addon settings
+     * Get configured countries — delegates to Config::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-        $countries = [];
-
-        if (!empty($addon_settings['selected_countries'])) {
-            $sel = $addon_settings['selected_countries'];
-            if (is_array($sel)) {
-                foreach ($sel as $k => $v) {
-                    if ($v === 'Y' || $v === '1' || $v === 1) {
-                        $countries[] = strtoupper(trim($k));
-                    } elseif (is_string($v) && strlen($v) > 2) {
-                        $countries[] = strtoupper(trim($v));
-                    }
-                }
-            } elseif (is_string($sel)) {
-                $countries = array_map(function ($c) {
-                    return strtoupper(trim($c));
-                }, explode(',', $sel));
-            }
-        }
-
-        $countries = array_filter($countries);
-
-        if (empty($countries)) {
-            $countries = ['BULGARIA', 'GREECE', 'TURKEY', 'EGYPT'];
-        }
-
-        return $countries;
+        return Config::getSelectedCountries();
     }
 
     /**

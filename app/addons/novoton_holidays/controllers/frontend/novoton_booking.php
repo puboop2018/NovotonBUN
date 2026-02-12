@@ -46,6 +46,20 @@ function _nvt_get_cache_service() {
     return _nvt_cache_service();
 }
 
+// Service delegation helpers (wired up for gradual migration from inline code)
+function _nvt_get_search_service() {
+    return _nvt_search_service();
+}
+function _nvt_get_booking_service() {
+    return _nvt_booking_service();
+}
+function _nvt_get_price_service() {
+    return _nvt_price_service();
+}
+function _nvt_get_security_service() {
+    return _nvt_security_service();
+}
+
 //=============================================================================
 // CACHING HELPERS
 // A72: Use CacheService::remember() for caching. Example:
@@ -300,9 +314,11 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
 
 // Search availability
 if ($mode == 'search') {
-    
-    $searchParams = $_REQUEST;
-    
+
+    // Validate and sanitize search input via SecurityService
+    $security = _nvt_get_security_service();
+    $searchParams = $security->validateSearchParams($_REQUEST);
+
     // Validate required fields
     $check_in = !empty($searchParams['check_in']) ? $searchParams['check_in'] : '';
     
@@ -2621,12 +2637,16 @@ if ($mode == 'edit_booking') {
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
     
-    // Get booking record from database
+    // Get booking record — verify ownership (user_id or session_id)
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_session_id = Tygh::$app['session']->getID();
+
     $booking_record = db_get_row(
-        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i",
-        $booking_id
+        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+        $booking_id, $current_user_id, $current_session_id
     );
-    
+
     if (empty($booking_record)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
@@ -2823,11 +2843,25 @@ if ($mode == 'update_booking') {
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
     
+    // Verify booking ownership before allowing update
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_session_id = Tygh::$app['session']->getID();
+
+    $ownership_check = db_get_field(
+        "SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+        $booking_id, $current_user_id, $current_session_id
+    );
+    if (empty($ownership_check)) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
+
     // Process guest information using helper function
     $guests = $bookingData['guests'] ?? [];
     $contact = $bookingData['contact'] ?? [];
     $special_requests = $bookingData['special_requests'] ?? '';
-    
+
     // Get check-in date for age validation
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
     $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
