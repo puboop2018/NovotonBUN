@@ -1748,6 +1748,14 @@ msgctxt "Languages::novoton_holidays.child_must_be_under_18"
 msgid "Child must be under 18 years old at check-in"
 msgstr "Copilul trebuie să aibă sub 18 ani la check-in"
 
+msgctxt "Languages::novoton_holidays.not_child"
+msgid "At check-in, the child will be"
+msgstr "La check-in, copilul va avea"
+
+msgctxt "Languages::novoton_holidays.must_be_under_18"
+msgid "Must be under 18 years old."
+msgstr "Trebuie să fie sub 18 ani."
+
 msgctxt "Languages::novoton_holidays.price_increased"
 msgid "Price increased"
 msgstr "Prețul a crescut"
