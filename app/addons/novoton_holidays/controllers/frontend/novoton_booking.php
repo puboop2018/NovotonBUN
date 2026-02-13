@@ -477,6 +477,14 @@ if ($mode == 'search') {
             'nights' => 7,
             'adults' => 2,
             'children' => [],
+            'children_count' => 0,
+            'children_ages' => '',
+            'children_ages_str' => '',
+            'children_ages_array' => [],
+            'num_rooms' => 1,
+            'rooms_data' => [],
+            'rooms_data_json' => '[]',
+            'flex_days' => 0,
             'meal_plan' => __('novoton_holidays.all_boards') ?: 'All Boards',
             'hotel_id' => '',
             'product_id' => 0
@@ -3173,15 +3181,8 @@ if ($mode == 'request_alternatives') {
 if ($mode == 'ajax_recalculate_price') {
     // A74h: Immediately output JSON and die - bypass CS-Cart's output system
     
-    // Debug file for troubleshooting
-    $debug_file = DIR_ROOT . '/var/novoton_price_debug.log';
-    $debug_log = function($msg, $data = null) use ($debug_file) {
-        $line = date('Y-m-d H:i:s') . ' - ' . $msg;
-        if ($data !== null) {
-            $line .= ': ' . print_r($data, true);
-        }
-        file_put_contents($debug_file, $line . "\n", FILE_APPEND);
-    };
+    // Debug logging disabled in production (no-op function)
+    $debug_log = function($msg, $data = null) {};
     
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
     

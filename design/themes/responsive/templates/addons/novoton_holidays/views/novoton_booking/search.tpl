@@ -109,8 +109,8 @@
              data-novoton-booking
              data-hotel-id="{$novoton_params.hotel_id|default:''}" 
              data-product-id="{$novoton_params.product_id|default:''}"
-             data-check-in="{$novoton_params.check_in|date_format:'%Y-%m-%d'}"
-             data-check-out="{$novoton_params.check_out|date_format:'%Y-%m-%d'}"
+             data-check-in="{$novoton_params.check_in|default:''}"
+             data-check-out="{$novoton_params.check_out|default:''}"
              data-adults="{$novoton_params.adults|default:2}"
              data-children="{$novoton_params.children_count|default:0}"
              data-children-ages="{$novoton_params.children_ages|default:''}"
@@ -983,6 +983,7 @@ window.NovotonTranslations = {
     checkOut: "{__('novoton_holidays.check_out')|default:'Check-out'}",
     selectDates: "{__('novoton_holidays.select_dates')|default:'Select dates'}",
     guests: "{__('novoton_holidays.guests')|default:'Guests'}",
+    adult: "{__('novoton_holidays.adult')|default:'adult'}",
     adults: "{__('novoton_holidays.adults')|default:'adults'}",
     children: "{__('novoton_holidays.children')|default:'children'}",
     rooms: "{__('novoton_holidays.rooms')|default:'rooms'}",
