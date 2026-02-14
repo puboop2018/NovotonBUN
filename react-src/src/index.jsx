@@ -13,28 +13,39 @@ import { getLocale, parseDate, toDateString } from './utils';
 
 /**
  * Read data-* attributes from an element and build a config object.
- * Falls back to URL query parameters for booking fields so that the
- * search-results form picks up check_in, check_out, etc. from the URL
- * even when the server-side template doesn't populate the data attributes.
+ * URL query parameters take priority for booking fields (check_in, check_out,
+ * adults, children, rooms, etc.) so the search-results form always reflects
+ * the URL — even when the server-side template populates the data attributes
+ * with defaults like "0".
  */
 function readConfig(el) {
     const url = new URLSearchParams(window.location.search);
 
+    // Helpers: URL param wins when present, then data attribute, then fallback.
+    const str  = (urlKey, dataKey) => url.get(urlKey) || el.dataset[dataKey] || '';
+    const num  = (urlKey, dataKey, fallback) => {
+        const fromUrl  = url.get(urlKey);
+        if (fromUrl !== null && fromUrl !== '') return parseInt(fromUrl, 10);
+        const fromData = el.dataset[dataKey];
+        if (fromData !== undefined && fromData !== '') return parseInt(fromData, 10);
+        return fallback;
+    };
+
     return {
-        hotelId:             el.dataset.hotelId       || url.get('hotel_id')   || '',
-        productId:           el.dataset.productId     || url.get('product_id') || '',
-        mode:                el.dataset.mode           || 'product',
-        initialCheckIn:      el.dataset.checkIn       || url.get('check_in')   || '',
-        initialCheckOut:     el.dataset.checkOut      || url.get('check_out')  || '',
-        initialAdults:       parseInt(el.dataset.adults   || url.get('adults'))    || 2,
-        initialChildren:     parseInt(el.dataset.children || url.get('children'))  || 0,
-        initialChildrenAges: el.dataset.childrenAges  || url.get('children_ages') || '',
-        initialRooms:        parseInt(el.dataset.rooms    || url.get('rooms'))     || 1,
+        hotelId:             str('hotel_id',   'hotelId'),
+        productId:           str('product_id', 'productId'),
+        mode:                el.dataset.mode || 'product',
+        initialCheckIn:      str('check_in',       'checkIn'),
+        initialCheckOut:     str('check_out',      'checkOut'),
+        initialAdults:       num('adults',         'adults',       2),
+        initialChildren:     num('children',       'children',     0),
+        initialChildrenAges: str('children_ages',  'childrenAges'),
+        initialRooms:        num('rooms',          'rooms',        1),
         maxRooms:            parseInt(el.dataset.maxRooms)     || 12,
         maxAdults:           parseInt(el.dataset.maxAdults)    || 9,
         maxChildren:         parseInt(el.dataset.maxChildren)  || 4,
-        buttonText:          el.dataset.buttonText    || '',
-        roomsData:           el.dataset.roomsData     || url.get('rooms_data') || '',
+        buttonText:          el.dataset.buttonText || '',
+        roomsData:           url.get('rooms_data') || el.dataset.roomsData || '',
     };
 }
 
