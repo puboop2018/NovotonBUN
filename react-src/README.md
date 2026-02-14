@@ -5,9 +5,9 @@ Full source code for the `react19-bundle.js` booking engine widget.
 ## Quick Start
 
 ```bash
-cd js/addons/novoton_holidays/react-src
+cd react-src
 npm install
-npm run build   # production build → ../react19-bundle.js
+npm run build   # production build → js/addons/novoton_holidays/react19-bundle.js
 npm run dev     # development watch mode
 ```
 
@@ -27,7 +27,7 @@ src/
 
 ## Build Output
 
-`npm run build` produces `../react19-bundle.js` (the file loaded by CS-Cart).
+`npm run build` produces `js/addons/novoton_holidays/react19-bundle.js` (the file loaded by CS-Cart).
 
 The bundle includes React 19, ReactDOM 19 and all custom components in a
 single self-executing IIFE — no external dependencies at runtime.

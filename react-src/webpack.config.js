@@ -4,7 +4,7 @@ module.exports = {
     entry: './src/index.jsx',
     output: {
         filename: 'react19-bundle.js',
-        path: path.resolve(__dirname, '..'),
+        path: path.resolve(__dirname, '..', 'js', 'addons', 'novoton_holidays'),
         iife: true,
     },
     module: {
