@@ -110,11 +110,14 @@ export default function BookingEngine({ config }) {
         return parts.join(' · ');
     })();
 
-    // Date display text
+    // Date display text – show partial (check-in only) or full range
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
             const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
             return `${formatDateShort(checkIn)} — ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
+        }
+        if (checkIn) {
+            return `${formatDateShort(checkIn)} — ...`;
         }
         return '';
     })();
@@ -274,12 +277,16 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
-                            <span className="nvt-label">
-                                {t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}
-                            </span>
-                            {dateDisplayText && (
-                                <span className="nvt-value">
-                                    {dateDisplayText}
+                            {mode !== 'search' && (
+                                <span className="nvt-label">
+                                    {t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}
+                                </span>
+                            )}
+                            {dateDisplayText ? (
+                                <span className="nvt-value">{dateDisplayText}</span>
+                            ) : (
+                                <span className="nvt-value nvt-value--placeholder">
+                                    {`${t('checkIn', 'Check-in')} — ${t('checkOut', 'Check-out')}`}
                                 </span>
                             )}
                         </span>
@@ -305,7 +312,9 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
-                            <span className="nvt-label">{t('guests', 'Guests')}</span>
+                            {mode === 'homepage' && (
+                                <span className="nvt-label">{t('guests', 'Guests')}</span>
+                            )}
                             <span className="nvt-value">{guestSummary}</span>
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>

@@ -95,6 +95,8 @@ export function injectStyles() {
     text-align: left;
     font: inherit;
     color: inherit;
+    -webkit-user-select: text;
+    user-select: text;
 }
 .nvt-field-input:hover {
     background: var(--nvt-bg-light);
@@ -127,6 +129,9 @@ export function injectStyles() {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
 }
 .nvt-field-input-text .nvt-value--placeholder {
     color: var(--nvt-text-light);
