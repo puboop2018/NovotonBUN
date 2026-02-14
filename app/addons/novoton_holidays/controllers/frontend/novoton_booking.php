@@ -3364,27 +3364,20 @@ if ($mode == 'ajax_recalculate_price') {
 
                 $prices = $response->xpath('//Price');
                 $idRooms = $response->xpath('//IdRoom');
-                // Query both //IdBoard and //Board for matching board codes
                 $idBoards = $response->xpath('//IdBoard');
-                $boards = $response->xpath('//Board');
-                // Use IdBoard for matching if available (contains codes like "BB"),
-                // fall back to Board (which may contain names like "Bed and Breakfast")
-                $boardsForMatch = !empty($idBoards) ? $idBoards : $boards;
 
                 $debug_log('Found elements', [
                     'prices' => count($prices),
                     'rooms' => count($idRooms),
-                    'idBoards' => count($idBoards),
-                    'boards' => count($boards),
-                    'using' => !empty($idBoards) ? 'IdBoard' : 'Board'
+                    'idBoards' => count($idBoards)
                 ]);
 
-                $numResults = min(count($prices), count($idRooms), count($boardsForMatch));
+                $numResults = min(count($prices), count($idRooms), count($idBoards));
 
                 for ($i = 0; $i < $numResults; $i++) {
                     $resultPrice = floatval((string)$prices[$i]);
                     $resultRoom = rawurldecode((string)$idRooms[$i]);
-                    $resultBoard = (string)$boardsForMatch[$i];
+                    $resultBoard = (string)$idBoards[$i];
 
                     $debug_log("Result $i", [
                         'price' => $resultPrice,
@@ -3421,7 +3414,7 @@ if ($mode == 'ajax_recalculate_price') {
                 if (!$price_found && $numResults > 0) {
                     $new_price = floatval((string)$prices[0]);
                     $matched_room = rawurldecode((string)$idRooms[0]);
-                    $matched_board = (string)$boardsForMatch[0];
+                    $matched_board = (string)$idBoards[0];
                     if ($new_price > 0) {
                         $price_found = true;
                         $debug_log('Using first available price as fallback', [
@@ -3439,7 +3432,7 @@ if ($mode == 'ajax_recalculate_price') {
                 if ($new_price > 0) {
                     $price_found = true;
                     $matched_room = rawurldecode((string)($response->IdRoom ?? ''));
-                    $matched_board = (string)($response->IdBoard ?? $response->Board ?? '');
+                    $matched_board = (string)($response->IdBoard ?? '');
                     $debug_log('Found direct Price element from fallback', $new_price);
                 }
             }

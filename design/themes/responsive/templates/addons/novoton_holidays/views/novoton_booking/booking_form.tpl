@@ -577,8 +577,26 @@ window.bookingData = {ldelim}
     maxChildren: roomLimits.max_children || 2,
     minPax: roomLimits.min_pax || 1,
     totalCapacity: (roomLimits.rb || 2) + (roomLimits.eb || 0),
-    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if}
+    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if},
+    ageCategories: {if $booking_data.age_categories}{$booking_data.age_categories|json_encode nofilter}{else}[]{/if}
 {rdelim};
+
+// Compute hotel's max child age from age categories (e.g. 11.99 means children up to 11 years)
+window.bookingData.maxChildAge = 17; // default fallback
+(function() {ldelim}
+    var cats = window.bookingData.ageCategories;
+    if (cats && cats.length > 0) {ldelim}
+        var maxTo = 0;
+        for (var i = 0; i < cats.length; i++) {ldelim}
+            if (cats[i].is_child && parseFloat(cats[i].to_year) > maxTo) {ldelim}
+                maxTo = parseFloat(cats[i].to_year);
+            {rdelim}
+        {rdelim}
+        if (maxTo > 0) {ldelim}
+            window.bookingData.maxChildAge = Math.floor(maxTo);
+        {rdelim}
+    {rdelim}
+{rdelim})();
 
 // A74e: These functions are defined in booking-form-validation.js
 // Wrapper just ensures they exist before calling
@@ -672,12 +690,24 @@ function validateAndCheckAge(id, originalAge) {
         ageDisplay.textContent = '(' + calculatedAge + ' ' + ageLabel + ')';
     }
     
-    // Check if child (under 18)
+    // Check if child exceeds hotel's max child age (from hotelinfo age categories)
+    var maxChildAge = (window.bookingData && window.bookingData.maxChildAge) || 17;
+    if (calculatedAge > maxChildAge) {
+        var t = window.NovotonTranslations || {ldelim}{rdelim};
+        var notChildMsg = t.notChild || 'La check-in, copilul va avea';
+        var yearsLabel = t.ageLabel || 'ani';
+        var exceedsMaxAge = t.exceedsMaxChildAge || 'Hotelul acceptă copii până la ' + maxChildAge + ' ani.';
+        showDobError(dobInput, errorDiv, notChildMsg + ' ' + calculatedAge + ' ' + yearsLabel + '. ' + exceedsMaxAge);
+        showPriceError(t.childAgeNotAllowed || 'Vârsta copilului nu este acceptată de hotel');
+        return;
+    }
     if (calculatedAge >= 18) {
-        var notChildMsg = window.NovotonTranslations.notChild || 'La check-in, copilul va avea';
-        var yearsLabel = window.NovotonTranslations.ageLabel || 'ani';
-        var mustBeUnder18 = window.NovotonTranslations.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
+        var t = window.NovotonTranslations || {ldelim}{rdelim};
+        var notChildMsg = t.notChild || 'La check-in, copilul va avea';
+        var yearsLabel = t.ageLabel || 'ani';
+        var mustBeUnder18 = t.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
         showDobError(dobInput, errorDiv, notChildMsg + ' ' + calculatedAge + ' ' + yearsLabel + '. ' + mustBeUnder18);
+        showPriceError(t.childAgeNotAllowed || 'Vârsta copilului nu este acceptată de hotel');
         return;
     }
     
