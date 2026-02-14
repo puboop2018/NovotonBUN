@@ -1,7 +1,7 @@
 /**
  * Novoton Holidays - DOB Validation + Price Recalculation + Desktop/Mobile Fix
  * Version: A73
- * 
+ *
  * Features:
  * 1. Prevents Date of Birth from being set in the future
  * 2. Recalculates price when child age changes based on DOB
@@ -10,14 +10,27 @@
 
 (function() {
     'use strict';
-    
+
+    // Debug mode - only log when explicitly enabled
+    var DEBUG = (window.NovotonConfig && window.NovotonConfig.debug) || false;
+
+    function log(message, data) {
+        if (DEBUG && console && console.log) {
+            if (data !== undefined) {
+                console.log('[Novoton] ' + message, data);
+            } else {
+                console.log('[Novoton] ' + message);
+            }
+        }
+    }
+
     // Debounce timer for price recalculation
     var priceRecalcTimer = null;
     var isRecalculating = false;
-    
+
     // Run on DOM ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('[Novoton A73] Initializing DOB validation, price recalc, and visibility fix');
+        log('Initializing DOB validation, price recalc, and visibility fix');
         initDOBValidation();
         fixDesktopMobileVisibility();
         observeGuestChanges();
@@ -58,7 +71,7 @@
             });
         });
         
-        console.log('[Novoton A73] DOB validation initialized for', dobFields.length, 'fields');
+        log('DOB validation initialized for ' + dobFields.length + ' fields');
     }
     
     /**
@@ -150,7 +163,7 @@
         field.value = '';
         field.focus();
         
-        console.log('[Novoton A73] DOB validation error: Date is in the future');
+        log('DOB validation error: Date is in the future');
     }
     
     /**
@@ -214,14 +227,14 @@
      */
     function recalculatePrice(changedField) {
         if (isRecalculating) {
-            console.log('[Novoton A73] Price recalculation already in progress');
+            log('Price recalculation already in progress');
             return;
         }
         
         // Find the booking form
         var form = document.querySelector('.novoton-reservation-form form, .novoton-booking-form form, #novoton-booking-form');
         if (!form) {
-            console.log('[Novoton A73] Booking form not found');
+            log('Booking form not found');
             return;
         }
         
@@ -237,7 +250,7 @@
         _el = form.querySelector('input[name="package_name"]'); var packageName = (_el && _el.value) ? _el.value : '';
         
         if (!hotelId || !checkIn) {
-            console.log('[Novoton A73] Missing hotel_id or check_in for price recalculation');
+            log('Missing hotel_id or check_in for price recalculation');
             return;
         }
         
@@ -253,7 +266,7 @@
         // Update the age display for the changed field
         updateAgeDisplay(changedField, checkIn);
         
-        console.log('[Novoton A73] Recalculating price with ages:', childrenAges);
+        log('Recalculating price with ages:', childrenAges);
         
         // Show loading indicator
         showPriceLoading();
@@ -307,16 +320,16 @@
                     totalPriceField.value = data.new_price;
                 }
                 
-                console.log('[Novoton A73] Price updated:', data.new_price, 'EUR');
+                log('Price updated: ' + data.new_price + ' EUR');
             } else {
-                console.warn('[Novoton A73] Price recalculation failed:', data.message);
+                log('Price recalculation failed: ' + (data.message || ''));
                 showPriceError(data.message || 'Price calculation error');
             }
         })
         .catch(function(error) {
             isRecalculating = false;
             hidePriceLoading();
-            console.error('[Novoton A73] Price recalculation error:', error);
+            log('Price recalculation error: ' + error);
         });
     }
     
@@ -562,7 +575,7 @@
             }
         });
         
-        console.warn('[Novoton A73] Price error:', message);
+        log('Price error: ' + message);
     }
     
     /**
@@ -592,7 +605,7 @@
             observer.observe(container, { childList: true, subtree: true });
         });
         
-        console.log('[Novoton A73] Guest observer initialized for', containers.length, 'containers');
+        log('Guest observer initialized for ' + containers.length + ' containers');
     }
     
     /**
@@ -643,9 +656,7 @@
             });
         }
         
-        console.log('[Novoton A73] Visibility fix applied. Mobile mode:', isMobile, 
-                    '| Mobile elements:', mobileElements.length, 
-                    '| Desktop elements:', desktopElements.length);
+        log('Visibility fix applied. Mobile: ' + isMobile + ' | Mobile els: ' + mobileElements.length + ' | Desktop els: ' + desktopElements.length);
     }
     
     // Re-run visibility fix on resize (debounced)

@@ -57,4 +57,4 @@ window.NovotonTranslations = {
     pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
 };
 </script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>

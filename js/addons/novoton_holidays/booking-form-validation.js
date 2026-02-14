@@ -187,20 +187,31 @@
     };
 
     // =========================================================================
+    // HTML ESCAPING UTILITY
+    // =========================================================================
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // =========================================================================
     // ROOM CHANGE WARNING MODAL
     // =========================================================================
-    
+
     window.showRoomChangeWarning = function(data) {
         log('showRoomChangeWarning', data);
-        
+
         var existing = document.getElementById('room-change-warning');
         if (existing) existing.remove();
-        
+
         var priceDiff = parseFloat(data.price_difference) || 0;
         var newPrice = parseFloat(data.new_price) || 0;
         var originalPrice = parseFloat(data.original_price) || 0;
-        var originalRoom = data.original_room || '';
-        var newRoom = data.new_room || '';
+        var originalRoom = escapeHtml(data.original_room || '');
+        var newRoom = escapeHtml(data.new_room || '');
         
         var priceDiffText = '', priceDiffStyle = '';
         if (priceDiff > 0) {
@@ -248,7 +259,9 @@
             '</div></div>';
         
         window._roomChangeData = data;
-        document.body.insertAdjacentHTML('beforeend', html);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        document.body.appendChild(wrapper.firstChild);
         log('Modal displayed');
     };
 
@@ -276,8 +289,8 @@
         var notif = document.createElement('div');
         notif.id = 'room-change-confirmation';
         notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
-        notif.innerHTML = '✓ <strong>' + (t.roomUpdated || 'Camera a fost actualizată:') + '</strong> ' + 
-            (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
+        notif.innerHTML = '✓ <strong>' + escapeHtml(t.roomUpdated || 'Camera a fost actualizată:') + '</strong> ' +
+            escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
         
         var section = document.querySelector('.guest-names-section h3, .booking-form-header');
         if (section && section.parentNode) {
@@ -366,21 +379,24 @@
                         showRoomChangeWarning(data);
                     } catch (e) {
                         logError('Modal error', e);
-                        alert('Camera: ' + (data.original_room || '') + ' → ' + (data.new_room || '') + 
-                              '\nPreț: ' + (data.new_price || 0).toFixed(2) + ' €');
+                        var t2 = window.NovotonTranslations || {};
+                        alert((t2.roomChangedTitle || 'Room changed') + ': ' + (data.original_room || '') + ' → ' + (data.new_room || '') +
+                              '\n' + (t2.priceChange || 'Price') + ': ' + (data.new_price || 0).toFixed(2) + ' €');
                     }
                 }
                 
                 updateFormWithNewPricing(data);
             } else {
-                showPriceRecalculationNotice(data.message || 'Prețul va fi verificat la finalizare.');
+                var t3 = window.NovotonTranslations || {};
+                showPriceRecalculationNotice(data.message || t3.priceWillBeVerified || 'Price will be verified at checkout.');
             }
         })
         .catch(function(error) {
             logError('AJAX error', error);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             if (priceDisplay) priceDisplay.style.opacity = '1';
-            showPriceRecalculationNotice('Prețul va fi verificat la finalizare.');
+            var t3 = window.NovotonTranslations || {};
+            showPriceRecalculationNotice(t3.priceWillBeVerified || 'Price will be verified at checkout.');
         });
     };
 
