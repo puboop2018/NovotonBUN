@@ -577,26 +577,8 @@ window.bookingData = {ldelim}
     maxChildren: roomLimits.max_children || 2,
     minPax: roomLimits.min_pax || 1,
     totalCapacity: (roomLimits.rb || 2) + (roomLimits.eb || 0),
-    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if},
-    ageCategories: {if $booking_data.age_categories}{$booking_data.age_categories|json_encode nofilter}{else}[]{/if}
+    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if}
 {rdelim};
-
-// Compute hotel's max child age from age categories (e.g. 11.99 means children up to 11 years)
-window.bookingData.maxChildAge = 17; // default fallback
-(function() {ldelim}
-    var cats = window.bookingData.ageCategories;
-    if (cats && cats.length > 0) {ldelim}
-        var maxTo = 0;
-        for (var i = 0; i < cats.length; i++) {ldelim}
-            if (cats[i].is_child && parseFloat(cats[i].to_year) > maxTo) {ldelim}
-                maxTo = parseFloat(cats[i].to_year);
-            {rdelim}
-        {rdelim}
-        if (maxTo > 0) {ldelim}
-            window.bookingData.maxChildAge = Math.floor(maxTo);
-        {rdelim}
-    {rdelim}
-{rdelim})();
 
 // A74e: These functions are defined in booking-form-validation.js
 // Wrapper just ensures they exist before calling
@@ -686,9 +668,7 @@ function validateAndCheckAge(id, originalAge) {
     novotonLog('Age calculation', {ldelim}
         dob: dobValue,
         checkIn: window.bookingData.checkIn,
-        calculatedAge: calculatedAge,
-        maxChildAge: (window.bookingData && window.bookingData.maxChildAge) || 17,
-        ageCategories: window.bookingData.ageCategories
+        calculatedAge: calculatedAge
     {rdelim});
 
     // Update hidden field
@@ -705,18 +685,6 @@ function validateAndCheckAge(id, originalAge) {
         ageDisplay.textContent = '(' + calculatedAge + ' ' + ageLabel + ')';
     {rdelim}
 
-    // Check if child exceeds hotel's max child age (from hotelinfo age categories)
-    // Hotel treats children above max child age as adults — warn user but
-    // still trigger price recalculation (API will return the adult-rate price)
-    var maxChildAge = (window.bookingData && window.bookingData.maxChildAge) || 17;
-    if (calculatedAge > maxChildAge && calculatedAge < 18) {ldelim}
-        var t = window.NovotonTranslations || {ldelim}{rdelim};
-        var exceedsMsg = t.exceedsMaxChildAge || 'Hotelul acceptă copii până la ' + maxChildAge + ' ani. Copilul va fi considerat adult.';
-        novotonLog('Child age exceeds hotel max child age', {ldelim} calculatedAge: calculatedAge, maxChildAge: maxChildAge {rdelim});
-        showDobError(dobInput, errorDiv, exceedsMsg);
-        // Do NOT return — still trigger price recalculation so the API
-        // returns the correct adult-rate price for this occupancy
-    {rdelim}
     if (calculatedAge >= 18) {ldelim}
         var t = window.NovotonTranslations || {ldelim}{rdelim};
         var notChildMsg = t.notChild || 'La check-in, copilul va avea';
@@ -727,11 +695,9 @@ function validateAndCheckAge(id, originalAge) {
         return;
     {rdelim}
 
-    // Valid - show green (only if no warning was shown above)
-    if (calculatedAge <= maxChildAge) {ldelim}
-        dobInput.style.borderColor = '#28a745';
-        dobInput.style.backgroundColor = '#f0fff0';
-    {rdelim}
+    // Valid child age — show green, let API determine price
+    dobInput.style.borderColor = '#28a745';
+    dobInput.style.backgroundColor = '#f0fff0';
 
     // Extract room number from id (format: rX_cY where X=room, Y=child)
     var roomMatch = id.match(/r(\d+)_c\d+/);
