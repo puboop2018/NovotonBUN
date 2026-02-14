@@ -615,7 +615,11 @@ function validateAndCheckAge(id, originalAge) {
     // Skip if empty or incomplete
     if (!dobValue || dobValue.length < 10) return;
     
-    // Parse DOB
+    // Parse DOB - requires booking-form-validation.js
+    if (typeof parseDobMasked !== 'function') {
+        novotonLog('parseDobMasked not loaded yet');
+        return;
+    }
     var parsed = parseDobMasked(dobValue);
     if (!parsed) {
         showDobError(dobInput, errorDiv, 'Format invalid');
@@ -646,7 +650,11 @@ function validateAndCheckAge(id, originalAge) {
         return;
     }
     
-    // Calculate age at check-in
+    // Calculate age at check-in - requires booking-form-validation.js
+    if (typeof calculateAgeAtDate !== 'function') {
+        novotonLog('calculateAgeAtDate not loaded yet');
+        return;
+    }
     var checkInDate = new Date(window.bookingData.checkIn);
     var calculatedAge = calculateAgeAtDate(birthDate, checkInDate);
     
@@ -689,24 +697,25 @@ function showDobError(input, errorDiv, message) {
     input.style.borderColor = '#dc3545';
     input.style.backgroundColor = '#fff5f5';
     if (errorDiv) {
-        errorDiv.innerHTML = ' ' + message;
+        errorDiv.textContent = message;
         errorDiv.style.display = 'block';
     }
 }
 
-// Debounce timer for price recalculation
-var priceRecalcDebounceTimer = null;
+// Per-room debounce timers for price recalculation
+var priceRecalcDebouncers = {};
 
 function collectAndRecalculate(roomNum) {
     roomNum = roomNum || 1;
 
-    // Debounce: wait 600ms after last DOB change before recalculating
+    // Debounce per room: wait 600ms after last DOB change before recalculating
     // This prevents multiple API calls when user enters DOBs for multiple children
-    if (priceRecalcDebounceTimer) {
-        clearTimeout(priceRecalcDebounceTimer);
+    // Using per-room timers so room 1 and room 2 don't overwrite each other
+    if (priceRecalcDebouncers[roomNum]) {
+        clearTimeout(priceRecalcDebouncers[roomNum]);
     }
 
-    priceRecalcDebounceTimer = setTimeout(function() {
+    priceRecalcDebouncers[roomNum] = setTimeout(function() {
         doCollectAndRecalculate(roomNum);
     }, 600);
 }

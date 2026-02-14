@@ -5,7 +5,7 @@
  * date first, then a check-out date. Selected range is highlighted.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { getLocale, nightsBetween, formatDateShort, t } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
 import { ChevronLeft, ChevronRight } from './icons';
@@ -46,8 +46,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Memoize today so it doesn't invalidate useCallback deps on every render
+    const today = useMemo(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }, []);
 
     // Start calendar from check-in month, or current month
     const startMonth = checkIn ? new Date(checkIn.getFullYear(), checkIn.getMonth(), 1)
@@ -58,6 +62,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
     const popupRef = useRef(null);
+    const closeTimerRef = useRef(null);
 
     // Close on outside click
     useEffect(() => {
@@ -69,6 +74,13 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, [onClose]);
+
+    // Clean up auto-close timer on unmount
+    useEffect(() => {
+        return () => {
+            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        };
+    }, []);
 
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -101,7 +113,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
             setSelecting(null);
             onSelect(tempCheckIn, date);
             // Auto-close calendar after brief delay so user sees selection
-            setTimeout(() => { onClose && onClose(); }, 350);
+            closeTimerRef.current = setTimeout(() => { onClose && onClose(); }, 350);
         }
     }, [tempCheckIn, tempCheckOut, today, onSelect, onClose]);
 

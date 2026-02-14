@@ -248,15 +248,30 @@ function _nvt_parse_dob($guest) {
                 }
             }
         } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob_value)) {
-            $birthday = $dob_value;
+            $parts = explode('-', $dob_value);
+            if (checkdate(intval($parts[1]), intval($parts[2]), intval($parts[0]))) {
+                $birthday = $dob_value;
+            }
         }
     } elseif (!empty($guest['dob_day']) && !empty($guest['dob_month']) && !empty($guest['dob_year'])) {
-        $dob_day = str_pad(intval($guest['dob_day']), 2, '0', STR_PAD_LEFT);
-        $dob_month = str_pad(intval($guest['dob_month']), 2, '0', STR_PAD_LEFT);
+        $dob_day = intval($guest['dob_day']);
+        $dob_month = intval($guest['dob_month']);
         $dob_year = intval($guest['dob_year']);
-        $birthday = "{$dob_year}-{$dob_month}-{$dob_day}";
+        $current_year = intval(date('Y'));
+        if ($dob_day >= 1 && $dob_day <= 31 &&
+            $dob_month >= 1 && $dob_month <= 12 &&
+            $dob_year >= 1925 && $dob_year <= $current_year &&
+            checkdate($dob_month, $dob_day, $dob_year)) {
+            $birthday = sprintf('%04d-%02d-%02d', $dob_year, $dob_month, $dob_day);
+        }
     } elseif (!empty($guest['birthday'])) {
-        $birthday = $guest['birthday'];
+        $raw = trim($guest['birthday']);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+            $parts = explode('-', $raw);
+            if (checkdate(intval($parts[1]), intval($parts[2]), intval($parts[0]))) {
+                $birthday = $raw;
+            }
+        }
     }
     
     return $birthday;
@@ -846,8 +861,10 @@ if ($mode == 'search') {
                             $debug_log[] = "  API Response received (parsing...)";
                         }
 
-                        libxml_use_internal_errors(true);
+                        $prevLibxml = libxml_use_internal_errors(true);
                         $xml = simplexml_load_string($rawXml);
+                        libxml_clear_errors();
+                        libxml_use_internal_errors($prevLibxml);
 
                         if ($xml !== false) {
                             // Parse results - handle both single and multiple results
@@ -1207,9 +1224,11 @@ if ($mode == 'search') {
                 }
                 
                 // Parse the raw XML to get all room_price elements
-                libxml_use_internal_errors(true);
+                $prevLibxml = libxml_use_internal_errors(true);
                 $xml = simplexml_load_string($rawXml);
-                
+                libxml_clear_errors();
+                libxml_use_internal_errors($prevLibxml);
+
                 if ($xml !== false) {
                     // Get all room_price elements using xpath
                     $roomPrices = $xml->xpath('//room_price') ?: [$xml];
