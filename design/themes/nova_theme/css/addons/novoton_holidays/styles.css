@@ -5646,3 +5646,18 @@ div.novoton-desktop-only,
 .nvt-guest-picker-dropdown {
     min-width: 340px;
 }
+
+/* ===========================
+   Visual Editor – Search Button Override
+   --
+   CSS custom properties --nvt-search-btn-bg / --nvt-search-btn-hover
+   are set via the compiled LESS (styles.less) which integrates with
+   the Visual Editor preset.  The var() fallback (#006ce4) keeps the
+   default when no preset has been applied yet.
+   =========================== */
+.nvt-btn-search {
+    background: var(--nvt-search-btn-bg, #006ce4) !important;
+}
+.nvt-btn-search:hover {
+    background: var(--nvt-search-btn-hover, #0057b8) !important;
+}
