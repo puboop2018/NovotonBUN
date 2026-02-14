@@ -110,14 +110,14 @@ export default function BookingEngine({ config }) {
         return parts.join(' · ');
     })();
 
-    // Date display text – show partial (check-in only) or full range
+    // Date display text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
             const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
-            return `${formatDateShort(checkIn)} — ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
+            return `${formatDateShort(checkIn)} - ${formatDateShort(checkOut)} — ${nights} ${nightLabel}`;
         }
         if (checkIn) {
-            return `${formatDateShort(checkIn)} — ...`;
+            return `${formatDateShort(checkIn)} - ...`;
         }
         return '';
     })();

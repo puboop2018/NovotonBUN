@@ -175,14 +175,14 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
         );
     }
 
-    // Footer text – show check-in/check-out dates + nights
+    // Footer text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
     const footerText = (() => {
         if (tempCheckIn && tempCheckOut) {
             const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
-            return `${t('checkIn', 'Check-in')}: ${formatDateShort(tempCheckIn)}  ·  ${t('checkOut', 'Check-out')}: ${formatDateShort(tempCheckOut)}  —  ${nights} ${nightLabel}`;
+            return `${formatDateShort(tempCheckIn)} - ${formatDateShort(tempCheckOut)} — ${nights} ${nightLabel}`;
         }
         if (tempCheckIn) {
-            return `${t('checkIn', 'Check-in')}: ${formatDateShort(tempCheckIn)}  ·  ${t('selectCheckOut', 'Select check-out date')}`;
+            return `${formatDateShort(tempCheckIn)} - ${t('selectCheckOut', 'Select check-out date')}`;
         }
         return t('selectCheckIn', 'Select check-in date');
     })();
