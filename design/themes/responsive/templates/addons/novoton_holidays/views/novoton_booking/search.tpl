@@ -109,8 +109,8 @@
              data-novoton-booking
              data-hotel-id="{$novoton_params.hotel_id|default:''}" 
              data-product-id="{$novoton_params.product_id|default:''}"
-             data-check-in="{$novoton_params.check_in|date_format:'%Y-%m-%d'}"
-             data-check-out="{$novoton_params.check_out|date_format:'%Y-%m-%d'}"
+             data-check-in="{$novoton_params.check_in|default:''}"
+             data-check-out="{$novoton_params.check_out|default:''}"
              data-adults="{$novoton_params.adults|default:2}"
              data-children="{$novoton_params.children_count|default:0}"
              data-children-ages="{$novoton_params.children_ages|default:''}"
@@ -983,6 +983,7 @@ window.NovotonTranslations = {
     checkOut: "{__('novoton_holidays.check_out')|default:'Check-out'}",
     selectDates: "{__('novoton_holidays.select_dates')|default:'Select dates'}",
     guests: "{__('novoton_holidays.guests')|default:'Guests'}",
+    adult: "{__('novoton_holidays.adult')|default:'adult'}",
     adults: "{__('novoton_holidays.adults')|default:'adults'}",
     children: "{__('novoton_holidays.children')|default:'children'}",
     rooms: "{__('novoton_holidays.rooms')|default:'rooms'}",
@@ -1020,7 +1021,14 @@ window.NovotonTranslations = {
     selectCheckOut: "{__('novoton_holidays.select_check_out')|default:'Select check-out date'}",
     selectedSingular: "{__('novoton_holidays.selected_singular')|default:'selected'}",
     childAge: "{__('novoton_holidays.child_age')|default:'Childs age'}",
-    dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}"
+    dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}",
+    child: "{__('novoton_holidays.child')|default:'child'}",
+    childLabel: "{__('novoton_holidays.child_label')|default:'Child'}",
+    ageOfChild: "{__('novoton_holidays.age_of_child')|default:'Age of child'}",
+    checkInPast: "{__('novoton_holidays.check_in_past')|default:'Check-in date cannot be in the past'}",
+    includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
+    of: "{__('novoton_holidays.of')|default:'of'}",
+    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>

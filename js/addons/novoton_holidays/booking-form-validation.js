@@ -17,7 +17,7 @@
     // =========================================================================
     
     var CONFIG = {
-        debug: true,
+        debug: (window.NovotonConfig && window.NovotonConfig.debug) || false,
         selectors: {
             priceDisplay: '.price-total, .total-price-value, .booking-total-value, .price-amount',
             priceSection: '.booking-price-box, .price-summary, .booking-summary'

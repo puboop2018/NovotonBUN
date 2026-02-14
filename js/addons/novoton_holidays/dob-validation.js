@@ -225,15 +225,16 @@
             return;
         }
         
-        // Get booking data from form hidden fields
-        var hotelId = form.querySelector('input[name="hotel_id"]')?.value || '';
-        var roomId = form.querySelector('input[name="room_id"]')?.value || '';
-        var boardId = form.querySelector('input[name="board_id"]')?.value || '';
-        var checkIn = form.querySelector('input[name="check_in"]')?.value || '';
-        var nights = parseInt(form.querySelector('input[name="nights"]')?.value || '7', 10);
-        var adults = parseInt(form.querySelector('input[name="adults"]')?.value || '2', 10);
-        var originalPrice = parseFloat(form.querySelector('input[name="total_price"]')?.value || '0');
-        var packageName = form.querySelector('input[name="package_name"]')?.value || '';
+        // Get booking data from form hidden fields (no optional chaining for browser compat)
+        var _el;
+        _el = form.querySelector('input[name="hotel_id"]'); var hotelId = (_el && _el.value) ? _el.value : '';
+        _el = form.querySelector('input[name="room_id"]'); var roomId = (_el && _el.value) ? _el.value : '';
+        _el = form.querySelector('input[name="board_id"]'); var boardId = (_el && _el.value) ? _el.value : '';
+        _el = form.querySelector('input[name="check_in"]'); var checkIn = (_el && _el.value) ? _el.value : '';
+        _el = form.querySelector('input[name="nights"]'); var nights = parseInt((_el && _el.value) ? _el.value : '7', 10);
+        _el = form.querySelector('input[name="adults"]'); var adults = parseInt((_el && _el.value) ? _el.value : '2', 10);
+        _el = form.querySelector('input[name="total_price"]'); var originalPrice = parseFloat((_el && _el.value) ? _el.value : '0');
+        _el = form.querySelector('input[name="package_name"]'); var packageName = (_el && _el.value) ? _el.value : '';
         
         if (!hotelId || !checkIn) {
             console.log('[Novoton A73] Missing hotel_id or check_in for price recalculation');
@@ -505,14 +506,6 @@
             }
         });
         
-        // Show notification about price change - DISABLED: Using inline notification in booking_form.tpl instead
-        // if (priceDifference !== 0) {
-        //     var diffText = priceDifference > 0 
-        //         ? '+' + priceDifference.toFixed(2) + ' EUR' 
-        //         : priceDifference.toFixed(2) + ' EUR';
-        //     
-        //     showPriceChangeNotification(diffText, priceDifference > 0 ? 'increase' : 'decrease');
-        // }
     }
     
     /**

@@ -440,6 +440,34 @@ msgctxt "Languages::novoton_holidays.years_old"
 msgid "years old"
 msgstr "years old"
 
+msgctxt "Languages::novoton_holidays.year_old"
+msgid "year old"
+msgstr "year old"
+
+msgctxt "Languages::novoton_holidays.child_label"
+msgid "Child"
+msgstr "Child"
+
+msgctxt "Languages::novoton_holidays.age_of_child"
+msgid "Age of child"
+msgstr "Age of child"
+
+msgctxt "Languages::novoton_holidays.check_in_past"
+msgid "Check-in date cannot be in the past"
+msgstr "Check-in date cannot be in the past"
+
+msgctxt "Languages::novoton_holidays.includes_on_request"
+msgid "(includes on-request)"
+msgstr "(includes on-request)"
+
+msgctxt "Languages::novoton_holidays.of"
+msgid "of"
+msgstr "of"
+
+msgctxt "Languages::novoton_holidays.selected"
+msgid "selected"
+msgstr "selected"
+
 msgctxt "Languages::novoton_holidays.search_availability"
 msgid "Search Availability"
 msgstr "Search Availability"
@@ -1663,6 +1691,14 @@ msgstr "Enable Debug Logging"
 msgctxt "SettingsTooltips::novoton_holidays::debug_logging"
 msgid "novoton_holidays.debug_logging"
 msgstr "Log all API requests and responses for debugging. Check Administration > Logs > Runtime for entries."
+
+msgctxt "SettingsOptions::novoton_holidays::debug_mode"
+msgid "novoton_holidays.debug_mode"
+msgstr "Enable Frontend Debug Mode"
+
+msgctxt "SettingsTooltips::novoton_holidays::debug_mode"
+msgid "novoton_holidays.debug_mode"
+msgstr "Enable JavaScript console debug logging on the storefront. Outputs detailed [Novoton] messages to browser console for troubleshooting booking forms and price recalculation."
 
 msgctxt "Languages::novoton_holidays.api_request_sent"
 msgid "novoton_holidays.api_request_sent"

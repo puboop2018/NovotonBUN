@@ -16,18 +16,22 @@
         // Get configuration from data attributes on the container
         var container = document.getElementById('multi-room-selection');
         if (!container) {
-            console.log('Novoton: Multi-room container not found');
+            if (window.NovotonConfig && window.NovotonConfig.debug) {
+                console.log('[Novoton] Multi-room container not found');
+            }
             return;
         }
-        
+
         numRooms = parseInt(container.dataset.numRooms || '0', 10);
         try {
             roomsData = JSON.parse(container.dataset.roomsData || '[]');
         } catch(e) {
             roomsData = [];
         }
-        
-        console.log('Novoton Multi-room JS initialized. Rooms:', numRooms);
+
+        if (window.NovotonConfig && window.NovotonConfig.debug) {
+            console.log('[Novoton] Multi-room JS initialized. Rooms:', numRooms);
+        }
         
         // Attach event listeners to all radio buttons
         var radios = container.querySelectorAll('input[type="radio"]');
@@ -119,13 +123,15 @@
         // Update summary
         var summaryEl = document.getElementById('rooms-selected-summary');
         if (summaryEl) {
+            var t = window.NovotonTranslations || {};
             if (selectedCount === numRooms) {
                 summaryEl.textContent = summaryParts.join(' | ');
                 if (hasOnRequest) {
-                    summaryEl.textContent += ' (includes on-request)';
+                    summaryEl.textContent += ' ' + (t.includesOnRequest || '(includes on-request)');
                 }
             } else {
-                summaryEl.textContent = selectedCount + ' of ' + numRooms + ' rooms selected';
+                var roomsLabel = numRooms === 1 ? (t.room || 'room') : (t.rooms || 'rooms');
+                summaryEl.textContent = selectedCount + ' ' + (t.of || 'of') + ' ' + numRooms + ' ' + roomsLabel + ' ' + (t.selected || 'selected');
             }
         }
         
@@ -207,7 +213,8 @@
     // Submit booking form
     function submitMultiRoomBooking() {
         if (Object.keys(roomSelections).length < numRooms) {
-            alert('Please select a room type for each room');
+            var t = window.NovotonTranslations || {};
+            alert(t.pleaseSelectAllRooms || 'Please select a room type for each room');
             return;
         }
         var form = document.getElementById('multi-room-booking-form');

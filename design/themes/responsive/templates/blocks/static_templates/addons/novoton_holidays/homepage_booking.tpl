@@ -43,7 +43,18 @@ window.NovotonTranslations = {
     whereAreYouGoing: "{__('novoton_holidays.where_going')|default:'Where are you going?'}",
     night: "{__('novoton_holidays.night')|default:'night'}",
     nights: "{__('novoton_holidays.nights')|default:'nights'}",
-    childrensAges: "{__('novoton_holidays.childrens_ages')|default:'Children ages'}"
+    childrensAges: "{__('novoton_holidays.childrens_ages')|default:'Children ages'}",
+    adult: "{__('novoton_holidays.adult')|default:'adult'}",
+    child: "{__('novoton_holidays.child')|default:'child'}",
+    yearsOld: "{__('novoton_holidays.years_old')|default:'years old'}",
+    yearOld: "{__('novoton_holidays.year_old')|default:'year old'}",
+    childLabel: "{__('novoton_holidays.child_label')|default:'Child'}",
+    ageOfChild: "{__('novoton_holidays.age_of_child')|default:'Age of child'}",
+    checkInPast: "{__('novoton_holidays.check_in_past')|default:'Check-in date cannot be in the past'}",
+    includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
+    of: "{__('novoton_holidays.of')|default:'of'}",
+    selected: "{__('novoton_holidays.selected')|default:'selected'}",
+    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>

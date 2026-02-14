@@ -452,7 +452,8 @@ class SecurityService
         );
         
         if ($data) {
-            return unserialize($data) ?: ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
+            $unserialized = unserialize($data, ['allowed_classes' => false]);
+            return is_array($unserialized) ? $unserialized : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
         }
         
         return ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
