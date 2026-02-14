@@ -818,15 +818,10 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
     
     novotonLog('AJAX request', requestData);
 
-    // Use CS-Cart controller dispatch (replaces standalone novoton_ajax_price.php)
-    var ajaxUrl = '';
-    if (typeof window.fn_url === 'function') {
-        ajaxUrl = window.fn_url('novoton_booking.ajax_recalculate_price');
-    } else if (window.Tygh && window.Tygh.current_url) {
-        ajaxUrl = window.Tygh.current_url.replace(/dispatch=[^&]+/, 'dispatch=novoton_booking.ajax_recalculate_price');
-    } else {
-        ajaxUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.php?dispatch=novoton_booking.ajax_recalculate_price';
-    }
+    // Build a clean AJAX URL with only dispatch — all data goes in the JSON body.
+    // Do NOT inherit parent page URL params (children_ages[], hotel_id, etc.)
+    // as CS-Cart's init processes them through __() causing PHP warnings.
+    var ajaxUrl = '{$config.current_location|default:""}/index.php?dispatch=novoton_booking.ajax_recalculate_price';
     novotonLog('AJAX URL', ajaxUrl);
     
     fetch(ajaxUrl, {
