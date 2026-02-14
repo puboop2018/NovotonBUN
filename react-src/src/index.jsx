@@ -57,6 +57,7 @@ function init() {
     // 1. Product page booking widget
     const productRoot = document.getElementById('novoton-booking-root');
     if (productRoot) {
+        loadTranslations(productRoot);
         const config = readConfig(productRoot);
         config.mode = 'product';
         createRoot(productRoot).render(<BookingEngine config={config} />);
@@ -65,6 +66,7 @@ function init() {
     // 2. Search results form
     const searchRoot = document.getElementById('novoton-search-form-root');
     if (searchRoot) {
+        loadTranslations(searchRoot);
         const config = readConfig(searchRoot);
         config.mode = 'search';
         createRoot(searchRoot).render(<BookingEngine config={config} />);
@@ -73,10 +75,24 @@ function init() {
     // 3. Homepage search bar
     const homepageRoot = document.getElementById('novoton-homepage-form-root');
     if (homepageRoot) {
+        loadTranslations(homepageRoot);
         const config = readConfig(homepageRoot);
         config.mode = 'homepage';
         createRoot(homepageRoot).render(<BookingEngine config={config} />);
     }
+}
+
+/**
+ * Parse data-translations JSON attribute and merge into
+ * window.NovotonTranslations so the t() helper can find them.
+ */
+function loadTranslations(el) {
+    const raw = el.dataset.translations;
+    if (!raw) return;
+    try {
+        const parsed = JSON.parse(raw);
+        window.NovotonTranslations = Object.assign(window.NovotonTranslations || {}, parsed);
+    } catch (_) { /* ignore malformed JSON */ }
 }
 
 // ---------------------------------------------------------------------------
