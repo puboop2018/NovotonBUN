@@ -3197,32 +3197,64 @@ if ($mode == 'request_alternatives') {
 
 // AJAX endpoint to recalculate price when child age changes
 if ($mode == 'ajax_recalculate_price') {
-    // A74h: Immediately output JSON and die - bypass CS-Cart's output system
-    
-    // Debug logging disabled in production (no-op function)
-    $debug_log = function($msg, $data = null) {};
-    
+    // CRITICAL: Suppress ALL output immediately. CS-Cart's ErrorHandler outputs
+    // PHP warnings (e.g. "Array to string conversion" from __() receiving URL
+    // params like children_ages[]) which corrupts our JSON response and causes
+    // "Cannot modify header" errors. We must capture everything.
+    @ob_start();
+    $prev_error_reporting = error_reporting(0);
+    $prev_display_errors = ini_get('display_errors');
+    @ini_set('display_errors', '0');
+
+    // Debug logging — writes to CS-Cart log when addon setting debug=Y
+    // or when ?novoton_debug=1 is in the URL
+    $debug_enabled = false;
+    $debug_messages = [];
+    try {
+        $addon_settings = Registry::get('addons.novoton_holidays');
+        $debug_enabled = (!empty($addon_settings['debug']) && $addon_settings['debug'] === 'Y')
+                      || !empty($_REQUEST['novoton_debug']);
+    } catch (\Exception $e) {}
+
+    $debug_log = function($msg, $data = null) use (&$debug_enabled, &$debug_messages) {
+        if (!$debug_enabled) return;
+        $entry = date('H:i:s') . ' ' . $msg;
+        if ($data !== null) {
+            $entry .= ': ' . (is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+        $debug_messages[] = $entry;
+        // Also write to CS-Cart log immediately
+        fn_log_event('general', 'runtime', ['message' => '[NovotonPriceRecalc] ' . $entry]);
+    };
+
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
-    
-    // Get JSON input
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-    
-    $debug_log('Raw input', $input);
-    $debug_log('Decoded data', $data);
-    
+
     // Helper function to send JSON response and exit
-    $sendJson = function($response) {
-        // Clear ALL output buffers
+    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$prev_error_reporting, &$prev_display_errors) {
+        // Include debug log in response when debug is enabled
+        if ($debug_enabled && !empty($debug_messages)) {
+            $response['_debug'] = $debug_messages;
+        }
+        // Clear ALL output buffers (captures any PHP warnings/notices)
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
-        // Set headers
-        header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-cache, must-revalidate');
-        // Output and die immediately
-        die(json_encode($response));
+        // Restore error settings
+        error_reporting($prev_error_reporting);
+        @ini_set('display_errors', $prev_display_errors);
+        // Set headers — use @ to suppress "headers already sent" if somehow triggered
+        @header('Content-Type: application/json; charset=utf-8');
+        @header('Cache-Control: no-cache, must-revalidate');
+        // Output clean JSON and die
+        die(json_encode($response, JSON_UNESCAPED_UNICODE));
     };
+
+    // Get JSON input
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    $debug_log('Raw input', $input);
+    $debug_log('Decoded data', $data);
     
     if (empty($data)) {
         $debug_log('ERROR: Invalid request data');
@@ -3300,7 +3332,7 @@ if ($mode == 'ajax_recalculate_price') {
             if ($new_price > 0) {
                 $price_found = true;
                 $matched_room = rawurldecode((string)($response->IdRoom ?? $room_id));
-                $matched_board = (string)($response->IdBoard ?? $response->Board ?? $board_id);
+                $matched_board = (string)($response->IdBoard ?? $board_id);
                 $debug_log('Found direct Price from specific room/board query', $new_price);
             }
         }
@@ -3322,7 +3354,7 @@ if ($mode == 'ajax_recalculate_price') {
                 $debug_log('ERROR: No response from API');
                 $sendJson([
                     'success' => false,
-                    'message' => __('novoton_holidays.price_not_available')
+                    'message' => 'Price not available'
                 ]);
             }
 
@@ -3442,7 +3474,7 @@ if ($mode == 'ajax_recalculate_price') {
             $debug_log('ERROR: Price not found for combination');
             $sendJson([
                 'success' => false,
-                'message' => __('novoton_holidays.price_not_found_for_combination')
+                'message' => 'Price not found for this room/board combination'
             ]);
         }
 
@@ -3494,11 +3526,11 @@ if ($mode == 'ajax_recalculate_price') {
             'new_board' => $matched_board ?: $board_id
         ]);
 
-    } catch (Exception $e) {
-        $debug_log('EXCEPTION', $e->getMessage());
+    } catch (\Exception $e) {
+        $debug_log('EXCEPTION', $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
         $sendJson([
             'success' => false,
-            'message' => __('novoton_holidays.price_calculation_error')
+            'message' => 'Price calculation error'
         ]);
     }
 }
