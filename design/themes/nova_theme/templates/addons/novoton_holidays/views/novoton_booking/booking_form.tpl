@@ -399,8 +399,8 @@
                                                autocomplete="off"
                                                placeholder="ZZ/LL/AAAA"
                                                value="{$prefilled_child_dob}"
-                                               onkeydown="handleDobKeydown(event)"
-                                               oninput="applyDobMask(this)"
+                                               onkeydown="handleDobKeydownLocal(event)"
+                                               oninput="applyDobMaskLocal(this)"
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
@@ -513,8 +513,8 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// Debug logging - only when explicitly enabled
-var novotonDebug = (window.NovotonConfig && window.NovotonConfig.debug) || false;
+// Debug logging - enabled via NovotonConfig.debug or ?novoton_debug=1 in URL
+var novotonDebug = (window.NovotonConfig && window.NovotonConfig.debug) || (window.location.search.indexOf('novoton_debug') !== -1);
 function novotonLog(message, data) {
     if (novotonDebug && console && console.log) {
         if (data !== undefined) {
