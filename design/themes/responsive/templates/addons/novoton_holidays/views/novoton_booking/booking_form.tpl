@@ -919,14 +919,17 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             
         } else {
             novotonLog('Recalculation failed: ' + (data.message || ''));
-            showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
+            // API returned no price — show soft info notice but keep form submittable
+            showInfoNotice('{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"}');
+            if (priceEl) priceEl.style.opacity = '1';
         }
     })
     .catch(function(error) {
         novotonLog('AJAX error: ' + error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
+        // Network/server error — show soft info notice but keep form submittable
+        showInfoNotice('{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"}');
     });
 }
 
