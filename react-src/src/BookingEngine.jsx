@@ -277,11 +277,6 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
-                            {mode !== 'search' && (
-                                <span className="nvt-label">
-                                    {t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}
-                                </span>
-                            )}
                             {dateDisplayText ? (
                                 <span className="nvt-value">{dateDisplayText}</span>
                             ) : (
