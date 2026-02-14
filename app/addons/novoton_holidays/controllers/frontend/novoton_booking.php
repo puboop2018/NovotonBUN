@@ -3018,13 +3018,12 @@ if ($mode == 'request_alternatives') {
     }
 
     // --- Validate and sanitize search params ---
-    $searchValidation = $security->validateSearchParams($_REQUEST);
-    $sanitized = $searchValidation['sanitized'] ?? [];
+    $sanitized = $security->validateSearchParams($_REQUEST);
 
     $hotel_id = $sanitized['hotel_id'] ?? '';
     $hotel_name = strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200));
     $check_in = $sanitized['check_in'] ?? '';
-    $check_out = $_REQUEST['check_out'] ?? '';
+    $check_out = $sanitized['check_out'] ?? ($_REQUEST['check_out'] ?? '');
     $nights = $sanitized['nights'] ?? 7;
     $adults = $sanitized['adults'] ?? 2;
     $children = $sanitized['children'] ?? 0;
