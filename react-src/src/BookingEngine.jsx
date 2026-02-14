@@ -84,6 +84,14 @@ export default function BookingEngine({ config }) {
     const [ageErrors, setAgeErrors] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Button state: "Search" → "Change search" → "Apply changes"
+    // In search mode, user already searched so start with hasSearched=true.
+    // On product page with pre-filled dates, also start as hasSearched.
+    const [hasSearched, setHasSearched] = useState(
+        mode === 'search' || (!!initialCheckIn && !!initialCheckOut)
+    );
+    const [datesChanged, setDatesChanged] = useState(false);
+
     const engineRef = useRef(null);
 
     // -----------------------------------------------------------------------
@@ -94,17 +102,17 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    // Build guest summary text
+    // Build guest summary text (always lowercase)
     const guestSummary = (() => {
         const parts = [];
 
-        const adultLabel = totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults');
+        const adultLabel = (totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults')).toLowerCase();
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
+        const childLabel = (totalChildren === 1 ? t('child', 'child') : t('children', 'children')).toLowerCase();
         parts.push(`${totalChildren} ${childLabel}`);
 
-        const roomLabel = rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms');
+        const roomLabel = (rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms')).toLowerCase();
         parts.push(`${rooms.length} ${roomLabel}`);
 
         return parts.join(' · ');
@@ -130,7 +138,8 @@ export default function BookingEngine({ config }) {
         setCheckIn(newCheckIn);
         setCheckOut(newCheckOut);
         setValidationError('');
-    }, []);
+        if (hasSearched) setDatesChanged(true);
+    }, [hasSearched]);
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
@@ -237,7 +246,17 @@ export default function BookingEngine({ config }) {
     // Main render
     // -----------------------------------------------------------------------
 
-    const searchBtnText = buttonText || t('search', 'Search');
+    // Button text state machine:
+    // 1. Default: "Search"
+    // 2. After search: "Change search"
+    // 3. If dates changed after search: "Apply changes"
+    // 4. After clicking "Apply changes": navigates, reloads as "Change search"
+    const searchBtnText = (() => {
+        if (buttonText) return buttonText;
+        if (hasSearched && datesChanged) return t('applyChanges', 'Apply changes');
+        if (hasSearched) return t('changeSearch', 'Change search');
+        return t('search', 'Search');
+    })();
 
     return (
         <div className="nvt-booking-engine" ref={engineRef}>

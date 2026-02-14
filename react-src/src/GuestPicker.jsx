@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { t } from './utils';
+import { t, getLocale } from './utils';
 
 export default function GuestPicker({
     rooms,
@@ -98,7 +98,7 @@ export default function GuestPicker({
                                     className="nvt-remove-room"
                                     onClick={() => removeRoom(roomIdx)}
                                 >
-                                    {t('remove', 'Remove')}
+                                    {t('remove', getLocale() === 'ro' ? 'Șterge' : 'Remove')}
                                 </button>
                             )}
                         </div>

@@ -54,7 +54,8 @@ window.NovotonTranslations = {
     includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
     of: "{__('novoton_holidays.of')|default:'of'}",
     selected: "{__('novoton_holidays.selected')|default:'selected'}",
-    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
+    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}",
+    remove: "{__('novoton_holidays.remove')|default:'Remove'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>

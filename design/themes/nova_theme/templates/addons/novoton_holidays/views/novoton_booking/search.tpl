@@ -1028,7 +1028,9 @@ window.NovotonTranslations = {
     checkInPast: "{__('novoton_holidays.check_in_past')|default:'Check-in date cannot be in the past'}",
     includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
     of: "{__('novoton_holidays.of')|default:'of'}",
-    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
+    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}",
+    remove: "{__('novoton_holidays.remove')|default:'Remove'}",
+    changeSearch: "{__('novoton_holidays.change_search')|default:'Change search'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>
