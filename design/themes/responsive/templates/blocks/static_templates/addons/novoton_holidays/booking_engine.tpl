@@ -40,4 +40,4 @@
 </div>
 
 {* Load React 19 bundle (provides React globally) then booking component *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>

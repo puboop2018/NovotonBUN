@@ -1031,8 +1031,8 @@ window.NovotonTranslations = {
     pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
 };
 </script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v={$smarty.now}"></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v=2.7.1" defer></script>
 
 {* A73: JavaScript fallback to fix desktop/mobile display if CSS fails *}
 <script>

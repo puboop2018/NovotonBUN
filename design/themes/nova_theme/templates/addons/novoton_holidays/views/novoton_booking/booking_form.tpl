@@ -505,6 +505,26 @@ window.NovotonTranslations.room = window.NovotonTranslations.room || '{__("novot
 window.NovotonTranslations.rooms = window.NovotonTranslations.rooms || '{__("novoton_holidays.rooms")|default:"rooms"|escape:"javascript"}';
 window.NovotonTranslations.pleaseSelectAllRooms = '{__("novoton_holidays.please_select_all_rooms")|default:"Please select a room type for each room"|escape:"javascript"}';
 
+// HTML escape utility to prevent XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+// Debug logging - only when explicitly enabled
+var novotonDebug = (window.NovotonConfig && window.NovotonConfig.debug) || false;
+function novotonLog(message, data) {
+    if (novotonDebug && console && console.log) {
+        if (data !== undefined) {
+            console.log('[Novoton] ' + message, data);
+        } else {
+            console.log('[Novoton] ' + message);
+        }
+    }
+}
+
 // Form submit validation
 document.getElementById('novoton-booking-form').addEventListener('submit', function(e) {
     var allFilled = true;
@@ -516,13 +536,13 @@ document.getElementById('novoton-booking-form').addEventListener('submit', funct
             el.style.borderColor = '#ccc';
         }
     });
-    
+
     if (!allFilled) {
         e.preventDefault();
         alert('{__("novoton_holidays.fill_all_fields")|escape:"javascript"}');
         return;
     }
-    
+
     // Check for DOB validation errors
     var dobErrors = document.querySelectorAll('.dob-validation-error');
     var hasError = false;
@@ -531,15 +551,7 @@ document.getElementById('novoton-booking-form').addEventListener('submit', funct
             hasError = true;
         }
     });
-    
-    // Check if occupancy is exceeded
-    var occupancyBlock = document.getElementById('occupancy-block-message');
-    if (occupancyBlock && occupancyBlock.style.display !== 'none') {
-        e.preventDefault();
-        alert('{__("novoton_holidays.occupancy_exceeded_alert")|default:"Camera selectata nu permite acest numar de adulti. Va rugam modificati selectia."|escape:"javascript"}');
-        return;
-    }
-    
+
     if (hasError) {
         e.preventDefault();
         alert('{__("novoton_holidays.dob_validation_error")|default:"Verificati datele de nastere introduse."|escape:"javascript"}');
@@ -713,7 +725,7 @@ function doCollectAndRecalculate(roomNum) {
                 childrenAges.push(age);
             }
         });
-        console.log('[Novoton] Collected children ages for room ' + roomNum + ':', childrenAges);
+        novotonLog('Collected children ages for room ' + roomNum, childrenAges);
     } else {
         // Single room: collect all
         document.querySelectorAll('[id^="child_calc_age_"]').forEach(function(input) {
@@ -722,7 +734,7 @@ function doCollectAndRecalculate(roomNum) {
                 childrenAges.push(age);
             }
         });
-        console.log('[Novoton] Collected children ages:', childrenAges);
+        novotonLog('Collected children ages', childrenAges);
     }
 
     if (childrenAges.length > 0) {
@@ -734,10 +746,10 @@ function doCollectAndRecalculate(roomNum) {
 // A74y: Updated to handle per-room recalculation for multi-room bookings
 function triggerPriceRecalculationInline(childrenAges, roomNum) {
     roomNum = roomNum || 1;
-    console.log('[Novoton] triggerPriceRecalculationInline called for room ' + roomNum + ' with ages:', childrenAges);
+    novotonLog('triggerPriceRecalculationInline called for room ' + roomNum, childrenAges);
     
     if (!window.bookingData) {
-        console.error('[Novoton] bookingData not defined');
+        novotonLog('bookingData not defined');
         return;
     }
     
@@ -748,7 +760,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
     var roomData = {};
     if (isMultiRoom && window.bookingData.roomsData[roomIdx]) {
         roomData = window.bookingData.roomsData[roomIdx];
-        console.log('[Novoton] Using room-specific data for room ' + roomNum + ':', roomData);
+        novotonLog('Using room-specific data for room ' + roomNum, roomData);
     } else {
         roomData = {
             room_id: window.bookingData.roomId,
@@ -781,7 +793,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
         is_multi_room: isMultiRoom
     };
     
-    console.log('[Novoton] AJAX request:', requestData);
+    novotonLog('AJAX request', requestData);
 
     // Use CS-Cart controller dispatch (replaces standalone novoton_ajax_price.php)
     var ajaxUrl = '';
@@ -792,7 +804,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
     } else {
         ajaxUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.php?dispatch=novoton_booking.ajax_recalculate_price';
     }
-    console.log('[Novoton] AJAX URL:', ajaxUrl);
+    novotonLog('AJAX URL', ajaxUrl);
     
     fetch(ajaxUrl, {
         method: 'POST',
@@ -800,23 +812,21 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
         body: JSON.stringify(requestData)
     })
     .then(function(response) { 
-        console.log('[Novoton] Response status:', response.status);
-        console.log('[Novoton] Response headers:', response.headers.get('content-type'));
+        novotonLog('Response status: ' + response.status);
         return response.text(); // Get raw text first
     })
     .then(function(text) {
-        console.log('[Novoton] Raw response:', text.substring(0, 500));
+        novotonLog('Raw response', text.substring(0, 200));
         // Try to parse JSON
         try {
             return JSON.parse(text);
         } catch (e) {
-            console.error('[Novoton] JSON parse error:', e.message);
-            console.error('[Novoton] Response was:', text);
+            novotonLog('JSON parse error: ' + e.message);
             throw e;
         }
     })
     .then(function(data) {
-        console.log('[Novoton] AJAX response:', data);
+        novotonLog('AJAX response', data);
         
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
@@ -826,7 +836,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             hidePriceError();
 
             var newPrice = parseFloat(data.new_price) || 0;
-            console.log('[Novoton] New price for room ' + roomNum + ':', newPrice);
+            novotonLog('New price for room ' + roomNum + ': ' + newPrice);
             
             if (isMultiRoom && window.bookingData.roomsData && window.bookingData.roomsData[roomIdx]) {
                 // Multi-room: Update only this room's price
@@ -845,7 +855,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                     totalPrice += parseFloat(window.bookingData.roomsData[i].price) || 0;
                 }
                 
-                console.log('[Novoton] New total price:', totalPrice);
+                novotonLog('New total price: ' + totalPrice);
                 
                 // Update total price display
                 document.querySelectorAll('.price-total').forEach(function(el) {
@@ -856,7 +866,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 var hiddenPriceInput = document.querySelector('input[name="total_price"]');
                 if (hiddenPriceInput) {
                     hiddenPriceInput.value = totalPrice.toFixed(2);
-                    console.log('[Novoton] Updated hidden total_price input to:', totalPrice.toFixed(2));
+                    novotonLog('Updated hidden total_price to: ' + totalPrice.toFixed(2));
                 }
                 
                 // Update bookingData total
@@ -877,7 +887,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 var hiddenPriceInput = document.querySelector('input[name="total_price"]');
                 if (hiddenPriceInput) {
                     hiddenPriceInput.value = newPrice.toFixed(2);
-                    console.log('[Novoton] Updated hidden total_price input to:', newPrice.toFixed(2));
+                    novotonLog('Updated hidden total_price to: ' + newPrice.toFixed(2));
                 }
                 
                 // Show price change notification
@@ -899,12 +909,12 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             if (notice) notice.style.display = 'none';
             
         } else {
-            console.log('[Novoton] Recalculation failed:', data.message);
+            novotonLog('Recalculation failed: ' + (data.message || ''));
             showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
         }
     })
     .catch(function(error) {
-        console.error('[Novoton] AJAX error:', error);
+        novotonLog('AJAX error: ' + error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
         showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
@@ -966,7 +976,7 @@ function hidePriceError() {
 
 // Refresh price manually
 function refreshPrice() {
-    console.log('[Novoton] Manual price refresh triggered');
+    novotonLog('Manual price refresh triggered');
     hidePriceError();
 
     // Collect all children ages from the form
@@ -978,7 +988,7 @@ function refreshPrice() {
         }
     });
 
-    console.log('[Novoton] Refreshing with children ages:', childrenAges);
+    novotonLog('Refreshing with children ages', childrenAges);
     triggerPriceRecalculationInline(childrenAges, 1);
 }
 
@@ -1016,7 +1026,7 @@ function showInfoNotice(message) {
 }
 
 function showRoomChangeModal(data) {
-    console.log('[Novoton] Showing room change modal:', data);
+    novotonLog('Showing room change modal', data);
     
     var existing = document.getElementById('room-change-warning');
     if (existing) existing.remove();
@@ -1045,12 +1055,12 @@ function showRoomChangeModal(data) {
             '<div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">' +
                 '<div style="text-align:center;">' +
                     '<div style="font-size:11px;color:#666;text-transform:uppercase;">{__("novoton_holidays.original_room")|default:"Camera selectata"}</div>' +
-                    '<div style="font-weight:600;color:#856404;text-decoration:line-through;">' + (data.original_room || '') + '</div>' +
+                    '<div style="font-weight:600;color:#856404;text-decoration:line-through;">' + escapeHtml(data.original_room || '') + '</div>' +
                 '</div>' +
                 '<div style="font-size:24px;color:#856404;">-></div>' +
                 '<div style="text-align:center;">' +
                     '<div style="font-size:11px;color:#666;text-transform:uppercase;">{__("novoton_holidays.new_room")|default:"Camera noua"}</div>' +
-                    '<div style="font-weight:600;color:#155724;">' + (data.new_room || '') + '</div>' +
+                    '<div style="font-weight:600;color:#155724;">' + escapeHtml(data.new_room || '') + '</div>' +
                 '</div>' +
             '</div>' +
         '</div>' +
@@ -1069,7 +1079,9 @@ function showRoomChangeModal(data) {
         '</div></div>';
     
     window._roomChangeData = data;
-    document.body.insertAdjacentHTML('beforeend', html);
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper.firstChild);
 }
 
 function closeRoomModal() {
@@ -1081,10 +1093,11 @@ function acceptRoomChangeInline() {
     var data = window._roomChangeData || {};
     closeRoomModal();
     
-    // Format room name for display (add "Camera Dubla" prefix if needed)
+    // Format room name for display using translated room type prefix
     var displayRoom = data.new_room || '';
     if (displayRoom && !displayRoom.toLowerCase().includes('camer')) {
-        displayRoom = 'Camera Dubla (' + displayRoom + ')';
+        var roomTypeLabel = '{__("novoton_holidays.room_type_double")|default:"Double Room"|escape:"javascript"}';
+        displayRoom = roomTypeLabel + ' (' + displayRoom + ')';
     }
     
     // Build display text with board and price if available
@@ -1153,7 +1166,7 @@ function acceptRoomChangeInline() {
     var notif = document.createElement('div');
     notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
     var roomLabel = roomNum ? '{__("novoton_holidays.room_number")|default:"Camera"} ' + roomNum + ': ' : '';
-    notif.innerHTML = '✓ <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + roomLabel + (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' EUR';
+    notif.innerHTML = '✓ <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + escapeHtml(roomLabel) + escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' EUR';
     
     var section = document.querySelector('.guest-names-section h3');
     if (section && section.parentNode) {
