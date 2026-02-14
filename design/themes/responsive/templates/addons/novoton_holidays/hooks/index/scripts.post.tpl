@@ -8,6 +8,12 @@
  * CS-Cart will automatically include this when rendering pages.
  *}
 
+{* Pass addon settings to frontend JS *}
+<script>
+window.NovotonConfig = window.NovotonConfig || {};
+window.NovotonConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true{else}false{/if};
+</script>
+
 {* Core booking functionality - always load *}
 {script src="js/addons/novoton_holidays/utils.js"}
 {script src="js/addons/novoton_holidays/booking_engine.js"}

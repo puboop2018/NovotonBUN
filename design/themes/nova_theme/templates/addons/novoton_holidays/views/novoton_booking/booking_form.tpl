@@ -490,6 +490,20 @@ window.NovotonTranslations.futureDate = '{__("novoton_holidays.future_date")|def
 window.NovotonTranslations.notChild = '{__("novoton_holidays.not_child")|default:"La check-in, copilul va avea"|escape:"javascript"}';
 window.NovotonTranslations.yearsOld = '{__("novoton_holidays.years_old")|default:"ani"|escape:"javascript"}';
 window.NovotonTranslations.mustBeUnder18 = '{__("novoton_holidays.must_be_under_18")|default:"Trebuie sa fie sub 18 ani."|escape:"javascript"}';
+window.NovotonTranslations.adult = window.NovotonTranslations.adult || '{__("novoton_holidays.adult")|default:"adult"|escape:"javascript"}';
+window.NovotonTranslations.adults = window.NovotonTranslations.adults || '{__("novoton_holidays.adults")|default:"adults"|escape:"javascript"}';
+window.NovotonTranslations.child = window.NovotonTranslations.child || '{__("novoton_holidays.child")|default:"child"|escape:"javascript"}';
+window.NovotonTranslations.children = window.NovotonTranslations.children || '{__("novoton_holidays.children")|default:"children"|escape:"javascript"}';
+window.NovotonTranslations.yearOld = window.NovotonTranslations.yearOld || '{__("novoton_holidays.year_old")|default:"year old"|escape:"javascript"}';
+window.NovotonTranslations.childLabel = '{__("novoton_holidays.child_label")|default:"Child"|escape:"javascript"}';
+window.NovotonTranslations.ageOfChild = '{__("novoton_holidays.age_of_child")|default:"Age of child"|escape:"javascript"}';
+window.NovotonTranslations.checkInPast = '{__("novoton_holidays.check_in_past")|default:"Check-in date cannot be in the past"|escape:"javascript"}';
+window.NovotonTranslations.includesOnRequest = '{__("novoton_holidays.includes_on_request")|default:"(includes on-request)"|escape:"javascript"}';
+window.NovotonTranslations.of = window.NovotonTranslations.of || '{__("novoton_holidays.of")|default:"of"|escape:"javascript"}';
+window.NovotonTranslations.selected = window.NovotonTranslations.selected || '{__("novoton_holidays.selected")|default:"selected"|escape:"javascript"}';
+window.NovotonTranslations.room = window.NovotonTranslations.room || '{__("novoton_holidays.room")|default:"room"|escape:"javascript"}';
+window.NovotonTranslations.rooms = window.NovotonTranslations.rooms || '{__("novoton_holidays.rooms")|default:"rooms"|escape:"javascript"}';
+window.NovotonTranslations.pleaseSelectAllRooms = '{__("novoton_holidays.please_select_all_rooms")|default:"Please select a room type for each room"|escape:"javascript"}';
 
 // Form submit validation
 document.getElementById('novoton-booking-form').addEventListener('submit', function(e) {

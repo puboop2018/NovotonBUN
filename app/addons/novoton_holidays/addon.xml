@@ -351,6 +351,11 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="debug_mode">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
             

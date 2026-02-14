@@ -58,14 +58,17 @@
                         .attr('required', 'required');
                     
                     // Add age options 0-17
+                    var t = window.NovotonTranslations || {};
                     for (var age = 0; age <= 17; age++) {
-                        $ageSelect.append($('<option></option>').val(age).text(age + ' years'));
+                        var ageUnit = age === 1 ? (t.yearOld || 'year old') : (t.yearsOld || 'years old');
+                        $ageSelect.append($('<option></option>').val(age).text(age + ' ' + ageUnit));
                     }
-                    
+
+                    var childLabel = (t.childLabel || 'Child') + ' ' + i + ':';
                     var $label = $('<label></label>')
                         .addClass('control-label-inline')
                         .attr('for', 'child_age_' + i)
-                        .text('Child ' + i + ':');
+                        .text(childLabel);
                     
                     var $wrapper = $('<div></div>')
                         .addClass('child-age-field')
@@ -100,7 +103,8 @@
             
             if (checkInDate < today) {
                 e.preventDefault();
-                alert('Check-in date cannot be in the past');
+                var t = window.NovotonTranslations || {};
+                alert(t.checkInPast || 'Check-in date cannot be in the past');
                 return false;
             }
         });
@@ -204,13 +208,16 @@
                         .attr('name', 'child_age_' + i)
                         .addClass('form-control');
                     
+                    var t = window.NovotonTranslations || {};
                     for (var age = 0; age <= 17; age++) {
-                        $ageSelect.append($('<option></option>').val(age).text(age + ' years old'));
+                        var ageUnit = age === 1 ? (t.yearOld || 'year old') : (t.yearsOld || 'years old');
+                        $ageSelect.append($('<option></option>').val(age).text(age + ' ' + ageUnit));
                     }
-                    
+
+                    var ageOfChildLabel = (t.ageOfChild || 'Age of child') + ' ' + i + ':';
                     var $wrapper = $('<div></div>')
                         .addClass('child-age-selector')
-                        .html('<label>Age of child ' + i + ':</label>')
+                        .html('<label>' + ageOfChildLabel + '</label>')
                         .append($ageSelect);
                     
                     $childrenAgesContainer.append($wrapper);
@@ -224,13 +231,16 @@
         function updateGuestSummary() {
             var adults = parseInt($adultsInput.val());
             var children = parseInt($childrenInput.val());
-            
-            var summary = adults + ' adult' + (adults !== 1 ? 's' : '');
-            
+            var t = window.NovotonTranslations || {};
+
+            var adultLabel = adults === 1 ? (t.adult || 'adult') : (t.adults || 'adults');
+            var summary = adults + ' ' + adultLabel;
+
             if (children > 0) {
-                summary += ', ' + children + ' child' + (children !== 1 ? 'ren' : '');
+                var childLabel = children === 1 ? (t.child || 'child') : (t.children || 'children');
+                summary += ', ' + children + ' ' + childLabel;
             }
-            
+
             $button.find('.guest-summary').text(summary);
         }
         

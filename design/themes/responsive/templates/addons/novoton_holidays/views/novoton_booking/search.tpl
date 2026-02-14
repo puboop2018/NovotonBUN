@@ -1021,7 +1021,14 @@ window.NovotonTranslations = {
     selectCheckOut: "{__('novoton_holidays.select_check_out')|default:'Select check-out date'}",
     selectedSingular: "{__('novoton_holidays.selected_singular')|default:'selected'}",
     childAge: "{__('novoton_holidays.child_age')|default:'Childs age'}",
-    dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}"
+    dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}",
+    child: "{__('novoton_holidays.child')|default:'child'}",
+    childLabel: "{__('novoton_holidays.child_label')|default:'Child'}",
+    ageOfChild: "{__('novoton_holidays.age_of_child')|default:'Age of child'}",
+    checkInPast: "{__('novoton_holidays.check_in_past')|default:'Check-in date cannot be in the past'}",
+    includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
+    of: "{__('novoton_holidays.of')|default:'of'}",
+    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.now}"></script>
