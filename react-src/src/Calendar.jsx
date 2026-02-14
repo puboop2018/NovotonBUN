@@ -5,8 +5,8 @@
  * date first, then a check-out date. Selected range is highlighted.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { getLocale, nightsBetween, t } from './utils';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { getLocale, nightsBetween, formatDateShort, t } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
 import { ChevronLeft, ChevronRight } from './icons';
 
@@ -46,8 +46,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Memoize today so it doesn't invalidate useCallback deps on every render
+    const today = useMemo(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }, []);
 
     // Start calendar from check-in month, or current month
     const startMonth = checkIn ? new Date(checkIn.getFullYear(), checkIn.getMonth(), 1)
@@ -58,6 +62,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
     const popupRef = useRef(null);
+    const closeTimerRef = useRef(null);
 
     // Close on outside click
     useEffect(() => {
@@ -70,6 +75,13 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
         return () => document.removeEventListener('mousedown', handleClick);
     }, [onClose]);
 
+    // Clean up auto-close timer on unmount
+    useEffect(() => {
+        return () => {
+            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        };
+    }, []);
+
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
     }, []);
@@ -81,31 +93,29 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
     const handleDayClick = useCallback((date) => {
         if (date < today) return;
 
-        // If no check-in yet, or we already have both, start fresh
+        // CASE 1 & 4: No dates or both dates selected → fresh CHECK-IN
         if (!tempCheckIn || (tempCheckIn && tempCheckOut)) {
             setTempCheckIn(date);
             setTempCheckOut(null);
             setSelecting('checkOut');
-        } else {
-            // We have check-in, picking check-out
-            if (date <= tempCheckIn) {
-                // Clicked before check-in → restart
-                setTempCheckIn(date);
-                setTempCheckOut(null);
-                setSelecting('checkOut');
-            } else {
-                setTempCheckOut(date);
-                setSelecting(null);
-            }
+            onSelect(date, null);
         }
-    }, [tempCheckIn, tempCheckOut, today]);
-
-    const handleDone = useCallback(() => {
-        if (tempCheckIn && tempCheckOut) {
-            onSelect(tempCheckIn, tempCheckOut);
+        // CASE 3: Only check-in + click before/on → new CHECK-IN
+        else if (date <= tempCheckIn) {
+            setTempCheckIn(date);
+            setTempCheckOut(null);
+            setSelecting('checkOut');
+            onSelect(date, null);
         }
-        onClose && onClose();
-    }, [tempCheckIn, tempCheckOut, onSelect, onClose]);
+        // CASE 2: Only check-in + click after → CHECK-OUT (complete)
+        else {
+            setTempCheckOut(date);
+            setSelecting(null);
+            onSelect(tempCheckIn, date);
+            // Auto-close calendar after brief delay so user sees selection
+            closeTimerRef.current = setTimeout(() => { onClose && onClose(); }, 350);
+        }
+    }, [tempCheckIn, tempCheckOut, today, onSelect, onClose]);
 
     // Two consecutive months
     const month1Year = viewDate.getFullYear();
@@ -165,14 +175,17 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
         );
     }
 
-    // Footer text
-    let footerText = '';
-    if (tempCheckIn && tempCheckOut) {
-        const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
-        footerText = `${nights} ${nightLabel}`;
-    } else if (tempCheckIn) {
-        footerText = t('selectCheckOut', 'Select check-out date');
-    }
+    // Footer text – show check-in/check-out dates + nights
+    const footerText = (() => {
+        if (tempCheckIn && tempCheckOut) {
+            const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
+            return `${t('checkIn', 'Check-in')}: ${formatDateShort(tempCheckIn)}  ·  ${t('checkOut', 'Check-out')}: ${formatDateShort(tempCheckOut)}  —  ${nights} ${nightLabel}`;
+        }
+        if (tempCheckIn) {
+            return `${t('checkIn', 'Check-in')}: ${formatDateShort(tempCheckIn)}  ·  ${t('selectCheckOut', 'Select check-out date')}`;
+        }
+        return t('selectCheckIn', 'Select check-in date');
+    })();
 
     return (
         <div className="nvt-calendar-popup" ref={popupRef}>
@@ -201,14 +214,6 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
 
             <div className="nvt-calendar-footer">
                 <span>{footerText}</span>
-                <button
-                    type="button"
-                    className="nvt-done-btn"
-                    onClick={handleDone}
-                    disabled={!tempCheckIn || !tempCheckOut}
-                >
-                    {t('done', 'Done')}
-                </button>
             </div>
         </div>
     );

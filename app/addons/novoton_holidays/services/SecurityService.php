@@ -124,45 +124,97 @@ class SecurityService
      */
     public function validateSearchParams(array $params): array
     {
-        $errors = [];
         $sanitized = [];
-        
+
         // Sanitize and validate check_in
         if (!empty($params['check_in'])) {
             if ($this->isValidDate($params['check_in'])) {
                 $sanitized['check_in'] = $params['check_in'];
-            } else {
-                $errors[] = 'Invalid check-in date';
             }
         }
-        
+
+        // Sanitize and validate check_out
+        if (!empty($params['check_out'])) {
+            if ($this->isValidDate($params['check_out'])) {
+                $sanitized['check_out'] = $params['check_out'];
+            }
+        }
+
         // Sanitize nights
         $sanitized['nights'] = max(1, min(30, intval($params['nights'] ?? 7)));
-        
+
         // Sanitize adults
         $sanitized['adults'] = max(1, min(10, intval($params['adults'] ?? 2)));
-        
+
         // Sanitize children
         $sanitized['children'] = max(0, min(6, intval($params['children'] ?? 0)));
-        
+
         // Sanitize rooms
         $sanitized['rooms'] = max(1, min(5, intval($params['rooms'] ?? 1)));
-        
+
         // Sanitize destination (alphanumeric, spaces, common punctuation)
         if (!empty($params['destination'])) {
             $sanitized['destination'] = $this->sanitizeString($params['destination'], 100);
         }
-        
+
         // Sanitize hotel_id
         if (!empty($params['hotel_id'])) {
             $sanitized['hotel_id'] = $this->sanitizeHotelId($params['hotel_id']);
         }
-        
-        return [
-            'valid' => empty($errors),
-            'errors' => $errors,
-            'sanitized' => $sanitized
-        ];
+
+        // Pass through product_id (integer)
+        if (!empty($params['product_id'])) {
+            $sanitized['product_id'] = intval($params['product_id']);
+        }
+
+        // Pass through children_ages (comma-separated integers)
+        if (!empty($params['children_ages']) && is_string($params['children_ages'])) {
+            // Only allow digits and commas
+            $sanitized['children_ages'] = preg_replace('/[^0-9,]/', '', $params['children_ages']);
+        }
+
+        // Pass through rooms_data (JSON string - will be decoded by controller)
+        if (!empty($params['rooms_data'])) {
+            $sanitized['rooms_data'] = is_string($params['rooms_data']) ? $params['rooms_data'] : json_encode($params['rooms_data']);
+        }
+        if (!empty($params['room_data'])) {
+            $sanitized['room_data'] = is_string($params['room_data']) ? $params['room_data'] : json_encode($params['room_data']);
+        }
+
+        // Pass through meal_plan
+        if (!empty($params['meal_plan'])) {
+            $sanitized['meal_plan'] = preg_replace('/[^a-zA-Z0-9_ &+]/', '', substr($params['meal_plan'], 0, 50));
+        }
+
+        // Pass through flex_days (integer)
+        if (!empty($params['flex_days'])) {
+            $sanitized['flex_days'] = max(0, min(30, intval($params['flex_days'])));
+        }
+
+        // Pass through search query
+        if (!empty($params['q'])) {
+            $sanitized['q'] = $this->sanitizeString($params['q'], 200);
+        }
+
+        // Debug mode flag
+        if (!empty($params['debug'])) {
+            $sanitized['debug'] = true;
+        }
+
+        // Reset circuit breaker flag
+        if (!empty($params['reset_circuit'])) {
+            $sanitized['reset_circuit'] = true;
+        }
+
+        // Legacy child_age_N parameters
+        for ($i = 1; $i <= 6; $i++) {
+            $key = 'child_age_' . $i;
+            if (isset($params[$key])) {
+                $sanitized[$key] = max(0, min(17, intval($params[$key])));
+            }
+        }
+
+        return $sanitized;
     }
     
     /**
