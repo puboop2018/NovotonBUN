@@ -94,15 +94,17 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    // Build guest summary text
+    // Build guest summary text (hide children when count is 0)
     const guestSummary = (() => {
         const parts = [];
 
         const adultLabel = totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults');
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
-        parts.push(`${totalChildren} ${childLabel}`);
+        if (totalChildren > 0) {
+            const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
+            parts.push(`${totalChildren} ${childLabel}`);
+        }
 
         const roomLabel = rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms');
         parts.push(`${rooms.length} ${roomLabel}`);
