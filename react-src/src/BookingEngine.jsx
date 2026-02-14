@@ -84,6 +84,14 @@ export default function BookingEngine({ config }) {
     const [ageErrors, setAgeErrors] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Button state: "Search" → "Change search" → "Apply changes"
+    // In search mode, user already searched so start with hasSearched=true.
+    // On product page with pre-filled dates, also start as hasSearched.
+    const [hasSearched, setHasSearched] = useState(
+        mode === 'search' || (!!initialCheckIn && !!initialCheckOut)
+    );
+    const [datesChanged, setDatesChanged] = useState(false);
+
     const engineRef = useRef(null);
 
     // -----------------------------------------------------------------------
@@ -94,30 +102,30 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    // Build guest summary text
+    // Build guest summary text (always lowercase)
     const guestSummary = (() => {
         const parts = [];
 
-        const adultLabel = totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults');
+        const adultLabel = (totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults')).toLowerCase();
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
+        const childLabel = (totalChildren === 1 ? t('child', 'child') : t('children', 'children')).toLowerCase();
         parts.push(`${totalChildren} ${childLabel}`);
 
-        const roomLabel = rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms');
+        const roomLabel = (rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms')).toLowerCase();
         parts.push(`${rooms.length} ${roomLabel}`);
 
         return parts.join(' · ');
     })();
 
-    // Date display text – show partial (check-in only) or full range
+    // Date display text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
             const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
-            return `${formatDateShort(checkIn)} — ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
+            return `${formatDateShort(checkIn)} - ${formatDateShort(checkOut)} — ${nights} ${nightLabel}`;
         }
         if (checkIn) {
-            return `${formatDateShort(checkIn)} — ...`;
+            return `${formatDateShort(checkIn)} - ...`;
         }
         return '';
     })();
@@ -130,7 +138,8 @@ export default function BookingEngine({ config }) {
         setCheckIn(newCheckIn);
         setCheckOut(newCheckOut);
         setValidationError('');
-    }, []);
+        if (hasSearched) setDatesChanged(true);
+    }, [hasSearched]);
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
@@ -237,7 +246,17 @@ export default function BookingEngine({ config }) {
     // Main render
     // -----------------------------------------------------------------------
 
-    const searchBtnText = buttonText || t('search', 'Search');
+    // Button text state machine:
+    // 1. Default: "Search"
+    // 2. After search: "Change search"
+    // 3. If dates changed after search: "Apply changes"
+    // 4. After clicking "Apply changes": navigates, reloads as "Change search"
+    const searchBtnText = (() => {
+        if (buttonText) return buttonText;
+        if (hasSearched && datesChanged) return t('applyChanges', 'Apply changes');
+        if (hasSearched) return t('changeSearch', 'Change search');
+        return t('search', 'Search');
+    })();
 
     return (
         <div className="nvt-booking-engine" ref={engineRef}>
@@ -277,11 +296,6 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
-                            {mode !== 'search' && (
-                                <span className="nvt-label">
-                                    {t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}
-                                </span>
-                            )}
                             {dateDisplayText ? (
                                 <span className="nvt-value">{dateDisplayText}</span>
                             ) : (
@@ -312,9 +326,6 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
-                            {mode === 'homepage' && (
-                                <span className="nvt-label">{t('guests', 'Guests')}</span>
-                            )}
                             <span className="nvt-value">{guestSummary}</span>
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>

@@ -404,7 +404,7 @@
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][original_age]" value="{$child_age_at_checkin}" />
+                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][original_age]" id="child_orig_age_r{$room_num}_c{$i}" value="{$child_age_at_checkin}" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][calculated_age]" id="child_calc_age_r{$room_num}_c{$i}" value="" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
@@ -601,95 +601,110 @@ function validateAndCheckAge(id, originalAge) {
     var infoDiv = document.getElementById('dob_info_' + id);
     var calcAgeInput = document.getElementById('child_calc_age_' + id);
     var ageDisplay = document.getElementById('child_age_display_' + id);
-    
-    if (!dobInput) return;
-    
+
+    novotonLog('validateAndCheckAge called', {ldelim} id: id, originalAge: originalAge {rdelim});
+
+    if (!dobInput) {ldelim} novotonLog('DOB input not found: child_dob_' + id); return; {rdelim}
+
     var dobValue = dobInput.value;
-    
+    novotonLog('DOB value', dobValue);
+
     // Clear previous states
     dobInput.style.borderColor = '';
     dobInput.style.backgroundColor = '';
-    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
-    if (infoDiv) { infoDiv.style.display = 'none'; infoDiv.textContent = ''; }
-    
+    if (errorDiv) {ldelim} errorDiv.style.display = 'none'; errorDiv.textContent = ''; {rdelim}
+    if (infoDiv) {ldelim} infoDiv.style.display = 'none'; infoDiv.textContent = ''; {rdelim}
+    // Clear previous price error when user re-enters DOB
+    hidePriceError();
+
     // Skip if empty or incomplete
-    if (!dobValue || dobValue.length < 10) return;
-    
+    if (!dobValue || dobValue.length < 10) {ldelim} novotonLog('DOB incomplete, skipping'); return; {rdelim}
+
     // Parse DOB - requires booking-form-validation.js
-    if (typeof parseDobMasked !== 'function') {
+    if (typeof parseDobMasked !== 'function') {ldelim}
         novotonLog('parseDobMasked not loaded yet');
         return;
-    }
+    {rdelim}
     var parsed = parseDobMasked(dobValue);
-    if (!parsed) {
+    if (!parsed) {ldelim}
+        novotonLog('DOB parse failed');
         showDobError(dobInput, errorDiv, 'Format invalid');
         return;
-    }
-    
+    {rdelim}
+    novotonLog('DOB parsed', parsed);
+
     // Validate ranges
-    if (parsed.day < 1 || parsed.day > 31) {
+    if (parsed.day < 1 || parsed.day > 31) {ldelim}
         showDobError(dobInput, errorDiv, 'Ziua invalida (1-31)');
         return;
-    }
-    if (parsed.month < 1 || parsed.month > 12) {
+    {rdelim}
+    if (parsed.month < 1 || parsed.month > 12) {ldelim}
         showDobError(dobInput, errorDiv, 'Luna invalida (1-12)');
         return;
-    }
+    {rdelim}
     var currentYear = new Date().getFullYear();
-    if (parsed.year < 1925 || parsed.year > currentYear) {
+    if (parsed.year < 1925 || parsed.year > currentYear) {ldelim}
         showDobError(dobInput, errorDiv, 'Anul invalid');
         return;
-    }
-    
+    {rdelim}
+
     // Check if DOB is in the future
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     var birthDate = new Date(parsed.year, parsed.month - 1, parsed.day);
-    if (birthDate > today) {
+    if (birthDate > today) {ldelim}
         showDobError(dobInput, errorDiv, 'Data nasterii nu poate fi in viitor');
         return;
-    }
-    
+    {rdelim}
+
     // Calculate age at check-in - requires booking-form-validation.js
-    if (typeof calculateAgeAtDate !== 'function') {
+    if (typeof calculateAgeAtDate !== 'function') {ldelim}
         novotonLog('calculateAgeAtDate not loaded yet');
         return;
-    }
+    {rdelim}
     var checkInDate = new Date(window.bookingData.checkIn);
     var calculatedAge = calculateAgeAtDate(birthDate, checkInDate);
-    
+
+    novotonLog('Age calculation', {ldelim}
+        dob: dobValue,
+        checkIn: window.bookingData.checkIn,
+        calculatedAge: calculatedAge
+    {rdelim});
+
     // Update hidden field
     if (calcAgeInput) calcAgeInput.value = calculatedAge;
-    
+
     // Update age display - use translation with singular/plural (Romanian: "1 an", "2 ani")
-    if (ageDisplay) {
+    if (ageDisplay) {ldelim}
         var ageLabel;
-        if (calculatedAge === 1) {
+        if (calculatedAge === 1) {ldelim}
             ageLabel = window.NovotonTranslations && window.NovotonTranslations.ageLabelSingular ? window.NovotonTranslations.ageLabelSingular : 'an';
-        } else {
+        {rdelim} else {ldelim}
             ageLabel = window.NovotonTranslations && window.NovotonTranslations.ageLabel ? window.NovotonTranslations.ageLabel : 'ani';
-        }
+        {rdelim}
         ageDisplay.textContent = '(' + calculatedAge + ' ' + ageLabel + ')';
-    }
-    
-    // Check if child (under 18)
-    if (calculatedAge >= 18) {
-        var notChildMsg = window.NovotonTranslations.notChild || 'La check-in, copilul va avea';
-        var yearsLabel = window.NovotonTranslations.ageLabel || 'ani';
-        var mustBeUnder18 = window.NovotonTranslations.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
+    {rdelim}
+
+    if (calculatedAge >= 18) {ldelim}
+        var t = window.NovotonTranslations || {ldelim}{rdelim};
+        var notChildMsg = t.notChild || 'La check-in, copilul va avea';
+        var yearsLabel = t.ageLabel || 'ani';
+        var mustBeUnder18 = t.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
         showDobError(dobInput, errorDiv, notChildMsg + ' ' + calculatedAge + ' ' + yearsLabel + '. ' + mustBeUnder18);
+        showPriceError(t.childAgeNotAllowed || 'Vârsta copilului depășește limita');
         return;
-    }
-    
-    // Valid - show green
+    {rdelim}
+
+    // Valid child age — show green, let API determine price
     dobInput.style.borderColor = '#28a745';
     dobInput.style.backgroundColor = '#f0fff0';
-    
+
     // Extract room number from id (format: rX_cY where X=room, Y=child)
     var roomMatch = id.match(/r(\d+)_c\d+/);
     var roomNum = roomMatch ? parseInt(roomMatch[1], 10) : 1;
-    
+
     // Trigger price recalculation for this specific room
+    novotonLog('Triggering price recalculation for room ' + roomNum);
     collectAndRecalculate(roomNum);
 }
 
@@ -725,26 +740,25 @@ function doCollectAndRecalculate(roomNum) {
     // For single room: collect all children ages
     var childrenAges = [];
     var isMultiRoom = window.bookingData.numRooms > 1;
+    var selector = isMultiRoom
+        ? '[id^="child_calc_age_r' + roomNum + '_c"]'
+        : '[id^="child_calc_age_"]';
 
-    if (isMultiRoom) {
-        // Collect ages only for the specific room (format: child_calc_age_rX_cY)
-        document.querySelectorAll('[id^="child_calc_age_r' + roomNum + '_c"]').forEach(function(input) {
-            var age = parseInt(input.value, 10);
-            if (!isNaN(age) && age >= 0 && age < 18) {
-                childrenAges.push(age);
+    document.querySelectorAll(selector).forEach(function(input) {
+        var age = parseInt(input.value, 10);
+        // If DOB not yet entered for this child, use original age from booking
+        if (isNaN(age)) {
+            var origId = input.id.replace('child_calc_age_', 'child_orig_age_');
+            var origInput = document.getElementById(origId);
+            if (origInput) {
+                age = parseInt(origInput.value, 10);
             }
-        });
-        novotonLog('Collected children ages for room ' + roomNum, childrenAges);
-    } else {
-        // Single room: collect all
-        document.querySelectorAll('[id^="child_calc_age_"]').forEach(function(input) {
-            var age = parseInt(input.value, 10);
-            if (!isNaN(age) && age >= 0 && age < 18) {
-                childrenAges.push(age);
-            }
-        });
-        novotonLog('Collected children ages', childrenAges);
-    }
+        }
+        if (!isNaN(age) && age >= 0 && age < 18) {
+            childrenAges.push(age);
+        }
+    });
+    novotonLog('Collected children ages' + (isMultiRoom ? ' for room ' + roomNum : ''), childrenAges);
 
     if (childrenAges.length > 0) {
         triggerPriceRecalculationInline(childrenAges, roomNum);
@@ -919,14 +933,17 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
             
         } else {
             novotonLog('Recalculation failed: ' + (data.message || ''));
-            showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
+            // API returned success:false — show info notice, keep form submittable
+            showInfoNotice('{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"}');
+            if (priceEl) priceEl.style.opacity = '1';
         }
     })
     .catch(function(error) {
-        novotonLog('AJAX error: ' + error);
+        novotonLog('AJAX error (no API response): ' + error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        showPriceError('{__("novoton_holidays.check_child_dob")|default:"Verifică data nașterii"}');
+        // No API response at all — disable submit, price cannot be verified
+        showPriceError('{__("novoton_holidays.api_unavailable")|default:"Serviciul de prețuri nu este disponibil. Încercați din nou."}');
     });
 }
 
