@@ -13,23 +13,28 @@ import { getLocale, parseDate, toDateString } from './utils';
 
 /**
  * Read data-* attributes from an element and build a config object.
+ * Falls back to URL query parameters for booking fields so that the
+ * search-results form picks up check_in, check_out, etc. from the URL
+ * even when the server-side template doesn't populate the data attributes.
  */
 function readConfig(el) {
+    const url = new URLSearchParams(window.location.search);
+
     return {
-        hotelId:             el.dataset.hotelId       || '',
-        productId:           el.dataset.productId     || '',
+        hotelId:             el.dataset.hotelId       || url.get('hotel_id')   || '',
+        productId:           el.dataset.productId     || url.get('product_id') || '',
         mode:                el.dataset.mode           || 'product',
-        initialCheckIn:      el.dataset.checkIn       || '',
-        initialCheckOut:     el.dataset.checkOut      || '',
-        initialAdults:       parseInt(el.dataset.adults)       || 2,
-        initialChildren:     parseInt(el.dataset.children)     || 0,
-        initialChildrenAges: el.dataset.childrenAges  || '',
-        initialRooms:        parseInt(el.dataset.rooms)        || 1,
+        initialCheckIn:      el.dataset.checkIn       || url.get('check_in')   || '',
+        initialCheckOut:     el.dataset.checkOut      || url.get('check_out')  || '',
+        initialAdults:       parseInt(el.dataset.adults   || url.get('adults'))    || 2,
+        initialChildren:     parseInt(el.dataset.children || url.get('children'))  || 0,
+        initialChildrenAges: el.dataset.childrenAges  || url.get('children_ages') || '',
+        initialRooms:        parseInt(el.dataset.rooms    || url.get('rooms'))     || 1,
         maxRooms:            parseInt(el.dataset.maxRooms)     || 12,
         maxAdults:           parseInt(el.dataset.maxAdults)    || 9,
         maxChildren:         parseInt(el.dataset.maxChildren)  || 4,
         buttonText:          el.dataset.buttonText    || '',
-        roomsData:           el.dataset.roomsData     || '',
+        roomsData:           el.dataset.roomsData     || url.get('rooms_data') || '',
     };
 }
 
