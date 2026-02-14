@@ -404,7 +404,7 @@
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][original_age]" value="{$child_age_at_checkin}" />
+                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][original_age]" id="child_orig_age_r{$room_num}_c{$i}" value="{$child_age_at_checkin}" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][calculated_age]" id="child_calc_age_r{$room_num}_c{$i}" value="" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
@@ -725,26 +725,25 @@ function doCollectAndRecalculate(roomNum) {
     // For single room: collect all children ages
     var childrenAges = [];
     var isMultiRoom = window.bookingData.numRooms > 1;
+    var selector = isMultiRoom
+        ? '[id^="child_calc_age_r' + roomNum + '_c"]'
+        : '[id^="child_calc_age_"]';
 
-    if (isMultiRoom) {
-        // Collect ages only for the specific room (format: child_calc_age_rX_cY)
-        document.querySelectorAll('[id^="child_calc_age_r' + roomNum + '_c"]').forEach(function(input) {
-            var age = parseInt(input.value, 10);
-            if (!isNaN(age) && age >= 0 && age < 18) {
-                childrenAges.push(age);
+    document.querySelectorAll(selector).forEach(function(input) {
+        var age = parseInt(input.value, 10);
+        // If DOB not yet entered for this child, use original age from booking
+        if (isNaN(age)) {
+            var origId = input.id.replace('child_calc_age_', 'child_orig_age_');
+            var origInput = document.getElementById(origId);
+            if (origInput) {
+                age = parseInt(origInput.value, 10);
             }
-        });
-        novotonLog('Collected children ages for room ' + roomNum, childrenAges);
-    } else {
-        // Single room: collect all
-        document.querySelectorAll('[id^="child_calc_age_"]').forEach(function(input) {
-            var age = parseInt(input.value, 10);
-            if (!isNaN(age) && age >= 0 && age < 18) {
-                childrenAges.push(age);
-            }
-        });
-        novotonLog('Collected children ages', childrenAges);
-    }
+        }
+        if (!isNaN(age) && age >= 0 && age < 18) {
+            childrenAges.push(age);
+        }
+    });
+    novotonLog('Collected children ages' + (isMultiRoom ? ' for room ' + roomNum : ''), childrenAges);
 
     if (childrenAges.length > 0) {
         triggerPriceRecalculationInline(childrenAges, roomNum);

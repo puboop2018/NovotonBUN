@@ -3265,209 +3265,226 @@ if ($mode == 'ajax_recalculate_price') {
     }
     
     try {
-        // Build room_price API parameters
-        // A73v: Send empty room_id/board_id to get all available prices
-        // The API often doesn't recognize specific room/board IDs with spaces
+        $new_price = 0;
+        $price_found = false;
+        $matched_room = '';
+        $matched_board = '';
+        $room_id_decoded = $room_id;  // Keep as-is from form (already has + not %2b)
+
+        // =====================================================================
+        // PRIMARY: Send actual room_id/board_id (same approach as add_to_cart)
+        // This is the proven path that works for the booking flow
+        // =====================================================================
         $params = [
             'hotel_id' => $hotel_id,
-            'room_id' => '',  // Get all rooms
-            'board_id' => '', // Get all boards
+            'room_id' => $room_id,
+            'board_id' => $board_id,
             'check_in' => $check_in,
             'check_out' => $check_out,
             'adults' => $adults,
-            'children' => $children_ages,  // Array of ages
-            'nocache' => true  // Always get fresh price
+            'children' => $children_ages,
+            'nocache' => true
         ];
-        
-        $debug_log('API params (getting all rooms/boards)', $params);
-        $debug_log('Will match room_id', $room_id);
-        $debug_log('Will match board_id', $board_id);
-        
-        // Call room_price API
+
+        $debug_log('API params (with actual room/board IDs)', $params);
+
         $response = $api->getRoomPrice($params);
-        
-        // Log raw API request/response
+
         $debug_log('API Last Request', $api->getLastRequest());
         $rawResponse = $api->getLastResponse();
         $debug_log('API Last Response (first 2000 chars)', substr($rawResponse, 0, 2000));
-        
-        // A73w: The room_price API returns a FLAT XML structure without proper nesting
-        // Multiple results are just repeated fields under <room_price>
-        // We need to parse it differently
-        
-        $new_price = 0;
-        $price_found = false;
-        
-        // Check if we got a valid response
-        if (!$response) {
-            $debug_log('ERROR: No response from API');
-            $sendJson([
-                'success' => false, 
-                'message' => __('novoton_holidays.price_not_available')
-            ]);
-        }
-        
-        // A74: DON'T urldecode the room_id from the form - it already has + in it
-        // Only the API response has URL-encoded values like %2b
-        $room_id_decoded = $room_id;  // Keep as-is from form
-        $debug_log('Room ID for matching (from form)', $room_id_decoded);
-        
-        // Try to parse the flat XML structure
-        // The response has multiple "records" but they're not wrapped in individual elements
-        // We need to extract all Price/IdRoom/Board combinations
-        
-        // Method 1: Try standard structure first (with hotel wrapper)
-        if (isset($response->hotel)) {
-            $debug_log('Standard structure detected (hotel wrapper)');
-            $hotel = $response->hotel;
-            $rooms = isset($hotel->rooms->IdRoom) ? [$hotel->rooms] : ($hotel->rooms ?? []);
-            
-            foreach ($rooms as $room) {
-                $roomId = rawurldecode((string)($room->IdRoom ?? ''));
-                if (!empty($room_id) && $roomId !== $room_id_decoded && stripos($roomId, $room_id_decoded) === false) {
-                    continue;
-                }
-                
-                $boards = isset($room->board->IdBoard) ? [$room->board] : ($room->board ?? []);
-                foreach ($boards as $board) {
-                    $boardId = (string)($board->IdBoard ?? '');
-                    if (!empty($board_id) && $boardId !== $board_id && stripos($boardId, $board_id) === false) {
-                        continue;
-                    }
-                    
-                    $price = floatval((string)($board->Price ?? $board->TotalPrice ?? 0));
-                    if ($price > 0) {
-                        $new_price = $price;
-                        $price_found = true;
-                        $debug_log('Found price (standard structure)', $price);
-                        break 2;
-                    }
-                }
-            }
-        }
-        
-        // Method 2: Parse flat structure (direct fields under room_price)
-        if (!$price_found) {
-            $debug_log('Trying flat structure parsing');
-            
-            // Get all Price elements
-            $prices = $response->xpath('//Price');
-            $idRooms = $response->xpath('//IdRoom');
-            $boards = $response->xpath('//Board');
-            
-            $debug_log('Found elements', [
-                'prices' => count($prices),
-                'rooms' => count($idRooms),
-                'boards' => count($boards)
-            ]);
-            
-            // Match by index - each index represents one result
-            $numResults = min(count($prices), count($idRooms), count($boards));
-            
-            for ($i = 0; $i < $numResults; $i++) {
-                $resultPrice = floatval((string)$prices[$i]);
-                $resultRoom = rawurldecode((string)$idRooms[$i]);
-                $resultBoard = (string)$boards[$i];
 
-                $debug_log("Result $i", [
-                    'price' => $resultPrice,
-                    'room' => $resultRoom,
-                    'board' => $resultBoard
-                ]);
-                
-                // Check if room matches (exact or partial)
-                $roomMatches = empty($room_id_decoded) || 
-                               $resultRoom === $room_id_decoded || 
-                               stripos($resultRoom, $room_id_decoded) !== false ||
-                               stripos($room_id_decoded, $resultRoom) !== false;
-                
-                // Check if board matches (exact or partial)
-                $boardMatches = empty($board_id) || 
-                                $resultBoard === $board_id || 
-                                stripos($resultBoard, $board_id) !== false ||
-                                stripos($board_id, $resultBoard) !== false;
-                
-                if ($roomMatches && $boardMatches && $resultPrice > 0) {
-                    $new_price = $resultPrice;
-                    $price_found = true;
-                    $matched_room = $resultRoom;  // Store matched room for comparison
-                    $matched_board = $resultBoard; // Store matched board
-                    $debug_log('MATCH FOUND!', [
-                        'index' => $i,
-                        'room' => $resultRoom,
-                        'board' => $resultBoard,
-                        'price' => $resultPrice
-                    ]);
-                    break;
-                }
-            }
-            
-            // If no exact match, try getting any price from response
-            if (!$price_found && $numResults > 0) {
-                // Get the first available price as fallback
-                $new_price = floatval((string)$prices[0]);
-                $matched_room = rawurldecode((string)$idRooms[0]); // Store first room
-                $matched_board = (string)$boards[0]; // Store first board
-                if ($new_price > 0) {
-                    $price_found = true;
-                    $debug_log('Using first available price as fallback', [
-                        'price' => $new_price,
-                        'room' => $matched_room,
-                        'board' => $matched_board
-                    ]);
-                }
-            }
-        }
-        
-        // Method 3: Direct Price element at root
-        if (!$price_found && isset($response->Price)) {
+        // Direct Price element (API returns single result for specific room/board)
+        if ($response && isset($response->Price)) {
             $new_price = floatval((string)$response->Price);
             if ($new_price > 0) {
                 $price_found = true;
-                $matched_room = rawurldecode((string)($response->IdRoom ?? ''));
-                $matched_board = (string)($response->Board ?? '');
-                $debug_log('Found direct Price element', $new_price);
+                $matched_room = rawurldecode((string)($response->IdRoom ?? $room_id));
+                $matched_board = (string)($response->IdBoard ?? $response->Board ?? $board_id);
+                $debug_log('Found direct Price from specific room/board query', $new_price);
             }
         }
-        
+
+        // =====================================================================
+        // FALLBACK: If specific room/board returned no price, try getting all
+        // combinations and match (handles APIs that reject IDs with spaces)
+        // =====================================================================
+        if (!$price_found) {
+            $debug_log('Specific room/board query returned no price, trying all combinations');
+
+            $params['room_id'] = '';
+            $params['board_id'] = '';
+            $response = $api->getRoomPrice($params);
+
+            $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse() ?? '', 0, 2000));
+
+            if (!$response) {
+                $debug_log('ERROR: No response from API');
+                $sendJson([
+                    'success' => false,
+                    'message' => __('novoton_holidays.price_not_available')
+                ]);
+            }
+
+            // Method 1: Try standard structure first (with hotel wrapper)
+            if (isset($response->hotel)) {
+                $debug_log('Standard structure detected (hotel wrapper)');
+                $hotel = $response->hotel;
+                $rooms = isset($hotel->rooms->IdRoom) ? [$hotel->rooms] : ($hotel->rooms ?? []);
+
+                foreach ($rooms as $room) {
+                    $roomId = rawurldecode((string)($room->IdRoom ?? ''));
+                    if (!empty($room_id) && $roomId !== $room_id_decoded && stripos($roomId, $room_id_decoded) === false) {
+                        continue;
+                    }
+
+                    $boardsList = isset($room->board->IdBoard) ? [$room->board] : ($room->board ?? []);
+                    foreach ($boardsList as $board) {
+                        $boardIdVal = (string)($board->IdBoard ?? '');
+                        if (!empty($board_id) && $boardIdVal !== $board_id && stripos($boardIdVal, $board_id) === false) {
+                            continue;
+                        }
+
+                        $price = floatval((string)($board->Price ?? $board->TotalPrice ?? 0));
+                        if ($price > 0) {
+                            $new_price = $price;
+                            $price_found = true;
+                            $matched_room = $roomId;
+                            $matched_board = $boardIdVal;
+                            $debug_log('Found price (standard structure)', $price);
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            // Method 2: Parse flat structure (direct fields under room_price)
+            if (!$price_found) {
+                $debug_log('Trying flat structure parsing');
+
+                $prices = $response->xpath('//Price');
+                $idRooms = $response->xpath('//IdRoom');
+                // Query both //IdBoard and //Board for matching board codes
+                $idBoards = $response->xpath('//IdBoard');
+                $boards = $response->xpath('//Board');
+                // Use IdBoard for matching if available (contains codes like "BB"),
+                // fall back to Board (which may contain names like "Bed and Breakfast")
+                $boardsForMatch = !empty($idBoards) ? $idBoards : $boards;
+
+                $debug_log('Found elements', [
+                    'prices' => count($prices),
+                    'rooms' => count($idRooms),
+                    'idBoards' => count($idBoards),
+                    'boards' => count($boards),
+                    'using' => !empty($idBoards) ? 'IdBoard' : 'Board'
+                ]);
+
+                $numResults = min(count($prices), count($idRooms), count($boardsForMatch));
+
+                for ($i = 0; $i < $numResults; $i++) {
+                    $resultPrice = floatval((string)$prices[$i]);
+                    $resultRoom = rawurldecode((string)$idRooms[$i]);
+                    $resultBoard = (string)$boardsForMatch[$i];
+
+                    $debug_log("Result $i", [
+                        'price' => $resultPrice,
+                        'room' => $resultRoom,
+                        'board' => $resultBoard
+                    ]);
+
+                    $roomMatches = empty($room_id_decoded) ||
+                                   $resultRoom === $room_id_decoded ||
+                                   stripos($resultRoom, $room_id_decoded) !== false ||
+                                   stripos($room_id_decoded, $resultRoom) !== false;
+
+                    $boardMatches = empty($board_id) ||
+                                    $resultBoard === $board_id ||
+                                    stripos($resultBoard, $board_id) !== false ||
+                                    stripos($board_id, $resultBoard) !== false;
+
+                    if ($roomMatches && $boardMatches && $resultPrice > 0) {
+                        $new_price = $resultPrice;
+                        $price_found = true;
+                        $matched_room = $resultRoom;
+                        $matched_board = $resultBoard;
+                        $debug_log('MATCH FOUND!', [
+                            'index' => $i,
+                            'room' => $resultRoom,
+                            'board' => $resultBoard,
+                            'price' => $resultPrice
+                        ]);
+                        break;
+                    }
+                }
+
+                // Fallback: use first available price from response
+                if (!$price_found && $numResults > 0) {
+                    $new_price = floatval((string)$prices[0]);
+                    $matched_room = rawurldecode((string)$idRooms[0]);
+                    $matched_board = (string)$boardsForMatch[0];
+                    if ($new_price > 0) {
+                        $price_found = true;
+                        $debug_log('Using first available price as fallback', [
+                            'price' => $new_price,
+                            'room' => $matched_room,
+                            'board' => $matched_board
+                        ]);
+                    }
+                }
+            }
+
+            // Method 3: Direct Price element at root (from all-combinations response)
+            if (!$price_found && isset($response->Price)) {
+                $new_price = floatval((string)$response->Price);
+                if ($new_price > 0) {
+                    $price_found = true;
+                    $matched_room = rawurldecode((string)($response->IdRoom ?? ''));
+                    $matched_board = (string)($response->IdBoard ?? $response->Board ?? '');
+                    $debug_log('Found direct Price element from fallback', $new_price);
+                }
+            }
+        }
+
         if (!$price_found) {
             $debug_log('ERROR: Price not found for combination');
             $sendJson([
-                'success' => false, 
+                'success' => false,
                 'message' => __('novoton_holidays.price_not_found_for_combination')
             ]);
         }
-        
+
+        // Apply commission so displayed price matches customer-facing price
+        $new_price = $api->applyCommission($new_price);
+
         // Check if room changed
         $room_changed = false;
         $original_room = $room_id_decoded;
         if (!empty($matched_room) && !empty($original_room)) {
-            // Compare rooms (case-insensitive, trim whitespace)
             $room_changed = (strcasecmp(trim($matched_room), trim($original_room)) !== 0);
         }
-        
+
         $debug_log('Room change check', [
             'original_room' => $original_room,
-            'matched_room' => $matched_room ?? 'N/A',
+            'matched_room' => $matched_room ?: 'N/A',
             'room_changed' => $room_changed ? 'YES' : 'NO'
         ]);
-        
+
         // Calculate price difference
         $price_difference = $new_price - $original_price;
-        
+
         // Format price for display
         $currency = Registry::get('currencies.' . CART_PRIMARY_CURRENCY);
         $formatted_price = fn_format_price($new_price, $currency);
-        
+
         $debug_log('SUCCESS', [
             'new_price' => $new_price,
             'original_price' => $original_price,
             'difference' => $price_difference,
             'children_ages' => $children_ages,
             'room_changed' => $room_changed,
-            'new_room' => $matched_room ?? ''
+            'new_room' => $matched_room ?: ''
         ]);
-        
+
         // Return success response with room change info
         $sendJson([
             'success' => true,
@@ -3480,14 +3497,14 @@ if ($mode == 'ajax_recalculate_price') {
             'children_ages' => $children_ages,
             'room_changed' => $room_changed,
             'original_room' => $original_room,
-            'new_room' => $matched_room ?? $original_room,
-            'new_board' => $matched_board ?? $board_id
+            'new_room' => $matched_room ?: $original_room,
+            'new_board' => $matched_board ?: $board_id
         ]);
-        
+
     } catch (Exception $e) {
         $debug_log('EXCEPTION', $e->getMessage());
         $sendJson([
-            'success' => false, 
+            'success' => false,
             'message' => __('novoton_holidays.price_calculation_error')
         ]);
     }
