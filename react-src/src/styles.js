@@ -46,7 +46,7 @@ export function injectStyles() {
 }
 .nvt-availability-subtitle {
     font-size: 13px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-error);
     margin: 0;
 }
 

@@ -101,10 +101,8 @@ export default function BookingEngine({ config }) {
         const adultLabel = totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults');
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        if (totalChildren > 0) {
-            const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
-            parts.push(`${totalChildren} ${childLabel}`);
-        }
+        const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
+        parts.push(`${totalChildren} ${childLabel}`);
 
         const roomLabel = rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms');
         parts.push(`${rooms.length} ${roomLabel}`);
@@ -212,7 +210,7 @@ export default function BookingEngine({ config }) {
                 </h2>
                 {!checkIn && (
                     <p className="nvt-availability-subtitle">
-                        {t('selectDatesToSee', 'Select dates to see availability and prices')}
+                        {t('selectDatesMessage', 'Select dates to see this property\'s availability and prices')}
                     </p>
                 )}
             </div>
@@ -279,9 +277,11 @@ export default function BookingEngine({ config }) {
                             <span className="nvt-label">
                                 {t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}
                             </span>
-                            <span className={`nvt-value${!dateDisplayText ? ' nvt-value--placeholder' : ''}`}>
-                                {dateDisplayText || t('selectDates', 'Select dates')}
-                            </span>
+                            {dateDisplayText && (
+                                <span className="nvt-value">
+                                    {dateDisplayText}
+                                </span>
+                            )}
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>
                     </button>
