@@ -94,17 +94,15 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    // Build guest summary text (hide children when count is 0)
+    // Build guest summary text
     const guestSummary = (() => {
         const parts = [];
 
         const adultLabel = totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults');
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        if (totalChildren > 0) {
-            const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
-            parts.push(`${totalChildren} ${childLabel}`);
-        }
+        const childLabel = totalChildren === 1 ? t('child', 'child') : t('children', 'children');
+        parts.push(`${totalChildren} ${childLabel}`);
 
         const roomLabel = rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms');
         parts.push(`${rooms.length} ${roomLabel}`);
@@ -314,9 +312,6 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
-                            {mode === 'homepage' && (
-                                <span className="nvt-label">{t('guests', 'Guests')}</span>
-                            )}
                             <span className="nvt-value">{guestSummary}</span>
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>
