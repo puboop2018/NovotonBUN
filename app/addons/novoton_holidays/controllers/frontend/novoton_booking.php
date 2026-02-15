@@ -61,6 +61,24 @@ function _nvt_get_security_service() {
 }
 
 //=============================================================================
+// SANITIZE $_REQUEST / $_GET — prevent "Array to string conversion" warnings
+// When the URL contains children_ages[]=5&children_ages[]=8, PHP parses these
+// into arrays. CS-Cart's __() translation function (and other internal calls)
+// may cast these to string, triggering warnings that corrupt JSON output.
+// Fix: flatten known array params to comma-separated strings at controller top.
+//=============================================================================
+$_nvt_array_params = ['children_ages', 'ages'];
+foreach ($_nvt_array_params as $_nvt_param) {
+    foreach ([&$_REQUEST, &$_GET] as &$_nvt_superglobal) {
+        if (isset($_nvt_superglobal[$_nvt_param]) && is_array($_nvt_superglobal[$_nvt_param])) {
+            $_nvt_superglobal[$_nvt_param] = implode(',', array_map('intval', $_nvt_superglobal[$_nvt_param]));
+        }
+    }
+    unset($_nvt_superglobal);
+}
+unset($_nvt_array_params, $_nvt_param);
+
+//=============================================================================
 // CACHING HELPERS
 // A72: Use CacheService::remember() for caching. Example:
 //   $cache = _nvt_get_cache_service();
@@ -3197,14 +3215,21 @@ if ($mode == 'request_alternatives') {
 
 // AJAX endpoint to recalculate price when child age changes
 if ($mode == 'ajax_recalculate_price') {
-    // CRITICAL: Suppress ALL output immediately. CS-Cart's ErrorHandler outputs
-    // PHP warnings (e.g. "Array to string conversion" from __() receiving URL
-    // params like children_ages[]) which corrupts our JSON response and causes
-    // "Cannot modify header" errors. We must capture everything.
-    @ob_start();
-    $prev_error_reporting = error_reporting(0);
-    $prev_display_errors = ini_get('display_errors');
-    @ini_set('display_errors', '0');
+    // Scoped error handler: log warnings to CS-Cart log, prevent any output.
+    // This replaces the old blanket error_reporting(0) — real errors are still
+    // logged, but PHP won't echo anything that corrupts our JSON response.
+    $_nvt_caught_warnings = [];
+    $prev_error_handler = set_error_handler(function ($errno, $errstr, $errfile, $errline) use (&$_nvt_caught_warnings) {
+        // Log the warning for debugging, but don't output anything
+        $_nvt_caught_warnings[] = [
+            'type'    => $errno,
+            'message' => $errstr,
+            'file'    => $errfile,
+            'line'    => $errline,
+        ];
+        // Return true = handled, PHP won't output or escalate
+        return true;
+    }, E_WARNING | E_NOTICE | E_DEPRECATED | E_USER_WARNING | E_USER_NOTICE);
 
     // Debug logging — writes to CS-Cart log when addon setting debug=Y
     // or when ?novoton_debug=1 is in the URL
@@ -3230,22 +3255,27 @@ if ($mode == 'ajax_recalculate_price') {
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
 
     // Helper function to send JSON response and exit
-    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$prev_error_reporting, &$prev_display_errors) {
+    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings, &$prev_error_handler) {
         // Include debug log in response when debug is enabled
         if ($debug_enabled && !empty($debug_messages)) {
             $response['_debug'] = $debug_messages;
         }
-        // Clear ALL output buffers (captures any PHP warnings/notices)
-        while (ob_get_level() > 0) {
-            ob_end_clean();
+        // Log any caught warnings to CS-Cart log (visible in admin, not in response)
+        if (!empty($_nvt_caught_warnings)) {
+            fn_log_event('general', 'runtime', [
+                'message' => '[NovotonPriceRecalc] Caught PHP warnings',
+                'warnings' => $_nvt_caught_warnings,
+            ]);
+            // Include in debug response so developer can see them
+            if ($debug_enabled) {
+                $response['_warnings'] = $_nvt_caught_warnings;
+            }
         }
-        // Restore error settings
-        error_reporting($prev_error_reporting);
-        @ini_set('display_errors', $prev_display_errors);
-        // Set headers — use @ to suppress "headers already sent" if somehow triggered
-        @header('Content-Type: application/json; charset=utf-8');
-        @header('Cache-Control: no-cache, must-revalidate');
-        // Output clean JSON and die
+        // Restore previous error handler
+        restore_error_handler();
+        // Set headers and output clean JSON
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, must-revalidate');
         die(json_encode($response, JSON_UNESCAPED_UNICODE));
     };
 
