@@ -205,8 +205,8 @@ if ($mode == 'check_prices') {
 
     echo '<div class="log">';
 
-    // Step 1: Get authoritative resort names directly from resort_list API,
-    // merged with DB hotel cities as fallback
+    // Step 1: Get resort names from resort_list API (the authoritative source).
+    // These are the exact names that room_price API accepts — no fallback needed.
     $all_hotels = db_get_hash_array(
         "SELECT hotel_id, hotel_name, city, product_id, has_prices FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
         'hotel_id',
@@ -217,63 +217,29 @@ if ($mode == 'check_prices') {
     $api = new NovotonApi();
     $hotelRepo = new HotelRepository();
 
-    // Primary source: call resort_list API directly (~2KB, instant)
-    // Returns the exact resort names that room_price API accepts
-    $api_resorts = [];
-    try {
-        $resort_list_response = $api->getResortList($country);
-        if ($resort_list_response) {
-            foreach ($resort_list_response->xpath('//Resort') as $r) {
-                $name = trim((string)$r);
-                if (!empty($name)) {
-                    $api_resorts[] = $name;
-                }
+    $resorts = [];
+    $resort_list_response = $api->getResortList($country);
+    if ($resort_list_response) {
+        foreach ($resort_list_response->xpath('//Resort') as $r) {
+            $name = trim((string)$r);
+            if (!empty($name)) {
+                $resorts[] = $name;
             }
         }
-    } catch (Exception $e) {
-        // Fall through to DB fallback
     }
 
-    // Fallback: DB hotel cities (if API call fails)
-    $db_cities = db_get_fields(
-        "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city IS NOT NULL ORDER BY city",
-        $country
-    );
-
-    if (!empty($api_resorts)) {
-        // Use API resorts as primary, merge DB cities that aren't duplicates.
-        // Skip DB cities that normalize to the same name as an API resort
-        // (e.g., "ST.CONSTANTINE & ELENA" vs "ST. CONSTANTINE AND ELENA")
-        $normalized_api = [];
-        foreach ($api_resorts as $ar) {
-            $normalized_api[fn_novoton_normalize_resort_name($ar)] = true;
-        }
-        $extra_cities = [];
-        $skipped_cities = [];
-        foreach ($db_cities as $dc) {
-            if (!in_array($dc, $api_resorts)) {
-                $norm = fn_novoton_normalize_resort_name($dc);
-                if (isset($normalized_api[$norm])) {
-                    $skipped_cities[] = $dc;
-                } else {
-                    $extra_cities[] = $dc;
-                }
-            }
-        }
-        $resorts = array_values(array_unique(array_merge($api_resorts, $extra_cities)));
-        $source = 'resort_list API + DB cities (' . count($api_resorts) . ' + ' . count($extra_cities) . ')';
-        if (!empty($skipped_cities)) {
-            $source .= ' — skipped ' . count($skipped_cities) . ' duplicate DB cities';
-        }
-    } else {
-        $resorts = $db_cities;
-        $source = 'DB cities only (resort_list API unavailable)';
+    if (empty($resorts)) {
+        echo "<span class='error'>resort_list API returned no resorts for {$country}. Cannot proceed.</span><br>";
+        echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
+        echo '</div></body></html>';
+        exit;
     }
+
     sort($resorts);
     $total_resorts = count($resorts);
 
     echo "Country: {$country} | Resorts: {$total_resorts} | Hotels in DB: {$total_hotels}<br>";
-    echo "Resort source: {$source}<br>";
+    echo "Resort source: resort_list API ({$total_resorts} resorts)<br>";
     echo "Check-in: {$check_in} | Check-out: {$check_out}<br>";
     echo "Method: resort-based bulk query with regex &lt;IdHotel&gt; extraction<br><br>\n";
     flush();
@@ -332,106 +298,7 @@ if ($mode == 'check_prices') {
             flush();
         }
 
-        // Step 4: Targeted fallback for hotels not found in any resort query.
-        // Only re-check hotels that PREVIOUSLY had prices (has_prices = 'Y').
-        // These are the likely city/resort mismatches — avoids checking all ~692
-        // no-price hotels when only ~12 are actual mismatches.
-        $not_found_in_resorts = array_diff_key($all_hotels, $hotels_with_prices);
-        $fallback_candidates = array_filter($not_found_in_resorts, function($h) {
-            return ($h['has_prices'] ?? '') === 'Y';
-        });
-        $fallback_found = 0;
-        $fallback_errors = 0;
-        $fallback_checked = count($fallback_candidates);
-
-        if (!empty($fallback_candidates)) {
-            echo "<br><div class='resort-header'>Fallback: checking {$fallback_checked} hotels that previously had prices but weren't in any resort response...</div>\n";
-            flush();
-
-            // Build normalized API resort lookup for fuzzy matching
-            $normalized_api_resorts = [];
-            foreach ($api_resorts as $ar) {
-                $normalized_api_resorts[fn_novoton_normalize_resort_name($ar)] = $ar;
-            }
-
-            foreach ($fallback_candidates as $hotel_id => $hotel) {
-                try {
-                    $result = $api->getRoomPrice([
-                        'hotel_id'  => $hotel_id,
-                        'check_in'  => $check_in,
-                        'check_out' => $check_out,
-                        'adults'    => 2,
-                        'nocache'   => true,
-                    ]);
-
-                    $has_prices = false;
-                    if ($result instanceof \SimpleXMLElement) {
-                        $prices = $result->xpath('//Price');
-                        $has_prices = !empty($prices) && count($prices) > 0;
-                    }
-
-                    if ($has_prices) {
-                        // Try to extract the actual resort name from the API response
-                        // so self-healing (Step 5) can correct the city
-                        $resort_for_healing = $hotel['city'] ?: '<no city>';
-                        $raw_response = $api->getLastResponse();
-                        if (!empty($raw_response) && preg_match('/<Resort>\s*([^<]+?)\s*<\/Resort>/i', $raw_response, $resort_match)) {
-                            $extracted = trim($resort_match[1]);
-                            if (!empty($extracted)) {
-                                $resort_for_healing = $extracted;
-                            }
-                        }
-
-                        // If API response didn't include Resort, try fuzzy matching
-                        // the hotel's DB city against known API resort names
-                        if ($resort_for_healing === ($hotel['city'] ?: '<no city>') && !empty($hotel['city'])) {
-                            $normalized_city = fn_novoton_normalize_resort_name($hotel['city']);
-                            if (isset($normalized_api_resorts[$normalized_city])) {
-                                $resort_for_healing = $normalized_api_resorts[$normalized_city];
-                            }
-                        }
-
-                        $hotels_with_prices[$hotel_id] = $resort_for_healing;
-                        $fallback_found++;
-                        $mismatch_detail = '';
-                        if ($resort_for_healing !== ($hotel['city'] ?: '<no city>')) {
-                            $mismatch_detail = " → API resort: " . htmlspecialchars($resort_for_healing);
-                        }
-                        echo "<span class='success'>  ✓ {$hotel['hotel_name']} (city: " . htmlspecialchars($hotel['city'] ?: '<empty>') . "{$mismatch_detail}) — city/resort mismatch</span><br>\n";
-                    } else {
-                        echo "<span class='skip'>  ○ {$hotel['hotel_name']} — no longer has prices</span><br>\n";
-                    }
-                } catch (Exception $e) {
-                    $fallback_errors++;
-                }
-
-                if (($fallback_found + $fallback_errors) % 10 == 0) {
-                    flush();
-                }
-            }
-
-            echo "<br><span class='success'>  Fallback: {$fallback_found}/{$fallback_checked} still have prices</span><br>\n";
-        }
-
-        // Step 5: Self-heal city/resort mismatches.
-        // $hotels_with_prices maps hotel_id => resort_name (the resort query that found it).
-        // If a hotel's DB city doesn't match, update it so future runs find it directly.
-        $city_corrections = 0;
-        foreach ($hotels_with_prices as $hid => $found_in_resort) {
-            if (isset($all_hotels[$hid]) && $found_in_resort !== '<no city>') {
-                $db_city = $all_hotels[$hid]['city'] ?? '';
-                if ($db_city !== $found_in_resort) {
-                    $hotelRepo->update($hid, ['city' => $found_in_resort]);
-                    $city_corrections++;
-                    echo "<span class='warning'>  ⟳ {$all_hotels[$hid]['hotel_name']}: city corrected \"{$db_city}\" → \"{$found_in_resort}\"</span><br>\n";
-                }
-            }
-        }
-        if ($city_corrections > 0) {
-            echo "<br><span class='warning'>  Auto-corrected {$city_corrections} city/resort mismatches (will be found by resort scan next run)</span><br>\n";
-        }
-
-        // Step 6: Update database - mark hotels with/without prices
+        // Step 4: Update database - mark hotels with/without prices
         $with_prices_count = 0;
         $no_prices = 0;
         $now = date('Y-m-d H:i:s');
@@ -454,21 +321,14 @@ if ($mode == 'check_prices') {
             }
         }
 
-        // Step 7: Report hotels found by API but NOT in our database
+        // Step 5: Report hotels found by API but NOT in our database
         $unknown_hotels = array_diff_key($hotels_with_prices, $all_hotels);
 
         echo "<br><strong>Summary:</strong><br>";
         echo "Resorts queried: {$total_resorts}" . ($resort_errors > 0 ? " ({$resort_errors} errors)" : '') . "<br>";
         echo "Hotels in DB: {$total_hotels}<br>";
-        echo "With prices (resort scan): <span class='success'>" . ($with_prices_count - $fallback_found) . "</span><br>";
-        if ($fallback_found > 0) {
-            echo "With prices (fallback): <span class='success'>+{$fallback_found}</span> (city/resort mismatch)<br>";
-        }
-        echo "With prices (total): <span class='success'><strong>{$with_prices_count}</strong></span><br>";
+        echo "With prices: <span class='success'><strong>{$with_prices_count}</strong></span><br>";
         echo "No prices: {$no_prices}<br>";
-        if ($city_corrections > 0) {
-            echo "City/resort corrections: <span class='warning'>{$city_corrections}</span> (self-healed for next run)<br>";
-        }
 
         if (!empty($unknown_hotels)) {
             echo "<br><span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
