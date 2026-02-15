@@ -109,6 +109,26 @@
     - Use PriceService::getRoomPrice() directly (has built-in caching)
     - Use CacheService::remember() for caching patterns
     - Code reduced by ~280 lines through proper service delegation
+
+    CHANGELOG A86 (PHP Warning Fix + UI Polish):
+
+    Bug Fixes:
+    - FIXED: PHP warnings corrupting AJAX JSON response (root cause fix)
+      - dob-validation.js: replaced dirty URL (Tygh.current_url.replace)
+        with clean baseUrl + dispatch-only URL construction
+      - booking-form-validation.js: already had clean URL (no change)
+      - Controller: scoped set_error_handler() replaces blanket
+        error_reporting(0) — warnings logged, not suppressed
+      - Controller top: sanitize $_REQUEST/$_GET arrays (children_ages[],
+        ages[]) to comma-separated strings before CS-Cart __() can choke
+    - FIXED: DOB event handler race condition with multi-room support
+    - FIXED: AJAX URL leaking booking page params (children_ages[], etc.)
+
+    UI/Frontend:
+    - CHANGED: Removed dark backgrounds from search results page CSS
+    - NEW: Visual Editor integration for search button color
+    - CHANGED: Replaced hardcoded modal text and Early Booking labels
+      with translation keys (NovotonTranslations)
     ═══════════════════════════════════════════════════════════════
     -->
     

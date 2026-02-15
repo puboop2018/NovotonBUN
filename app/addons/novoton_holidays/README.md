@@ -1,7 +1,7 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 3.0.0
-**Last Updated:** February 10, 2026
+**Version:** 3.0.0-A86
+**Last Updated:** February 15, 2026
 **Compatibility:** CS-Cart 4.x
 **Developer:** VacanteLitoral.ro
 
@@ -682,7 +682,7 @@ Returns JSON response for automated monitoring:
 {
   "status": "healthy",
   "timestamp": "2026-02-10T12:00:00+00:00",
-  "version": "3.0.0-A84",
+  "version": "3.0.0-A86",
   "components": {
     "database": { "status": "healthy", "response_time_ms": 2.5 },
     "api": { "status": "healthy", "circuit_breaker": {...} },
@@ -746,6 +746,17 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 3.0.0-A86 (February 15, 2026)
+- **Fixed:** PHP warnings corrupting AJAX JSON response — proper three-pronged root cause fix:
+  - `dob-validation.js`: replaced dirty URL construction (`Tygh.current_url.replace()` leaked `children_ages[]` params) with clean `baseUrl + dispatch-only` URL
+  - Controller AJAX handler: replaced blanket `error_reporting(0)` + `ob_start()` with scoped `set_error_handler()` that logs warnings to CS-Cart log without suppressing them
+  - Controller top: sanitize `$_REQUEST`/`$_GET` arrays (`children_ages[]`, `ages[]`) to comma-separated integer strings before CS-Cart `__()` can trigger "Array to string conversion"
+- **Fixed:** DOB event handler race condition, synced external JS with multi-room support
+- **Fixed:** AJAX URL leaking booking page params into price recalculation requests
+- **Changed:** Removed dark backgrounds from search results page CSS
+- **Added:** Visual Editor integration for search button color customization
+- **Changed:** Replaced hardcoded modal text and Early Booking labels with translation keys (`NovotonTranslations`)
 
 ### Version 3.0.0 (February 10, 2026)
 - **API Resilience:** Added retry logic with exponential backoff (3 attempts, 1s/2s/4s delays)
@@ -843,4 +854,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 10, 2026 - Version 3.0.0*
+*Documentation last updated: February 15, 2026 - Version 3.0.0-A86*
