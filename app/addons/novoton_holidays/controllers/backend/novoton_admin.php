@@ -251,7 +251,7 @@ if ($mode == 'run_cron') {
     
     $cron_mode = $_REQUEST['mode'] ?? '';
     $allowed_modes = [
-        'hotel_list', 'room_price', 'list_facilities',
+        'hotel_list', 'room_price', 'list_facilities', 'resort_list',
         'add_hotels_as_products', 'offers_update',
         'resinfo', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives',
         'cleanup', 'expire_requests'

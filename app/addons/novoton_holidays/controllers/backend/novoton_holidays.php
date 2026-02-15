@@ -212,6 +212,7 @@ if ($mode == 'manage' || empty($mode)) {
         'prices' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
+        'resort_list' => $syncLogRepo->getLastSyncDate('resort_list'),
     ];
     
     // Build cron URLs
