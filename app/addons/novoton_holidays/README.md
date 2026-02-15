@@ -2,7 +2,8 @@
 
 **Version:** 3.0.0-A86
 **Last Updated:** February 15, 2026
-**Compatibility:** CS-Cart 4.x
+**Compatibility:** CS-Cart 4.9.3 - 4.19.1 (ULTIMATE edition)
+**PHP:** 7.4 - 8.4
 **Developer:** VacanteLitoral.ro
 
 Complete hotel booking integration with Novoton XML API for CS-Cart.
@@ -18,6 +19,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - [API Functions](#api-functions)
 - [Database Schema](#database-schema)
 - [Architecture](#architecture)
+- [Frontend JavaScript](#frontend-javascript)
 - [React Booking Engine](#react-booking-engine)
 - [Troubleshooting](#troubleshooting)
 - [Changelog](#changelog)
@@ -53,6 +55,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 ### Admin Features
 - Booking management with Novoton sync
 - Hotel import wizard (admin + cron)
+- Price comparison tool
 - Sync logs and diagnostics dashboard
 - Excluded resorts management
 - API response caching
@@ -60,11 +63,12 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - **Automatic exchange rate updates from BNR API**
 
 ### Technical
-- Service-based architecture
+- Service-based architecture (14 service classes)
 - Centralized constants
-- Error handling and logging
+- Scoped error handling and logging
 - CSRF protection
 - URL-encoded API parameters
+- API resilience (retry + circuit breaker)
 
 ---
 
@@ -79,9 +83,11 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 
 | Setting | Description |
 |---------|-------------|
+| API URL | Novoton API endpoint |
+| API Key | Novoton API key |
+| API ID | Novoton API identifier |
 | API Username | Novoton API username |
 | API Password | Novoton API password |
-| API URL | Novoton API endpoint |
 | Commission % | Markup percentage on prices |
 | Cron Access Key | Secret key for cron job authentication |
 | Currency Risk Commission % | Exchange rate markup (0-5%, default 1.8%) |
@@ -96,12 +102,14 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 
 ### Settings Sections
 
-1. **Novoton API** - API credentials and endpoint
-2. **Pricing** - Commission settings
-3. **Countries** - Select countries to sync
-4. **Excluded Resorts** - Resorts to skip during sync
-5. **Cron** - Cron access key and URLs
-6. **Exchange Rates** - Currency risk commission percentage
+1. **Novoton API** - API credentials (URL, key, ID, username, password), API cache toggle
+2. **Pricing** - Commission percentage, round prices toggle
+3. **Exchange Rates** - Currency risk commission percentage, last update timestamp
+4. **API Resilience** - Max retries, retry delay, retry multiplier, circuit breaker threshold/timeout
+5. **Products** - Selected countries, product code prefix, delete on uninstall, excluded resorts
+6. **Cron** - Cron access key, cron links info
+7. **Display** - Show booking form toggle, booking form position (before tabs / after description / sidebar)
+8. **Other** - Last sync date, test booking mode, disable API submission, debug logging, debug mode
 
 ---
 
@@ -111,15 +119,14 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 
 | Page | URL | Description |
 |------|-----|-------------|
-| Dashboard | `novoton_holidays.manage` | Overview, stats, and quick actions |
+| Dashboard / Hotels Sync | `novoton_holidays.manage` | Overview, stats, sync, and quick actions |
 | Hotel Bookings | `novoton_bookings.manage` | Manage customer bookings |
 | Alternative Requests | `novoton_alternatives.manage` | Alternative room requests |
-| Hotels Sync | `novoton_sync.manage` | Hotel synchronization |
-| Room Price Check | `novoton_prices.room_price` | Check hotel prices |
+| Room Price Check | `novoton_holidays.room_price` | Check hotel prices |
 | Add Hotels as Products | `novoton_holidays.add_hotels_as_products` | Import hotels to CS-Cart |
 | Facilities | `novoton_holidays.list_facilities` | Hotel facilities list |
 | **Exchange Rates** | `novoton_exchange_rates.manage` | Currency rate management |
-| Diagnostic | `novoton_diagnostic.index` | API connectivity test |
+| Diagnostic | `novoton_diagnostic.test` | API connectivity test |
 | Test Hotel Request | `novoton_holidays.test_hotel_request` | Debug hotel API calls |
 | Test Alternative RS | `novoton_holidays.test_alternative_rs` | Debug alternative search |
 
@@ -149,10 +156,16 @@ All cron URLs require the `access_key` parameter matching your configured **Cron
 | `hotel_list` | `hotellist` | Sync hotel list from API |
 | `list_facilities` | `facilities` | Update hotel facilities list |
 | `exchange_rates` | `exchange_rates` | Update BNR currency rates (daily) |
-| `resinfo` | `resinfo` | Check ASK bookings status |
+| `resinfo` | `resinfo` | Check ASK bookings status (default mode) |
 | `offers_update` | `offers_update` | Sync only changed offers (delta sync) |
 | `add_hotels_as_products` | - | Import hotels as CS-Cart products |
 | `room_price` | `prices` | Check which hotels have active prices |
+| `resort_list` | - | Sync resort/destination list from API |
+| `alternative_rs` | - | Check for alternative offers |
+| `alternative_rs_bookings` | - | Check alternatives for pending bookings |
+| `notify_alternatives` | - | Send alternative notifications to customers |
+| `expire_requests` | - | Expire old alternative requests |
+| `update_prices` | - | Update cached prices |
 
 ### Cron URL Examples
 
@@ -353,6 +366,7 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 |--------|-------------|
 | `getHotelList($country, $city, $hotel, $hotelType)` | Get list of hotels |
 | `getHotelInfo($hotelId, $lang)` | Get hotel details |
+| `getHotelInfoBatch($hotelIds, $lang, $concurrency)` | Batch fetch multiple hotels (curl_multi) |
 | `getHotelDescription($hotelId, $lang)` | Get hotel description |
 | `getHotelImages($hotelId, $lang)` | Get hotel images |
 
@@ -362,17 +376,36 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 |--------|-------------|
 | `searchAvailability($params)` | Search available rooms |
 | `getRoomPrice($params)` | Get room price with terms |
-| `getHotelQuota($hotelId, $roomId, $checkIn, $checkOut)` | Get room availability |
+| `getRoomPriceByResort($params)` | Get room prices for entire resort |
+| `getRoomPriceByResortRaw($params)` | Resort prices - raw response |
+| `getHotelQuota($hotelId, $roomId, $checkIn, $checkOut, $roomType)` | Get room availability |
 | `getHotelQuotaAll($hotelId, $checkIn, $checkOut)` | Get all rooms availability |
+| `getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut)` | Get additional allotments |
 | `getPriceInfo($hotelId, $packageName)` | Get price info for package |
+| `getSpecialOffers($hotelId, $packageName, $lang)` | Get EB discounts/extras |
 
-### Booking
+### Booking & Reservations
 
 | Method | Description |
 |--------|-------------|
 | `createReservation($bookingData)` | Create a booking |
-| `getReservationStatus($reservationId)` | Check booking status |
-| `cancelReservation($reservationId)` | Cancel a booking |
+| `createHotelRequest($requestData, $lang, $returnXml)` | Request alternatives when unavailable |
+| `generateHotelRequestXml($requestData)` | Generate request XML (preview/testing) |
+| `getAlternatives($idNum, $lang)` | Check for available alternatives |
+| `getReservationInfo($idNum, $confirmAgency, $lang)` | Get reservation info |
+| `listInvoices($arrFrom, $arrTo, $lang)` | List invoices |
+| `getInvoiceHtml($idNum, $lang)` | Get invoice as HTML |
+| `getInvoiceXml($idNum, $lang)` | Get invoice as XML |
+
+### Destinations & Facilities
+
+| Method | Description |
+|--------|-------------|
+| `getResortList($country, $lang)` | Get resort/destination list |
+| `listFacilities()` | List all facilities |
+| `getHotelFacilities($hotelId)` | Get hotel facilities |
+| `getOffersUpdate($dateTime, $country, $resort, $hotel)` | Get updated/new offers |
+| `getKickbackInfo($lang)` | Check commission info |
 
 ### Utility
 
@@ -381,23 +414,26 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 | `applyCommission($price)` | Add commission to price |
 | `clearCache($function)` | Clear API cache |
 | `getLastRequest()` | Debug: last API request |
+| `getLastRequestFormatted()` | Debug: last request formatted |
 | `getLastResponse()` | Debug: last API response |
+| `getLastResponseRaw()` | Debug: raw response before XML cleaning |
 | `getLastError()` | Debug: last error message |
 | `getCircuitStatus()` | Get circuit breaker status |
+| `resetCircuitBreaker()` | Manually reset circuit breaker |
 
 ### API Resilience Features
 
 The API client includes built-in resilience patterns:
 
 #### Retry with Exponential Backoff
-- **Max Retries:** 3 attempts
-- **Initial Delay:** 1 second
-- **Backoff Multiplier:** 2x (delays: 1s, 2s, 4s)
+- **Max Retries:** 3 attempts (configurable via addon settings)
+- **Initial Delay:** 1 second (configurable)
+- **Backoff Multiplier:** 2x (configurable) — delays: 1s, 2s, 4s
 - **Retryable Errors:** Network timeouts, connection refused, 5xx errors, 429 rate limiting
 
 #### Circuit Breaker Pattern
-- **Threshold:** 5 consecutive failures opens circuit
-- **Timeout:** 60 seconds before half-open retry
+- **Threshold:** 5 consecutive failures opens circuit (configurable)
+- **Timeout:** 60 seconds before half-open retry (configurable)
 - **Auto-Recovery:** Successful request resets failure counter
 - Monitor status: `$api->getCircuitStatus()`
 
@@ -430,33 +466,38 @@ Stores synced hotel information.
 | hotel_id | varchar(50) | Novoton hotel ID (PK) |
 | product_id | int | Linked CS-Cart product ID |
 | hotel_name | varchar(255) | Hotel name |
-| country | varchar(100) | Country |
 | city | varchar(100) | City/Resort |
 | region | varchar(100) | Region |
-| hotel_type | varchar(10) | Star rating |
-| description_en | text | English description |
-| description_ro | text | Romanian description |
-| hotel_data | longtext | JSON hotel details (V3) |
+| country | varchar(100) | Country |
+| hotel_type | varchar(50) | e.g. 4*, 3* Sup, Apart (raw from API) |
+| star_rating | tinyint | Parsed numeric rating 1-5 |
+| latitude | varchar(20) | Hotel latitude |
+| longitude | varchar(20) | Hotel longitude |
+| hotel_data | longtext | JSON: full hotelinfo API response |
 | has_prices | enum('Y','N') | Has active prices |
 | packages_count | int | Number of packages |
 | hotelinfo_synced_at | datetime | Last hotelinfo sync |
-| last_price_check | datetime | Last price check |
+| hotel_list_synced_at | datetime | Last hotel_list API sync |
 | created_at | datetime | Created timestamp |
-| updated_at | datetime | Updated timestamp |
+| updated_at | timestamp | Updated timestamp |
 
 #### `cscart_novoton_hotel_packages`
-Stores hotel packages (V3 architecture).
+Stores hotel packages with priceinfo data (V3 architecture).
 
 | Column | Type | Description |
 |--------|------|-------------|
+| id | int | Auto-increment PK |
 | hotel_id | varchar(50) | Hotel ID (FK) |
-| package_id | varchar(100) | Package ID |
+| package_id | varchar(50) | Package ID (IdCont from API) |
 | package_name | varchar(255) | Package name |
-| min_price | decimal(10,2) | Minimum price |
-| has_early_booking | tinyint | Has early booking |
-| priceinfo_data | longtext | JSON price info |
-| synced_at | datetime | Last sync timestamp |
+| priceinfo_data | longtext | JSON: full priceinfo API response |
+| seasons_count | int | Number of seasons in priceinfo |
+| has_early_booking | enum('Y','N') | Has EB discounts |
+| min_price | decimal(10,2) | Lowest adult price |
+| currency | varchar(3) | Currency code (default EUR) |
+| synced_at | datetime | Last priceinfo sync |
 | created_at | datetime | Created timestamp |
+| updated_at | timestamp | Updated timestamp |
 
 #### `cscart_novoton_bookings`
 Stores customer bookings.
@@ -465,13 +506,20 @@ Stores customer bookings.
 |--------|------|-------------|
 | booking_id | int | Auto-increment PK |
 | order_id | int | CS-Cart order ID |
-| user_id | int | Customer user ID |
 | product_id | int | CS-Cart product ID |
+| user_id | int | Customer user ID |
+| session_id | varchar(64) | Session ID for guest bookings |
+| novoton_confirm_id | varchar(50) | Confirmation from Novoton API |
+| novoton_invoice_id | varchar(50) | IdNum from API |
+| novoton_res_num | varchar(50) | ResNum from resinfo |
+| novoton_status | varchar(20) | API status: OK, ASK, ST, WT, RQ |
 | hotel_id | varchar(50) | Novoton hotel ID |
 | hotel_name | varchar(255) | Hotel name |
+| package_id | varchar(50) | Package ID |
+| package_name | varchar(255) | Package name |
 | room_id | varchar(100) | Room type code |
 | room_type | varchar(255) | Room type name |
-| board_id | varchar(20) | Board type code |
+| board_id | varchar(50) | Board type code |
 | board_name | varchar(100) | Board type display name |
 | item_id | varchar(32) | CS-Cart order item ID |
 | check_in | date | Check-in date |
@@ -479,24 +527,62 @@ Stores customer bookings.
 | nights | int | Number of nights |
 | adults | int | Number of adults |
 | children | int | Number of children |
-| children_ages | varchar(100) | Children ages JSON |
-| num_rooms | int | Number of rooms |
-| room_number | int | Room group number (for multi-group) |
-| total_rooms | int | Total room groups in booking |
-| rooms_data | text | JSON room details |
-| guests_data | text | JSON guest details |
-| holder_name | varchar(255) | Main guest name |
+| children_ages | varchar(100) | Comma-separated ages |
+| num_rooms | int | Number of rooms booked |
+| rooms_data | longtext | JSON: rooms configuration |
+| room_number | int | Which room in multi-room booking |
+| total_rooms | int | Total rooms in original booking |
+| guest_name | varchar(255) | Guest name |
 | guest_email | varchar(255) | Contact email |
 | guest_phone | varchar(50) | Contact phone |
-| total_price | decimal(10,2) | Total price EUR |
-| novoton_reservation_id | varchar(100) | Novoton booking reference |
-| novoton_status | varchar(50) | Novoton booking status |
-| status | varchar(20) | Internal status |
+| guests_data | longtext | JSON: all guests details |
+| holder_name | varchar(255) | Main holder name |
+| base_price | decimal(12,2) | Base price |
+| extras_price | decimal(12,2) | Extras price |
+| total_price | decimal(12,2) | Total price |
+| api_price | decimal(12,2) | Price returned from API |
+| currency | varchar(3) | Currency (default EUR) |
+| status | enum | pending, confirmed, cancelled, completed, failed, ask, waiting |
+| api_request | longtext | JSON: API request sent |
+| api_response | longtext | JSON: API response received |
+| alternatives_data | longtext | JSON: alternative hotels |
+| alternatives_requested | tinyint | Whether alternatives were requested |
+| last_status_check | timestamp | Last time status was polled |
+| notes | text | Notes |
 | special_requests | text | Special requests |
-| api_request | text | Sent API request |
-| api_response | text | Received API response |
+| created_at | timestamp | Created timestamp |
+| updated_at | timestamp | Updated timestamp |
+
+#### `cscart_novoton_alternative_requests`
+Stores alternative booking requests.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| request_id | int | Auto-increment PK |
+| user_id | int | CS-Cart user ID |
+| hotel_id | varchar(50) | Hotel ID |
+| hotel_name | varchar(255) | Hotel name |
+| check_in | date | Check-in date |
+| check_out | date | Check-out date |
+| nights | int | Number of nights |
+| num_rooms | int | Number of rooms |
+| adults | int | Adults count |
+| children | int | Children count |
+| children_ages | varchar(100) | Children ages |
+| room_id | varchar(50) | Room ID |
+| board_id | varchar(50) | Board ID |
+| contact_name | varchar(255) | Contact name |
+| contact_email | varchar(255) | Contact email |
+| contact_phone | varchar(50) | Contact phone |
+| notes | text | Notes |
+| status | enum | pending, pending_manual, alternatives_found, notified, booked, expired, cancelled |
+| novoton_request_id | varchar(50) | IdNum from hotel_request |
+| api_request_xml | text | XML sent to API |
+| api_response | text | Raw API response |
+| alternatives_data | longtext | JSON: found alternatives |
+| notified_at | datetime | Notification timestamp |
 | created_at | datetime | Created timestamp |
-| updated_at | datetime | Updated timestamp |
+| updated_at | timestamp | Updated timestamp |
 
 #### `cscart_novoton_facilities`
 Stores facility definitions.
@@ -504,8 +590,39 @@ Stores facility definitions.
 | Column | Type | Description |
 |--------|------|-------------|
 | facility_id | int | Facility ID (PK) |
+| facility_name | varchar(255) | Default name |
 | facility_name_en | varchar(255) | English name |
 | facility_name_ro | varchar(255) | Romanian name |
+| synced_at | datetime | Last sync |
+| created_at | timestamp | Created timestamp |
+
+#### `cscart_novoton_hotel_facilities`
+Hotel-facility relationships (many-to-many).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| hotel_id | varchar(50) | Hotel ID (PK part 1) |
+| facility_id | int | Facility ID (PK part 2) |
+
+#### `cscart_novoton_resorts`
+Resort list from API.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| resort_name | varchar(100) | Resort name (PK part 1) |
+| country | varchar(50) | Country (PK part 2) |
+| synced_at | datetime | Last sync |
+| created_at | timestamp | Created timestamp |
+
+#### `cscart_novoton_cache`
+Cached API responses.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| cache_key | varchar(255) | Cache key (PK) |
+| cache_data | mediumtext | Cached data |
+| expires_at | timestamp | Expiration time |
+| created_at | timestamp | Created timestamp |
 
 #### `cscart_novoton_sync_log`
 Logs synchronization history.
@@ -513,13 +630,18 @@ Logs synchronization history.
 | Column | Type | Description |
 |--------|------|-------------|
 | log_id | int | Auto-increment PK |
-| sync_type | varchar(50) | Type: hotellist, hotelinfo, prices, offers_update, facilities |
-| sync_date | datetime | Sync timestamp |
+| sync_type | varchar(50) | Type: hotellist, hotelinfo, priceinfo, prices, offers_update, facilities, exchange_rates, resinfo |
+| sync_date | timestamp | Sync timestamp |
 | products_total | int | Total items processed |
 | products_updated | int | Items updated |
 | products_failed | int | Items failed |
+| products_no_data | int | Items with no data |
+| products_missing | int | Items missing |
 | duration_seconds | int | Duration in seconds |
-| status | varchar(20) | Status: completed, failed |
+| log_file | varchar(255) | Log file path |
+| error_message | text | Error message |
+| notes | text | Extra JSON data for sync details |
+| status | enum | running, completed, failed |
 
 ---
 
@@ -529,12 +651,14 @@ Logs synchronization history.
 
 ```
 app/addons/novoton_holidays/
-├── addon.xml                 # Addon definition
+├── addon.xml                 # Addon definition & DB schema
 ├── init.php                  # Initialization
 ├── func.php                  # Helper functions
 ├── hooks.php                 # CS-Cart hooks
 ├── cron.php                  # CLI cron entry
+├── config.php                # Configuration constants
 ├── Constants.php             # Centralized constants
+├── CRON_JOBS.txt             # Cron job documentation
 │
 ├── controllers/
 │   ├── backend/              # Admin controllers
@@ -544,58 +668,88 @@ app/addons/novoton_holidays/
 │   │   ├── novoton_tools.php         # Tools & tests
 │   │   ├── novoton_bookings.php      # Bookings
 │   │   ├── novoton_alternatives.php  # Alternatives
+│   │   ├── novoton_admin.php         # Admin AJAX handlers
+│   │   ├── novoton_price_compare.php # Price comparison tool
 │   │   ├── novoton_exchange_rates.php # Exchange rates
 │   │   └── novoton_diagnostic.php    # Diagnostics
 │   └── frontend/             # Customer controllers
-│       ├── novoton_booking.php
-│       ├── novoton_cron.php
-│       ├── novoton_holidays.php
-│       └── novoton_exchange_rates.php # Exchange rates cron
+│       ├── novoton_booking.php       # Booking flow (search, form, cart, AJAX)
+│       ├── novoton_cron.php          # Cron dispatcher
+│       └── novoton_holidays.php      # Frontend hooks
 │
 ├── functions/                # Helper function files
 │   ├── formatting.php        # Date/text formatting
 │   ├── email.php             # Email helpers
-│   └── exchange_rates.php    # BNR exchange rate functions
+│   ├── exchange_rates.php    # BNR exchange rate functions
+│   ├── bookings.php          # Booking helpers
+│   ├── helpers.php           # General helpers
+│   ├── hotels.php            # Hotel helpers
+│   └── install.php           # Install/uninstall functions
 │
 ├── Repository/               # Data repositories
 │   ├── HotelRepository.php
 │   ├── BookingRepository.php
+│   ├── FacilityRepository.php
 │   └── SyncLogRepository.php
 │
 ├── services/                 # Service classes
-│   ├── BookingService.php
-│   ├── CacheService.php
-│   ├── DateHelper.php
-│   ├── GuestDataService.php
-│   ├── PriceService.php
-│   ├── SearchService.php
-│   └── SecurityService.php
+│   ├── ServiceLoader.php     # Lazy-loaded service factory
+│   ├── BookingService.php    # Booking operations
+│   ├── CacheService.php      # API response caching
+│   ├── CronService.php       # Cron job management
+│   ├── DateHelper.php        # Date formatting/calculations
+│   ├── ErrorHandler.php      # Error handling
+│   ├── GuestDataService.php  # Guest data parsing
+│   ├── LoggerTrait.php       # PSR-3-like logging trait
+│   ├── PriceService.php      # Price calculations with commission
+│   ├── PriceInfoService.php  # Season price lists
+│   ├── PriceInfoCalculation.php # Price info calculations
+│   ├── SearchService.php     # Search parameter parsing
+│   ├── SecurityService.php   # Input validation and CSRF
+│   └── ValidationHelper.php  # Validation utilities
 │
 ├── src/                      # Core classes
-│   ├── NovotonApi.php        # API client
+│   ├── NovotonApi.php        # API client (37 public methods)
 │   ├── HotelSync.php         # V3 Hotel synchronization
 │   └── PriceInfoSync.php     # Priceinfo synchronization
 │
 ├── Helpers/                  # Helper classes
-│   ├── DatabaseIterator.php  # PHP Generators for memory-efficient iteration
+│   ├── AbstractBatchedSync.php   # Base class for batched sync
 │   ├── BatchedHotelInfoSync.php  # Batched hotel sync with resume
-│   └── BatchedPriceInfoSync.php  # Batched priceinfo sync with resume
+│   ├── BatchedPriceInfoSync.php  # Batched priceinfo sync with resume
+│   ├── Config.php                # Helper config
+│   ├── CronHelper.php            # Cron utilities
+│   ├── DatabaseHelper.php        # Database utilities
+│   ├── DatabaseIterator.php      # PHP Generators for memory-efficient iteration
+│   ├── StateManager.php          # Sync state management
+│   ├── SyncInterface.php         # Sync contract interface
+│   └── SyncLogger.php            # Sync logging utilities
 │
 └── schemas/                  # CS-Cart schemas
-    └── block_manager/
+    ├── block_manager/
+    ├── permissions/           # Admin permissions
+    ├── static_templates/      # Block templates
+    └── theme_editor/          # Visual editor schemas
 ```
 
 ### Service Classes
 
 | Service | Purpose |
 |---------|---------|
+| `ServiceLoader` | Lazy-loaded singleton factory for all services |
 | `BookingService` | Create, update, retrieve bookings |
 | `CacheService` | API response caching |
-| `GuestDataService` | Parse and format guest data |
-| `PriceService` | Price calculations with commission |
-| `SearchService` | Search parameter parsing |
-| `SecurityService` | Input validation and CSRF |
+| `CronService` | Cron job scheduling and execution |
 | `DateHelper` | Date formatting and calculations |
+| `ErrorHandler` | Scoped error handling |
+| `GuestDataService` | Parse and format guest data |
+| `LoggerTrait` | Consistent PSR-3-like logging |
+| `PriceService` | Price calculations with commission |
+| `PriceInfoService` | Season price list management |
+| `PriceInfoCalculation` | Price info calculation engine |
+| `SearchService` | Search parameter parsing |
+| `SecurityService` | Input validation, CSRF, sanitization |
+| `ValidationHelper` | Reusable validation rules |
 
 ### Booking Data Architecture (Single Source of Truth)
 
@@ -636,6 +790,46 @@ Orphan bookings (order_id=0, older than 24h) are abandoned cart items that can b
 
 ---
 
+## Frontend JavaScript
+
+### JS Files
+
+| File | Purpose |
+|------|---------|
+| `js/addons/novoton_holidays/react19-bundle.js` | React 19 booking engine (~214 KB minified) |
+| `js/addons/novoton_holidays/booking-form-validation.js` | DOB masking, age validation, AJAX price recalculation |
+| `js/addons/novoton_holidays/booking_engine.js` | Booking engine form initialization |
+| `js/addons/novoton_holidays/dob-validation.js` | DOB validation, price recalc, desktop/mobile visibility |
+| `js/addons/novoton_holidays/multiroom-booking.js` | Multi-room selection and configuration |
+| `js/addons/novoton_holidays/utils.js` | Shared utility functions |
+
+### CSS Files
+
+| File | Purpose |
+|------|---------|
+| `design/themes/*/css/addons/novoton_holidays/styles.css` | Main addon styles |
+| `design/themes/*/css/addons/novoton_holidays/styles.min.css` | Minified main styles |
+| `design/themes/*/css/addons/novoton_holidays/booking-form-react.css` | React booking form styles |
+| `design/themes/*/css/addons/novoton_holidays/booking-form-react.min.css` | Minified React styles |
+| `design/backend/css/addons/novoton_holidays/styles.css` | Admin panel styles |
+
+Themes: `responsive` (default CS-Cart) and `nova_theme`.
+
+### Booking Controller Modes (Frontend)
+
+| Dispatch | Description |
+|----------|-------------|
+| `novoton_booking.search` | Search availability |
+| `novoton_booking.booking_form` | Display booking form |
+| `novoton_booking.add_to_cart` | Add booking to cart |
+| `novoton_booking.book` | Process booking |
+| `novoton_booking.edit_booking` | Edit existing booking |
+| `novoton_booking.update_booking` | Update booking |
+| `novoton_booking.request_alternatives` | Request alternative rooms |
+| `novoton_booking.ajax_recalculate_price` | AJAX price recalculation |
+
+---
+
 ## React Booking Engine
 
 The addon includes a React 19-based booking form for an enhanced user experience.
@@ -659,7 +853,7 @@ The addon includes a React 19-based booking form for an enhanced user experience
 ### Bundle Details
 
 - **File:** `js/addons/novoton_holidays/react19-bundle.js`
-- **Size:** ~218 KB (minified production build)
+- **Size:** ~214 KB (minified production build)
 - **Includes:** React 19, ReactDOM, booking components
 
 ### Styling
@@ -681,7 +875,7 @@ Returns JSON response for automated monitoring:
 ```json
 {
   "status": "healthy",
-  "timestamp": "2026-02-10T12:00:00+00:00",
+  "timestamp": "2026-02-15T12:00:00+00:00",
   "version": "3.0.0-A86",
   "components": {
     "database": { "status": "healthy", "response_time_ms": 2.5 },
@@ -707,7 +901,9 @@ Use this endpoint with monitoring tools (Uptime Robot, Pingdom, etc.) to track a
 
 ### Debug Mode
 
-Add `?debug_novoton=1` to any page URL to see debug information.
+Add `?novoton_debug=1` to any booking AJAX URL, or enable **Debug Mode** in addon settings.
+
+For search page debugging, pass `&debug=1` in the search URL.
 
 ### Common Issues
 
@@ -737,6 +933,11 @@ Add `?debug_novoton=1` to any page URL to see debug information.
 - Check BNR API connectivity
 - Verify `cron_password` parameter
 - Check commission is between 0-5%
+
+#### PHP warnings corrupting JSON response
+- Fixed in A86: AJAX URLs now send only `dispatch` param (no leaked URL params)
+- Scoped error handler logs warnings without suppressing them
+- `$_REQUEST` arrays sanitized at controller top
 
 ### Log Files
 
