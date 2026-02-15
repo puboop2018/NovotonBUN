@@ -115,7 +115,7 @@ export default function BookingEngine({ config }) {
         const roomLabel = (rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms')).toLowerCase();
         parts.push(`${rooms.length} ${roomLabel}`);
 
-        return parts.join(' · ');
+        return parts.join(' \u00b7 ');
     })();
 
     // Date display text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
@@ -207,6 +207,18 @@ export default function BookingEngine({ config }) {
 
         window.location.href = url;
     }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, totalAdults, totalChildren]);
+
+    // Button click handler: "Change search" opens calendar, others navigate
+    const handleButtonClick = useCallback(() => {
+        if (hasSearched && !datesChanged) {
+            // "Change search" state – open calendar for editing
+            setShowCalendar(true);
+            setShowGuests(false);
+            return;
+        }
+        // "Search" or "Apply changes" – perform search
+        handleSearch();
+    }, [hasSearched, datesChanged, handleSearch]);
 
     // -----------------------------------------------------------------------
     // Render helpers
@@ -349,7 +361,7 @@ export default function BookingEngine({ config }) {
                     <button
                         type="button"
                         className="nvt-btn-search"
-                        onClick={handleSearch}
+                        onClick={handleButtonClick}
                     >
                         {searchBtnText}
                     </button>
