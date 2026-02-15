@@ -108,16 +108,24 @@ window.NovotonUtils = (function() {
     async function fetchWithTimeout(url, options = {}, timeout = 30000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
-        
+
         try {
             const response = await fetch(url, {
                 ...options,
                 signal: controller.signal
             });
             clearTimeout(id);
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+            }
+
             return response;
         } catch (error) {
             clearTimeout(id);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout after ' + timeout + 'ms');
+            }
             throw error;
         }
     }
@@ -195,13 +203,13 @@ window.NovotonUtils = (function() {
     // Show/hide loading indicator
     function setLoading(element, loading, text = 'Se încarcă...') {
         if (!element) return;
-        
+
         if (loading) {
-            element.dataset.originalText = element.innerHTML;
-            element.innerHTML = '<span class="nvt-spinner"></span> ' + text;
+            element.dataset.originalText = element.textContent;
+            element.textContent = '⟳ ' + text;
             element.disabled = true;
         } else {
-            element.innerHTML = element.dataset.originalText || element.innerHTML;
+            element.textContent = element.dataset.originalText || element.textContent;
             element.disabled = false;
         }
     }

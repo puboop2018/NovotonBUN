@@ -555,13 +555,12 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null)
         $date_format = '%d.%m.%Y'; // fallback
     }
     
-    // Format dates for display using CS-Cart format
-    $check_in_formatted = !empty($product['extra']['check_in']) 
-        ? fn_date_format(strtotime($product['extra']['check_in']), $date_format)
-        : '';
-    $check_out_formatted = !empty($product['extra']['check_out']) 
-        ? fn_date_format(strtotime($product['extra']['check_out']), $date_format)
-        : '';
+    // Format dates for display using CS-Cart format (strtotime returns false on invalid input)
+    $check_in_ts = !empty($product['extra']['check_in']) ? strtotime($product['extra']['check_in']) : false;
+    $check_in_formatted = ($check_in_ts !== false) ? fn_date_format($check_in_ts, $date_format) : '';
+
+    $check_out_ts = !empty($product['extra']['check_out']) ? strtotime($product['extra']['check_out']) : false;
+    $check_out_formatted = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
     
     // Get rooms data
     $num_rooms = intval($product['extra']['num_rooms'] ?? 1);
@@ -1034,8 +1033,8 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
         // Log guests_data for debugging - DETAILED
         if ($debug_logging) {
             // Check structure of first element
-            $first_key = !empty($guests_data) ? array_key_first($guests_data) : 'EMPTY';
-            $first_val = !empty($guests_data) ? reset($guests_data) : 'EMPTY';
+            $first_key = (is_array($guests_data) && !empty($guests_data)) ? array_key_first($guests_data) : 'EMPTY';
+            $first_val = (is_array($guests_data) && !empty($guests_data)) ? reset($guests_data) : 'EMPTY';
             
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton - Raw guests_data from cart (DETAILED)',
@@ -1212,10 +1211,20 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
                 $api_data['board_id'] = $group_rooms[0]['board_id'] ?? $booking_data['board_id'];
             }
             
-            // Calculate nights for this group
-            $check_in_date = new DateTime($group['check_in']);
-            $check_out_date = new DateTime($group['check_out']);
-            $nights = $check_in_date->diff($check_out_date)->days;
+            // Calculate nights for this group (guard against invalid date strings)
+            try {
+                $check_in_date = new DateTime($group['check_in']);
+                $check_out_date = new DateTime($group['check_out']);
+                $nights = $check_in_date->diff($check_out_date)->days;
+            } catch (\Exception $e) {
+                fn_log_event('general', 'error', [
+                    'message' => 'Novoton - Invalid date in booking group',
+                    'check_in' => $group['check_in'] ?? '',
+                    'check_out' => $group['check_out'] ?? '',
+                    'error' => $e->getMessage()
+                ]);
+                $nights = intval($booking_data['nights'] ?? 7);
+            }
             
             // Build room IDs string for display
             $room_ids_display = array_column($group_rooms, 'room_id');
@@ -1565,6 +1574,24 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
     // Get currency for display
     $currency_code = $order['secondary_currency'] ?? 'EUR';
 
+    // Pre-fetch hotel location data for all Novoton products in a single query (avoid N+1)
+    $hotel_ids_to_fetch = [];
+    foreach ($order['products'] as $product) {
+        if (!empty($product['extra']['novoton_booking']) && !empty($product['extra']['hotel_id']) && empty($product['extra']['city'])) {
+            $hotel_ids_to_fetch[$product['extra']['hotel_id']] = true;
+        }
+    }
+    $hotels_location_cache = [];
+    if (!empty($hotel_ids_to_fetch)) {
+        $rows = db_get_array(
+            "SELECT hotel_id, city, region, country FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+            array_keys($hotel_ids_to_fetch)
+        );
+        foreach ($rows as $row) {
+            $hotels_location_cache[$row['hotel_id']] = $row;
+        }
+    }
+
     foreach ($order['products'] as &$product) {
         // Debug: Show extra keys
         if (!empty($_REQUEST['debug'])) {
@@ -1581,25 +1608,22 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
         $check_out = $product['extra']['check_out'] ?? '';
         $total_price = floatval($product['extra']['total_price'] ?? $product['price'] ?? 0);
 
-        // [1] Add hotel location data (city, region, country) from database
-        if (!empty($hotel_id) && empty($product['extra']['city'])) {
-            $hotel_data = db_get_row(
-                "SELECT city, region, country FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                $hotel_id
-            );
-            if ($hotel_data) {
-                $product['extra']['city'] = $hotel_data['city'] ?? '';
-                $product['extra']['region'] = $hotel_data['region'] ?? '';
-                $product['extra']['country'] = $hotel_data['country'] ?? '';
-            }
+        // [1] Add hotel location data from pre-fetched cache
+        if (!empty($hotel_id) && empty($product['extra']['city']) && isset($hotels_location_cache[$hotel_id])) {
+            $hotel_data = $hotels_location_cache[$hotel_id];
+            $product['extra']['city'] = $hotel_data['city'] ?? '';
+            $product['extra']['region'] = $hotel_data['region'] ?? '';
+            $product['extra']['country'] = $hotel_data['country'] ?? '';
         }
 
-        // [2] Format dates using CS-Cart date format setting
-        if (!empty($check_in)) {
-            $product['extra']['check_in_formatted'] = fn_date_format(strtotime($check_in), $date_format);
+        // [2] Format dates using CS-Cart date format setting (guard against strtotime returning false)
+        $ci_ts = !empty($check_in) ? strtotime($check_in) : false;
+        if ($ci_ts !== false) {
+            $product['extra']['check_in_formatted'] = fn_date_format($ci_ts, $date_format);
         }
-        if (!empty($check_out)) {
-            $product['extra']['check_out_formatted'] = fn_date_format(strtotime($check_out), $date_format);
+        $co_ts = !empty($check_out) ? strtotime($check_out) : false;
+        if ($co_ts !== false) {
+            $product['extra']['check_out_formatted'] = fn_date_format($co_ts, $date_format);
         }
 
         // Format Terms of Payment

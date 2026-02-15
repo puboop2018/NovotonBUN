@@ -165,8 +165,14 @@
             var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
             var changeColor = difference > 0 ? '#dc3545' : '#28a745';
             var t = window.NovotonTranslations || {};
-            notif.innerHTML = (t.priceUpdated || 'Prețul a fost actualizat în funcție de vârsta copilului') +
-                              ': <strong style="color:' + changeColor + '">' + changeText + ' €</strong>';
+            notif.textContent = '';
+            notif.appendChild(document.createTextNode(
+                (t.priceUpdated || 'Prețul a fost actualizat în funcție de vârsta copilului') + ': '
+            ));
+            var strong = document.createElement('strong');
+            strong.style.color = changeColor;
+            strong.textContent = changeText + ' €';
+            notif.appendChild(strong);
             notif.style.display = 'block';
         }
     };
@@ -182,7 +188,7 @@
                 priceSection.parentNode.insertBefore(notif, priceSection.nextSibling);
             }
         }
-        notif.innerHTML = 'ℹ️ ' + message;
+        notif.textContent = 'ℹ️ ' + message;
         notif.style.display = 'block';
     };
 
