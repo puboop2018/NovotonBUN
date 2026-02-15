@@ -285,16 +285,11 @@
             original_price: originalPrice
         };
         
-        // Build AJAX URL - try to use global config or relative path
-        var ajaxUrl = '';
-        if (typeof window.fn_url === 'function') {
-            ajaxUrl = window.fn_url('novoton_booking.ajax_recalculate_price');
-        } else if (window.Tygh && window.Tygh.current_url) {
-            ajaxUrl = window.Tygh.current_url.replace(/dispatch=[^&]+/, 'dispatch=novoton_booking.ajax_recalculate_price');
-        } else {
-            // Fallback - use relative URL that works from any page
-            ajaxUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.php?dispatch=novoton_booking.ajax_recalculate_price';
-        }
+        // Build clean AJAX URL — only dispatch param, all data in JSON body.
+        // Do NOT inherit parent page URL params (children_ages[], etc.) as they
+        // cause PHP warnings in CS-Cart's init that corrupt the JSON response.
+        var baseUrl = (window.Tygh && window.Tygh.current_location) || window.location.origin;
+        var ajaxUrl = baseUrl + '/index.php?dispatch=novoton_booking.ajax_recalculate_price';
         
         fetch(ajaxUrl, {
             method: 'POST',

@@ -17,7 +17,7 @@
     // =========================================================================
     
     var CONFIG = {
-        debug: (window.NovotonConfig && window.NovotonConfig.debug) || false,
+        debug: (window.NovotonConfig && window.NovotonConfig.debug) || (window.location.search.indexOf('novoton_debug') !== -1),
         selectors: {
             priceDisplay: '.price-total, .total-price-value, .booking-total-value, .price-amount',
             priceSection: '.booking-price-box, .price-summary, .booking-summary'
@@ -320,60 +320,87 @@
     // PRICE RECALCULATION (AJAX)
     // =========================================================================
     
-    window.triggerPriceRecalculation = function(childrenAges) {
-        log('triggerPriceRecalculation', childrenAges);
-        
+    window.triggerPriceRecalculation = function(childrenAges, roomNum) {
+        roomNum = roomNum || 1;
+        log('triggerPriceRecalculation room ' + roomNum, childrenAges);
+
         if (!window.bookingData) {
             logError('bookingData not defined');
             return;
         }
-        
+
+        var isMultiRoom = window.bookingData.numRooms > 1 && window.bookingData.roomsData && window.bookingData.roomsData.length > 0;
+        var roomIdx = roomNum - 1;
+
+        // Get room-specific data for multi-room, or use single room data
+        var roomData = {};
+        if (isMultiRoom && window.bookingData.roomsData[roomIdx]) {
+            roomData = window.bookingData.roomsData[roomIdx];
+        } else {
+            roomData = {
+                room_id: window.bookingData.roomId,
+                board_id: window.bookingData.boardId,
+                adults: window.bookingData.adults,
+                price: window.bookingData.currentPrice
+            };
+        }
+
         var priceDisplay = document.querySelector(CONFIG.selectors.priceDisplay);
         var loadingIndicator = document.getElementById('price-loading-indicator');
-        
+
         if (loadingIndicator) loadingIndicator.style.display = 'inline-block';
         if (priceDisplay) priceDisplay.style.opacity = '0.5';
-        
+
         var requestData = {
             hotel_id: window.bookingData.hotelId,
-            room_id: window.bookingData.roomId,
-            board_id: window.bookingData.boardId,
+            room_id: roomData.room_id || window.bookingData.roomId,
+            board_id: roomData.board_id || window.bookingData.boardId,
             check_in: window.bookingData.checkIn,
             nights: window.bookingData.nights,
-            adults: window.bookingData.adults,
+            adults: roomData.adults || window.bookingData.adults,
             children_ages: childrenAges,
-            package_name: window.bookingData.packageName,
-            original_price: window.bookingData.currentPrice
+            package_name: roomData.package_name || window.bookingData.packageName,
+            original_price: roomData.price || window.bookingData.currentPrice,
+            room_num: roomNum,
+            is_multi_room: isMultiRoom
         };
-        
+
         log('AJAX request', requestData);
 
-        // Use CS-Cart controller dispatch (replaces standalone novoton_ajax_price.php)
-        var ajaxUrl = '';
-        if (typeof window.fn_url === 'function') {
-            ajaxUrl = window.fn_url('novoton_booking.ajax_recalculate_price');
-        } else if (window.Tygh && window.Tygh.current_url) {
-            ajaxUrl = window.Tygh.current_url.replace(/dispatch=[^&]+/, 'dispatch=novoton_booking.ajax_recalculate_price');
-        } else {
-            ajaxUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.php?dispatch=novoton_booking.ajax_recalculate_price';
-        }
+        // Clean AJAX URL — only dispatch param. All booking data goes in JSON body.
+        // Do NOT inherit parent page URL params (children_ages[], etc.) as they
+        // cause PHP warnings in CS-Cart's init that corrupt the JSON response.
+        var baseUrl = (window.Tygh && window.Tygh.current_location) || window.location.origin;
+        var ajaxUrl = baseUrl + '/index.php?dispatch=novoton_booking.ajax_recalculate_price';
         log('AJAX URL', ajaxUrl);
-        
+
         fetch(ajaxUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify(requestData)
         })
-        .then(function(response) { return response.json(); })
+        .then(function(response) {
+            log('Response status: ' + response.status);
+            return response.text();
+        })
+        .then(function(text) {
+            log('Raw response', text.substring(0, 200));
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                logError('JSON parse error: ' + e.message);
+                throw e;
+            }
+        })
         .then(function(data) {
             log('AJAX response', data);
-            
+
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             if (priceDisplay) priceDisplay.style.opacity = '1';
-            
+
             if (data.success) {
                 updatePriceDisplay(data.new_price, data.formatted_price, data.price_difference);
-                
+
                 if (data.room_changed) {
                     try {
                         showRoomChangeWarning(data);
@@ -384,7 +411,7 @@
                               '\n' + (t2.priceChange || 'Price') + ': ' + (data.new_price || 0).toFixed(2) + ' €');
                     }
                 }
-                
+
                 updateFormWithNewPricing(data);
             } else {
                 var t3 = window.NovotonTranslations || {};

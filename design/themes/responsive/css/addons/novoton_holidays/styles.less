@@ -264,15 +264,50 @@
 @media (max-width: 768px) {
     .novoton-booking-engine {
         padding: @novoton-spacing-md;
-        
+
         .booking-form {
             .form-row {
                 flex-direction: column;
-                
+
                 .form-group {
                     width: 100%;
                 }
             }
         }
+    }
+}
+
+// ============================================================================
+// VISUAL EDITOR INTEGRATION
+// ============================================================================
+// These LESS variables match the field names in:
+//   schemas/theme_editor/schema.post.php
+//
+// The Visual Editor saves overrides into styles/data/PRESET.less which is
+// loaded LAST during LESS compilation.  LESS lazy evaluation ensures the
+// preset value wins over the defaults below.
+//
+// The :root block bridges LESS → CSS custom properties so the React booking
+// engine (which injects its own <style>) can also pick up the colors.
+// ============================================================================
+
+// Customisable via Visual Editor (defaults match the React component)
+@novoton-search-btn-bg:    #006ce4;
+@novoton-search-btn-hover: #0057b8;
+
+// Bridge: LESS variables → CSS custom properties
+:root {
+    --nvt-search-btn-bg:    @novoton-search-btn-bg;
+    --nvt-search-btn-hover: @novoton-search-btn-hover;
+    --nvt-primary:          @novoton-primary;
+    --nvt-accent:           @novoton-accent;
+}
+
+// Override the React component's hardcoded search button color
+.nvt-btn-search {
+    background: var(--nvt-search-btn-bg, @novoton-search-btn-bg) !important;
+
+    &:hover {
+        background: var(--nvt-search-btn-hover, @novoton-search-btn-hover) !important;
     }
 }

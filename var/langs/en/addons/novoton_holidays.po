@@ -516,6 +516,10 @@ msgctxt "Languages::novoton_holidays.important"
 msgid "Important"
 msgstr "Important"
 
+msgctxt "Languages::novoton_holidays.additional_information"
+msgid "Additional Information"
+msgstr "Additional Information"
+
 msgctxt "Languages::novoton_holidays.no_prices_available"
 msgid "No prices available"
 msgstr "No prices available"

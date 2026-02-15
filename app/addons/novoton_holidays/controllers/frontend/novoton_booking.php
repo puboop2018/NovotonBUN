@@ -61,6 +61,24 @@ function _nvt_get_security_service() {
 }
 
 //=============================================================================
+// SANITIZE $_REQUEST / $_GET — prevent "Array to string conversion" warnings
+// When the URL contains children_ages[]=5&children_ages[]=8, PHP parses these
+// into arrays. CS-Cart's __() translation function (and other internal calls)
+// may cast these to string, triggering warnings that corrupt JSON output.
+// Fix: flatten known array params to comma-separated strings at controller top.
+//=============================================================================
+$_nvt_array_params = ['children_ages', 'ages'];
+foreach ($_nvt_array_params as $_nvt_param) {
+    foreach ([&$_REQUEST, &$_GET] as &$_nvt_superglobal) {
+        if (isset($_nvt_superglobal[$_nvt_param]) && is_array($_nvt_superglobal[$_nvt_param])) {
+            $_nvt_superglobal[$_nvt_param] = implode(',', array_map('intval', $_nvt_superglobal[$_nvt_param]));
+        }
+    }
+    unset($_nvt_superglobal);
+}
+unset($_nvt_array_params, $_nvt_param);
+
+//=============================================================================
 // CACHING HELPERS
 // A72: Use CacheService::remember() for caching. Example:
 //   $cache = _nvt_get_cache_service();
@@ -3197,32 +3215,76 @@ if ($mode == 'request_alternatives') {
 
 // AJAX endpoint to recalculate price when child age changes
 if ($mode == 'ajax_recalculate_price') {
-    // A74h: Immediately output JSON and die - bypass CS-Cart's output system
-    
-    // Debug logging disabled in production (no-op function)
-    $debug_log = function($msg, $data = null) {};
-    
+    // Scoped error handler: log warnings to CS-Cart log, prevent any output.
+    // This replaces the old blanket error_reporting(0) — real errors are still
+    // logged, but PHP won't echo anything that corrupts our JSON response.
+    $_nvt_caught_warnings = [];
+    $prev_error_handler = set_error_handler(function ($errno, $errstr, $errfile, $errline) use (&$_nvt_caught_warnings) {
+        // Log the warning for debugging, but don't output anything
+        $_nvt_caught_warnings[] = [
+            'type'    => $errno,
+            'message' => $errstr,
+            'file'    => $errfile,
+            'line'    => $errline,
+        ];
+        // Return true = handled, PHP won't output or escalate
+        return true;
+    }, E_WARNING | E_NOTICE | E_DEPRECATED | E_USER_WARNING | E_USER_NOTICE);
+
+    // Debug logging — writes to CS-Cart log when addon setting debug=Y
+    // or when ?novoton_debug=1 is in the URL
+    $debug_enabled = false;
+    $debug_messages = [];
+    try {
+        $addon_settings = Registry::get('addons.novoton_holidays');
+        $debug_enabled = (!empty($addon_settings['debug']) && $addon_settings['debug'] === 'Y')
+                      || !empty($_REQUEST['novoton_debug']);
+    } catch (\Exception $e) {}
+
+    $debug_log = function($msg, $data = null) use (&$debug_enabled, &$debug_messages) {
+        if (!$debug_enabled) return;
+        $entry = date('H:i:s') . ' ' . $msg;
+        if ($data !== null) {
+            $entry .= ': ' . (is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+        $debug_messages[] = $entry;
+        // Also write to CS-Cart log immediately
+        fn_log_event('general', 'runtime', ['message' => '[NovotonPriceRecalc] ' . $entry]);
+    };
+
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
-    
+
+    // Helper function to send JSON response and exit
+    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings, &$prev_error_handler) {
+        // Include debug log in response when debug is enabled
+        if ($debug_enabled && !empty($debug_messages)) {
+            $response['_debug'] = $debug_messages;
+        }
+        // Log any caught warnings to CS-Cart log (visible in admin, not in response)
+        if (!empty($_nvt_caught_warnings)) {
+            fn_log_event('general', 'runtime', [
+                'message' => '[NovotonPriceRecalc] Caught PHP warnings',
+                'warnings' => $_nvt_caught_warnings,
+            ]);
+            // Include in debug response so developer can see them
+            if ($debug_enabled) {
+                $response['_warnings'] = $_nvt_caught_warnings;
+            }
+        }
+        // Restore previous error handler
+        restore_error_handler();
+        // Set headers and output clean JSON
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, must-revalidate');
+        die(json_encode($response, JSON_UNESCAPED_UNICODE));
+    };
+
     // Get JSON input
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
-    
+
     $debug_log('Raw input', $input);
     $debug_log('Decoded data', $data);
-    
-    // Helper function to send JSON response and exit
-    $sendJson = function($response) {
-        // Clear ALL output buffers
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        // Set headers
-        header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-cache, must-revalidate');
-        // Output and die immediately
-        die(json_encode($response));
-    };
     
     if (empty($data)) {
         $debug_log('ERROR: Invalid request data');
@@ -3300,7 +3362,7 @@ if ($mode == 'ajax_recalculate_price') {
             if ($new_price > 0) {
                 $price_found = true;
                 $matched_room = rawurldecode((string)($response->IdRoom ?? $room_id));
-                $matched_board = (string)($response->IdBoard ?? $response->Board ?? $board_id);
+                $matched_board = (string)($response->IdBoard ?? $board_id);
                 $debug_log('Found direct Price from specific room/board query', $new_price);
             }
         }
@@ -3322,7 +3384,7 @@ if ($mode == 'ajax_recalculate_price') {
                 $debug_log('ERROR: No response from API');
                 $sendJson([
                     'success' => false,
-                    'message' => __('novoton_holidays.price_not_available')
+                    'message' => 'Price not available'
                 ]);
             }
 
@@ -3442,7 +3504,7 @@ if ($mode == 'ajax_recalculate_price') {
             $debug_log('ERROR: Price not found for combination');
             $sendJson([
                 'success' => false,
-                'message' => __('novoton_holidays.price_not_found_for_combination')
+                'message' => 'Price not found for this room/board combination'
             ]);
         }
 
@@ -3494,11 +3556,11 @@ if ($mode == 'ajax_recalculate_price') {
             'new_board' => $matched_board ?: $board_id
         ]);
 
-    } catch (Exception $e) {
-        $debug_log('EXCEPTION', $e->getMessage());
+    } catch (\Exception $e) {
+        $debug_log('EXCEPTION', $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
         $sendJson([
             'success' => false,
-            'message' => __('novoton_holidays.price_calculation_error')
+            'message' => 'Price calculation error'
         ]);
     }
 }

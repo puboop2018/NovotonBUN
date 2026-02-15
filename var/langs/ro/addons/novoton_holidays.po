@@ -2067,3 +2067,15 @@ msgstr "Prețurile vor fi disponibile după sincronizarea datelor de preț."
 msgctxt "Languages::novoton_holidays.prices_include_commission"
 msgid "Prices include agency commission"
 msgstr "Prețurile includ comisionul agenției"
+
+msgctxt "Languages::novoton_holidays.additional_information"
+msgid "Additional Information"
+msgstr "Informații suplimentare"
+
+msgctxt "Languages::novoton_holidays.important"
+msgid "Important"
+msgstr "Important"
+
+msgctxt "Languages::novoton_holidays.remarks"
+msgid "Remarks"
+msgstr "Observații"

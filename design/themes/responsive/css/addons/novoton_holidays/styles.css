@@ -3854,32 +3854,6 @@
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .novoton-search-results-page {
-        background: #fff;
-    }
-    
-    .novoton-room-section {
-        background: #16213e;
-        border-color: #0f3460;
-    }
-    
-    .novoton-room-option {
-        background: #1a1a2e;
-        border-color: #0f3460;
-    }
-    
-    .novoton-room-option:hover {
-        background: #16213e;
-    }
-    
-    .novoton-room-name,
-    .novoton-board-name {
-        color: #e0e0e0;
-    }
-}
-
 /* Room Card Header continued */
 .novoton-room-card-header {
     display: flex;
@@ -3895,18 +3869,18 @@
 
 .novoton-room-number {
     font-size: 16px;
-    color: #fff;
+    color: #003580;
 }
 
 .novoton-room-guests-info {
-    color: rgba(255,255,255,0.9);
+    color: #333;
     font-size: 14px;
 }
 
 .novoton-room-card-price {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
+    color: #003580;
     transition: all 0.3s;
 }
 
@@ -4054,8 +4028,9 @@
 
 /* Booking Footer */
 .novoton-booking-footer {
-    background: linear-gradient(135deg, #003580, #0057b8);
-    color: #fff;
+    background: #f8f9fa;
+    border-top: 3px solid #003580;
+    color: #333;
     padding: 25px;
 }
 
@@ -4075,13 +4050,13 @@
 
 .novoton-total-label {
     font-size: 14px;
-    color: rgba(255,255,255,0.85);
+    color: #666;
 }
 
 .novoton-total-price {
     font-size: 32px;
     font-weight: 700;
-    color: #ffc107;
+    color: #003580;
 }
 
 .novoton-footer-action {
@@ -5043,13 +5018,10 @@ body.modal-open {
     background: transparent !important;
 }
 
-/* Ensure search form has no dark blue background for single room */
+/* Ensure search form and React engine have no dark background */
 .novoton-search-form-wrapper .nvt-booking-engine,
-.novoton-search-form-wrapper .nvt-form-container {
-    background: transparent !important;
-}
-
-.novoton-search-form-wrapper .nvt-form-container.nvt-mode-homepage {
+.novoton-search-form-wrapper .nvt-form-container,
+.novoton-search-form-wrapper [data-novoton-booking] {
     background: transparent !important;
 }
 
@@ -5175,7 +5147,8 @@ body.modal-open {
 }
 
 .room-type-header {
-    background: linear-gradient(135deg, #003580, #0057b8);
+    background: #f8f9fa;
+    border-bottom: 2px solid #003580;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
@@ -5184,12 +5157,12 @@ body.modal-open {
 
 .room-type-number {
     font-size: 16px;
-    color: #fff;
+    color: #003580;
     font-weight: bold;
 }
 
 .room-type-guests {
-    color: rgba(255,255,255,0.9);
+    color: #333;
     margin-left: 8px;
     font-size: 14px;
 }
@@ -5197,7 +5170,7 @@ body.modal-open {
 .room-type-price {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
+    color: #003580;
 }
 
 .room-options-list {
@@ -5233,14 +5206,15 @@ body.modal-open {
 
 /* Loading state */
 #novoton-loading {
-    background: linear-gradient(135deg, #003580, #0057b8);
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
     padding: 40px;
     border-radius: 8px;
     text-align: center;
 }
 
 #novoton-loading span {
-    color: #fff;
+    color: #003580;
     font-size: 16px;
 }
 
@@ -5261,14 +5235,15 @@ body.modal-open {
 
 /* Loading State */
 .novoton-loading-state {
-    background: linear-gradient(135deg, #003580, #0057b8);
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
     padding: 40px;
     border-radius: 8px;
     text-align: center;
 }
 
 .novoton-loading-state span {
-    color: #fff;
+    color: #003580;
     font-size: 16px;
 }
 
@@ -5671,4 +5646,19 @@ div.novoton-desktop-only,
 /* Ensure guest picker dropdown is wide enough */
 .nvt-guest-picker-dropdown {
     min-width: 340px;
+}
+
+/* ===========================
+   Visual Editor – Search Button Override
+   --
+   CSS custom properties --nvt-search-btn-bg / --nvt-search-btn-hover
+   are set via the compiled LESS (styles.less) which integrates with
+   the Visual Editor preset.  The var() fallback (#006ce4) keeps the
+   default when no preset has been applied yet.
+   =========================== */
+.nvt-btn-search {
+    background: var(--nvt-search-btn-bg, #006ce4) !important;
+}
+.nvt-btn-search:hover {
+    background: var(--nvt-search-btn-hover, #0057b8) !important;
 }
