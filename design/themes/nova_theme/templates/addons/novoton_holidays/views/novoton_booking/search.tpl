@@ -1059,6 +1059,7 @@ window.NovotonTranslations = {
     pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}",
     remove: "{__('novoton_holidays.remove')|default:'Remove'}",
     changeSearch: "{__('novoton_holidays.change_search')|default:'Change search'}",
+    searching: "{__('novoton_holidays.searching')|default:'Searching...'}",
     available: "{__('novoton_holidays.available')|default:'Available'}",
     offer: "{__('novoton_holidays.offer')|default:'offer'}",
     offers: "{__('novoton_holidays.offers')|default:'offers'}"
