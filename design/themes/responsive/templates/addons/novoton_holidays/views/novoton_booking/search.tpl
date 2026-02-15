@@ -1,10 +1,14 @@
 {*
- * Novoton Booking Search Results - v2.7.0-A73
+ * Novoton Booking Search Results - v2.7.0-A74
  * Fixes:
  * - A67: Fixed desktop/mobile both showing on desktop
  * - A67: Added DOB validation (cannot be in future)
  * - A73n: Added inline grid styles for desktop table layout
  * - A73o: Multiple CSS loading methods for reliability
+ * - A74: Replaced hardcoded modal text ("Note:", "Additional Information:",
+ *         "Important:") with translation keys for i18n support
+ * - A74: Replaced hardcoded "Early Booking" badge text with translation key
+ * - A74: Added inline comments for modal content sections
  * Hybrid styling: inline for critical layout, CSS classes for enhancement
  *}
 
@@ -159,14 +163,14 @@
             <div style="flex: 1;">
                 <span style="font-weight: 700; font-size: 15px;">
                     {if $early_booking_range && $early_booking_range.max > 0}
-                        Early Booking 
+                        {__("novoton_holidays.early_booking")}
                         {if $early_booking_range.min == $early_booking_range.max}
                             -{$early_booking_range.max|string_format:"%.0f"}%
                         {else}
                             -{$early_booking_range.min|string_format:"%.0f"}% to -{$early_booking_range.max|string_format:"%.0f"}%
                         {/if}
                     {elseif $active_early_booking}
-                        -{$active_early_booking.reduction|floatval}% Early Booking
+                        -{$active_early_booking.reduction|floatval}% {__("novoton_holidays.early_booking")}
                     {/if}
                 </span>
             </div>
@@ -626,7 +630,7 @@
                             
                             {if $result.early_booking_discount > 0}
                                 <span style="display: inline-block; background: #ff6b35; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; margin-left: 5px;">
-                                    -{$result.early_booking_discount|string_format:"%.0f"}% Early Booking
+                                    -{$result.early_booking_discount|string_format:"%.0f"}% {__("novoton_holidays.early_booking")}
                                 </span>
                             {/if}
                         </div>
@@ -670,13 +674,16 @@
                                             <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_mobile|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
-                                    {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
-                                    {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
-                                    {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong> Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                    {* Remark/Note field - uses translation key, collapses blank lines *}
+                                    {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
+                                    {* Additional information field *}
+                                    {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                    {* Important notice - highlighted *}
+                                    {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                                 </div>
                             {/if}
                         </div>
-                        
+
                         <div style="font-size: 11px; color: #888; margin-top: 6px;">{__("novoton_holidays.includes_taxes")}</div>
                     </div>
                     
@@ -771,9 +778,12 @@
                                         <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_desktop|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
-                                {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">Note:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
-                                {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">Additional Information:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
-                                {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>⚠️ Important:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                {* Remark/Note field - uses translation key, collapses blank lines *}
+                                {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
+                                {* Additional information field *}
+                                {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                {* Important notice - highlighted *}
+                                {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
                             </div>
                         {/if}
                     </div>
@@ -788,7 +798,7 @@
                         <div style="font-size: 12px; color: #666;">{__("novoton_holidays.includes_taxes")}</div>
                         {if $result.early_booking_discount > 0}
                             <div style="display: inline-block; background: #ff6b35; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 5px;">
-                                -{$result.early_booking_discount|string_format:"%.0f"}% Early Booking
+                                -{$result.early_booking_discount|string_format:"%.0f"}% {__("novoton_holidays.early_booking")}
                             </div>
                         {/if}
                     </div>
