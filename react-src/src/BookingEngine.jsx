@@ -83,6 +83,7 @@ export default function BookingEngine({ config }) {
     const [validationError, setValidationError] = useState('');
     const [ageErrors, setAgeErrors] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
 
     // Button state: "Search" → "Change search" → "Apply changes"
     // In search mode, user already searched so start with hasSearched=true.
@@ -146,6 +147,112 @@ export default function BookingEngine({ config }) {
         setAgeErrors([]);
     }, []);
 
+    const buildSearchUrl = useCallback(() => {
+        let url;
+        if (mode === 'homepage') {
+            url = window.location.origin + '/index.php?dispatch=products.search&q=' +
+                  encodeURIComponent(searchQuery);
+        } else {
+            url = window.location.origin + '/index.php?dispatch=novoton_booking.search';
+            if (hotelId) url += '&hotel_id=' + hotelId;
+            if (productId) url += '&product_id=' + productId;
+        }
+
+        url += '&check_in=' + toDateString(checkIn);
+        url += '&check_out=' + toDateString(checkOut);
+        url += '&adults=' + totalAdults;
+        url += '&children=' + totalChildren;
+        url += '&rooms=' + rooms.length;
+        url += '&rooms_data=' + encodeURIComponent(JSON.stringify(rooms));
+
+        // Collect all child ages
+        const allAges = [];
+        rooms.forEach(room => {
+            (room.childrenAges || []).forEach(age => {
+                if (age !== null && age !== undefined) allAges.push(age);
+            });
+        });
+        if (allAges.length > 0) {
+            url += '&children_ages=' + allAges.join(',');
+        }
+
+        return url;
+    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, totalAdults, totalChildren]);
+
+    const performAjaxSearch = useCallback((url) => {
+        setIsSearching(true);
+        setShowCalendar(false);
+        setShowGuests(false);
+
+        const fetchUrl = url + '&_t=' + Date.now();
+
+        fetch(fetchUrl)
+            .then(r => r.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newPage = doc.querySelector('.novoton-search-results-page');
+                const curPage = document.querySelector('.novoton-search-results-page');
+
+                if (!newPage || !curPage) {
+                    window.location.href = fetchUrl;
+                    return;
+                }
+
+                const curForm = curPage.querySelector('.novoton-search-form-wrapper');
+                const newForm = newPage.querySelector('.novoton-search-form-wrapper');
+
+                if (!curForm || !newForm) {
+                    window.location.href = fetchUrl;
+                    return;
+                }
+
+                // Remove current results (everything after form wrapper)
+                while (curForm.nextSibling) {
+                    curForm.nextSibling.remove();
+                }
+
+                // Append new results from fetched page
+                const fragment = document.createDocumentFragment();
+                let node = newForm.nextSibling;
+                while (node) {
+                    fragment.appendChild(document.importNode(node, true));
+                    node = node.nextSibling;
+                }
+                curPage.appendChild(fragment);
+
+                // Execute inline scripts in the new content
+                curPage.querySelectorAll('script').forEach(oldScript => {
+                    if (oldScript.closest('.novoton-search-form-wrapper')) return;
+                    // Skip already-loaded external scripts (React, DOB validation)
+                    if (oldScript.src && (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation'))) return;
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.textContent = oldScript.textContent;
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+
+                // Scroll to results area
+                const resultsTop = curForm.getBoundingClientRect().bottom + window.pageYOffset - 20;
+                window.scrollTo({ top: resultsTop, behavior: 'smooth' });
+
+                // Update browser URL without page reload
+                window.history.pushState({}, '', url);
+
+                // Reset button state
+                setHasSearched(true);
+                setDatesChanged(false);
+                setIsSearching(false);
+            })
+            .catch(() => {
+                // Fallback to full page navigation on error
+                window.location.href = fetchUrl;
+            });
+    }, []);
+
     const handleSearch = useCallback(() => {
         // Validate dates
         if (!checkIn || !checkOut) {
@@ -175,41 +282,20 @@ export default function BookingEngine({ config }) {
 
         setValidationError('');
 
-        // Build URL
-        let url;
-        if (mode === 'homepage') {
-            url = window.location.origin + '/index.php?dispatch=products.search&q=' +
-                  encodeURIComponent(searchQuery);
-        } else {
-            url = window.location.origin + '/index.php?dispatch=novoton_booking.search';
-            if (hotelId) url += '&hotel_id=' + hotelId;
-            if (productId) url += '&product_id=' + productId;
+        const url = buildSearchUrl();
+
+        // In search mode, use AJAX to update results without page reload
+        if (mode === 'search') {
+            performAjaxSearch(url);
+            return;
         }
 
-        url += '&check_in=' + toDateString(checkIn);
-        url += '&check_out=' + toDateString(checkOut);
-        url += '&adults=' + totalAdults;
-        url += '&children=' + totalChildren;
-        url += '&rooms=' + rooms.length;
-        url += '&rooms_data=' + encodeURIComponent(JSON.stringify(rooms));
-        url += '&_t=' + Date.now();
-
-        // Collect all child ages
-        const allAges = [];
-        rooms.forEach(room => {
-            (room.childrenAges || []).forEach(age => {
-                if (age !== null && age !== undefined) allAges.push(age);
-            });
-        });
-        if (allAges.length > 0) {
-            url += '&children_ages=' + allAges.join(',');
-        }
-
-        window.location.href = url;
-    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, totalAdults, totalChildren]);
+        window.location.href = url + '&_t=' + Date.now();
+    }, [checkIn, checkOut, rooms, mode, buildSearchUrl, performAjaxSearch]);
 
     // Button click handler: "Change search" opens calendar, others navigate
     const handleButtonClick = useCallback(() => {
+        if (isSearching) return;
         if (hasSearched && !datesChanged) {
             // "Change search" state – open calendar for editing
             setShowCalendar(true);
@@ -218,7 +304,7 @@ export default function BookingEngine({ config }) {
         }
         // "Search" or "Apply changes" – perform search
         handleSearch();
-    }, [hasSearched, datesChanged, handleSearch]);
+    }, [hasSearched, datesChanged, handleSearch, isSearching]);
 
     // -----------------------------------------------------------------------
     // Render helpers
@@ -262,8 +348,9 @@ export default function BookingEngine({ config }) {
     // 1. Default: "Search"
     // 2. After search: "Change search"
     // 3. If dates changed after search: "Apply changes"
-    // 4. After clicking "Apply changes": navigates, reloads as "Change search"
+    // 4. After clicking "Apply changes": AJAX updates results, button returns to "Change search"
     const searchBtnText = (() => {
+        if (isSearching) return t('searching', 'Searching...');
         if (buttonText) return buttonText;
         if (hasSearched && datesChanged) return t('applyChanges', 'Apply changes');
         if (hasSearched) return t('changeSearch', 'Change search');
@@ -362,6 +449,8 @@ export default function BookingEngine({ config }) {
                         type="button"
                         className="nvt-btn-search"
                         onClick={handleButtonClick}
+                        disabled={isSearching}
+                        style={isSearching ? { opacity: 0.7, cursor: 'wait' } : undefined}
                     >
                         {searchBtnText}
                     </button>

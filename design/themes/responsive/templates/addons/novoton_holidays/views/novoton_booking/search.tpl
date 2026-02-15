@@ -148,8 +148,10 @@
                             {$total_quota = $total_quota + $r.rooms_available}
                         {/if}
                     {/foreach}
-                    <span style="background: #28a745; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                        ✓ {__("novoton_holidays.available")}: {if $total_quota > 0}{$total_quota}{else}{$novoton_results|@count}{/if} {__("novoton_holidays.rooms")}, {$novoton_results|@count} {if $novoton_results|@count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
+                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|@count}
+                    {$badge_offers_count = $novoton_results|@count}
+                    <span id="novoton-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" style="background: #28a745; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                        ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"}{else}{__("novoton_holidays.rooms")|default:"rooms"}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
                     </span>
                     {/if}
                 </div>
@@ -982,6 +984,22 @@ function closeInfoModal() {
 }
 document.getElementById('info-modal').addEventListener('click', function(e) { if (e.target === this) closeInfoModal(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInfoModal(); });
+
+/**
+ * Dynamically update the availability badge text without page reload.
+ * Call updateAvailabilityBadge(roomsCount, offersCount) from anywhere.
+ */
+window.updateAvailabilityBadge = function(roomsCount, offersCount) {
+    var badge = document.getElementById('novoton-availability-badge');
+    if (!badge) return;
+    var tr = window.NovotonTranslations || {};
+    var roomLabel = (roomsCount === 1) ? (tr.room || 'room') : (tr.rooms || 'rooms');
+    var offerLabel = (offersCount === 1) ? (tr.offer || 'offer') : (tr.offers || 'offers');
+    var availableLabel = tr.available || 'Available';
+    badge.textContent = '\u2713 ' + availableLabel + ': ' + roomsCount + ' ' + roomLabel + ', ' + offersCount + ' ' + offerLabel;
+    badge.setAttribute('data-rooms-count', roomsCount);
+    badge.setAttribute('data-offers-count', offersCount);
+};
 </script>
 
 {* Load React for search form *}
@@ -1040,7 +1058,11 @@ window.NovotonTranslations = {
     of: "{__('novoton_holidays.of')|default:'of'}",
     pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}",
     remove: "{__('novoton_holidays.remove')|default:'Remove'}",
-    changeSearch: "{__('novoton_holidays.change_search')|default:'Change search'}"
+    changeSearch: "{__('novoton_holidays.change_search')|default:'Change search'}",
+    searching: "{__('novoton_holidays.searching')|default:'Searching...'}",
+    available: "{__('novoton_holidays.available')|default:'Available'}",
+    offer: "{__('novoton_holidays.offer')|default:'offer'}",
+    offers: "{__('novoton_holidays.offers')|default:'offers'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>
