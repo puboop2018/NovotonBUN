@@ -1019,7 +1019,7 @@ window.NovotonTranslations = {
     room: "{__('novoton_holidays.room')|default:'Room'}",
     search: "{__('novoton_holidays.search')|default:'Search'}",
     addRoom: "{__('novoton_holidays.add_room')|default:'Add Room'}",
-    childrenAges: "{__('novoton_holidays.childrens_ages')|default:'Childrens ages'}",
+    childrenAges: "{__('novoton_holidays.childrens_ages')|default:"Children's ages"}",
     selectAge: "{__('novoton_holidays.select_age')|default:'Select age'}",
     yearsOld: "{__('novoton_holidays.years_old')|default:'years old'}",
     yearOld: "{__('novoton_holidays.year_old')|default:'year old'}",
@@ -1048,7 +1048,7 @@ window.NovotonTranslations = {
     sun: "{__('novoton_holidays.sun')|default:'Su'}",
     selectCheckOut: "{__('novoton_holidays.select_check_out')|default:'Select check-out date'}",
     selectedSingular: "{__('novoton_holidays.selected_singular')|default:'selected'}",
-    childAge: "{__('novoton_holidays.child_age')|default:'Childs age'}",
+    childAge: "{__('novoton_holidays.child_age')|default:"Child's age at check-in"}",
     dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}",
     child: "{__('novoton_holidays.child')|default:'child'}",
     childLabel: "{__('novoton_holidays.child_label')|default:'Child'}",
@@ -1062,7 +1062,10 @@ window.NovotonTranslations = {
     searching: "{__('novoton_holidays.searching')|default:'Searching...'}",
     available: "{__('novoton_holidays.available')|default:'Available'}",
     offer: "{__('novoton_holidays.offer')|default:'offer'}",
-    offers: "{__('novoton_holidays.offers')|default:'offers'}"
+    offers: "{__('novoton_holidays.offers')|default:'offers'}",
+    pleaseEnterDates: "{__('novoton_holidays.please_enter_dates')|default:'Please select check-in and check-out dates'}",
+    selectDatesMessage: "{__('novoton_holidays.select_dates_message')|default:"Select dates to see this property's availability and prices"}",
+    selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.8.0" defer></script>
