@@ -3306,6 +3306,7 @@
 /* Search Results Page - Mobile */
 .novoton-search-results-page {
     padding: 0 10px;
+    background: #fff;
 }
 
 /* Hotel Header Card */
@@ -5009,7 +5010,7 @@ body.modal-open {
 
 .novoton-search-results-page {
     padding: 0 10px;
-    background: #fff !important;
+    background: #fff;
 }
 
 .novoton-search-form-wrapper {
