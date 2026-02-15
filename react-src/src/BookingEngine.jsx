@@ -395,12 +395,11 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
-                            <span className="nvt-label">{t('checkIn', 'Check-in')} — {t('checkOut', 'Check-out')}</span>
                             {dateDisplayText ? (
                                 <span className="nvt-value">{dateDisplayText}</span>
                             ) : (
                                 <span className="nvt-value nvt-value--placeholder">
-                                    {t('selectDates', 'Select dates')}
+                                    {`${t('checkIn', 'Check-in')} — ${t('checkOut', 'Check-out')}`}
                                 </span>
                             )}
                         </span>
@@ -426,7 +425,6 @@ export default function BookingEngine({ config }) {
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
-                            <span className="nvt-label">{t('guests', 'Guests')}</span>
                             <span className="nvt-value">{guestSummary}</span>
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>
