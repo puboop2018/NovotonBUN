@@ -89,7 +89,9 @@ export function formatDateShort(date) {
     const locale = getLocale();
     const dayNames = locale === 'ro' ? DAYS_SHORT_RO : DAYS_SHORT_EN;
     const monthNames = locale === 'ro' ? MONTHS_SHORT_RO : MONTHS_SHORT_EN;
-    return dayNames[date.getDay()] + ' ' + date.getDate() + ' ' + monthNames[date.getMonth()];
+    const day = dayNames[date.getDay()].toLowerCase();
+    const month = monthNames[date.getMonth()].toLowerCase();
+    return day + ', ' + date.getDate() + ' ' + month;
 }
 
 /**
