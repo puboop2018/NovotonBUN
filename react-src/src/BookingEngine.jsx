@@ -115,13 +115,14 @@ export default function BookingEngine({ config }) {
         const roomLabel = (rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms')).toLowerCase();
         parts.push(`${rooms.length} ${roomLabel}`);
 
-        return parts.join(' ');
+        return parts.join(' \u00b7 ');
     })();
 
-    // Date display text – e.g. "mon., 14 feb. — mon., 21 feb."
+    // Date display text – e.g. "mon., 14 feb. — mon., 21 feb., 7 nights"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
-            return `${formatDateShort(checkIn)} — ${formatDateShort(checkOut)}`;
+            const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
+            return `${formatDateShort(checkIn)} — ${formatDateShort(checkOut)}, ${nights} ${nightLabel}`;
         }
         if (checkIn) {
             return `${formatDateShort(checkIn)} — ...`;
