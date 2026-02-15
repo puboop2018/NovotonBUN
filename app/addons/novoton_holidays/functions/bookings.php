@@ -115,12 +115,16 @@ function fn_novoton_check_reservation_status($booking_id = 0)
             if (!empty($status_response)) {
                 $new_status = (string)($status_response['Status'] ?? $status_response['status'] ?? '');
                 
-                // Map Novoton status to internal status
+                // Map Novoton API status codes (hotel_res_RQ response) to internal status
                 $status_map = [
+                    'OK' => 'confirmed',
                     'Confirmed' => 'confirmed',
-                    'OnRequest' => 'pending',
-                    'Waitlist' => 'pending',
+                    'ASK' => 'ask',
+                    'OnRequest' => 'ask',
+                    'ST' => 'cancelled',
                     'Cancelled' => 'cancelled',
+                    'WT' => 'waiting',
+                    'Waitlist' => 'waiting',
                 ];
                 
                 $internal_status = $status_map[$new_status] ?? $booking['status'];

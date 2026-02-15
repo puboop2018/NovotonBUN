@@ -27,11 +27,11 @@ final class Constants
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_FAILED = 'failed';
     
-    // Novoton API status values
-    public const NOVOTON_STATUS_CONFIRMED = 'Confirmed';
-    public const NOVOTON_STATUS_ON_REQUEST = 'OnRequest';
-    public const NOVOTON_STATUS_CANCELLED = 'Cancelled';
-    public const NOVOTON_STATUS_WAITLIST = 'Waitlist';
+    // Novoton API status values (hotel_res_RQ response codes)
+    public const NOVOTON_STATUS_CONFIRMED = 'OK';      // Reservation accepted and confirmed
+    public const NOVOTON_STATUS_ON_REQUEST = 'ASK';     // Reservation accepted with asking status
+    public const NOVOTON_STATUS_CANCELLED = 'ST';       // Reservation cancelled
+    public const NOVOTON_STATUS_WAITLIST = 'WT';        // Reservation with waiting status
     
     // ========== Board Types ==========
     
