@@ -203,6 +203,25 @@ function fn_novoton_normalize_room_code($roomCode)
 }
 
 /**
+ * Normalize resort/city name for comparison
+ *
+ * Handles common API inconsistencies like "ST.CONSTANTINE & ELENA"
+ * vs "ST. CONSTANTINE AND ELENA" by stripping punctuation and
+ * normalizing whitespace.
+ *
+ * @param string $name Resort or city name
+ * @return string Normalized name for comparison
+ */
+function fn_novoton_normalize_resort_name($name)
+{
+    $name = strtoupper(trim($name));
+    $name = str_replace('&', 'AND', $name);
+    $name = str_replace(['.', ',', '-', "'", '"'], ' ', $name);
+    $name = preg_replace('/\s+/', ' ', $name);
+    return trim($name);
+}
+
+/**
  * Parse payment terms from XML string
  * 
  * Novoton API format:
