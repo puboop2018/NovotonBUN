@@ -1,7 +1,7 @@
 <?php
 /***************************************************************************
  *                                                                          *
- *   (c) 2024-2025 VacanteLitoral.ro                                       *
+ *   (c) 2024-2026 VacanteLitoral.ro                                       *
  *                                                                          *
  *   Novoton Holidays Addon - Configuration Constants                       *
  *   Location: app/addons/novoton_holidays/config.php                       *
@@ -13,7 +13,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 /**
  * Addon version
  */
-define('NOVOTON_HOLIDAYS_VERSION', '2.8.0');
+define('NOVOTON_HOLIDAYS_VERSION', '3.0.0');
 
 /**
  * Addon ID

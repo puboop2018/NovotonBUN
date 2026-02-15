@@ -199,12 +199,14 @@ class CronService
         $map = [
             'OK' => 'confirmed',
             'Confirmed' => 'confirmed',
-            'ST' => 'confirmed',
-            'WT' => 'waiting',
             'ASK' => 'ask',
-            'RQ' => 'pending',
+            'OnRequest' => 'ask',
+            'ST' => 'cancelled',
             'Cancelled' => 'cancelled',
-            'CX' => 'cancelled'
+            'CX' => 'cancelled',
+            'WT' => 'waiting',
+            'Waitlist' => 'waiting',
+            'RQ' => 'pending',
         ];
 
         return $map[$novotonStatus] ?? 'pending';

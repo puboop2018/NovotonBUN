@@ -1289,8 +1289,8 @@ msgid "Confirmed"
 msgstr "Confirmed"
 
 msgctxt "Languages::novoton_holidays.status_ask"
-msgid "Pending"
-msgstr "Pending"
+msgid "On Request"
+msgstr "On Request"
 
 msgctxt "Languages::novoton_holidays.status_st"
 msgid "Cancelled"

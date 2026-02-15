@@ -152,12 +152,22 @@ class BookingRepository
     /**
      * Set Novoton reservation ID
      */
-    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'confirmed'): bool
+    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'OK'): bool
     {
+        // Map Novoton API status codes to internal status
+        $status_map = [
+            'OK' => 'confirmed',
+            'Confirmed' => 'confirmed',
+            'ASK' => 'ask',
+            'ST' => 'cancelled',
+            'WT' => 'waiting',
+        ];
+        $internal_status = $status_map[$status] ?? 'pending';
+
         return $this->update($booking_id, [
             'novoton_reservation_id' => $reservation_id,
             'novoton_status' => $status,
-            'status' => ($status == 'Confirmed') ? 'confirmed' : 'pending'
+            'status' => $internal_status
         ]);
     }
     
