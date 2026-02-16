@@ -67,7 +67,7 @@ class PriceInfoCalculation
     public function __construct()
     {
         $this->commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? 0);
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
 
     /**

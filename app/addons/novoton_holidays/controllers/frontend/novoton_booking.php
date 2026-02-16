@@ -79,29 +79,6 @@ foreach ($_nvt_array_params as $_nvt_param) {
 unset($_nvt_array_params, $_nvt_param);
 
 //=============================================================================
-// CACHING HELPERS
-// A72: Use CacheService::remember() for caching. Example:
-//   $cache = _nvt_get_cache_service();
-//   $data = $cache->remember('cache_key', function() { return fetch_data(); }, 300);
-//=============================================================================
-
-//=============================================================================
-// SEARCH HELPERS
-// A72: Use SearchService methods directly:
-//   $searchService = _nvt_get_search_service();
-//   $params = $searchService->parseSearchParams($request);
-//   $totals = $searchService->calculateRoomTotals($rooms_data);
-//=============================================================================
-
-//=============================================================================
-// BOOKING HELPERS
-// A72: Use BookingService methods directly:
-//   $bookingService = _nvt_get_booking_service();
-//   $booking_id = $bookingService->createBooking($bookingData, $product_id);
-//   $bookingService->addToCart($booking_id, $product_id, $bookingData);
-//=============================================================================
-
-//=============================================================================
 // UTILITY HELPERS
 //=============================================================================
 
@@ -3121,7 +3098,9 @@ if ($mode == 'ajax_recalculate_price') {
         $addon_settings = Registry::get('addons.novoton_holidays');
         $debug_enabled = (!empty($addon_settings['debug']) && $addon_settings['debug'] === 'Y')
                       || !empty($_REQUEST['novoton_debug']);
-    } catch (\Exception $e) {}
+    } catch (\Exception $e) {
+        // Registry may not be available in edge cases; debug stays disabled
+    }
 
     $debug_log = function($msg, $data = null) use (&$debug_enabled, &$debug_messages) {
         if (!$debug_enabled) return;

@@ -39,7 +39,7 @@ class CacheService
     {
         $this->storage = $storage;
         $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
         
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {

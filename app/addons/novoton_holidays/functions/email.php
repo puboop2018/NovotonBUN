@@ -14,8 +14,27 @@ use Tygh\Tygh;
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 /**
+ * Escape a CSV field to prevent formula injection.
+ *
+ * Values starting with =, +, -, @, tab or carriage-return are prefixed
+ * with a single-quote so spreadsheet applications treat them as text.
+ * The field is also double-quote-wrapped with inner quotes escaped.
+ *
+ * @param string $value Raw field value
+ * @return string Safe, quoted CSV field
+ */
+function fn_novoton_csv_escape(string $value): string
+{
+    // Neutralise formula injection characters
+    if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value)) {
+        $value = "'" . $value;
+    }
+    return '"' . str_replace('"', '""', $value) . '"';
+}
+
+/**
  * Generate CSV report from import results
- * 
+ *
  * @param array $results Array of import results
  * @param string $import_type Type of import (manual/cron)
  * @param array $summary Summary statistics
@@ -24,11 +43,11 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 function fn_novoton_generate_import_csv_report($results, $import_type = 'manual', $summary = [])
 {
     $csv_lines = [];
-    
+
     // Header row
     $csv_lines[] = implode(';', [
         'Hotel ID',
-        'Hotel Name', 
+        'Hotel Name',
         'Action',
         'Product ID',
         'Star Rating',
@@ -37,22 +56,22 @@ function fn_novoton_generate_import_csv_report($results, $import_type = 'manual'
         'Error',
         'Timestamp'
     ]);
-    
+
     // Data rows
     foreach ($results as $row) {
         $csv_lines[] = implode(';', [
-            $row['hotel_id'] ?? '',
-            '"' . str_replace('"', '""', $row['hotel_name'] ?? '') . '"',
-            $row['action'] ?? '',
-            $row['product_id'] ?? '',
-            $row['star_rating'] ?? '',
-            $row['description'] ?? '',
-            $row['facilities'] ?? '',
-            '"' . str_replace('"', '""', $row['error'] ?? '') . '"',
-            $row['timestamp'] ?? date('Y-m-d H:i:s')
+            fn_novoton_csv_escape((string)($row['hotel_id'] ?? '')),
+            fn_novoton_csv_escape((string)($row['hotel_name'] ?? '')),
+            fn_novoton_csv_escape((string)($row['action'] ?? '')),
+            fn_novoton_csv_escape((string)($row['product_id'] ?? '')),
+            fn_novoton_csv_escape((string)($row['star_rating'] ?? '')),
+            fn_novoton_csv_escape((string)($row['description'] ?? '')),
+            fn_novoton_csv_escape((string)($row['facilities'] ?? '')),
+            fn_novoton_csv_escape((string)($row['error'] ?? '')),
+            fn_novoton_csv_escape((string)($row['timestamp'] ?? date('Y-m-d H:i:s')))
         ]);
     }
-    
+
     return implode("\n", $csv_lines);
 }
 
@@ -252,19 +271,19 @@ function fn_novoton_generate_hotel_features_csv()
             // Romanian row
             $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';
             $csv_lines[] = implode(';', [
-                $product_code,
-                'ro',
-                $star_ro,
-                $boards_str
+                fn_novoton_csv_escape($product_code),
+                fn_novoton_csv_escape('ro'),
+                fn_novoton_csv_escape($star_ro),
+                fn_novoton_csv_escape($boards_str)
             ]);
-            
+
             // English row
             $star_en = ($stars >= 1 && $stars <= 5) ? $star_labels['en'][$stars - 1] : '';
             $csv_lines[] = implode(';', [
-                $product_code,
-                'en',
-                $star_en,
-                $boards_str
+                fn_novoton_csv_escape($product_code),
+                fn_novoton_csv_escape('en'),
+                fn_novoton_csv_escape($star_en),
+                fn_novoton_csv_escape($boards_str)
             ]);
             
             $result['count']++;

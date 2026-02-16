@@ -125,7 +125,9 @@ class OffersUpdateCommand extends AbstractCronCommand
                 if ($desc && isset($desc->Description)) {
                     $description = (string)$desc->Description;
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+                fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to get description for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+            }
 
             $product_data = [
                 'product' => $existing['hotel_name'] ?? $hotel_name,
@@ -185,10 +187,14 @@ class OffersUpdateCommand extends AbstractCronCommand
                     if (++$count >= 10) break;
                 }
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to import images for hotel {$hotelId}", 'error' => $e->getMessage()]);
+        }
 
         try {
             fn_novoton_sync_hotel_facilities($hotelId);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotelId}", 'error' => $e->getMessage()]);
+        }
     }
 }

@@ -160,24 +160,9 @@ if ($mode == 'manage' || empty($mode)) {
     
     // Get addon settings
     $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    
+
     // Parse selected countries
-    $selected_countries = $addon_settings['selected_countries'] ?? 'BULGARIA';
-    if (is_array($selected_countries)) {
-        $countries = [];
-        foreach ($selected_countries as $key => $value) {
-            if ($value === 'Y' || $value === '1') {
-                $countries[] = $key;
-            } elseif (is_string($value) && strlen($value) > 2) {
-                $countries[] = $value;
-            }
-        }
-    } else {
-        $countries = array_filter(array_map('trim', explode(',', $selected_countries)));
-    }
-    if (empty($countries)) {
-        $countries = ['BULGARIA'];
-    }
+    $countries = fn_novoton_parse_countries();
     
     // Gather statistics
     $stats = [

@@ -222,6 +222,39 @@ function fn_novoton_normalize_resort_name($name)
 }
 
 /**
+ * Parse an XML string that may be wrapped in CDATA.
+ *
+ * Handles raw XML, CDATA-wrapped XML, and fragments that need a root wrapper.
+ *
+ * @param string $xml_string Raw XML or CDATA string
+ * @return \SimpleXMLElement|null Parsed XML or null on failure
+ */
+function fn_novoton_parse_xml_string($xml_string)
+{
+    if (empty($xml_string)) {
+        return null;
+    }
+
+    $xml_string = trim($xml_string);
+
+    // Extract from CDATA if needed
+    if (strpos($xml_string, '<') !== 0) {
+        if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xml_string, $matches)) {
+            $xml_string = $matches[1];
+        }
+    }
+
+    libxml_use_internal_errors(true);
+    $xml = simplexml_load_string($xml_string);
+
+    if ($xml === false) {
+        $xml = simplexml_load_string('<root>' . $xml_string . '</root>');
+    }
+
+    return $xml ?: null;
+}
+
+/**
  * Parse payment terms from XML string
  * 
  * Novoton API format:
@@ -238,30 +271,12 @@ function fn_novoton_parse_payment_terms($xml_string)
     if (empty($xml_string)) {
         return [];
     }
-    
+
     $terms = [];
-    
+
     try {
-        // Handle both raw XML and CDATA-wrapped XML
-        $xml_string = trim($xml_string);
-        
-        // If it doesn't start with <, try to extract from CDATA
-        if (strpos($xml_string, '<') !== 0) {
-            if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xml_string, $matches)) {
-                $xml_string = $matches[1];
-            }
-        }
-        
-        // Parse XML
-        libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($xml_string);
-        
-        if ($xml === false) {
-            // Try wrapping in root element
-            $xml = simplexml_load_string('<root>' . $xml_string . '</root>');
-        }
-        
-        if ($xml === false) {
+        $xml = fn_novoton_parse_xml_string($xml_string);
+        if ($xml === null) {
             return [];
         }
         
@@ -328,27 +343,13 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = '')
     }
     
     $terms = [];
-    
+
     try {
-        $xml_string = trim($xml_string);
-        
-        if (strpos($xml_string, '<') !== 0) {
-            if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xml_string, $matches)) {
-                $xml_string = $matches[1];
-            }
-        }
-        
-        libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($xml_string);
-        
-        if ($xml === false) {
-            $xml = simplexml_load_string('<root>' . $xml_string . '</root>');
-        }
-        
-        if ($xml === false) {
+        $xml = fn_novoton_parse_xml_string($xml_string);
+        if ($xml === null) {
             return [];
         }
-        
+
         // Try Novoton format first: <Penalty tillDate="..." Type="...">value</Penalty>
         $penaltyRules = $xml->xpath('//Penalty') ?: [];
         

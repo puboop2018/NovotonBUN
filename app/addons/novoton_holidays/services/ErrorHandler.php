@@ -12,14 +12,18 @@
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Registry;
 
 class ErrorHandler
 {
     /** @var array Collected errors */
     private static $errors = [];
-    
+
     /** @var bool Debug mode */
     private static $debug = false;
+
+    /** @var bool Whether debug has been auto-initialized from settings */
+    private static $initialized = false;
     
     /** @var array Error messages (translatable) */
     private static $messages = [
@@ -45,31 +49,45 @@ class ErrorHandler
     
     /**
      * Initialize error handler
-     * 
+     *
      * @param bool $debug Enable debug mode
      */
     public static function init(bool $debug = false): void
     {
         self::$debug = $debug;
         self::$errors = [];
+        self::$initialized = true;
     }
-    
+
+    /**
+     * Auto-initialize from addon settings if not explicitly initialized
+     */
+    private static function ensureInitialized(): void
+    {
+        if (!self::$initialized) {
+            self::$debug = (Registry::get(Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+            self::$initialized = true;
+        }
+    }
+
     /**
      * Add an error
-     * 
+     *
      * @param string $code Error code
      * @param string $message Custom message (optional)
      * @param array $context Additional context
      */
     public static function addError(string $code, string $message = '', array $context = []): void
     {
+        self::ensureInitialized();
+
         self::$errors[] = [
             'code' => $code,
             'message' => $message ?: self::getMessage($code),
             'context' => self::$debug ? $context : [],
             'timestamp' => date('Y-m-d H:i:s'),
         ];
-        
+
         // Log error if debug enabled
         if (self::$debug) {
             self::logError($code, $message, $context);

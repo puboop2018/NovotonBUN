@@ -31,7 +31,7 @@ class SearchService
     {
         $this->api = fn_novoton_get_api();
         $this->cache = new CacheService();
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
     /**

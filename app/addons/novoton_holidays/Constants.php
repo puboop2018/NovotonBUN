@@ -172,8 +172,16 @@ final class Constants
     public const DEFAULT_ROOMS = 1;
     public const DEFAULT_COMMISSION = 0;
     
+    // ========== Debug / Logging Settings Keys ==========
+
+    /** Registry key for verbose service logging (default Y) */
+    public const SETTING_DEBUG_LOGGING = 'addons.novoton_holidays.debug_logging';
+
+    /** Registry key for full debug mode (default N) */
+    public const SETTING_DEBUG_MODE = 'addons.novoton_holidays.debug_mode';
+
     // ========== File Paths ==========
-    
+
     public const CACHE_DIR = 'var/cache/novoton/';
     public const LOG_DIR = 'var/log/';
     

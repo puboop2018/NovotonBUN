@@ -124,8 +124,8 @@ class NovotonHttpClient
             curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
             curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
             $response = curl_exec($ch);
             $lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -219,8 +219,8 @@ class NovotonHttpClient
                 curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
                 curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
                 curl_multi_add_handle($mh, $ch);
                 $handles[$key] = $ch;

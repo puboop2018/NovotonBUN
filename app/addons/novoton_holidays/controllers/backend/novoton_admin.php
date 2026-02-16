@@ -376,24 +376,8 @@ if ($mode == 'run_cron') {
 // ================================================
 
 function fn_novoton_admin_sync_hotels($api) {
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $selected_countries = !empty($addon_settings['selected_countries']) ? $addon_settings['selected_countries'] : 'BULGARIA';
-    
-    $countries = [];
-    if (is_array($selected_countries)) {
-        foreach ($selected_countries as $key => $value) {
-            if ($value === 'Y' || $value === '1' || $value === 1) {
-                $countries[] = $key;
-            }
-        }
-    } else {
-        $countries = array_map('trim', explode(',', $selected_countries));
-    }
-    
-    if (empty($countries)) {
-        $countries = ['BULGARIA'];
-    }
-    
+    $countries = fn_novoton_parse_countries();
+
     $total = 0;
     $synced = 0;
     

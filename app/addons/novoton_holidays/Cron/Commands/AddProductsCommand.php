@@ -85,7 +85,9 @@ class AddProductsCommand extends AbstractCronCommand
                 if ($desc && isset($desc->Description)) {
                     $description = (string)$desc->Description;
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+                fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to get description for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+            }
 
             $product_data = [
                 'product' => $hotel['hotel_name'],
@@ -115,11 +117,15 @@ class AddProductsCommand extends AbstractCronCommand
                             if (++$count >= 10) break;
                         }
                     }
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                    fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to import images for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                }
 
                 try {
                     fn_novoton_sync_hotel_facilities($hotel_id);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                    fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                }
 
                 $added++;
                 $this->output("ADDED (ID: {$product_id})");

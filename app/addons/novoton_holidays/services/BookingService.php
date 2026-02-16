@@ -36,7 +36,7 @@ class BookingService
         $this->api = fn_novoton_get_api();
         $this->guestService = new GuestDataService();
         $this->priceService = new PriceService();
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
     /**
