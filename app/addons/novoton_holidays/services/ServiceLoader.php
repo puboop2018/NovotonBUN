@@ -26,6 +26,8 @@ use Tygh\Addons\NovotonHolidays\Services\SecurityService;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ValidationHelper;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
+use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
+use Tygh\Addons\NovotonHolidays\Services\AlternativeRequestService;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
@@ -39,7 +41,8 @@ $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
 
 // Load services
 foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService',
-          'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService'] as $class) {
+          'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService',
+          'DiagnosticsService', 'AlternativeRequestService'] as $class) {
     $file = $services_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Services\\{$class}")) {
         require_once $file;
@@ -236,4 +239,32 @@ function _nvt_db_iterator() {
  */
 function _nvt_batched_hotelinfo_sync() {
     return new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
+}
+
+/**
+ * Get DiagnosticsService singleton
+ * Handles API testing, hotel list testing, room price testing, etc.
+ *
+ * @return DiagnosticsService
+ */
+function _nvt_diagnostics_service() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new DiagnosticsService();
+    }
+    return $instance;
+}
+
+/**
+ * Get AlternativeRequestService singleton
+ * Handles alternative booking request creation, API calls, email
+ *
+ * @return AlternativeRequestService
+ */
+function _nvt_alternative_request_service() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new AlternativeRequestService();
+    }
+    return $instance;
 }

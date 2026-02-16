@@ -476,8 +476,249 @@ class BookingService
     }
     
     /**
+     * Verify price via room_price API and extract terms.
+     *
+     * Calls the Novoton room_price API with the given parameters,
+     * validates that a price is returned, applies commission, and
+     * extracts terms of payment/cancellation from the response.
+     *
+     * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
+     * @return array{success: bool, total_price: float, base_price: float, terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string, error: string}
+     */
+    public function verifyPrice(array $params): array
+    {
+        $priceParams = [
+            'hotel_id' => $params['hotel_id'],
+            'room_id' => $params['room_id'] ?? '',
+            'board_id' => $params['board_id'] ?? '',
+            'star_rating' => '',
+            'check_in' => $params['check_in'],
+            'check_out' => $params['check_out'],
+            'adults' => intval($params['adults'] ?? 2),
+            'children' => $params['children_ages'] ?? [],
+        ];
+
+        $priceData = $this->api->getRoomPrice($priceParams);
+
+        if (!$priceData || !isset($priceData->Price)) {
+            $this->log('Price verification failed', [
+                'hotel_id' => $params['hotel_id'],
+                'room_id' => $params['room_id'] ?? '',
+                'children_ages' => $params['children_ages'] ?? [],
+            ]);
+            return [
+                'success' => false,
+                'total_price' => 0,
+                'base_price' => 0,
+                'terms_of_payment' => '',
+                'terms_of_cancellation' => '',
+                'remark' => '',
+                'important' => '',
+                'error' => 'price_verification_failed',
+            ];
+        }
+
+        $rawPrice = floatval((string)$priceData->Price);
+        $totalPrice = $this->api->applyCommission($rawPrice);
+
+        // Extract terms
+        $termsOfPayment = '';
+        $termsOfCancellation = '';
+        if ($priceData instanceof \SimpleXMLElement) {
+            $tp = $priceData->xpath('//TermsOfPayment');
+            $tc = $priceData->xpath('//TermsOfCancellation');
+            if (!empty($tp[0])) {
+                $termsOfPayment = $tp[0]->asXML();
+            }
+            if (!empty($tc[0])) {
+                $termsOfCancellation = $tc[0]->asXML();
+            }
+        }
+
+        return [
+            'success' => true,
+            'total_price' => $totalPrice,
+            'base_price' => $rawPrice,
+            'terms_of_payment' => $termsOfPayment,
+            'terms_of_cancellation' => $termsOfCancellation,
+            'remark' => isset($priceData->remark) ? (string)$priceData->remark : '',
+            'important' => isset($priceData->Important) ? (string)$priceData->Important : '',
+            'error' => '',
+        ];
+    }
+
+    /**
+     * Assemble the full cart product array for a Novoton booking.
+     *
+     * Combines booking record data, hotel info, and terms into the
+     * structure expected by CS-Cart's cart system.
+     *
+     * @param int $productId CS-Cart product ID
+     * @param int $bookingId Novoton booking ID
+     * @param array $bookingData Raw form data
+     * @param array $hotelInfo Hotel data from repository
+     * @param array $guestsData Parsed guest data
+     * @param array $priceResult Result from verifyPrice()
+     * @param array $roomsData Parsed rooms data
+     * @return array Cart product entry with 'extra' containing all booking metadata
+     */
+    public function assembleCartProduct(
+        int $productId,
+        int $bookingId,
+        array $bookingData,
+        array $hotelInfo,
+        array $guestsData,
+        array $priceResult,
+        array $roomsData
+    ): array {
+        $boardId = $bookingData['board_id'] ?? 'BB';
+        $nights = $this->calculateNights($bookingData['check_in'], $bookingData['check_out']);
+        $guestNames = [];
+        $holderName = '';
+        foreach ($guestsData as $g) {
+            if (!empty($g['name'])) {
+                $guestNames[] = $g['name'];
+            }
+        }
+        $holderName = $guestNames[0] ?? '';
+        $guestList = implode(', ', $guestNames);
+
+        // Collect children ages from guests
+        $childAges = [];
+        foreach ($guestsData as $g) {
+            if (isset($g['type']) && $g['type'] === 'child' && isset($g['age'])) {
+                $childAges[] = intval($g['age']);
+            }
+        }
+
+        $totalPrice = $priceResult['total_price'];
+
+        return [
+            'product_id' => $productId,
+            'amount' => 1,
+            'price' => $totalPrice,
+            'base_price' => $totalPrice,
+            'original_price' => $totalPrice,
+            'stored_price' => 'Y',
+            'extra' => [
+                'novoton_booking' => true,
+                'novoton_booking_id' => $bookingId,
+                'hotel_id' => $bookingData['hotel_id'],
+                'hotel_name' => $hotelInfo['hotel_name'] ?? '',
+                'hotel_city' => $hotelInfo['city'] ?? '',
+                'hotel_region' => $hotelInfo['region'] ?? '',
+                'hotel_country' => $hotelInfo['country'] ?? 'BULGARIA',
+                'package_name' => $bookingData['package_name'] ?? '',
+                'room_id' => $bookingData['room_id'],
+                'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
+                'room_type_display' => fn_novoton_format_room_type($bookingData['room_id']),
+                'board_id' => $boardId,
+                'board_name' => fn_novoton_format_board_name($boardId),
+                'check_in' => $bookingData['check_in'],
+                'check_out' => $bookingData['check_out'],
+                'nights' => $nights,
+                'adults' => intval($bookingData['adults'] ?? 2),
+                'children' => intval($bookingData['children'] ?? 0),
+                'children_ages' => !empty($childAges) ? implode(',', $childAges) : ($bookingData['children_ages'] ?? ''),
+                'num_rooms' => intval($bookingData['num_rooms'] ?? 1),
+                'rooms_data' => $roomsData,
+                'guest_names' => $guestList,
+                'holder_name' => $holderName,
+                'guests_data' => json_encode($guestsData),
+                'contact_email' => $bookingData['contact']['email'] ?? '',
+                'contact_phone' => $bookingData['contact']['phone'] ?? '',
+                'special_requests' => strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000)),
+                'terms_of_payment' => fn_novoton_format_payment_terms($priceResult['terms_of_payment']),
+                'terms_of_cancellation' => fn_novoton_format_cancellation_terms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
+                'terms_of_payment_raw' => $priceResult['terms_of_payment'],
+                'terms_of_cancellation_raw' => $priceResult['terms_of_cancellation'],
+                'remark' => $priceResult['remark'],
+                'important' => $priceResult['important'],
+                'total_price' => $totalPrice,
+                'currency' => 'EUR',
+            ],
+        ];
+    }
+
+    /**
+     * Enrich rooms_data with display fields needed by Smarty templates.
+     *
+     * Adds children_ages_str and room_type_display to each room entry,
+     * and syncs children ages from guest form data back to rooms.
+     *
+     * @param array $roomsData Rooms data array
+     * @param array $guestsData Parsed guest data
+     * @return array Enriched rooms data
+     */
+    public function enrichRoomsData(array $roomsData, array $guestsData): array
+    {
+        foreach ($roomsData as $roomIdx => &$room) {
+            $roomNum = $roomIdx + 1;
+
+            // Collect children ages from guests for this room
+            $childAgesForRoom = [];
+            foreach ($guestsData as $guest) {
+                if (isset($guest['room']) && $guest['room'] == $roomNum && ($guest['type'] ?? '') === 'child') {
+                    $childAgesForRoom[] = intval($guest['age'] ?? 0);
+                }
+            }
+
+            if (!empty($childAgesForRoom)) {
+                $room['childrenAges'] = $childAgesForRoom;
+            }
+
+            // Build display string for children ages
+            if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
+                $validAges = array_filter($room['childrenAges'], function ($age) {
+                    return $age !== null && $age !== '';
+                });
+                $room['children_ages_str'] = !empty($validAges)
+                    ? implode(', ', $validAges) . ' ' . __('novoton_holidays.years_old')
+                    : '';
+            } else {
+                $room['children_ages_str'] = '';
+            }
+
+            // Ensure room_type_display is set
+            if (empty($room['room_type_display']) && !empty($room['room_id'])) {
+                $room['room_type_display'] = fn_novoton_format_room_type($room['room_id']);
+                $room['room_name'] = fn_novoton_format_room_type($room['room_id']);
+            }
+
+            // Fix room_id: PHP URL decoding converts + to space
+            if (!empty($room['room_id'])) {
+                $room['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room['room_id']);
+            }
+        }
+        unset($room);
+
+        return $roomsData;
+    }
+
+    /**
+     * Resolve the CS-Cart product ID for a given hotel ID.
+     *
+     * @param string $hotelId Novoton hotel ID
+     * @param int $fallbackProductId Product ID from form (fallback)
+     * @return int Product ID or 0 if not found
+     */
+    public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int
+    {
+        $addonSettings = Registry::get('addons.novoton_holidays') ?? [];
+        $prefix = trim(explode(',', $addonSettings['product_code_prefixes'] ?? 'NVT')[0]);
+        $productCode = $prefix . $hotelId;
+
+        $productId = (int)db_get_field(
+            "SELECT product_id FROM ?:products WHERE product_code = ?s",
+            $productCode
+        );
+
+        return $productId ?: $fallbackProductId;
+    }
+
+    /**
      * Log debug message
-     * 
+     *
      * @param string $message Message
      * @param array $context Context
      */

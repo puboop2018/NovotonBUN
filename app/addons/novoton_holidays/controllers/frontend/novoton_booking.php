@@ -3040,7 +3040,7 @@ if ($mode == 'update_booking') {
 
 /**
  * Request alternatives when no availability
- * Uses hotel_request API to request alternatives from Novoton
+ * Delegates to AlternativeRequestService for API call, DB storage, and email.
  */
 if ($mode == 'request_alternatives') {
     $security = _nvt_get_security_service();
@@ -3058,158 +3058,40 @@ if ($mode == 'request_alternatives') {
     $sanitized = $security->validateSearchParams($_REQUEST);
 
     $hotel_id = $sanitized['hotel_id'] ?? '';
-    $hotel_name = strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200));
     $check_in = $sanitized['check_in'] ?? '';
-    $check_out = $sanitized['check_out'] ?? ($_REQUEST['check_out'] ?? '');
     $nights = $sanitized['nights'] ?? 7;
-    $adults = $sanitized['adults'] ?? 2;
-    $children = $sanitized['children'] ?? 0;
-    $num_rooms = $sanitized['rooms'] ?? 1;
-    $contact_email = trim($_REQUEST['contact_email'] ?? '');
-    $contact_phone = trim($_REQUEST['contact_phone'] ?? '');
-    $notes = strip_tags(mb_substr(trim($_REQUEST['notes'] ?? ''), 0, 2000));
 
-    if (empty($hotel_id) || empty($check_in) || empty($contact_email)) {
+    // Delegate to AlternativeRequestService
+    $altService = _nvt_alternative_request_service();
+    $result = $altService->createRequest([
+        'hotel_id' => $hotel_id,
+        'hotel_name' => strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200)),
+        'check_in' => $check_in,
+        'check_out' => $sanitized['check_out'] ?? ($_REQUEST['check_out'] ?? ''),
+        'nights' => $nights,
+        'adults' => $sanitized['adults'] ?? 2,
+        'children' => $sanitized['children'] ?? 0,
+        'num_rooms' => $sanitized['rooms'] ?? 1,
+        'contact_email' => trim($_REQUEST['contact_email'] ?? ''),
+        'contact_phone' => trim($_REQUEST['contact_phone'] ?? ''),
+        'notes' => $_REQUEST['notes'] ?? '',
+    ]);
+
+    if (!empty($result['error']) && $result['error'] === 'missing_required_fields') {
         fn_set_notification('E', __('error'), __('novoton_holidays.missing_required_fields'));
         return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];
     }
 
-    // Validate email
-    if (!filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
+    if (!empty($result['error']) && $result['error'] === 'invalid_email') {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_email'));
         return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];
     }
 
-    // Validate check_out date format
-    if (!empty($check_out) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $check_out)) {
-        $check_out = '';
+    // Show appropriate notification
+    if (!empty($result['message'])) {
+        fn_set_notification('N', __('notice'), __('novoton_holidays.' . $result['message']));
     }
-    
-    // Load API
-    $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-    if (file_exists($src_dir . 'NovotonApi.php')) {
-        require_once($src_dir . 'NovotonApi.php');
-    }
-    
-    try {
-        $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
-        
-        // Build guest data
-        $guests = [];
-        $room_guests = [];
-        for ($i = 1; $i <= $adults; $i++) {
-            $guests[] = [
-                'id' => $i,
-                'name' => 'Guest ' . $i,
-                'birthday' => '',
-                'age' => 30
-            ];
-            $room_guests[] = [
-                'id' => $i,
-                'name' => 'Guest ' . $i
-            ];
-        }
-        
-        // Build request data for hotel_request API
-        $requestData = [
-            'hotel_id' => $hotel_id,
-            'package_name' => $hotel_name,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'room_id' => '', // Any room
-            'board_id' => '', // Any board
-            'holder' => 'Request from ' . $contact_email,
-            'remark' => $notes,
-            'comment' => "Contact: {$contact_email}" . ($contact_phone ? ", Phone: {$contact_phone}" : ''),
-            'guests' => $guests,
-            'room_guests' => $room_guests
-        ];
-        
-        // Send hotel_request to Novoton API - get both XML and response
-        $apiResult = $api->createHotelRequest($requestData, 'UK', true);
-        
-        // Store the request in database with XML sent
-        // Encrypt PII fields (contact email, phone, notes) for GDPR compliance
-        $request_record = [
-            'hotel_id' => $hotel_id,
-            'hotel_name' => $hotel_name,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'nights' => $nights,
-            'adults' => $adults,
-            'children' => $children,
-            'num_rooms' => $num_rooms,
-            'contact_email' => $security->encrypt($contact_email),
-            'contact_phone' => !empty($contact_phone) ? $security->encrypt($contact_phone) : '',
-            'notes' => !empty($notes) ? $security->encrypt($notes) : '',
-            'status' => 'pending',
-            'api_request_xml' => $apiResult['xml_sent'] ?? '',
-            'api_response' => $apiResult['xml_response'] ?? '',
-            'novoton_request_id' => $apiResult['id_num'] ?? '',
-            'created_at' => date('Y-m-d H:i:s')
-        ];
 
-        $security->logSecurityEvent('alternative_request_created', [
-            'hotel_id' => $hotel_id,
-            'novoton_request_id' => $apiResult['id_num'] ?? ''
-        ]);
-        
-        db_query("INSERT INTO ?:novoton_alternative_requests ?e", $request_record);
-        $request_id = db_get_field("SELECT LAST_INSERT_ID()");
-        
-        // Send confirmation email to customer
-        $mail_data = [
-            'hotel_name' => $hotel_name,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'nights' => $nights,
-            'adults' => $adults,
-            'children' => $children,
-            'request_id' => $request_id,
-            'novoton_id' => $apiResult['id_num'] ?? ''
-        ];
-        
-        // Use CS-Cart mailer
-        $mailer = Tygh::$app['mailer'];
-        $mailer->send([
-            'to' => $contact_email,
-            'from' => 'default_company_orders_department',
-            'data' => $mail_data,
-            'template_code' => 'novoton_alternatives_request_confirmation',
-            'tpl' => 'addons/novoton_holidays/email/alternatives_request_confirmation.tpl'
-        ], 'A');
-        
-        fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_request_sent'));
-        
-    } catch (Exception $e) {
-        fn_log_event('general', 'runtime', [
-            'message' => 'Novoton hotel_request error',
-            'error' => $e->getMessage()
-        ]);
-        
-        // Still save the request even if API fails — encrypt PII
-        $request_record = [
-            'hotel_id' => $hotel_id,
-            'hotel_name' => $hotel_name,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'nights' => $nights,
-            'adults' => $adults,
-            'children' => $children,
-            'num_rooms' => $num_rooms,
-            'contact_email' => $security->encrypt($contact_email),
-            'contact_phone' => !empty($contact_phone) ? $security->encrypt($contact_phone) : '',
-            'notes' => !empty($notes) ? $security->encrypt($notes) : '',
-            'status' => 'pending_manual',
-            'api_response' => $e->getMessage(),
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-        
-        db_query("INSERT INTO ?:novoton_alternative_requests ?e", $request_record);
-        
-        fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_request_saved'));
-    }
-    
     return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . $hotel_id . '&check_in=' . $check_in . '&nights=' . $nights)];
 }
 
