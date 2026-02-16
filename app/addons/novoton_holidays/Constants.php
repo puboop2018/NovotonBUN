@@ -34,7 +34,8 @@ final class Constants
     public const NOVOTON_STATUS_WAITLIST = 'WT';        // Reservation with waiting status
     
     // ========== Board Types ==========
-    
+    // Canonical codes: use ValueObjects\BoardType for display-name lookups
+
     public const BOARD_AI = 'AI';           // All Inclusive
     public const BOARD_UAI = 'UAI';         // Ultra All Inclusive
     public const BOARD_FB = 'FB';           // Full Board
@@ -44,7 +45,12 @@ final class Constants
     public const BOARD_BB = 'BB';           // Bed & Breakfast
     public const BOARD_RO = 'RO';           // Room Only
     public const BOARD_SC = 'SC';           // Self Catering
-    
+
+    /**
+     * Board code => display name map.
+     * @deprecated Use ValueObjects\BoardType::allWithAliases() instead.
+     *             Kept for backward compatibility with templates referencing Constants::BOARD_NAMES.
+     */
     public const BOARD_NAMES = [
         self::BOARD_AI => 'All Inclusive',
         'ALL INCL' => 'All Inclusive',
@@ -56,6 +62,20 @@ final class Constants
         self::BOARD_BB => 'Bed & Breakfast',
         self::BOARD_RO => 'Room Only',
         self::BOARD_SC => 'Self Catering',
+    ];
+
+    // ========== Reservation Status Mapping ==========
+    // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses
+
+    public const NOVOTON_STATUS_TO_INTERNAL = [
+        self::NOVOTON_STATUS_CONFIRMED  => self::STATUS_CONFIRMED,  // OK  -> confirmed
+        'Confirmed'                     => self::STATUS_CONFIRMED,
+        self::NOVOTON_STATUS_ON_REQUEST => 'ask',                   // ASK -> ask (on-request)
+        'OnRequest'                     => 'ask',
+        self::NOVOTON_STATUS_CANCELLED  => self::STATUS_CANCELLED,  // ST  -> cancelled
+        'Cancelled'                     => self::STATUS_CANCELLED,
+        self::NOVOTON_STATUS_WAITLIST   => 'waiting',               // WT  -> waiting
+        'Waitlist'                      => 'waiting',
     ];
     
     // ========== Availability Status ==========
@@ -107,16 +127,46 @@ final class Constants
     // Note: hotel_list, hotel_info, priceinfo are NOT cached
     // They are stored in database and synced via cron jobs
     
-    // ========== API Endpoints ==========
-    
-    public const API_FUNCTION_HOTEL_LIST = 'hotel_list';
-    public const API_FUNCTION_HOTEL_INFO = 'hotelinfo';
-    public const API_FUNCTION_ROOM_PRICE = 'room_price';
-    public const API_FUNCTION_HOTEL_QUOTA = 'hotel_quota';
-    public const API_FUNCTION_PRICE_INFO = 'priceinfo';
-    public const API_FUNCTION_RESERVATION = 'reservation';
-    public const API_FUNCTION_RES_INFO = 'resinfo';
-    public const API_FUNCTION_CANCEL = 'cancel_reservation';
+    // ========== API Functions ==========
+    // Names match the Novoton XML API function identifiers exactly.
+    // See Novoton API docs: each constant = the <function> value sent in the URL.
+
+    // --- Catalog & Hotel Data ---
+    public const API_FUNCTION_HOTEL_LIST        = 'hotel_list';         //  1. List hotel names
+    public const API_FUNCTION_HOTEL_INFO        = 'hotelinfo';          //  2. Hotel services/rooms/packages
+    public const API_FUNCTION_HOTEL_DESCRIPTION = 'hotel_description';  //  5. Hotel description text
+    public const API_FUNCTION_HOTEL_IMAGES      = 'hotel_images';       //  6. Hotel pictures
+
+    // --- Pricing & Availability ---
+    public const API_FUNCTION_ROOM_PRICE        = 'room_price';         //  3. Real-time accommodation prices
+    public const API_FUNCTION_HOTEL_QUOTA       = 'hotel_quota';        //  4. Free allotments (availability)
+    public const API_FUNCTION_HOTEL_QUOTA_ADD   = 'hotel_quota_add';    // 21. Additional allotments
+    public const API_FUNCTION_PRICE_INFO        = 'priceinfo';          // 13. Season prices
+    public const API_FUNCTION_SPECIAL_OFFERS    = 'spo';                // 10. Early booking & discounts
+    public const API_FUNCTION_OFFERS_UPDATE     = 'offers_update';      // 25. Updated/new offers (delta)
+
+    // --- Reservations ---
+    public const API_FUNCTION_RESERVATION       = 'hotel_res_RQ';       //  7. Submit reservation request
+    public const API_FUNCTION_RES_INFO          = 'resinfo';            // 15. Reservation status check
+    public const API_FUNCTION_CANCEL            = 'cancel_reservation'; //     Cancel reservation
+    public const API_FUNCTION_INVOICE_HTML      = 'hotel_acc_RQ_html';  //  8. Invoice (HTML)
+    public const API_FUNCTION_INVOICE_XML       = 'hotel_acc_RQ';       //  9. Invoice (XML)
+    public const API_FUNCTION_LIST_INVOICES     = 'list_invoices';      // 14. List invoices
+
+    // --- Alternatives ---
+    public const API_FUNCTION_HOTEL_REQUEST     = 'hotel_request';      // 22. Request alternatives
+    public const API_FUNCTION_ALTERNATIVE_RS    = 'alternative_RS';     // 23. Check alternative offers
+
+    // --- Search & Destinations ---
+    public const API_FUNCTION_SEARCH            = 'frmsearch';          //     Availability search
+    public const API_FUNCTION_RESORT_LIST       = 'resort_list';        // 16. Destinations/resort names
+
+    // --- Facilities ---
+    public const API_FUNCTION_LIST_FACILITIES   = 'list_facilities';    // 26. All facilities catalog
+    public const API_FUNCTION_HOTEL_FACILITIES  = 'hotel_facilities';   // 27. Facilities for a hotel
+
+    // --- Commission ---
+    public const API_FUNCTION_KICKBACK          = 'kickback_RS';        // 24. Commission/kickback info
     
     // ========== Database Tables (V3 Architecture) ==========
 

@@ -456,23 +456,15 @@ class BookingService
     
     /**
      * Get board name from ID
-     * 
-     * @param string $board_id Board ID
-     * @return string Board name
+     *
+     * Delegates to BoardType value object (single source of truth).
+     *
+     * @param string $board_id Board ID (e.g. "AI", "FB+", "ALL INCL")
+     * @return string Board display name
      */
     private function getBoardName(string $board_id): string
     {
-        $map = [
-            'AI' => 'All Inclusive',
-            'ALL INCL' => 'All Inclusive',
-            'UAI' => 'Ultra All Inclusive',
-            'FB' => 'Full Board',
-            'HB' => 'Half Board',
-            'BB' => 'Bed & Breakfast',
-            'RO' => 'Room Only',
-        ];
-        
-        return $map[strtoupper($board_id)] ?? $board_id;
+        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
     }
     
     /**

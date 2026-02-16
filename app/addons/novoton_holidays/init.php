@@ -114,25 +114,39 @@ spl_autoload_register(function ($class) {
     // Handle Services namespace
     $servicePrefix = 'Tygh\\Addons\\NovotonHolidays\\Services\\';
     $serviceBaseDir = __DIR__ . '/services/';
-    
+
     if (strncmp($servicePrefix, $class, strlen($servicePrefix)) === 0) {
         $relativeClass = substr($class, strlen($servicePrefix));
         $file = $serviceBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
-        
+
         if (file_exists($file)) {
             require $file;
             return;
         }
     }
-    
+
+    // Handle ValueObjects namespace
+    $voPrefix = 'Tygh\\Addons\\NovotonHolidays\\ValueObjects\\';
+    $voBaseDir = __DIR__ . '/ValueObjects/';
+
+    if (strncmp($voPrefix, $class, strlen($voPrefix)) === 0) {
+        $relativeClass = substr($class, strlen($voPrefix));
+        $file = $voBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
+
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
+    }
+
     // Handle main namespace (Constants, etc.)
     $mainPrefix = 'Tygh\\Addons\\NovotonHolidays\\';
     $mainBaseDir = __DIR__ . '/';
-    
+
     if (strncmp($mainPrefix, $class, strlen($mainPrefix)) === 0) {
         $relativeClass = substr($class, strlen($mainPrefix));
         $file = $mainBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
-        
+
         if (file_exists($file)) {
             require $file;
             return;
@@ -150,59 +164,36 @@ if (file_exists($hooks_file)) {
 /**
  * Smarty modifier to format room type code to full name
  * Usage in templates: {$room_id|novoton_format_room_type}
+ *
+ * Delegates to RoomType value object (single source of truth).
  */
 function fn_novoton_smarty_format_room_type($room_id)
 {
     if (empty($room_id)) {
         return '';
     }
-    
-    // First fix the + sign issue
-    $room_id = str_replace(['%2b', '%2B'], '+', $room_id);
-    $room_id = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room_id);
-    
+
     // If already a full name (contains Romanian characters), return as-is
     if (preg_match('/[ăîâșț]/iu', $room_id)) {
         return $room_id;
     }
-    
-    // Use the existing function if available
-    if (function_exists('fn_novoton_format_room_type')) {
-        return fn_novoton_format_room_type($room_id);
-    }
-    
-    return $room_id;
+
+    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($room_id);
 }
 
 /**
  * Smarty modifier to format board code to full name
  * Usage in templates: {$board_id|novoton_format_board}
+ *
+ * Delegates to BoardType value object (single source of truth).
  */
 function fn_novoton_smarty_format_board($board_id)
 {
     if (empty($board_id)) {
         return '';
     }
-    
-    // Use the existing function if available
-    if (function_exists('fn_novoton_format_board_name')) {
-        return fn_novoton_format_board_name($board_id);
-    }
-    
-    // Fallback mapping
-    $map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        'UAI' => 'Ultra All Inclusive',
-        'FB' => 'Full Board',
-        'HB' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'RO' => 'Room Only'
-    ];
-    
-    $key = strtoupper(trim($board_id));
-    return $map[$key] ?? $board_id;
+
+    return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
 }
 
 /**

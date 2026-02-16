@@ -54,41 +54,21 @@ function fn_novoton_format_date($date)
 
 /**
  * Format board name for display
- * 
+ *
+ * Delegates to BoardType value object (single source of truth).
+ *
  * @param string $boardId Board code (AI, HB, FB, etc.)
  * @return string Formatted board name
  */
 function fn_novoton_format_board_name($boardId)
 {
-    $boardId = trim(strtoupper($boardId));
-    
-    $board_map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALL INCLUSIVE' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        'UAI' => 'Ultra All Inclusive',
-        'ULTRA ALL INCL' => 'Ultra All Inclusive',
-        'ULTRA ALL INCLUSIVE' => 'Ultra All Inclusive',
-        'FB' => 'Full Board',
-        'FB+' => 'Full Board Plus',
-        'FULL BOARD' => 'Full Board',
-        'HB' => 'Half Board',
-        'HB+' => 'Half Board Plus',
-        'HALF BOARD' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'BED AND BREAKFAST' => 'Bed & Breakfast',
-        'RO' => 'Room Only',
-        'ROOM ONLY' => 'Room Only',
-        'SC' => 'Self Catering',
-        'SELF CATERING' => 'Self Catering',
-    ];
-    
-    return $board_map[$boardId] ?? $boardId;
+    return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardId);
 }
 
 /**
  * Format room type code for display
+ *
+ * Delegates to RoomType value object (single source of truth).
  *
  * When $roomType is provided (from hotelinfo API <Type>), formats as:
  *   "{Type display name} ({IdRoom})" e.g. "Camera Dubla (DBL 2+1)"
@@ -101,105 +81,21 @@ function fn_novoton_format_board_name($boardId)
  */
 function fn_novoton_format_room_type($roomId, $roomType = '')
 {
-    // Decode URL-encoded plus signs
-    $roomId = str_replace(['%2b', '%2B'], '+', $roomId);
-    $roomId = rawurldecode($roomId);
-    $roomId = trim($roomId);
-
-    // Detect if roomType or roomId is already formatted (e.g., "Camera Dubla (DBL 2+1)")
-    // to prevent double formatting
-    $formatted_pattern = '/^(Camera|Apartament|Studio|Suita|Vila|Bungalou|Maisoneta|Penthouse|Junior Suita)\s.*\(.+\)$/i';
-    if (!empty($roomType) && preg_match($formatted_pattern, $roomType)) {
-        return $roomType;
-    }
-    if (preg_match($formatted_pattern, $roomId)) {
-        return $roomId;
-    }
-
-    // Room type mapping (used for both hotelinfo Type and IdRoom base code)
-    $room_map = [
-        'SGL' => 'Camera Single',
-        'DBL' => 'Camera Dubla',
-        'TWIN' => 'Camera Twin',
-        'TWN' => 'Camera Twin',
-        'TRP' => 'Camera Tripla',
-        'TRPL' => 'Camera Tripla',
-        'TRIPLE' => 'Camera Tripla',
-        'QUA' => 'Camera Cvadrupla',
-        'QUAD' => 'Camera Cvadrupla',
-        'FAM' => 'Camera Familie',
-        'FAMILY' => 'Camera Familie',
-        'STUDIO' => 'Studio',
-        'STD' => 'Studio',
-        'APT' => 'Apartament',
-        'APP' => 'Apartament',
-        'APARTMENT' => 'Apartament',
-        'SUITE' => 'Suita',
-        'STE' => 'Suita',
-        'JRSUITE' => 'Junior Suita',
-        'JST' => 'Junior Suita',
-        'JUNIOR' => 'Junior Suita',
-        'VILLA' => 'Vila',
-        'VLA' => 'Vila',
-        'BUNGALOW' => 'Bungalou',
-        'BNG' => 'Bungalou',
-        'MAISONETTE' => 'Maisoneta',
-        'MAI' => 'Maisoneta',
-        'PENTHOUSE' => 'Penthouse',
-        'PH' => 'Penthouse',
-        'DLX' => 'Camera Deluxe',
-        'DELUXE' => 'Camera Deluxe',
-        'SUP' => 'Camera Superior',
-        'SUPERIOR' => 'Camera Superior',
-        '1-BR' => 'Apartament 1 Dormitor',
-        '2-BR' => 'Apartament 2 Dormitoare',
-        '3-BR' => 'Apartament 3 Dormitoare',
-    ];
-
-    // If hotelinfo Type is provided, use it: "{Type display name} ({IdRoom})"
-    if (!empty($roomType)) {
-        $typeKey = strtoupper(trim($roomType));
-        $typeName = $room_map[$typeKey] ?? $roomType;
-        return $typeName . ' (' . $roomId . ')';
-    }
-
-    // Fallback: parse IdRoom code when no hotelinfo Type available
-    // Normalize: "DBL 2 1" -> "DBL 2+1"
-    $roomIdNorm = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomId);
-    $parts = preg_split('/[\s]+/', $roomIdNorm, 2);
-    $base = strtoupper($parts[0] ?? '');
-
-    $room_name = $room_map[$base] ?? null;
-
-    // Fallback: handle N-BR pattern (e.g., "4-BR", "5-BR") dynamically
-    if ($room_name === null && preg_match('/^(\d+)-BR$/i', $base, $brMatch)) {
-        $room_name = 'Apartament ' . $brMatch[1] . ' Dormitoare';
-    }
-
-    if ($room_name === null) {
-        // Unknown base code — return original roomId as-is
-        return $roomId;
-    }
-
-    // Return: "Camera Dubla (DBL 2+1)" — translated name + original code
-    return $room_name . ' (' . $roomIdNorm . ')';
+    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
 }
 
 /**
  * Normalize room code - ensures + sign between occupancy numbers
  * E.g., "DBL 2 1 DELUXE" -> "DBL 2+1 DELUXE"
- * 
+ *
+ * Delegates to RoomType value object (single source of truth).
+ *
  * @param string $roomCode Room code from API
  * @return string Normalized room code
  */
 function fn_novoton_normalize_room_code($roomCode)
 {
-    $roomCode = str_replace(['%2b', '%2B'], '+', $roomCode);
-    $roomCode = rawurldecode($roomCode);
-    $roomCode = trim($roomCode);
-    // Ensure + sign between consecutive digits with space
-    $roomCode = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomCode);
-    return $roomCode;
+    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::normalizeRoomCode($roomCode);
 }
 
 /**

@@ -678,7 +678,7 @@ class NovotonApi
 
         foreach ($offers as $offer) {
             $roomType = (string)($offer->IdRoom ?? $offer->Room ?? $offer->room ?? '');
-            $boardType = (string)($offer->IdBoard ?? $offer->Board ?? $offer->board ?? '');
+            $boardCode = (string)($offer->IdBoard ?? $offer->Board ?? $offer->board ?? '');
             $price = floatval($offer->Price ?? $offer->price ?? 0);
             $nights = intval($offer->Nights ?? $offer->nights ?? 7);
             $availability = intval($offer->Availability ?? $offer->Avail ?? $offer->avail ?? 0);
@@ -688,8 +688,8 @@ class NovotonApi
             $results[] = [
                 'room_id' => $roomType,
                 'room_name' => $roomType,
-                'board_id' => $boardType,
-                'board_name' => $boardType,
+                'board_id' => $boardCode,
+                'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
                 'check_in' => $params['check_in'],
                 'check_out' => $params['check_out'],
                 'nights' => $nights,
@@ -722,11 +722,12 @@ class NovotonApi
             $price = floatval($data['Price'] ?? $data['price'] ?? 0);
             if ($price > 0) {
                 $nights = intval($data['Nights'] ?? $data['nights'] ?? 7);
+                $boardCode = $data['IdBoard'] ?? $data['Board'] ?? 'AI';
                 $results[] = [
                     'room_id' => $data['IdRoom'] ?? $data['Room'] ?? 'ROOM',
                     'room_name' => $data['Room'] ?? $data['IdRoom'] ?? 'Room',
-                    'board_id' => $data['IdBoard'] ?? $data['Board'] ?? 'AI',
-                    'board_name' => $data['Board'] ?? $data['IdBoard'] ?? 'All Inclusive',
+                    'board_id' => $boardCode,
+                    'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
                     'check_in' => $params['check_in'],
                     'check_out' => $params['check_out'],
                     'nights' => $nights,
