@@ -81,7 +81,7 @@ class AlternativeRequestService
      * }
      * @return array{success: bool, request_id: int, novoton_id: string, message: string, error: string}
      */
-    public function createRequest(array $params): array
+    public function submitAlternativeBookingRequest(array $params): array
     {
         $security = $this->getSecurity();
 

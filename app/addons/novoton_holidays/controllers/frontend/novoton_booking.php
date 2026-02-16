@@ -3063,7 +3063,7 @@ if ($mode == 'request_alternatives') {
 
     // Delegate to AlternativeRequestService
     $altService = _nvt_alternative_request_service();
-    $result = $altService->createRequest([
+    $result = $altService->submitAlternativeBookingRequest([
         'hotel_id' => $hotel_id,
         'hotel_name' => strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200)),
         'check_in' => $check_in,
