@@ -11,7 +11,7 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
@@ -26,19 +26,8 @@ class HotelSync
     public function __construct()
     {
         $this->api = new NovotonApi();
-
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-
-        // Parse selected countries
-        $countrySetting = $settings['selected_countries'] ?? 'BULGARIA';
-        if (is_string($countrySetting)) {
-            $this->selectedCountries = array_map('trim', explode(',', $countrySetting));
-        } else {
-            $this->selectedCountries = (array)$countrySetting;
-        }
-
-        $this->productPrefixes = explode(',', $settings['product_code_prefixes'] ?? 'NVT');
-        $this->productPrefixes = array_map('trim', $this->productPrefixes);
+        $this->selectedCountries = ConfigService::getSelectedCountries();
+        $this->productPrefixes = ConfigService::getProductCodePrefixes();
 
         $this->stats = [
             'hotels_processed' => 0,

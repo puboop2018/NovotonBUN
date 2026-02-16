@@ -8,7 +8,7 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
@@ -71,17 +71,15 @@ class NovotonApi
 
     public function __construct()
     {
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-
-        $this->httpClient = new NovotonHttpClient($settings);
+        $this->httpClient = new NovotonHttpClient(ConfigService::all());
         $this->xmlParser = new NovotonXmlParser();
         $this->commissionCalculator = new CommissionCalculator(
-            floatval($settings['commission'] ?? 8),
-            $settings['round_prices'] ?? 'Y'
+            ConfigService::getCommission(),
+            ConfigService::isRoundPrices() ? 'Y' : 'N'
         );
 
         // Initialize cache service
-        $this->enableCache = ($settings['enable_api_cache'] ?? 'Y') === 'Y';
+        $this->enableCache = (ConfigService::get('enable_api_cache', 'Y') === 'Y');
         if ($this->enableCache) {
             $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
         }
@@ -786,8 +784,7 @@ class NovotonApi
      */
     public function createReservation(array $bookingData)
     {
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-        $isTestMode = ($settings['test_booking'] ?? 'N') === 'Y';
+        $isTestMode = ConfigService::isTestBooking();
 
         $remark = $bookingData['remark'] ?? '';
         $comment = $bookingData['comment'] ?? '';

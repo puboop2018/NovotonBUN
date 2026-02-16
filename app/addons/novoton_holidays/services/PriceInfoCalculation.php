@@ -33,8 +33,6 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
-
 class PriceInfoCalculation
 {
     /** @var array Priceinfo data */
@@ -66,8 +64,8 @@ class PriceInfoCalculation
      */
     public function __construct()
     {
-        $this->commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? 0);
-        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+        $this->commission = ConfigService::getCommission();
+        $this->debug = ConfigService::isDebugLogging();
     }
 
     /**

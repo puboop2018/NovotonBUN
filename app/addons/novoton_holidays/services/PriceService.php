@@ -10,8 +10,6 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
-
 class PriceService
 {
     /** @var float Commission percentage */
@@ -31,11 +29,11 @@ class PriceService
      */
     public function __construct()
     {
-        $this->commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? '0');
+        $this->commission = ConfigService::getCommission();
         // Use CS-Cart's primary currency, fallback to EUR
         $this->currency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
         $this->cache = new CacheService();
-        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+        $this->debug = ConfigService::isDebugLogging();
     }
     
     /**

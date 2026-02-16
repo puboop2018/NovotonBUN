@@ -20,6 +20,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -159,7 +160,7 @@ if ($mode == 'manage' || empty($mode)) {
     $syncLogRepo = new SyncLogRepository();
     
     // Get addon settings
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $addon_settings = ConfigService::all();
 
     // Parse selected countries
     $countries = fn_novoton_parse_countries();

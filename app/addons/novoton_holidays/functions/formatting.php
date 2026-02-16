@@ -10,7 +10,7 @@
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 /**
  * Format date using CS-Cart's date format from Admin > Settings > Appearance
@@ -344,8 +344,7 @@ function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price,
     }
 
     // Get rounding setting from addon
-    $round_prices = Registry::get('addons.novoton_holidays.round_prices');
-    $round_prices = ($round_prices === 'Y' || $round_prices === true);
+    $round_prices = ConfigService::isRoundPrices();
 
     $lines = [];
 

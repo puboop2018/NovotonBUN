@@ -20,6 +20,7 @@
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -589,8 +590,7 @@ if ($mode == 'search') {
         
         // If no product_id provided, look it up from hotel_id
         if (empty($productId)) {
-            $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-            $prefix = trim(explode(',', $addon_settings['product_code_prefixes'] ?? 'NVT')[0]);
+            $prefix = ConfigService::getFirstProductCodePrefix();
             $productId = db_get_field(
                 "SELECT product_id FROM ?:products WHERE product_code = ?s",
                 $prefix . $hotelId
@@ -1877,8 +1877,7 @@ if ($mode == 'booking_form') {
     }
     
     // Get product and hotel info
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $prefix = trim(explode(',', $addon_settings['product_code_prefixes'] ?? 'NVT')[0]);
+    $prefix = ConfigService::getFirstProductCodePrefix();
     $product_code = $prefix . $bookingData['hotel_id'];
     
     $product_id = db_get_field(
@@ -2193,8 +2192,7 @@ if ($mode == 'add_to_cart') {
     }
     
     // Get product ID from hotel ID
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $prefix = trim(explode(',', $addon_settings['product_code_prefixes'] ?? 'NVT')[0]);
+    $prefix = ConfigService::getFirstProductCodePrefix();
     $product_code = $prefix . $bookingData['hotel_id'];
     
     $product_id = db_get_field(
@@ -3094,8 +3092,7 @@ if ($mode == 'ajax_recalculate_price') {
     $debug_enabled = false;
     $debug_messages = [];
     try {
-        $addon_settings = Registry::get('addons.novoton_holidays');
-        $debug_enabled = (!empty($addon_settings['debug']) && $addon_settings['debug'] === 'Y')
+        $debug_enabled = (ConfigService::get('debug', 'N') === 'Y')
                       || !empty($_REQUEST['novoton_debug']);
     } catch (\Exception $e) {
         // Registry may not be available in edge cases; debug stays disabled

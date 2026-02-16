@@ -15,6 +15,7 @@
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -47,10 +48,9 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
         return;
     }
 
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $commission     = floatval($addon_settings['commission'] ?? 8);
-    $disable_api    = ($addon_settings['disable_api_submission'] ?? 'N') === 'Y';
-    $debug_logging  = ($addon_settings['debug_logging'] ?? 'Y') === 'Y';
+    $commission     = ConfigService::getCommission();
+    $disable_api    = ConfigService::isApiDisabled();
+    $debug_logging  = ConfigService::isDebugLogging();
 
     // Ensure API class is loaded
     $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';

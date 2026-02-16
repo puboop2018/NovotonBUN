@@ -6,6 +6,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -535,7 +536,7 @@ function fn_novoton_admin_add_products($api, $country, $limit) {
 }
 
 function fn_novoton_admin_check_offers($api, $country) {
-    $last_check = Registry::get('addons.novoton_holidays.last_offers_update');
+    $last_check = ConfigService::getLastOffersUpdate();
     if (empty($last_check)) {
         $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
     }

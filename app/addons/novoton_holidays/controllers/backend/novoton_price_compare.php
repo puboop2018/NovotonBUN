@@ -31,6 +31,7 @@ if (!class_exists('Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation') &
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 /**
  * Mode: compare
@@ -527,7 +528,7 @@ if ($mode == 'compare') {
         }
     }
 
-    $commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? 0);
+    $commission = ConfigService::getCommission();
     $apiPriceWithCommission = $apiPrice * (1 + $commission / 100);
 
     if ($apiPriceFound) {

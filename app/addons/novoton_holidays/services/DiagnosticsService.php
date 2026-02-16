@@ -11,7 +11,6 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
@@ -26,7 +25,7 @@ class DiagnosticsService
 
     public function __construct(?NovotonApi $api = null)
     {
-        $this->settings = Registry::get('addons.novoton_holidays') ?? [];
+        $this->settings = ConfigService::all();
         $this->api = $api;
     }
 

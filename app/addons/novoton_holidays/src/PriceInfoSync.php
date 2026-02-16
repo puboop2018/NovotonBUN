@@ -9,7 +9,7 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
@@ -22,11 +22,8 @@ class PriceInfoSync
     public function __construct()
     {
         $this->api = new NovotonApi();
-
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-        $this->defaultCountry = $settings['default_country'] ?? 'BULGARIA';
-        $this->productPrefixes = explode(',', $settings['product_code_prefixes'] ?? 'NVT');
-        $this->productPrefixes = array_map('trim', $this->productPrefixes);
+        $this->defaultCountry = ConfigService::getDefaultCountry();
+        $this->productPrefixes = ConfigService::getProductCodePrefixes();
     }
 
     /**

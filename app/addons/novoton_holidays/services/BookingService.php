@@ -689,8 +689,7 @@ class BookingService
      */
     public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int
     {
-        $addonSettings = Registry::get('addons.novoton_holidays') ?? [];
-        $prefix = trim(explode(',', $addonSettings['product_code_prefixes'] ?? 'NVT')[0]);
+        $prefix = ConfigService::getFirstProductCodePrefix();
         $productCode = $prefix . $hotelId;
 
         $productId = (int)db_get_field(

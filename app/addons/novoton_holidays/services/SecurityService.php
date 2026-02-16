@@ -533,7 +533,7 @@ class SecurityService
         $key = Registry::get('config.crypt_key');
         
         if (empty($key)) {
-            $key = Registry::get('addons.novoton_holidays.api_key') ?? '';
+            $key = ConfigService::getApiKey();
         }
 
         if (empty($key)) {

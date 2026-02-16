@@ -15,6 +15,7 @@
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -36,7 +37,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         return;
     }
 
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $addon_settings = ConfigService::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }
@@ -102,7 +103,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
         return;
     }
 
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $addon_settings = ConfigService::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }

@@ -10,6 +10,7 @@
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -283,10 +284,7 @@ function fn_novoton_update_exchange_rates($return_details = false)
     $result['bnr_rates'] = $bnr_rates;
 
     // Step 3: Get commission setting (0-5% range)
-    $commission = (float) Registry::get('addons.novoton_holidays.currency_risk_commission');
-    if ($commission < 0) {
-        $commission = 0;
-    }
+    $commission = ConfigService::getCurrencyRiskCommission();
     if ($commission > 5) {
         $commission = 5; // Maximum 5%
     }
@@ -350,8 +348,8 @@ function fn_novoton_update_exchange_rates($return_details = false)
 function fn_novoton_get_exchange_rate_info()
 {
     $info = [
-        'last_update' => Registry::get('addons.novoton_holidays.last_exchange_rate_update') ?: 'Never',
-        'commission' => Registry::get('addons.novoton_holidays.currency_risk_commission') ?: '0',
+        'last_update' => ConfigService::getLastExchangeRateUpdate() ?: 'Never',
+        'commission' => ConfigService::getCurrencyRiskCommission(),
         'currencies' => [],
     ];
 

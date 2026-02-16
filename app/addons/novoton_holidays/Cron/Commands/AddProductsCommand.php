@@ -3,6 +3,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -155,12 +156,7 @@ class AddProductsCommand extends AbstractCronCommand
             return array_filter(array_map('trim', explode(',', $val)));
         }
 
-        $setting = Registry::get('addons.novoton_holidays.excluded_resorts') ?? '';
-        if (empty($setting)) return [];
-
-        $decoded = json_decode($setting, true);
-        if (is_array($decoded)) return array_filter($decoded);
-
-        return array_filter(array_map('trim', explode(',', $setting)));
+        $resorts = ConfigService::getExcludedResorts();
+        return $resorts;
     }
 }
