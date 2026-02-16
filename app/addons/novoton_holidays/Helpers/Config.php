@@ -5,6 +5,9 @@
  * Centralized configuration access with caching to reduce
  * repeated Registry::get calls throughout the addon.
  *
+ * Injectable: Use Config::getInstance() or inject via constructor.
+ * Testable: Use Config::setInstance($mockConfig) in tests.
+ *
  * @package NovotonHolidays
  * @since 3.1.0
  */
@@ -62,16 +65,53 @@ class Config
     const PRODUCT_CODE_PREFIX = 'NVT';
 
     /**
-     * Cached settings
-     * @var array|null
+     * Singleton instance (replaceable for testing)
+     * @var self|null
      */
-    private static ?array $settings = null;
+    private static ?self $instance = null;
 
     /**
-     * Cached paths
+     * Cached settings (instance-level, not static)
      * @var array|null
      */
-    private static ?array $paths = null;
+    private ?array $settings = null;
+
+    /**
+     * Cached paths (instance-level, not static)
+     * @var array|null
+     */
+    private ?array $paths = null;
+
+    /**
+     * Constructor allows injecting settings for testing.
+     *
+     * @param array|null $overrideSettings Pre-loaded settings (bypasses Registry)
+     */
+    public function __construct(?array $overrideSettings = null)
+    {
+        if ($overrideSettings !== null) {
+            $this->settings = $overrideSettings;
+        }
+    }
+
+    /**
+     * Get the singleton instance (creates one if needed).
+     */
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Replace the singleton instance (for testing / DI).
+     */
+    public static function setInstance(?self $instance): void
+    {
+        self::$instance = $instance;
+    }
 
     /**
      * Get addon settings (cached)
@@ -80,10 +120,11 @@ class Config
      */
     public static function getSettings(): array
     {
-        if (self::$settings === null) {
-            self::$settings = Registry::get('addons.' . self::ADDON_ID) ?? [];
+        $self = self::getInstance();
+        if ($self->settings === null) {
+            $self->settings = Registry::get('addons.' . self::ADDON_ID) ?? [];
         }
-        return self::$settings;
+        return $self->settings;
     }
 
     /**
@@ -191,11 +232,12 @@ class Config
      */
     public static function getPaths(): array
     {
-        if (self::$paths === null) {
+        $self = self::getInstance();
+        if ($self->paths === null) {
             $addon_dir = Registry::get('config.dir.addons') . self::ADDON_ID . '/';
             $cache_dir = Registry::get('config.dir.cache_misc') ?? (DIR_ROOT . '/var/cache/');
 
-            self::$paths = [
+            $self->paths = [
                 'addon' => $addon_dir,
                 'src' => $addon_dir . 'src/',
                 'helpers' => $addon_dir . 'Helpers/',
@@ -204,7 +246,7 @@ class Config
                 'reports' => fn_get_files_dir_path() . 'novoton_reports/',
             ];
         }
-        return self::$paths;
+        return $self->paths;
     }
 
     /**
@@ -266,8 +308,9 @@ class Config
      */
     public static function clearCache(): void
     {
-        self::$settings = null;
-        self::$paths = null;
+        $self = self::getInstance();
+        $self->settings = null;
+        $self->paths = null;
     }
 
     /**
