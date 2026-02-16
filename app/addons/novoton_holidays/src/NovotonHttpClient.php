@@ -36,10 +36,19 @@ class NovotonHttpClient
     public function __construct(array $settings)
     {
         $this->apiUrl = !empty($settings['api_url']) ? $settings['api_url'] : 'b2b.allinclusivebg.com';
-        $this->apiKey = !empty($settings['api_key']) ? $settings['api_key'] : 'TEST-TEST-TEST-TEST-TEST';
-        $this->apiId = !empty($settings['api_id']) ? $settings['api_id'] : '713';
-        $this->apiUser = !empty($settings['api_user']) ? $settings['api_user'] : 'EHROM117';
-        $this->apiPassword = !empty($settings['api_password']) ? $settings['api_password'] : 'EUP359YJX';
+        $this->apiKey = $settings['api_key'] ?? '';
+        $this->apiId = $settings['api_id'] ?? '';
+        $this->apiUser = $settings['api_user'] ?? '';
+        $this->apiPassword = $settings['api_password'] ?? '';
+
+        if (empty($this->apiKey) || empty($this->apiUser) || empty($this->apiPassword)) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API credentials not configured — set api_key, api_user, and api_password in addon settings',
+                'has_key' => !empty($this->apiKey),
+                'has_user' => !empty($this->apiUser),
+                'has_password' => !empty($this->apiPassword),
+            ]);
+        }
 
         $this->maxRetries = (int)($settings['api_max_retries'] ?? 3);
         $this->retryDelayMs = (int)($settings['api_retry_delay_ms'] ?? 1000);

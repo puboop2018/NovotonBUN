@@ -1098,7 +1098,12 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         $group_num = 0;
         $all_booking_ids = [];
-        
+
+        // Wrap all booking DB operations in a transaction for atomicity
+        db_query("START TRANSACTION");
+        $transaction_ok = true;
+
+        try {
         foreach ($room_groups as $group_key => $group) {
             $group_num++;
             $group_rooms = $group['rooms'];
@@ -1386,6 +1391,17 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
                     'error' => $e->getMessage()
                 ]);
             }
+        }
+
+        db_query("COMMIT");
+
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton Booking transaction rolled back',
+                'order_id' => $order_id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

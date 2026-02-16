@@ -248,26 +248,34 @@ class HotelSync
                 $longitude = (string)($hotelInfo->Longitude ?? '');
                 $region = (string)($hotelInfo->Region ?? '');
 
-                // Update hotel record (V3: hotel_data stores hotelinfo JSON)
-                db_query(
-                    "UPDATE ?:novoton_hotels SET
-                     hotel_data = ?s,
-                     latitude = ?s,
-                     longitude = ?s,
-                     region = ?s,
-                     packages_count = ?i,
-                     hotelinfo_synced_at = NOW()
-                     WHERE hotel_id = ?s",
-                    $hotelDataJson,
-                    $latitude,
-                    $longitude,
-                    $region,
-                    $packagesCount,
-                    $hotelId
-                );
+                // Wrap hotel + package updates in a transaction for atomicity
+                db_query("START TRANSACTION");
+                try {
+                    // Update hotel record (V3: hotel_data stores hotelinfo JSON)
+                    db_query(
+                        "UPDATE ?:novoton_hotels SET
+                         hotel_data = ?s,
+                         latitude = ?s,
+                         longitude = ?s,
+                         region = ?s,
+                         packages_count = ?i,
+                         hotelinfo_synced_at = NOW()
+                         WHERE hotel_id = ?s",
+                        $hotelDataJson,
+                        $latitude,
+                        $longitude,
+                        $region,
+                        $packagesCount,
+                        $hotelId
+                    );
 
-                // Sync packages for this hotel
-                $this->syncPackagesForHotel($hotelId, $hotelInfo);
+                    // Sync packages for this hotel
+                    $this->syncPackagesForHotel($hotelId, $hotelInfo);
+                    db_query("COMMIT");
+                } catch (\Exception $txe) {
+                    db_query("ROLLBACK");
+                    throw $txe;
+                }
 
                 $this->stats['hotels_updated']++;
                 $this->log("Updated hotelinfo for hotel {$hotelId}");
