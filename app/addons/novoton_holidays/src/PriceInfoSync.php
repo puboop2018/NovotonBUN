@@ -10,6 +10,8 @@
 namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class PriceInfoSync
 {
@@ -215,6 +217,12 @@ class PriceInfoSync
                 return false;
             }
 
+        } catch (ApiException $e) {
+            $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (API error HTTP ' . $e->getHttpCode() . ': ' . $e->getMessage() . ')';
+            return false;
+        } catch (XmlParsingException $e) {
+            $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (XML error: ' . $e->getMessage() . ')';
+            return false;
         } catch (\Exception $e) {
             $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (Error: ' . $e->getMessage() . ')';
             return false;
@@ -347,6 +355,10 @@ class PriceInfoSync
                     }
                 }
             }
+        } catch (ApiException $e) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'API error checking missing products (HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage()
+            ]);
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Error checking missing products: ' . $e->getMessage()

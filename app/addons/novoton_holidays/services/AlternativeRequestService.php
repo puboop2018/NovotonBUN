@@ -18,6 +18,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class AlternativeRequestService
@@ -188,9 +189,10 @@ class AlternativeRequestService
                 'message' => 'alternatives_request_sent',
                 'error' => '',
             ];
-        } catch (\Exception $e) {
+        } catch (ApiException $e) {
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton hotel_request error',
+                'message' => 'Novoton hotel_request API error (HTTP ' . $e->getHttpCode() . ')',
+                'api_function' => $e->getApiFunction(),
                 'error' => $e->getMessage(),
             ]);
 

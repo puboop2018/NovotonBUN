@@ -368,6 +368,27 @@ function fn_novoton_holidays_upgrade_db()
         );
     }
 
+    // Add terms columns to novoton_bookings (cache terms at booking creation to avoid API calls on order view)
+    $terms_columns = [
+        'terms_of_payment_raw'            => 'LONGTEXT',
+        'terms_of_cancellation_raw'       => 'LONGTEXT',
+        'terms_of_payment_formatted'      => 'LONGTEXT',
+        'terms_of_cancellation_formatted' => 'LONGTEXT',
+    ];
+    foreach ($terms_columns as $col_name => $col_type) {
+        $exists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = '?:novoton_bookings'
+             AND COLUMN_NAME = '{$col_name}'"
+        );
+        if (!$exists) {
+            @db_query(
+                "ALTER TABLE ?:novoton_bookings ADD COLUMN `{$col_name}` {$col_type} DEFAULT NULL AFTER `api_response`"
+            );
+        }
+    }
+
     // Add hotel_type column to novoton_hotels
     $hotel_type_exists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS

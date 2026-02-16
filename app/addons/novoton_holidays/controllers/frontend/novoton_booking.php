@@ -1606,9 +1606,9 @@ if ($mode == 'search') {
     $hotel_country_display = '';
 
     if (!empty($hotelId)) {
-        // V3: Optimized query - select only display columns
+        // V3: Optimized query - select only display columns (hotel_data is audit/cache only, never queried for display)
         $hotel_info = db_get_row(
-            "SELECT hotel_id, hotel_name, city, region, country, hotel_type, hotel_data
+            "SELECT hotel_id, hotel_name, city, region, country, hotel_type
              FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotelId
         );

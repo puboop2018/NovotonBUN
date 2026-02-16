@@ -14,6 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
 class BookingService
 {
@@ -154,18 +155,9 @@ class BookingService
      */
     public function getBooking(int $booking_id): ?array
     {
-        $booking = db_get_row(
-            "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i",
-            $booking_id
-        );
-        
-        if ($booking) {
-            // Parse JSON fields
-            $booking['rooms_data_parsed'] = json_decode($booking['rooms_data'] ?? '[]', true);
-            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data'] ?? '[]');
-        }
-        
-        return $booking ?: null;
+        // Use hydrated repository to decode JSON once and cache per-request
+        $repo = new BookingRepository();
+        return $repo->findByIdHydrated($booking_id);
     }
     
     /**

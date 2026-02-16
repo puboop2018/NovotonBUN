@@ -16,6 +16,9 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -148,10 +151,27 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
 
             db_query("COMMIT");
 
-        } catch (\Exception $e) {
+        } catch (ApiException $e) {
+            db_query("ROLLBACK");
+            fn_log_event('general', 'runtime', [
+                'message'      => 'Novoton Booking transaction rolled back (API error)',
+                'order_id'     => $order_id,
+                'api_function' => $e->getApiFunction(),
+                'http_code'    => $e->getHttpCode(),
+                'error'        => $e->getMessage(),
+            ]);
+        } catch (NovotonException $e) {
             db_query("ROLLBACK");
             fn_log_event('general', 'runtime', [
                 'message'  => 'Novoton Booking transaction rolled back',
+                'order_id' => $order_id,
+                'context'  => $e->getContext(),
+                'error'    => $e->getMessage(),
+            ]);
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            fn_log_event('general', 'runtime', [
+                'message'  => 'Novoton Booking transaction rolled back (unexpected)',
                 'order_id' => $order_id,
                 'error'    => $e->getMessage(),
             ]);
@@ -181,10 +201,9 @@ function _nvt_hydrate_booking_from_db(array $booking_data, int $booking_id, bool
         return $booking_data;
     }
 
-    $db_booking = db_get_row(
-        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i",
-        $booking_id
-    );
+    // Use hydrated repository to avoid repeated JSON decoding
+    $repo = new BookingRepository();
+    $db_booking = $repo->findByIdHydrated($booking_id);
 
     if (empty($db_booking)) {
         return $booking_data;
@@ -196,10 +215,12 @@ function _nvt_hydrate_booking_from_db(array $booking_data, int $booking_id, bool
         'room_id', 'room_type', 'board_id', 'check_in', 'check_out', 'nights',
         'adults', 'children', 'children_ages', 'num_rooms',
         'holder_name', 'guest_name', 'special_requests',
+        'terms_of_payment_raw', 'terms_of_cancellation_raw',
+        'terms_of_payment_formatted', 'terms_of_cancellation_formatted',
     ];
 
     foreach ($priority_fields as $field) {
-        if (isset($db_booking[$field])) {
+        if (!empty($db_booking[$field])) {
             $booking_data[$field] = $db_booking[$field];
         }
     }
@@ -208,7 +229,7 @@ function _nvt_hydrate_booking_from_db(array $booking_data, int $booking_id, bool
     $booking_data['total_price'] = floatval($booking_data['total_price']);
     $booking_data['base_price']  = floatval($booking_data['base_price'] ?? 0);
 
-    // Structured JSON fields
+    // Structured JSON fields — prefer already-parsed arrays from hydrated cache
     if (!empty($db_booking['rooms_data'])) {
         $booking_data['rooms_data'] = $db_booking['rooms_data'];
     }
@@ -603,7 +624,7 @@ function _nvt_build_booking_record(
         $check_in_date  = new \DateTime($group['check_in']);
         $check_out_date = new \DateTime($group['check_out']);
         $nights         = $check_in_date->diff($check_out_date)->days;
-    } catch (\Exception $e) {
+    } catch (\InvalidArgumentException $e) {
         fn_log_event('general', 'error', [
             'message'   => 'Novoton - Invalid date in booking group',
             'check_in'  => $group['check_in'] ?? '',
@@ -647,9 +668,14 @@ function _nvt_build_booking_record(
         'status'           => 'pending',
         'special_requests' => $booking_data['special_requests'] ?? '',
         'api_request'      => json_encode($api_data),
-        'notes'            => $disable_api ? 'API submission disabled - test mode' : '',
-        'user_id'          => $order_user_id,
-        'guest_email'      => $order_email,
+        'notes'                          => $disable_api ? 'API submission disabled - test mode' : '',
+        'user_id'                        => $order_user_id,
+        'guest_email'                    => $order_email,
+        // Persist terms at booking creation so order display never needs a live API call
+        'terms_of_payment_raw'           => $booking_data['terms_of_payment_raw'] ?? null,
+        'terms_of_cancellation_raw'      => $booking_data['terms_of_cancellation_raw'] ?? null,
+        'terms_of_payment_formatted'     => $booking_data['terms_of_payment'] ?? $booking_data['terms_of_payment_formatted'] ?? null,
+        'terms_of_cancellation_formatted' => $booking_data['terms_of_cancellation'] ?? $booking_data['terms_of_cancellation_formatted'] ?? null,
     ];
 }
 
@@ -775,10 +801,10 @@ function _nvt_submit_and_record_booking(
                 ]);
             }
         }
-    } catch (\Exception $e) {
+    } catch (ApiException $e) {
         db_query(
             "UPDATE ?:novoton_bookings SET status = 'failed', notes = ?s WHERE booking_id = ?i",
-            'API Error: ' . $e->getMessage(),
+            'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
             $booking_id
         );
 
@@ -938,7 +964,9 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
 /**
  * Enrich an order product with formatted payment and cancellation terms.
  *
- * Falls back to a live API call if no terms data is stored.
+ * Terms are persisted in novoton_bookings at booking creation time.
+ * Falls back to a DB lookup by booking_id if not in cart extra.
+ * No live API call is made — terms are a snapshot from booking time.
  */
 function _nvt_enrich_order_product_terms(
     array &$product,
@@ -948,50 +976,26 @@ function _nvt_enrich_order_product_terms(
     float  $total_price,
     string $currency_code
 ): void {
-    $payment_raw = $product['extra']['terms_of_payment_raw']      ?? '';
+    $payment_raw  = $product['extra']['terms_of_payment_raw']      ?? '';
     $payment_text = $product['extra']['terms_of_payment']          ?? '';
-    $cancel_raw  = $product['extra']['terms_of_cancellation_raw'] ?? '';
-    $cancel_text = $product['extra']['terms_of_cancellation']     ?? '';
+    $cancel_raw   = $product['extra']['terms_of_cancellation_raw'] ?? '';
+    $cancel_text  = $product['extra']['terms_of_cancellation']     ?? '';
 
-    // Fallback: fetch from live API if nothing stored
+    // Fallback: fetch from novoton_bookings DB record (terms are persisted at booking creation)
     if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
-        $room_id  = $product['extra']['room_id']  ?? '';
-        $adults   = $product['extra']['adults']    ?? 2;
-        $children = $product['extra']['children']  ?? 0;
-
-        if (!empty($hotel_id) && !empty($check_in) && !empty($check_out)) {
-            try {
-                $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-                if (file_exists($src_dir . 'NovotonApi.php')) {
-                    require_once $src_dir . 'NovotonApi.php';
-                    $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
-
-                    $priceData = $api->getRoomPrice([
-                        'hotel_id'  => $hotel_id,
-                        'check_in'  => $check_in,
-                        'check_out' => $check_out,
-                        'adults'    => $adults,
-                        'children'  => $children,
-                        'room_id'   => $room_id,
-                    ]);
-
-                    if ($priceData instanceof \SimpleXMLElement) {
-                        $termsPayment      = $priceData->xpath('//TermsOfPayment');
-                        $termsCancellation = $priceData->xpath('//TermsOfCancellation');
-
-                        if (!empty($termsPayment[0])) {
-                            $payment_raw = $termsPayment[0]->asXML();
-                        }
-                        if (!empty($termsCancellation[0])) {
-                            $cancel_raw = $termsCancellation[0]->asXML();
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                // Silently fail — terms are nice-to-have, not critical
-                if (!empty($_REQUEST['debug'])) {
-                    fn_set_notification('W', 'DEBUG', 'API error: ' . $e->getMessage());
-                }
+        $booking_id = intval($product['extra']['novoton_booking_id'] ?? 0);
+        if ($booking_id > 0) {
+            $terms = db_get_row(
+                "SELECT terms_of_payment_raw, terms_of_cancellation_raw,
+                        terms_of_payment_formatted, terms_of_cancellation_formatted
+                 FROM ?:novoton_bookings WHERE booking_id = ?i",
+                $booking_id
+            );
+            if (!empty($terms)) {
+                $payment_raw  = $terms['terms_of_payment_raw'] ?? '';
+                $cancel_raw   = $terms['terms_of_cancellation_raw'] ?? '';
+                $payment_text = $terms['terms_of_payment_formatted'] ?? '';
+                $cancel_text  = $terms['terms_of_cancellation_formatted'] ?? '';
             }
         }
     }

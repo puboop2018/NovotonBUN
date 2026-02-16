@@ -13,6 +13,8 @@ namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelSync
 {
@@ -143,8 +145,14 @@ class HotelSync
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['hotels_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error fetching hotel_list for {$countryName} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for hotel_list {$countryName}: " . $e->getMessage();
+                $this->stats['hotels_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error fetching hotel_list for {$countryName}: " . $e->getMessage();
+                $this->stats['errors'][] = "Unexpected error fetching hotel_list for {$countryName}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
 
@@ -287,8 +295,14 @@ class HotelSync
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['hotels_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error syncing hotelinfo for {$hotelId} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for hotelinfo {$hotelId}: " . $e->getMessage();
+                $this->stats['hotels_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error syncing hotelinfo for {$hotelId}: " . $e->getMessage();
+                $this->stats['errors'][] = "Unexpected error syncing hotelinfo for {$hotelId}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
 
@@ -394,6 +408,12 @@ class HotelSync
 
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error for package {$hotelId}/{$packageId} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for package {$hotelId}/{$packageId}: " . $e->getMessage();
                 $this->stats['packages_failed']++;
             } catch (\Exception $e) {
                 $syncEx = SyncException::packageSyncFailed($hotelId, $packageId, $e->getMessage(), $e);
@@ -571,6 +591,12 @@ class HotelSync
 
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error refreshing {$pkg['hotel_id']}/{$pkg['package_id']} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error refreshing {$pkg['hotel_id']}/{$pkg['package_id']}: " . $e->getMessage();
                 $this->stats['packages_failed']++;
             } catch (\Exception $e) {
                 $syncEx = SyncException::packageSyncFailed($pkg['hotel_id'], $pkg['package_id'], $e->getMessage(), $e);

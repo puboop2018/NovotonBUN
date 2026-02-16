@@ -13,6 +13,8 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class DiagnosticsService
 {
@@ -93,11 +95,29 @@ class DiagnosticsService
                 'sample_hotel' => $sample,
                 'error' => '',
             ];
+        } catch (ApiException $e) {
+            return [
+                'success' => false,
+                'config' => $config,
+                'message' => 'API Error (HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                'hotels_count' => 0,
+                'sample_hotel' => null,
+                'error' => $e->getMessage(),
+            ];
+        } catch (XmlParsingException $e) {
+            return [
+                'success' => false,
+                'config' => $config,
+                'message' => 'XML Parsing Error: ' . $e->getMessage(),
+                'hotels_count' => 0,
+                'sample_hotel' => null,
+                'error' => $e->getMessage(),
+            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'config' => $config,
-                'message' => 'Exception: ' . $e->getMessage(),
+                'message' => 'Unexpected error: ' . $e->getMessage(),
                 'hotels_count' => 0,
                 'sample_hotel' => null,
                 'error' => $e->getMessage(),
