@@ -8,6 +8,7 @@
  ***************************************************************************/
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -189,20 +190,9 @@ function fn_novoton_smarty_format_board($board_id)
         return fn_novoton_format_board_name($board_id);
     }
     
-    // Fallback mapping
-    $map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        'UAI' => 'Ultra All Inclusive',
-        'FB' => 'Full Board',
-        'HB' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'RO' => 'Room Only'
-    ];
-    
+    // Fallback mapping using canonical source
     $key = strtoupper(trim($board_id));
-    return $map[$key] ?? $board_id;
+    return Constants::BOARD_NAMES[$key] ?? $board_id;
 }
 
 /**

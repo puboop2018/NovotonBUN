@@ -12,6 +12,7 @@
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 class SearchService
 {
@@ -365,20 +366,7 @@ class SearchService
      */
     public function getBoardName(string $board_id): string
     {
-        $board_map = [
-            'AI' => 'All Inclusive',
-            'ALL INCL' => 'All Inclusive',
-            'UAI' => 'Ultra All Inclusive',
-            'FB' => 'Full Board',
-            'FB+' => 'Full Board Plus',
-            'HB' => 'Half Board',
-            'HB+' => 'Half Board Plus',
-            'BB' => 'Bed & Breakfast',
-            'RO' => 'Room Only',
-            'SC' => 'Self Catering',
-        ];
-        
-        return $board_map[strtoupper($board_id)] ?? $board_id;
+        return Constants::BOARD_NAMES[strtoupper($board_id)] ?? $board_id;
     }
     
     /**

@@ -11,6 +11,7 @@
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 /**
  * Format date using CS-Cart's date format from Admin > Settings > Appearance
@@ -61,30 +62,8 @@ function fn_novoton_format_date($date)
 function fn_novoton_format_board_name($boardId)
 {
     $boardId = trim(strtoupper($boardId));
-    
-    $board_map = [
-        'AI' => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALL INCLUSIVE' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        'UAI' => 'Ultra All Inclusive',
-        'ULTRA ALL INCL' => 'Ultra All Inclusive',
-        'ULTRA ALL INCLUSIVE' => 'Ultra All Inclusive',
-        'FB' => 'Full Board',
-        'FB+' => 'Full Board Plus',
-        'FULL BOARD' => 'Full Board',
-        'HB' => 'Half Board',
-        'HB+' => 'Half Board Plus',
-        'HALF BOARD' => 'Half Board',
-        'BB' => 'Bed & Breakfast',
-        'BED AND BREAKFAST' => 'Bed & Breakfast',
-        'RO' => 'Room Only',
-        'ROOM ONLY' => 'Room Only',
-        'SC' => 'Self Catering',
-        'SELF CATERING' => 'Self Catering',
-    ];
-    
-    return $board_map[$boardId] ?? $boardId;
+
+    return Constants::BOARD_NAMES[$boardId] ?? $boardId;
 }
 
 /**
