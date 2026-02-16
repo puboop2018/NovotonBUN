@@ -19,6 +19,7 @@
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -2515,7 +2516,7 @@ if ($mode == 'add_to_cart') {
             'children' => $total_children,
             'rooms_data' => json_encode($rooms_data),
             'guest_name' => $guest_list,
-            'guests_data' => json_encode($guests_data),
+            'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
             'guest_email' => $contact['email'] ?? '',
@@ -2563,7 +2564,7 @@ if ($mode == 'add_to_cart') {
             'holder_name' => $holder_name,
             'guest_email' => '',  // Will be set from order at checkout
             'guest_phone' => $contact['phone'] ?? '',
-            'guests_data' => json_encode($guests_data),
+            'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
             'currency' => 'EUR',
@@ -2609,7 +2610,7 @@ if ($mode == 'add_to_cart') {
             'rooms_data' => $rooms_data,
             'guest_names' => $guest_list,
             'holder_name' => $holder_name,
-            'guests_data' => json_encode($guests_data),  // Store as JSON string to preserve associative keys
+            'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'contact_email' => $contact['email'] ?? '',
             'contact_phone' => $contact['phone'] ?? '',
             'special_requests' => $special_requests,
@@ -2738,12 +2739,10 @@ if ($mode == 'edit_booking') {
     }
     
     if ($cart_item && !empty($cart_item['extra']['guests_data'])) {
-        $guests_data = is_string($cart_item['extra']['guests_data']) 
-            ? json_decode($cart_item['extra']['guests_data'], true) 
-            : $cart_item['extra']['guests_data'];
+        $guests_data = GuestDataNormalizer::normalize($cart_item['extra']['guests_data']);
     }
     if (empty($guests_data)) {
-        $guests_data = json_decode($booking_record['guests_data'], true) ?: [];
+        $guests_data = GuestDataNormalizer::normalize($booking_record['guests_data'] ?? '');
     }
     
     // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
@@ -2989,16 +2988,16 @@ if ($mode == 'update_booking') {
          guests_data = ?s, special_requests = ?s, notes = ?s, api_request = ?s
          WHERE booking_id = ?i",
         $guest_list, $holder_name, $contact['email'] ?? '', $contact['phone'] ?? '',
-        json_encode($guests_data), $special_requests, $special_requests, json_encode($api_request), $booking_id
+        GuestDataNormalizer::toJson($guests_data), $special_requests, $special_requests, json_encode($api_request), $booking_id
     );
-    
+
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {
         $cart = &Tygh::$app['session']['cart'];
         if (isset($cart['products'][$cart_id])) {
             $cart['products'][$cart_id]['extra']['guest_names'] = $guest_list;
             $cart['products'][$cart_id]['extra']['holder_name'] = $holder_name;
-            $cart['products'][$cart_id]['extra']['guests_data'] = json_encode($guests_data);  // Store as JSON
+            $cart['products'][$cart_id]['extra']['guests_data'] = GuestDataNormalizer::toJson($guests_data);
             $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
             $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
             $cart['products'][$cart_id]['extra']['special_requests'] = $special_requests;

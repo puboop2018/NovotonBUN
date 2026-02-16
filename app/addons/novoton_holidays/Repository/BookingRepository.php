@@ -10,6 +10,8 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+
 class BookingRepository
 {
     /**
@@ -369,7 +371,7 @@ class BookingRepository
             // Parse guests for display
             $guests_data = null;
             if (!empty($nb['guests_data'])) {
-                $guests_data = is_string($nb['guests_data']) ? json_decode($nb['guests_data'], true) : $nb['guests_data'];
+                $guests_data = GuestDataNormalizer::normalize($nb['guests_data']);
             }
 
             if (!empty($guests_data) && is_array($guests_data)) {

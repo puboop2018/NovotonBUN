@@ -17,6 +17,7 @@
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -219,7 +220,7 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['children_ages']      = $booking['children_ages'] ?? '';
     $product['extra']['holder_name']        = $booking['holder_name'] ?? '';
     $product['extra']['guest_names']        = $booking['guest_name'] ?? '';
-    $product['extra']['guests_data']        = $booking['guests_data'] ?? '';
+    $product['extra']['guests_data']        = GuestDataNormalizer::toJson($booking['guests_data'] ?? '');
     $product['extra']['total_price']        = $booking['total_price'];
     $product['extra']['package_name']       = $booking['package_name'] ?? '';
     $product['extra']['num_rooms']          = intval($booking['num_rooms'] ?? 1);

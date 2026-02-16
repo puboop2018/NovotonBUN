@@ -11,69 +11,35 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+
 class GuestDataService
 {
     /**
-     * Parse guests data from booking form
-     * 
-     * Supports multiple formats:
-     * - Flat array with room1_adult_1, room1_child_1 keys
-     * - Nested array by room
-     * - Simple guest list
-     * 
+     * Parse guests data from booking form.
+     *
+     * Accepts any supported format (keyed, indexed-array, or JSON string)
+     * and always returns canonical keyed format via GuestDataNormalizer.
+     *
      * @param array $bookingData Booking form data
-     * @return array Parsed guests data
+     * @return array Parsed guests data in canonical keyed format
      */
     public function parseGuestsData(array $bookingData): array
     {
-        $guests_data = [];
-        
-        // Check for existing guests_data
+        // Primary source: guests_data field
         if (!empty($bookingData['guests_data'])) {
-            $guests_data = is_string($bookingData['guests_data'])
-                ? json_decode($bookingData['guests_data'], true)
-                : $bookingData['guests_data'];
-                
-            if (!is_array($guests_data)) {
-                $guests_data = [];
+            $normalized = GuestDataNormalizer::normalize($bookingData['guests_data']);
+            if (!empty($normalized)) {
+                return $normalized;
             }
         }
-        
-        // Check for guests array (alternative format)
-        if (empty($guests_data) && !empty($bookingData['guests'])) {
-            $guests_data = $this->parseGuestsArray($bookingData['guests']);
+
+        // Fallback: guests array (legacy format)
+        if (!empty($bookingData['guests'])) {
+            return GuestDataNormalizer::normalize($bookingData['guests']);
         }
-        
-        return $guests_data;
-    }
-    
-    /**
-     * Parse guests array format
-     * 
-     * @param array $guests Raw guests array
-     * @return array Formatted guests data
-     */
-    private function parseGuestsArray(array $guests): array
-    {
-        $result = [];
-        
-        foreach ($guests as $key => $guest) {
-            if (is_array($guest)) {
-                $result[$key] = [
-                    'name' => $guest['name'] ?? '',
-                    'first_name' => $guest['first_name'] ?? '',
-                    'last_name' => $guest['last_name'] ?? '',
-                    'api_name' => $this->formatApiName($guest),
-                    'birthday' => $this->validateBirthday($guest['birthday'] ?? ''),
-                    'age' => $guest['age'] ?? null,
-                    'type' => $guest['type'] ?? 'adult',
-                    'room' => $guest['room'] ?? 1,
-                    'is_holder' => $guest['is_holder'] ?? false,
-                ];
-            }
-        }
-        
-        return $result;
+
+        return [];
     }
     
     /**

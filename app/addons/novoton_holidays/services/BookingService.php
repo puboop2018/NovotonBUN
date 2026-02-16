@@ -13,6 +13,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 class BookingService
 {
@@ -91,7 +92,7 @@ class BookingService
             'holder_name' => $this->guestService->getHolderName($guests_data, $bookingData),
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
-            'guests_data' => json_encode($guests_data),
+            'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => floatval($bookingData['base_price'] ?? 0),
             'api_price' => floatval($bookingData['api_price'] ?? 0),
             'total_price' => floatval($bookingData['total_price'] ?? 0),
@@ -161,7 +162,7 @@ class BookingService
         if ($booking) {
             // Parse JSON fields
             $booking['rooms_data_parsed'] = json_decode($booking['rooms_data'] ?? '[]', true);
-            $booking['guests_data_parsed'] = json_decode($booking['guests_data'] ?? '[]', true);
+            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data'] ?? '[]');
         }
         
         return $booking ?: null;

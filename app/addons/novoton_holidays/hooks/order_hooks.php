@@ -15,6 +15,7 @@
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -314,16 +315,12 @@ function _nvt_resolve_rooms_and_guests(array $booking_data, int $order_id, bool 
  */
 function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debug): array
 {
-    $guests_data = [];
-
+    // Primary: normalize from cart/DB data (handles both keyed and legacy array formats)
     if (!empty($booking_data['guests_data'])) {
-        $guests_data = is_string($booking_data['guests_data'])
-            ? json_decode($booking_data['guests_data'], true)
-            : $booking_data['guests_data'];
-    }
-
-    if (!empty($guests_data) && is_array($guests_data)) {
-        return $guests_data;
+        $guests_data = GuestDataNormalizer::normalize($booking_data['guests_data']);
+        if (!empty($guests_data)) {
+            return $guests_data;
+        }
     }
 
     // Fallback 1: re-fetch from DB by booking_id
@@ -334,7 +331,7 @@ function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debu
             $booking_id
         );
         if (!empty($db_guests)) {
-            $guests_data = json_decode($db_guests, true) ?: [];
+            $guests_data = GuestDataNormalizer::normalize($db_guests);
             if ($debug) {
                 fn_log_event('general', 'runtime', [
                     'message'      => 'Novoton - Fetched guests_data from database (cart was empty)',
@@ -359,7 +356,7 @@ function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debu
         $booking_data['check_out'] ?? ''
     );
     if (!empty($existing['guests_data'])) {
-        $guests_data = json_decode($existing['guests_data'], true) ?: [];
+        $guests_data = GuestDataNormalizer::normalize($existing['guests_data']);
         if ($debug) {
             fn_log_event('general', 'runtime', [
                 'message'      => 'Novoton - Fetched guests_data from pending booking record',
@@ -367,9 +364,10 @@ function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debu
                 'guests_count' => count($guests_data),
             ]);
         }
+        return $guests_data;
     }
 
-    return is_array($guests_data) ? $guests_data : [];
+    return [];
 }
 
 /**
@@ -1032,10 +1030,8 @@ function _nvt_format_order_guests(array &$product): void
         return;
     }
 
-    if (is_string($guests_data)) {
-        $guests_data = json_decode($guests_data, true);
-    }
-    if (!is_array($guests_data)) {
+    $guests_data = GuestDataNormalizer::normalize($guests_data);
+    if (empty($guests_data)) {
         return;
     }
 
