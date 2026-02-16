@@ -8,6 +8,11 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
+require_once __DIR__ . '/Exceptions/NovotonException.php';
+require_once __DIR__ . '/Exceptions/ApiException.php';
+
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+
 class NovotonHttpClient
 {
     private $apiUrl;
@@ -79,18 +84,20 @@ class NovotonHttpClient
      * @param string $function API function name
      * @param string $xml XML request body
      * @param string $lang Language code
-     * @return string|false Raw response body or false on failure
+     * @return string Raw response body
+     * @throws ApiException On circuit breaker open or request failure after retries
      */
-    public function sendRequest(string $function, string $xml = '', string $lang = 'UK')
+    public function sendRequest(string $function, string $xml = '', string $lang = 'UK'): string
     {
         if (!$this->isCircuitClosed()) {
+            $secondsUntilRetry = $this->circuitBreakerTimeout - (time() - self::$lastFailureTime);
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API request blocked by circuit breaker',
                 'function' => $function,
-                'seconds_until_retry' => $this->circuitBreakerTimeout - (time() - self::$lastFailureTime)
+                'seconds_until_retry' => $secondsUntilRetry
             ]);
             $this->lastError = 'Circuit breaker open - API temporarily unavailable';
-            return false;
+            throw ApiException::circuitBreakerOpen($function, $secondsUntilRetry);
         }
 
         $url = 'http://' . $this->apiUrl . '/index.php';
@@ -156,13 +163,14 @@ class NovotonHttpClient
 
         if ($lastError || $lastHttpCode < 200 || $lastHttpCode >= 300) {
             $this->recordFailure();
+            $attempts = min($attempt, $this->maxRetries);
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton API Error after ' . min($attempt, $this->maxRetries) . ' attempts: ' . $lastError,
+                'message' => "Novoton API Error after {$attempts} attempts: {$lastError}",
                 'function' => $function,
                 'http_code' => $lastHttpCode,
                 'circuit_status' => $this->getCircuitStatus()
             ]);
-            return false;
+            throw ApiException::requestFailed($function, $lastError, $lastHttpCode, $attempts);
         }
 
         return $response;

@@ -9,7 +9,15 @@
 namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
 
+require_once __DIR__ . '/Exceptions/NovotonException.php';
+require_once __DIR__ . '/Exceptions/ApiException.php';
+require_once __DIR__ . '/Exceptions/XmlParsingException.php';
+require_once __DIR__ . '/Exceptions/ValidationException.php';
+require_once __DIR__ . '/Exceptions/SyncException.php';
 require_once __DIR__ . '/NovotonHttpClient.php';
 require_once __DIR__ . '/NovotonXmlParser.php';
 require_once __DIR__ . '/CommissionCalculator.php';
@@ -92,16 +100,41 @@ class NovotonApi
      */
     private function callApi(string $function, string $xml, string $lang = 'UK')
     {
-        $raw = $this->httpClient->sendRequest($function, $xml, $lang);
-        $this->syncDebugState();
-
-        if ($raw === false) {
+        try {
+            $raw = $this->httpClient->sendRequest($function, $xml, $lang);
+        } catch (ApiException $e) {
+            $this->syncDebugState();
             return false;
         }
 
+        $this->syncDebugState();
         $cleaned = $this->xmlParser->clean($raw);
         $this->lastResponse = $cleaned;
         return $cleaned;
+    }
+
+    /**
+     * Send API request, clean and parse the XML response.
+     * Catches ApiException and XmlParsingException for backward compatibility.
+     *
+     * @param string $function API function name
+     * @param string $xml XML request body
+     * @param string $lang Language code
+     * @return \SimpleXMLElement|false Parsed XML or false on failure
+     */
+    private function callApiAndParse(string $function, string $xml, string $lang = 'UK')
+    {
+        $response = $this->callApi($function, $xml, $lang);
+
+        if ($response === false) {
+            return false;
+        }
+
+        try {
+            return $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            return false;
+        }
     }
 
     /**
@@ -180,7 +213,7 @@ class NovotonApi
     /**
      * Apply commission and rounding to price
      */
-    public function applyCommission($price)
+    public function applyCommission(float $price): float
     {
         return $this->commissionCalculator->apply($price);
     }
@@ -206,8 +239,10 @@ class NovotonApi
     /**
      * 1. hotel_list - List with hotel names
      * Per API docs: use % as wildcard (e.g., <Hotel>%</Hotel> for all hotels)
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelList($country = '%', $city = '%', $hotel = '%', $hotelType = '%')
+    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%')
     {
         $country = empty($country) ? '%' : $country;
         $city = empty($city) ? '%' : $city;
@@ -224,22 +259,22 @@ class NovotonApi
             </hotelinfo>
         </hotel_list>';
 
-        $response = $this->callApi('hotel_list', $xml);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_list', $xml);
     }
 
     /**
      * 2. hotelinfo - Information for hotel services
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelInfo($hotelId, $lang = 'UK')
+    public function getHotelInfo(string $hotelId, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotelinfo>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotelinfo>';
 
-        $response = $this->callApi('hotelinfo', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotelinfo', $xml, $lang);
     }
 
     /**
@@ -276,8 +311,11 @@ class NovotonApi
             if ($raw === false) {
                 $results[$hotelId] = false;
             } else {
-                $parsed = $this->xmlParser->cleanAndParse($raw);
-                $results[$hotelId] = $parsed ?: false;
+                try {
+                    $results[$hotelId] = $this->xmlParser->cleanAndParse($raw);
+                } catch (XmlParsingException $e) {
+                    $results[$hotelId] = false;
+                }
             }
         }
 
@@ -286,8 +324,10 @@ class NovotonApi
 
     /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getRoomPrice($params)
+    public function getRoomPrice(array $params)
     {
         // Allow bypassing cache with 'nocache' param
         $bypassCache = !empty($params['nocache']);
@@ -309,7 +349,11 @@ class NovotonApi
             $cachedXml = $this->getFromCache('room_price', $cacheKey);
             if ($cachedXml !== null && is_string($cachedXml)) {
                 $this->lastResponse = $cachedXml;
-                return $this->xmlParser->parse($cachedXml);
+                try {
+                    return $this->xmlParser->parse($cachedXml);
+                } catch (XmlParsingException $e) {
+                    // Cached data corrupted, fall through to fresh API call
+                }
             }
         }
 
@@ -365,26 +409,27 @@ class NovotonApi
 
         $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
 
+        if ($response === false) {
+            return false;
+        }
+
         // Log raw response for debugging
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton room_price - Raw API response',
-            'response_length' => strlen($response ?? ''),
-            'response_first_500' => substr($response ?? '', 0, 500)
+            'response_length' => strlen($response),
+            'response_first_500' => substr($response, 0, 500)
         ]);
 
-        $result = $this->xmlParser->parse($response);
+        try {
+            $result = $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            return false;
+        }
 
         // Save RAW XML to cache (not SimpleXMLElement) ONLY if we have valid price data
-        if ($result !== null && $result !== false && !empty($response)) {
-            $hasPriceData = false;
-            if ($result instanceof \SimpleXMLElement) {
-                $prices = $result->xpath('//Price');
-                $hasPriceData = !empty($prices) && count($prices) > 0;
-            }
-
-            if ($hasPriceData) {
-                $this->saveToCache('room_price', $cacheKey, $response);
-            }
+        $prices = $result->xpath('//Price');
+        if (!empty($prices) && count($prices) > 0) {
+            $this->saveToCache('room_price', $cacheKey, $response);
         }
 
         return $result;
@@ -393,7 +438,7 @@ class NovotonApi
     /**
      * Get last API request (for debugging)
      */
-    public function getLastRequest()
+    public function getLastRequest(): string
     {
         return $this->lastRequest ?? '';
     }
@@ -401,7 +446,7 @@ class NovotonApi
     /**
      * Get last API response (for debugging)
      */
-    public function getLastResponse()
+    public function getLastResponse(): string
     {
         return $this->lastResponse ?? '';
     }
@@ -409,7 +454,7 @@ class NovotonApi
     /**
      * Get last request formatted params (for debugging)
      */
-    public function getLastRequestFormatted()
+    public function getLastRequestFormatted(): array
     {
         return $this->lastRequestFormatted ?? [];
     }
@@ -417,7 +462,7 @@ class NovotonApi
     /**
      * Get last error (for debugging)
      */
-    public function getLastError()
+    public function getLastError(): string
     {
         $error = $this->lastError ?? '';
         if ($this->lastHttpCode && $this->lastHttpCode != 200) {
@@ -429,7 +474,7 @@ class NovotonApi
     /**
      * Get last raw response before XML cleaning (for debugging)
      */
-    public function getLastResponseRaw()
+    public function getLastResponseRaw(): string
     {
         return $this->lastResponseRaw ?? '';
     }
@@ -442,7 +487,7 @@ class NovotonApi
      * @param string $checkOut Check-out date (Y-m-d)
      * @return array Associative array of room_id => quota value
      */
-    public function getHotelQuotaAll($hotelId, $checkIn, $checkOut)
+    public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
     {
         // Build cache key
         $cacheParams = ['hotel_id' => $hotelId, 'check_in' => $checkIn, 'check_out' => $checkOut];
@@ -463,11 +508,20 @@ class NovotonApi
         </hotel_quota>';
 
         $response = $this->callApi('hotel_quota', $xml);
-        $parsed = $this->xmlParser->parse($response);
+
+        if ($response === false) {
+            return [];
+        }
+
+        try {
+            $parsed = $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            return [];
+        }
 
         $quotaMap = [];
 
-        if ($parsed && isset($parsed->Package)) {
+        if (isset($parsed->Package)) {
             foreach ($parsed->Package as $package) {
                 $packageXml = $package->asXML();
 
@@ -507,8 +561,10 @@ class NovotonApi
 
     /**
      * 4. hotel_quota - Free allotments for a single room (AVAILABILITY)
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelQuota($hotelId, $roomId, $checkIn, $checkOut, $roomType = '')
+    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = '')
     {
         $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
 
@@ -525,17 +581,27 @@ class NovotonApi
 
         if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
             fn_log_event('general', 'runtime', [
-                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response, 0, 500)
+                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response ?: '', 0, 500)
             ]);
         }
 
-        return $this->xmlParser->parse($response);
+        if ($response === false) {
+            return false;
+        }
+
+        try {
+            return $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            return false;
+        }
     }
 
     /**
      * Search availability using frmsearch API endpoint
+     *
+     * @return array Search results
      */
-    public function searchAvailability($params)
+    public function searchAvailability(array $params): array
     {
         $adultsCount = intval($params['adults'] ?? 2);
         $adultAges = $params['adult_ages'] ?? [];
@@ -572,13 +638,17 @@ class NovotonApi
         if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Response',
-                'response' => substr($response, 0, 2000)
+                'response' => substr($response ?: '', 0, 2000)
             ]);
         }
 
-        $result = $this->xmlParser->parse($response);
+        if ($response === false) {
+            return [];
+        }
 
-        if (!$result) {
+        try {
+            $result = $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
             return [];
         }
 
@@ -677,8 +747,10 @@ class NovotonApi
 
     /**
      * 5. hotel_description - Description of hotel
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelDescription($hotelId, $lang = 'UK', $includePackage = false)
+    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false)
     {
         $packageXml = $includePackage ? '<PackageDescription>Yes</PackageDescription>' : '';
 
@@ -688,28 +760,30 @@ class NovotonApi
             ' . $packageXml . '
         </hotel_description>';
 
-        $response = $this->callApi('hotel_description', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_description', $xml, $lang);
     }
 
     /**
      * 6. hotel_images - Pictures of hotel
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelImages($hotelId, $lang = 'UK')
+    public function getHotelImages(string $hotelId, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotel_images>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_images>';
 
-        $response = $this->callApi('hotel_images', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_images', $xml, $lang);
     }
 
     /**
      * 7. hotel_res_RQ - Reservation request
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function createReservation($bookingData)
+    public function createReservation(array $bookingData)
     {
         $settings = Registry::get('addons.novoton_holidays') ?? [];
         $isTestMode = ($settings['test_booking'] ?? 'N') === 'Y';
@@ -832,13 +906,23 @@ class NovotonApi
             ]);
         }
 
-        return $this->xmlParser->parse($response);
+        if ($response === false) {
+            return false;
+        }
+
+        try {
+            return $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            return false;
+        }
     }
 
     /**
      * 8. hotel_acc_RQ_html - Request for invoice - HTML
+     *
+     * @return string|false HTML response or false
      */
-    public function getInvoiceHtml($idNum, $lang = 'UK')
+    public function getInvoiceHtml(string $idNum, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotel_acc_RQ_html>
@@ -853,8 +937,10 @@ class NovotonApi
 
     /**
      * 9. hotel_acc_RQ - Request for invoice - XML
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getInvoiceXml($idNum, $lang = 'UK')
+    public function getInvoiceXml(string $idNum, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotel_acc_RQ>
@@ -863,14 +949,15 @@ class NovotonApi
             <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
         </hotel_acc_RQ>';
 
-        $response = $this->callApi('hotel_acc_RQ', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_acc_RQ', $xml, $lang);
     }
 
     /**
      * 10. spo - EB (Early booking), extras and other discounts
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getSpecialOffers($hotelId, $packageName = '', $lang = 'UK')
+    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK')
     {
         $packageXml = $packageName ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';
 
@@ -882,14 +969,15 @@ class NovotonApi
             ' . $packageXml . '
         </spo>';
 
-        $response = $this->callApi('spo', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('spo', $xml, $lang);
     }
 
     /**
      * 13. priceinfo - Season prices request XML
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getPriceInfo($hotelId, $packageName, $lang = 'UK')
+    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <priceinfo>
@@ -899,14 +987,15 @@ class NovotonApi
             <PackageName>' . htmlspecialchars($packageName) . '</PackageName>
         </priceinfo>';
 
-        $response = $this->callApi('priceinfo', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('priceinfo', $xml, $lang);
     }
 
     /**
      * 14. list_invoices - List Invoices
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function listInvoices($arrFrom = '', $arrTo = '', $lang = 'UK')
+    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK')
     {
         $arrFromXml = $arrFrom ? '<ArrFrom>' . htmlspecialchars($arrFrom) . '</ArrFrom>' : '';
         $arrToXml = $arrTo ? '<ArrTo>' . htmlspecialchars($arrTo) . '</ArrTo>' : '';
@@ -919,14 +1008,15 @@ class NovotonApi
             ' . $arrToXml . '
         </list_invoices>';
 
-        $response = $this->callApi('list_invoices', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('list_invoices', $xml, $lang);
     }
 
     /**
      * 15. resinfo - Reservations Info
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getReservationInfo($idNum = '', $confirmAgency = '', $lang = 'UK')
+    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK')
     {
         $searchXml = $idNum ? '<IdNum>' . htmlspecialchars($idNum) . '</IdNum>' :
                               '<ConfirmAgency>' . htmlspecialchars($confirmAgency) . '</ConfirmAgency>';
@@ -938,28 +1028,30 @@ class NovotonApi
             ' . $searchXml . '
         </resinfo>';
 
-        $response = $this->callApi('resinfo', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('resinfo', $xml, $lang);
     }
 
     /**
      * 16. resort_list - Destinations List
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getResortList($country = 'BULGARIA', $lang = 'UK')
+    public function getResortList(string $country = 'BULGARIA', string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <resort_list>
             <Country>' . htmlspecialchars($country) . '</Country>
         </resort_list>';
 
-        $response = $this->callApi('resort_list', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('resort_list', $xml, $lang);
     }
 
     /**
      * Get room prices for an entire resort (much more efficient than per-hotel)
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getRoomPriceByResort($params)
+    public function getRoomPriceByResort(array $params)
     {
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
@@ -1008,16 +1100,16 @@ class NovotonApi
             'adults' => $adultsCount
         ];
 
-        $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
-
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('room_price', $xml, $params['lang'] ?? 'UK');
     }
 
     /**
      * Get room prices for an entire resort - RAW response (no XML parsing)
      * Much faster for large responses (800KB+) like GOLDEN SANDS
+     *
+     * @return string|false Raw XML response or false
      */
-    public function getRoomPriceByResortRaw($params)
+    public function getRoomPriceByResortRaw(array $params)
     {
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
@@ -1066,8 +1158,10 @@ class NovotonApi
 
     /**
      * 21. hotel_quota_add - Allotments additional
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut)
+    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotel_quota>
@@ -1077,14 +1171,15 @@ class NovotonApi
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
         </hotel_quota>';
 
-        $response = $this->callApi('hotel_quota_add', $xml);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_quota_add', $xml);
     }
 
     /**
      * 22. hotel_request - Request alternatives when no prices available from room_price
+     *
+     * @return \SimpleXMLElement|array|false
      */
-    public function createHotelRequest($requestData, $lang = 'UK', $returnXml = false)
+    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false)
     {
         $guestsXml = '';
         if (!empty($requestData['guests'])) {
@@ -1140,7 +1235,16 @@ class NovotonApi
         ]);
 
         $response = $this->callApi('hotel_request', $xml, $lang);
-        $parsed = $this->xmlParser->parse($response);
+
+        if ($response === false) {
+            $parsed = false;
+        } else {
+            try {
+                $parsed = $this->xmlParser->parse($response);
+            } catch (XmlParsingException $e) {
+                $parsed = false;
+            }
+        }
 
         if ($returnXml) {
             $xmlMasked = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
@@ -1160,7 +1264,7 @@ class NovotonApi
     /**
      * Generate hotel_request XML without sending (for preview/testing)
      */
-    public function generateHotelRequestXml($requestData)
+    public function generateHotelRequestXml(array $requestData): string
     {
         $guestsXml = '';
         if (!empty($requestData['guests'])) {
@@ -1219,8 +1323,10 @@ class NovotonApi
 
     /**
      * 23. alternative_RS - Check for available requested alternatives
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getAlternatives($idNum, $lang = 'UK')
+    public function getAlternatives(string $idNum, string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
 <alternative_RS>
@@ -1234,14 +1340,15 @@ class NovotonApi
             'xml' => $xml
         ]);
 
-        $response = $this->callApi('alternative_RS', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('alternative_RS', $xml, $lang);
     }
 
     /**
      * 24. kickback_RS - Check for kickback (commission)
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getKickbackInfo($lang = 'UK')
+    public function getKickbackInfo(string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <kickback_RS>
@@ -1249,14 +1356,15 @@ class NovotonApi
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
         </kickback_RS>';
 
-        $response = $this->callApi('kickback_RS', $xml, $lang);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('kickback_RS', $xml, $lang);
     }
 
     /**
      * 25. offers_update - Updated/New Offers
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getOffersUpdate($dateTime, $country = '', $resort = '', $hotel = '')
+    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = '')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <offers_update>
@@ -1268,12 +1376,13 @@ class NovotonApi
             <Hotel>' . htmlspecialchars($hotel) . '</Hotel>
         </offers_update>';
 
-        $response = $this->callApi('offers_update', $xml);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('offers_update', $xml);
     }
 
     /**
      * 26. list_facilities - List all facilities
+     *
+     * @return \SimpleXMLElement|false
      */
     public function listFacilities()
     {
@@ -1281,21 +1390,21 @@ class NovotonApi
         <list_facilities>
         </list_facilities>';
 
-        $response = $this->callApi('list_facilities', $xml);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('list_facilities', $xml);
     }
 
     /**
      * 27. hotel_facilities - Hotel facilities
+     *
+     * @return \SimpleXMLElement|false
      */
-    public function getHotelFacilities($hotelId)
+    public function getHotelFacilities(string $hotelId)
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <hotel_facilities>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_facilities>';
 
-        $response = $this->callApi('hotel_facilities', $xml);
-        return $this->xmlParser->parse($response);
+        return $this->callApiAndParse('hotel_facilities', $xml);
     }
 }

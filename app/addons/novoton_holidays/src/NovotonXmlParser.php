@@ -8,6 +8,11 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
+require_once __DIR__ . '/Exceptions/NovotonException.php';
+require_once __DIR__ . '/Exceptions/XmlParsingException.php';
+
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+
 class NovotonXmlParser
 {
     /**
@@ -44,16 +49,17 @@ class NovotonXmlParser
      * Uses streaming mode for responses > 1MB.
      *
      * @param string|null|false $xmlString Cleaned XML string
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement Parsed XML
+     * @throws XmlParsingException On empty response or parse failure
      */
-    public function parse($xmlString)
+    public function parse($xmlString): \SimpleXMLElement
     {
         if (empty($xmlString)) {
             fn_log_event('general', 'runtime', [
                 'message' => 'XML Parse Error - Empty response',
                 'raw_response' => '(empty)'
             ]);
-            return false;
+            throw new XmlParsingException('XML Parse Error - Empty response', [], 0);
         }
 
         $size = strlen($xmlString);
@@ -85,7 +91,11 @@ class NovotonXmlParser
                 'raw_response_first_500' => substr($xmlString, 0, 500)
             ]);
             libxml_clear_errors();
-            return false;
+            throw new XmlParsingException(
+                'XML Parse Error: ' . implode('; ', array_slice($error_messages, 0, 5)),
+                $error_messages,
+                $size
+            );
         }
 
         return $xml;
@@ -95,12 +105,13 @@ class NovotonXmlParser
      * Convenience: clean then parse
      *
      * @param string|null|false $rawString Raw XML string
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement Parsed XML
+     * @throws XmlParsingException On empty input or parse failure
      */
-    public function cleanAndParse($rawString)
+    public function cleanAndParse($rawString): \SimpleXMLElement
     {
         if (empty($rawString)) {
-            return false;
+            throw new XmlParsingException('XML Parse Error - Empty response', [], 0);
         }
         return $this->parse($this->clean($rawString));
     }
@@ -110,9 +121,10 @@ class NovotonXmlParser
      * Uses maximum optimization flags to minimize memory usage.
      *
      * @param string $xmlString Raw XML string
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement Parsed XML
+     * @throws XmlParsingException On parse failure
      */
-    private function parseStreaming(string $xmlString)
+    private function parseStreaming(string $xmlString): \SimpleXMLElement
     {
         libxml_use_internal_errors(true);
 
@@ -126,14 +138,19 @@ class NovotonXmlParser
             foreach ($errors as $err) {
                 $error_messages[] = "Line {$err->line}: {$err->message}";
             }
+            $size = strlen($xmlString);
             fn_log_event('general', 'runtime', [
                 'message' => 'XML Parse Error (streaming mode)',
                 'errors' => implode('; ', array_slice($error_messages, 0, 5)),
-                'response_size' => strlen($xmlString),
+                'response_size' => $size,
                 'raw_response_first_500' => substr($xmlString, 0, 500)
             ]);
             libxml_clear_errors();
-            return false;
+            throw new XmlParsingException(
+                'XML Parse Error (streaming): ' . implode('; ', array_slice($error_messages, 0, 5)),
+                $error_messages,
+                $size
+            );
         }
 
         return $xml;
