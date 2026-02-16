@@ -223,7 +223,13 @@ function fn_novoton_register_smarty_modifiers()
             }
         }
     } catch (\Exception $e) {
-        // Silently fail - modifiers won't be available but templates should still work
+        // Modifiers won't be available but templates should still work
+        if (function_exists('fn_log_event')) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'novoton_holidays: Smarty modifier registration failed',
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
 

@@ -546,6 +546,8 @@ class NovotonApi
      * 1. hotel_list - List with hotel names
      * Per API docs: use % as wildcard (e.g., <Hotel>%</Hotel> for all hotels)
      * Pass '%' or empty string for wildcard search
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelList($country = '%', $city = '%', $hotel = '%', $hotelType = '%')
     {
@@ -571,6 +573,8 @@ class NovotonApi
 
     /**
      * 2. hotelinfo - Information for hotel services
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelInfo($hotelId, $lang = 'UK')
     {
@@ -590,6 +594,7 @@ class NovotonApi
      * @param string $lang Language code
      * @param int $concurrency Max simultaneous requests
      * @return array hotel_id => SimpleXMLElement|false
+     * @throws \RuntimeException If batch API request fails
      */
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
     {
@@ -691,6 +696,8 @@ class NovotonApi
      * - Adt - number of adults (integer)
      * - Chd - children ages as <Age> elements, e.g. <Chd><Age>2</Age><Age>7</Age></Chd>
      * - Remark=Yes and Important=Yes to get additional booking info
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getRoomPrice($params)
     {
@@ -879,6 +886,7 @@ class NovotonApi
      * @param string $checkIn Check-in date (Y-m-d)
      * @param string $checkOut Check-out date (Y-m-d)
      * @return array Associative array of room_id => quota value
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelQuotaAll($hotelId, $checkIn, $checkOut)
     {
@@ -964,6 +972,8 @@ class NovotonApi
      * - CheckIn/CheckOut in YYYY-MM-DD format
      * 
      * Response: <Quota></Quota> - returns smallest available count for period
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelQuota($hotelId, $roomId, $checkIn, $checkOut, $roomType = '')
     {
@@ -1003,6 +1013,7 @@ class NovotonApi
      *   - check_out: Departure date (Y-m-d format)
      *   - adults: Number of adults (default 2)
      * @return array|false Array of available rooms/prices or false on error
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function searchAvailability($params)
     {
@@ -1162,6 +1173,8 @@ class NovotonApi
 
     /**
      * 5. hotel_description - Description of hotel
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelDescription($hotelId, $lang = 'UK', $includePackage = false)
     {
@@ -1179,6 +1192,8 @@ class NovotonApi
 
     /**
      * 6. hotel_images - Pictures of hotel
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelImages($hotelId, $lang = 'UK')
     {
@@ -1210,6 +1225,7 @@ class NovotonApi
      *   - order_num: CS-Cart order number (optional)
      * 
      * @return SimpleXMLElement Response with IdNum, Price, Currency, Quota, Status
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function createReservation($bookingData)
     {
@@ -1347,6 +1363,8 @@ class NovotonApi
 
     /**
      * 8. hotel_acc_RQ_html - Request for invoice - HTML
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getInvoiceHtml($idNum, $lang = 'UK')
     {
@@ -1363,6 +1381,8 @@ class NovotonApi
 
     /**
      * 9. hotel_acc_RQ - Request for invoice - XML
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getInvoiceXml($idNum, $lang = 'UK')
     {
@@ -1379,6 +1399,8 @@ class NovotonApi
 
     /**
      * 10. spo - EB (Early booking), extras and other discounts
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getSpecialOffers($hotelId, $packageName = '', $lang = 'UK')
     {
@@ -1398,6 +1420,8 @@ class NovotonApi
 
     /**
      * 13. priceinfo - Season prices request   XML
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getPriceInfo($hotelId, $packageName, $lang = 'UK')
     {
@@ -1415,6 +1439,8 @@ class NovotonApi
 
     /**
      * 14. list_invoices - List Invoices
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function listInvoices($arrFrom = '', $arrTo = '', $lang = 'UK')
     {
@@ -1435,6 +1461,8 @@ class NovotonApi
 
     /**
      * 15. resinfo - Reservations Info
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getReservationInfo($idNum = '', $confirmAgency = '', $lang = 'UK')
     {
@@ -1454,6 +1482,8 @@ class NovotonApi
 
     /**
      * 16. resort_list - Destinations List
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getResortList($country = 'BULGARIA', $lang = 'UK')
     {
@@ -1472,6 +1502,7 @@ class NovotonApi
      * 
      * @param array $params [resort, check_in, check_out, adults, children, board_id]
      * @return SimpleXMLElement|false
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getRoomPriceByResort($params)
     {
@@ -1539,6 +1570,7 @@ class NovotonApi
      * 
      * @param array $params [resort, check_in, check_out, adults, children, board_id]
      * @return string Raw XML response string
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getRoomPriceByResortRaw($params)
     {
@@ -1593,6 +1625,8 @@ class NovotonApi
 
     /**
      * 21. hotel_quota_add - Allotments additional
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut)
     {
@@ -1615,6 +1649,8 @@ class NovotonApi
      * Response contains IdNum which is used to check alternatives via alternative_RS (typically 24-48 hours later)
      * 
      * Note: For bookings (both Quota > 0 and Quota = 0/RQ), we use hotel_res_RQ
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function createHotelRequest($requestData, $lang = 'UK', $returnXml = false)
     {
@@ -1758,6 +1794,8 @@ class NovotonApi
     /**
      * 23. alternative_RS - Check for available requested alternatives
      * Used to check status of a previously submitted hotel_request
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getAlternatives($idNum, $lang = 'UK')
     {
@@ -1778,6 +1816,8 @@ class NovotonApi
     }
     /**
      * 24. kickback_RS - Check for kickback (commission)
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getKickbackInfo($lang = 'UK')
     {
@@ -1793,6 +1833,8 @@ class NovotonApi
 
     /**
      * 25. offers_update - Updated/New Offers
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getOffersUpdate($dateTime, $country = '', $resort = '', $hotel = '')
     {
@@ -1812,6 +1854,8 @@ class NovotonApi
 
     /**
      * 26. list_facilities - List all facilities
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function listFacilities()
     {
@@ -1825,6 +1869,8 @@ class NovotonApi
 
     /**
      * 27. hotel_facilities - Hotel facilities
+     *
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelFacilities($hotelId)
     {

@@ -236,32 +236,90 @@ class CacheService implements CacheServiceInterface
     
     /**
      * Convert SimpleXMLElement and other non-serializable types to arrays
-     * 
+     *
      * @param mixed $data Data to convert
+     * @param int $depth Current recursion depth (prevents runaway nesting)
      * @return mixed Serializable data
      */
-    private function convertToSerializable($data)
+    private function convertToSerializable($data, int $depth = 0)
     {
-        // Handle SimpleXMLElement
-        if ($data instanceof \SimpleXMLElement) {
-            return json_decode(json_encode($data), true);
+        if ($depth > 64) {
+            return is_scalar($data) ? $data : null;
         }
-        
+
+        // Handle SimpleXMLElement via dedicated traversal (avoids json_decode(json_encode()) roundtrip)
+        if ($data instanceof \SimpleXMLElement) {
+            return $this->simpleXmlToArray($data, $depth);
+        }
+
         // Handle arrays recursively
         if (is_array($data)) {
-            return array_map([$this, 'convertToSerializable'], $data);
+            $result = [];
+            foreach ($data as $key => $value) {
+                $result[$key] = $this->convertToSerializable($value, $depth + 1);
+            }
+            return $result;
         }
-        
+
         // Handle objects with SimpleXMLElement properties
         if (is_object($data)) {
             $array = [];
             foreach (get_object_vars($data) as $key => $value) {
-                $array[$key] = $this->convertToSerializable($value);
+                $array[$key] = $this->convertToSerializable($value, $depth + 1);
             }
             return $array;
         }
-        
+
         return $data;
+    }
+
+    /**
+     * Convert a SimpleXMLElement to a plain array without json_encode/decode roundtrip.
+     *
+     * @param \SimpleXMLElement $xml The element to convert
+     * @param int $depth Current recursion depth
+     * @return mixed Array representation, or string for leaf text nodes
+     */
+    private function simpleXmlToArray(\SimpleXMLElement $xml, int $depth = 0)
+    {
+        if ($depth > 64) {
+            return (string)$xml;
+        }
+
+        $result = [];
+
+        // Attributes
+        foreach ($xml->attributes() as $attrName => $attrValue) {
+            $result['@attributes'][(string)$attrName] = (string)$attrValue;
+        }
+
+        // Child elements
+        foreach ($xml->children() as $childName => $child) {
+            $value = $this->simpleXmlToArray($child, $depth + 1);
+
+            if (isset($result[$childName])) {
+                // Multiple children with the same name → collect into indexed array
+                if (!is_array($result[$childName]) || !isset($result[$childName][0])) {
+                    $result[$childName] = [$result[$childName]];
+                }
+                $result[$childName][] = $value;
+            } else {
+                $result[$childName] = $value;
+            }
+        }
+
+        // If no children and no attributes, return text content
+        if (empty($result)) {
+            return trim((string)$xml);
+        }
+
+        // If has text content alongside children/attributes
+        $text = trim((string)$xml);
+        if ($text !== '') {
+            $result['@text'] = $text;
+        }
+
+        return $result;
     }
     
     /**
