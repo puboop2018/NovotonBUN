@@ -19,7 +19,7 @@ class SearchService
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
     
-    /** @var CacheService */
+    /** @var CacheServiceInterface */
     private $cache;
     
     /** @var bool */

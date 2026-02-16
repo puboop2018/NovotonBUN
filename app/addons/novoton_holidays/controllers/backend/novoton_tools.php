@@ -162,10 +162,10 @@ if ($mode == 'test_api') {
             $lastRequest = $api->getLastRequestFormatted();
             echo "Last request:\n" . (is_array($lastRequest) ? print_r($lastRequest, true) : $lastRequest) . "\n";
             echo "Last error: " . $api->getLastError() . "\n";
-            echo "Last HTTP code: " . $api->lastHttpCode . "\n";
-            
+            echo "Last HTTP code: " . $api->getLastHttpCode() . "\n";
+
             // Show raw response for debugging
-            $rawResponse = $api->lastResponseRaw ?? '';
+            $rawResponse = $api->getLastResponseRaw();
             if (!empty($rawResponse)) {
                 echo "\nRaw response (first 500 chars):\n";
                 echo substr($rawResponse, 0, 500) . "\n";

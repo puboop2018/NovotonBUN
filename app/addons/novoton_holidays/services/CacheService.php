@@ -13,7 +13,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 
-class CacheService
+class CacheService implements CacheServiceInterface
 {
     /** @var string Cache storage type: 'file' or 'database' */
     private $storage = 'file';

@@ -20,7 +20,7 @@ class PriceService
     /** @var string Default currency */
     private $currency;
     
-    /** @var CacheService */
+    /** @var CacheServiceInterface */
     private $cache;
     
     /** @var bool Debug mode */

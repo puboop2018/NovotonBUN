@@ -15,7 +15,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class BookingService
+class BookingService implements BookingServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;

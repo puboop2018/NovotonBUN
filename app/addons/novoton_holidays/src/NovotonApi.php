@@ -46,13 +46,13 @@ class NovotonApi
         'priceinfo',     // Stored in novoton_hotel_packages.priceinfo_data JSON
     ];
     
-    // Debug properties
-    public $lastRequest = '';
-    public $lastResponse = '';
-    public $lastResponseRaw = '';
-    public $lastRequestFormatted = [];
-    public $lastError = '';
-    public $lastHttpCode = 0;
+    // Debug properties (use getters for access)
+    private $lastRequest = '';
+    private $lastResponse = '';
+    private $lastResponseRaw = '';
+    private $lastRequestFormatted = [];
+    private $lastError = '';
+    private $lastHttpCode = 0;
 
     // Retry configuration (loaded from addon settings)
     private $maxRetries;
@@ -846,6 +846,14 @@ class NovotonApi
     public function getLastResponseRaw()
     {
         return $this->lastResponseRaw ?? '';
+    }
+
+    /**
+     * Get last HTTP response code (for debugging)
+     */
+    public function getLastHttpCode(): int
+    {
+        return $this->lastHttpCode ?? 0;
     }
 
     /**
