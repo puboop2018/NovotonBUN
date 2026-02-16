@@ -8,6 +8,9 @@
  * - API initialization
  * - Product creation from hotel data
  *
+ * Injectable: Use CronHelper::getInstance() or inject via constructor.
+ * Testable: Use CronHelper::setInstance($mockHelper) in tests.
+ *
  * @package NovotonHolidays
  * @since 3.1.0
  */
@@ -19,6 +22,47 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class CronHelper
 {
+    /**
+     * Singleton instance (replaceable for testing)
+     * @var self|null
+     */
+    private static ?self $instance = null;
+
+    /**
+     * Injected config (optional, falls back to Config::class)
+     * @var Config|null
+     */
+    private ?Config $config;
+
+    /**
+     * Constructor allows injecting Config for testing.
+     *
+     * @param Config|null $config Injected config (null = use singleton)
+     */
+    public function __construct(?Config $config = null)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * Get the singleton instance.
+     */
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Replace the singleton instance (for testing / DI).
+     */
+    public static function setInstance(?self $instance): void
+    {
+        self::$instance = $instance;
+    }
+
     /**
      * Validate cron access key
      *

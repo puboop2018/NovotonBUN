@@ -1,0 +1,1052 @@
+================================================================================
+     NOVOTON BOOKING FORM SYSTEM — COMPLETE FEATURE SPECIFICATION
+================================================================================
+
+Document Version: 1.0
+Date: 2026-02-15
+Repository: NovotonAddonRepoA
+Addon Version: 3.0.0-A86
+Developer: VacanteLitoral.ro
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1.  SYSTEM OVERVIEW
+2.  TECHNOLOGY STACK
+3.  PROJECT STRUCTURE
+4.  REACT 19 BOOKING ENGINE
+5.  CALENDAR / DATE PICKER
+6.  GUEST PICKER (ROOM & OCCUPANCY)
+7.  CHILD AGE MANAGEMENT
+8.  MULTI-ROOM BOOKING
+9.  SEARCH FUNCTIONALITY
+10. PRICE CALCULATION ENGINE (9-STEP ALGORITHM)
+11. BOOKING WORKFLOW & ORDER MANAGEMENT
+12. API INTEGRATION (NOVOTON XML API)
+13. CRON JOBS & DATA SYNCHRONIZATION
+14. EXCHANGE RATE MANAGEMENT
+15. ADMIN PANEL FEATURES
+16. SECURITY FEATURES
+17. CACHING STRATEGY
+18. DATABASE SCHEMA
+19. FRONTEND TEMPLATES & STYLING
+20. LOCALIZATION (i18n)
+21. CONFIGURATION & SETTINGS
+22. EMAIL NOTIFICATIONS
+23. ERROR HANDLING & VALIDATION
+24. COMPATIBILITY MATRIX
+
+================================================================================
+1. SYSTEM OVERVIEW
+================================================================================
+
+The Novoton Booking Form System is a comprehensive hotel booking integration
+addon for CS-Cart Ultimate e-commerce platform. It transforms a CS-Cart store
+into a full-featured hotel booking platform by integrating with the Novoton
+XML API to provide:
+
+  - Real-time hotel search and availability
+  - Complex seasonal pricing with discounts
+  - Multi-room booking with guest management
+  - React 19-powered modern booking interface
+  - Complete booking lifecycle management
+  - Automated data synchronization via cron jobs
+  - Admin tools for monitoring and management
+
+The system handles thousands of hotels with detailed information including
+location, facilities, star ratings, room types, board options, and seasonal
+pricing structures.
+
+================================================================================
+2. TECHNOLOGY STACK
+================================================================================
+
+FRONTEND:
+  - React 19.2.3 (Booking Engine UI)
+  - Vanilla JavaScript (Form validation, DOB handling)
+  - CSS3 / LESS (Responsive styling)
+  - Smarty Templates (CS-Cart integration)
+  - Webpack + Babel (Build pipeline)
+
+BACKEND:
+  - PHP 7.4 - 8.4
+  - CS-Cart 4.9.3 - 4.19.1 (ULTIMATE edition)
+  - MySQL (Database)
+  - XML (API communication)
+
+EXTERNAL APIS:
+  - Novoton XML API (Hotel data, pricing, bookings)
+  - BNR API (Romanian National Bank - exchange rates)
+
+BUILD TOOLS:
+  - Webpack (Module bundler)
+  - Babel (@babel/preset-env, @babel/preset-react)
+  - NPM (Package management)
+
+================================================================================
+3. PROJECT STRUCTURE
+================================================================================
+
+NovotonAddonRepoA/
+|
+|-- Documentation/                    # Documentation files
+|   |-- PriceInfo_calculation_algorithm.txt
+|   |-- CRON_JOBS.txt
+|   |-- Specificatii_API_Eurosite.pdf
+|   |-- Specificatii_API_Eurosite_with_tables_no_header_footer_cleaned.docx
+|   |-- Novoton Booking Form System - Complete Feature Specification.txt
+|
+|-- app/addons/novoton_holidays/      # Main addon code (PHP backend)
+|   |-- controllers/
+|   |   |-- frontend/                 # Customer-facing controllers
+|   |   |   |-- novoton_booking.php
+|   |   |   |-- novoton_holidays.php
+|   |   |   |-- novoton_cron.php
+|   |   |-- backend/                  # Admin panel controllers
+|   |       |-- novoton_bookings.php
+|   |       |-- novoton_holidays.php
+|   |       |-- novoton_hotels.php
+|   |       |-- novoton_prices.php
+|   |       |-- novoton_exchange_rates.php
+|   |       |-- novoton_alternatives.php
+|   |       |-- novoton_price_compare.php
+|   |       |-- novoton_diagnostic.php
+|   |       |-- novoton_admin.php
+|   |       |-- novoton_tools.php
+|   |-- services/                     # Service layer (~4,800 lines)
+|   |   |-- BookingService.php
+|   |   |-- SearchService.php
+|   |   |-- PriceService.php
+|   |   |-- PriceInfoService.php
+|   |   |-- PriceInfoCalculation.php  # 2,176 lines - pricing algorithm
+|   |   |-- GuestDataService.php
+|   |   |-- CacheService.php
+|   |   |-- CronService.php
+|   |   |-- DateHelper.php
+|   |   |-- ErrorHandler.php
+|   |   |-- SecurityService.php
+|   |   |-- ValidationHelper.php
+|   |   |-- LoggerTrait.php
+|   |   |-- ServiceLoader.php
+|   |-- src/                          # Core API & sync
+|   |   |-- NovotonApi.php            # 1,830 lines - API wrapper
+|   |   |-- HotelSync.php
+|   |   |-- PriceInfoSync.php
+|   |-- Repository/                   # Database access layer
+|   |   |-- BookingRepository.php
+|   |   |-- HotelRepository.php
+|   |   |-- FacilityRepository.php
+|   |   |-- SyncLogRepository.php
+|   |-- Helpers/                      # Utility classes
+|   |   |-- Config.php
+|   |   |-- DatabaseHelper.php
+|   |   |-- DatabaseIterator.php
+|   |   |-- StateManager.php
+|   |   |-- SyncLogger.php
+|   |   |-- CronHelper.php
+|   |   |-- AbstractBatchedSync.php
+|   |   |-- BatchedHotelInfoSync.php
+|   |   |-- BatchedPriceInfoSync.php
+|   |-- functions/                    # Functional utilities
+|   |   |-- bookings.php
+|   |   |-- hotels.php
+|   |   |-- email.php
+|   |   |-- exchange_rates.php
+|   |   |-- formatting.php
+|   |   |-- helpers.php
+|   |   |-- install.php
+|   |-- Constants.php
+|   |-- init.php
+|   |-- hooks.php
+|   |-- config.php
+|   |-- cron.php
+|   |-- addon.xml                     # Addon metadata & DB schema
+|
+|-- react-src/                        # React 19 booking engine source
+|   |-- src/
+|   |   |-- index.jsx                 # Entry point
+|   |   |-- BookingEngine.jsx         # Main component
+|   |   |-- Calendar.jsx              # Date picker
+|   |   |-- GuestPicker.jsx           # Room/guest selector
+|   |   |-- icons.jsx                 # SVG icon components
+|   |   |-- styles.js                 # CSS-in-JS injection
+|   |   |-- translations.js           # i18n strings
+|   |   |-- utils.js                  # Helper functions
+|   |-- webpack.config.js
+|   |-- package.json
+|
+|-- js/addons/novoton_holidays/       # Compiled JS & validation
+|   |-- react19-bundle.js             # Compiled React bundle (215 KB)
+|   |-- booking-form-validation.js    # DOB masking & validation
+|   |-- dob-validation.js             # DOB validation & price recalc
+|   |-- booking_engine.js             # Legacy booking engine
+|   |-- multiroom-booking.js          # Room selection interface
+|   |-- utils.js                      # Shared utilities
+|
+|-- design/                           # UI templates & stylesheets
+|   |-- backend/                      # Admin panel templates & CSS
+|   |-- themes/                       # Frontend theme templates
+|
+|-- scripts/                          # Utility scripts
+|-- var/langs/                        # Translation files (.po)
+    |-- en/addons/novoton_holidays.po
+    |-- ro/addons/novoton_holidays.po
+
+CODEBASE STATISTICS:
+  - PHP Backend:    ~61 files, ~18,861 lines
+  - React Source:   ~11 files, ~1,200 lines
+  - Frontend JS:    ~7 files, ~289 KB
+  - Templates:      ~100+ Smarty template files
+  - CSS/LESS:       ~15+ stylesheet files
+  - Database:       8 tables with indexes
+
+================================================================================
+4. REACT 19 BOOKING ENGINE
+================================================================================
+
+The booking engine is the primary user-facing component, built with React 19
+and designed with a Booking.com-inspired aesthetic.
+
+COMPONENT: BookingEngine.jsx (Main Component)
+----------------------------------------------
+Purpose: Root booking form component that orchestrates all sub-components.
+
+Operating Modes:
+  - "product"  : Widget on hotel product pages
+  - "search"   : Search results page form
+  - "homepage" : Homepage search bar
+
+State Management:
+  - checkIn / checkOut dates
+  - rooms array (adults count, children count, children ages per room)
+  - Search parameters (destination, flexible dates)
+  - UI state (open/closed pickers, validation errors)
+
+Button State Transitions:
+  1. "Search"         -> Initial state, triggers hotel search
+  2. "Change Search"  -> After search, allows modification
+  3. "Apply Changes"  -> Confirms modified search parameters
+
+Mount Points (Auto-initialized via index.jsx):
+  - #novoton-booking-root           -> Product page widget
+  - #novoton-search-form-root       -> Search results form
+  - #novoton-homepage-form-root     -> Homepage search bar
+
+Configuration is read from data-* attributes on mount elements.
+
+COMPONENT: styles.js (CSS-in-JS)
+----------------------------------
+  - Injects CSS once on first render
+  - CSS custom properties for theming
+  - Color scheme: #003580 (primary blue), #ffb700 (accent yellow)
+  - Booking.com-style yellow 3px border (#febb02)
+  - Responsive flex layout
+  - Mobile-optimized touch targets
+
+================================================================================
+5. CALENDAR / DATE PICKER
+================================================================================
+
+COMPONENT: Calendar.jsx
+-------------------------
+Purpose: Two-month side-by-side calendar widget for date range selection.
+
+Features:
+  - Two months displayed simultaneously
+  - Check-in date selected first, check-out second
+  - Visual highlighting of selected date range
+  - Auto-close on outside click (click-away detection)
+  - Locale-aware display (English / Romanian)
+  - Month navigation with prev/next arrow buttons
+  - Minimum 1-night stay enforced
+  - Past dates disabled (cannot select dates before today)
+  - Mobile-responsive layout
+
+Selection Flow:
+  1. User clicks a date -> sets as check-in
+  2. User clicks a second date -> sets as check-out
+  3. If second date is before check-in -> resets, new date becomes check-in
+  4. Range between dates is highlighted visually
+
+Date Formatting:
+  - Internal: "YYYY-MM-DD" (ISO format)
+  - Display: "Mon. 14 Feb." (locale-aware short format)
+  - Utility functions: parseDate(), toDateString(), formatDateShort()
+
+Night Calculation:
+  - nightsBetween(checkIn, checkOut) computes stay duration
+  - Displayed as "X nights" summary
+
+================================================================================
+6. GUEST PICKER (ROOM & OCCUPANCY)
+================================================================================
+
+COMPONENT: GuestPicker.jsx
+----------------------------
+Purpose: Multi-room booking interface with per-room guest configuration.
+
+Features:
+  - Add/remove rooms (1 to 12 rooms maximum)
+  - Set adults per room (1 to 9 adults)
+  - Set children per room (0 to 4 children)
+  - Child age selection for each child (ages 0-17)
+  - Age error highlighting (visual feedback for invalid ages)
+  - Room-by-room configuration panels
+  - Summary display: "2 adults, 1 child, 1 room"
+  - Click-away close behavior
+  - Increment/decrement buttons (+/-) for counts
+
+Room Data Structure:
+  rooms: [
+    { adults: 2, children: 1, childrenAges: [5] },
+    { adults: 2, children: 0, childrenAges: [] }
+  ]
+
+Constraints (from Constants.php):
+  - MAX_ADULTS:   10 (total across all rooms)
+  - MAX_CHILDREN: 6  (total across all rooms)
+  - MAX_ROOMS:    5  (per booking, configurable up to 12)
+  - Per room:     1-9 adults, 0-4 children
+
+================================================================================
+7. CHILD AGE MANAGEMENT
+================================================================================
+
+Child age handling is a critical feature that affects pricing calculations.
+
+DOB INPUT (booking-form-validation.js + dob-validation.js):
+------------------------------------------------------------
+  - DD/MM/YYYY format with auto-masking
+  - Auto-detect: uses date input type on supporting browsers, falls back to
+    text input with manual masking
+  - Cursor position preservation during character masking
+  - Slash (/) auto-insertion between day/month/year segments
+
+CLIENT-SIDE VALIDATION:
+  - Prevents future dates (max date set to today)
+  - Validates DD/MM/YYYY format
+  - Checks day/month ranges (01-31 / 01-12)
+  - Checks year range (reasonable birth years)
+  - Prevents children >= 18 years old at check-in date
+
+SERVER-SIDE VALIDATION (GuestDataService.php):
+  - validateBirthday(): Rejects future DOB values
+  - validateChildAge(): Ensures child < 18 at check-in date
+  - Returns validation errors with specific messages
+
+PRICE RECALCULATION ON DOB CHANGE:
+  - When a DOB field changes, system detects the child's age bracket
+  - If the age bracket differs from the originally selected age, triggers
+    an AJAX call to recalculate pricing
+  - Debounced (1-second delay) to prevent excessive API calls
+  - MutationObserver watches for dynamically added guest fields
+  - Age brackets are hotel-specific (parsed from hotelinfo data)
+
+CHILD AGE BRACKETS:
+  - Age bands are dynamic per hotel (not hardcoded)
+  - Common bands: 0-1.99, 2-11.99, 12-17.99 (varies by hotel)
+  - parseChildAgeBands() reads from hotelinfo data
+  - getAvailableChildAgeBands() checks which bands have pricing rows
+  - Children whose age band has no pricing are reclassified as extra adults
+
+CHILD RECLASSIFICATION:
+  - When a child's age band has NO pricing rows for the selected room/board:
+    -> Child removed from children array
+    -> Reclassified as extra adult (3RD ADULT, 4TH ADULT, etc.)
+    -> Moved to "children_as_adults" array in occupancy structure
+    -> Priced using adult extra bed rates
+
+================================================================================
+8. MULTI-ROOM BOOKING
+================================================================================
+
+FILE: multiroom-booking.js
+---------------------------
+
+Features:
+  - Radio button room selection from available options
+  - Per-room price display with currency formatting
+  - Total price calculation across selected rooms
+  - Visual highlighting of the selected room option
+  - Form population with selected room data
+  - On-request (ASK) status tracking and display
+
+Room Selection UI:
+  - Each room option shows: room type, board type, price per person/night
+  - Price breakdown: total price, per-night rate, per-person-per-night rate
+  - Availability indicator (OK / On Request / Sold Out)
+  - Early booking discount badge when applicable
+  - Selected room highlighted with accent color
+
+Data Flow:
+  1. Search returns available rooms with pricing
+  2. User selects room(s) via radio buttons
+  3. Selected room data populated into hidden form fields
+  4. On form submit, room selection sent to booking controller
+  5. Rooms stored as JSON in novoton_bookings.rooms_data
+
+================================================================================
+9. SEARCH FUNCTIONALITY
+================================================================================
+
+SERVICE: SearchService.php (420 lines)
+----------------------------------------
+
+Search Parameters:
+  - Destination (country, region, city, or specific hotel)
+  - Check-in / check-out dates
+  - Number of rooms
+  - Adults per room
+  - Children per room with ages
+  - Flexible date search (+/- days option)
+
+Search Flow:
+  1. User enters search criteria in React booking engine
+  2. Form submits to novoton_holidays controller
+  3. SearchService.parseSearchParams() normalizes input
+  4. SearchService.calculateRoomTotals() sums guests across rooms
+  5. SearchService.searchAvailability() calls room_price API
+  6. Results formatted by SearchService.buildRoomOptions()
+  7. Results displayed with pricing, availability, and room details
+
+Search Results Display:
+  - Hotel name with city/region and star rating
+  - Room type with package name
+  - Board type (All Inclusive, Half Board, Bed & Breakfast, etc.)
+  - Price per person (total + nightly breakdown)
+  - Early booking discount indicator
+  - Free cancellation indicator
+  - Payment terms with calculated deposit amounts
+  - Cancellation policy display
+
+================================================================================
+10. PRICE CALCULATION ENGINE (9-STEP ALGORITHM)
+================================================================================
+
+SERVICE: PriceInfoCalculation.php (2,176 lines)
+-------------------------------------------------
+
+The pricing engine computes hotel package prices through a 9-step process.
+Full algorithm details are documented in PriceInfo_calculation_algorithm.txt.
+
+STEP 1: LOAD DATA
+  - Load priceinfo_data JSON from novoton_hotel_packages table
+  - Load hotelinfo for room capacities (RB, EB, maxADT, maxCHD, minPAX)
+
+STEP 2: VALIDATE & BUILD OCCUPANCY
+  - Validate against room capacity constraints
+  - Assign adults to Regular Beds (RB) first, extras to Extra Beds (EB)
+  - Extra adults assigned as "3RD ADULT", "4TH ADULT", etc.
+  - Children assigned to remaining regular beds, then extra beds
+  - Each occupant tagged with age_type and acc_type
+
+STEP 3: MAP SEASONS TO NIGHTS
+  - For each night, determine applicable season based on date ranges
+  - Seasons map to Price1, Price2, Price3, etc. columns
+
+STEP 4: CALCULATE BASE PRICE
+  - Match room/board/age_type/acc_type in season_price table
+  - Handle percentage prices (e.g., "80%" of Base code price)
+  - Handle RoomPrice='Yes' (charge once per room, not per person)
+  - Recursive code resolution for chained pricing references
+  - IdStar filtering for star-category-specific prices
+
+STEP 5: CALCULATE FEES / SUPPLEMENTS
+  - extras_daily:  Per-person daily charges with Type handling
+                   (Arrival = full stay, Stay = overlapping only)
+  - extras_single: Single supplement (1 adult in double+ room)
+  - extras_rooms:  Per-room charges (sea view, balcony, etc.)
+  - extras_board:  Board upgrade charges (FB, AI, UAI packages)
+  - handling_fee:  Tiered fee based on stay length
+  - company_fee:   Flat per-room fee
+
+STEP 6: CALCULATE EARLY BOOKING (EB) DISCOUNT
+  - Check booking date within EB booking period
+  - Check check-in date within EB travel date range
+  - Apply EB% to: base price (always), extras_daily (if EBToDaily='Yes'),
+    extras_rooms (if EBToRooms='Yes'), extras_board (if EBToBoard='Yes')
+
+STEP 7: CALCULATE REDUCTION (FREE NIGHTS)
+  - Check stay length within reduction range
+  - Determine free nights (End = last N, Start = first N)
+  - Calculate discount from free nights' base prices
+  - Apply proportional reduction to supplements where configured
+
+STEP 8: APPLY PRIORITY RULES
+  - Priority='Yes' (not combinable): pick best single discount
+  - Priority='No' (combinable): apply both discounts
+  - PriorityEB='Yes': force Early Booking over Reduction
+  - Compare 4 scenarios: no discount, EB only, Reduction only, combined
+
+STEP 9: APPLY COMMISSION
+  - final_price = calculated_price * (1 + commission / 100)
+
+MASTER FORMULA:
+  Price = (BasePrice + extras_single + extras_daily + extras_rooms
+           + extras_board + handling_fee + company_fee) - Applied_Discounts
+  Final_Price = Price * (1 + commission / 100)
+
+RESULT STRUCTURE:
+  {
+    "success": true,
+    "price": 1234.56,
+    "price_without_commission": 1073.57,
+    "commission": 15,
+    "breakdown": {
+      "base_price": ...,
+      "base_per_night": [...],
+      "fees": { "extras_daily", "extras_single", "extras_rooms",
+                "extras_board", "handling_fee", "company_fee" },
+      "discounts": { "early_booking": {...}, "reduction": {...} },
+      "applied_discount": "reduction",
+      "discount_amount": 114.29,
+      "child_age_bands": [...]
+    },
+    "occupancy": {...}
+  }
+
+================================================================================
+11. BOOKING WORKFLOW & ORDER MANAGEMENT
+================================================================================
+
+SERVICE: BookingService.php (493 lines)
+-----------------------------------------
+
+BOOKING LIFECYCLE:
+  1. SEARCH      -> User searches for hotels (dates, guests, destination)
+  2. SELECT      -> User selects room/board option from results
+  3. CONFIGURE   -> User specifies guest details (names, DOBs, contact info)
+  4. ADD TO CART -> BookingService.addToCart() adds hotel to CS-Cart cart
+  5. CHECKOUT    -> Standard CS-Cart checkout process
+  6. CONFIRM     -> On order placement, booking created in database
+  7. API SUBMIT  -> Reservation sent to Novoton API
+  8. TRACK       -> Booking status tracked (pending/confirmed/cancelled)
+
+BOOKING STATUSES:
+  - pending     : Booking created, awaiting API confirmation
+  - confirmed   : API returned confirmation (ResNr assigned)
+  - cancelled   : Booking cancelled
+  - completed   : Stay completed
+  - failed      : API error during booking
+  - ask         : On-request booking (availability not guaranteed)
+  - waiting     : Waiting for hotel response on ASK bookings
+
+BOOKING DATA STORED:
+  - Hotel details (ID, name, package, room type, board)
+  - Stay details (check-in, check-out, nights)
+  - Guest details (adults, children, ages, names, contact info)
+  - Room configuration (num_rooms, rooms_data JSON)
+  - Pricing (base_price, extras_price, total_price, api_price, currency)
+  - API tracking (confirm_id, invoice_id, res_num, api_request/response)
+  - Alternative suggestions (alternatives_data JSON)
+  - Notes and special requests
+
+ALTERNATIVE HOTEL SYSTEM:
+  - When requested room is unavailable, system can suggest alternatives
+  - Admin or cron can fetch alternative offers from API
+  - Customer notified via email with alternative options
+  - Tracked in novoton_alternative_requests table
+
+================================================================================
+12. API INTEGRATION (NOVOTON XML API)
+================================================================================
+
+SERVICE: NovotonApi.php (1,830 lines)
+---------------------------------------
+
+27 API FUNCTIONS:
+  1.  hotel_list         - Get hotel catalog
+  2.  hotelinfo          - Hotel details (capacity, rooms, facilities)
+  3.  room_price         - Real-time room pricing
+  4.  hotel_quota        - Room availability
+  5.  priceinfo          - Seasonal pricing data
+  6.  resort_list        - Resort/city names
+  7.  facilities         - Hotel facilities catalog
+  8.  reservation        - Submit a booking
+  9.  resinfo            - Get reservation details/status
+  10. cancel_reservation - Cancel a booking
+  11. hotel_request      - Request alternative rooms
+  12. alternative_rs     - Get alternative offers
+  13. offers_update      - Check for new/updated offers
+  ... and more
+
+AUTHENTICATION:
+  - API URL, Key, ID, Username, Password (stored in addon settings)
+  - XML request construction with encoded parameters
+  - XML response parsing
+
+RESILIENCE FEATURES:
+  - Retry logic: up to 3 retries with exponential backoff
+  - Configurable retry delays (default 1s, multiplier 2x)
+  - Circuit breaker: stops requests after 5 failures for 60 seconds
+  - Prevents cascading failures during API outages
+  - HTTP status code tracking and logging
+
+DATA FLOW:
+  - Hotel List    -> novoton_hotels table
+  - Hotel Info    -> novoton_hotels.hotel_data (JSON)
+  - Price Info    -> novoton_hotel_packages.priceinfo_data (JSON)
+  - Room Price    -> Cached 5 minutes (live calculation)
+  - Availability  -> Cached 3 minutes (live status)
+
+================================================================================
+13. CRON JOBS & DATA SYNCHRONIZATION
+================================================================================
+
+Full cron documentation in CRON_JOBS.txt. Summary below.
+
+RECOMMENDED SCHEDULE:
+  Mode                    | Frequency      | Priority
+  ------------------------|----------------|----------
+  hotel_info_batched      | Every 5 min    | HIGH
+  sync_priceinfo_batched  | Every 5 min    | HIGH
+  hotel_list              | Daily 2 AM     | MEDIUM
+  resinfo                 | Every 2 hours  | MEDIUM
+  exchange_rates          | Daily 2 PM     | MEDIUM
+  list_facilities         | Weekly Sunday   | LOW
+  offers_update           | Every 2 hours  | LOW
+  add_hotels_as_products  | Manual/Daily   | LOW
+  expire_requests         | Daily midnight | LOW
+
+BATCHED SYNC (Smart Resumable):
+  - hotel_info_batched:
+    * First run syncs ALL hotels in batches
+    * Daily: checks offers_update API, syncs only changed hotels
+    * Every 6 months: automatic full re-sync
+    * Configurable batch_size and max_time
+    * Resume capability if interrupted
+  - sync_priceinfo_batched:
+    * First run syncs ALL packages in batches
+    * Daily: re-syncs stale packages (>24 hours old)
+    * Every 7 days: automatic full re-sync
+    * Configurable batch_size, max_time, stale_hours
+
+CLI SUPPORT:
+  - PHP CLI mode with unlimited=1 flag (no time limit)
+  - Processes ALL items in one run
+  - Better for initial setup or full re-syncs
+
+STATE FILES:
+  - var/cache/novoton/batch_hotelinfo_state.json
+  - var/cache/novoton/batch_priceinfo_state.json
+
+================================================================================
+14. EXCHANGE RATE MANAGEMENT
+================================================================================
+
+Source: BNR (Romanian National Bank) XML API
+
+Features:
+  - Automatic daily fetch of EUR/RON exchange rates
+  - Calculates EUR-based coefficients for RON, USD, GBP
+  - Applies configurable currency risk commission (default 1.8%)
+  - Updates CS-Cart currency coefficients automatically
+  - Manual trigger available from admin panel
+
+Example Output:
+  BNR Rates (RON-based):   EUR: 4.9750, USD: 4.5680, GBP: 5.8420
+  Coefficients (EUR-based): RON: 5.0645, USD: 0.9178, GBP: 1.1734
+
+================================================================================
+15. ADMIN PANEL FEATURES
+================================================================================
+
+DASHBOARD (novoton_holidays.php):
+  - Sync status overview with progress bars
+  - Cron URL display with copy-to-clipboard
+  - Quick-start sync buttons
+  - Error alerts and warnings
+
+BOOKING MANAGEMENT (novoton_bookings.php):
+  - List all bookings with search/filter
+  - View booking details (hotel, guests, pricing, API response)
+  - Update booking status
+  - Resend confirmation emails
+  - Export booking data
+
+HOTEL MANAGEMENT (novoton_hotels.php):
+  - Browse synced hotels
+  - View hotel details and packages
+  - Link/unlink hotels to CS-Cart products
+  - Hotel import wizard (view_hotels_to_add.tpl)
+
+PRICE MANAGEMENT (novoton_prices.php):
+  - View hotel package pricing
+  - Inspect priceinfo data
+
+PRICE COMPARISON TOOL (novoton_price_compare.php):
+  - Shows all 9 calculation steps side by side
+  - Compare calculated price vs API price
+  - Debug pricing discrepancies
+  - Per-night, per-person breakdown
+
+EXCHANGE RATES (novoton_exchange_rates.php):
+  - View current rates
+  - Manual rate refresh
+  - Commission adjustment
+
+ALTERNATIVE REQUESTS (novoton_alternatives.php):
+  - Manage alternative hotel suggestions
+  - Fetch alternatives from API
+  - Send notifications to customers
+
+DIAGNOSTIC TOOLS (novoton_diagnostic.php):
+  - Test API connectivity
+  - Verify credentials
+  - Test specific API functions
+  - View raw request/response XML
+
+================================================================================
+16. SECURITY FEATURES
+================================================================================
+
+SERVICE: SecurityService.php (569 lines)
+
+INPUT VALIDATION:
+  - validate() method with configurable rules
+  - Sanitize user input (strip dangerous characters)
+  - Parameter type checking and range validation
+
+ENCRYPTION:
+  - AES-256-CBC encryption for Personally Identifiable Information (PII)
+  - Encrypted fields: guest email, phone, notes in alternative requests
+  - Encryption key management
+
+CSRF PROTECTION:
+  - CSRF token generation and validation
+  - Applied to all state-changing operations
+
+DOB VALIDATION (Defense in Depth):
+  - Client-side: max date attribute prevents future dates
+  - Client-side: JavaScript validation on blur/change
+  - Server-side: GuestDataService.validateBirthday() rejects future DOB
+  - Server-side: GuestDataService.validateChildAge() ensures child < 18
+
+API SECURITY:
+  - Credentials stored in addon settings (not in code)
+  - Rate limiting on API requests
+  - Circuit breaker prevents excessive failed requests
+  - Response validation and sanitization
+
+================================================================================
+17. CACHING STRATEGY
+================================================================================
+
+SERVICE: CacheService.php (500 lines)
+
+CACHE LAYERS:
+  1. Database cache (novoton_cache table):
+     - API response caching
+     - Configurable TTL per cache type
+  2. File-based cache (var/cache/novoton/):
+     - Batch sync state files
+     - Temporary processing data
+  3. Application-level caching:
+     - room_price API calls: 5-minute TTL
+     - Availability checks: 3-minute TTL
+     - Static hotel data: stored in database (long-lived)
+
+CACHE METHODS:
+  - get(key)                -> Retrieve from cache
+  - set(key, data, ttl)     -> Store with time-to-live
+  - remember(key, ttl, fn)  -> Get or execute callback and cache
+  - forget(key)             -> Remove specific cache entry
+  - flush()                 -> Clear all cache
+
+================================================================================
+18. DATABASE SCHEMA
+================================================================================
+
+8 TABLES (defined in addon.xml):
+
+TABLE: novoton_hotels
+  - hotel_id (PK)           : API IdHotel
+  - product_id              : Link to CS-Cart product
+  - hotel_name, city, region, country
+  - star_rating (1-5)
+  - hotel_data (JSON)       : Full hotelinfo API response
+  - has_prices, packages_count
+  - hotelinfo_synced_at, hotel_list_synced_at
+  - Indexes: country, star_rating, city_country, has_prices
+
+TABLE: novoton_hotel_packages
+  - id (PK, auto-increment)
+  - hotel_id (FK)
+  - package_id              : API IdCont
+  - package_name
+  - priceinfo_data (JSON)   : Complete pricing structure
+  - seasons_count, has_early_booking
+  - min_price, currency
+  - synced_at
+  - Indexes: hotel_id, package_id, min_price, synced_at
+
+TABLE: novoton_bookings
+  - booking_id (PK, auto-increment)
+  - order_id (FK to CS-Cart orders)
+  - Hotel info: hotel_id, hotel_name, package_id, package_name
+  - Room info: room_id, room_type, board_id, board_name
+  - Stay info: check_in, check_out, nights
+  - Guest info: adults, children, children_ages, num_rooms
+  - rooms_data (JSON), guests_data (JSON)
+  - Pricing: base_price, extras_price, total_price, api_price, currency
+  - Status tracking: status, novoton_confirm_id, novoton_invoice_id,
+                     novoton_res_num, novoton_status
+  - API data: api_request, api_response (JSON)
+  - alternatives_data (JSON)
+  - notes, special_requests
+  - created_at, updated_at
+  - 11 indexes for search optimization
+
+TABLE: novoton_sync_log
+  - log_id, sync_type, sync_date
+  - products_total, products_updated, products_failed
+  - duration_seconds, error_message, notes, status
+  - Indexes: date, status, sync_type
+
+TABLE: novoton_cache
+  - cache_key (PK), cache_data (MEDIUMTEXT)
+  - expires_at, created_at
+
+TABLE: novoton_alternative_requests
+  - request_id, user_id, hotel details, stay details
+  - Contact info (encrypted): contact_email, contact_phone, notes
+  - status, alternatives_data (JSON)
+  - created_at, updated_at
+
+TABLE: novoton_facilities
+  - Facility IDs, names, and categories
+
+TABLE: novoton_hotel_facilities
+  - Hotel-to-facility relationship mapping
+
+TABLE: novoton_resorts
+  - Resort/city reference data
+
+================================================================================
+19. FRONTEND TEMPLATES & STYLING
+================================================================================
+
+FRONTEND TEMPLATES (Customer-Facing):
+  - booking_engine.tpl         : React 19 booking widget wrapper
+  - booking_form.tpl           : Legacy booking form (deprecated)
+  - booking_summary.tpl        : Price summary display
+  - product_tabs/              : Hotel prices tab on product page
+  - search.tpl                 : Search results page
+
+BACKEND TEMPLATES (Admin Panel):
+  - manage.tpl                 : Sync dashboard
+  - view.tpl / manage.tpl      : Booking management UI
+  - view_hotels_to_add.tpl     : Hotel import wizard
+  - test_hotel_request.tpl     : Diagnostic tools
+  - cron_info.tpl              : Cron configuration display
+  - excluded_resorts.tpl       : Resort exclusion management
+
+EMAIL TEMPLATES:
+  - novoton_holidays_import_report           : Sync job status reports
+  - novoton_holidays_alternatives_available  : Alternative hotel notifications
+  - novoton_holidays_alternatives_request    : Request confirmation emails
+
+DESIGN APPROACH:
+  - Booking.com-inspired aesthetic
+  - Yellow 3px accent border (#febb02)
+  - Primary blue: #003580
+  - Accent yellow: #ffb700
+  - Mobile-responsive with media queries
+  - CSS custom properties (variables) for theming
+  - Yellow mobile warning border for touch devices
+  - Two theme support: nova_theme and responsive
+
+================================================================================
+20. LOCALIZATION (i18n)
+================================================================================
+
+SUPPORTED LANGUAGES:
+  - English (en)
+  - Romanian (ro)
+
+TRANSLATION FILES:
+  - var/langs/en/addons/novoton_holidays.po
+  - var/langs/ro/addons/novoton_holidays.po
+
+FRONTEND TRANSLATIONS (React):
+  - translations.js contains bilingual strings
+  - t(key, fallback) helper function
+  - Reads from window.NovotonTranslations global
+  - Covers: month names, weekday abbreviations, UI labels, button text
+
+LANGUAGE DETECTION:
+  - getLocale() reads from DOM or Tygh.language global
+  - Falls back to English if language not detected
+
+================================================================================
+21. CONFIGURATION & SETTINGS
+================================================================================
+
+Defined in addon.xml, accessible via Admin -> Addons -> Novoton Holidays.
+
+SETTINGS SECTIONS:
+
+API Credentials:
+  - API URL
+  - API Key
+  - API ID
+  - API Username
+  - API Password
+
+Pricing:
+  - Commission percentage
+  - Round prices (on/off)
+  - Rounding precision
+
+Exchange Rates:
+  - Currency risk commission (0-5%, default 1.8%)
+  - Auto-sync enabled/disabled
+
+API Resilience:
+  - Max retries (default 3)
+  - Retry delay (default 1s)
+  - Retry multiplier (default 2x)
+  - Circuit breaker threshold (default 5 failures)
+  - Circuit breaker timeout (default 60s)
+
+Products:
+  - Country selection (default BULGARIA)
+  - Excluded resorts list
+  - Auto-create products on sync
+
+Cron:
+  - Cron access key
+  - Batch sizes
+  - Max execution times
+
+Display:
+  - Show/hide specific UI elements
+  - Date format preferences
+  - Currency display options
+
+CONSTANTS (Constants.php):
+  ADDON_ID = 'novoton_holidays'
+  STATUS_*: pending, confirmed, cancelled, completed, failed, ask, waiting
+  BOARD_*: AI (All Inclusive), FB (Full Board), HB (Half Board), BB (B&B)
+  AVAIL_*: OK, RQ (On Request), STOP, NA
+  MAX_ADULTS = 10, MAX_CHILDREN = 6, MAX_ROOMS = 5
+  CACHE_TTL: 300s (room_price), 180s (availability)
+  COUNTRIES: 12 supported countries
+
+================================================================================
+22. EMAIL NOTIFICATIONS
+================================================================================
+
+3 EMAIL TEMPLATES:
+
+1. Import Report (novoton_holidays_import_report):
+   - Sent after cron sync jobs complete
+   - Contains: sync type, duration, counts (total/updated/failed)
+   - Error details if any failures occurred
+
+2. Alternatives Available (novoton_holidays_alternatives_available):
+   - Sent to customer when alternative hotel options are found
+   - Contains: original search details, alternative room/price options
+   - Call-to-action to view and book alternatives
+
+3. Alternatives Request (novoton_holidays_alternatives_request):
+   - Confirmation sent when customer requests alternatives
+   - Contains: search criteria, expected response time
+
+BOOKING CONFIRMATION:
+   - Hotel booking details injected into standard CS-Cart order emails
+   - Via novoton_booking.php snippet and hooks
+   - Includes: hotel name, dates, room type, guest names, pricing
+
+================================================================================
+23. ERROR HANDLING & VALIDATION
+================================================================================
+
+SERVICE: ErrorHandler.php
+--------------------------
+  - Centralized error handling
+  - Error logging with context
+  - Graceful error display to users
+  - Admin notification for critical errors
+
+SERVICE: ValidationHelper.php
+-------------------------------
+  - Input validation rules engine
+  - Required field checks
+  - Type validation (string, integer, date, email)
+  - Range validation (min/max values)
+  - Custom validation rules
+
+VALIDATION LAYERS:
+  1. Client-side (JavaScript):
+     - Form field validation on blur/change
+     - DOB format and range checking
+     - Required field highlighting
+     - Real-time error messages
+
+  2. Server-side (PHP):
+     - SecurityService.validate() for all inputs
+     - GuestDataService validation for guest details
+     - BookingService validation for booking parameters
+     - API response validation
+
+  3. Database-level:
+     - Foreign key constraints
+     - NOT NULL constraints
+     - Index-based uniqueness
+
+API ERROR HANDLING:
+  - Retry with exponential backoff (configurable)
+  - Circuit breaker for persistent failures
+  - Error logging to novoton_sync_log table
+  - Admin notifications for critical API failures
+  - Graceful degradation (show cached data when API unavailable)
+
+================================================================================
+24. COMPATIBILITY MATRIX
+================================================================================
+
+PHP VERSIONS:
+  - PHP 7.4  (minimum supported)
+  - PHP 8.0
+  - PHP 8.1
+  - PHP 8.2
+  - PHP 8.3
+  - PHP 8.4  (maximum supported)
+
+CS-CART VERSIONS:
+  - CS-Cart 4.9.3   (minimum supported)
+  - CS-Cart 4.10.x
+  - CS-Cart 4.11.x
+  - CS-Cart 4.12.x
+  - CS-Cart 4.13.x
+  - CS-Cart 4.14.x
+  - CS-Cart 4.15.x
+  - CS-Cart 4.16.x
+  - CS-Cart 4.17.x
+  - CS-Cart 4.18.x
+  - CS-Cart 4.19.1  (maximum supported)
+
+EDITION:
+  - CS-Cart ULTIMATE only
+
+BROWSER SUPPORT:
+  - Modern browsers with React 19 support
+  - Date input fallback for older browsers (text input with masking)
+  - Mobile-responsive design
+
+CS-CART HOOKS USED (14 hooks):
+  - place_order             : Create booking on order placement
+  - get_orders_post         : Fetch booking info with orders
+  - get_order_info          : Format terms display
+  - get_product_data_post   : Add hotel data to products
+  - calculate_cart_items    : Recalculate prices in cart
+  - user_login_post         : Link session bookings to user
+  - create_user_post        : Link new user bookings
+  - delete_order            : Clean up booking records
+  - ... and 6+ additional hooks
+
+================================================================================
+END OF DOCUMENT
+================================================================================

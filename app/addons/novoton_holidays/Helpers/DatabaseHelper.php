@@ -7,6 +7,9 @@
  * - Upsert operations (INSERT ... ON DUPLICATE KEY UPDATE)
  * - Bulk lookups with caching
  *
+ * Injectable: Use DatabaseHelper::getInstance() or inject via constructor.
+ * Testable: Use DatabaseHelper::setInstance($mockHelper) in tests.
+ *
  * @package NovotonHolidays
  * @since 3.1.0
  */
@@ -16,16 +19,41 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 class DatabaseHelper
 {
     /**
+     * Singleton instance (replaceable for testing)
+     * @var self|null
+     */
+    private static ?self $instance = null;
+
+    /**
      * Lookup cache for product codes -> product IDs
      * @var array
      */
-    private static array $productCodeCache = [];
+    private array $productCodeCache = [];
 
     /**
      * Lookup cache for hotel IDs -> hotel data
      * @var array
      */
-    private static array $hotelCache = [];
+    private array $hotelCache = [];
+
+    /**
+     * Get the singleton instance.
+     */
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Replace the singleton instance (for testing / DI).
+     */
+    public static function setInstance(?self $instance): void
+    {
+        self::$instance = $instance;
+    }
 
     /**
      * Batch update hotels has_prices flag after room_price API checks
@@ -42,7 +70,6 @@ class DatabaseHelper
         $updated = 0;
 
         if (!empty($withPrices)) {
-            // db_query returns affected rows count for UPDATE
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'Y', last_price_check = NOW()
@@ -52,7 +79,6 @@ class DatabaseHelper
         }
 
         if (!empty($withoutPrices)) {
-            // db_query returns affected rows count for UPDATE
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_prices = 'N', last_price_check = NOW()
@@ -143,7 +169,6 @@ class DatabaseHelper
 
             $hotel['updated_at'] = $now;
 
-            // db_query returns affected rows: 1 for insert, 2 for update with changes, 0 for no change
             $affected = (int) \db_query(
                 "INSERT INTO ?:novoton_hotels ?e
                  ON DUPLICATE KEY UPDATE ?u",
@@ -342,7 +367,6 @@ class DatabaseHelper
      */
     public static function cleanupOldLogs(int $days = 90): int
     {
-        // db_query returns affected rows count for DELETE
         return (int) \db_query(
             "DELETE FROM ?:novoton_sync_log
              WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)",
@@ -384,7 +408,8 @@ class DatabaseHelper
      */
     public static function clearCache(): void
     {
-        self::$productCodeCache = [];
-        self::$hotelCache = [];
+        $self = self::getInstance();
+        $self->productCodeCache = [];
+        $self->hotelCache = [];
     }
 }

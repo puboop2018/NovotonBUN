@@ -11,7 +11,10 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelSync
 {
@@ -23,19 +26,8 @@ class HotelSync
     public function __construct()
     {
         $this->api = new NovotonApi();
-
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-
-        // Parse selected countries
-        $countrySetting = $settings['selected_countries'] ?? 'BULGARIA';
-        if (is_string($countrySetting)) {
-            $this->selectedCountries = array_map('trim', explode(',', $countrySetting));
-        } else {
-            $this->selectedCountries = (array)$countrySetting;
-        }
-
-        $this->productPrefixes = explode(',', $settings['product_code_prefixes'] ?? 'NVT');
-        $this->productPrefixes = array_map('trim', $this->productPrefixes);
+        $this->selectedCountries = ConfigService::getSelectedCountries();
+        $this->productPrefixes = ConfigService::getProductCodePrefixes();
 
         $this->stats = [
             'hotels_processed' => 0,
@@ -55,7 +47,7 @@ class HotelSync
      * @param string $hotelType Hotel type from API
      * @return int|null Star rating 1-5 or null
      */
-    private function parseStarRating($hotelType)
+    private function parseStarRating(string $hotelType): ?int
     {
         if (empty($hotelType)) {
             return null;
@@ -80,7 +72,7 @@ class HotelSync
      * @param string|null $country Specific country or null for all selected
      * @return array Stats
      */
-    public function syncHotelList($country = null)
+    public function syncHotelList(?string $country = null): array
     {
         $countries = $country ? [$country] : $this->selectedCountries;
 
@@ -139,8 +131,17 @@ class HotelSync
 
                 $this->log("Processed " . count($hotels) . " hotels for {$countryName}");
 
+            } catch (SyncException $e) {
+                $this->stats['errors'][] = $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error fetching hotel_list for {$countryName} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for hotel_list {$countryName}: " . $e->getMessage();
+                $this->stats['hotels_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error fetching hotel_list for {$countryName}: " . $e->getMessage();
+                $this->stats['errors'][] = "Unexpected error fetching hotel_list for {$countryName}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
 
@@ -199,7 +200,7 @@ class HotelSync
      * @param int $limit Max hotels to process (0 = unlimited)
      * @return array Stats
      */
-    public function syncHotelInfo($hotelIds = null, $limit = 0)
+    public function syncHotelInfo(?array $hotelIds = null, int $limit = 0): array
     {
         if ($hotelIds === null) {
             // Get hotels that need hotelinfo sync
@@ -248,32 +249,49 @@ class HotelSync
                 $longitude = (string)($hotelInfo->Longitude ?? '');
                 $region = (string)($hotelInfo->Region ?? '');
 
-                // Update hotel record (V3: hotel_data stores hotelinfo JSON)
-                db_query(
-                    "UPDATE ?:novoton_hotels SET
-                     hotel_data = ?s,
-                     latitude = ?s,
-                     longitude = ?s,
-                     region = ?s,
-                     packages_count = ?i,
-                     hotelinfo_synced_at = NOW()
-                     WHERE hotel_id = ?s",
-                    $hotelDataJson,
-                    $latitude,
-                    $longitude,
-                    $region,
-                    $packagesCount,
-                    $hotelId
-                );
+                // Wrap hotel + package updates in a transaction for atomicity
+                db_query("START TRANSACTION");
+                try {
+                    // Update hotel record (V3: hotel_data stores hotelinfo JSON)
+                    db_query(
+                        "UPDATE ?:novoton_hotels SET
+                         hotel_data = ?s,
+                         latitude = ?s,
+                         longitude = ?s,
+                         region = ?s,
+                         packages_count = ?i,
+                         hotelinfo_synced_at = NOW()
+                         WHERE hotel_id = ?s",
+                        $hotelDataJson,
+                        $latitude,
+                        $longitude,
+                        $region,
+                        $packagesCount,
+                        $hotelId
+                    );
 
-                // Sync packages for this hotel
-                $this->syncPackagesForHotel($hotelId, $hotelInfo);
+                    // Sync packages for this hotel
+                    $this->syncPackagesForHotel($hotelId, $hotelInfo);
+                    db_query("COMMIT");
+                } catch (\Exception $txe) {
+                    db_query("ROLLBACK");
+                    throw $txe;
+                }
 
                 $this->stats['hotels_updated']++;
                 $this->log("Updated hotelinfo for hotel {$hotelId}");
 
+            } catch (SyncException $e) {
+                $this->stats['errors'][] = $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error syncing hotelinfo for {$hotelId} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['hotels_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for hotelinfo {$hotelId}: " . $e->getMessage();
+                $this->stats['hotels_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error syncing hotelinfo for {$hotelId}: " . $e->getMessage();
+                $this->stats['errors'][] = "Unexpected error syncing hotelinfo for {$hotelId}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
 
@@ -292,7 +310,7 @@ class HotelSync
      * @param \SimpleXMLElement $hotelInfo Hotel info from API
      * @return int Number of packages synced
      */
-    private function syncPackagesForHotel($hotelId, $hotelInfo)
+    private function syncPackagesForHotel(string $hotelId, \SimpleXMLElement $hotelInfo): int
     {
         if (!isset($hotelInfo->packages)) {
             return 0;
@@ -377,8 +395,18 @@ class HotelSync
                 $this->stats['packages_updated']++;
                 $synced++;
 
+            } catch (SyncException $e) {
+                $this->stats['errors'][] = $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error for package {$hotelId}/{$packageId} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error for package {$hotelId}/{$packageId}: " . $e->getMessage();
+                $this->stats['packages_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error syncing package {$packageId} for hotel {$hotelId}: " . $e->getMessage();
+                $syncEx = SyncException::packageSyncFailed($hotelId, $packageId, $e->getMessage(), $e);
+                $this->stats['errors'][] = $syncEx->getMessage();
                 $this->stats['packages_failed']++;
             }
 
@@ -447,7 +475,7 @@ class HotelSync
      * @param int $hotelLimit Max hotels for hotelinfo sync (0 = unlimited)
      * @return array Stats
      */
-    public function fullSync($country = null, $hotelLimit = 0)
+    public function fullSync(?string $country = null, int $hotelLimit = 0): array
     {
         $startTime = time();
 
@@ -479,7 +507,7 @@ class HotelSync
      * @param int $limit Max packages to sync (0 = unlimited)
      * @return array Stats
      */
-    public function syncPriceInfoOnly($limit = 0)
+    public function syncPriceInfoOnly(int $limit = 0): array
     {
         $startTime = time();
 
@@ -550,8 +578,18 @@ class HotelSync
 
                 $this->stats['packages_updated']++;
 
+            } catch (SyncException $e) {
+                $this->stats['errors'][] = $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (ApiException $e) {
+                $this->stats['errors'][] = "API error refreshing {$pkg['hotel_id']}/{$pkg['package_id']} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+                $this->stats['packages_failed']++;
+            } catch (XmlParsingException $e) {
+                $this->stats['errors'][] = "XML parsing error refreshing {$pkg['hotel_id']}/{$pkg['package_id']}: " . $e->getMessage();
+                $this->stats['packages_failed']++;
             } catch (\Exception $e) {
-                $this->stats['errors'][] = "Error syncing priceinfo for {$pkg['hotel_id']}/{$pkg['package_id']}: " . $e->getMessage();
+                $syncEx = SyncException::packageSyncFailed($pkg['hotel_id'], $pkg['package_id'], $e->getMessage(), $e);
+                $this->stats['errors'][] = $syncEx->getMessage();
                 $this->stats['packages_failed']++;
             }
 
@@ -566,7 +604,7 @@ class HotelSync
     /**
      * Get sync stats
      */
-    public function getStats()
+    public function getStats(): array
     {
         return $this->stats;
     }
@@ -574,7 +612,7 @@ class HotelSync
     /**
      * Log message
      */
-    private function log($message)
+    private function log(string $message): void
     {
         if (defined('CONSOLE') && CONSOLE) {
             echo "[" . date('Y-m-d H:i:s') . "] {$message}\n";
@@ -588,7 +626,7 @@ class HotelSync
     /**
      * Save sync log to database
      */
-    private function saveLog()
+    private function saveLog(): void
     {
         db_query(
             "INSERT INTO ?:novoton_sync_log

@@ -105,6 +105,10 @@
                 <span>Facilities</span>
                 <span>{if $last_syncs.facilities}{$last_syncs.facilities|date_format:"%d.%m %H:%M"}{else}Never{/if}</span>
             </div>
+            <div class="novoton-stat-row">
+                <span>Resort List</span>
+                <span>{if $last_syncs.resort_list}{$last_syncs.resort_list|date_format:"%d.%m %H:%M"}{else}Never{/if}</span>
+            </div>
         </div>
     </div>
     
@@ -232,6 +236,12 @@
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
                 <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Resort List</strong><br><small style="color:#666;">Sync resort names</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.resort_list}</div></td>
+                <td>Weekly</td>
+                <td><a href="{$cron_urls.resort_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Booking Status</strong><br><small style="color:#666;">Check ASK bookings</small></td>

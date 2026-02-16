@@ -26,6 +26,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 class BatchedHotelInfoSync
 {
@@ -245,10 +246,7 @@ class BatchedHotelInfoSync
             );
 
             // Pre-fetch product_code -> product_id map for unlinked hotels
-            $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-            $prefixes = !empty($addon_settings['product_code_prefixes'])
-                ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
-                : ['NVT'];
+            $prefixes = ConfigService::getProductCodePrefixes();
 
             $code_patterns = [];
             foreach ($batch as $hid) {
@@ -558,10 +556,7 @@ class BatchedHotelInfoSync
      */
     private function reconcileProductLinks(): void
     {
-        $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-        $prefixes = !empty($addon_settings['product_code_prefixes'])
-            ? array_map('trim', explode(',', $addon_settings['product_code_prefixes']))
-            : ['NVT'];
+        $prefixes = ConfigService::getProductCodePrefixes();
 
         // 1. Re-link: hotels with NULL product_id whose product exists (bulk approach)
         $orphaned = db_get_fields(

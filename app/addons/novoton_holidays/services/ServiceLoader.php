@@ -1,18 +1,35 @@
 <?php
 /**
  * Novoton Holidays - Service Loader
- * 
- * Provides lazy-loaded singleton access to all service classes.
- * Include this file to get access to service getters.
- * 
+ *
+ * Provides lazy-loaded singleton access to all service classes,
+ * repositories, helpers, and value objects.
+ *
  * Usage:
- *   $bookingService = _nvt_booking_service();
- *   $guestService = _nvt_guest_service();
- *   $searchService = _nvt_search_service();
- *   $priceService = _nvt_price_service();
- *   $securityService = _nvt_security_service();
- *   $cacheService = _nvt_cache_service();
- * 
+ *   // --- Services ---
+ *   $bookingService    = _nvt_booking_service();
+ *   $guestService      = _nvt_guest_service();
+ *   $searchService     = _nvt_search_service();
+ *   $priceService      = _nvt_price_service();
+ *   $priceInfoService  = _nvt_price_info_service();
+ *   $securityService   = _nvt_security_service();
+ *   $cacheService      = _nvt_cache_service();
+ *   $validationHelper  = _nvt_validation_helper();
+ *   $dateHelper        = _nvt_date_helper();
+ *   $cronService       = _nvt_cron_service();
+ *   $diagnostics       = _nvt_diagnostics_service();
+ *   $alternatives      = _nvt_alternative_request_service();
+ *
+ *   // --- Repositories ---
+ *   $hotelRepo         = _nvt_hotel_repo();
+ *   $bookingRepo       = _nvt_booking_repo();
+ *   $facilityRepo      = _nvt_facility_repo();
+ *   $syncLogRepo       = _nvt_sync_log_repo();
+ *
+ *   // --- Helpers ---
+ *   $dbIterator        = _nvt_db_iterator();
+ *   $batchSync         = _nvt_batched_hotelinfo_sync();
+ *
  * @package NovotonHolidays
  * @since 2.8.0
  */
@@ -26,8 +43,14 @@ use Tygh\Addons\NovotonHolidays\Services\SecurityService;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ValidationHelper;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
+use Tygh\Addons\NovotonHolidays\Services\DateHelper;
+use Tygh\Addons\NovotonHolidays\Services\CronService;
+use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
+use Tygh\Addons\NovotonHolidays\Services\AlternativeRequestService;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
+use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
@@ -36,10 +59,13 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 $services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
 $repository_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Repository/';
 $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
+$vo_dir = Registry::get('config.dir.addons') . 'novoton_holidays/ValueObjects/';
 
 // Load services
 foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService',
-          'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService'] as $class) {
+          'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService',
+          'DateHelper', 'CronService',
+          'DiagnosticsService', 'AlternativeRequestService'] as $class) {
     $file = $services_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Services\\{$class}")) {
         require_once $file;
@@ -62,10 +88,22 @@ foreach (['DatabaseIterator', 'BatchedHotelInfoSync'] as $class) {
     }
 }
 
+// Load value objects
+foreach (['BoardType', 'RoomType'] as $class) {
+    $file = $vo_dir . $class . '.php';
+    if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\ValueObjects\\{$class}")) {
+        require_once $file;
+    }
+}
+
+// =============================================================================
+// SERVICE GETTERS
+// =============================================================================
+
 /**
  * Get BookingService singleton
  * Handles booking creation, cart operations, order processing
- * 
+ *
  * @return BookingService
  */
 function _nvt_booking_service() {
@@ -79,7 +117,7 @@ function _nvt_booking_service() {
 /**
  * Get GuestDataService singleton
  * Handles guest data parsing, validation, formatting
- * 
+ *
  * @return GuestDataService
  */
 function _nvt_guest_service() {
@@ -93,7 +131,7 @@ function _nvt_guest_service() {
 /**
  * Get SearchService singleton
  * Handles search parameter parsing, availability search
- * 
+ *
  * @return SearchService
  */
 function _nvt_search_service() {
@@ -107,7 +145,7 @@ function _nvt_search_service() {
 /**
  * Get PriceService singleton
  * Handles price calculations, commission application
- * 
+ *
  * @return PriceService
  */
 function _nvt_price_service() {
@@ -121,7 +159,7 @@ function _nvt_price_service() {
 /**
  * Get SecurityService singleton
  * Handles input validation, sanitization, CSRF protection
- * 
+ *
  * @return SecurityService
  */
 function _nvt_security_service() {
@@ -135,7 +173,7 @@ function _nvt_security_service() {
 /**
  * Get CacheService singleton
  * Handles API response caching
- * 
+ *
  * @return CacheService
  */
 function _nvt_cache_service() {
@@ -149,7 +187,7 @@ function _nvt_cache_service() {
 /**
  * Get ValidationHelper singleton
  * Handles booking data validation
- * 
+ *
  * @return ValidationHelper
  */
 function _nvt_validation_helper() {
@@ -162,8 +200,8 @@ function _nvt_validation_helper() {
 
 /**
  * Get PriceInfoService singleton
- * Handles price info retrieval and formatting
- * 
+ * Handles season price info retrieval and formatting
+ *
  * @return PriceInfoService
  */
 function _nvt_price_info_service() {
@@ -175,9 +213,41 @@ function _nvt_price_info_service() {
 }
 
 /**
+ * Get DateHelper singleton
+ * Date formatting and calculation utilities with Romanian locale support
+ *
+ * @return DateHelper
+ */
+function _nvt_date_helper() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new DateHelper();
+    }
+    return $instance;
+}
+
+/**
+ * Get CronService singleton
+ * Centralized service for cron job operations (resort_list sync, hotel_list sync, etc.)
+ *
+ * @return CronService
+ */
+function _nvt_cron_service() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new CronService();
+    }
+    return $instance;
+}
+
+// =============================================================================
+// REPOSITORY GETTERS
+// =============================================================================
+
+/**
  * Get HotelRepository singleton
  * Database access for hotel data
- * 
+ *
  * @return HotelRepository
  */
 function _nvt_hotel_repo() {
@@ -201,6 +271,38 @@ function _nvt_booking_repo() {
     }
     return $instance;
 }
+
+/**
+ * Get FacilityRepository singleton
+ * Database access for hotel facilities (list_facilities / hotel_facilities API)
+ *
+ * @return FacilityRepository
+ */
+function _nvt_facility_repo() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new FacilityRepository();
+    }
+    return $instance;
+}
+
+/**
+ * Get SyncLogRepository singleton
+ * Database access for cron sync history logs
+ *
+ * @return SyncLogRepository
+ */
+function _nvt_sync_log_repo() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new SyncLogRepository();
+    }
+    return $instance;
+}
+
+// =============================================================================
+// HELPER GETTERS
+// =============================================================================
 
 /**
  * Get DatabaseIterator singleton
@@ -236,4 +338,32 @@ function _nvt_db_iterator() {
  */
 function _nvt_batched_hotelinfo_sync() {
     return new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
+}
+
+/**
+ * Get DiagnosticsService singleton
+ * Handles API testing, hotel list testing, room price testing, etc.
+ *
+ * @return DiagnosticsService
+ */
+function _nvt_diagnostics_service() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new DiagnosticsService();
+    }
+    return $instance;
+}
+
+/**
+ * Get AlternativeRequestService singleton
+ * Handles alternative booking request creation (hotel_request API), email notifications
+ *
+ * @return AlternativeRequestService
+ */
+function _nvt_alternative_request_service() {
+    static $instance = null;
+    if ($instance === null) {
+        $instance = new AlternativeRequestService();
+    }
+    return $instance;
 }

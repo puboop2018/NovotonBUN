@@ -10,18 +10,19 @@
  ****************************************************************************/
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 // Cron update
 if ($mode == 'cron_update') {
-    
+
     // Get addon settings with null safety
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    
+    $addon_settings = ConfigService::all();
+
     // Verify API key
     $provided_key = $_REQUEST['access_key'] ?? '';
-    $stored_key = $addon_settings['cron_access_key'] ?? '';
+    $stored_key = ConfigService::getCronAccessKey();
     
     if (empty($stored_key)) {
         die('ERROR: Cron Access Key not configured in addon settings.');
@@ -151,11 +152,11 @@ if ($mode == 'cron_update') {
  * URL: index.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY
  */
 if ($mode == 'cron_export_hotel_features') {
-    $expected_key = Registry::get('addons.novoton_holidays.cron_access_key') ?? '';
+    $expected_key = ConfigService::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
-    
+
     header('Content-Type: text/plain; charset=utf-8');
-    
+
     if (empty($expected_key)) {
         echo "[ERROR] Cron API key not configured.\n";
         exit;
@@ -190,9 +191,9 @@ if ($mode == 'cron_export_hotel_features') {
  * URL: index.php?dispatch=novoton_holidays.get_hotel_features_csv&access_key=YOUR_ACCESS_KEY
  */
 if ($mode == 'get_hotel_features_csv') {
-    $expected_key = Registry::get('addons.novoton_holidays.cron_access_key') ?? '';
+    $expected_key = ConfigService::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
-    
+
     // Verify API key
     if (empty($expected_key) || $provided_key !== $expected_key) {
         header('HTTP/1.1 403 Forbidden');

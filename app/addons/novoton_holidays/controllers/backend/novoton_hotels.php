@@ -21,6 +21,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -401,8 +402,7 @@ if ($mode == 'check_packages') {
     echo '<div class="log">';
 
     // Get all countries from settings
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $countries = fn_novoton_parse_countries($addon_settings['selected_countries'] ?? '');
+    $countries = fn_novoton_parse_countries(ConfigService::get('selected_countries', ''));
 
     echo "Countries: " . implode(', ', $countries) . "<br>";
     echo "Limit per country: {$limit}<br>";
@@ -549,54 +549,3 @@ if ($mode == 'check_packages') {
     exit;
 }
 
-/**
- * Helper: Parse countries from settings
- * Note: This is also defined in helpers.php - this is a fallback if helpers.php not loaded
- */
-if (!function_exists('fn_novoton_parse_countries')) {
-function fn_novoton_parse_countries($selected_countries) {
-    $countries = [];
-    
-    // Parse the selected countries from settings
-    if (is_array($selected_countries)) {
-        foreach ($selected_countries as $key => $value) {
-            if ($value === 'Y' || $value === '1' || $value === 1) {
-                $countries[] = strtoupper(trim($key));
-            } elseif (is_string($value) && strlen($value) > 2) {
-                $countries[] = strtoupper(trim($value));
-            }
-        }
-    } elseif (!empty($selected_countries) && is_string($selected_countries)) {
-        $countries = array_map(function($c) {
-            return strtoupper(trim($c));
-        }, explode(',', $selected_countries));
-    }
-    
-    $countries = array_filter($countries);
-    
-    // If no countries selected, return ALL available countries
-    if (empty($countries)) {
-        // Use Constants if available, otherwise use hardcoded list
-        if (class_exists('\\Tygh\\Addons\\NovotonHolidays\\Constants')) {
-            return \Tygh\Addons\NovotonHolidays\Constants::COUNTRIES;
-        }
-        // Fallback list of all Novoton-supported countries
-        return [
-            'ALBANIA',
-            'BULGARIA', 
-            'CYPRUS',
-            'EGYPT',
-            'FRANCE',
-            'GREECE',
-            'ITALY',
-            'MALDIVES',
-            'SPAIN',
-            'TURKEY',
-            'UNITED ARAB EMIRATES',
-            'UNITED KINGDOM',
-        ];
-    }
-    
-    return $countries;
-}
-} // end function_exists
