@@ -1065,6 +1065,7 @@ window.NovotonTranslations = {
     offers: "{__('novoton_holidays.offers')|default:'offers'}"
 };
 </script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v=2.7.1" defer></script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v=2.7.1" defer></script>
 

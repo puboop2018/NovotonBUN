@@ -39,5 +39,6 @@
     </div>
 </div>
 
-{* Load React 19 bundle (provides React globally) then booking component *}
+{* Load React 19 vendor (cached separately) then app bundle *}
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v=2.7.1" defer></script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.7.1" defer></script>
