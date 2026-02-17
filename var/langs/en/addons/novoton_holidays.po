@@ -1780,6 +1780,14 @@ msgctxt "Languages::novoton_holidays.apply_changes"
 msgid "Apply changes"
 msgstr "Apply changes"
 
+msgctxt "Languages::novoton_holidays.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Please select check-in and check-out dates"
+
+msgctxt "Languages::novoton_holidays.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Select age ([count] missing)"
+
 msgctxt "Languages::novoton_holidays.flexible_dates"
 msgid "Flexible dates"
 msgstr "Flexible dates"

@@ -1088,6 +1088,14 @@ msgctxt "Languages::novoton_holidays.apply_changes"
 msgid "Apply changes"
 msgstr "Aplică modificări"
 
+msgctxt "Languages::novoton_holidays.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Vă rugăm selectați datele de check-in și check-out"
+
+msgctxt "Languages::novoton_holidays.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Selectează vârsta ([count] lipsă)"
+
 msgctxt "Languages::novoton_holidays.day"
 msgid "Day"
 msgstr "Zi"

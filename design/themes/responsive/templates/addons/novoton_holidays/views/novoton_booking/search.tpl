@@ -1066,7 +1066,8 @@ window.NovotonTranslations = {
     offers: "{__('novoton_holidays.offers')|default:'offers'}",
     pleaseEnterDates: "{__('novoton_holidays.please_enter_dates')|default:'Please select check-in and check-out dates'}",
     selectDatesMessage: "{__('novoton_holidays.select_dates_message')|default:"Select dates to see this property's availability and prices"}",
-    selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}"
+    selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}",
+    selectMissingAges: "{__('novoton_holidays.select_missing_ages')|default:'Select age ([count] missing)'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
