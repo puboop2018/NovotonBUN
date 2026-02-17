@@ -117,14 +117,6 @@ class PriceService
     }
 
     /**
-     * @deprecated Use convertFromApiCurrency() instead.
-     */
-    public static function convertFromEur(float $api_price, ?string $target_currency = null): float
-    {
-        return self::convertFromApiCurrency($api_price, $target_currency);
-    }
-
-    /**
      * Convert all price fields in a search results array from API currency to display currency.
      *
      * @param array $results Search results array
