@@ -12,6 +12,14 @@ use Tygh\Addons\NovotonHolidays\Constants;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+// Addon version constant — single source of truth from addon.xml via Registry.
+// Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for use in script cache-busting.
+if (!defined('NOVOTON_VERSION')) {
+    $__nv = Registry::get('addons.novoton_holidays.version') ?: '0.0.0';
+    define('NOVOTON_VERSION', preg_replace('/-.*$/', '', $__nv));
+    unset($__nv);
+}
+
 // Load addon constants
 $config_file = __DIR__ . '/config.php';
 if (file_exists($config_file)) {
