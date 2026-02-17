@@ -167,7 +167,7 @@
             var t = window.NovotonTranslations || {};
             notif.textContent = '';
             notif.appendChild(document.createTextNode(
-                (t.priceUpdated || 'Prețul a fost actualizat în funcție de vârsta copilului') + ': '
+                t.priceUpdated + ': '
             ));
             var strong = document.createElement('strong');
             strong.style.color = changeColor;
@@ -234,24 +234,24 @@
             '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
             '<div style="text-align:center;margin-bottom:20px;">' +
                 '<div style="font-size:40px;margin-bottom:10px;">⚠️</div>' +
-                '<h3 style="margin:0;color:#856404;font-size:18px;">' + (t.roomChangedTitle || 'Camera s-a modificat') + '</h3>' +
+                '<h3 style="margin:0;color:#856404;font-size:18px;">' + t.roomChangedTitle + '</h3>' +
             '</div>' +
-            '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">' + (t.roomChangedDueToAge || 'Camera selectată nu este disponibilă pentru vârsta copilului introdusă.') + '</p>' +
+            '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">' + t.roomChangedDueToAge + '</p>' +
             '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin-bottom:20px;">' +
                 '<div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">' +
                     '<div style="text-align:center;">' +
-                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + (t.originalRoom || 'Camera selectată') + '</div>' +
+                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + t.originalRoom + '</div>' +
                         '<div style="font-weight:600;color:#856404;text-decoration:line-through;">' + originalRoom + '</div>' +
                     '</div>' +
                     '<div style="font-size:24px;color:#856404;">→</div>' +
                     '<div style="text-align:center;">' +
-                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + (t.newRoom || 'Camera nouă') + '</div>' +
+                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + t.newRoom + '</div>' +
                         '<div style="font-weight:600;color:#155724;">' + newRoom + '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
             '<div style="background:#f8f9fa;border-radius:8px;padding:15px;margin-bottom:20px;text-align:center;">' +
-                '<div style="font-size:12px;color:#666;margin-bottom:5px;">' + (t.priceChange || 'Modificare preț') + '</div>' +
+                '<div style="font-size:12px;color:#666;margin-bottom:5px;">' + t.priceChange + '</div>' +
                 '<div style="font-size:20px;">' +
                     '<span style="text-decoration:line-through;color:#999;">' + originalPrice.toFixed(2) + ' €</span> ' +
                     '<span style="' + priceDiffStyle + '">(' + priceDiffText + ')</span> ' +
@@ -259,8 +259,8 @@
                 '</div>' +
             '</div>' +
             '<div style="display:flex;gap:10px;justify-content:center;">' +
-                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">← ' + (t.goBackToSearch || 'Înapoi la căutare') + '</button>' +
-                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + (t.continueWithNewRoom || 'Continuă cu noua cameră') + ' →</button>' +
+                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">← ' + t.goBackToSearch + '</button>' +
+                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + t.continueWithNewRoom + ' →</button>' +
             '</div>' +
             '</div></div>';
         
@@ -295,7 +295,7 @@
         var notif = document.createElement('div');
         notif.id = 'room-change-confirmation';
         notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
-        notif.innerHTML = '✓ <strong>' + escapeHtml(t.roomUpdated || 'Camera a fost actualizată:') + '</strong> ' +
+        notif.innerHTML = '✓ <strong>' + escapeHtml(t.roomUpdated) + '</strong> ' +
             escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
         
         var section = document.querySelector('.guest-names-section h3, .booking-form-header');
