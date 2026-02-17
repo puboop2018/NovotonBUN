@@ -5,27 +5,6 @@
 {$_nv_hotels_terms = []}
 {$_nv_hotels_prices = []}
 
-{* Debug output when ?debug=1 *}
-{if $smarty.request.debug}
-<div style="background:#fff3cd;border:1px solid #ffc107;padding:15px;margin:15px 0;font-family:monospace;font-size:12px;">
-    <strong>DEBUG: Novoton Order Terms (nova_theme)</strong><br>
-    order_info.products count: {$order_info.products|@count|default:0}<br>
-    {foreach from=$order_info.products item=dbg_product key=dbg_key}
-        <hr style="margin:5px 0;">
-        Product [{$dbg_key}]: {$dbg_product.product|default:'?'}<br>
-        - novoton_booking: {if $dbg_product.extra.novoton_booking}YES{else}NO{/if}<br>
-        - hotel_id: {$dbg_product.extra.hotel_id|default:'(empty)'}<br>
-        - hotel_name: {$dbg_product.extra.hotel_name|default:'(empty)'}<br>
-        - price: {$dbg_product.extra.price|default:$dbg_product.price|default:'(empty)'}<br>
-        - terms_of_payment_raw: {if $dbg_product.extra.terms_of_payment_raw}"{$dbg_product.extra.terms_of_payment_raw|truncate:80}"{else}(empty){/if}<br>
-        - terms_of_payment_formatted: {if $dbg_product.extra.terms_of_payment_formatted}"{$dbg_product.extra.terms_of_payment_formatted|truncate:80}"{else}(empty){/if}<br>
-        - terms_of_cancellation_raw: {if $dbg_product.extra.terms_of_cancellation_raw}"{$dbg_product.extra.terms_of_cancellation_raw|truncate:80}"{else}(empty){/if}<br>
-        - terms_of_cancellation_formatted: {if $dbg_product.extra.terms_of_cancellation_formatted}"{$dbg_product.extra.terms_of_cancellation_formatted|truncate:80}"{else}(empty){/if}<br>
-        - extra keys: {if is_array($dbg_product.extra)}{implode(", ", array_keys($dbg_product.extra))}{else}(not array){/if}<br>
-    {/foreach}
-</div>
-{/if}
-
 {* First pass: collect prices per hotel *}
 {if $order_info.products}
     {foreach from=$order_info.products item=product key=item_id}

@@ -12,7 +12,7 @@
     <!-- 
     ═══════════════════════════════════════════════════════════════
     Novoton Holidays Integration for CS-Cart
-    Version: 2.7.0 (Build A20 - Complete Optimization)
+    Version: 3.0.0 (Build A86)
     ═══════════════════════════════════════════════════════════════
     
     DESCRIPTION:
@@ -439,13 +439,14 @@
                 `country` varchar(100) DEFAULT NULL COMMENT 'Country from API',
                 `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart (raw from API)',
                 `star_rating` tinyint(1) DEFAULT NULL COMMENT 'Parsed numeric rating 1-5',
-                `latitude` varchar(20) DEFAULT NULL,
-                `longitude` varchar(20) DEFAULT NULL,
+                `latitude` decimal(10,7) DEFAULT NULL,
+                `longitude` decimal(10,7) DEFAULT NULL,
                 `hotel_data` longtext COMMENT 'JSON: full hotelinfo API response',
                 `has_prices` enum('Y','N') DEFAULT 'N' COMMENT 'Has packages with priceinfo',
                 `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
+                `last_price_check` datetime DEFAULT NULL COMMENT 'Last room_price_check result',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`hotel_id`),
@@ -697,17 +698,6 @@
                 PRIMARY KEY (`hotel_id`, `facility_id`),
                 KEY `idx_facility_id` (`facility_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel-facility relationships'
-        </item>
-
-        <!-- Resorts list table (from resort_list API) -->
-        <item for="install">
-            CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
-                `resort_name` varchar(100) NOT NULL,
-                `country` varchar(50) NOT NULL DEFAULT 'BULGARIA',
-                `synced_at` datetime DEFAULT NULL,
-                `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (`resort_name`, `country`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort list from API (authoritative resort names for room_price queries)'
         </item>
 
         <!-- Uninstall queries -->

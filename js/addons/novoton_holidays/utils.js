@@ -4,7 +4,7 @@
  * Common functions used across multiple JS files to avoid duplication.
  * 
  * @package NovotonHolidays
- * @since 2.7.0
+ * @since 3.0.0
  */
 
 window.NovotonUtils = (function() {

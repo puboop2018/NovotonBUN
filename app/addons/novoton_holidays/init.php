@@ -39,12 +39,6 @@ function fn_novoton_ensure_tables_exist()
     if ($checked) return;
     $checked = true;
     
-    // Drop unused novoton_resorts table if it exists (dead infrastructure)
-    $resorts_table = db_get_field("SHOW TABLES LIKE '?:novoton_resorts'");
-    if (!empty($resorts_table)) {
-        db_query("DROP TABLE IF EXISTS `?:novoton_resorts`");
-    }
-
     // Drop redundant resort column — city field is the resort (City = Resort in API)
     $resort_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'resort'");
     if (!empty($resort_col)) {

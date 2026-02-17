@@ -1,6 +1,6 @@
 /**
  * Novoton Holidays - DOB Validation + Price Recalculation + Desktop/Mobile Fix
- * Version: A73
+ * Version: 3.0.0-A86
  *
  * Features:
  * 1. Prevents Date of Birth from being set in the future
@@ -307,7 +307,7 @@
             hidePriceLoading();
             
             if (data.success) {
-                updatePriceDisplay(data.new_price, data.price_difference);
+                updatePriceDisplay(data.new_price, data.formatted_price, data.price_difference);
                 
                 // Update the hidden total_price field
                 var totalPriceField = form.querySelector('input[name="total_price"]');

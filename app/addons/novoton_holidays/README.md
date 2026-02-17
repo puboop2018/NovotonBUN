@@ -471,13 +471,14 @@ Stores synced hotel information.
 | country | varchar(100) | Country |
 | hotel_type | varchar(50) | e.g. 4*, 3* Sup, Apart (raw from API) |
 | star_rating | tinyint | Parsed numeric rating 1-5 |
-| latitude | varchar(20) | Hotel latitude |
-| longitude | varchar(20) | Hotel longitude |
+| latitude | decimal(10,7) | Hotel latitude |
+| longitude | decimal(10,7) | Hotel longitude |
 | hotel_data | longtext | JSON: full hotelinfo API response |
 | has_prices | enum('Y','N') | Has active prices |
 | packages_count | int | Number of packages |
 | hotelinfo_synced_at | datetime | Last hotelinfo sync |
 | hotel_list_synced_at | datetime | Last hotel_list API sync |
+| last_price_check | datetime | Last room_price_check result |
 | created_at | datetime | Created timestamp |
 | updated_at | timestamp | Updated timestamp |
 
@@ -603,16 +604,6 @@ Hotel-facility relationships (many-to-many).
 |--------|------|-------------|
 | hotel_id | varchar(50) | Hotel ID (PK part 1) |
 | facility_id | int | Facility ID (PK part 2) |
-
-#### `cscart_novoton_resorts`
-Resort list from API.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| resort_name | varchar(100) | Resort name (PK part 1) |
-| country | varchar(50) | Country (PK part 2) |
-| synced_at | datetime | Last sync |
-| created_at | timestamp | Created timestamp |
 
 #### `cscart_novoton_cache`
 Cached API responses.
@@ -948,7 +939,19 @@ Addon logs events to CS-Cart's logging system:
 
 ## Changelog
 
-### Version 3.0.0-A86 (February 15, 2026)
+### Version 3.0.0-A86 (February 17, 2026)
+- **Security:** Removed debug info disclosure via `?debug_novoton=1` and `?debug=1` on customer-facing order pages
+- **Security:** Fixed XSS via unescaped `special_requests` field on order pages (added `|escape`)
+- **Fixed:** `updatePriceDisplay` called with wrong arity in `dob-validation.js` — price change notifications now fire correctly
+- **Fixed:** Schema: `latitude`/`longitude` columns now `DECIMAL(10,7)` (was `varchar(20)`) in fresh installs
+- **Fixed:** Schema: Added missing `last_price_check` column to `novoton_hotels` CREATE TABLE in addon.xml
+- **Removed:** Dead `novoton_resorts` table (was created on install then immediately dropped)
+- **Removed:** Backup files (`.backup2`, `.full`) from settings templates
+- **Changed:** Script `?v=` cache-busting now uses `NOVOTON_VERSION` constant from addon.xml (no more hardcoded versions)
+- **Updated:** Stale version comments across JS files and addon.xml to reflect 3.0.0-A86
+- **Updated:** Documentation: database schema, removed dead table docs, synced with actual schema
+
+### Version 3.0.0-A86 (February 15, 2026) - Initial
 - **Fixed:** PHP warnings corrupting AJAX JSON response — proper three-pronged root cause fix:
   - `dob-validation.js`: replaced dirty URL construction (`Tygh.current_url.replace()` leaked `children_ages[]` params) with clean `baseUrl + dispatch-only` URL
   - Controller AJAX handler: replaced blanket `error_reporting(0)` + `ob_start()` with scoped `set_error_handler()` that logs warnings to CS-Cart log without suppressing them
@@ -1055,4 +1058,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 15, 2026 - Version 3.0.0-A86*
+*Documentation last updated: February 17, 2026 - Version 3.0.0-A86*

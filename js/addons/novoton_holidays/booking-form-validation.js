@@ -1,6 +1,6 @@
 /**
  * Novoton Holidays - Booking Form Validation & Price Recalculation
- * Version: 2.7.1-A74e
+ * Version: 3.0.0-A86
  * 
  * Features:
  * - DOB input masking (DD/MM/YYYY)
