@@ -76,6 +76,14 @@ msgctxt "SettingsOptions::novoton_holidays::round_prices"
 msgid "Round hotel prices"
 msgstr "Round hotel prices"
 
+msgctxt "SettingsOptions::novoton_holidays::api_currency"
+msgid "API prices currency"
+msgstr "API prices currency"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_currency"
+msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+msgstr "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+
 msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
 msgid "Exchange Rates"
 msgstr "Exchange Rates"

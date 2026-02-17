@@ -81,6 +81,16 @@ class ConfigService
 
     // ========== String Settings ==========
 
+    /**
+     * Get the currency that the Novoton API returns prices in.
+     * Configurable in addon settings; defaults to EUR.
+     */
+    public static function getApiCurrency(): string
+    {
+        $val = (string)(self::settings()['api_currency'] ?? 'EUR');
+        return $val !== '' ? $val : 'EUR';
+    }
+
     public static function getApiUrl(): string
     {
         return (string)(self::settings()['api_url'] ?? '');

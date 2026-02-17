@@ -54,25 +54,37 @@ class PriceService
     }
 
     /**
-     * Convert a price from EUR (Novoton API currency) to the CS-Cart display currency.
+     * Get the source currency that the Novoton API returns prices in.
+     * Reads from addon settings ("API prices currency"), defaults to EUR.
+     *
+     * @return string Currency code (e.g. 'EUR', 'USD')
+     */
+    public static function getApiCurrency(): string
+    {
+        return ConfigService::getApiCurrency();
+    }
+
+    /**
+     * Convert a price from the API currency to the CS-Cart display currency.
      *
      * Uses CS-Cart's currency coefficients from the currencies table.
      * In CS-Cart, coefficient converts from primary currency to that currency:
      *   amount_in_currency = amount_in_primary * coefficient
      *
-     * To convert from EUR to any target currency:
-     *   target_price = eur_price * (target_coefficient / eur_coefficient)
+     * To convert from source to target:
+     *   target_price = source_price * (target_coefficient / source_coefficient)
      *
-     * @param float $eur_price Price in EUR (from Novoton API)
+     * @param float $api_price Price from Novoton API (in api_currency)
      * @param string|null $target_currency Target currency code (null = display currency)
      * @return float Converted price
      */
-    public static function convertFromEur(float $eur_price, ?string $target_currency = null): float
+    public static function convertFromEur(float $api_price, ?string $target_currency = null): float
     {
+        $source = self::getApiCurrency();
         $target = $target_currency ?? self::getDisplayCurrency();
 
-        if ($target === 'EUR') {
-            return $eur_price;
+        if ($source === $target) {
+            return $api_price;
         }
 
         $currencies = \Tygh\Registry::get('currencies');
@@ -81,40 +93,41 @@ class PriceService
                 $currencies = fn_get_currencies();
             }
             if (empty($currencies)) {
-                return $eur_price;
+                return $api_price;
             }
         }
 
-        // Get EUR coefficient (1.0 if EUR is the primary currency)
-        $eur_coefficient = 1.0;
-        if (isset($currencies['EUR']['coefficient'])) {
-            $eur_coefficient = floatval($currencies['EUR']['coefficient']);
+        // Get source (API) coefficient (1.0 if it is the primary currency)
+        $source_coefficient = 1.0;
+        if (isset($currencies[$source]['coefficient'])) {
+            $source_coefficient = floatval($currencies[$source]['coefficient']);
         }
 
-        // Get target coefficient (1.0 if target is the primary currency)
+        // Get target (display) coefficient (1.0 if it is the primary currency)
         $target_coefficient = 1.0;
         if (isset($currencies[$target]['coefficient'])) {
             $target_coefficient = floatval($currencies[$target]['coefficient']);
         }
 
         // Guard against invalid coefficient
-        if ($eur_coefficient <= 0) {
-            $eur_coefficient = 1.0;
+        if ($source_coefficient <= 0) {
+            $source_coefficient = 1.0;
         }
 
-        return round($eur_price / $eur_coefficient * $target_coefficient, 2);
+        return round($api_price / $source_coefficient * $target_coefficient, 2);
     }
 
     /**
-     * Convert all price fields in a search results array from EUR to display currency.
+     * Convert all price fields in a search results array from API currency to display currency.
      *
      * @param array $results Search results array
      * @return array Results with converted prices
      */
     public static function convertResultsCurrency(array $results): array
     {
+        $source = self::getApiCurrency();
         $display = self::getDisplayCurrency();
-        if ($display === 'EUR') {
+        if ($source === $display) {
             return $results;
         }
 

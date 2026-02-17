@@ -48,6 +48,14 @@ msgctxt "SettingsOptions::novoton_holidays::commission"
 msgid "Commission (%)"
 msgstr "Comision (%)"
 
+msgctxt "SettingsOptions::novoton_holidays::api_currency"
+msgid "API prices currency"
+msgstr "Moneda prețurilor API"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_currency"
+msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+msgstr "Moneda în care API-ul Novoton returnează prețurile. Prețurile vor fi convertite din această monedă în moneda selectată de client."
+
 msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
 msgid "Exchange Rates"
 msgstr "Cursuri Valutare"

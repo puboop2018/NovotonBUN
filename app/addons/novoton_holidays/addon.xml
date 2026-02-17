@@ -224,6 +224,17 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="api_currency">
+                        <type>selectbox</type>
+                        <default_value>EUR</default_value>
+                        <variants>
+                            <item id="EUR"></item>
+                            <item id="USD"></item>
+                            <item id="GBP"></item>
+                            <item id="RON"></item>
+                            <item id="BGN"></item>
+                        </variants>
+                    </item>
 
                     <!-- Exchange Rates Header -->
                     <item id="exchange_rates_header">
