@@ -12,7 +12,6 @@
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Registry;
 
 class CronService
 {
@@ -23,8 +22,7 @@ class CronService
     public function __construct()
     {
         $this->api = new NovotonApi();
-        $settings = Registry::get('addons.novoton_holidays') ?? [];
-        $this->countries = fn_novoton_parse_countries($settings['selected_countries'] ?? '');
+        $this->countries = fn_novoton_parse_countries(ConfigService::get('selected_countries', ''));
     }
 
     /**

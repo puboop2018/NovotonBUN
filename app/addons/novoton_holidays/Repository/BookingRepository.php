@@ -10,15 +10,95 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+
 class BookingRepository
 {
     /**
-     * Find booking by ID
+     * Request-scoped memo cache for hydrated bookings.
+     * Prevents the same booking's rooms_data/guests_data from being
+     * decoded 2-3 times within a single request cycle.
+     *
+     * @var array<int, array>
+     */
+    private static $hydratedCache = [];
+
+    /**
+     * Find booking by ID (raw DB row, no JSON decoding).
      */
     public function findById(int $booking_id): ?array
     {
         $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
         return $booking ?: null;
+    }
+
+    /**
+     * Find booking by ID with JSON fields decoded and memo-cached.
+     *
+     * Decodes rooms_data and guests_data once per request. Subsequent
+     * calls for the same booking_id return the cached result.
+     *
+     * @param int  $booking_id
+     * @param bool $force  Bypass cache (e.g. after an update)
+     * @return array|null Hydrated booking or null
+     */
+    public function findByIdHydrated(int $booking_id, bool $force = false): ?array
+    {
+        if (!$force && isset(self::$hydratedCache[$booking_id])) {
+            return self::$hydratedCache[$booking_id];
+        }
+
+        $booking = $this->findById($booking_id);
+        if ($booking === null) {
+            return null;
+        }
+
+        $booking = self::hydrateJsonFields($booking);
+        self::$hydratedCache[$booking_id] = $booking;
+
+        return $booking;
+    }
+
+    /**
+     * Decode JSON fields on a raw booking row in-place.
+     *
+     * Call this instead of scattered json_decode() calls to ensure
+     * each field is decoded exactly once.
+     *
+     * @param array $booking Raw DB row
+     * @return array Booking with rooms_data_parsed, guests_data_parsed
+     */
+    public static function hydrateJsonFields(array $booking): array
+    {
+        // rooms_data
+        if (!empty($booking['rooms_data']) && is_string($booking['rooms_data'])) {
+            $booking['rooms_data_parsed'] = json_decode($booking['rooms_data'], true) ?: [];
+        } elseif (is_array($booking['rooms_data'] ?? null)) {
+            $booking['rooms_data_parsed'] = $booking['rooms_data'];
+        } else {
+            $booking['rooms_data_parsed'] = [];
+        }
+
+        // guests_data — always normalize to canonical keyed format
+        if (!empty($booking['guests_data'])) {
+            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data']);
+        } else {
+            $booking['guests_data_parsed'] = [];
+        }
+
+        return $booking;
+    }
+
+    /**
+     * Invalidate the memo cache for a specific booking (e.g. after update).
+     */
+    public static function invalidateCache(int $booking_id = 0): void
+    {
+        if ($booking_id > 0) {
+            unset(self::$hydratedCache[$booking_id]);
+        } else {
+            self::$hydratedCache = [];
+        }
     }
     
     /**
@@ -369,7 +449,7 @@ class BookingRepository
             // Parse guests for display
             $guests_data = null;
             if (!empty($nb['guests_data'])) {
-                $guests_data = is_string($nb['guests_data']) ? json_decode($nb['guests_data'], true) : $nb['guests_data'];
+                $guests_data = GuestDataNormalizer::normalize($nb['guests_data']);
             }
 
             if (!empty($guests_data) && is_array($guests_data)) {

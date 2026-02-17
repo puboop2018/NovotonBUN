@@ -39,11 +39,13 @@ class CacheService implements CacheServiceInterface
     {
         $this->storage = $storage;
         $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
         
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {
-            @mkdir($this->cache_dir, 0777, true);
+            if (!mkdir($this->cache_dir, 0777, true) && !is_dir($this->cache_dir)) {
+                fn_log_event('general', 'warning', ['message' => 'Novoton CacheService: Failed to create cache directory', 'dir' => $this->cache_dir]);
+            }
         }
     }
     
@@ -187,20 +189,20 @@ class CacheService implements CacheServiceInterface
             return null;
         }
         
-        $content = @file_get_contents($file);
+        $content = file_get_contents($file);
         if ($content === false) {
             return null;
         }
-        
-        $data = @unserialize($content, ['allowed_classes' => false]);
+
+        $data = unserialize($content, ['allowed_classes' => false]);
         if ($data === false || !isset($data['expires']) || !isset($data['data'])) {
-            @unlink($file);
+            unlink($file);
             return null;
         }
-        
+
         // Check expiration
         if ($data['expires'] < time()) {
-            @unlink($file);
+            unlink($file);
             return null;
         }
         
@@ -231,7 +233,7 @@ class CacheService implements CacheServiceInterface
             'created' => time()
         ]);
         
-        return @file_put_contents($file, $data, LOCK_EX) !== false;
+        return file_put_contents($file, $data, LOCK_EX) !== false;
     }
     
     /**
@@ -333,7 +335,7 @@ class CacheService implements CacheServiceInterface
         $file = $this->getCacheFilePath($key);
         
         if (file_exists($file)) {
-            return @unlink($file);
+            return unlink($file);
         }
         
         return true;
@@ -359,12 +361,12 @@ class CacheService implements CacheServiceInterface
             $filename = basename($file, '.cache');
             
             if ($prefix === null || strpos($filename, $prefix) === 0) {
-                if (@unlink($file)) {
+                if (unlink($file)) {
                     $count++;
                 }
             }
         }
-        
+
         return $count;
     }
     
@@ -406,7 +408,7 @@ class CacheService implements CacheServiceInterface
             return null;
         }
         
-        $data = @unserialize($row['cache_data'], ['allowed_classes' => false]);
+        $data = unserialize($row['cache_data'], ['allowed_classes' => false]);
         
         // Store in memory
         self::$memory_cache[$key] = [
@@ -490,11 +492,11 @@ class CacheService implements CacheServiceInterface
             // Clean expired file cache
             $files = glob($this->cache_dir . '*.cache') ?: [];
             foreach ($files as $file) {
-                $content = @file_get_contents($file);
-                if ($content) {
-                    $data = @unserialize($content, ['allowed_classes' => false]);
-                    if ($data && isset($data['expires']) && $data['expires'] < time()) {
-                        if (@unlink($file)) {
+                $content = file_get_contents($file);
+                if ($content !== false) {
+                    $data = unserialize($content, ['allowed_classes' => false]);
+                    if ($data !== false && isset($data['expires']) && $data['expires'] < time()) {
+                        if (unlink($file)) {
                             $count++;
                         }
                     }

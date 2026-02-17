@@ -91,7 +91,7 @@ export default function BookingEngine({ config }) {
     const [hasSearched, setHasSearched] = useState(
         mode === 'search' || (!!initialCheckIn && !!initialCheckOut)
     );
-    const [datesChanged, setDatesChanged] = useState(false);
+    const [paramsChanged, setParamsChanged] = useState(false);
 
     const engineRef = useRef(null);
 
@@ -139,13 +139,14 @@ export default function BookingEngine({ config }) {
         setCheckIn(newCheckIn);
         setCheckOut(newCheckOut);
         setValidationError('');
-        if (hasSearched) setDatesChanged(true);
+        if (hasSearched) setParamsChanged(true);
     }, [hasSearched]);
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
         setAgeErrors([]);
-    }, []);
+        if (hasSearched) setParamsChanged(true);
+    }, [hasSearched]);
 
     const buildSearchUrl = useCallback(() => {
         let url;
@@ -244,7 +245,7 @@ export default function BookingEngine({ config }) {
 
                 // Reset button state
                 setHasSearched(true);
-                setDatesChanged(false);
+                setParamsChanged(false);
                 setIsSearching(false);
             })
             .catch(() => {
@@ -296,7 +297,7 @@ export default function BookingEngine({ config }) {
     // Button click handler: "Change search" opens calendar, others navigate
     const handleButtonClick = useCallback(() => {
         if (isSearching) return;
-        if (hasSearched && !datesChanged) {
+        if (hasSearched && !paramsChanged) {
             // "Change search" state – open calendar for editing
             setShowCalendar(true);
             setShowGuests(false);
@@ -304,7 +305,7 @@ export default function BookingEngine({ config }) {
         }
         // "Search" or "Apply changes" – perform search
         handleSearch();
-    }, [hasSearched, datesChanged, handleSearch, isSearching]);
+    }, [hasSearched, paramsChanged, handleSearch, isSearching]);
 
     // -----------------------------------------------------------------------
     // Render helpers
@@ -347,12 +348,12 @@ export default function BookingEngine({ config }) {
     // Button text state machine:
     // 1. Default: "Search"
     // 2. After search: "Change search"
-    // 3. If dates changed after search: "Apply changes"
+    // 3. If dates/guests changed after search: "Apply changes"
     // 4. After clicking "Apply changes": AJAX updates results, button returns to "Change search"
     const searchBtnText = (() => {
         if (isSearching) return t('searching', 'Searching...');
         if (buttonText) return buttonText;
-        if (hasSearched && datesChanged) return t('applyChanges', 'Apply changes');
+        if (hasSearched && paramsChanged) return t('applyChanges', 'Apply changes');
         if (hasSearched) return t('changeSearch', 'Change search');
         return t('search', 'Search');
     })();

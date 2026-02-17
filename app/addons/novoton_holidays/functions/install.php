@@ -10,6 +10,7 @@
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -41,8 +42,7 @@ function fn_novoton_holidays_uninstall()
     db_query("DELETE FROM ?:template_emails WHERE addon = 'novoton_holidays'");
     
     // OPTIONAL: Delete products that were created by the addon
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $delete_products = ($addon_settings['delete_products_on_uninstall'] ?? 'N') === 'Y';
+    $delete_products = ConfigService::isDeleteProductsOnUninstall();
     
     if ($delete_products) {
         $addon_product_ids = db_get_fields(
@@ -366,6 +366,27 @@ function fn_novoton_holidays_upgrade_db()
             "ALTER TABLE ?:novoton_bookings
              ADD COLUMN `holder_name` VARCHAR(255) DEFAULT '' AFTER `guest_name`"
         );
+    }
+
+    // Add terms columns to novoton_bookings (cache terms at booking creation to avoid API calls on order view)
+    $terms_columns = [
+        'terms_of_payment_raw'            => 'LONGTEXT',
+        'terms_of_cancellation_raw'       => 'LONGTEXT',
+        'terms_of_payment_formatted'      => 'LONGTEXT',
+        'terms_of_cancellation_formatted' => 'LONGTEXT',
+    ];
+    foreach ($terms_columns as $col_name => $col_type) {
+        $exists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = '?:novoton_bookings'
+             AND COLUMN_NAME = '{$col_name}'"
+        );
+        if (!$exists) {
+            @db_query(
+                "ALTER TABLE ?:novoton_bookings ADD COLUMN `{$col_name}` {$col_type} DEFAULT NULL AFTER `api_response`"
+            );
+        }
     }
 
     // Add hotel_type column to novoton_hotels

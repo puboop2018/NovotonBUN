@@ -10,6 +10,7 @@
  ****************************************************************************/
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -29,7 +30,7 @@ if ($mode == 'health') {
     $health = [
         'status' => 'healthy',
         'timestamp' => date('c'),
-        'version' => Registry::get('addons.novoton_holidays.version') ?? 'unknown',
+        'version' => ConfigService::getVersion(),
         'components' => [],
         'metrics' => []
     ];

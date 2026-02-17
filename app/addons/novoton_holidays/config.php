@@ -60,6 +60,8 @@ define('NOVOTON_PRODUCT_CODE_PREFIX', 'NVT');
 define('NOVOTON_SYNC_LOG_RETENTION_DAYS', 30);
 
 /**
- * Debug mode (set via addon settings)
+ * Debug settings (set via addon settings panel):
+ * - debug_logging: Verbose logging for services (default Y)
+ * - debug_mode: Full debug mode with API response dumps (default N)
+ * Use Constants::SETTING_DEBUG_LOGGING / Constants::SETTING_DEBUG_MODE for keys.
  */
-// Note: Use Registry::get('addons.novoton_holidays.debug_mode') for runtime check

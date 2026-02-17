@@ -28,7 +28,7 @@ trait LoggerTrait
      */
     protected function initLogger(string $prefix = ''): void
     {
-        $this->debugEnabled = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debugEnabled = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
         $this->logPrefix = $prefix ?: (new \ReflectionClass($this))->getShortName();
     }
     

@@ -8,6 +8,7 @@
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -201,7 +202,7 @@ if ($mode === 'manage') {
         if ($booking) {
             // Parse JSON fields
             if (!empty($booking['guests_data'])) {
-                $booking['guests'] = json_decode($booking['guests_data'], true);
+                $booking['guests'] = GuestDataNormalizer::normalize($booking['guests_data']);
             }
             if (!empty($booking['alternatives_data'])) {
                 $booking['alternatives'] = json_decode($booking['alternatives_data'], true);
@@ -260,7 +261,7 @@ if ($mode === 'manage') {
         
         foreach ($bookings as &$booking) {
             if (!empty($booking['guests_data'])) {
-                $booking['guests'] = json_decode($booking['guests_data'], true);
+                $booking['guests'] = GuestDataNormalizer::normalize($booking['guests_data']);
             }
             if (!empty($booking['alternatives_data'])) {
                 $booking['alternatives'] = json_decode($booking['alternatives_data'], true);

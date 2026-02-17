@@ -32,7 +32,7 @@ class SearchService
     {
         $this->api = fn_novoton_get_api();
         $this->cache = new CacheService();
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
     /**
@@ -360,13 +360,15 @@ class SearchService
     
     /**
      * Get board name from ID
-     * 
-     * @param string $board_id Board ID
-     * @return string Board name
+     *
+     * Delegates to BoardType value object (single source of truth).
+     *
+     * @param string $board_id Board ID (e.g. "AI", "FB+", "ALL INCL")
+     * @return string Board display name
      */
     public function getBoardName(string $board_id): string
     {
-        return Constants::BOARD_NAMES[strtoupper($board_id)] ?? $board_id;
+        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
     }
     
     /**

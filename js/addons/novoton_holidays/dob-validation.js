@@ -146,7 +146,7 @@
             errorElement.id = errorId;
             errorElement.className = 'novoton-dob-error-message';
             errorElement.style.cssText = 'color: #dc3545; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 4px;';
-            errorElement.innerHTML = '<span style="font-size: 14px;">⚠️</span> ' + errorMessage;
+            errorElement.textContent = '⚠️ ' + errorMessage;
             
             // Insert after the field
             field.parentNode.insertBefore(errorElement, field.nextSibling);
@@ -457,7 +457,7 @@
         
         priceElements.forEach(function(el) {
             el.dataset.originalText = el.textContent;
-            el.innerHTML = '<span style="opacity: 0.5;">⟳</span>';
+            el.textContent = '⟳';
             el.style.opacity = '0.7';
         });
     }
@@ -536,12 +536,12 @@
             notification.style.backgroundColor = '#fff5f5';
             notification.style.color = '#dc3545';
             notification.style.border = '1px solid #dc3545';
-            notification.innerHTML = '📈 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Prețul a crescut') + ': ' + text;
+            notification.textContent = '📈 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Prețul a crescut') + ': ' + text;
         } else {
             notification.style.backgroundColor = '#f0fff4';
             notification.style.color = '#28a745';
             notification.style.border = '1px solid #28a745';
-            notification.innerHTML = '📉 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Prețul a scăzut') + ': ' + text;
+            notification.textContent = '📉 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Prețul a scăzut') + ': ' + text;
         }
         
         document.body.appendChild(notification);

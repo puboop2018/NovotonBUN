@@ -72,9 +72,14 @@ function fn_novoton_normalize_package($pkg, $include_priceinfo_details = false)
  * Get hotel data by hotel_id
  * V3 Architecture: Reads from hotelinfo_data JSON + packages from novoton_hotel_packages
  *
+ * NOTE: This is the ONLY function that should read novoton_hotels.hotel_data.
+ * That column is an audit/cache of the raw API response. All other code should
+ * use parsed columns (hotel_name, city, region, etc.) or this function's
+ * extracted arrays (rooms, boards, ages). Never query hotel_data directly for display.
+ *
  * @param string $hotel_id Novoton hotel ID
  * @param bool $force Force refresh from database
- * @return array|null Hotel data or null
+ * @return array|null Hotel data with extracted rooms/boards/ages, or null
  */
 function fn_novoton_get_hotel_data($hotel_id, $force = false)
 {

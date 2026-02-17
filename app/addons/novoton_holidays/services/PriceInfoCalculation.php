@@ -38,8 +38,6 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
-
 class PriceInfoCalculation
 {
     /** @var float Commission percentage */
@@ -62,8 +60,8 @@ class PriceInfoCalculation
      */
     public function __construct()
     {
-        $this->commission = floatval(Registry::get('addons.novoton_holidays.commission') ?? 0);
-        $this->debug = (Registry::get('addons.novoton_holidays.debug_logging') ?? 'N') === 'Y';
+        $this->commission = ConfigService::getCommission();
+        $this->debug = ConfigService::isDebugLogging();
 
         $logger = [$this, 'log'];
         $this->parser = new PriceInfoParser($logger);

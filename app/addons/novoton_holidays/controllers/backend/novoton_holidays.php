@@ -20,6 +20,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -159,25 +160,10 @@ if ($mode == 'manage' || empty($mode)) {
     $syncLogRepo = new SyncLogRepository();
     
     // Get addon settings
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    
+    $addon_settings = ConfigService::all();
+
     // Parse selected countries
-    $selected_countries = $addon_settings['selected_countries'] ?? 'BULGARIA';
-    if (is_array($selected_countries)) {
-        $countries = [];
-        foreach ($selected_countries as $key => $value) {
-            if ($value === 'Y' || $value === '1') {
-                $countries[] = $key;
-            } elseif (is_string($value) && strlen($value) > 2) {
-                $countries[] = $value;
-            }
-        }
-    } else {
-        $countries = array_filter(array_map('trim', explode(',', $selected_countries)));
-    }
-    if (empty($countries)) {
-        $countries = ['BULGARIA'];
-    }
+    $countries = fn_novoton_parse_countries();
     
     // Gather statistics
     $stats = [
@@ -212,6 +198,7 @@ if ($mode == 'manage' || empty($mode)) {
         'prices' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
         'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
         'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
+        'resort_list' => $syncLogRepo->getLastSyncDate('resort_list'),
     ];
     
     // Build cron URLs

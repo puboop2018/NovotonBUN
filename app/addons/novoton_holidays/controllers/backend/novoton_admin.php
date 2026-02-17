@@ -6,6 +6,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -251,7 +252,7 @@ if ($mode == 'run_cron') {
     
     $cron_mode = $_REQUEST['mode'] ?? '';
     $allowed_modes = [
-        'hotel_list', 'room_price', 'list_facilities',
+        'hotel_list', 'room_price', 'list_facilities', 'resort_list',
         'add_hotels_as_products', 'offers_update',
         'resinfo', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives',
         'cleanup', 'expire_requests'
@@ -376,24 +377,8 @@ if ($mode == 'run_cron') {
 // ================================================
 
 function fn_novoton_admin_sync_hotels($api) {
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
-    $selected_countries = !empty($addon_settings['selected_countries']) ? $addon_settings['selected_countries'] : 'BULGARIA';
-    
-    $countries = [];
-    if (is_array($selected_countries)) {
-        foreach ($selected_countries as $key => $value) {
-            if ($value === 'Y' || $value === '1' || $value === 1) {
-                $countries[] = $key;
-            }
-        }
-    } else {
-        $countries = array_map('trim', explode(',', $selected_countries));
-    }
-    
-    if (empty($countries)) {
-        $countries = ['BULGARIA'];
-    }
-    
+    $countries = fn_novoton_parse_countries();
+
     $total = 0;
     $synced = 0;
     
@@ -551,7 +536,7 @@ function fn_novoton_admin_add_products($api, $country, $limit) {
 }
 
 function fn_novoton_admin_check_offers($api, $country) {
-    $last_check = Registry::get('addons.novoton_holidays.last_offers_update');
+    $last_check = ConfigService::getLastOffersUpdate();
     if (empty($last_check)) {
         $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
     }

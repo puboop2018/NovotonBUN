@@ -533,7 +533,14 @@ class SecurityService
         $key = Registry::get('config.crypt_key');
         
         if (empty($key)) {
-            $key = Registry::get('addons.novoton_holidays.api_key') ?? 'novoton_default_key';
+            $key = ConfigService::getApiKey();
+        }
+
+        if (empty($key)) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton SecurityService: no encryption key available — set config.crypt_key or addon api_key'
+            ]);
+            $key = hash('sha256', __DIR__ . php_uname('n'), false);
         }
         
         return hash('sha256', $key, true);
