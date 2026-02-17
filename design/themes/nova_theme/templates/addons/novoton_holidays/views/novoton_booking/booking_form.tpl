@@ -180,7 +180,7 @@
                                     - {$room_info.board_id}
                                 {/if}
                                 {if $room_info.price}
-                                    ({$room_info.price|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY})
+                                    ({$room_info.price|number_format:0} {$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY})
                                 {/if}
                             </span>
                         {/foreach}
@@ -223,7 +223,7 @@
                     <div id="price-error-message" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
                     <div class="price-total" id="novoton-total-price">{$booking_data.total_price|number_format:2}</div>
-                    <div class="price-currency">{$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                    <div class="price-currency">{$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
                     <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
                         ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
                     </span>
@@ -256,7 +256,7 @@
                         <span style="font-size: 16px;"> {__("novoton_holidays.room_number")} {$room_num}</span>
                         <span style="float: right; font-weight: normal; font-size: 14px;">
                             {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
-                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{$room.price|default:0|number_format:0} {$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</span>
                         </span>
                     </div>
                     {/if}

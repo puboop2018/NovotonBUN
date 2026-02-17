@@ -37,8 +37,103 @@ class PriceService
     }
     
     /**
+     * Get the current display currency code.
+     * Returns CART_SECONDARY_CURRENCY (user's selected) or CART_PRIMARY_CURRENCY.
+     *
+     * @return string Currency code (e.g. 'USD', 'EUR', 'RON')
+     */
+    public static function getDisplayCurrency(): string
+    {
+        if (defined('CART_SECONDARY_CURRENCY')) {
+            return CART_SECONDARY_CURRENCY;
+        }
+        if (defined('CART_PRIMARY_CURRENCY')) {
+            return CART_PRIMARY_CURRENCY;
+        }
+        return 'EUR';
+    }
+
+    /**
+     * Convert a price from EUR (Novoton API currency) to the CS-Cart display currency.
+     *
+     * Uses CS-Cart's currency coefficients from the currencies table.
+     * In CS-Cart, coefficient converts from primary currency to that currency:
+     *   amount_in_currency = amount_in_primary * coefficient
+     *
+     * To convert from EUR to any target currency:
+     *   target_price = eur_price * (target_coefficient / eur_coefficient)
+     *
+     * @param float $eur_price Price in EUR (from Novoton API)
+     * @param string|null $target_currency Target currency code (null = display currency)
+     * @return float Converted price
+     */
+    public static function convertFromEur(float $eur_price, ?string $target_currency = null): float
+    {
+        $target = $target_currency ?? self::getDisplayCurrency();
+
+        if ($target === 'EUR') {
+            return $eur_price;
+        }
+
+        $currencies = \Tygh\Registry::get('currencies');
+        if (empty($currencies)) {
+            if (function_exists('fn_get_currencies')) {
+                $currencies = fn_get_currencies();
+            }
+            if (empty($currencies)) {
+                return $eur_price;
+            }
+        }
+
+        // Get EUR coefficient (1.0 if EUR is the primary currency)
+        $eur_coefficient = 1.0;
+        if (isset($currencies['EUR']['coefficient'])) {
+            $eur_coefficient = floatval($currencies['EUR']['coefficient']);
+        }
+
+        // Get target coefficient (1.0 if target is the primary currency)
+        $target_coefficient = 1.0;
+        if (isset($currencies[$target]['coefficient'])) {
+            $target_coefficient = floatval($currencies[$target]['coefficient']);
+        }
+
+        // Guard against invalid coefficient
+        if ($eur_coefficient <= 0) {
+            $eur_coefficient = 1.0;
+        }
+
+        return round($eur_price / $eur_coefficient * $target_coefficient, 2);
+    }
+
+    /**
+     * Convert all price fields in a search results array from EUR to display currency.
+     *
+     * @param array $results Search results array
+     * @return array Results with converted prices
+     */
+    public static function convertResultsCurrency(array $results): array
+    {
+        $display = self::getDisplayCurrency();
+        if ($display === 'EUR') {
+            return $results;
+        }
+
+        foreach ($results as &$result) {
+            if (isset($result['total_price'])) {
+                $result['total_price'] = self::convertFromEur(floatval($result['total_price']));
+            }
+            if (isset($result['price_per_night'])) {
+                $result['price_per_night'] = self::convertFromEur(floatval($result['price_per_night']));
+            }
+        }
+        unset($result);
+
+        return $results;
+    }
+
+    /**
      * Apply commission to base price
-     * 
+     *
      * @param float $base_price Base price from API
      * @return float Price with commission
      */

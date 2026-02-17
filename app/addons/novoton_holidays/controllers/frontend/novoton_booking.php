@@ -21,6 +21,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\PriceService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -995,6 +996,10 @@ if ($mode == 'search') {
                 }
                 
                 // For multi-room, we need to display options per room
+                // Convert prices from EUR (API currency) to display currency
+                foreach ($all_room_results as $rn => $room_results) {
+                    $all_room_results[$rn] = PriceService::convertResultsCurrency($room_results);
+                }
                 // Pass all_room_results to template
                 Tygh::$app['view']->assign('all_room_results', $all_room_results);
                 Tygh::$app['view']->assign('is_multi_room_search', true);
@@ -1587,12 +1592,18 @@ if ($mode == 'search') {
         return [CONTROLLER_STATUS_REDIRECT, 'products.search?' . http_build_query($redirect_params)];
     }
     
+    // Convert prices from EUR (API currency) to CS-Cart display currency
+    $results = PriceService::convertResultsCurrency($results ?: []);
+    $alternative_results = PriceService::convertResultsCurrency($alternative_results ?: []);
+    $novoton_display_currency = PriceService::getDisplayCurrency();
+
     // Assign to view - ensure no null values
-    Tygh::$app['view']->assign('novoton_results', $results ?: []);
+    Tygh::$app['view']->assign('novoton_results', $results);
     Tygh::$app['view']->assign('novoton_params', $novoton_params ?: []);
-    
+    Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
+
     // Alternative dates results - ensure no null values
-    Tygh::$app['view']->assign('alternative_results', $alternative_results ?: []);
+    Tygh::$app['view']->assign('alternative_results', $alternative_results);
     Tygh::$app['view']->assign('alternative_check_in', $alternative_check_in ?: '');
     Tygh::$app['view']->assign('alternative_check_out', $alternative_check_out ?: '');
     Tygh::$app['view']->assign('no_availability_message', $no_availability_message ?: false);
@@ -2111,6 +2122,7 @@ if ($mode == 'booking_form') {
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
+    Tygh::$app['view']->assign('novoton_display_currency', PriceService::getDisplayCurrency());
     Tygh::$app['view']->assign('product_id', $product_id);
     Tygh::$app['view']->assign('hotel_name', $hotel_info['hotel_name'] ?? 'Hotel');
     Tygh::$app['view']->assign('hotel_city', $hotel_info['city'] ?? '');
@@ -2848,6 +2860,7 @@ if ($mode == 'edit_booking') {
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
+    Tygh::$app['view']->assign('novoton_display_currency', PriceService::getDisplayCurrency());
     Tygh::$app['view']->assign('booking_id', $booking_id);
     Tygh::$app['view']->assign('cart_id', $cart_id);
     Tygh::$app['view']->assign('is_edit_mode', true);
@@ -3368,6 +3381,9 @@ if ($mode == 'ajax_recalculate_price') {
         // Apply commission so displayed price matches customer-facing price
         $new_price = $api->applyCommission($new_price);
 
+        // Convert from EUR (API currency) to CS-Cart display currency
+        $new_price = PriceService::convertFromEur($new_price);
+
         // Check if room changed
         $room_changed = false;
         $original_room = $room_id_decoded;
@@ -3381,11 +3397,12 @@ if ($mode == 'ajax_recalculate_price') {
             'room_changed' => $room_changed ? 'YES' : 'NO'
         ]);
 
-        // Calculate price difference
+        // Calculate price difference (both prices now in display currency)
         $price_difference = $new_price - $original_price;
 
-        // Format price for display
-        $currency = Registry::get('currencies.' . CART_PRIMARY_CURRENCY);
+        // Format price for display using the active display currency
+        $display_currency_code = PriceService::getDisplayCurrency();
+        $currency = Registry::get('currencies.' . $display_currency_code);
         $formatted_price = fn_format_price($new_price, $currency);
 
         $debug_log('SUCCESS', [
