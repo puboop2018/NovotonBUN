@@ -703,7 +703,7 @@ class NovotonApi
                 'nights' => $nights,
                 'total_price' => $this->applyCommission($price),
                 'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                'currency' => 'EUR',
+                'currency' => ConfigService::getApiCurrency(),
                 'availability' => $availability
             ];
         }
@@ -741,7 +741,7 @@ class NovotonApi
                     'nights' => $nights,
                     'total_price' => $this->applyCommission($price),
                     'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                    'currency' => 'EUR',
+                    'currency' => ConfigService::getApiCurrency(),
                     'availability' => intval($data['Availability'] ?? $data['Avail'] ?? 1)
                 ];
             }

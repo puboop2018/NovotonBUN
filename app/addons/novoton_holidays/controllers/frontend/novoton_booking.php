@@ -2577,7 +2577,7 @@ if ($mode == 'add_to_cart') {
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'currency' => 'EUR',
+            'currency' => PriceService::getApiCurrency(),
             'status' => 'pending',
             'special_requests' => $special_requests,
             'notes' => $special_requests,
@@ -2631,7 +2631,7 @@ if ($mode == 'add_to_cart') {
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,
-            'currency' => 'EUR'
+            'currency' => PriceService::getApiCurrency(),
         ]
     ];
     
@@ -3381,8 +3381,8 @@ if ($mode == 'ajax_recalculate_price') {
         // Apply commission so displayed price matches customer-facing price
         $new_price = $api->applyCommission($new_price);
 
-        // Convert from EUR (API currency) to CS-Cart display currency
-        $new_price = PriceService::convertFromEur($new_price);
+        // Convert from API currency to CS-Cart display currency
+        $new_price = PriceService::convertFromApiCurrency($new_price);
 
         // Check if room changed
         $room_changed = false;

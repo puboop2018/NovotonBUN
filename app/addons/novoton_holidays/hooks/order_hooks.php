@@ -664,7 +664,7 @@ function _nvt_build_booking_record(
         'guests_data'      => json_encode($all_guests),
         'base_price'       => $total_api_price,
         'total_price'      => $total_group_price,
-        'currency'         => 'EUR',
+        'currency'         => ConfigService::getApiCurrency(),
         'status'           => 'pending',
         'special_requests' => $booking_data['special_requests'] ?? '',
         'api_request'      => json_encode($api_data),

@@ -235,7 +235,7 @@ function fn_novoton_calculate_price($params, $price_info, $hotel_data = [])
     $result = [
         'total' => 0,
         'per_night' => 0,
-        'currency' => 'EUR',
+        'currency' => \Tygh\Addons\NovotonHolidays\Services\ConfigService::getApiCurrency(),
         'calculated' => false
     ];
     
@@ -340,7 +340,7 @@ function fn_novoton_get_stored_price($product_id, $room_id, $board_id, $check_in
             'found' => true,
             'total' => $price_result['total'],
             'per_night' => $price_result['per_night'],
-            'currency' => 'EUR'
+            'currency' => \Tygh\Addons\NovotonHolidays\Services\ConfigService::getApiCurrency()
         ];
     }
     

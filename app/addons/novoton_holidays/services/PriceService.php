@@ -30,8 +30,7 @@ class PriceService
     public function __construct()
     {
         $this->commission = ConfigService::getCommission();
-        // Use CS-Cart's primary currency, fallback to EUR
-        $this->currency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
+        $this->currency = ConfigService::getApiCurrency();
         $this->cache = new CacheService();
         $this->debug = ConfigService::isDebugLogging();
     }
@@ -78,7 +77,7 @@ class PriceService
      * @param string|null $target_currency Target currency code (null = display currency)
      * @return float Converted price
      */
-    public static function convertFromEur(float $api_price, ?string $target_currency = null): float
+    public static function convertFromApiCurrency(float $api_price, ?string $target_currency = null): float
     {
         $source = self::getApiCurrency();
         $target = $target_currency ?? self::getDisplayCurrency();
@@ -118,6 +117,14 @@ class PriceService
     }
 
     /**
+     * @deprecated Use convertFromApiCurrency() instead.
+     */
+    public static function convertFromEur(float $api_price, ?string $target_currency = null): float
+    {
+        return self::convertFromApiCurrency($api_price, $target_currency);
+    }
+
+    /**
      * Convert all price fields in a search results array from API currency to display currency.
      *
      * @param array $results Search results array
@@ -133,10 +140,10 @@ class PriceService
 
         foreach ($results as &$result) {
             if (isset($result['total_price'])) {
-                $result['total_price'] = self::convertFromEur(floatval($result['total_price']));
+                $result['total_price'] = self::convertFromApiCurrency(floatval($result['total_price']));
             }
             if (isset($result['price_per_night'])) {
-                $result['price_per_night'] = self::convertFromEur(floatval($result['price_per_night']));
+                $result['price_per_night'] = self::convertFromApiCurrency(floatval($result['price_per_night']));
             }
         }
         unset($result);
