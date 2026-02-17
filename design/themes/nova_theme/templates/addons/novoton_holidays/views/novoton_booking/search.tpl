@@ -1068,9 +1068,9 @@ window.NovotonTranslations = {
     selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}"
 };
 </script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v=2.8.0" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.8.0" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v=2.8.0" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v=3.0.0" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=3.0.0" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v=3.0.0" defer></script>
 
 {* A73: JavaScript fallback to fix desktop/mobile display if CSS fails *}
 <script>
