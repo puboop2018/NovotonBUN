@@ -39,5 +39,6 @@
     </div>
 </div>
 
-{* Load React 19 bundle (provides React globally) then booking component *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v=2.8.0" defer></script>
+{* Load React 19 vendor (cached separately) then app bundle *}
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>

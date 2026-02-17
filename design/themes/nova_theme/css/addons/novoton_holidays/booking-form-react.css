@@ -456,8 +456,8 @@
     }
     
     .novoton-booking-react .form-field {
-        min-width: 100% !important;
-        border-right: none !important;
+        min-width: 100%;
+        border-right: none;
         border-bottom: 1px solid #e0e0e0;
     }
     

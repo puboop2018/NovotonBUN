@@ -1,11 +1,24 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/index.jsx',
+    entry: {
+        'react19-bundle': './src/index.jsx',
+    },
     output: {
-        filename: 'react19-bundle.js',
+        filename: '[name].js',
         path: path.resolve(__dirname, '..', 'js', 'addons', 'novoton_holidays'),
-        iife: true,
+    },
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                reactVendor: {
+                    test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+                    name: 'react-vendor',
+                    chunks: 'all',
+                    priority: 10,
+                },
+            },
+        },
     },
     module: {
         rules: [

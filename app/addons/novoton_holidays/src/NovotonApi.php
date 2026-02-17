@@ -282,6 +282,7 @@ class NovotonApi
      * @param string $lang Language code
      * @param int $concurrency Max simultaneous requests
      * @return array hotel_id => SimpleXMLElement|false
+     * @throws \RuntimeException If batch API request fails
      */
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
     {
@@ -478,12 +479,21 @@ class NovotonApi
     }
 
     /**
+     * Get last HTTP response code (for debugging)
+     */
+    public function getLastHttpCode(): int
+    {
+        return $this->lastHttpCode ?? 0;
+    }
+
+    /**
      * 4. hotel_quota - Free allotments (AVAILABILITY)
      *
      * @param string $hotelId Hotel ID
      * @param string $checkIn Check-in date (Y-m-d)
      * @param string $checkOut Check-out date (Y-m-d)
      * @return array Associative array of room_id => quota value
+     * @throws \RuntimeException If API request or response parsing fails
      */
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
     {

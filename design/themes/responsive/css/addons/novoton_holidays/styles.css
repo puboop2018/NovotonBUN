@@ -2041,6 +2041,7 @@
     font-weight: 500;
 }
 
+/* !important: overrides cs-cart theme defaults */
 .on-request-row {
     background: #fffaf5 !important;
     border-left: 3px solid #e67e22 !important;
@@ -4679,6 +4680,7 @@ body.modal-open {
 }
 
 /* G8: Red color for select dates message */
+/* !important: overrides cs-cart theme defaults */
 .nvt-select-dates-msg {
     color: #dc3545 !important;
 }
@@ -4700,6 +4702,7 @@ body.modal-open {
     border-radius: 8px 8px 0 0;
 }
 
+/* !important: overrides cs-cart theme defaults */
 .novoton-reservation-header h1 {
     margin: 0;
     font-size: 24px;
@@ -4988,15 +4991,15 @@ body.modal-open {
 /* Search Results Mobile Responsive */
 @media (max-width: 768px) {
     .results-header {
-        display: none !important;
+        display: none;
     }
     .result-row {
-        display: flex !important;
-        flex-direction: column !important;
-        grid-template-columns: none !important;
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: none;
     }
     .result-row > div {
-        border-right: none !important;
+        border-right: none;
         border-bottom: 1px solid #e0e0e0;
     }
     .result-row > div:last-child {
@@ -5013,12 +5016,14 @@ body.modal-open {
     background: #fff;
 }
 
+/* !important: overrides cs-cart theme defaults */
 .novoton-search-form-wrapper {
     margin-bottom: 20px;
     background: transparent !important;
 }
 
 /* Ensure search form and React engine have no dark background */
+/* !important: overrides cs-cart theme defaults */
 .novoton-search-form-wrapper .nvt-booking-engine,
 .novoton-search-form-wrapper .nvt-form-container,
 .novoton-search-form-wrapper [data-novoton-booking] {
@@ -5258,13 +5263,13 @@ body.modal-open {
 div.novoton-mobile-only,
 .novoton-mobile-only.novoton-room-card,
 div.novoton-mobile-only.novoton-room-card {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
+    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 /* Desktop elements visible by default */
@@ -5272,8 +5277,8 @@ div.novoton-mobile-only.novoton-room-card {
 div.novoton-desktop-only,
 .novoton-table-header.novoton-desktop-only,
 .result-row.novoton-desktop-only {
-    display: grid !important;
-    visibility: visible !important;
+    display: grid;
+    visibility: visible;
 }
 
 /* ========================
@@ -5285,46 +5290,46 @@ div.novoton-desktop-only,
     div.novoton-mobile-only,
     .novoton-mobile-only.novoton-room-card,
     div.novoton-mobile-only.novoton-room-card {
-        display: block !important;
-        visibility: visible !important;
-        height: auto !important;
-        overflow: visible !important;
-        margin: 0 0 12px 0 !important;
-        padding: 0 !important;
-        border: 1px solid #e0e0e0 !important;
+        display: block;
+        visibility: visible;
+        height: auto;
+        overflow: visible;
+        margin: 0 0 12px 0;
+        padding: 0;
+        border: 1px solid #e0e0e0;
     }
-    
+
     /* Hide desktop table */
     .novoton-desktop-only,
     div.novoton-desktop-only,
     .novoton-table-header.novoton-desktop-only,
     .result-row.novoton-desktop-only {
-        display: none !important;
-        visibility: hidden !important;
+        display: none;
+        visibility: hidden;
     }
-    
+
     /* Mobile room cards */
     .novoton-room-card {
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    
+
     .novoton-room-card:active {
         transform: scale(0.99);
     }
-    
+
     /* Reduce padding on mobile */
     .novoton-search-results-page {
-        padding: 0 5px !important;
+        padding: 0 5px;
     }
-    
+
     /* Hotel header adjustments */
     .novoton-hotel-header {
-        border-radius: 8px !important;
+        border-radius: 8px;
         margin-bottom: 12px;
     }
-    
+
     .novoton-hotel-header h2 {
-        font-size: 18px !important;
+        font-size: 18px;
     }
 }
 
@@ -5339,23 +5344,23 @@ div.novoton-desktop-only,
     .novoton-mobile-only.novoton-room-card,
     div.novoton-mobile-only.novoton-room-card,
     .novoton-room-card.novoton-mobile-only {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        overflow: hidden !important;
-        position: absolute !important;
-        left: -9999px !important;
+        display: none;
+        visibility: hidden;
+        height: 0;
+        overflow: hidden;
+        position: absolute;
+        left: -9999px;
     }
-    
+
     /* SHOW all desktop elements on desktop */
     .novoton-desktop-only,
     div.novoton-desktop-only,
     .novoton-table-header.novoton-desktop-only,
     .result-row.novoton-desktop-only {
-        display: grid !important;
-        visibility: visible !important;
-        position: relative !important;
-        left: auto !important;
+        display: grid;
+        visibility: visible;
+        position: relative;
+        left: auto;
     }
 }
 
@@ -5390,9 +5395,9 @@ div.novoton-desktop-only,
 .dob-masked-input {
     text-align: center;
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-    font-size: 16px !important;
+    font-size: 16px;
     letter-spacing: 1px;
-    padding: 12px 10px !important;
+    padding: 12px 10px;
 }
 
 /* Ensure numeric keyboard on mobile */
@@ -5442,8 +5447,8 @@ div.novoton-desktop-only,
     }
     
     .dob-masked-input {
-        font-size: 18px !important;
-        padding: 14px 12px !important;
+        font-size: 18px;
+        padding: 14px 12px;
         /* Larger tap target on mobile */
         min-height: 48px;
     }
@@ -5476,6 +5481,7 @@ div.novoton-desktop-only,
    A65: Desktop/Mobile View Fix
    ============================================ */
 
+/* !important: overrides cs-cart theme defaults */
 /* Desktop table header styling */
 .novoton-table-header {
     display: grid !important;
@@ -5487,11 +5493,13 @@ div.novoton-desktop-only,
     border-bottom: 2px solid #003580 !important;
 }
 
+/* !important: overrides cs-cart theme defaults */
 .novoton-table-header > div {
     color: #003580 !important;
     padding: 15px 20px;
 }
 
+/* !important: overrides cs-cart theme defaults */
 /* Desktop result row styling */
 .result-row.novoton-desktop-only {
     display: grid !important;
@@ -5509,6 +5517,7 @@ div.novoton-desktop-only,
     gap: 0 !important;
 }
 
+/* !important: overrides cs-cart theme defaults */
 .result-row.novoton-desktop-only.on-request {
     background: #fff8e1 !important;
 }
@@ -5531,6 +5540,7 @@ div.novoton-desktop-only,
 /* ============================================
    A73: FORCE Desktop Table Layout (>768px)
    This overrides ALL other rules on desktop
+   !important: overrides cs-cart theme defaults
    ============================================ */
 @media (min-width: 769px) {
     /* FORCE table header to be 4-column grid on desktop */
@@ -5551,7 +5561,7 @@ div.novoton-desktop-only,
         padding: 15px 20px !important;
         color: #003580 !important;
     }
-    
+
     /* FORCE result rows to be 4-column grid on desktop */
     .result-row.novoton-desktop-only,
     div.result-row.novoton-desktop-only {
@@ -5570,11 +5580,11 @@ div.novoton-desktop-only,
         box-shadow: none !important;
         gap: 0 !important;
     }
-    
+
     .result-row.novoton-desktop-only.on-request {
         background: #fff8e1 !important;
     }
-    
+
     /* FORCE hide mobile cards on desktop */
     .novoton-mobile-only,
     div.novoton-mobile-only,
@@ -5590,6 +5600,7 @@ div.novoton-desktop-only,
 }
 
 /* ===== A74q: Child Age Validation Styles ===== */
+/* !important: overrides React component inline styles */
 .room-section.validation-error {
     border-left: 4px solid #dc3545 !important;
     background: #fff5f5 !important;
@@ -5608,6 +5619,7 @@ div.novoton-desktop-only,
     color: #dc3545;
 }
 
+/* !important: overrides React component inline styles */
 .children-ages select.error-highlight {
     border: 2px solid #dc3545 !important;
     background: #fff5f5 !important;
@@ -5634,6 +5646,7 @@ div.novoton-desktop-only,
 }
 
 /* ===== Fix child age select dropdown width ===== */
+/* !important: overrides React component inline styles */
 .nvt-child-age-select {
     min-width: 140px !important;
     width: auto;
@@ -5656,6 +5669,7 @@ div.novoton-desktop-only,
    the Visual Editor preset.  The var() fallback (#006ce4) keeps the
    default when no preset has been applied yet.
    =========================== */
+/* !important: overrides React component inline styles */
 .nvt-btn-search {
     background: var(--nvt-search-btn-bg, #006ce4) !important;
 }

@@ -656,12 +656,8 @@ if ($mode == 'verify') {
     } else {
         $calculator = new PriceInfoCalculation();
 
-        // We need to set priceinfo directly for verification
-        // Create a reflection to set private property
-        $reflection = new ReflectionClass($calculator);
-        $propPriceinfo = $reflection->getProperty('priceinfo');
-        $propPriceinfo->setAccessible(true);
-        $propPriceinfo->setValue($calculator, json_decode($priceinfo_json, true));
+        // Set priceinfo directly on the parser for verification methods
+        $calculator->getParser()->setPriceinfo(json_decode($priceinfo_json, true));
 
         // 1. Show season mapping
         echo '<h2>1. Season Mapping for Each Night</h2>';

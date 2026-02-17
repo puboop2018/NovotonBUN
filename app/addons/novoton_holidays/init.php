@@ -8,8 +8,17 @@
  ***************************************************************************/
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
+
+// Addon version constant — single source of truth from addon.xml via Registry.
+// Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for use in script cache-busting.
+if (!defined('NOVOTON_VERSION')) {
+    $__nv = Registry::get('addons.novoton_holidays.version') ?: '0.0.0';
+    define('NOVOTON_VERSION', preg_replace('/-.*$/', '', $__nv));
+    unset($__nv);
+}
 
 // Load addon constants
 $config_file = __DIR__ . '/config.php';
@@ -224,7 +233,13 @@ function fn_novoton_register_smarty_modifiers()
             }
         }
     } catch (\Exception $e) {
-        // Silently fail - modifiers won't be available but templates should still work
+        // Modifiers won't be available but templates should still work
+        if (function_exists('fn_log_event')) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'novoton_holidays: Smarty modifier registration failed',
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
 

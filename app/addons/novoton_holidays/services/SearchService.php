@@ -12,13 +12,14 @@
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 class SearchService
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
     
-    /** @var CacheService */
+    /** @var CacheServiceInterface */
     private $cache;
     
     /** @var bool */

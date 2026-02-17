@@ -10,6 +10,7 @@
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 /**
