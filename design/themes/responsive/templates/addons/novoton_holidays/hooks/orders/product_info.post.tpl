@@ -18,7 +18,7 @@
     {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
         <strong>{__("novoton_holidays.n_rooms", [$product.extra.num_rooms])}:</strong><br>
         {foreach from=$product.extra.rooms_data item=room key=idx}
-            &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {__("novoton_holidays.n_adults", [$room.adults])}{if $room.children}, {__("novoton_holidays.n_children", [$room.children])} ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
+            &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {__("novoton_holidays.n_adults", [$room.adults])}{if $room.children}, {__("novoton_holidays.n_children", [$room.children])} ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
         {/foreach}
     {else}
         <strong>{__("novoton_holidays.room_type")}:</strong> {$product.extra.room_type_display|default:$product.extra.room_name|default:$product.extra.room_id}<br>
@@ -79,7 +79,7 @@
                     {* Payment Terms *}
                     {if $payment_terms_raw}
                         {$booking_price = $product.extra.price|default:$product.price|default:0}
-                        {$_payment_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, 'EUR')}
+                        {$_payment_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $smarty.const.CART_PRIMARY_CURRENCY)}
                         {if $_payment_formatted}
                             <div style="margin-bottom: 20px;">
                                 <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong>

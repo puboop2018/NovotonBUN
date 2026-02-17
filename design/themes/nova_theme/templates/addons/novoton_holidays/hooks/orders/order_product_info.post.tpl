@@ -20,7 +20,7 @@
             {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
                 {foreach from=$oi.extra.rooms_data item=room key=idx}
-                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
+                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
                 <strong>Room:</strong> {$oi.extra.room_type_display|default:$oi.extra.room_name|default:$oi.extra.room_id}<br>
@@ -58,7 +58,7 @@
             {$payment_terms_raw = $oi.extra.terms_of_payment_raw|default:$oi.extra.terms_of_payment|default:''}
             {if $payment_terms_raw}
                 {$booking_price = $oi.extra.price|default:$oi.price|default:0}
-                {$currency = $oi.extra.currency|default:'EUR'}
+                {$currency = $oi.extra.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}
                 {$_payment_terms_formatted = fn_novoton_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}
                 {if $_payment_terms_formatted}
                     <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>

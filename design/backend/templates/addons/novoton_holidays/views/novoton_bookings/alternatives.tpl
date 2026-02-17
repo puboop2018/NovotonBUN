@@ -35,7 +35,7 @@
                 <strong>Nights:</strong><br>{$booking.nights}
             </div>
             <div class="span3">
-                <strong>Original Price:</strong><br>{$booking.total_price|number_format:2} EUR
+                <strong>Original Price:</strong><br>{$booking.total_price|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}
             </div>
         </div>
     </div>
@@ -104,7 +104,7 @@
                     {/if}
                 </td>
                 <td>
-                    <strong style="font-size: 16px;">{$alt.total|number_format:2} EUR</strong>
+                    <strong style="font-size: 16px;">{$alt.total|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}</strong>
                     {if $alt.total != $booking.total_price}
                         {math equation="((new-old)/old)*100" new=$alt.total old=$booking.total_price assign=diff}
                         <br>

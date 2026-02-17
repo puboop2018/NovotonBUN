@@ -180,7 +180,7 @@
                                     - {$room_info.board_id}
                                 {/if}
                                 {if $room_info.price}
-                                    ({$room_info.price|number_format:0} EUR)
+                                    ({$room_info.price|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY})
                                 {/if}
                             </span>
                         {/foreach}
@@ -223,7 +223,7 @@
                     <div id="price-error-message" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
                     <div class="price-total" id="novoton-total-price">{$booking_data.total_price|number_format:2}</div>
-                    <div class="price-currency">EUR</div>
+                    <div class="price-currency">{$smarty.const.CART_PRIMARY_CURRENCY}</div>
                     <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
                         ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
                     </span>
@@ -256,7 +256,7 @@
                         <span style="font-size: 16px;"> {__("novoton_holidays.room_number")} {$room_num}</span>
                         <span style="float: right; font-weight: normal; font-size: 14px;">
                             {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
-                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{$room.price|default:0|number_format:0} EUR</span>
+                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                         </span>
                     </div>
                     {/if}
@@ -466,6 +466,7 @@
 <script>
 // A74e: Translation strings for JavaScript (used by external module)
 window.NovotonTranslations = window.NovotonTranslations || {};
+window.NovotonTranslations.currency = '{$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
 window.NovotonTranslations.priceIncreased = '{__("novoton_holidays.price_increased")|default:"Price increased"|escape:"javascript"}';
 window.NovotonTranslations.priceDecreased = '{__("novoton_holidays.price_decreased")|default:"Price decreased"|escape:"javascript"}';
 window.NovotonTranslations.priceRecalculating = '{__("novoton_holidays.price_recalculating")|default:"Recalculating price..."|escape:"javascript"}';
@@ -864,7 +865,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 // Update the room card price display
                 var roomPriceEl = document.querySelector('.room-card[data-room-num="' + roomNum + '"] .room-price');
                 if (roomPriceEl) {
-                    roomPriceEl.textContent = newPrice.toFixed(0) + ' EUR';
+                    roomPriceEl.textContent = newPrice.toFixed(0) + ' ' + (window.NovotonTranslations.currency || 'EUR');
                 }
                 
                 // Recalculate total from all rooms
@@ -1027,7 +1028,7 @@ function showPriceNotification(difference) {
     }
     var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
     var changeColor = difference > 0 ? '#dc3545' : '#28a745';
-    notif.innerHTML = '{__("novoton_holidays.price_updated_child_age")|default:"Pre\u021bul a fost actualizat \u00een func\u021bie de v\u00e2rsta copilului"}: <strong style="color:' + changeColor + '">' + changeText + ' EUR</strong>';
+    notif.innerHTML = '{__("novoton_holidays.price_updated_child_age")|default:"Pre\u021bul a fost actualizat \u00een func\u021bie de v\u00e2rsta copilului"}: <strong style="color:' + changeColor + '">' + changeText + ' ' + (window.NovotonTranslations.currency || 'EUR') + '</strong>';
     notif.style.display = 'block';
 }
 
@@ -1058,10 +1059,10 @@ function showRoomChangeModal(data) {
     
     var priceDiffText = '', priceDiffStyle = '';
     if (priceDiff > 0) {
-        priceDiffText = '+' + priceDiff.toFixed(2) + ' EUR';
+        priceDiffText = '+' + priceDiff.toFixed(2) + ' ' + (window.NovotonTranslations.currency || 'EUR');
         priceDiffStyle = 'color:#dc3545;font-weight:bold;';
     } else if (priceDiff < 0) {
-        priceDiffText = priceDiff.toFixed(2) + ' EUR';
+        priceDiffText = priceDiff.toFixed(2) + ' ' + (window.NovotonTranslations.currency || 'EUR');
         priceDiffStyle = 'color:#28a745;font-weight:bold;';
     }
     
@@ -1088,9 +1089,9 @@ function showRoomChangeModal(data) {
         '<div style="background:#f8f9fa;border-radius:8px;padding:15px;margin-bottom:20px;text-align:center;">' +
             '<div style="font-size:12px;color:#666;margin-bottom:5px;">{__("novoton_holidays.price_change")|default:"Modificare pret"}</div>' +
             '<div style="font-size:20px;">' +
-                '<span style="text-decoration:line-through;color:#999;">' + originalPrice.toFixed(2) + ' EUR</span> ' +
+                '<span style="text-decoration:line-through;color:#999;">' + originalPrice.toFixed(2) + ' ' + (window.NovotonTranslations.currency || 'EUR') + '</span> ' +
                 '<span style="' + priceDiffStyle + '">(' + priceDiffText + ')</span> ' +
-                '<span style="font-weight:bold;color:#003580;">' + newPrice.toFixed(2) + ' EUR</span>' +
+                '<span style="font-weight:bold;color:#003580;">' + newPrice.toFixed(2) + ' ' + (window.NovotonTranslations.currency || 'EUR') + '</span>' +
             '</div>' +
         '</div>' +
         '<div style="display:flex;gap:10px;justify-content:center;">' +
@@ -1127,7 +1128,7 @@ function acceptRoomChangeInline() {
         fullDisplayText += ' - ' + data.board_name;
     }
     if (data.new_price) {
-        fullDisplayText += ' (' + parseFloat(data.new_price).toFixed(0) + ' EUR)';
+        fullDisplayText += ' (' + parseFloat(data.new_price).toFixed(0) + ' ' + (window.NovotonTranslations.currency || 'EUR') + ')';
     }
     
     // Check if this is for a specific room in multi-room booking
@@ -1187,7 +1188,7 @@ function acceptRoomChangeInline() {
     var notif = document.createElement('div');
     notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
     var roomLabel = roomNum ? '{__("novoton_holidays.room_number")|default:"Camera"} ' + roomNum + ': ' : '';
-    notif.innerHTML = '✓ <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + escapeHtml(roomLabel) + escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' EUR';
+    notif.innerHTML = '✓ <strong>{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"}</strong> ' + escapeHtml(roomLabel) + escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' ' + (window.NovotonTranslations.currency || 'EUR');
     
     var section = document.querySelector('.guest-names-section h3');
     if (section && section.parentNode) {

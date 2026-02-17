@@ -90,7 +90,7 @@
                     <span class="label label-warning">RQ</span>
                 {/if}
             </td>
-            <td><strong>{$alt.total} EUR</strong></td>
+            <td><strong>{$alt.total} {$smarty.const.CART_PRIMARY_CURRENCY}</strong></td>
             <td>
                 {if $alt.alt_from_req == 'Yes'}
                     <span class="label label-success">[OK] Exact</span>

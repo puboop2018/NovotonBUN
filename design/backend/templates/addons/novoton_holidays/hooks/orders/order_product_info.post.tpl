@@ -43,7 +43,7 @@
                     {elseif $board_raw == 'BB' || $board_raw == 'B&B' || $board_raw == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
                     {elseif $board_raw == 'RO' || $board_raw == 'ROOM ONLY'}{$board_disp = 'Room Only'}
                     {else}{$board_disp = $board_raw}{/if}
-                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
+                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
                 {* Format room type - fix + sign and expand codes *}

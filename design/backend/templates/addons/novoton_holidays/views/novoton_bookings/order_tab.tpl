@@ -99,7 +99,7 @@
                             {/if}
                         </td>
                         <td>
-                            <strong>{$alt.total|number_format:2} EUR</strong>
+                            <strong>{$alt.total|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}</strong>
                         </td>
                         <td>
                             {if $alt.alt_from_req == 'Y' || $alt.alt_from_req == '1'}

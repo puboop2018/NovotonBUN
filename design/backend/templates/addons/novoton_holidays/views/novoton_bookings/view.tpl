@@ -92,12 +92,12 @@
     <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div>
             <span style="color: #666; font-size: 13px;">Total Price</span>
-            <div style="font-size: 28px; font-weight: bold; color: #003580;">{$booking.total_price|number_format:2} {$booking.currency|default:'EUR'}</div>
+            <div style="font-size: 28px; font-weight: bold; color: #003580;">{$booking.total_price|number_format:2} {$booking.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
         </div>
         {if $booking.api_price && $booking.api_price != $booking.total_price}
         <div>
             <span style="color: #666; font-size: 13px;">API Price</span>
-            <div style="font-size: 18px; color: #28a745;">{$booking.api_price|number_format:2} {$booking.currency|default:'EUR'}</div>
+            <div style="font-size: 18px; color: #28a745;">{$booking.api_price|number_format:2} {$booking.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
         </div>
         {/if}
         <div style="text-align: right;">
@@ -125,7 +125,7 @@
                     <div>🛏️ {$room.room_name|default:$room.room_id}</div>
                     <div>🍽️ {$room.board_name|default:$room.board_id}</div>
                     <div>👥 {$room.adults} adults{if $room.children}, {$room.children} children{/if}</div>
-                    <div style="margin-top: 5px; font-weight: bold; color: #003580;">{$room.price|default:0|number_format:2} EUR</div>
+                    <div style="margin-top: 5px; font-weight: bold; color: #003580;">{$room.price|default:0|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}</div>
                 </div>
             </div>
             {/foreach}
@@ -251,7 +251,7 @@
                     <td><strong>{$alt.package_name|default:$alt.hotel_id}</strong></td>
                     <td>{$alt.room_id} / {$alt.board_id}</td>
                     <td>{$alt.check_in} - {$alt.check_out}</td>
-                    <td><strong>{$alt.total} EUR</strong></td>
+                    <td><strong>{$alt.total} {$smarty.const.CART_PRIMARY_CURRENCY}</strong></td>
                     <td>{if $alt.quota > 0}<span class="label label-success">{$alt.quota}</span>{else}<span class="label label-warning">RQ</span>{/if}</td>
                 </tr>
                 {/if}

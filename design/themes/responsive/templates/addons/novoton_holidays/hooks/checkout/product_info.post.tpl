@@ -71,7 +71,7 @@
                     </div>
                     {* Price aligned to right *}
                     {if $product.extra.num_rooms > 1}
-                        <span style="color: #003580; font-weight: 600; margin-left: 15px; margin-right: 10px; white-space: nowrap;">{$room.price|default:0|number_format:0} EUR</span>
+                        <span style="color: #003580; font-weight: 600; margin-left: 15px; margin-right: 10px; white-space: nowrap;">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                     {/if}
                     <span id="{$collapse_id}_icon" style="font-size: 18px; color: #666; transition: transform 0.3s;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s; transform: {if $is_first}rotate(180deg){else}rotate(0deg){/if}"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
                 </div>

@@ -31,7 +31,7 @@
             {if !isset($_nv_hotels_terms[$_hotel_id])}
                 {$_hotel_name = $product.extra.hotel_name|default:$product.product|default:'Hotel'}
                 {$_check_in = $product.extra.check_in|default:''}
-                {$_currency = $product.extra.currency|default:'EUR'}
+                {$_currency = $product.extra.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}
 
                 {* Use aggregated price for this hotel *}
                 {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}

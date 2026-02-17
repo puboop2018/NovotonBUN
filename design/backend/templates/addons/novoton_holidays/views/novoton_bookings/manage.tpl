@@ -166,14 +166,14 @@
                 </td>
                 <td>
                     {if $booking.base_price > 0}
-                        <span style="color: #666;">{$booking.base_price|number_format:2} EUR</span>
+                        <span style="color: #666;">{$booking.base_price|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                     {else}
                         <span class="muted">-</span>
                     {/if}
                 </td>
                 <td>
                     {if $booking.total_price > 0}
-                        <strong>{$booking.total_price|number_format:2} {$booking.currency|default:'EUR'}</strong>
+                        <strong>{$booking.total_price|number_format:2} {$booking.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</strong>
                     {else}
                         <span class="muted" title="Price not recorded">N/A</span>
                     {/if}
