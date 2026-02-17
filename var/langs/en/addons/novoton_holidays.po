@@ -2559,3 +2559,19 @@ msgstr "[percent]% ([amount]) - due by [date]"
 msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
 msgid "[percent]% ([amount]) on booking"
 msgstr "[percent]% ([amount]) on booking"
+
+msgctxt "Languages::theme_editor.novoton_primary_color"
+msgid "Novoton: Primary color"
+msgstr "Novoton: Primary color"
+
+msgctxt "Languages::theme_editor.novoton_accent_color"
+msgid "Novoton: Accent color"
+msgstr "Novoton: Accent color"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_color"
+msgid "Novoton: Search button"
+msgstr "Novoton: Search button"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
+msgid "Novoton: Search button (hover)"
+msgstr "Novoton: Search button (hover)"

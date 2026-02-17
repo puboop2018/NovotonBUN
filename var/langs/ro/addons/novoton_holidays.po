@@ -1971,3 +1971,19 @@ msgstr "Important"
 msgctxt "Languages::novoton_holidays.remarks"
 msgid "Remarks"
 msgstr "Observații"
+
+msgctxt "Languages::theme_editor.novoton_primary_color"
+msgid "Novoton: Primary color"
+msgstr "Novoton: Culoare primară"
+
+msgctxt "Languages::theme_editor.novoton_accent_color"
+msgid "Novoton: Accent color"
+msgstr "Novoton: Culoare accent"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_color"
+msgid "Novoton: Search button"
+msgstr "Novoton: Buton căutare"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
+msgid "Novoton: Search button (hover)"
+msgstr "Novoton: Buton căutare (hover)"
