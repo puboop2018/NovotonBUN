@@ -392,6 +392,10 @@ msgctxt "Languages::novoton_holidays.night"
 msgid "night"
 msgstr "night"
 
+msgctxt "Languages::novoton_holidays.nights_many"
+msgid "nights"
+msgstr "nights"
+
 msgctxt "Languages::novoton_holidays.adults"
 msgid "novoton_holidays.adults"
 msgstr "Adults"

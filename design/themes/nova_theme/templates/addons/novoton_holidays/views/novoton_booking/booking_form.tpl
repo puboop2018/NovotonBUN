@@ -505,6 +505,10 @@ window.NovotonTranslations.selected = window.NovotonTranslations.selected || '{_
 window.NovotonTranslations.room = window.NovotonTranslations.room || '{__("novoton_holidays.room")|default:"room"|escape:"javascript"}';
 window.NovotonTranslations.rooms = window.NovotonTranslations.rooms || '{__("novoton_holidays.rooms")|default:"rooms"|escape:"javascript"}';
 window.NovotonTranslations.pleaseSelectAllRooms = '{__("novoton_holidays.please_select_all_rooms")|default:"Please select a room type for each room"|escape:"javascript"}';
+window.NovotonTranslations.night = window.NovotonTranslations.night || '{__("novoton_holidays.night")|default:"night"|escape:"javascript"}';
+window.NovotonTranslations.nights = window.NovotonTranslations.nights || '{__("novoton_holidays.nights")|default:"nights"|escape:"javascript"}';
+window.NovotonTranslations.nightsMany = window.NovotonTranslations.nightsMany || '{__("novoton_holidays.nights_many")|default:"nights"|escape:"javascript"}';
+window.NovotonTranslations.loading = window.NovotonTranslations.loading || '{__("novoton_holidays.loading")|default:"Loading..."|escape:"javascript"}';
 
 // HTML escape utility to prevent XSS
 function escapeHtml(str) {

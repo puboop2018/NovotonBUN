@@ -842,7 +842,7 @@ msgstr "Cameră Deluxe"
 
 msgctxt "Languages::novoton_holidays.room_type_fam"
 msgid "Family Room"
-msgstr "Cameră Family"
+msgstr "Cameră Familială"
 
 msgctxt "Languages::novoton_holidays.room_type_sup"
 msgid "Superior Room"
@@ -1231,6 +1231,10 @@ msgstr "nopți"
 msgctxt "Languages::novoton_holidays.overnight"
 msgid "overnight"
 msgstr "noapte"
+
+msgctxt "Languages::novoton_holidays.nights_many"
+msgid "nights"
+msgstr "de nopți"
 
 msgctxt "Languages::novoton_holidays.confirmation_48h"
 msgid "confirmation within max 48 hours"
