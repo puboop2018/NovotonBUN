@@ -78,7 +78,7 @@
             {/if}
             
             {if $oi.extra.special_requests}
-            <strong>Special Requests:</strong> {$oi.extra.special_requests}<br>
+            <strong>Special Requests:</strong> {$oi.extra.special_requests|escape}<br>
             {/if}
             
             {if $oi.extra.novoton_reservation_id}
@@ -89,14 +89,7 @@
             <a href="{"novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id`"|fn_url}">View Booking #{$oi.extra.novoton_booking_id}</a>
             {/if}
             
-            {* DEBUG *}
-            {if $smarty.request.debug_novoton}
-            <div style="margin-top:10px;padding:10px;background:#fff3cd;font-size:11px;">
-                <strong>DEBUG oi.extra:</strong><pre>{foreach from=$oi.extra key=k item=v}{$k}: {if is_array($v)}{$v|@json_encode}{else}{$v|truncate:300}{/if}
-{/foreach}</pre>
-            </div>
-            {/if}
-            
+
         </div>
     </td>
 </tr>

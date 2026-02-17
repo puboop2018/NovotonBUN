@@ -5,7 +5,7 @@
  * Functions for addon install, uninstall, and upgrades.
  * 
  * @package NovotonHolidays
- * @since 2.8.0
+ * @since 3.0.0
  */
 
 use Tygh\Registry;

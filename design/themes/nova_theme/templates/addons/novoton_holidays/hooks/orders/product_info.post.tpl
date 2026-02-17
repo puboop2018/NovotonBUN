@@ -53,7 +53,7 @@
     {/if}
 
     {if $product.extra.special_requests}
-    <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests}<br>
+    <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests|escape}<br>
     {/if}
 
     {* Payment and Cancellation Terms Link *}
@@ -108,13 +108,6 @@
         </div>
     {/if}
 
-    {* DEBUG *}
-    {if $smarty.request.debug_novoton}
-    <div style="margin-top:10px;padding:10px;background:#fff3cd;font-size:11px;">
-        <strong>DEBUG product.extra:</strong><pre>{foreach from=$product.extra key=k item=v}{$k}: {if is_array($v)}{$v|@json_encode}{else}{$v|truncate:300}{/if}
-{/foreach}</pre>
-    </div>
-    {/if}
 
 </div>
 {/if}
