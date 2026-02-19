@@ -1,8 +1,8 @@
 <?php
 /**
- * Novoton Price Service
- * 
- * Handles price calculations, commission application, and currency formatting.
+ * Novoton Room Price Service
+ *
+ * Handles real-time room price calculations, commission application, and currency formatting.
  * 
  * @package NovotonHolidays
  * @since 2.7.0
@@ -10,7 +10,7 @@
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class PriceService
+class RoomPriceService
 {
     /** @var float Commission percentage */
     private $commission;

@@ -399,7 +399,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'currency' => PriceService::getApiCurrency(),
+            'currency' => RoomPriceService::getApiCurrency(),
             'status' => 'pending',
             'special_requests' => $special_requests,
             'notes' => $special_requests,
@@ -453,7 +453,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,
-            'currency' => PriceService::getApiCurrency(),
+            'currency' => RoomPriceService::getApiCurrency(),
         ]
     ];
     

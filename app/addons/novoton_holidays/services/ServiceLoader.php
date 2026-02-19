@@ -38,7 +38,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\BookingService;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataService;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
-use Tygh\Addons\NovotonHolidays\Services\PriceService;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 use Tygh\Addons\NovotonHolidays\Services\SecurityService;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ValidationHelper;
@@ -62,7 +62,7 @@ $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
 $vo_dir = Registry::get('config.dir.addons') . 'novoton_holidays/ValueObjects/';
 
 // Load services
-foreach (['BookingService', 'GuestDataService', 'SearchService', 'PriceService',
+foreach (['BookingService', 'GuestDataService', 'SearchService', 'RoomPriceService',
           'SecurityService', 'CacheService', 'ValidationHelper', 'PriceInfoService',
           'DateHelper', 'CronService',
           'DiagnosticsService', 'AlternativeRequestService'] as $class) {
@@ -143,15 +143,15 @@ function _nvt_search_service() {
 }
 
 /**
- * Get PriceService singleton
- * Handles price calculations, commission application
+ * Get RoomPriceService singleton
+ * Handles real-time room price calculations, commission application
  *
- * @return PriceService
+ * @return RoomPriceService
  */
 function _nvt_price_service() {
     static $instance = null;
     if ($instance === null) {
-        $instance = new PriceService();
+        $instance = new RoomPriceService();
     }
     return $instance;
 }

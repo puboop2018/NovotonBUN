@@ -289,7 +289,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    Tygh::$app['view']->assign('novoton_display_currency', PriceService::getDisplayCurrency());
+    Tygh::$app['view']->assign('novoton_display_currency', RoomPriceService::getDisplayCurrency());
     Tygh::$app['view']->assign('product_id', $product_id);
     Tygh::$app['view']->assign('hotel_name', $hotel_info['hotel_name'] ?? 'Hotel');
     Tygh::$app['view']->assign('hotel_city', $hotel_info['city'] ?? '');

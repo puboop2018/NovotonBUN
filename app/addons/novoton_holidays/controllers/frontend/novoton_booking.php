@@ -14,7 +14,7 @@
  * - SearchService::parseSearchParams() for search parameter parsing
  * - SearchService::calculateRoomTotals() for room totals
  * - BookingService::createBooking() and addToCart() for bookings
- * - PriceService::getRoomPrice() for room prices (has built-in caching)
+ * - RoomPriceService::getRoomPrice() for room prices (has built-in caching)
  *
  * v2.8.0: Split into mode handler files under novoton_booking/ directory.
  * Each mode is in its own file for maintainability (~350 lines dispatcher
@@ -32,7 +32,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
-use Tygh\Addons\NovotonHolidays\Services\PriceService;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -333,7 +333,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     return $hotelInfo;
 }
 
-// A72: Use PriceService::getRoomPrice() for room prices (it has built-in caching)
+// A72: Use RoomPriceService::getRoomPrice() for room prices (it has built-in caching)
 // Example: $priceService = _nvt_get_price_service(); $price = $priceService->getRoomPrice($params);
 
 //=============================================================================

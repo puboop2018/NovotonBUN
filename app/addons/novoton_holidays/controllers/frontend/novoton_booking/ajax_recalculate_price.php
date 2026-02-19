@@ -303,7 +303,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         $new_price = $api->applyCommission($new_price);
 
         // Convert from API currency to CS-Cart display currency
-        $new_price = PriceService::convertFromApiCurrency($new_price);
+        $new_price = RoomPriceService::convertFromApiCurrency($new_price);
 
         // Check if room changed
         $room_changed = false;
@@ -322,7 +322,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         $price_difference = $new_price - $original_price;
 
         // Format price for display using the active display currency
-        $display_currency_code = PriceService::getDisplayCurrency();
+        $display_currency_code = RoomPriceService::getDisplayCurrency();
         $currency = Registry::get('currencies.' . $display_currency_code);
         $formatted_price = fn_format_price($new_price, $currency);
 

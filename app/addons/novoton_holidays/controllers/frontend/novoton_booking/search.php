@@ -677,7 +677,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                 // For multi-room, we need to display options per room
                 // Convert prices from EUR (API currency) to display currency
                 foreach ($all_room_results as $rn => $room_results) {
-                    $all_room_results[$rn] = PriceService::convertResultsCurrency($room_results);
+                    $all_room_results[$rn] = RoomPriceService::convertResultsCurrency($room_results);
                 }
                 // Pass all_room_results to template
                 Tygh::$app['view']->assign('all_room_results', $all_room_results);
@@ -1272,9 +1272,9 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     }
     
     // Convert prices from EUR (API currency) to CS-Cart display currency
-    $results = PriceService::convertResultsCurrency($results ?: []);
-    $alternative_results = PriceService::convertResultsCurrency($alternative_results ?: []);
-    $novoton_display_currency = PriceService::getDisplayCurrency();
+    $results = RoomPriceService::convertResultsCurrency($results ?: []);
+    $alternative_results = RoomPriceService::convertResultsCurrency($alternative_results ?: []);
+    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
 
     // Assign to view - ensure no null values
     Tygh::$app['view']->assign('novoton_results', $results);
