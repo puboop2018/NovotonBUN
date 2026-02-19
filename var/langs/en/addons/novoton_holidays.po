@@ -352,10 +352,6 @@ msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
 msgid "Before Tabs"
 msgstr "Before Tabs"
 
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::sidebar"
-msgid "Sidebar"
-msgstr "Sidebar"
-
 msgctxt "SettingsOptions::novoton_holidays::last_sync_date"
 msgid "Last Synchronization"
 msgstr "Last Synchronization"
