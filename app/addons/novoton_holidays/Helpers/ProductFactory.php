@@ -6,8 +6,6 @@ declare(strict_types=1);
  * Creates CS-Cart products from Novoton hotel data.
  * Single Responsibility: hotel-to-product conversion, image attachment, title building.
  *
- * Extracted from CronHelper to comply with SRP.
- *
  * @package NovotonHolidays
  * @since 3.3.0
  */
@@ -20,6 +18,13 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class ProductFactory
 {
+    private DatabaseHelper $dbHelper;
+
+    public function __construct(DatabaseHelper $dbHelper)
+    {
+        $this->dbHelper = $dbHelper;
+    }
+
     /**
      * Create CS-Cart product from hotel data
      *
@@ -28,14 +33,14 @@ class ProductFactory
      * @param int $categoryId Category to assign product to
      * @return int|null Product ID or null on failure
      */
-    public static function createFromHotel(array $hotel, NovotonApi $api, int $categoryId): ?int
+    public function createFromHotel(array $hotel, NovotonApi $api, int $categoryId): ?int
     {
         $hotelId = $hotel['hotel_id'];
         $hotelName = $hotel['hotel_name'] ?? '';
         $city = $hotel['city'] ?? '';
         $country = $hotel['country'] ?? '';
 
-        $productCode = DatabaseHelper::getProductCode($hotelId);
+        $productCode = $this->dbHelper->getProductCode($hotelId);
 
         // Check if product already exists
         $existingProductId = db_get_field(
@@ -94,7 +99,7 @@ class ProductFactory
         );
 
         // Attach images
-        self::attachHotelImages($productId, $hotelId, $api);
+        $this->attachHotelImages($productId, $hotelId, $api);
 
         // Sync facilities
         try {
@@ -113,7 +118,7 @@ class ProductFactory
      *
      * @return int Number of images attached
      */
-    public static function attachHotelImages(int $productId, string $hotelId, NovotonApi $api): int
+    public function attachHotelImages(int $productId, string $hotelId, NovotonApi $api): int
     {
         try {
             $imagesResponse = $api->getHotelImages($hotelId);

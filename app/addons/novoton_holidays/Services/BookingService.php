@@ -34,11 +34,14 @@ class BookingService implements BookingServiceInterface
     /**
      * Constructor
      */
-    public function __construct()
-    {
+    public function __construct(
+        ?GuestDataService $guestService = null,
+        ?RoomPriceService $priceService = null,
+        ?BookingRepository $bookingRepo = null
+    ) {
         $this->api = fn_novoton_get_api();
-        $this->guestService = new GuestDataService();
-        $this->priceService = new RoomPriceService();
+        $this->guestService = $guestService ?? new GuestDataService();
+        $this->priceService = $priceService ?? new RoomPriceService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     

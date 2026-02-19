@@ -4,7 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class HotelListSyncCommand extends AbstractCronCommand
 {
@@ -20,6 +20,7 @@ class HotelListSyncCommand extends AbstractCronCommand
 
     public function execute(): array
     {
+        $dbHelper = Container::getInstance()->databaseHelper();
         $this->output("Syncing hotels from API (hotel_list)...");
         $this->output("");
 
@@ -63,7 +64,7 @@ class HotelListSyncCommand extends AbstractCronCommand
                 ];
             }
 
-            $result = DatabaseHelper::upsertHotels($hotelBatch);
+            $result = $dbHelper->upsertHotels($hotelBatch);
             $added += $result['inserted'];
             $updated += $result['updated'];
 

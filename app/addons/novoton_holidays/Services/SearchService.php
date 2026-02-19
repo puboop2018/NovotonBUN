@@ -29,10 +29,10 @@ class SearchService
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(?CacheServiceInterface $cache = null)
     {
         $this->api = fn_novoton_get_api();
-        $this->cache = new CacheService();
+        $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
