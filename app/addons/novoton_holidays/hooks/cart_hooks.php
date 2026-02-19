@@ -25,7 +25,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 /**
  * Hook: Format cart product info for hotel bookings
  */
-function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth)
+function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth): void
 {
     if (!empty($product['extra']['novoton_booking'])) {
         fn_novoton_add_booking_display_data($product);
@@ -38,7 +38,7 @@ function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth)
  * Ensures booking details are shown even if extra data was lost.
  * Supports multiple bookings for the same hotel product.
  */
-function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth)
+function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth): void
 {
     if (empty($cart_products)) {
         return;
@@ -96,7 +96,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
 /**
  * Hook: after calculate cart - ensure rooms_data is preserved as array
  */
-function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth)
+function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
     if (fn_novoton_is_debug()) {
         fn_log_event('general', 'runtime', [
@@ -125,7 +125,7 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
 /**
  * Hook: checkout page display - add debug info
  */
-function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_id)
+function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_id): void
 {
     if (fn_novoton_is_debug()) {
         \Tygh\Tygh::$app['view']->assign('novoton_checkout_debug', true);
@@ -137,7 +137,7 @@ function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_i
  * Hook: dispatch_before_display - Ensure meta variables are never null,
  * register Smarty modifiers, and load frontend CSS.
  */
-function fn_novoton_holidays_dispatch_before_display()
+function fn_novoton_holidays_dispatch_before_display(): void
 {
     // Register Smarty modifiers for ALL dispatches
     if (function_exists('fn_novoton_register_smarty_modifiers')) {
@@ -236,7 +236,7 @@ function _nvt_inject_booking_into_cart_product(
  * Populates product_options_value[] with formatted booking details
  * for display in cart, checkout, and order pages.
  */
-function fn_novoton_add_booking_display_data(&$product, $cart = null)
+function fn_novoton_add_booking_display_data(&$product, $cart = null): void
 {
     $date_format = Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
 

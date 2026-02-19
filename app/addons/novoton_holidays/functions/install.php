@@ -20,7 +20,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * 
  * @return bool
  */
-function fn_novoton_holidays_uninstall()
+function fn_novoton_holidays_uninstall(): bool
 {
     // Clean up legacy AJAX price handler from CS-Cart root (if still present from older versions)
     $ajax_file = Registry::get('config.dir.root') . '/novoton_ajax_price.php';
@@ -85,7 +85,7 @@ function fn_novoton_holidays_uninstall()
  * @param int|null $tab_id Tab ID
  * @return bool
  */
-function fn_novoton_holidays_fix_tab_name($tab_id = null)
+function fn_novoton_holidays_fix_tab_name($tab_id = null): bool
 {
     if (empty($tab_id)) {
         $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");
@@ -124,7 +124,7 @@ function fn_novoton_holidays_fix_tab_name($tab_id = null)
  * 
  * @return bool
  */
-function fn_novoton_holidays_post_install()
+function fn_novoton_holidays_post_install(): bool
 {
     // Legacy: standalone ajax_price.php no longer needed — controller mode used instead.
     // Clean up any leftover copy in CS-Cart root from prior versions.
@@ -172,7 +172,7 @@ function fn_novoton_holidays_post_install()
  * 
  * @return bool
  */
-function fn_novoton_holidays_install_email_templates()
+function fn_novoton_holidays_install_email_templates(): bool
 {
     if (!class_exists('\Tygh\Template\Mail\Service')) {
         return false;

@@ -22,7 +22,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
  * @param string|int $date Date string or timestamp
  * @return string Formatted date
  */
-function fn_novoton_format_date($date)
+function fn_novoton_format_date($date): string
 {
     if (empty($date)) {
         return '';
@@ -61,7 +61,7 @@ function fn_novoton_format_date($date)
  * @param string $boardId Board code (AI, HB, FB, etc.)
  * @return string Formatted board name
  */
-function fn_novoton_format_board_name($boardId)
+function fn_novoton_format_board_name($boardId): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardId);
 }
@@ -80,7 +80,7 @@ function fn_novoton_format_board_name($boardId)
  * @param string $roomType Room type from hotelinfo API (e.g., "DBL", "APP", "SGL")
  * @return string Formatted room display name
  */
-function fn_novoton_format_room_type($roomId, $roomType = '')
+function fn_novoton_format_room_type($roomId, $roomType = ''): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
 }
@@ -94,7 +94,7 @@ function fn_novoton_format_room_type($roomId, $roomType = '')
  * @param string $roomCode Room code from API
  * @return string Normalized room code
  */
-function fn_novoton_normalize_room_code($roomCode)
+function fn_novoton_normalize_room_code($roomCode): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::normalizeRoomCode($roomCode);
 }
@@ -109,7 +109,7 @@ function fn_novoton_normalize_room_code($roomCode)
  * @param string $name Resort or city name
  * @return string Normalized name for comparison
  */
-function fn_novoton_normalize_resort_name($name)
+function fn_novoton_normalize_resort_name($name): string
 {
     $name = strtoupper(trim($name));
     $name = str_replace('&', 'AND', $name);
@@ -126,7 +126,7 @@ function fn_novoton_normalize_resort_name($name)
  * @param string $xml_string Raw XML or CDATA string
  * @return \SimpleXMLElement|null Parsed XML or null on failure
  */
-function fn_novoton_parse_xml_string($xml_string)
+function fn_novoton_parse_xml_string($xml_string): ?\SimpleXMLElement
 {
     if (empty($xml_string)) {
         return null;
@@ -163,7 +163,7 @@ function fn_novoton_parse_xml_string($xml_string)
  * @param string $xml_string XML terms string
  * @return array Parsed terms data
  */
-function fn_novoton_parse_payment_terms($xml_string)
+function fn_novoton_parse_payment_terms($xml_string): array
 {
     if (empty($xml_string)) {
         return [];
@@ -233,7 +233,7 @@ function fn_novoton_parse_payment_terms($xml_string)
  * @param string $check_in Check-in date for relative calculations
  * @return array Parsed cancellation terms
  */
-function fn_novoton_parse_cancellation_terms($xml_string, $check_in = '')
+function fn_novoton_parse_cancellation_terms($xml_string, $check_in = ''): array
 {
     if (empty($xml_string)) {
         return [];
@@ -336,7 +336,7 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = '')
  * @param string $currency_code Currency code (default: EUR)
  * @return string Formatted payment terms with amounts
  */
-function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR')
+function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR'): string
 {
     $terms = fn_novoton_parse_payment_terms($xml_string);
 
@@ -393,7 +393,7 @@ function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price,
  * @param string $xml_string Raw XML string
  * @return string Formatted HTML
  */
-function fn_novoton_format_payment_terms($xml_string)
+function fn_novoton_format_payment_terms($xml_string): string
 {
     $terms = fn_novoton_parse_payment_terms($xml_string);
 
@@ -432,7 +432,7 @@ function fn_novoton_format_payment_terms($xml_string)
  * @param string $check_in Check-in date
  * @return string Formatted HTML
  */
-function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
+function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): string
 {
     $terms = fn_novoton_parse_cancellation_terms($xml_string, $check_in);
 
@@ -508,7 +508,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = '')
  * @param string $xml_string Raw XML string
  * @return string|null Date string or null
  */
-function fn_novoton_get_free_cancellation_date($xml_string)
+function fn_novoton_get_free_cancellation_date($xml_string): ?string
 {
     $terms = fn_novoton_parse_cancellation_terms($xml_string);
     
@@ -538,7 +538,7 @@ function fn_novoton_get_free_cancellation_date($xml_string)
  * @param int|string $year Year
  * @return string Formatted title
  */
-function fn_novoton_build_hotel_title($hotel_name, $city, $country, $year)
+function fn_novoton_build_hotel_title($hotel_name, $city, $country, $year): string
 {
     // Clean and Title Case the hotel name
     $hotel_name = trim($hotel_name);
@@ -576,7 +576,7 @@ function fn_novoton_build_hotel_title($hotel_name, $city, $country, $year)
  * @param \SimpleXMLElement|string $xml XML object or string
  * @return array Converted array
  */
-function fn_novoton_xml_to_array($xml)
+function fn_novoton_xml_to_array($xml): array
 {
     if (is_string($xml)) {
         libxml_use_internal_errors(true);

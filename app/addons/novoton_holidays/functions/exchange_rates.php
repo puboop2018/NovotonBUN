@@ -19,7 +19,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  *
  * @return string|false XML content or false on failure
  */
-function fn_novoton_fetch_bnr_rates()
+function fn_novoton_fetch_bnr_rates(): string|false
 {
     $url = 'https://curs.bnr.ro/nbrfxrates.xml';
 
@@ -68,7 +68,7 @@ function fn_novoton_fetch_bnr_rates()
  * @param bool $include_date If true, returns array with 'rates' and 'publishing_date' keys
  * @return array Associative array of currency => rate (relative to RON), or ['rates' => [...], 'publishing_date' => '...']
  */
-function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'], $include_date = false)
+function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'], $include_date = false): array
 {
     $rates = [];
     $publishing_date = '';
@@ -143,7 +143,7 @@ function fn_novoton_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GB
  * @param float $commission Commission percentage to add (e.g., 2 for 2%)
  * @return array Currency coefficients for CS-Cart
  */
-function fn_novoton_calculate_currency_coefficients($bnr_rates, $commission = 0)
+function fn_novoton_calculate_currency_coefficients($bnr_rates, $commission = 0): array
 {
     $coefficients = [];
 
@@ -176,7 +176,7 @@ function fn_novoton_calculate_currency_coefficients($bnr_rates, $commission = 0)
  * @param array $coefficients Currency coefficients to update
  * @return array Results with success/error info per currency
  */
-function fn_novoton_update_cscart_currencies($coefficients)
+function fn_novoton_update_cscart_currencies($coefficients): array
 {
     $results = [];
 
@@ -247,7 +247,7 @@ function fn_novoton_update_cscart_currencies($coefficients)
  * @param bool $return_details If true, returns detailed results instead of just success/fail
  * @return array|bool Results array or bool success
  */
-function fn_novoton_update_exchange_rates($return_details = false)
+function fn_novoton_update_exchange_rates($return_details = false): array|bool
 {
     $result = [
         'success' => false,
@@ -345,7 +345,7 @@ function fn_novoton_update_exchange_rates($return_details = false)
  *
  * @return array Exchange rate information
  */
-function fn_novoton_get_exchange_rate_info()
+function fn_novoton_get_exchange_rate_info(): array
 {
     $info = [
         'last_update' => ConfigProvider::getLastExchangeRateUpdate() ?: 'Never',
@@ -376,7 +376,7 @@ function fn_novoton_get_exchange_rate_info()
  *
  * @return bool Success status
  */
-function fn_novoton_cron_update_exchange_rates()
+function fn_novoton_cron_update_exchange_rates(): array|bool
 {
     return fn_novoton_update_exchange_rates(false);
 }

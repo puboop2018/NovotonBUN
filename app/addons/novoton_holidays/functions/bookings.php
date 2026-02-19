@@ -78,7 +78,7 @@ function fn_novoton_decrypt_requests_pii(array $requests): array
  * @param int $booking_id Booking ID (0 = check all pending)
  * @return array Result
  */
-function fn_novoton_check_reservation_status($booking_id = 0)
+function fn_novoton_check_reservation_status($booking_id = 0): array
 {
     $api = fn_novoton_get_api();
     if (!$api) {
@@ -149,7 +149,7 @@ function fn_novoton_check_reservation_status($booking_id = 0)
  * @param int $booking_id Booking ID
  * @return array Result
  */
-function fn_novoton_request_alternatives($booking_id)
+function fn_novoton_request_alternatives($booking_id): array
 {
     $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
     
@@ -190,7 +190,7 @@ function fn_novoton_request_alternatives($booking_id)
  * @param int $booking_id Booking ID
  * @return array Alternatives data
  */
-function fn_novoton_get_alternatives($booking_id)
+function fn_novoton_get_alternatives($booking_id): array
 {
     $request = db_get_row(
         "SELECT * FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
@@ -214,7 +214,7 @@ function fn_novoton_get_alternatives($booking_id)
  * @param int $order_id Order ID
  * @return array Bookings
  */
-function fn_novoton_get_order_bookings($order_id)
+function fn_novoton_get_order_bookings($order_id): array
 {
     return db_get_array(
         "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
@@ -227,7 +227,7 @@ function fn_novoton_get_order_bookings($order_id)
  * 
  * @return array Result
  */
-function fn_novoton_cron_resinfo()
+function fn_novoton_cron_resinfo(): array
 {
     $api = fn_novoton_get_api();
     if (!$api) {

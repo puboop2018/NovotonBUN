@@ -43,7 +43,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  *   - Sends ALL rooms in SINGLE API request IF same hotel, package, and dates
  *   - Sends SEPARATE API calls if rooms have different packages or dates
  */
-function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &$cart, &$auth)
+function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
     if (empty($order_id) || empty($cart['products'])) {
         return;
@@ -812,7 +812,7 @@ function _nvt_submit_and_record_booking(
  * Uses a single batch query (not N+1) to fetch all bookings for all
  * orders in the result set.
  */
-function fn_novoton_holidays_get_orders_post($params, &$orders)
+function fn_novoton_holidays_get_orders_post($params, &$orders): void
 {
     if (empty($orders)) {
         return;
@@ -856,7 +856,7 @@ function fn_novoton_holidays_get_orders_post($params, &$orders)
  *   - Guest display names (Last, First format)
  *   - Board display name via BoardType value object
  */
-function fn_novoton_holidays_get_order_info(&$order, $additional_data)
+function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
     if (!empty($_REQUEST['debug'])) {
         fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
