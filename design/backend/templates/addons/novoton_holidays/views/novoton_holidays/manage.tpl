@@ -461,6 +461,7 @@
         <table class="novoton-table">
             <tr>
                 <th>Date</th>
+                <th>Type</th>
                 <th>Total</th>
                 <th>Updated</th>
                 <th>Failed</th>
@@ -470,6 +471,7 @@
             {foreach from=$recent_syncs item=log}
             <tr>
                 <td>{$log.sync_date|date_format:"%d.%m.%Y %H:%M"}</td>
+                <td><span class="novoton-badge novoton-badge-info">{$log.sync_type}</span></td>
                 <td>{$log.products_total}</td>
                 <td>{$log.products_updated}</td>
                 <td style="color: {if $log.products_failed > 0}red{else}#999{/if};">{$log.products_failed}</td>
