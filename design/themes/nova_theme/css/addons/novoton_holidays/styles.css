@@ -2978,16 +2978,10 @@
 .room-header-card {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     padding: 18px 20px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
     color: #fff;
-    transition: background 0.2s;
-}
-
-.room-header-card:hover {
-    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
 }
 
 .room-header-card .room-title {
@@ -3016,23 +3010,9 @@
     gap: 8px;
 }
 
-.room-header-card .expand-icon {
-    font-size: 14px;
-    transition: transform 0.3s;
-    opacity: 0.8;
-}
-
-.room-section-card.expanded .room-header-card .expand-icon {
-    transform: rotate(180deg);
-}
-
 .room-section-card .room-content {
-    display: none;
-    padding: 0;
-}
-
-.room-section-card.expanded .room-content {
     display: block;
+    padding: 0;
 }
 
 /* New Prices Table */
