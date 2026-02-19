@@ -42,7 +42,8 @@ $tools_modes = [
     'test_api', 'test_formats', 'test_product', 'test_hotel_list', 'test_room_price',
     'test_search', 'test_hotel_request', 'test_alternative_rs', 'test_facilities',
     'export_hotel_features_csv', 'download_hotel_features_csv', 'get_hotel_features_csv',
-    'cron_export_hotel_features'
+    'cron_export_hotel_features',
+    'export_hotel_features_xml', 'download_hotel_features_xml'
 ];
 
 // Route to appropriate sub-controller
