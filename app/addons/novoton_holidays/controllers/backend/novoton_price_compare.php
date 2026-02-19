@@ -778,6 +778,61 @@ if ($mode == 'get_packages') {
 }
 
 /**
+ * Mode: get_rooms (AJAX)
+ * Return IdRoom values from hotelinfo for a hotel as JSON
+ */
+if ($mode == 'get_rooms') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+
+    if (empty($hotel_id)) {
+        echo json_encode(['rooms' => []]);
+        exit;
+    }
+
+    $hotel_data_json = db_get_field(
+        "SELECT hotel_data FROM ?:novoton_hotels WHERE hotel_id = ?s",
+        $hotel_id
+    );
+
+    $rooms_list = [];
+
+    if (!empty($hotel_data_json)) {
+        $hotel_data = json_decode($hotel_data_json, true);
+        $rooms = $hotel_data['rooms'] ?? [];
+
+        // Normalize single room entry to array
+        if (isset($rooms['IdRoom'])) {
+            $rooms = [$rooms];
+        }
+
+        foreach ($rooms as $room) {
+            $id_room = $room['IdRoom'] ?? '';
+            if (!empty($id_room)) {
+                $type = $room['Type'] ?? '';
+                $rb = $room['RegularBeds'] ?? $room['RB'] ?? '';
+                $eb = $room['ExtraBeds'] ?? $room['EB'] ?? '';
+                $label = $id_room;
+                if (!empty($type) && $type !== $id_room) {
+                    $label .= ' (' . $type . ')';
+                }
+                if ($rb !== '' || $eb !== '') {
+                    $label .= ' [RB:' . $rb . ' EB:' . $eb . ']';
+                }
+                $rooms_list[] = [
+                    'id_room' => $id_room,
+                    'label' => $label,
+                ];
+            }
+        }
+    }
+
+    echo json_encode(['rooms' => $rooms_list]);
+    exit;
+}
+
+/**
  * Default mode: Show comparison form
  */
 if (empty($mode) || $mode == 'manage') {

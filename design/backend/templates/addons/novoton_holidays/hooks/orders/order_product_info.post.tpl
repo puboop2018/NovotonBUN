@@ -17,6 +17,16 @@
             <strong>Package:</strong> {$oi.extra.package_name}<br>
             {/if}
             
+            {* Pre-assign room type translations *}
+            {$_rt_dbl = "{__('novoton_holidays.room_type_dbl')}"}
+            {$_rt_sgl = "{__('novoton_holidays.room_type_sgl')}"}
+            {$_rt_trp = "{__('novoton_holidays.room_type_trp')}"}
+            {$_rt_quad = "{__('novoton_holidays.room_type_quad')}"}
+            {$_rt_fam = "{__('novoton_holidays.room_type_fam')}"}
+            {$_rt_app = "{__('novoton_holidays.room_type_app')}"}
+            {$_rt_stu = "{__('novoton_holidays.room_type_stu')}"}
+            {$_rt_sui = "{__('novoton_holidays.room_type_sui')}"}
+
             {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
                 {foreach from=$oi.extra.rooms_data item=room key=idx}
@@ -25,14 +35,14 @@
                     {$room_raw = $room_raw|replace:'%2b':'+'|replace:'%2B':'+'}
                     {$room_raw = $room_raw|regex_replace:"/(\d)\s+(\d)/":"$1+$2"}
                     {* Expand room type codes to full names *}
-                    {if $room_raw|strpos:'DBL' !== false}{$room_display = $room_raw|replace:'DBL':'Camera Dubla'}
-                    {elseif $room_raw|strpos:'SGL' !== false}{$room_display = $room_raw|replace:'SGL':'Camera Single'}
-                    {elseif $room_raw|strpos:'TRP' !== false || $room_raw|strpos:'TRPL' !== false}{$room_display = $room_raw|replace:'TRP':'Camera Tripla'|replace:'TRPL':'Camera Tripla'}
-                    {elseif $room_raw|strpos:'QUAD' !== false || $room_raw|strpos:'QUA' !== false}{$room_display = $room_raw|replace:'QUAD':'Camera Cvadrupla'|replace:'QUA':'Camera Cvadrupla'}
-                    {elseif $room_raw|strpos:'FAM' !== false}{$room_display = $room_raw|replace:'FAM':'Camera Familiala'}
-                    {elseif $room_raw|strpos:'APT' !== false}{$room_display = $room_raw|replace:'APT':'Apartament'}
-                    {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':'Studio'}
-                    {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':'Suita'|replace:'SUI':'Suita'}
+                    {if $room_raw|strpos:'DBL' !== false}{$room_display = $room_raw|replace:'DBL':$_rt_dbl}
+                    {elseif $room_raw|strpos:'SGL' !== false}{$room_display = $room_raw|replace:'SGL':$_rt_sgl}
+                    {elseif $room_raw|strpos:'TRP' !== false || $room_raw|strpos:'TRPL' !== false}{$room_display = $room_raw|replace:'TRP':$_rt_trp|replace:'TRPL':$_rt_trp}
+                    {elseif $room_raw|strpos:'QUAD' !== false || $room_raw|strpos:'QUA' !== false}{$room_display = $room_raw|replace:'QUAD':$_rt_quad|replace:'QUA':$_rt_quad}
+                    {elseif $room_raw|strpos:'FAM' !== false}{$room_display = $room_raw|replace:'FAM':$_rt_fam}
+                    {elseif $room_raw|strpos:'APT' !== false}{$room_display = $room_raw|replace:'APT':$_rt_app}
+                    {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
+                    {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
                     {else}{$room_display = $room_raw}{/if}
                     {* Format board name *}
                     {$board_raw = $room.board_display|default:$room.board_name|default:$room.board_id}
@@ -43,7 +53,7 @@
                     {elseif $board_raw == 'BB' || $board_raw == 'B&B' || $board_raw == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
                     {elseif $board_raw == 'RO' || $board_raw == 'ROOM ONLY'}{$board_disp = 'Room Only'}
                     {else}{$board_disp = $board_raw}{/if}
-                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} EUR<br>
+                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
                 {* Format room type - fix + sign and expand codes *}
@@ -51,14 +61,14 @@
                 {$room_raw = $room_raw|replace:'%2b':'+'|replace:'%2B':'+'}
                 {$room_raw = $room_raw|regex_replace:"/(\d)\s+(\d)/":"$1+$2"}
                 {* Expand room type codes to full names *}
-                {if $room_raw|strpos:'DBL' !== false}{$room_display = $room_raw|replace:'DBL':'Camera Dubla'}
-                {elseif $room_raw|strpos:'SGL' !== false}{$room_display = $room_raw|replace:'SGL':'Camera Single'}
-                {elseif $room_raw|strpos:'TRP' !== false || $room_raw|strpos:'TRPL' !== false}{$room_display = $room_raw|replace:'TRP':'Camera Tripla'|replace:'TRPL':'Camera Tripla'}
-                {elseif $room_raw|strpos:'QUAD' !== false || $room_raw|strpos:'QUA' !== false}{$room_display = $room_raw|replace:'QUAD':'Camera Cvadrupla'|replace:'QUA':'Camera Cvadrupla'}
-                {elseif $room_raw|strpos:'FAM' !== false}{$room_display = $room_raw|replace:'FAM':'Camera Familiala'}
-                {elseif $room_raw|strpos:'APT' !== false}{$room_display = $room_raw|replace:'APT':'Apartament'}
-                {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':'Studio'}
-                {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':'Suita'|replace:'SUI':'Suita'}
+                {if $room_raw|strpos:'DBL' !== false}{$room_display = $room_raw|replace:'DBL':$_rt_dbl}
+                {elseif $room_raw|strpos:'SGL' !== false}{$room_display = $room_raw|replace:'SGL':$_rt_sgl}
+                {elseif $room_raw|strpos:'TRP' !== false || $room_raw|strpos:'TRPL' !== false}{$room_display = $room_raw|replace:'TRP':$_rt_trp|replace:'TRPL':$_rt_trp}
+                {elseif $room_raw|strpos:'QUAD' !== false || $room_raw|strpos:'QUA' !== false}{$room_display = $room_raw|replace:'QUAD':$_rt_quad|replace:'QUA':$_rt_quad}
+                {elseif $room_raw|strpos:'FAM' !== false}{$room_display = $room_raw|replace:'FAM':$_rt_fam}
+                {elseif $room_raw|strpos:'APT' !== false}{$room_display = $room_raw|replace:'APT':$_rt_app}
+                {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
+                {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
                 {else}{$room_display = $room_raw}{/if}
                 {* Format board name *}
                 {$board_raw = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id}

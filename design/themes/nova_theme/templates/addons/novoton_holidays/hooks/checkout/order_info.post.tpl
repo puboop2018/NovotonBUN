@@ -26,7 +26,7 @@
                         {if $room_info.board_name} - {$room_info.board_name}{/if}<br>
                         <span style="color: #666;">
                              {$room_info.adults|default:2} ad.{if $room_info.children}, {$room_info.children} ch.{/if}
-                            {if $room_info.price} - {$room_info.price|number_format:0}EUR{/if}
+                            {if $room_info.price} - {$room_info.price|number_format:0}{$smarty.const.CART_PRIMARY_CURRENCY}{/if}
                         </span>
                     </div>
                 {/foreach}

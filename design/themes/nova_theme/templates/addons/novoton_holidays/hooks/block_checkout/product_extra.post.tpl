@@ -75,7 +75,7 @@
                 <div onclick="toggleCheckoutRoom('{$collapse_id}')" style="padding: 10px 14px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <span style="font-weight: 600; color: #1a1a1a; font-size: 13px;">{__("novoton_holidays.room")} {$room_number}: {$room.room_type_display|default:$room.room_name}</span>
-                        <span style="color: #666; margin-left: 8px; font-size: 12px;">{$room.price|default:0|number_format:0} EUR</span>
+                        <span style="color: #666; margin-left: 8px; font-size: 12px;">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                     </div>
                     <span id="{$collapse_id}_icon" style="font-size: 16px; color: #666;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s; transform: {if $is_first}rotate(180deg){else}rotate(0deg){/if}"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
                 </div>

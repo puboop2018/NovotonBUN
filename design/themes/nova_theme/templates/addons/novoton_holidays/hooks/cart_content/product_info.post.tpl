@@ -11,7 +11,7 @@
                     <br><span style="color:#666;"> {$room.board_name|default:$room.board_id}</span>
                     <br><span style="color:#666;"> {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if}</span>
                 </div>
-                <div style="text-align:right;font-weight:600;color:#003580;white-space:nowrap;margin-left:10px;">{$room.price|number_format:0} EUR</div>
+                <div style="text-align:right;font-weight:600;color:#003580;white-space:nowrap;margin-left:10px;">{$room.price|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</div>
             </div>
         {/foreach}
     {else}

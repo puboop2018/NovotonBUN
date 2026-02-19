@@ -127,9 +127,9 @@
      */
     function showDOBError(field) {
         // Get error message from translations or use default
-        var errorMessage = (window.NovotonTranslations && window.NovotonTranslations.dobCannotBeFuture) 
-            ? window.NovotonTranslations.dobCannotBeFuture 
-            : 'Data nașterii nu poate fi în viitor';
+        var errorMessage = (window.NovotonTranslations && window.NovotonTranslations.dobCannotBeFuture)
+            ? window.NovotonTranslations.dobCannotBeFuture
+            : 'Date of birth cannot be in the future';
         
         // Mark field as invalid
         field.classList.add('novoton-dob-error');
@@ -421,9 +421,9 @@
                 // Use singular/plural form (Romanian: "1 an", "2 ani")
                 var ageLabel;
                 if (age === 1) {
-                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabelSingular) || 'an';
+                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabelSingular) || 'year';
                 } else {
-                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabel) || 'ani';
+                    ageLabel = (window.NovotonTranslations && window.NovotonTranslations.ageLabel) || 'years';
                 }
                 ageDisplay.textContent = '(' + age + ' ' + ageLabel + ')';
 
@@ -536,12 +536,12 @@
             notification.style.backgroundColor = '#fff5f5';
             notification.style.color = '#dc3545';
             notification.style.border = '1px solid #dc3545';
-            notification.textContent = '📈 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Prețul a crescut') + ': ' + text;
+            notification.textContent = '📈 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Price increased') + ': ' + text;
         } else {
             notification.style.backgroundColor = '#f0fff4';
             notification.style.color = '#28a745';
             notification.style.border = '1px solid #28a745';
-            notification.textContent = '📉 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Prețul a scăzut') + ': ' + text;
+            notification.textContent = '📉 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Price decreased') + ': ' + text;
         }
         
         document.body.appendChild(notification);
@@ -704,9 +704,9 @@
         
         if (dob > today) {
             result.valid = false;
-            result.error = (window.NovotonTranslations && window.NovotonTranslations.dobCannotBeFuture) 
-                ? window.NovotonTranslations.dobCannotBeFuture 
-                : 'Data nașterii nu poate fi în viitor';
+            result.error = (window.NovotonTranslations && window.NovotonTranslations.dobCannotBeFuture)
+                ? window.NovotonTranslations.dobCannotBeFuture
+                : 'Date of birth cannot be in the future';
             return result;
         }
         

@@ -406,7 +406,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
 
                                                 {if $total > 0}
-                                                    <span class="price">{$total|number_format:0} EUR</span>
+                                                    <span class="price">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}
@@ -485,7 +485,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
 
                                                 {if $total > 0}
-                                                    <span class="price price-highlight">{$total|number_format:0} EUR</span>
+                                                    <span class="price price-highlight">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}
@@ -566,7 +566,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
                                                 
                                                 {if $total > 0}
-                                                    <span class="price">{$total|number_format:0} EUR</span>
+                                                    <span class="price">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}

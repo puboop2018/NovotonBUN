@@ -111,7 +111,7 @@
                 <td>{$alt.room_id}<br><small class="muted">{$alt.board_id}</small></td>
                 <td>{$alt.check_in} - {$alt.check_out}</td>
                 <td>{if $alt.quota > 0}<span class="label label-success">{$alt.quota}</span>{else}<span class="label label-warning">RQ</span>{/if}</td>
-                <td><strong>{$alt.total|default:'-'} EUR</strong></td>
+                <td><strong>{$alt.total|default:'-'} {$smarty.const.CART_PRIMARY_CURRENCY}</strong></td>
             </tr>
             {/foreach}
         </tbody>

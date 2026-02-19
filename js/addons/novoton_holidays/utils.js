@@ -185,13 +185,30 @@ window.NovotonUtils = (function() {
         return plural;
     }
     
-    // Romanian pluralization for common words
+    // Pluralization for common words (uses NovotonTranslations when available)
     const roPlural = {
-        noapte: (n) => n === 1 ? 'noapte' : (n >= 2 && n <= 19 ? 'nopți' : 'de nopți'),
-        adult: (n) => n === 1 ? 'adult' : 'adulți',
-        copil: (n) => n === 1 ? 'copil' : 'copii',
-        camera: (n) => n === 1 ? 'cameră' : 'camere',
-        an: (n) => n === 1 ? 'an' : 'ani'
+        noapte: (n) => {
+            var t = window.NovotonTranslations || {};
+            if (n === 1) return t.night || 'night';
+            if (n >= 2 && n <= 19) return t.nights || 'nights';
+            return t.nightsMany || t.nights || 'nights';
+        },
+        adult: (n) => {
+            var t = window.NovotonTranslations || {};
+            return n === 1 ? (t.adult || 'adult') : (t.adults || 'adults');
+        },
+        copil: (n) => {
+            var t = window.NovotonTranslations || {};
+            return n === 1 ? (t.child || 'child') : (t.children || 'children');
+        },
+        camera: (n) => {
+            var t = window.NovotonTranslations || {};
+            return n === 1 ? (t.room || 'room') : (t.rooms || 'rooms');
+        },
+        an: (n) => {
+            var t = window.NovotonTranslations || {};
+            return n === 1 ? (t.yearOld || 'year') : (t.yearsOld || 'years');
+        }
     };
     
     // Scroll to element smoothly
@@ -201,7 +218,11 @@ window.NovotonUtils = (function() {
     }
     
     // Show/hide loading indicator
-    function setLoading(element, loading, text = 'Se încarcă...') {
+    function setLoading(element, loading, text) {
+        if (!text) {
+            var t = window.NovotonTranslations || {};
+            text = t.loading || 'Loading...';
+        }
         if (!element) return;
 
         if (loading) {

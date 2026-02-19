@@ -207,6 +207,11 @@ class ValidationHelper
      */
     public static function isValidCurrency(string $currency): bool
     {
+        $currencies = \Tygh\Registry::get('currencies');
+        if (!empty($currencies)) {
+            return isset($currencies[strtoupper($currency)]);
+        }
+        // Fallback if CS-Cart currencies not loaded
         $valid = ['EUR', 'USD', 'GBP', 'BGN', 'RON'];
         return in_array(strtoupper($currency), $valid);
     }

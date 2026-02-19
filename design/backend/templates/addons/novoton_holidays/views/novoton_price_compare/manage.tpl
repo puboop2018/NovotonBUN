@@ -36,7 +36,7 @@
 
         <div class="form-group">
             <label for="hotel_id">Hotel</label>
-            <select name="hotel_id" id="hotel_id" required onchange="loadPackages(this.value)">
+            <select name="hotel_id" id="hotel_id" required onchange="loadPackages(this.value); loadRooms(this.value)">
                 <option value="">-- Select Hotel --</option>
                 {foreach from=$hotels item=hotel}
                     <option value="{$hotel.hotel_id}">{$hotel.hotel_name} ({$hotel.hotel_id})</option>
@@ -54,7 +54,11 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="room_id">Room Type</label>
-                <input type="text" name="room_id" id="room_id" placeholder="e.g., DBL, DBL%2b1, SGL">
+                <select id="room_id_select" style="display:none;" disabled>
+                    <option value="">-- Select Hotel First --</option>
+                </select>
+                <input type="text" name="room_id" id="room_id_text" placeholder="e.g., DBL, DBL 2+1, SGL">
+                <small id="room_id_hint" style="color:#666;">Select a hotel to load available room types</small>
             </div>
             <div class="form-group">
                 <label for="board_id">Board Type</label>
@@ -146,10 +150,74 @@ function loadPackages(hotelId) {
         });
 }
 
+function loadRooms(hotelId) {
+    var roomSelect = document.getElementById('room_id_select');
+    var roomText = document.getElementById('room_id_text');
+    var roomHint = document.getElementById('room_id_hint');
+
+    if (!hotelId) {
+        roomSelect.style.display = 'none';
+        roomSelect.disabled = true;
+        roomText.style.display = '';
+        roomText.disabled = false;
+        roomHint.textContent = 'Select a hotel to load available room types';
+        return;
+    }
+
+    roomHint.textContent = 'Loading rooms...';
+
+    fetch('{"novoton_price_compare.get_rooms"|fn_url}' + '&hotel_id=' + hotelId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.rooms && data.rooms.length > 0) {
+                // Show select, hide text input
+                roomSelect.innerHTML = '<option value="">Any (all rooms)</option>';
+                data.rooms.forEach(function(room) {
+                    var option = document.createElement('option');
+                    option.value = room.id_room;
+                    option.textContent = room.label;
+                    roomSelect.appendChild(option);
+                });
+                roomSelect.style.display = '';
+                roomSelect.disabled = false;
+                roomText.style.display = 'none';
+                roomText.disabled = true;
+                roomText.name = '';
+                roomSelect.name = 'room_id';
+                roomHint.textContent = data.rooms.length + ' room type(s) from hotelinfo';
+            } else {
+                // No rooms found - show text input
+                roomSelect.style.display = 'none';
+                roomSelect.disabled = true;
+                roomSelect.name = '';
+                roomText.style.display = '';
+                roomText.disabled = false;
+                roomText.name = 'room_id';
+                roomHint.textContent = 'No room data in hotelinfo — type manually';
+            }
+        })
+        .catch(error => {
+            roomSelect.style.display = 'none';
+            roomSelect.disabled = true;
+            roomSelect.name = '';
+            roomText.style.display = '';
+            roomText.disabled = false;
+            roomText.name = 'room_id';
+            roomHint.textContent = 'Error loading rooms — type manually';
+        });
+}
+
+function onRoomSelectChange(sel) {
+    // If user picks "custom..." option we could add, but for now just let them use the select
+}
+
 function verifySeasons() {
     var hotelId = document.getElementById('hotel_id').value;
     var packageName = document.getElementById('package_name').value;
-    var roomId = document.getElementById('room_id').value;
+    // Get room_id from whichever field is active
+    var roomSelect = document.getElementById('room_id_select');
+    var roomText = document.getElementById('room_id_text');
+    var roomId = roomSelect.style.display !== 'none' ? roomSelect.value : roomText.value;
     var boardId = document.getElementById('board_id').value;
     var checkIn = document.getElementById('check_in').value;
     var nights = document.getElementById('nights').value;

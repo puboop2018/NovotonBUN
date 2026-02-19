@@ -6,8 +6,9 @@
  * error highlighting.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { t } from './utils';
+import { TrashIcon } from './icons';
 
 export default function GuestPicker({
     rooms,
@@ -85,11 +86,45 @@ export default function GuestPicker({
         return ageErrors.some(e => e.room === roomIdx && e.child === childIdx);
     }
 
+    // Count missing child ages across all rooms
+    const missingAgeCount = useMemo(() => {
+        let count = 0;
+        rooms.forEach(room => {
+            if (room.children > 0) {
+                (room.childrenAges || []).forEach(age => {
+                    if (age === null || age === undefined || age === '') count++;
+                });
+            }
+        });
+        return count;
+    }, [rooms]);
+
+    // Scroll to first room with missing age
+    const scrollToMissingAge = useCallback(() => {
+        if (!popupRef.current) return;
+        const container = popupRef.current.querySelector('.nvt-guest-rooms-container');
+        if (!container) return;
+
+        // Find first empty age select
+        const emptySelect = container.querySelector('.nvt-child-age-select');
+        if (!emptySelect) return;
+
+        // Find the one with empty value
+        const allSelects = container.querySelectorAll('.nvt-child-age-select');
+        for (const sel of allSelects) {
+            if (sel.value === '') {
+                sel.closest('.nvt-room-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sel.focus();
+                break;
+            }
+        }
+    }, []);
+
     return (
         <div className="nvt-guest-popup" ref={popupRef}>
             <div className="nvt-guest-rooms-container">
                 {rooms.map((room, roomIdx) => (
-                    <div key={roomIdx} className="nvt-room-section">
+                    <div key={roomIdx} className="nvt-room-section" data-room-idx={roomIdx}>
                         <div className="nvt-room-header">
                             <h4>{t('room', 'Room')} {roomIdx + 1}</h4>
                             {rooms.length > 1 && (
@@ -97,8 +132,10 @@ export default function GuestPicker({
                                     type="button"
                                     className="nvt-remove-room"
                                     onClick={() => removeRoom(roomIdx)}
+                                    title={t('remove', 'Remove')}
                                 >
-                                    {t('remove', 'Remove')}
+                                    <TrashIcon />
+                                    <span>{t('remove', 'Remove')}</span>
                                 </button>
                             )}
                         </div>
@@ -205,6 +242,17 @@ export default function GuestPicker({
                     </div>
                 ))}
             </div>
+
+            {/* Missing ages alert */}
+            {missingAgeCount > 0 && (
+                <button
+                    type="button"
+                    className="nvt-missing-ages-alert"
+                    onClick={scrollToMissingAge}
+                >
+                    {t('selectMissingAges', 'Select age ([count] missing)').replace('[count]', missingAgeCount)}
+                </button>
+            )}
 
             {rooms.length < maxRooms && (
                 <button

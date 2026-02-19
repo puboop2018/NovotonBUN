@@ -149,17 +149,17 @@ export function injectStyles() {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 12px 24px;
+    gap: 8px;
+    padding: 21px 42px;
     background: #006ce4;
     color: #fff;
     border: none;
     border-left: 3px solid var(--nvt-yellow);
-    font-size: 15px;
+    font-size: 26px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    min-height: 48px;
+    min-height: 84px;
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
@@ -378,16 +378,23 @@ export function injectStyles() {
     color: var(--nvt-text);
 }
 .nvt-remove-room {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
-    color: var(--nvt-primary);
+    font-weight: 600;
+    color: #b71c1c;
     cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    text-decoration: underline;
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
+    border-radius: 4px;
+    padding: 4px 10px;
+    transition: background 0.15s, border-color 0.15s;
 }
 .nvt-remove-room:hover {
-    color: var(--nvt-error);
+    background: #ffcdd2;
+    border-color: #e57373;
+    color: #c62828;
 }
 
 .nvt-guest-row {
@@ -482,6 +489,27 @@ export function injectStyles() {
 .nvt-age-error .nvt-child-age-select {
     border-color: var(--nvt-error);
     background: #fff5f5;
+}
+
+/* ----- Missing ages alert ----- */
+
+.nvt-missing-ages-alert {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 12px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--nvt-radius);
+    color: #856404;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s;
+}
+.nvt-missing-ages-alert:hover {
+    background: #ffe69c;
 }
 
 /* ----- Add room button ----- */

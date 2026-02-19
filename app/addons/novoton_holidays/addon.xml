@@ -224,6 +224,17 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="api_currency">
+                        <type>selectbox</type>
+                        <default_value>EUR</default_value>
+                        <variants>
+                            <item id="EUR"></item>
+                            <item id="USD"></item>
+                            <item id="GBP"></item>
+                            <item id="RON"></item>
+                            <item id="BGN"></item>
+                        </variants>
+                    </item>
 
                     <!-- Exchange Rates Header -->
                     <item id="exchange_rates_header">
@@ -698,6 +709,19 @@
                 PRIMARY KEY (`hotel_id`, `facility_id`),
                 KEY `idx_facility_id` (`facility_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel-facility relationships'
+        </item>
+
+        <!-- Resorts table - synced resort names per country -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `resort_name` varchar(255) NOT NULL,
+                `country` varchar(100) NOT NULL,
+                `synced_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `idx_resort_country` (`resort_name`(191), `country`),
+                KEY `idx_country` (`country`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort names synced from Novoton API'
         </item>
 
         <!-- Uninstall queries -->

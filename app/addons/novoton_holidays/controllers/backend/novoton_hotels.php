@@ -101,6 +101,8 @@ if ($mode == 'view_hotels_to_add') {
     Tygh::$app['view']->assign('country', $country);
     Tygh::$app['view']->assign('filter', $filter);
     Tygh::$app['view']->assign('stats', $stats);
+
+    return [CONTROLLER_STATUS_OK];
 }
 
 /**
@@ -160,7 +162,9 @@ if ($mode == 'add_hotels_as_products') {
             Tygh::$app['view']->assign('resorts', $resorts);
             Tygh::$app['view']->assign('categories', $categories);
             Tygh::$app['view']->assign('languages', $languages);
-        } catch (\Exception $e) {
+
+            return [CONTROLLER_STATUS_OK];
+        } catch (\Throwable $e) {
             fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
             return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
         }
@@ -314,9 +318,11 @@ if ($mode == 'add_hotels_as_products') {
 if ($mode == 'list_facilities') {
     $facilities = db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
     $count = count($facilities);
-    
+
     Tygh::$app['view']->assign('facilities', $facilities);
     Tygh::$app['view']->assign('facilities_count', $count);
+
+    return [CONTROLLER_STATUS_OK];
 }
 
 /**
