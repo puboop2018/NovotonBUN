@@ -62,7 +62,7 @@ class CronHelper
             return false;
         }
 
-        return !empty($providedKey) && $providedKey === $storedKey;
+        return !empty($providedKey) && hash_equals($storedKey, $providedKey);
     }
 
     /**
