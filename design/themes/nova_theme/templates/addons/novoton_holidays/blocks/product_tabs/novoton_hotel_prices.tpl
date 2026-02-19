@@ -164,7 +164,6 @@
         
         {* Room Sections with space between cards *}
         <div class="rooms-accordion">
-            {$first_dbl = true}
             {foreach from=$sorted_rooms key=room_key item=room_data name=rooms_loop}
                 {$room_id = $room_data.room_id}
                 {$room_display = $room_id|replace:'%2b':'+'|replace:'%2B':'+'}
@@ -188,15 +187,8 @@
                     {$board_display = "{__('novoton_holidays.room_only')}"}
                 {/if}
                 
-                {* Expand first DBL room only *}
-                {$is_expanded = false}
-                {if $first_dbl && strpos($room_id|default:'', 'DBL') !== false}
-                    {$is_expanded = true}
-                    {$first_dbl = false}
-                {/if}
-                
-                <div class="room-section-card {if $is_expanded}expanded{/if}" data-room="{$room_id}">
-                    <div class="room-header-card" onclick="this.parentElement.classList.toggle('expanded')">
+                <div class="room-section-card expanded" data-room="{$room_id}">
+                    <div class="room-header-card">
                         <div class="room-title">
                             <span class="room-name">{$room_display}</span>
                             <span class="room-board">{$board_display}</span>
@@ -207,7 +199,6 @@
                             <span>| {__("novoton_holidays.max")} {$maxCHD} {__("novoton_holidays.children_short")}</span>
                             {/if}
                         </div>
-                        <span class="expand-icon">v</span>
                     </div>
                     
                     <div class="room-content">
@@ -586,7 +577,7 @@
         <div class="collapsible-section expanded" id="early-booking-section">
             <div class="section-header" onclick="this.parentElement.classList.toggle('expanded')">
                 <h4>{__("novoton_holidays.early_booking_extra_discounts")}</h4>
-                <span class="expand-icon">v</span>
+                <span class="expand-icon">&#9662;</span>
             </div>
             <div class="section-content">
                 <div class="early-booking-list">
@@ -640,7 +631,7 @@
         <div class="collapsible-section" id="payment-terms-section">
             <div class="section-header" onclick="this.parentElement.classList.toggle('expanded')">
                 <h4>{__("novoton_holidays.payment_cancellation_terms")}</h4>
-                <span class="expand-icon">v</span>
+                <span class="expand-icon">&#9662;</span>
             </div>
             <div class="section-content">
                 {if $hotel_full_data.price_info.payment_terms}
@@ -703,18 +694,3 @@
     
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Ensure first DBL room is expanded on page load
-    var roomSections = document.querySelectorAll('.room-section-card');
-    var foundDbl = false;
-    
-    roomSections.forEach(function(section) {
-        var roomId = section.getAttribute('data-room') || '';
-        if (!foundDbl && roomId.indexOf('DBL') !== -1) {
-            section.classList.add('expanded');
-            foundDbl = true;
-        }
-    });
-});
-</script>

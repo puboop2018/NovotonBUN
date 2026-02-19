@@ -80,29 +80,29 @@ class SyncLogRepository
         $log_data = [
             'sync_type' => $type,
             'sync_date' => date('Y-m-d H:i:s'),
-            'hotels_synced' => $data['synced'] ?? $data['hotels_synced'] ?? 0,
-            'hotels_added' => $data['added'] ?? $data['hotels_added'] ?? 0,
-            'hotels_updated' => $data['updated'] ?? $data['hotels_updated'] ?? 0,
-            'errors' => $data['errors'] ?? 0,
-            'duration' => $data['duration'] ?? 0,
-            'details' => isset($data['details']) ? (is_array($data['details']) ? json_encode($data['details']) : $data['details']) : null
+            'products_total' => $data['total'] ?? $data['products_total'] ?? 0,
+            'products_updated' => $data['updated'] ?? $data['products_updated'] ?? 0,
+            'products_failed' => $data['failed'] ?? $data['errors'] ?? $data['products_failed'] ?? 0,
+            'duration_seconds' => $data['duration'] ?? $data['duration_seconds'] ?? 0,
+            'status' => $data['status'] ?? 'completed',
+            'notes' => isset($data['details']) ? (is_array($data['details']) ? json_encode($data['details']) : $data['details']) : null
         ];
-        
+
         $log_id = db_query("INSERT INTO ?:novoton_sync_log ?e", $log_data);
         return (int) $log_id;
     }
-    
+
     /**
      * Log sync result (convenience method)
      */
-    public function logSync(string $type, int $synced, int $added, int $updated, int $errors = 0, int $duration = 0, array $details = []): int
+    public function logSync(string $type, int $total, int $updated, int $failed = 0, int $duration = 0, string $status = 'completed', array $details = []): int
     {
         return $this->create($type, [
-            'synced' => $synced,
-            'added' => $added,
+            'total' => $total,
             'updated' => $updated,
-            'errors' => $errors,
+            'failed' => $failed,
             'duration' => $duration,
+            'status' => $status,
             'details' => $details
         ]);
     }
@@ -171,14 +171,13 @@ class SyncLogRepository
     public function getStats(int $days = 7): array
     {
         $stats = db_get_array(
-            "SELECT sync_type, 
+            "SELECT sync_type,
                     COUNT(*) as count,
-                    SUM(hotels_synced) as total_synced,
-                    SUM(hotels_added) as total_added,
-                    SUM(hotels_updated) as total_updated,
-                    SUM(errors) as total_errors,
-                    AVG(duration) as avg_duration
-             FROM ?:novoton_sync_log 
+                    SUM(products_total) as total_processed,
+                    SUM(products_updated) as total_updated,
+                    SUM(products_failed) as total_failed,
+                    AVG(duration_seconds) as avg_duration
+             FROM ?:novoton_sync_log
              WHERE sync_date > DATE_SUB(NOW(), INTERVAL ?i DAY)
              GROUP BY sync_type",
             $days

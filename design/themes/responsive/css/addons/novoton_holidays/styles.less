@@ -1,62 +1,107 @@
 /**
  * Novoton Holidays - LESS Styles
- * 
- * This LESS file provides CSS variables and theme integration.
- * It imports the main styles.css and adds LESS-specific features.
- * 
- * CS-Cart compiles all LESS files into a single cached CSS file.
- * 
+ *
+ * Design tokens → LESS variables → CSS custom properties.
+ * CS-Cart compiles this into a single cached CSS file.
+ *
+ * The four @novoton-* variables marked "Theme Editor" match the field
+ * names in schemas/theme_editor/schema.post.php.  When an admin changes
+ * a color in the Visual Editor the preset LESS file overrides these
+ * defaults and the :root bridge propagates the value to every
+ * var(--nvt-*) consumer (LESS components, React, plain CSS).
+ *
  * @package NovotonHolidays
- * @since 2.8.0
+ * @since   2.8.0
  */
 
 // ============================================================================
-// VARIABLES (can be overridden by theme)
+// DESIGN TOKENS  (single source of truth for the whole addon)
 // ============================================================================
 
-// Brand colors
-@novoton-primary: #003580;        // Booking.com blue
-@novoton-primary-dark: #00264d;
-@novoton-primary-light: #0071c2;
-@novoton-accent: #febb02;         // Booking.com yellow
-@novoton-accent-hover: #e5a800;
+// Brand  — Theme Editor customisable
+@novoton-primary:           #003580;   // Theme Editor → "Novoton: Primary color"
+@novoton-accent:            #febb02;   // Theme Editor → "Novoton: Accent color"
+@novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Novoton: Search button"
+@novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Novoton: Search button (hover)"
 
-// Status colors
-@novoton-success: #28a745;
-@novoton-warning: #ffc107;
-@novoton-danger: #dc3545;
-@novoton-info: #17a2b8;
+// Brand derived
+@novoton-primary-light:     #0071c2;
+@novoton-primary-dark:      #00264d;
+@novoton-accent-hover:      #e5a800;
 
-// Text colors
-@novoton-text: #333333;
-@novoton-text-muted: #6c757d;
-@novoton-text-light: #999999;
+// Status
+@novoton-success:           #28a745;
+@novoton-warning:           #ffc107;
+@novoton-danger:            #dc3545;
 
-// Background colors
-@novoton-bg-light: #f8f9fa;
-@novoton-bg-card: #ffffff;
-@novoton-border: #dee2e6;
+// Text
+@novoton-text:              #333333;
+@novoton-text-light:        #6b6b6b;
+@novoton-text-disabled:     #cccccc;
+
+// Surfaces
+@novoton-bg:                #ffffff;
+@novoton-bg-light:          #f5f5f5;
+@novoton-border:            #e0e0e0;
+
+// Layout
+@novoton-radius:            8px;
+@novoton-radius-sm:         4px;
 
 // Typography
 @novoton-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-@novoton-font-size-base: 14px;
-@novoton-font-size-small: 12px;
-@novoton-font-size-large: 16px;
+@novoton-font-size-base:    14px;
+@novoton-font-size-small:   12px;
+@novoton-font-size-large:   16px;
 
 // Spacing
-@novoton-spacing-xs: 5px;
-@novoton-spacing-sm: 10px;
-@novoton-spacing-md: 15px;
-@novoton-spacing-lg: 20px;
-@novoton-spacing-xl: 30px;
-
-// Border radius
-@novoton-radius: 4px;
-@novoton-radius-lg: 8px;
+@novoton-spacing-xs:  5px;
+@novoton-spacing-sm:  10px;
+@novoton-spacing-md:  15px;
+@novoton-spacing-lg:  20px;
+@novoton-spacing-xl:  30px;
 
 // Shadows
-@novoton-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+@novoton-shadow:    0 2px 4px rgba(0, 0, 0, 0.1);
 @novoton-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// ============================================================================
+// LESS → CSS CUSTOM PROPERTIES BRIDGE
+//
+// React, booking-form-react.css, and inline styles can all read these
+// via var(--nvt-*).  When the Visual Editor overrides a LESS variable
+// the custom property updates automatically on recompile.
+// ============================================================================
+
+:root {
+    // Brand
+    --nvt-primary:          @novoton-primary;
+    --nvt-primary-light:    @novoton-primary-light;
+    --nvt-primary-dark:     @novoton-primary-dark;
+    --nvt-accent:           @novoton-accent;
+    --nvt-accent-hover:     @novoton-accent-hover;
+    --nvt-search-btn-bg:    @novoton-search-btn-bg;
+    --nvt-search-btn-hover: @novoton-search-btn-hover;
+
+    // Status
+    --nvt-success:          @novoton-success;
+    --nvt-warning:          @novoton-warning;
+    --nvt-danger:           @novoton-danger;
+
+    // Text
+    --nvt-text:             @novoton-text;
+    --nvt-text-light:       @novoton-text-light;
+    --nvt-text-disabled:    @novoton-text-disabled;
+
+    // Surfaces
+    --nvt-bg:               @novoton-bg;
+    --nvt-bg-light:         @novoton-bg-light;
+    --nvt-border:           @novoton-border;
+
+    // Layout
+    --nvt-radius:           @novoton-radius;
+    --nvt-radius-sm:        @novoton-radius-sm;
+}
 
 // ============================================================================
 // MIXINS
@@ -70,23 +115,23 @@
     text-align: center;
     text-decoration: none;
     border: none;
-    border-radius: @novoton-radius;
+    border-radius: @novoton-radius-sm;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    
+
     &:hover {
         transform: translateY(-1px);
     }
-    
+
     &:active {
         transform: translateY(0);
     }
 }
 
 .novoton-card() {
-    background: @novoton-bg-card;
+    background: @novoton-bg;
     border: 1px solid @novoton-border;
-    border-radius: @novoton-radius-lg;
+    border-radius: @novoton-radius;
     padding: @novoton-spacing-lg;
     box-shadow: @novoton-shadow;
 }
@@ -96,13 +141,13 @@
     padding: @novoton-spacing-sm @novoton-spacing-md;
     font-size: @novoton-font-size-base;
     border: 1px solid @novoton-border;
-    border-radius: @novoton-radius;
+    border-radius: @novoton-radius-sm;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    
+
     &:focus {
         outline: none;
         border-color: @novoton-primary;
-        box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.1);
+        box-shadow: 0 0 0 3px fade(@novoton-primary, 10%);
     }
 }
 
@@ -110,48 +155,43 @@
 // BASE COMPONENT STYLES
 // ============================================================================
 
-// Primary button
 .novoton-btn-primary {
     .novoton-button();
     background-color: @novoton-primary;
     color: #fff;
-    
+
     &:hover {
         background-color: @novoton-primary-dark;
         color: #fff;
     }
 }
 
-// Accent button (yellow)
 .novoton-btn-accent {
     .novoton-button();
     background-color: @novoton-accent;
     color: @novoton-text;
-    
+
     &:hover {
         background-color: @novoton-accent-hover;
         color: @novoton-text;
     }
 }
 
-// Success button
 .novoton-btn-success {
     .novoton-button();
     background-color: @novoton-success;
     color: #fff;
-    
+
     &:hover {
         background-color: darken(@novoton-success, 10%);
         color: #fff;
     }
 }
 
-// Card component
 .novoton-card {
     .novoton-card();
 }
 
-// Form input
 .novoton-input {
     .novoton-input();
 }
@@ -162,7 +202,7 @@
 
 .novoton-booking-engine {
     .novoton-card();
-    
+
     .booking-header {
         color: @novoton-primary;
         font-size: @novoton-font-size-large;
@@ -170,23 +210,23 @@
         padding-bottom: @novoton-spacing-sm;
         border-bottom: 2px solid @novoton-border;
     }
-    
+
     .booking-form {
         .form-group {
             margin-bottom: @novoton-spacing-md;
-            
+
             label {
                 display: block;
                 margin-bottom: @novoton-spacing-xs;
                 font-weight: 600;
                 color: @novoton-text;
             }
-            
+
             input, select {
                 .novoton-input();
             }
         }
-        
+
         .submit-btn {
             .novoton-button();
             width: 100%;
@@ -194,7 +234,7 @@
             color: @novoton-text;
             font-size: @novoton-font-size-large;
             padding: @novoton-spacing-md;
-            
+
             &:hover {
                 background-color: @novoton-accent-hover;
             }
@@ -209,18 +249,18 @@
 .novoton-price {
     font-weight: 700;
     color: @novoton-primary;
-    
+
     .price-amount {
         font-size: 1.5em;
     }
-    
+
     .price-currency {
         font-size: 0.8em;
     }
-    
+
     .price-per-night {
         font-size: @novoton-font-size-small;
-        color: @novoton-text-muted;
+        color: @novoton-text-light;
         font-weight: normal;
     }
 }
@@ -235,25 +275,25 @@
     font-size: @novoton-font-size-small;
     font-weight: 600;
     border-radius: 12px;
-    
+
     &.badge-success {
         background-color: lighten(@novoton-success, 40%);
         color: darken(@novoton-success, 10%);
     }
-    
+
     &.badge-warning {
         background-color: lighten(@novoton-warning, 35%);
         color: darken(@novoton-warning, 25%);
     }
-    
+
     &.badge-danger {
         background-color: lighten(@novoton-danger, 35%);
         color: darken(@novoton-danger, 10%);
     }
-    
+
     &.badge-info {
-        background-color: lighten(@novoton-info, 40%);
-        color: darken(@novoton-info, 15%);
+        background-color: lighten(#17a2b8, 40%);
+        color: darken(#17a2b8, 15%);
     }
 }
 
@@ -274,40 +314,5 @@
                 }
             }
         }
-    }
-}
-
-// ============================================================================
-// VISUAL EDITOR INTEGRATION
-// ============================================================================
-// These LESS variables match the field names in:
-//   schemas/theme_editor/schema.post.php
-//
-// The Visual Editor saves overrides into styles/data/PRESET.less which is
-// loaded LAST during LESS compilation.  LESS lazy evaluation ensures the
-// preset value wins over the defaults below.
-//
-// The :root block bridges LESS → CSS custom properties so the React booking
-// engine (which injects its own <style>) can also pick up the colors.
-// ============================================================================
-
-// Customisable via Visual Editor (defaults match the React component)
-@novoton-search-btn-bg:    #006ce4;
-@novoton-search-btn-hover: #0057b8;
-
-// Bridge: LESS variables → CSS custom properties
-:root {
-    --nvt-search-btn-bg:    @novoton-search-btn-bg;
-    --nvt-search-btn-hover: @novoton-search-btn-hover;
-    --nvt-primary:          @novoton-primary;
-    --nvt-accent:           @novoton-accent;
-}
-
-// Override the React component's hardcoded search button color
-.nvt-btn-search {
-    background: var(--nvt-search-btn-bg, @novoton-search-btn-bg) !important;
-
-    &:hover {
-        background: var(--nvt-search-btn-hover, @novoton-search-btn-hover) !important;
     }
 }

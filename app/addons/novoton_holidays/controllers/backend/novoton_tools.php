@@ -98,6 +98,58 @@ if ($mode == 'download_hotel_features_csv') {
 }
 
 /**
+ * Mode: export_hotel_features_xml
+ * Generate XML file with hotel features for CS-Cart import
+ */
+if ($mode == 'export_hotel_features_xml') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
+    try {
+        $result = fn_novoton_generate_hotel_features_xml();
+
+        if ($result['success']) {
+            fn_set_notification('N', __('notice'), "Hotel features XML generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
+        } else {
+            fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
+        }
+    } catch (Exception $e) {
+        fn_set_notification('E', __('error'), "Exception: " . $e->getMessage());
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
+}
+
+/**
+ * Mode: download_hotel_features_xml
+ * Download the generated XML file
+ */
+if ($mode == 'download_hotel_features_xml') {
+    $file = $_REQUEST['file'] ?? '';
+
+    if (empty($file)) {
+        fn_set_notification('E', __('error'), 'No file specified');
+        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
+    }
+
+    // Security: only allow files from novoton_reports directory
+    $dir = fn_get_files_dir_path() . 'novoton_reports/';
+    $file_path = $dir . basename($file);
+
+    if (!file_exists($file_path)) {
+        fn_set_notification('E', __('error'), 'File not found');
+        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
+    }
+
+    header('Content-Type: application/xml; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+    header('Content-Length: ' . filesize($file_path));
+    readfile($file_path);
+    exit;
+}
+
+/**
  * Mode: test_api
  * Test API connection and credentials — delegates to DiagnosticsService
  */

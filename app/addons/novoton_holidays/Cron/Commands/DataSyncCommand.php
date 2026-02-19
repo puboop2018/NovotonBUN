@@ -46,7 +46,7 @@ class DataSyncCommand extends AbstractCronCommand
         if (is_array($result) && !empty($result['success'])) {
             $added = $result['added'] ?? 0;
             $updated = $result['updated'] ?? 0;
-            $this->output("Synced {$result['total']} resorts ({$added} added, {$updated} updated).");
+            $this->output("Synced " . ($result['total'] ?? ($added + $updated)) . " resorts ({$added} added, {$updated} updated).");
         } else {
             $errors = 1;
             $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
@@ -75,10 +75,13 @@ class DataSyncCommand extends AbstractCronCommand
         if (is_array($result) && !empty($result['success'])) {
             $added = $result['added'] ?? 0;
             $updated = $result['updated'] ?? 0;
-            $this->output("Synced {$result['total']} facilities ({$added} added, {$updated} updated).");
-        } else {
-            $updated = is_numeric($result) ? (int)$result : 0;
+            $this->output("Synced " . ($result['total'] ?? ($added + $updated)) . " facilities ({$added} added, {$updated} updated).");
+        } elseif (is_numeric($result)) {
+            $updated = (int)$result;
             $this->output("Synced {$updated} facilities.");
+        } else {
+            $errors = 1;
+            $this->output("Error: " . (is_array($result) ? ($result['error'] ?? 'Unknown error') : 'Sync returned unexpected result'));
         }
 
         $this->logToSyncTable('facilities', $added + $updated, $errors);
@@ -87,7 +90,7 @@ class DataSyncCommand extends AbstractCronCommand
             'duration' => $this->getDuration() . 's'
         ]);
 
-        return ['success' => true, 'stats' => ['added' => $added, 'updated' => $updated]];
+        return ['success' => $errors === 0, 'stats' => ['added' => $added, 'updated' => $updated]];
     }
 
     private function updateExchangeRates(): array

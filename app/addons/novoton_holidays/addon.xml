@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>3.0.0-A86</version>
+    <version>3.2.0</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
@@ -353,7 +353,6 @@
                         <variants>
                             <item id="before_tabs"></item>
                             <item id="after_description"></item>
-                            <item id="sidebar"></item>
                         </variants>
                     </item>
                     
@@ -396,17 +395,6 @@
                         <type>template</type>
                         <default_value>cron_info.tpl</default_value>
                         <variants/>
-                    </item>
-                </items>
-            </section>
-            
-            <section id="sync_settings">
-                <name>Sync Settings</name>
-                <items>
-                    <item id="last_offers_update">
-                        <name>Last Offers Update Check</name>
-                        <type>input</type>
-                        <default_value></default_value>
                     </item>
                 </items>
             </section>

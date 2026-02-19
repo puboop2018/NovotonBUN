@@ -2,6 +2,8 @@
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Cron\Commands\ResInfoCommand;
+use Tygh\Addons\NovotonHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 
 class FullSyncCommand extends AbstractCronCommand
@@ -44,7 +46,7 @@ class FullSyncCommand extends AbstractCronCommand
         // 2. Check booking statuses
         $this->output("Checking booking statuses...");
         $resinfo = new ResInfoCommand($this->api, $this->logger);
-        $resinfoResult = $resinfo->execute();
+        $resinfo->execute();
         $this->output("");
 
         // 3. Cleanup

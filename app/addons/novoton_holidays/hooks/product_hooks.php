@@ -201,8 +201,16 @@ function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): v
     $product['novoton_hotel_info'] = $hotel_info;
 
     if (!empty($hotel_info['rooms'])) {
-        $product['novoton_rooms'] = $hotel_info['rooms'];
-        \Tygh\Tygh::$app['view']->assign('rooms_data', $hotel_info['rooms']);
+        // Re-index rooms by IdRoom so template can look up by room_id
+        $rooms_by_id = [];
+        foreach ($hotel_info['rooms'] as $room) {
+            $rid = $room['IdRoom'] ?? '';
+            if (!empty($rid)) {
+                $rooms_by_id[$rid] = $room;
+            }
+        }
+        $product['novoton_rooms'] = $rooms_by_id;
+        \Tygh\Tygh::$app['view']->assign('rooms_data', $rooms_by_id);
     }
 
     if (!empty($hotel_info['packages'])) {

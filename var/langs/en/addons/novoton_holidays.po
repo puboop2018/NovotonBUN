@@ -352,10 +352,6 @@ msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
 msgid "Before Tabs"
 msgstr "Before Tabs"
 
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::sidebar"
-msgid "Sidebar"
-msgstr "Sidebar"
-
 msgctxt "SettingsOptions::novoton_holidays::last_sync_date"
 msgid "Last Synchronization"
 msgstr "Last Synchronization"
@@ -2076,13 +2072,6 @@ msgctxt "Languages::novoton_holidays.menu.test_alternative_rs"
 msgid "Test alternative_RS"
 msgstr "Test alternative_RS"
 
-msgctxt "SettingsSections::novoton_holidays::sync_settings"
-msgid "Sync Settings"
-msgstr "Sync Settings"
-
-msgctxt "SettingsOptions::novoton_holidays::last_offers_update"
-msgid "Last Offers Update Check"
-msgstr "Last Offers Update Check"
 
 msgctxt "Languages::novoton_holidays.dob_placeholder"
 msgid "DD/MM/YYYY"

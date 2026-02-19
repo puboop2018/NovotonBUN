@@ -311,3 +311,113 @@ function fn_novoton_generate_hotel_features_csv()
     
     return $result;
 }
+
+/**
+ * Generate XML file with hotel features for CS-Cart product import.
+ *
+ * XML target node: products/product
+ * Field mapping:
+ *   product_code  → Product code
+ *   language      → Language
+ *   feature_stele → Feature: Stele
+ *   feature_tip_masa → Feature: Tip Masa
+ *
+ * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string, 'filename' => string]
+ */
+function fn_novoton_generate_hotel_features_xml()
+{
+    $result = [
+        'success'   => false,
+        'file_path' => '',
+        'count'     => 0,
+        'error'     => '',
+        'filename'  => '',
+    ];
+
+    try {
+        $hotels = db_get_array(
+            "SELECT h.hotel_id, h.hotel_name, h.hotel_type, h.product_id, p.product_code
+             FROM ?:novoton_hotels h
+             LEFT JOIN ?:products p ON h.product_id = p.product_id
+             WHERE h.product_id > 0
+             ORDER BY h.hotel_name"
+        );
+
+        if (empty($hotels)) {
+            $result['error'] = 'No hotels with products found';
+            return $result;
+        }
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        $root = $dom->createElement('products');
+        $dom->appendChild($root);
+
+        $star_labels = [
+            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
+            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
+        ];
+
+        foreach ($hotels as $hotel) {
+            $product_code = !empty($hotel['product_code'])
+                ? $hotel['product_code']
+                : 'NVT-' . $hotel['hotel_id'];
+
+            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+
+            // Boards via hotel data
+            $board_names = [];
+            $hotel_full  = fn_novoton_get_hotel_data($hotel['hotel_id']);
+            if (!empty($hotel_full['boards'])) {
+                foreach ($hotel_full['boards'] as $b) {
+                    $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string) $b;
+                    if (!empty($code)) {
+                        $board_names[] = fn_novoton_format_board_name($code);
+                    }
+                }
+            }
+            $boards_str = implode(',', array_unique($board_names));
+
+            // One <product> node per language
+            foreach (['ro', 'en'] as $lang) {
+                $star_value = ($stars >= 1 && $stars <= 5)
+                    ? $star_labels[$lang][$stars - 1]
+                    : '';
+
+                $product_node = $dom->createElement('product');
+
+                $product_node->appendChild($dom->createElement('product_code', htmlspecialchars($product_code, ENT_XML1, 'UTF-8')));
+                $product_node->appendChild($dom->createElement('language', $lang));
+                $product_node->appendChild($dom->createElement('feature_stele', htmlspecialchars($star_value, ENT_XML1, 'UTF-8')));
+                $product_node->appendChild($dom->createElement('feature_tip_masa', htmlspecialchars($boards_str, ENT_XML1, 'UTF-8')));
+
+                $root->appendChild($product_node);
+            }
+
+            $result['count']++;
+        }
+
+        // Save
+        $filename  = 'novoton_hotel_features_' . date('Ymd_His') . '.xml';
+        $dir       = fn_get_files_dir_path() . 'novoton_reports/';
+
+        if (!is_dir($dir)) {
+            fn_mkdir($dir);
+        }
+
+        $file_path = $dir . $filename;
+
+        if ($dom->save($file_path)) {
+            $result['success']   = true;
+            $result['file_path'] = $file_path;
+            $result['filename']  = $filename;
+        } else {
+            $result['error'] = 'Failed to write XML file';
+        }
+    } catch (\Exception $e) {
+        $result['error'] = $e->getMessage();
+    }
+
+    return $result;
+}

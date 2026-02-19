@@ -338,19 +338,16 @@ class BookingRepository
 
         $where_clause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-        // Query novoton_bookings as primary source, LEFT JOIN orders for order status
-        // Also join order_details to get product price as fallback when booking prices are 0
+        // Query novoton_bookings as primary source, LEFT JOIN orders for order status/contact info
         $bookings_raw = db_get_array(
             "SELECT nb.*,
                     nh.hotel_name, nh.city AS hotel_city, nh.region AS hotel_region, nh.country AS hotel_country,
                     o.status AS order_status, o.timestamp AS order_timestamp,
                     o.firstname AS order_firstname, o.lastname AS order_lastname,
-                    o.email AS order_email, o.phone AS order_phone,
-                    od.price AS order_product_price, od.base_price AS order_product_base_price
+                    o.email AS order_email, o.phone AS order_phone
              FROM ?:novoton_bookings nb
              LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
              LEFT JOIN ?:orders o ON nb.order_id = o.order_id
-             LEFT JOIN ?:order_details od ON nb.order_id = od.order_id AND nb.product_id = od.product_id
              {$where_clause}
              ORDER BY nb.order_id DESC, nb.booking_id DESC"
         );
@@ -388,15 +385,9 @@ class BookingRepository
                 'total_rooms' => $nb['total_rooms'] ?? 1,
                 'rooms_data' => $nb['rooms_data'] ?? null,
                 'guests_data' => $nb['guests_data'] ?? null,
-                'base_price' => floatval($nb['base_price'] ?? 0) > 0
-                    ? $nb['base_price']
-                    : ($nb['order_product_base_price'] ?? $nb['order_product_price'] ?? 0),
-                'api_price' => floatval($nb['api_price'] ?? 0) > 0
-                    ? $nb['api_price']
-                    : (floatval($nb['base_price'] ?? 0) > 0 ? $nb['base_price'] : ($nb['order_product_base_price'] ?? 0)),
-                'total_price' => floatval($nb['total_price'] ?? 0) > 0
-                    ? $nb['total_price']
-                    : ($nb['order_product_price'] ?? $nb['order_product_base_price'] ?? 0),
+                'base_price' => $nb['base_price'] ?? 0,
+                'api_price' => $nb['api_price'] ?? $nb['base_price'] ?? 0,
+                'total_price' => $nb['total_price'] ?? 0,
                 'currency' => $nb['currency'] ?? 'EUR',
                 'holder_name' => $nb['holder_name'] ?? '',
                 'guest_name' => $nb['guest_name'] ?? $nb['holder_name'] ?? '',
