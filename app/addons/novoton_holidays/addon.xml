@@ -399,17 +399,6 @@
                     </item>
                 </items>
             </section>
-            
-            <section id="sync_settings">
-                <name>Sync Settings</name>
-                <items>
-                    <item id="last_offers_update">
-                        <name>Last Offers Update Check</name>
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                </items>
-            </section>
         </sections>
     </settings>
 

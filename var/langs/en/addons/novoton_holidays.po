@@ -2076,13 +2076,6 @@ msgctxt "Languages::novoton_holidays.menu.test_alternative_rs"
 msgid "Test alternative_RS"
 msgstr "Test alternative_RS"
 
-msgctxt "SettingsSections::novoton_holidays::sync_settings"
-msgid "Sync Settings"
-msgstr "Sync Settings"
-
-msgctxt "SettingsOptions::novoton_holidays::last_offers_update"
-msgid "Last Offers Update Check"
-msgstr "Last Offers Update Check"
 
 msgctxt "Languages::novoton_holidays.dob_placeholder"
 msgid "DD/MM/YYYY"

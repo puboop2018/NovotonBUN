@@ -126,11 +126,6 @@ class ConfigService
         return (string)(self::settings()['last_exchange_rate_update'] ?? '');
     }
 
-    public static function getLastOffersUpdate(): string
-    {
-        return (string)(self::settings()['last_offers_update'] ?? '');
-    }
-
     public static function getVersion(): string
     {
         return (string)(self::settings()['version'] ?? 'unknown');

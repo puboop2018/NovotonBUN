@@ -6,7 +6,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -536,24 +536,24 @@ function fn_novoton_admin_add_products($api, $country, $limit) {
 }
 
 function fn_novoton_admin_check_offers($api, $country) {
-    $last_check = ConfigService::getLastOffersUpdate();
+    $last_check = db_get_field(
+        "SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type IN ('offers_update', 'product_import') AND status = 'completed' ORDER BY sync_date DESC LIMIT 1"
+    );
     if (empty($last_check)) {
         $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
     }
-    
+
     echo "Checking offers since: {$last_check}\n";
-    
+
     $response = $api->getOffersUpdate($last_check, $country);
-    
+
     if (!$response || !isset($response->Offer)) {
         return ['success' => true, 'message' => 'No new offers found'];
     }
-    
+
     $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
     $count = count($offers);
-    
-    fn_settings_update_value('last_offers_update', date('Y-m-d\TH:i:s'), 'novoton_holidays');
-    
+
     return ['success' => true, 'message' => "Found {$count} offers"];
 }
 
