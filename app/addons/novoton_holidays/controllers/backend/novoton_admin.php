@@ -13,7 +13,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 // Update prices manually
 if ($mode == 'update_prices') {
     
-    if (!empty($_REQUEST['single_product'])) {
+    if (!empty($_REQUEST['single_product']) && !empty($_REQUEST['product_id'])) {
         // Update single product
         $productId = intval($_REQUEST['product_id']);
         

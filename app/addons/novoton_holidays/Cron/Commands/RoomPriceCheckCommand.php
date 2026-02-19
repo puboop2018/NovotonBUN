@@ -47,19 +47,23 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 'children' => 0
             ];
 
-            $response = $this->api->getRoomPrice($params);
-
             $best_price = 0;
-            if ($response instanceof \SimpleXMLElement) {
-                $prices = $response->xpath('//Price');
-                if (!empty($prices)) {
-                    foreach ($prices as $p) {
-                        $pv = floatval((string)$p);
-                        if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
-                            $best_price = $pv;
+            try {
+                $response = $this->api->getRoomPrice($params);
+
+                if ($response instanceof \SimpleXMLElement) {
+                    $prices = $response->xpath('//Price');
+                    if (!empty($prices)) {
+                        foreach ($prices as $p) {
+                            $pv = floatval((string)$p);
+                            if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
+                                $best_price = $pv;
+                            }
                         }
                     }
                 }
+            } catch (\Exception $e) {
+                // API failure for this hotel — treat as no price
             }
 
             if ($best_price > 0) {

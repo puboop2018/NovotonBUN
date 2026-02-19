@@ -570,7 +570,7 @@ if ($mode == 'search') {
     ];
     
     // Debug mode - enable to see API responses
-    $debug_mode = !empty($searchParams['debug']) || defined('NOVOTON_DEBUG');
+    $debug_mode = defined('NOVOTON_DEBUG');
     $debug_log = [];
 
     // Allow resetting circuit breaker in debug mode via &reset_circuit=1
@@ -2164,27 +2164,6 @@ if ($mode == 'add_to_cart') {
         $bookingData['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $bookingData['room_id']);
     }
 
-    // Debug: Log RAW POST data for guests
-    fn_log_event('general', 'runtime', [
-        'message' => 'Novoton add_to_cart: RAW REQUEST DEBUG',
-        'REQUEST_guests_isset' => isset($_REQUEST['guests']) ? 'YES' : 'NO',
-        'POST_guests_isset' => isset($_POST['guests']) ? 'YES' : 'NO',
-        'REQUEST_guests_type' => isset($_REQUEST['guests']) ? gettype($_REQUEST['guests']) : 'NOT SET',
-        'REQUEST_guests_count' => isset($_REQUEST['guests']) && is_array($_REQUEST['guests']) ? count($_REQUEST['guests']) : 0,
-        'REQUEST_guests_keys' => isset($_REQUEST['guests']) && is_array($_REQUEST['guests']) ? array_keys($_REQUEST['guests']) : 'NO KEYS',
-        'REQUEST_guests_full' => isset($_REQUEST['guests']) ? $_REQUEST['guests'] : 'NO GUESTS IN REQUEST'
-    ]);
-
-    // Debug: Log incoming data including guests
-    fn_log_event('general', 'runtime', [
-        'message' => 'Novoton add_to_cart: incoming data',
-        'num_rooms' => $bookingData['num_rooms'] ?? 'NOT SET',
-        'rooms_data_raw' => substr($bookingData['rooms_data'] ?? 'NOT SET', 0, 500),
-        'is_multi_room' => $bookingData['is_multi_room'] ?? 'NOT SET',
-        'guests_keys' => isset($bookingData['guests']) ? array_keys($bookingData['guests']) : 'NO GUESTS',
-        'guests_data' => isset($bookingData['guests']) ? $bookingData['guests'] : 'NO GUESTS'
-    ]);
-
     // --- Security: Validate booking data via SecurityService ---
     $validation = $security->validateBookingData($bookingData);
     if (!$validation['valid']) {
@@ -2237,16 +2216,6 @@ if ($mode == 'add_to_cart') {
     $guest_list = $parsed_guests['guest_list'] ?? '';
     $holder_name = $parsed_guests['holder_name'] ?? '';
     
-    // Debug: Log processed guests
-    fn_log_event('general', 'runtime', [
-        'message' => 'Novoton add_to_cart: processed guests',
-        'guest_names_count' => count($guest_names),
-        'guest_names' => $guest_names,
-        'guests_data_keys' => array_keys($guests_data),
-        'guests_data' => $guests_data,
-        'holder_name' => $holder_name
-    ]);
-    
     // Get children ages from guests_data (more reliable than form hidden field)
     $all_child_ages = [];
     foreach ($guests_data as $guest) {
@@ -2258,11 +2227,11 @@ if ($mode == 'add_to_cart') {
     
     // Get package name
     $package_name = $bookingData['package_name'] ?? '';
-    if (empty($package_name) && !empty($booking['hotel_id'])) {
+    if (empty($package_name) && !empty($bookingData['hotel_id'])) {
         // V3: Get first package from novoton_hotel_packages table
         $first_pkg = db_get_field(
             "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
-            $booking['hotel_id']
+            $bookingData['hotel_id']
         );
         if (!empty($first_pkg)) {
             $package_name = $first_pkg;
@@ -2452,14 +2421,6 @@ if ($mode == 'add_to_cart') {
         }
     }
     unset($room);
-    
-    // Debug: Always log what we're storing
-    fn_log_event('general', 'runtime', [
-        'message' => 'Novoton add_to_cart: parsed rooms_data',
-        'num_rooms' => $num_rooms,
-        'rooms_data_count' => count($rooms_data),
-        'rooms_data_sample' => array_slice($rooms_data, 0, 2)
-    ]);
     
     // Check if similar booking already exists (same hotel, dates, holder, no order yet)
     // This prevents duplicates from form resubmissions
@@ -3105,8 +3066,7 @@ if ($mode == 'ajax_recalculate_price') {
     $debug_enabled = false;
     $debug_messages = [];
     try {
-        $debug_enabled = (ConfigService::get('debug', 'N') === 'Y')
-                      || !empty($_REQUEST['novoton_debug']);
+        $debug_enabled = (ConfigService::get('debug', 'N') === 'Y');
     } catch (\Exception $e) {
         // Registry may not be available in edge cases; debug stays disabled
     }
