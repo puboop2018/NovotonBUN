@@ -346,7 +346,7 @@ class BookingRepository
                     o.status AS order_status, o.timestamp AS order_timestamp,
                     o.firstname AS order_firstname, o.lastname AS order_lastname,
                     o.email AS order_email, o.phone AS order_phone,
-                    od.price AS order_product_price, od.base_price AS order_product_base_price
+                    od.price AS order_product_price
              FROM ?:novoton_bookings nb
              LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
              LEFT JOIN ?:orders o ON nb.order_id = o.order_id
@@ -390,13 +390,13 @@ class BookingRepository
                 'guests_data' => $nb['guests_data'] ?? null,
                 'base_price' => floatval($nb['base_price'] ?? 0) > 0
                     ? $nb['base_price']
-                    : ($nb['order_product_base_price'] ?? $nb['order_product_price'] ?? 0),
+                    : ($nb['order_product_price'] ?? 0),
                 'api_price' => floatval($nb['api_price'] ?? 0) > 0
                     ? $nb['api_price']
-                    : (floatval($nb['base_price'] ?? 0) > 0 ? $nb['base_price'] : ($nb['order_product_base_price'] ?? 0)),
+                    : (floatval($nb['base_price'] ?? 0) > 0 ? $nb['base_price'] : ($nb['order_product_price'] ?? 0)),
                 'total_price' => floatval($nb['total_price'] ?? 0) > 0
                     ? $nb['total_price']
-                    : ($nb['order_product_price'] ?? $nb['order_product_base_price'] ?? 0),
+                    : ($nb['order_product_price'] ?? 0),
                 'currency' => $nb['currency'] ?? 'EUR',
                 'holder_name' => $nb['holder_name'] ?? '',
                 'guest_name' => $nb['guest_name'] ?? $nb['holder_name'] ?? '',
