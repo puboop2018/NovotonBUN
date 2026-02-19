@@ -26,6 +26,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class Container
 {
@@ -180,6 +181,14 @@ class Container
     {
         return $this->resolve('alternativeRequestService', fn() => new AlternativeRequestService(
             $this->alternativeRequestRepository()
+        ));
+    }
+
+    public function bookingSubmissionService(): BookingSubmissionService
+    {
+        return $this->resolve('bookingSubmissionService', fn() => new BookingSubmissionService(
+            $this->bookingRepository(),
+            new NovotonApi()
         ));
     }
 

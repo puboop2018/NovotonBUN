@@ -102,6 +102,13 @@ function _nvt_alternative_request_service() {
     return Container::getInstance()->alternativeRequestService();
 }
 
+/**
+ * @return \Tygh\Addons\NovotonHolidays\Services\BookingSubmissionService
+ */
+function _nvt_booking_submission_service() {
+    return Container::getInstance()->bookingSubmissionService();
+}
+
 // =============================================================================
 // REPOSITORY GETTERS
 // =============================================================================
