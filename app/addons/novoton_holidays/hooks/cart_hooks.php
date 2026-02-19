@@ -18,6 +18,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -48,17 +49,8 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         return;
     }
 
-    $all_bookings = db_get_array(
-        "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
-                board_id, check_in, check_out, nights, adults, children, children_ages,
-                num_rooms, rooms_data, total_price, currency, status, guests_data,
-                package_name, session_id
-         FROM ?:novoton_bookings
-         WHERE product_id IN (?n)
-         AND status IN ('pending', 'confirmed')
-         ORDER BY booking_id DESC",
-        $product_ids
-    );
+    $repo = new BookingRepository();
+    $all_bookings = $repo->findByProductIds($product_ids);
 
     if (empty($all_bookings)) {
         return;

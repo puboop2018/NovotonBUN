@@ -18,6 +18,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 
@@ -345,12 +346,10 @@ function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debu
     }
 
     // Fallback 1: re-fetch from DB by booking_id
+    $repo = new BookingRepository();
     $booking_id = intval($booking_data['novoton_booking_id'] ?? 0);
     if ($booking_id > 0) {
-        $db_guests = db_get_field(
-            "SELECT guests_data FROM ?:novoton_bookings WHERE booking_id = ?i",
-            $booking_id
-        );
+        $db_guests = $repo->getGuestsData($booking_id);
         if (!empty($db_guests)) {
             $guests_data = GuestDataNormalizer::normalize($db_guests);
             if ($debug) {
@@ -367,11 +366,7 @@ function _nvt_resolve_guests_data(array $booking_data, int $order_id, bool $debu
     }
 
     // Fallback 2: match unassigned pending booking by hotel + dates
-    $existing = db_get_row(
-        "SELECT guests_data, holder_name FROM ?:novoton_bookings
-         WHERE hotel_id = ?s AND check_in = ?s AND check_out = ?s
-         AND order_id = 0
-         ORDER BY booking_id DESC LIMIT 1",
+    $existing = $repo->findUnassignedByHotelDates(
         $booking_data['hotel_id'] ?? '',
         $booking_data['check_in'] ?? '',
         $booking_data['check_out'] ?? ''
@@ -699,33 +694,27 @@ function _nvt_persist_booking_record(
     int   $group_num,
     int   $order_id
 ): int {
+    $repo = new BookingRepository();
+
     // Group 1: update the original booking from cart
     if ($group_num === 1 && $original_booking_id > 0) {
-        db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
-            $record, $original_booking_id);
+        $repo->update($original_booking_id, $record);
         return $original_booking_id;
     }
 
     // Dedup: find existing booking for this order + hotel + dates
-    $existing_id = db_get_field(
-        "SELECT booking_id FROM ?:novoton_bookings
-         WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
-         LIMIT 1",
-        $order_id,
-        $record['hotel_id'],
-        $record['check_in'],
-        $record['check_out']
+    $existing_id = $repo->findIdByOrderAndHotelDates(
+        $order_id, $record['hotel_id'], $record['check_in'], $record['check_out']
     );
 
     if ($existing_id) {
-        db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
-            $record, $existing_id);
-        return (int) $existing_id;
+        $repo->update($existing_id, $record);
+        return $existing_id;
     }
 
     // New booking
     $record['session_id'] = session_id();
-    return (int) db_query("INSERT INTO ?:novoton_bookings ?e", $record);
+    return $repo->create($record);
 }
 
 /**
@@ -752,12 +741,10 @@ function _nvt_submit_and_record_booking(
     bool  $disable_api,
     bool  $debug
 ): void {
+    $repo = new BookingRepository();
+
     if ($disable_api) {
-        db_query(
-            "UPDATE ?:novoton_bookings SET notes = ?s WHERE booking_id = ?i",
-            'API submission disabled - booking saved locally only.',
-            $booking_id
-        );
+        $repo->update($booking_id, ['notes' => 'API submission disabled - booking saved locally only.']);
         return;
     }
 
@@ -788,8 +775,7 @@ function _nvt_submit_and_record_booking(
                 $update['status'] = $status_map[$novoton_status];
             }
 
-            db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
-                $update, $booking_id);
+            $repo->update($booking_id, $update);
 
             if ($debug) {
                 fn_log_event('general', 'runtime', [
@@ -802,11 +788,10 @@ function _nvt_submit_and_record_booking(
             }
         }
     } catch (ApiException $e) {
-        db_query(
-            "UPDATE ?:novoton_bookings SET status = 'failed', notes = ?s WHERE booking_id = ?i",
-            'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
-            $booking_id
-        );
+        $repo->update($booking_id, [
+            'status' => 'failed',
+            'notes'  => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+        ]);
 
         fn_log_event('general', 'runtime', [
             'message'  => 'Novoton Booking API Error',
@@ -838,14 +823,8 @@ function fn_novoton_holidays_get_orders_post($params, &$orders)
         return;
     }
 
-    $all_bookings = db_get_array(
-        "SELECT booking_id, order_id, hotel_id, hotel_name, room_type, board_id,
-                check_in, check_out, nights, adults, children, total_price,
-                currency, status, novoton_status, novoton_confirm_id
-         FROM ?:novoton_bookings
-         WHERE order_id IN (?n)",
-        $order_ids
-    );
+    $repo = new BookingRepository();
+    $all_bookings = $repo->findByOrderIds($order_ids);
 
     if (empty($all_bookings)) {
         return;
@@ -899,13 +878,8 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data)
     }
     $hotels_cache = [];
     if (!empty($hotel_ids)) {
-        $rows = db_get_array(
-            "SELECT hotel_id, city, region, country FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
-            array_keys($hotel_ids)
-        );
-        foreach ($rows as $row) {
-            $hotels_cache[$row['hotel_id']] = $row;
-        }
+        $hotelRepo = new HotelRepository();
+        $hotels_cache = $hotelRepo->getLocationsByIds(array_keys($hotel_ids));
     }
 
     foreach ($order['products'] as &$product) {
@@ -985,12 +959,8 @@ function _nvt_enrich_order_product_terms(
     if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
         $booking_id = intval($product['extra']['novoton_booking_id'] ?? 0);
         if ($booking_id > 0) {
-            $terms = db_get_row(
-                "SELECT terms_of_payment_raw, terms_of_cancellation_raw,
-                        terms_of_payment_formatted, terms_of_cancellation_formatted
-                 FROM ?:novoton_bookings WHERE booking_id = ?i",
-                $booking_id
-            );
+            $repo = new BookingRepository();
+            $terms = $repo->getTerms($booking_id);
             if (!empty($terms)) {
                 $payment_raw  = $terms['terms_of_payment_raw'] ?? '';
                 $cancel_raw   = $terms['terms_of_cancellation_raw'] ?? '';

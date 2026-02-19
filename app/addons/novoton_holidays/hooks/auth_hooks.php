@@ -13,6 +13,8 @@
  * @since   3.0.0
  */
 
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 /**
@@ -32,18 +34,11 @@ function fn_novoton_holidays_user_login_post($user_data, $auth)
 
     $user_id    = intval($auth['user_id']);
     $session_id = session_id();
+    $repo       = new BookingRepository();
 
     // Link by session
     if (!empty($session_id)) {
-        $updated = db_query(
-            "UPDATE ?:novoton_bookings
-             SET user_id = ?i
-             WHERE session_id = ?s
-             AND user_id = 0
-             AND order_id = 0",
-            $user_id,
-            $session_id
-        );
+        $updated = $repo->linkToUserBySession($user_id, $session_id);
 
         if ($updated > 0) {
             fn_log_event('general', 'runtime', [
@@ -57,14 +52,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth)
 
     // Link by email
     if (!empty($user_data['email'])) {
-        $updated_by_email = db_query(
-            "UPDATE ?:novoton_bookings
-             SET user_id = ?i
-             WHERE guest_email = ?s
-             AND user_id = 0",
-            $user_id,
-            $user_data['email']
-        );
+        $updated_by_email = $repo->linkToUserByEmail($user_id, $user_data['email']);
 
         if ($updated_by_email > 0) {
             fn_log_event('general', 'runtime', [
@@ -89,28 +77,15 @@ function fn_novoton_holidays_create_user_post($user_data)
     }
 
     $user_id = intval($user_data['user_id']);
+    $repo    = new BookingRepository();
 
     // Link by email
-    $updated = db_query(
-        "UPDATE ?:novoton_bookings
-         SET user_id = ?i
-         WHERE guest_email = ?s
-         AND user_id = 0",
-        $user_id,
-        $user_data['email']
-    );
+    $updated = $repo->linkToUserByEmail($user_id, $user_data['email']);
 
     // Link by current session
     $session_id = session_id();
     if (!empty($session_id)) {
-        db_query(
-            "UPDATE ?:novoton_bookings
-             SET user_id = ?i
-             WHERE session_id = ?s
-             AND user_id = 0",
-            $user_id,
-            $session_id
-        );
+        $repo->linkToUserBySession($user_id, $session_id);
     }
 
     if ($updated > 0) {
