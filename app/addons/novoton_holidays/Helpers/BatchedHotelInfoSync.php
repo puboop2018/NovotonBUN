@@ -743,11 +743,11 @@ class BatchedHotelInfoSync
     }
 
     /**
-     * Get configured countries — delegates to Config::getSelectedCountries()
+     * Get configured countries — delegates to ConfigService::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        return Config::getSelectedCountries();
+        return ConfigService::getSelectedCountries();
     }
 
     /**

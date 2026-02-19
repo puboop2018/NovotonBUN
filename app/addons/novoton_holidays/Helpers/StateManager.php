@@ -15,6 +15,8 @@
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+
 class StateManager
 {
     /**
@@ -62,9 +64,9 @@ class StateManager
         $this->stateName = $stateName;
 
         // Ensure cache directory exists
-        Config::ensureCacheDir();
+        ConfigService::ensureCacheDir();
 
-        $cacheDir = Config::getPath('cache');
+        $cacheDir = ConfigService::getPath('cache');
         $this->stateFile = $cacheDir . "batch_{$stateName}_state.json";
     }
 

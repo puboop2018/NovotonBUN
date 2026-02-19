@@ -19,6 +19,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 class CronHelper
 {
@@ -27,22 +28,6 @@ class CronHelper
      * @var self|null
      */
     private static ?self $instance = null;
-
-    /**
-     * Injected config (optional, falls back to Config::class)
-     * @var Config|null
-     */
-    private ?Config $config;
-
-    /**
-     * Constructor allows injecting Config for testing.
-     *
-     * @param Config|null $config Injected config (null = use singleton)
-     */
-    public function __construct(?Config $config = null)
-    {
-        $this->config = $config;
-    }
 
     /**
      * Get the singleton instance.
@@ -71,7 +56,7 @@ class CronHelper
      */
     public static function validateAccessKey(string $providedKey): bool
     {
-        $storedKey = Config::getCronAccessKey();
+        $storedKey = ConfigService::getCronAccessKey();
 
         if (empty($storedKey)) {
             return false;
@@ -105,7 +90,7 @@ class CronHelper
         header('Content-Type: text/plain; charset=utf-8');
 
         // Load API
-        $srcDir = Config::getPath('src');
+        $srcDir = ConfigService::getPath('src');
         if (file_exists($srcDir . 'NovotonApi.php')) {
             require_once($srcDir . 'NovotonApi.php');
         }
@@ -174,7 +159,7 @@ class CronHelper
             'product_code' => $productCode,
             'price' => 0,
             'status' => 'D', // Disabled until prices are synced
-            'company_id' => Config::getCompanyId(),
+            'company_id' => ConfigService::getCompanyId(),
             'main_category' => $categoryId,
             'category_ids' => [$categoryId],
             'full_description' => $description,
@@ -228,10 +213,10 @@ class CronHelper
             }
 
             $imgCount = 0;
-            $maxImages = Config::MAX_IMAGES_PER_HOTEL;
+            $maxImages = ConfigService::MAX_IMAGES_PER_HOTEL;
 
             foreach ($imagesResponse->url as $url) {
-                $imageUrl = Config::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
+                $imageUrl = ConfigService::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
 
                 if (function_exists('fn_novoton_add_product_image')) {
                     fn_novoton_add_product_image($productId, $imageUrl, $imgCount === 0);
@@ -300,7 +285,7 @@ class CronHelper
         }
 
         // Fall back to settings
-        return Config::getExcludedResorts();
+        return ConfigService::getExcludedResorts();
     }
 
     /**

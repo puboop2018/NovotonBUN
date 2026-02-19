@@ -112,48 +112,34 @@ function fn_novoton_ensure_tables_exist()
     }
 }
 
-// Register PSR-4 autoloader for addon classes
+// Register PSR-4 autoloader for ALL addon namespaces:
+// Services, Helpers, Repository, Cron, Cron\Commands, ValueObjects, Exceptions, root
 spl_autoload_register(function ($class) {
-    // Handle Services namespace
-    $servicePrefix = 'Tygh\\Addons\\NovotonHolidays\\Services\\';
-    $serviceBaseDir = __DIR__ . '/services/';
+    $prefix = 'Tygh\\Addons\\NovotonHolidays\\';
+    if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+        return;
+    }
 
-    if (strncmp($servicePrefix, $class, strlen($servicePrefix)) === 0) {
-        $relativeClass = substr($class, strlen($servicePrefix));
-        $file = $serviceBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
+    $relative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
 
-        if (file_exists($file)) {
-            require $file;
-            return;
+    // Non-standard directory mappings (namespace dir doesn't match filesystem)
+    $overrides = [
+        'Services/'   => __DIR__ . '/services/',         // lowercase dir
+        'Exceptions/' => __DIR__ . '/src/Exceptions/',   // nested inside src/
+    ];
+
+    foreach ($overrides as $nsPrefix => $dir) {
+        if (strncmp($nsPrefix, $relative, strlen($nsPrefix)) === 0) {
+            $file = $dir . substr($relative, strlen($nsPrefix));
+            if (file_exists($file)) { require $file; return; }
         }
     }
 
-    // Handle ValueObjects namespace
-    $voPrefix = 'Tygh\\Addons\\NovotonHolidays\\ValueObjects\\';
-    $voBaseDir = __DIR__ . '/ValueObjects/';
-
-    if (strncmp($voPrefix, $class, strlen($voPrefix)) === 0) {
-        $relativeClass = substr($class, strlen($voPrefix));
-        $file = $voBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
-
-        if (file_exists($file)) {
-            require $file;
-            return;
-        }
-    }
-
-    // Handle main namespace (Constants, etc.)
-    $mainPrefix = 'Tygh\\Addons\\NovotonHolidays\\';
-    $mainBaseDir = __DIR__ . '/';
-
-    if (strncmp($mainPrefix, $class, strlen($mainPrefix)) === 0) {
-        $relativeClass = substr($class, strlen($mainPrefix));
-        $file = $mainBaseDir . str_replace('\\', '/', $relativeClass) . '.php';
-
-        if (file_exists($file)) {
-            require $file;
-            return;
-        }
+    // Standard PSR-4: addon root (Helpers, Repository, Cron, ValueObjects, etc.)
+    // Also check src/ for root-namespace classes (NovotonApi, HotelSync, etc.)
+    foreach ([__DIR__ . '/', __DIR__ . '/src/'] as $dir) {
+        $file = $dir . $relative;
+        if (file_exists($file)) { require $file; return; }
     }
 });
 
