@@ -50,7 +50,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 //   _nvt_booking_repo()      - Booking database access
 //=============================================================================
 
-$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/services/ServiceLoader.php';
+$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
 if (file_exists($service_loader)) {
     require_once $service_loader;
 }

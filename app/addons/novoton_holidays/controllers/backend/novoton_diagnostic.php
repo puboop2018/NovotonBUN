@@ -95,7 +95,7 @@ if ($mode == 'health') {
 
     // 3. Cache status
     try {
-        $cache_service_file = Registry::get('config.dir.addons') . 'novoton_holidays/services/CacheService.php';
+        $cache_service_file = Registry::get('config.dir.addons') . 'novoton_holidays/Services/CacheService.php';
         if (file_exists($cache_service_file)) {
             require_once($cache_service_file);
             $cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');

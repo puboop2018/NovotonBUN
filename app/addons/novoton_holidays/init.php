@@ -124,7 +124,6 @@ spl_autoload_register(function ($class) {
 
     // Non-standard directory mappings (namespace dir doesn't match filesystem)
     $overrides = [
-        'Services/'   => __DIR__ . '/services/',         // lowercase dir
         'Exceptions/' => __DIR__ . '/src/Exceptions/',   // nested inside src/
     ];
 

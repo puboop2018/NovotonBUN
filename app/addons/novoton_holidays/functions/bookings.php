@@ -32,7 +32,7 @@ function fn_novoton_decrypt_request_pii(array $request): array
     // Lazy-load SecurityService (works in both controller and cron context)
     static $security = null;
     if ($security === null) {
-        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/services/ServiceLoader.php';
+        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
         if (file_exists($loader)) {
             require_once $loader;
         }

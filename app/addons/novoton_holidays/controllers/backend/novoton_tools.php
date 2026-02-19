@@ -40,7 +40,7 @@ if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_
 }
 
 // Load DiagnosticsService
-$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
+$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Services/';
 if (!class_exists('Tygh\Addons\NovotonHolidays\Services\DiagnosticsService') && file_exists($services_dir . 'DiagnosticsService.php')) {
     require_once($services_dir . 'DiagnosticsService.php');
 }

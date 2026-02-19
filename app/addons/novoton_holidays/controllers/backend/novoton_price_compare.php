@@ -20,7 +20,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 // Load required classes
 $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
+$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Services/';
 
 if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_dir . 'NovotonApi.php')) {
     require_once($src_dir . 'NovotonApi.php');

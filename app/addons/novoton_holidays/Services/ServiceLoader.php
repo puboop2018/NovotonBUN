@@ -57,7 +57,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 // Auto-load service classes
-$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
+$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Services/';
 $repository_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Repository/';
 $helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
 $vo_dir = Registry::get('config.dir.addons') . 'novoton_holidays/ValueObjects/';
