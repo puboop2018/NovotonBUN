@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class ProductFactory
 {
@@ -61,7 +62,7 @@ class ProductFactory
             if ($descResponse && isset($descResponse->Description)) {
                 $description = (string)$descResponse->Description;
             }
-        } catch (\Exception $e) {
+        } catch (ApiException $e) {
             // Ignore description fetch errors
         }
 
@@ -138,7 +139,7 @@ class ProductFactory
             }
 
             return $imgCount;
-        } catch (\Exception $e) {
+        } catch (ApiException $e) {
             return 0;
         }
     }

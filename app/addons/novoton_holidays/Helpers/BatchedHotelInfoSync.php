@@ -28,6 +28,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedHotelInfoSync
 {
@@ -295,7 +296,7 @@ class BatchedHotelInfoSync
                         $packages_count = $this->countPackages($hotel_info);
                         $this->output("OK ({$packages_count} packages)");
                     }
-                } catch (\Exception $e) {
+                } catch (ApiException $e) {
                     $this->output("ERROR: " . $e->getMessage());
                     $state['errors']++;
                     $state['error_ids'][] = $hotel_id;
@@ -337,7 +338,7 @@ class BatchedHotelInfoSync
                             $state['errors']--;
                             $this->output("  [{$retry_id}] retry OK");
                         }
-                    } catch (\Exception $e) {
+                    } catch (ApiException $e) {
                         $this->output("  [{$retry_id}] retry failed: " . $e->getMessage());
                     }
                 }
@@ -721,7 +722,7 @@ class BatchedHotelInfoSync
                 } else {
                     $this->output("  No changes");
                 }
-            } catch (\Exception $e) {
+            } catch (ApiException $e) {
                 $this->output("  Error: " . $e->getMessage());
             }
         }
