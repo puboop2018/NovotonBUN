@@ -61,8 +61,8 @@ class PriceInfoCalculation
      */
     public function __construct()
     {
-        $this->commission = ConfigService::getCommission();
-        $this->debug = ConfigService::isDebugLogging();
+        $this->commission = ConfigProvider::getCommission();
+        $this->debug = ConfigProvider::isDebugLogging();
 
         $logger = [$this, 'log'];
         $this->parser = new PriceInfoParser($logger);

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
@@ -27,8 +27,8 @@ class HotelSync
     public function __construct()
     {
         $this->api = new NovotonApi();
-        $this->selectedCountries = ConfigService::getSelectedCountries();
-        $this->productPrefixes = ConfigService::getProductCodePrefixes();
+        $this->selectedCountries = ConfigProvider::getSelectedCountries();
+        $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
 
         $this->stats = [
             'hotels_processed' => 0,

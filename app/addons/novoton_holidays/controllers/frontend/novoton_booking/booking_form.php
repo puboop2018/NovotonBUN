@@ -55,7 +55,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     }
     
     // Get product and hotel info
-    $prefix = ConfigService::getFirstProductCodePrefix();
+    $prefix = ConfigProvider::getFirstProductCodePrefix();
     $product_code = $prefix . $bookingData['hotel_id'];
     
     $product_id = db_get_field(

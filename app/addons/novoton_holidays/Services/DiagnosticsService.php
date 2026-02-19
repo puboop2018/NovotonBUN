@@ -26,7 +26,7 @@ class DiagnosticsService
 
     public function __construct(?NovotonApi $api = null)
     {
-        $this->settings = ConfigService::all();
+        $this->settings = ConfigProvider::all();
         $this->api = $api;
     }
 

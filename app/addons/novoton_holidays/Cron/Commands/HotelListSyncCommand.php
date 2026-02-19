@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 
 class HotelListSyncCommand extends AbstractCronCommand
@@ -23,7 +23,7 @@ class HotelListSyncCommand extends AbstractCronCommand
         $this->output("Syncing hotels from API (hotel_list)...");
         $this->output("");
 
-        $countries = ConfigService::getSelectedCountries();
+        $countries = ConfigProvider::getSelectedCountries();
         $this->output("Countries: " . implode(', ', $countries));
         $this->output("");
 

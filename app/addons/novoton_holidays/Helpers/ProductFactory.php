@@ -15,7 +15,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class ProductFactory
 {
@@ -71,7 +71,7 @@ class ProductFactory
             'product_code' => $productCode,
             'price' => 0,
             'status' => 'D',
-            'company_id' => ConfigService::getCompanyId(),
+            'company_id' => ConfigProvider::getCompanyId(),
             'main_category' => $categoryId,
             'category_ids' => [$categoryId],
             'full_description' => $description,
@@ -122,10 +122,10 @@ class ProductFactory
             }
 
             $imgCount = 0;
-            $maxImages = ConfigService::MAX_IMAGES_PER_HOTEL;
+            $maxImages = ConfigProvider::MAX_IMAGES_PER_HOTEL;
 
             foreach ($imagesResponse->url as $url) {
-                $imageUrl = ConfigService::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
+                $imageUrl = ConfigProvider::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
 
                 if (function_exists('fn_novoton_add_product_image')) {
                     fn_novoton_add_product_image($productId, $imageUrl, $imgCount === 0);

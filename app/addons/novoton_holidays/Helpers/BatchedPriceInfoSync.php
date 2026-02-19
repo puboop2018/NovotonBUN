@@ -26,7 +26,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class BatchedPriceInfoSync
 {
@@ -635,11 +635,11 @@ class BatchedPriceInfoSync
     }
 
     /**
-     * Get configured countries — delegates to ConfigService::getSelectedCountries()
+     * Get configured countries — delegates to ConfigProvider::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        return ConfigService::getSelectedCountries();
+        return ConfigProvider::getSelectedCountries();
     }
 
     /**

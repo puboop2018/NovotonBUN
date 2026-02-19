@@ -15,7 +15,7 @@
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
@@ -39,7 +39,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         return;
     }
 
-    $addon_settings = ConfigService::all();
+    $addon_settings = ConfigProvider::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }
@@ -106,7 +106,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
         return;
     }
 
-    $addon_settings = ConfigService::all();
+    $addon_settings = ConfigProvider::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }

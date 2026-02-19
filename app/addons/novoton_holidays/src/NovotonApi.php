@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
@@ -72,15 +72,15 @@ class NovotonApi
 
     public function __construct()
     {
-        $this->httpClient = new NovotonHttpClient(ConfigService::all());
+        $this->httpClient = new NovotonHttpClient(ConfigProvider::all());
         $this->xmlParser = new NovotonXmlParser();
         $this->commissionCalculator = new CommissionCalculator(
-            ConfigService::getCommission(),
-            ConfigService::isRoundPrices() ? 'Y' : 'N'
+            ConfigProvider::getCommission(),
+            ConfigProvider::isRoundPrices() ? 'Y' : 'N'
         );
 
         // Initialize cache service
-        $this->enableCache = (ConfigService::get('enable_api_cache', 'Y') === 'Y');
+        $this->enableCache = (ConfigProvider::get('enable_api_cache', 'Y') === 'Y');
         if ($this->enableCache) {
             $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
         }
@@ -704,7 +704,7 @@ class NovotonApi
                 'nights' => $nights,
                 'total_price' => $this->applyCommission($price),
                 'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                'currency' => ConfigService::getApiCurrency(),
+                'currency' => ConfigProvider::getApiCurrency(),
                 'availability' => $availability
             ];
         }
@@ -742,7 +742,7 @@ class NovotonApi
                     'nights' => $nights,
                     'total_price' => $this->applyCommission($price),
                     'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                    'currency' => ConfigService::getApiCurrency(),
+                    'currency' => ConfigProvider::getApiCurrency(),
                     'availability' => intval($data['Availability'] ?? $data['Avail'] ?? 1)
                 ];
             }
@@ -795,7 +795,7 @@ class NovotonApi
      */
     public function createReservation(array $bookingData)
     {
-        $isTestMode = ConfigService::isTestBooking();
+        $isTestMode = ConfigProvider::isTestBooking();
 
         $remark = $bookingData['remark'] ?? '';
         $comment = $bookingData['comment'] ?? '';

@@ -27,7 +27,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class BatchedHotelInfoSync
 {
@@ -247,7 +247,7 @@ class BatchedHotelInfoSync
             );
 
             // Pre-fetch product_code -> product_id map for unlinked hotels
-            $prefixes = ConfigService::getProductCodePrefixes();
+            $prefixes = ConfigProvider::getProductCodePrefixes();
 
             $code_patterns = [];
             foreach ($batch as $hid) {
@@ -557,7 +557,7 @@ class BatchedHotelInfoSync
      */
     private function reconcileProductLinks(): void
     {
-        $prefixes = ConfigService::getProductCodePrefixes();
+        $prefixes = ConfigProvider::getProductCodePrefixes();
 
         // 1. Re-link: hotels with NULL product_id whose product exists (bulk approach)
         $orphaned = db_get_fields(
@@ -744,11 +744,11 @@ class BatchedHotelInfoSync
     }
 
     /**
-     * Get configured countries — delegates to ConfigService::getSelectedCountries()
+     * Get configured countries — delegates to ConfigProvider::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        return ConfigService::getSelectedCountries();
+        return ConfigProvider::getSelectedCountries();
     }
 
     /**

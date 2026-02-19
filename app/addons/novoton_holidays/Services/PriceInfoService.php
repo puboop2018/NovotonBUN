@@ -39,8 +39,8 @@ class PriceInfoService
     public function __construct()
     {
         $this->api = fn_novoton_get_api();
-        $this->commission = ConfigService::getCommission();
-        $this->debug = ConfigService::isDebugLogging();
+        $this->commission = ConfigProvider::getCommission();
+        $this->debug = ConfigProvider::isDebugLogging();
     }
 
     /**

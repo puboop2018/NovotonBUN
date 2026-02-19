@@ -534,7 +534,7 @@ class SecurityService
         $key = Registry::get('config.crypt_key');
         
         if (empty($key)) {
-            $key = ConfigService::getApiKey();
+            $key = ConfigProvider::getApiKey();
         }
 
         if (empty($key)) {

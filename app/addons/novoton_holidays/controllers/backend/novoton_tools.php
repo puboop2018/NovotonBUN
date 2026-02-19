@@ -29,7 +29,7 @@
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -595,7 +595,7 @@ if ($mode == 'test_product') {
  * Cron job to export hotel features CSV
  */
 if ($mode == 'cron_export_hotel_features') {
-    $expected_key = ConfigService::getCronAccessKey();
+    $expected_key = ConfigProvider::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
 
     header('Content-Type: text/plain; charset=utf-8');
@@ -632,7 +632,7 @@ if ($mode == 'cron_export_hotel_features') {
  * Direct download with API key authentication
  */
 if ($mode == 'get_hotel_features_csv') {
-    $expected_key = ConfigService::getCronAccessKey();
+    $expected_key = ConfigProvider::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
 
     if (empty($expected_key) || $provided_key !== $expected_key) {

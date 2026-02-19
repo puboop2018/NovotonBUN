@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 
 class RoomPriceCheckCommand extends AbstractCronCommand
@@ -83,7 +83,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $withoutPricesIds = [];
             }
 
-            usleep(ConfigService::API_DELAY_MS * 1000);
+            usleep(ConfigProvider::API_DELAY_MS * 1000);
         }
 
         // Final batch

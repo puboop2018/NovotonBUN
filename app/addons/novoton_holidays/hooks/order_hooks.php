@@ -15,7 +15,7 @@
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
@@ -49,9 +49,9 @@ function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &
         return;
     }
 
-    $commission     = ConfigService::getCommission();
-    $disable_api    = ConfigService::isApiDisabled();
-    $debug_logging  = ConfigService::isDebugLogging();
+    $commission     = ConfigProvider::getCommission();
+    $disable_api    = ConfigProvider::isApiDisabled();
+    $debug_logging  = ConfigProvider::isDebugLogging();
 
     // Ensure API class is loaded
     $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
@@ -659,7 +659,7 @@ function _nvt_build_booking_record(
         'guests_data'      => json_encode($all_guests),
         'base_price'       => $total_api_price,
         'total_price'      => $total_group_price,
-        'currency'         => ConfigService::getApiCurrency(),
+        'currency'         => ConfigProvider::getApiCurrency(),
         'status'           => 'pending',
         'special_requests' => $booking_data['special_requests'] ?? '',
         'api_request'      => json_encode($api_data),

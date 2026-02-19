@@ -98,7 +98,7 @@ class BookingService implements BookingServiceInterface
             'base_price' => floatval($bookingData['base_price'] ?? 0),
             'api_price' => floatval($bookingData['api_price'] ?? 0),
             'total_price' => floatval($bookingData['total_price'] ?? 0),
-            'currency' => ConfigService::getApiCurrency(),
+            'currency' => ConfigProvider::getApiCurrency(),
             'status' => 'pending',
             'special_requests' => $bookingData['special_requests'] ?? '',
             'notes' => $bookingData['special_requests'] ?? '',
@@ -621,7 +621,7 @@ class BookingService implements BookingServiceInterface
                 'remark' => $priceResult['remark'],
                 'important' => $priceResult['important'],
                 'total_price' => $totalPrice,
-                'currency' => ConfigService::getApiCurrency(),
+                'currency' => ConfigProvider::getApiCurrency(),
             ],
         ];
     }
@@ -690,7 +690,7 @@ class BookingService implements BookingServiceInterface
      */
     public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int
     {
-        $prefix = ConfigService::getFirstProductCodePrefix();
+        $prefix = ConfigProvider::getFirstProductCodePrefix();
         $productCode = $prefix . $hotelId;
 
         $productId = (int)db_get_field(

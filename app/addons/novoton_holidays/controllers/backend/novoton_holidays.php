@@ -20,7 +20,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -161,7 +161,7 @@ if ($mode == 'manage' || empty($mode)) {
     $syncLogRepo = new SyncLogRepository();
     
     // Get addon settings
-    $addon_settings = ConfigService::all();
+    $addon_settings = ConfigProvider::all();
 
     // Parse selected countries
     $countries = fn_novoton_parse_countries();
@@ -229,7 +229,7 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);
     Tygh::$app['view']->assign('addon_settings', $addon_settings);
-    Tygh::$app['view']->assign('addon_version', ConfigService::getVersion());
+    Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
     
     // Get available resorts for exclusion management
     $resorts_by_country = [];

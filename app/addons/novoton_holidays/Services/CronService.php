@@ -23,7 +23,7 @@ class CronService
     public function __construct()
     {
         $this->api = new NovotonApi();
-        $this->countries = fn_novoton_parse_countries(ConfigService::get('selected_countries', ''));
+        $this->countries = fn_novoton_parse_countries(ConfigProvider::get('selected_countries', ''));
     }
 
     /**

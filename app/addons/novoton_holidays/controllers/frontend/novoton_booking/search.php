@@ -270,7 +270,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         
         // If no product_id provided, look it up from hotel_id
         if (empty($productId)) {
-            $prefix = ConfigService::getFirstProductCodePrefix();
+            $prefix = ConfigProvider::getFirstProductCodePrefix();
             $productId = db_get_field(
                 "SELECT product_id FROM ?:products WHERE product_code = ?s",
                 $prefix . $hotelId

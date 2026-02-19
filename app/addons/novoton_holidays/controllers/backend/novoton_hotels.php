@@ -21,7 +21,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -408,7 +408,7 @@ if ($mode == 'check_packages') {
     echo '<div class="log">';
 
     // Get all countries from settings
-    $countries = fn_novoton_parse_countries(ConfigService::get('selected_countries', ''));
+    $countries = fn_novoton_parse_countries(ConfigProvider::get('selected_countries', ''));
 
     echo "Countries: " . implode(', ', $countries) . "<br>";
     echo "Limit per country: {$limit}<br>";

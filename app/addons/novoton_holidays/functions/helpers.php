@@ -11,7 +11,7 @@
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -29,7 +29,7 @@ function fn_novoton_parse_countries($selected_countries = null)
 {
     // If null passed, get from settings
     if ($selected_countries === null) {
-        $selected_countries = ConfigService::get('selected_countries', '');
+        $selected_countries = ConfigProvider::get('selected_countries', '');
     }
     
     $countries = [];
@@ -89,7 +89,7 @@ function fn_novoton_is_debug()
         return true;
     }
     
-    return ConfigService::isDebugMode();
+    return ConfigProvider::isDebugMode();
 }
 
 /**

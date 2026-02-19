@@ -27,7 +27,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     $debug_enabled = false;
     $debug_messages = [];
     try {
-        $debug_enabled = (ConfigService::get('debug', 'N') === 'Y');
+        $debug_enabled = (ConfigProvider::get('debug', 'N') === 'Y');
     } catch (\Exception $e) {
         // Registry may not be available in edge cases; debug stays disabled
     }

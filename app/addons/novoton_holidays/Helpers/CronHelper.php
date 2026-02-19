@@ -20,7 +20,8 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 
 class CronHelper
 {
@@ -57,7 +58,7 @@ class CronHelper
      */
     public static function validateAccessKey(string $providedKey): bool
     {
-        $storedKey = ConfigService::getCronAccessKey();
+        $storedKey = ConfigProvider::getCronAccessKey();
 
         if (empty($storedKey)) {
             return false;
@@ -91,7 +92,7 @@ class CronHelper
         header('Content-Type: text/plain; charset=utf-8');
 
         // Load API
-        $srcDir = ConfigService::getPath('src');
+        $srcDir = PathResolver::getPath('src');
         if (file_exists($srcDir . 'NovotonApi.php')) {
             require_once($srcDir . 'NovotonApi.php');
         }
@@ -104,28 +105,6 @@ class CronHelper
             'logger' => $logger,
             'mode' => $mode,
         ];
-    }
-
-    // ── Product creation delegated to ProductFactory (SRP) ──
-
-    public static function createProductFromHotel(array $hotel, NovotonApi $api, int $categoryId): ?int
-    {
-        return ProductFactory::createFromHotel($hotel, $api, $categoryId);
-    }
-
-    public static function attachHotelImages(int $productId, string $hotelId, NovotonApi $api): int
-    {
-        return ProductFactory::attachHotelImages($productId, $hotelId, $api);
-    }
-
-    public static function buildHotelTitle(string $hotelName, string $city, string $country, string $year): string
-    {
-        return ProductFactory::buildHotelTitle($hotelName, $city, $country, $year);
-    }
-
-    public static function getOrCreateCategory(string $categoryPath): int
-    {
-        return ProductFactory::getOrCreateCategory($categoryPath);
     }
 
     /**
@@ -144,7 +123,7 @@ class CronHelper
         }
 
         // Fall back to settings
-        return ConfigService::getExcludedResorts();
+        return ConfigProvider::getExcludedResorts();
     }
 
     /**
