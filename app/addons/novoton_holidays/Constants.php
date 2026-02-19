@@ -33,19 +33,6 @@ final class Constants
     public const NOVOTON_STATUS_CANCELLED = 'ST';       // Reservation cancelled
     public const NOVOTON_STATUS_WAITLIST = 'WT';        // Reservation with waiting status
     
-    // ========== Board Types ==========
-    // Canonical codes: use ValueObjects\BoardType for display-name lookups
-
-    public const BOARD_AI = 'AI';           // All Inclusive
-    public const BOARD_UAI = 'UAI';         // Ultra All Inclusive
-    public const BOARD_FB = 'FB';           // Full Board
-    public const BOARD_FB_PLUS = 'FB+';     // Full Board Plus
-    public const BOARD_HB = 'HB';           // Half Board
-    public const BOARD_HB_PLUS = 'HB+';     // Half Board Plus
-    public const BOARD_BB = 'BB';           // Bed & Breakfast
-    public const BOARD_RO = 'RO';           // Room Only
-    public const BOARD_SC = 'SC';           // Self Catering
-
     // ========== Reservation Status Mapping ==========
     // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses
 
