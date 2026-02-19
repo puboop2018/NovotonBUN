@@ -692,7 +692,7 @@ app/addons/novoton_holidays/
 │   ├── ErrorHandler.php      # Error handling
 │   ├── GuestDataService.php  # Guest data parsing
 │   ├── LoggerTrait.php       # PSR-3-like logging trait
-│   ├── PriceService.php      # Price calculations with commission
+│   ├── RoomPriceService.php  # Real-time room price calculations with commission
 │   ├── PriceInfoService.php  # Season price lists
 │   ├── PriceInfoCalculation.php # Price info calculations
 │   ├── SearchService.php     # Search parameter parsing
@@ -735,7 +735,7 @@ app/addons/novoton_holidays/
 | `ErrorHandler` | Scoped error handling |
 | `GuestDataService` | Parse and format guest data |
 | `LoggerTrait` | Consistent PSR-3-like logging |
-| `PriceService` | Price calculations with commission |
+| `RoomPriceService` | Real-time room price calculations with commission |
 | `PriceInfoService` | Season price list management |
 | `PriceInfoCalculation` | Price info calculation engine |
 | `SearchService` | Search parameter parsing |

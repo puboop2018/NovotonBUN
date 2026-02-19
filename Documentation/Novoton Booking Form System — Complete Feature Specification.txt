@@ -117,7 +117,7 @@ NovotonAddonRepoA/
 |   |-- services/                     # Service layer (~4,800 lines)
 |   |   |-- BookingService.php
 |   |   |-- SearchService.php
-|   |   |-- PriceService.php
+|   |   |-- RoomPriceService.php
 |   |   |-- PriceInfoService.php
 |   |   |-- PriceInfoCalculation.php  # 2,176 lines - pricing algorithm
 |   |   |-- GuestDataService.php

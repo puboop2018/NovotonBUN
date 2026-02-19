@@ -1,6 +1,8 @@
 <?php
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
+use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+
 abstract class AbstractCronCommand
 {
     protected $api;
@@ -53,11 +55,13 @@ abstract class AbstractCronCommand
 
     protected function logToSyncTable(string $type, int $updated, int $failed = 0): void
     {
-        db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_type = ?s, sync_date = NOW(),
-             products_updated = ?i, products_failed = ?i, duration_seconds = ?i, status = 'completed'",
-            $type, $updated, $failed, (int)$this->getDuration()
-        );
+        $syncRepo = new SyncLogRepository();
+        $syncRepo->create($type, [
+            'updated'  => $updated,
+            'failed'   => $failed,
+            'duration' => (int)$this->getDuration(),
+            'status'   => 'completed',
+        ]);
     }
 
     protected function sendReport(string $type, array $stats, string $context = ''): void

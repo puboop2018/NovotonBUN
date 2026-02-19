@@ -2,11 +2,11 @@
 /**
  * Novoton Holidays - Configuration Manager
  *
- * Centralized configuration access with caching to reduce
- * repeated Registry::get calls throughout the addon.
- *
- * Injectable: Use Config::getInstance() or inject via constructor.
- * Testable: Use Config::setInstance($mockConfig) in tests.
+ * @deprecated Use \Tygh\Addons\NovotonHolidays\Services\ConfigService instead.
+ *             ConfigService provides the same settings access with proper type coercion,
+ *             plus all constants, path helpers, and utility methods that were previously
+ *             split across both classes. This class is kept for backwards compatibility
+ *             but will be removed in a future release.
  *
  * @package NovotonHolidays
  * @since 3.1.0

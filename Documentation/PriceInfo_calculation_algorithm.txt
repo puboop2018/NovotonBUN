@@ -48,7 +48,7 @@ CALCULATION FILES:
 ------------------
 - PriceInfoCalculation.php  - Main calculation engine
 - PriceInfoService.php      - Retrieval and formatting of stored priceinfo
-- PriceService.php          - Utility service for price calculations
+- RoomPriceService.php      - Real-time room price service (API-based)
 - PriceInfoSync.php         - Synchronizes priceinfo from API to database
 
 DATA STORAGE:

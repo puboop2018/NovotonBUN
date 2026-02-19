@@ -462,6 +462,196 @@ class BookingRepository
     }
 
     /**
+     * Link unassigned bookings to a user by session ID.
+     *
+     * Used after login to claim guest bookings from the current browser session.
+     *
+     * @return int Number of bookings linked
+     */
+    public function linkToUserBySession(int $user_id, string $session_id): int
+    {
+        return (int) db_query(
+            "UPDATE ?:novoton_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
+            $user_id,
+            $session_id
+        );
+    }
+
+    /**
+     * Link unassigned bookings to a user by email.
+     *
+     * Used after login/registration to claim bookings made with the same email.
+     *
+     * @return int Number of bookings linked
+     */
+    public function linkToUserByEmail(int $user_id, string $email): int
+    {
+        return (int) db_query(
+            "UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0",
+            $user_id,
+            $email
+        );
+    }
+
+    /**
+     * Find bookings by multiple product IDs (batch query for cart).
+     *
+     * @param array  $product_ids Product IDs
+     * @param array  $statuses    Optional status filter (default: pending + confirmed)
+     * @return array Booking rows
+     */
+    public function findByProductIds(array $product_ids, array $statuses = ['pending', 'confirmed']): array
+    {
+        if (empty($product_ids)) {
+            return [];
+        }
+        return db_get_array(
+            "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
+                    board_id, check_in, check_out, nights, adults, children, children_ages,
+                    num_rooms, rooms_data, total_price, currency, status, guests_data,
+                    package_name, session_id
+             FROM ?:novoton_bookings
+             WHERE product_id IN (?n) AND status IN (?a)
+             ORDER BY booking_id DESC",
+            $product_ids,
+            $statuses
+        );
+    }
+
+    /**
+     * Delete all bookings for a product (used when product is deleted).
+     *
+     * @return int Number of bookings deleted
+     */
+    public function deleteByProductId(int $product_id): int
+    {
+        return (int) db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
+    }
+
+    /**
+     * Get raw guests_data JSON for a booking.
+     */
+    public function getGuestsData(int $booking_id): ?string
+    {
+        $data = db_get_field("SELECT guests_data FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+        return $data ?: null;
+    }
+
+    /**
+     * Find the most recent unassigned pending booking matching hotel + dates.
+     *
+     * Used as a fallback to recover guests_data when cart data is stale.
+     */
+    public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array
+    {
+        $row = db_get_row(
+            "SELECT guests_data, holder_name FROM ?:novoton_bookings
+             WHERE hotel_id = ?s AND check_in = ?s AND check_out = ?s AND order_id = 0
+             ORDER BY booking_id DESC LIMIT 1",
+            $hotel_id,
+            $check_in,
+            $check_out
+        );
+        return $row ?: null;
+    }
+
+    /**
+     * Find bookings for multiple order IDs in a single batch query.
+     *
+     * @param array $order_ids
+     * @return array Booking summary rows
+     */
+    public function findByOrderIds(array $order_ids): array
+    {
+        if (empty($order_ids)) {
+            return [];
+        }
+        return db_get_array(
+            "SELECT booking_id, order_id, hotel_id, hotel_name, room_type, board_id,
+                    check_in, check_out, nights, adults, children, total_price,
+                    currency, status, novoton_status, novoton_confirm_id
+             FROM ?:novoton_bookings
+             WHERE order_id IN (?n)",
+            $order_ids
+        );
+    }
+
+    /**
+     * Get booking terms (payment + cancellation) for order display.
+     */
+    public function getTerms(int $booking_id): ?array
+    {
+        $terms = db_get_row(
+            "SELECT terms_of_payment_raw, terms_of_cancellation_raw,
+                    terms_of_payment_formatted, terms_of_cancellation_formatted
+             FROM ?:novoton_bookings WHERE booking_id = ?i",
+            $booking_id
+        );
+        return $terms ?: null;
+    }
+
+    /**
+     * Find existing booking ID by order + hotel + dates (for dedup).
+     */
+    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int
+    {
+        $id = db_get_field(
+            "SELECT booking_id FROM ?:novoton_bookings
+             WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
+             LIMIT 1",
+            $order_id,
+            $hotel_id,
+            $check_in,
+            $check_out
+        );
+        return $id ? (int) $id : null;
+    }
+
+    /**
+     * Find bookings by Novoton API status (e.g. ASK, RQ).
+     *
+     * @param string $novoton_status  API-level status (e.g. 'ASK')
+     * @param array  $statuses        Internal statuses to match
+     * @param int    $limit           Max rows
+     */
+    public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = ?s AND status IN (?a)
+             ORDER BY created_at DESC LIMIT ?i",
+            $novoton_status,
+            $statuses,
+            $limit
+        );
+    }
+
+    /**
+     * Find RQ bookings that haven't had alternatives requested yet.
+     */
+    public function findRqWithoutAlternatives(int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = 'RQ' AND alternatives_requested = 0
+             ORDER BY created_at ASC LIMIT ?i",
+            $limit
+        );
+    }
+
+    /**
+     * Count orphan bookings (no order, older than N hours).
+     */
+    public function countOrphans(int $hours = 48): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
+            $hours
+        );
+    }
+
+    /**
      * Build WHERE clause from filters
      */
     private function buildWhereClause(array $filters): string

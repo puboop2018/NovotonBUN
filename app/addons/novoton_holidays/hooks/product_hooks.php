@@ -16,6 +16,8 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -56,8 +58,9 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $product['novoton_prices'] = $prices;
 
     // Last sync timestamp
+    $hotelRepo = new HotelRepository();
     $product['novoton_last_update'] = !empty($hotel_id)
-        ? db_get_field("SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s", $hotel_id)
+        ? $hotelRepo->getLatestPackageSyncedAt($hotel_id)
         : null;
 
     // Hotel info (rooms, packages, board, full data)
@@ -140,10 +143,12 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted)
     }
 
     // Clean up bookings
-    db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
+    $bookingRepo = new BookingRepository();
+    $bookingRepo->deleteByProductId($product_id);
 
     // Unlink hotel record (the hotel stays, only the CS-Cart link is removed)
-    db_query("UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i", $product_id);
+    $hotelRepo = new HotelRepository();
+    $hotelRepo->unlinkProduct($product_id);
 }
 
 // ============================================================================
@@ -261,12 +266,8 @@ function _nvt_resolve_active_package(array $packages_data): string
  */
 function _nvt_assign_season_and_early_booking(array &$product, string $hotel_id): void
 {
-    $package_data = db_get_field(
-        "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-         WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-         ORDER BY synced_at DESC LIMIT 1",
-        $hotel_id
-    );
+    $hotelRepo = new HotelRepository();
+    $package_data = $hotelRepo->getLatestPriceinfoData($hotel_id);
 
     $season_dates  = [];
     $early_booking = [];

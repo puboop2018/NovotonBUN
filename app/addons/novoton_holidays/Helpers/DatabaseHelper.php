@@ -16,6 +16,8 @@
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+
 class DatabaseHelper
 {
     /**
@@ -104,7 +106,7 @@ class DatabaseHelper
 
         // Generate product codes
         $productCodes = array_map(function ($id) {
-            return Config::PRODUCT_CODE_PREFIX . $id;
+            return ConfigService::PRODUCT_CODE_PREFIX . $id;
         }, $hotelIds);
 
         // Single query to get all existing products
@@ -119,7 +121,7 @@ class DatabaseHelper
         // Map back to hotel IDs
         $map = [];
         foreach ($hotelIds as $hotelId) {
-            $code = Config::PRODUCT_CODE_PREFIX . $hotelId;
+            $code = ConfigService::PRODUCT_CODE_PREFIX . $hotelId;
             if (isset($results[$code])) {
                 $map[$hotelId] = $results[$code]['product_id'];
             }
@@ -382,7 +384,7 @@ class DatabaseHelper
      */
     public static function getProductCode(string $hotelId): string
     {
-        return Config::PRODUCT_CODE_PREFIX . $hotelId;
+        return ConfigService::PRODUCT_CODE_PREFIX . $hotelId;
     }
 
     /**
@@ -393,7 +395,7 @@ class DatabaseHelper
      */
     public static function extractHotelId(string $productCode): ?string
     {
-        $prefix = Config::PRODUCT_CODE_PREFIX;
+        $prefix = ConfigService::PRODUCT_CODE_PREFIX;
         if (strpos($productCode, $prefix) === 0) {
             return substr($productCode, strlen($prefix));
         }

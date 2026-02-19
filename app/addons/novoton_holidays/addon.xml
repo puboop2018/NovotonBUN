@@ -40,7 +40,7 @@
       - SearchService - search/availability
       - BookingService - booking operations  
       - GuestDataService - guest handling
-      - PriceService - real-time prices
+      - RoomPriceService - real-time prices
       - PriceInfoService - season price lists
       - CacheService - API response caching
     - NEW: API response caching (configurable TTL)
@@ -106,7 +106,7 @@
     - Use SearchService::parseSearchParams() directly
     - Use SearchService::calculateRoomTotals() directly
     - Use BookingService::createBooking() and addToCart() directly
-    - Use PriceService::getRoomPrice() directly (has built-in caching)
+    - Use RoomPriceService::getRoomPrice() directly (has built-in caching)
     - Use CacheService::remember() for caching patterns
     - Code reduced by ~280 lines through proper service delegation
 

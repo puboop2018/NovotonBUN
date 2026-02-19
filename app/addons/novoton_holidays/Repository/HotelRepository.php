@@ -267,6 +267,113 @@ class HotelRepository
     }
 
     /**
+     * Unlink a hotel from its CS-Cart product (set product_id = NULL).
+     *
+     * Used when a product is deleted — the hotel record stays, only the link is removed.
+     */
+    public function unlinkProduct(int $product_id): bool
+    {
+        return (bool) db_query("UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i", $product_id);
+    }
+
+    /**
+     * Get location data (city, region, country) for multiple hotels in one query.
+     *
+     * @param array $hotel_ids
+     * @return array<string, array{hotel_id: string, city: string, region: string, country: string}>
+     *         Keyed by hotel_id
+     */
+    public function getLocationsByIds(array $hotel_ids): array
+    {
+        if (empty($hotel_ids)) {
+            return [];
+        }
+        $rows = db_get_array(
+            "SELECT hotel_id, city, region, country FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+            $hotel_ids
+        );
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['hotel_id']] = $row;
+        }
+        return $result;
+    }
+
+    /**
+     * Get the latest priceinfo_data JSON for a hotel (from novoton_hotel_packages).
+     */
+    public function getLatestPriceinfoData(string $hotel_id): ?string
+    {
+        $data = db_get_field(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
+            $hotel_id
+        );
+        return $data ?: null;
+    }
+
+    /**
+     * Get the latest synced_at timestamp for a hotel's packages.
+     */
+    public function getLatestPackageSyncedAt(string $hotel_id): ?string
+    {
+        $ts = db_get_field(
+            "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
+            $hotel_id
+        );
+        return $ts ?: null;
+    }
+
+    /**
+     * Link a hotel to a CS-Cart product.
+     */
+    public function linkProduct(string $hotel_id, int $product_id): bool
+    {
+        return (bool) db_query(
+            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+            $product_id,
+            $hotel_id
+        );
+    }
+
+    /**
+     * Insert or update a hotel record (upsert).
+     */
+    public function upsert(array $data): bool
+    {
+        return (bool) db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $data, $data);
+    }
+
+    /**
+     * Find hotels that have prices but no linked CS-Cart product.
+     *
+     * @param string $country         Country filter
+     * @param array  $excludeResorts  Cities to exclude
+     * @param int    $limit           0 = no limit
+     */
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
+    {
+        $query = "SELECT * FROM ?:novoton_hotels
+                  WHERE has_prices = 'Y' AND country = ?s
+                  AND (product_id IS NULL OR product_id = 0)";
+        $params = [$country];
+
+        if (!empty($excludeResorts)) {
+            $query .= " AND (city NOT IN (?a) OR city IS NULL)";
+            $params[] = $excludeResorts;
+        }
+
+        $query .= " ORDER BY hotel_name";
+        if ($limit > 0) {
+            $query .= " LIMIT ?i";
+            $params[] = $limit;
+        }
+
+        return db_get_array($query, ...$params);
+    }
+
+    /**
      * Build WHERE clause from filters
      */
     private function buildWhereClause(array $filters): string

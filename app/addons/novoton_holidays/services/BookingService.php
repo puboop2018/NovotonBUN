@@ -24,7 +24,7 @@ class BookingService implements BookingServiceInterface
     /** @var GuestDataService */
     private $guestService;
     
-    /** @var PriceService */
+    /** @var RoomPriceService */
     private $priceService;
     
     /** @var bool */
@@ -37,7 +37,7 @@ class BookingService implements BookingServiceInterface
     {
         $this->api = fn_novoton_get_api();
         $this->guestService = new GuestDataService();
-        $this->priceService = new PriceService();
+        $this->priceService = new RoomPriceService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     

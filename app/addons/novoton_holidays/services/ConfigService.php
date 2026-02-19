@@ -15,8 +15,38 @@ use Tygh\Registry;
 
 class ConfigService
 {
+    // ========== Constants (migrated from Helpers\Config) ==========
+
+    const ADDON_ID = 'novoton_holidays';
+
+    // API rate limiting
+    const API_DELAY_MS = 100;
+
+    // Batch processing defaults
+    const DEFAULT_BATCH_SIZE = 100;
+    const DEFAULT_MAX_EXECUTION_TIME = 300;
+    const MIN_BATCH_SIZE = 10;
+    const MAX_BATCH_SIZE = 500;
+    const MIN_EXECUTION_TIME = 60;
+    const MAX_EXECUTION_TIME = 3600;
+
+    // Image settings
+    const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
+    const MAX_IMAGES_PER_HOTEL = 10;
+
+    // Product code prefix
+    const PRODUCT_CODE_PREFIX = 'NVT';
+
+    // Sync intervals
+    const FULL_SYNC_INTERVAL_DAYS = 180;
+    const PRICE_SYNC_INTERVAL_DAYS = 7;
+    const STALE_HOURS = 24;
+
     /** @var array|null Cached settings array, loaded once per request. */
     private static $settings;
+
+    /** @var array|null Cached paths array. */
+    private static $paths;
 
     private static function settings(): array
     {
@@ -191,5 +221,120 @@ class ConfigService
     public static function get(string $key, $default = null)
     {
         return self::settings()[$key] ?? $default;
+    }
+
+    // ========== Paths ==========
+
+    /**
+     * Get all addon paths (cached).
+     *
+     * @return array
+     */
+    public static function getPaths(): array
+    {
+        if (self::$paths === null) {
+            $addon_dir = Registry::get('config.dir.addons') . self::ADDON_ID . '/';
+            $cache_dir = Registry::get('config.dir.cache_misc') ?? (defined('DIR_ROOT') ? DIR_ROOT . '/var/cache/' : '/tmp/');
+
+            self::$paths = [
+                'addon'     => $addon_dir,
+                'src'       => $addon_dir . 'src/',
+                'helpers'   => $addon_dir . 'Helpers/',
+                'functions' => $addon_dir . 'functions/',
+                'cache'     => $cache_dir . 'novoton/',
+                'reports'   => function_exists('fn_get_files_dir_path')
+                    ? fn_get_files_dir_path() . 'novoton_reports/'
+                    : $addon_dir . 'reports/',
+            ];
+        }
+        return self::$paths;
+    }
+
+    /**
+     * Get a specific addon path.
+     *
+     * @param string $key Path key (addon, src, helpers, functions, cache, reports)
+     * @return string
+     */
+    public static function getPath(string $key): string
+    {
+        $paths = self::getPaths();
+        return $paths[$key] ?? '';
+    }
+
+    // ========== Environment ==========
+
+    /**
+     * Get timezone from CS-Cart settings.
+     *
+     * @return string
+     */
+    public static function getTimezone(): string
+    {
+        return Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
+    }
+
+    /**
+     * Get admin email for notifications.
+     *
+     * @return string
+     */
+    public static function getAdminEmail(): string
+    {
+        $email = Registry::get('settings.Company.company_orders_email');
+
+        if (empty($email)) {
+            $email = Registry::get('settings.Company.company_site_administrator');
+        }
+
+        if (empty($email)) {
+            $email = db_get_field(
+                "SELECT email FROM ?:users WHERE user_type = 'A' AND status = 'A' ORDER BY user_id LIMIT 1"
+            );
+        }
+
+        return $email ?: '';
+    }
+
+    /**
+     * Get current company ID.
+     *
+     * @return int
+     */
+    public static function getCompanyId(): int
+    {
+        return intval(Registry::get('runtime.company_id') ?: 1);
+    }
+
+    /**
+     * Ensure cache directory exists.
+     *
+     * @return bool
+     */
+    public static function ensureCacheDir(): bool
+    {
+        $cache_dir = self::getPath('cache');
+
+        if (!is_dir($cache_dir)) {
+            return @mkdir($cache_dir, 0755, true);
+        }
+
+        return true;
+    }
+
+    /**
+     * Ensure reports directory exists.
+     *
+     * @return bool
+     */
+    public static function ensureReportsDir(): bool
+    {
+        $reports_dir = self::getPath('reports');
+
+        if (!is_dir($reports_dir)) {
+            return function_exists('fn_mkdir') ? fn_mkdir($reports_dir) : @mkdir($reports_dir, 0755, true);
+        }
+
+        return true;
     }
 }

@@ -224,7 +224,11 @@ function fn_novoton_get_order_bookings($order_id)
 
 /**
  * Calculate price using stored price info
- * 
+ *
+ * @deprecated V2 stub — superseded by RoomPriceService for real-time prices
+ *             and PriceInfoCalculation for stored season prices.
+ *             Not called in any active flow. Safe to remove in a future release.
+ *
  * @param array $params Search parameters
  * @param array $price_info Price data from packages
  * @param array $hotel_data Optional hotel data
@@ -302,7 +306,10 @@ function fn_novoton_calculate_price($params, $price_info, $hotel_data = [])
 
 /**
  * Get stored price for a room
- * 
+ *
+ * @deprecated V2 stub — wraps fn_novoton_calculate_price() which is also deprecated.
+ *             Not called in any active flow. Safe to remove in a future release.
+ *
  * @param int $product_id Product ID
  * @param string $room_id Room ID
  * @param string $board_id Board ID

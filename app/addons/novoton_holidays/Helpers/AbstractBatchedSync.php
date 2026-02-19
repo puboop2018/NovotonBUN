@@ -21,6 +21,7 @@
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 abstract class AbstractBatchedSync implements SyncInterface
 {
@@ -71,8 +72,8 @@ abstract class AbstractBatchedSync implements SyncInterface
      */
     public function __construct()
     {
-        $this->batchSize = Config::DEFAULT_BATCH_SIZE;
-        $this->maxExecutionTime = Config::DEFAULT_MAX_EXECUTION_TIME;
+        $this->batchSize = ConfigService::DEFAULT_BATCH_SIZE;
+        $this->maxExecutionTime = ConfigService::DEFAULT_MAX_EXECUTION_TIME;
 
         $this->state = new StateManager($this->getSyncName());
         $this->logger = new SyncLogger($this->getSyncName());
@@ -117,7 +118,7 @@ abstract class AbstractBatchedSync implements SyncInterface
      */
     public function setBatchSize(int $size): void
     {
-        $this->batchSize = max(Config::MIN_BATCH_SIZE, min(Config::MAX_BATCH_SIZE, $size));
+        $this->batchSize = max(ConfigService::MIN_BATCH_SIZE, min(ConfigService::MAX_BATCH_SIZE, $size));
     }
 
     /**
@@ -127,7 +128,7 @@ abstract class AbstractBatchedSync implements SyncInterface
      */
     public function setMaxExecutionTime(int $seconds): void
     {
-        $this->maxExecutionTime = max(Config::MIN_EXECUTION_TIME, min(Config::MAX_EXECUTION_TIME, $seconds));
+        $this->maxExecutionTime = max(ConfigService::MIN_EXECUTION_TIME, min(ConfigService::MAX_EXECUTION_TIME, $seconds));
     }
 
     /**
@@ -158,7 +159,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected function getApi(): NovotonApi
     {
         if ($this->api === null) {
-            $srcDir = Config::getPath('src');
+            $srcDir = ConfigService::getPath('src');
             if (file_exists($srcDir . 'NovotonApi.php')) {
                 require_once($srcDir . 'NovotonApi.php');
             }
@@ -241,7 +242,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected function getMetadata(array $options): array
     {
         return [
-            'countries' => $options['countries'] ?? Config::getSelectedCountries(),
+            'countries' => $options['countries'] ?? ConfigService::getSelectedCountries(),
         ];
     }
 
@@ -295,7 +296,7 @@ abstract class AbstractBatchedSync implements SyncInterface
                 }
 
                 // Small delay to avoid API rate limits
-                usleep(Config::API_DELAY_MS * 1000);
+                usleep(ConfigService::API_DELAY_MS * 1000);
             }
 
             // Progress output

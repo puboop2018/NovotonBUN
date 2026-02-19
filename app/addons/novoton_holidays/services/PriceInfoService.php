@@ -3,7 +3,7 @@
  * Novoton PriceInfo Service
  *
  * Handles season-based price information for product tab display.
- * This is DIFFERENT from real-time booking prices (PriceService).
+ * This is DIFFERENT from real-time booking prices (RoomPriceService).
  *
  * V3 Architecture:
  * - Season prices are stored in novoton_hotel_packages.priceinfo_data JSON

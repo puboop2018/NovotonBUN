@@ -2,6 +2,8 @@
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 
 class AlternativesCommand extends AbstractCronCommand
 {
@@ -38,13 +40,8 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Checking alternative_RS for pending requests...");
         $this->output("");
 
-        $pending = db_get_array(
-            "SELECT * FROM ?:novoton_alternative_requests
-             WHERE status = 'pending'
-             AND novoton_request_id IS NOT NULL AND novoton_request_id != ''
-             AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)
-             ORDER BY created_at ASC LIMIT 50"
-        );
+        $altRepo = new AlternativeRequestRepository();
+        $pending = $altRepo->findPendingOlderThan(24);
         $pending = fn_novoton_decrypt_requests_pii($pending);
 
         if (empty($pending)) {
@@ -90,11 +87,7 @@ class AlternativesCommand extends AbstractCronCommand
                 continue;
             }
 
-            db_query(
-                "UPDATE ?:novoton_alternative_requests SET alternatives_data = ?s, status = 'alternatives_found', updated_at = NOW() WHERE request_id = ?i",
-                json_encode($alternatives),
-                $request['request_id']
-            );
+            $altRepo->markAlternativesFound($request['request_id'], json_encode($alternatives));
             $found++;
             $this->output("FOUND " . count($alternatives) . " alternatives", false);
 
@@ -103,10 +96,7 @@ class AlternativesCommand extends AbstractCronCommand
                 $sent = $this->sendAlternativeEmail($request, $alternatives);
                 if ($sent) {
                     $emailed++;
-                    db_query(
-                        "UPDATE ?:novoton_alternative_requests SET status = 'notified', notified_at = NOW() WHERE request_id = ?i",
-                        $request['request_id']
-                    );
+                    $altRepo->markNotified($request['request_id']);
                     $this->output(" -> Email sent");
                 } else {
                     $this->output(" -> Email FAILED");
@@ -131,12 +121,8 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Checking alternatives for RQ status bookings...");
         $this->output("");
 
-        $bookings = db_get_array(
-            "SELECT * FROM ?:novoton_bookings
-             WHERE novoton_status = 'RQ'
-             AND alternatives_requested = 0
-             ORDER BY created_at ASC LIMIT 50"
-        );
+        $bookingRepo = new BookingRepository();
+        $bookings = $bookingRepo->findRqWithoutAlternatives();
 
         if (empty($bookings)) {
             $this->output("No RQ bookings to check.");
@@ -151,10 +137,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             if (!empty($booking['novoton_reservation_id'])) {
                 $this->api->getAlternatives($booking['novoton_reservation_id']);
-                db_query(
-                    "UPDATE ?:novoton_bookings SET alternatives_requested = 1 WHERE booking_id = ?i",
-                    $booking['booking_id']
-                );
+                $bookingRepo->update($booking['booking_id'], ['alternatives_requested' => 1]);
                 $this->output("checked");
             } else {
                 $this->output("no reservation ID");
@@ -170,11 +153,8 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Sending notifications for found alternatives...");
         $this->output("");
 
-        $requests = db_get_array(
-            "SELECT * FROM ?:novoton_alternative_requests
-             WHERE status = 'alternatives_found'
-             ORDER BY updated_at ASC LIMIT 20"
-        );
+        $altRepo = new AlternativeRequestRepository();
+        $requests = $altRepo->findUnnotified();
         $requests = fn_novoton_decrypt_requests_pii($requests);
 
         if (empty($requests)) {
@@ -197,10 +177,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             $sent = $this->sendAlternativeEmail($request, $alternatives);
             if ($sent) {
-                db_query(
-                    "UPDATE ?:novoton_alternative_requests SET status = 'notified', notified_at = NOW() WHERE request_id = ?i",
-                    $request['request_id']
-                );
+                $altRepo->markNotified($request['request_id']);
                 $notified++;
                 $this->output("SENT");
             } else {
@@ -218,16 +195,11 @@ class AlternativesCommand extends AbstractCronCommand
         $days = (int)$this->getParam('days', 30);
         $this->output("Expiring requests older than {$days} days...");
 
-        $result = db_query(
-            "UPDATE ?:novoton_alternative_requests
-             SET status = 'expired', updated_at = NOW()
-             WHERE status IN ('pending', 'pending_manual')
-             AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
-            $days
-        );
+        $altRepo = new AlternativeRequestRepository();
+        $result = $altRepo->expireOlderThan($days);
 
         $this->output("Expired {$result} requests.");
-        return ['success' => true, 'stats' => ['expired' => (int)$result]];
+        return ['success' => true, 'stats' => ['expired' => $result]];
     }
 
     private function sendAlternativeEmail(array $request, array $alternatives): bool
