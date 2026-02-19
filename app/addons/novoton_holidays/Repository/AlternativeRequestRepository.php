@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class AlternativeRequestRepository
+class AlternativeRequestRepository implements AlternativeRequestRepositoryInterface
 {
     /**
      * Find request by ID.

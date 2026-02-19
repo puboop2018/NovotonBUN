@@ -13,7 +13,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
-class BookingRepository
+class BookingRepository implements BookingRepositoryInterface
 {
     /**
      * Request-scoped memo cache for hydrated bookings.

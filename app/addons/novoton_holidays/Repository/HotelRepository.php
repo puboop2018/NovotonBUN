@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class HotelRepository
+class HotelRepository implements HotelRepositoryInterface
 {
     /**
      * Find hotel by ID
