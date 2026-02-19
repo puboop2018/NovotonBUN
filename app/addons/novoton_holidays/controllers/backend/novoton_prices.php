@@ -701,7 +701,7 @@ if ($mode == 'cron_offers_update') {
         $duration = time() - $start_time;
         
         // Log sync
-        $syncLogRepo->logSync('offers_update', count($hotels), 0, $updated, $errors, $duration);
+        $syncLogRepo->logSync('offers_update', count($hotels), $updated, $errors, $duration);
         
         echo "\n=== SUMMARY ===\n";
         echo "Updated: {$updated}\n";

@@ -462,21 +462,31 @@
             <tr>
                 <th>Date</th>
                 <th>Type</th>
-                <th>Synced</th>
-                <th>Added</th>
+                <th>Total</th>
                 <th>Updated</th>
-                <th>Errors</th>
+                <th>Failed</th>
+                <th>Status</th>
                 <th>Duration</th>
             </tr>
             {foreach from=$recent_syncs item=log}
             <tr>
                 <td>{$log.sync_date|date_format:"%d.%m.%Y %H:%M"}</td>
                 <td><span class="novoton-badge novoton-badge-info">{$log.sync_type}</span></td>
-                <td>{$log.hotels_synced}</td>
-                <td style="color: green;">{$log.hotels_added}</td>
-                <td>{$log.hotels_updated}</td>
-                <td style="color: {if $log.errors > 0}red{else}#999{/if};">{$log.errors}</td>
-                <td>{$log.duration}s</td>
+                <td>{$log.products_total}</td>
+                <td>{$log.products_updated}</td>
+                <td style="color: {if $log.products_failed > 0}red{else}#999{/if};">{$log.products_failed}</td>
+                <td>
+                    {if $log.status == 'completed'}
+                        <span class="novoton-badge novoton-badge-success">OK</span>
+                    {elseif $log.status == 'failed'}
+                        <span class="novoton-badge novoton-badge-danger">Failed</span>
+                    {elseif $log.status == 'running'}
+                        <span class="novoton-badge novoton-badge-warning">Running</span>
+                    {else}
+                        <span class="novoton-badge">{$log.status}</span>
+                    {/if}
+                </td>
+                <td>{$log.duration_seconds}s</td>
             </tr>
             {/foreach}
         </table>
