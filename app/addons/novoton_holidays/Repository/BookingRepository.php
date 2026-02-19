@@ -608,6 +608,50 @@ class BookingRepository
     }
 
     /**
+     * Find bookings by Novoton API status (e.g. ASK, RQ).
+     *
+     * @param string $novoton_status  API-level status (e.g. 'ASK')
+     * @param array  $statuses        Internal statuses to match
+     * @param int    $limit           Max rows
+     */
+    public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = ?s AND status IN (?a)
+             ORDER BY created_at DESC LIMIT ?i",
+            $novoton_status,
+            $statuses,
+            $limit
+        );
+    }
+
+    /**
+     * Find RQ bookings that haven't had alternatives requested yet.
+     */
+    public function findRqWithoutAlternatives(int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = 'RQ' AND alternatives_requested = 0
+             ORDER BY created_at ASC LIMIT ?i",
+            $limit
+        );
+    }
+
+    /**
+     * Count orphan bookings (no order, older than N hours).
+     */
+    public function countOrphans(int $hours = 48): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
+            $hours
+        );
+    }
+
+    /**
      * Build WHERE clause from filters
      */
     private function buildWhereClause(array $filters): string

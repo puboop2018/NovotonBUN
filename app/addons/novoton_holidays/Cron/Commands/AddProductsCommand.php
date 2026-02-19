@@ -4,6 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -33,25 +34,8 @@ class AddProductsCommand extends AbstractCronCommand
         }
         $this->output("");
 
-        // Build query
-        $query = "SELECT * FROM ?:novoton_hotels
-                  WHERE has_prices = 'Y'
-                  AND country = ?s
-                  AND (product_id IS NULL OR product_id = 0)";
-        $params = [$country];
-
-        if (!empty($exclude_resorts)) {
-            $query .= " AND (city NOT IN (?a) OR city IS NULL)";
-            $params[] = $exclude_resorts;
-        }
-
-        $query .= " ORDER BY hotel_name";
-        if ($limit > 0) {
-            $query .= " LIMIT ?i";
-            $params[] = $limit;
-        }
-
-        $hotels = db_get_array($query, ...$params);
+        $hotelRepo = new HotelRepository();
+        $hotels = $hotelRepo->findUnlinkedWithPrices($country, $exclude_resorts, $limit);
         $this->output("Found " . count($hotels) . " hotels to add.");
         $this->output("");
 
@@ -71,9 +55,10 @@ class AddProductsCommand extends AbstractCronCommand
 
             $this->output("[{$hotel_id}] {$hotel['hotel_name']} ({$hotel['city']}) ... ", false);
 
+            // Check if CS-Cart product already exists (core products table)
             $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
             if ($existing) {
-                db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $existing, $hotel_id);
+                $hotelRepo->linkProduct($hotel_id, (int)$existing);
                 $this->output("LINKED");
                 continue;
             }
@@ -106,7 +91,7 @@ class AddProductsCommand extends AbstractCronCommand
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 
             if ($product_id) {
-                db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $product_id, $hotel_id);
+                $hotelRepo->linkProduct($hotel_id, $product_id);
 
                 try {
                     $images = $this->api->getHotelImages($hotel_id);

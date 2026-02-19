@@ -3,6 +3,8 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 
 class OffersUpdateCommand extends AbstractCronCommand
 {
@@ -23,11 +25,8 @@ class OffersUpdateCommand extends AbstractCronCommand
 
         $country = strtoupper($this->getParam('country', 'BULGARIA'));
 
-        $last_import = db_get_field(
-            "SELECT sync_date FROM ?:novoton_sync_log
-             WHERE sync_type = 'product_import' AND status = 'completed'
-             ORDER BY log_id DESC LIMIT 1"
-        );
+        $syncRepo = new SyncLogRepository();
+        $last_import = $syncRepo->getLastSyncDate('product_import');
 
         if (empty($last_import)) {
             $this->output("ERROR: No previous product import found!");
@@ -40,7 +39,6 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output("Checking offers added/modified after this time...");
         $this->output("");
 
-        $sync_start = date('Y-m-d\TH:i:s');
         $response = $this->api->getOffersUpdate($last_import, $country);
 
         if (!$response || !isset($response->Offer)) {
@@ -52,6 +50,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output("Found " . count($offers) . " offers to check.");
         $this->output("");
 
+        $hotelRepo = new HotelRepository();
         $new_hotels = 0;
         $added_to_cart = 0;
         $current_year = date('Y');
@@ -64,11 +63,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $this->output("[{$hotel_id}] {$hotel_name} ... ", false);
 
-            $existing = db_get_row(
-                "SELECT hotel_id, hotel_name, country, city, has_prices, hotel_list_synced_at
-                 FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                $hotel_id
-            );
+            $existing = $hotelRepo->findById($hotel_id);
 
             if (!$existing) {
                 $this->output("NEW HOTEL - ", false);
@@ -84,7 +79,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                         'has_prices' => 'N',
                         'hotel_list_synced_at' => date('Y-m-d H:i:s')
                     ];
-                    db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $hotel_data, $hotel_data);
+                    $hotelRepo->upsert($hotel_data);
                     $new_hotels++;
                     $existing = $hotel_data;
                     $this->output("synced - ", false);
@@ -97,15 +92,16 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
 
             // Check if should add to CS-Cart
-            if ($existing['has_prices'] != 'Y') {
+            if (($existing['has_prices'] ?? '') != 'Y') {
                 $this->output("no prices");
                 continue;
             }
 
             $product_code = 'NVT' . $hotel_id;
+            // Check CS-Cart core products table
             $existing_product = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
             if ($existing_product) {
-                db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $existing_product, $hotel_id);
+                $hotelRepo->linkProduct($hotel_id, (int)$existing_product);
                 $this->output("linked");
                 continue;
             }
@@ -144,7 +140,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
             if ($product_id) {
-                db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $product_id, $hotel_id);
+                $hotelRepo->linkProduct($hotel_id, $product_id);
                 $this->attachImages($hotel_id, $product_id, $image_base_url);
                 $added_to_cart++;
                 $this->output("ADDED (ID: {$product_id})");
@@ -162,10 +158,10 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->logToSyncTable('offers_update', $added_to_cart);
 
         // Save sync timestamp
-        db_query(
-            "INSERT INTO ?:novoton_sync_log (sync_type, sync_date, status, products_updated) VALUES ('product_import', NOW(), 'completed', ?i)",
-            $added_to_cart
-        );
+        $syncRepo->create('product_import', [
+            'updated' => $added_to_cart,
+            'status'  => 'completed',
+        ]);
 
         $stats = ['new_hotels' => $new_hotels, 'added_to_cart' => $added_to_cart];
         $this->sendReport('offers_update', [

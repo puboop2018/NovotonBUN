@@ -166,6 +166,27 @@ class SyncLogRepository
     }
     
     /**
+     * Trim logs to keep only the N most recent entries.
+     *
+     * @return int Number of rows deleted
+     */
+    public function trimToLatest(int $keep = 100): int
+    {
+        $total = $this->count();
+        if ($total <= $keep) {
+            return 0;
+        }
+        $threshold_id = db_get_field(
+            "SELECT log_id FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 1 OFFSET ?i",
+            $keep - 1
+        );
+        if (!$threshold_id) {
+            return 0;
+        }
+        return (int) db_query("DELETE FROM ?:novoton_sync_log WHERE log_id < ?i", $threshold_id);
+    }
+
+    /**
      * Get sync statistics
      */
     public function getStats(int $days = 7): array

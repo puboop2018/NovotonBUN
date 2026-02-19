@@ -326,6 +326,54 @@ class HotelRepository
     }
 
     /**
+     * Link a hotel to a CS-Cart product.
+     */
+    public function linkProduct(string $hotel_id, int $product_id): bool
+    {
+        return (bool) db_query(
+            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+            $product_id,
+            $hotel_id
+        );
+    }
+
+    /**
+     * Insert or update a hotel record (upsert).
+     */
+    public function upsert(array $data): bool
+    {
+        return (bool) db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $data, $data);
+    }
+
+    /**
+     * Find hotels that have prices but no linked CS-Cart product.
+     *
+     * @param string $country         Country filter
+     * @param array  $excludeResorts  Cities to exclude
+     * @param int    $limit           0 = no limit
+     */
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
+    {
+        $query = "SELECT * FROM ?:novoton_hotels
+                  WHERE has_prices = 'Y' AND country = ?s
+                  AND (product_id IS NULL OR product_id = 0)";
+        $params = [$country];
+
+        if (!empty($excludeResorts)) {
+            $query .= " AND (city NOT IN (?a) OR city IS NULL)";
+            $params[] = $excludeResorts;
+        }
+
+        $query .= " ORDER BY hotel_name";
+        if ($limit > 0) {
+            $query .= " LIMIT ?i";
+            $params[] = $limit;
+        }
+
+        return db_get_array($query, ...$params);
+    }
+
+    /**
      * Build WHERE clause from filters
      */
     private function buildWhereClause(array $filters): string
