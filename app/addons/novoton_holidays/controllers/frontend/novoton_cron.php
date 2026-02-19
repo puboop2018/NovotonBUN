@@ -8,19 +8,12 @@
  * See CronDispatcher::getAvailableModes() for the full list.
  */
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
-
-// Load helpers (Config.php no longer needed — use ConfigService)
-$helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
-require_once($helpers_dir . 'SyncLogger.php');
-require_once($helpers_dir . 'DatabaseHelper.php');
-require_once($helpers_dir . 'CronHelper.php');
 
 // Authentication
 $provided_access_key = $_REQUEST['access_key'] ?? '';

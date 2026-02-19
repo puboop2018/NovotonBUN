@@ -17,11 +17,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
-// Load helpers
-$helpers_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Helpers/';
-require_once($helpers_dir . 'Config.php');
-require_once($helpers_dir . 'CronHelper.php');
-
 // Authentication via access_key
 $provided_key = $_REQUEST['access_key'] ?? '';
 if (!CronHelper::validateAccessKey($provided_key)) {
