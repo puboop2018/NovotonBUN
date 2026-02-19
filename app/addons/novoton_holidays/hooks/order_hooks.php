@@ -12,7 +12,6 @@
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
@@ -33,12 +32,6 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  */
 function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
-    // Ensure API class is loaded
-    $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-    if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_dir . 'NovotonApi.php')) {
-        require_once $src_dir . 'NovotonApi.php';
-    }
-
     Container::getInstance()->bookingSubmissionService()->submitOrder($order_id, $cart);
 }
 

@@ -88,12 +88,6 @@ if ($_routed) {
 // MODES HANDLED IN THIS FILE
 // ============================================================================
 
-// Load repositories
-$addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/';
-require_once($addon_dir . 'Repository/HotelRepository.php');
-require_once($addon_dir . 'Repository/BookingRepository.php');
-require_once($addon_dir . 'Repository/SyncLogRepository.php');
-
 // ============================================================================
 // POST HANDLERS
 // ============================================================================

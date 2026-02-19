@@ -3,7 +3,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Services\PathResolver;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSync;
 
 class BatchedSyncCommand extends AbstractCronCommand
 {
@@ -33,10 +34,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        $helpers_dir = PathResolver::getPath('helpers');
-        require_once($helpers_dir . 'BatchedHotelInfoSync.php');
-
-        $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync();
+        $sync = new BatchedHotelInfoSync();
         $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);
@@ -61,10 +59,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        $helpers_dir = PathResolver::getPath('helpers');
-        require_once($helpers_dir . 'BatchedPriceInfoSync.php');
-
-        $sync = new \Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSync();
+        $sync = new BatchedPriceInfoSync();
         $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);

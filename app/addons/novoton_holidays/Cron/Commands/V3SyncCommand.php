@@ -2,7 +2,6 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\HotelSync;
 
@@ -23,12 +22,6 @@ class V3SyncCommand extends AbstractCronCommand
         $mode = $this->params['_mode'] ?? 'sync_hotels';
         $country = $this->getParam('country');
         $limit = (int)$this->getParam('limit', 0);
-
-        // Load HotelSync class
-        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-        if (file_exists($src_dir . 'HotelSync.php')) {
-            require_once($src_dir . 'HotelSync.php');
-        }
 
         $sync = new HotelSync();
 

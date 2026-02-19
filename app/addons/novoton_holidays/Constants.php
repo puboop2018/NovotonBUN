@@ -46,33 +46,6 @@ final class Constants
     public const BOARD_RO = 'RO';           // Room Only
     public const BOARD_SC = 'SC';           // Self Catering
 
-    /**
-     * Board code => display name map.
-     * @deprecated Use ValueObjects\BoardType::allWithAliases() instead.
-     *             Kept for backward compatibility with templates referencing Constants::BOARD_NAMES.
-     */
-    public const BOARD_NAMES = [
-        self::BOARD_AI => 'All Inclusive',
-        'ALL INCL' => 'All Inclusive',
-        'ALL INCLUSIVE' => 'All Inclusive',
-        'ALLINC' => 'All Inclusive',
-        self::BOARD_UAI => 'Ultra All Inclusive',
-        'ULTRA ALL INCL' => 'Ultra All Inclusive',
-        'ULTRA ALL INCLUSIVE' => 'Ultra All Inclusive',
-        self::BOARD_FB => 'Full Board',
-        self::BOARD_FB_PLUS => 'Full Board Plus',
-        'FULL BOARD' => 'Full Board',
-        self::BOARD_HB => 'Half Board',
-        self::BOARD_HB_PLUS => 'Half Board Plus',
-        'HALF BOARD' => 'Half Board',
-        self::BOARD_BB => 'Bed & Breakfast',
-        'BED AND BREAKFAST' => 'Bed & Breakfast',
-        self::BOARD_RO => 'Room Only',
-        'ROOM ONLY' => 'Room Only',
-        self::BOARD_SC => 'Self Catering',
-        'SELF CATERING' => 'Self Catering',
-    ];
-
     // ========== Reservation Status Mapping ==========
     // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses
 

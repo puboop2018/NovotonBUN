@@ -142,11 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // GET modes
 if ($mode === 'manage') {
-    // Load BookingRepository
-    $repo_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Repository/';
-    if (!class_exists('Tygh\Addons\NovotonHolidays\Repository\BookingRepository')) {
-        require_once($repo_dir . 'BookingRepository.php');
-    }
     $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
 
     // List all bookings from novoton_bookings (single source of truth)
