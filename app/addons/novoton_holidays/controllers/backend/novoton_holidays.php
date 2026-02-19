@@ -229,6 +229,7 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);
     Tygh::$app['view']->assign('addon_settings', $addon_settings);
+    Tygh::$app['view']->assign('addon_version', Registry::get('addons.novoton_holidays.version') ?: '');
     
     // Get available resorts for exclusion management
     $resorts_by_country = [];

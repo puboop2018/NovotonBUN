@@ -504,8 +504,8 @@
     </a>
 {/capture}
 
-{include file="common/mainbox.tpl" 
-    title="Novoton Holidays Dashboard" 
-    content=$smarty.capture.mainbox 
+{include file="common/mainbox.tpl"
+    title="Novoton Holidays Dashboard{if $addon_version} v{$addon_version}{/if}"
+    content=$smarty.capture.mainbox
     buttons=$smarty.capture.buttons
 }
