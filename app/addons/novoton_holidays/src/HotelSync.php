@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Hotel Synchronization Class (V3 Architecture)
  * Path: app/addons/novoton_holidays/src/HotelSync.php

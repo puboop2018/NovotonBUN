@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton API Integration Class
  * Thin facade delegating to NovotonHttpClient, NovotonXmlParser, and CommissionCalculator.

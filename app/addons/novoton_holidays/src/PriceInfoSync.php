@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton PriceInfo Synchronization Class
  * Path: app/addons/novoton_holidays/src/PriceInfoSync.php
