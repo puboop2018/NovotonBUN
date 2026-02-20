@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton PriceInfo Synchronization Class
  * Path: app/addons/novoton_holidays/src/PriceInfoSync.php
@@ -9,7 +10,7 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
@@ -22,8 +23,8 @@ class PriceInfoSync
     public function __construct()
     {
         $this->api = new NovotonApi();
-        $this->defaultCountry = ConfigService::getDefaultCountry();
-        $this->productPrefixes = ConfigService::getProductCodePrefixes();
+        $this->defaultCountry = ConfigProvider::getDefaultCountry();
+        $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
     }
 
     /**

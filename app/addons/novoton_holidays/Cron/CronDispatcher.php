@@ -1,20 +1,21 @@
 <?php
+declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
-use Tygh\Addons\NovotonHolidays\Cron\Commands\ResInfoCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\CleanupCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\HotelListSyncCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\V3SyncCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\FullSyncCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\RoomPriceCheckCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\AlternativesCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\OffersUpdateCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\AddProductsCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\DataSyncCommand;
-use Tygh\Addons\NovotonHolidays\Cron\Commands\BatchedSyncCommand;
-
+/**
+ * Cron Command Dispatcher
+ *
+ * Auto-discovers command classes from the Cron/Commands/ directory.
+ * Any class extending AbstractCronCommand is automatically registered
+ * via its getModes() method. Adding a new command requires only creating
+ * a new file in Commands/ — no modification to this class needed (OCP).
+ *
+ * @package NovotonHolidays
+ * @since 3.3.0
+ */
 class CronDispatcher
 {
+    /** @var array<string, class-string<AbstractCronCommand>> mode => command class */
     private static $commandMap = [];
     private static $registered = false;
     private $api;
@@ -27,29 +28,36 @@ class CronDispatcher
         self::registerCommands();
     }
 
+    /**
+     * Auto-discover and register all command classes from the Commands/ directory.
+     */
     private static function registerCommands(): void
     {
         if (self::$registered) {
             return;
         }
 
-        $commands = [
-            ResInfoCommand::class,
-            CleanupCommand::class,
-            HotelListSyncCommand::class,
-            V3SyncCommand::class,
-            FullSyncCommand::class,
-            RoomPriceCheckCommand::class,
-            AlternativesCommand::class,
-            OffersUpdateCommand::class,
-            AddProductsCommand::class,
-            DataSyncCommand::class,
-            BatchedSyncCommand::class,
-        ];
+        $commandsDir = __DIR__ . '/Commands/';
+        if (!is_dir($commandsDir)) {
+            self::$registered = true;
+            return;
+        }
 
-        foreach ($commands as $class) {
-            foreach ($class::getModes() as $mode) {
-                self::$commandMap[$mode] = $class;
+        $namespace = 'Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\';
+
+        foreach (glob($commandsDir . '*Command.php') as $file) {
+            $className = $namespace . basename($file, '.php');
+
+            if (!class_exists($className)) {
+                require_once $file;
+            }
+
+            if (!class_exists($className) || !is_subclass_of($className, AbstractCronCommand::class)) {
+                continue;
+            }
+
+            foreach ($className::getModes() as $mode) {
+                self::$commandMap[$mode] = $className;
             }
         }
 
@@ -72,6 +80,9 @@ class CronDispatcher
         return isset(self::$commandMap[$mode]);
     }
 
+    /**
+     * @return array<string, string> mode => description
+     */
     public static function getAvailableModes(): array
     {
         self::registerCommands();
@@ -81,5 +92,14 @@ class CronDispatcher
             $modes[$mode] = $class::getDescription();
         }
         return $modes;
+    }
+
+    /**
+     * Reset for testing — forces re-discovery on next use.
+     */
+    public static function reset(): void
+    {
+        self::$commandMap = [];
+        self::$registered = false;
     }
 }

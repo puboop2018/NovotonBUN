@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Service
  * 
@@ -20,28 +21,27 @@ class BookingService implements BookingServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
-
+    
     /** @var GuestDataService */
     private $guestService;
-
+    
     /** @var RoomPriceService */
     private $priceService;
-
-    /** @var BookingRepository */
-    private $bookingRepo;
-
+    
     /** @var bool */
     private $debug = false;
-
+    
     /**
      * Constructor
      */
-    public function __construct()
-    {
+    public function __construct(
+        ?GuestDataService $guestService = null,
+        ?RoomPriceService $priceService = null,
+        ?BookingRepository $bookingRepo = null
+    ) {
         $this->api = fn_novoton_get_api();
-        $this->guestService = new GuestDataService();
-        $this->priceService = new RoomPriceService();
-        $this->bookingRepo = new BookingRepository();
+        $this->guestService = $guestService ?? new GuestDataService();
+        $this->priceService = $priceService ?? new RoomPriceService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -101,34 +101,30 @@ class BookingService implements BookingServiceInterface
             'base_price' => floatval($bookingData['base_price'] ?? 0),
             'api_price' => floatval($bookingData['api_price'] ?? 0),
             'total_price' => floatval($bookingData['total_price'] ?? 0),
-            'currency' => ConfigService::getApiCurrency(),
+            'currency' => ConfigProvider::getApiCurrency(),
             'status' => 'pending',
             'special_requests' => $bookingData['special_requests'] ?? '',
             'notes' => $bookingData['special_requests'] ?? '',
         ];
         
-        // Check for duplicate booking via repository
-        $existing = $this->bookingRepo->findExisting(
-            $booking_record['hotel_id'],
-            $booking_record['check_in'],
-            $booking_record['check_out'],
-            $booking_record['holder_name']
-        );
-
-        if ($existing) {
-            $this->updateBooking((int)$existing['booking_id'], $booking_record);
-            return (int)$existing['booking_id'];
+        // Check for duplicate booking
+        $existing_id = $this->findDuplicateBooking($booking_record);
+        
+        if ($existing_id) {
+            // Update existing
+            $this->updateBooking($existing_id, $booking_record);
+            return $existing_id;
         }
-
-        // Create new via repository
-        $booking_id = $this->bookingRepo->create($booking_record);
-
+        
+        // Create new
+        $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $booking_record);
+        
         $this->log('Booking created', [
             'booking_id' => $booking_id,
             'hotel_id' => $bookingData['hotel_id'],
             'rooms' => count($rooms_data)
         ]);
-
+        
         return $booking_id;
     }
     
@@ -143,12 +139,16 @@ class BookingService implements BookingServiceInterface
     {
         // Remove fields that shouldn't be updated
         unset($data['booking_id'], $data['created_at']);
-
-        $result = $this->bookingRepo->update($booking_id, $data);
-
+        
+        $result = db_query(
+            "UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
+            $data,
+            $booking_id
+        );
+        
         $this->log('Booking updated', ['booking_id' => $booking_id]);
-
-        return $result;
+        
+        return $result > 0;
     }
     
     /**
@@ -159,7 +159,9 @@ class BookingService implements BookingServiceInterface
      */
     public function getBooking(int $booking_id): ?array
     {
-        return $this->bookingRepo->findByIdHydrated($booking_id);
+        // Use hydrated repository to decode JSON once and cache per-request
+        $repo = new BookingRepository();
+        return $repo->findByIdHydrated($booking_id);
     }
     
     /**
@@ -170,7 +172,10 @@ class BookingService implements BookingServiceInterface
      */
     public function getBookingsForOrder(int $order_id): array
     {
-        return $this->bookingRepo->findByOrderId($order_id);
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
+            $order_id
+        );
     }
     
     /**
@@ -421,6 +426,32 @@ class BookingService implements BookingServiceInterface
     }
     
     /**
+     * Find duplicate pending booking
+     * 
+     * @param array $booking_record Booking data
+     * @return int|null Existing booking ID or null
+     */
+    private function findDuplicateBooking(array $booking_record): ?int
+    {
+        $existing = db_get_field(
+            "SELECT booking_id FROM ?:novoton_bookings 
+             WHERE order_id = 0 
+             AND hotel_id = ?s 
+             AND check_in = ?s 
+             AND check_out = ?s 
+             AND holder_name = ?s
+             AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+             LIMIT 1",
+            $booking_record['hotel_id'],
+            $booking_record['check_in'],
+            $booking_record['check_out'],
+            $booking_record['holder_name']
+        );
+        
+        return $existing ? intval($existing) : null;
+    }
+    
+    /**
      * Get board name from ID
      *
      * Delegates to BoardType value object (single source of truth).
@@ -593,7 +624,7 @@ class BookingService implements BookingServiceInterface
                 'remark' => $priceResult['remark'],
                 'important' => $priceResult['important'],
                 'total_price' => $totalPrice,
-                'currency' => ConfigService::getApiCurrency(),
+                'currency' => ConfigProvider::getApiCurrency(),
             ],
         ];
     }
@@ -662,7 +693,7 @@ class BookingService implements BookingServiceInterface
      */
     public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int
     {
-        $prefix = ConfigService::getFirstProductCodePrefix();
+        $prefix = ConfigProvider::getFirstProductCodePrefix();
         $productCode = $prefix . $hotelId;
 
         $productId = (int)db_get_field(

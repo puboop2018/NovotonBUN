@@ -282,8 +282,6 @@ if ($mode == 'run_cron') {
         // Include and run the cron logic
         $_REQUEST = array_merge($_REQUEST, $params);
         
-        // Classes are auto-loaded via PSR-4 autoloader registered in init.php
-        
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         
         // Execute based on mode

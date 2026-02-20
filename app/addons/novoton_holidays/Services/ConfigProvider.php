@@ -1,22 +1,21 @@
 <?php
+declare(strict_types=1);
 /**
- * Novoton Holidays - Typed Configuration Service
+ * Novoton Holidays - Configuration Provider
  *
- * Wraps Registry::get('addons.novoton_holidays') with proper type coercion.
- * All addon setting access should go through this class.
+ * Read-only access to addon settings from Registry with typed getters.
+ * Single Responsibility: settings retrieval and type coercion only.
  *
  * @package NovotonHolidays
- * @since 3.2.0
+ * @since 3.3.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 
-class ConfigService
+class ConfigProvider
 {
-    // ========== Constants (migrated from Helpers\Config) ==========
-
     const ADDON_ID = 'novoton_holidays';
 
     // API rate limiting
@@ -45,10 +44,7 @@ class ConfigService
     /** @var array|null Cached settings array, loaded once per request. */
     private static $settings;
 
-    /** @var array|null Cached paths array. */
-    private static $paths;
-
-    private static function settings(): array
+    public static function settings(): array
     {
         if (self::$settings === null) {
             self::$settings = Registry::get('addons.novoton_holidays') ?? [];
@@ -56,15 +52,12 @@ class ConfigService
         return self::$settings;
     }
 
-    /**
-     * Reset cached settings (useful after settings are updated mid-request).
-     */
     public static function reset(): void
     {
         self::$settings = null;
     }
 
-    // ========== Boolean Settings ==========
+    // ── Boolean Settings ──
 
     public static function isDebugMode(): bool
     {
@@ -97,7 +90,7 @@ class ConfigService
         return (self::settings()['delete_products_on_uninstall'] ?? 'N') === 'Y';
     }
 
-    // ========== Float Settings ==========
+    // ── Float Settings ──
 
     public static function getCommission(): float
     {
@@ -109,12 +102,8 @@ class ConfigService
         return max(0.0, floatval(self::settings()['currency_risk_commission'] ?? 0));
     }
 
-    // ========== String Settings ==========
+    // ── String Settings ──
 
-    /**
-     * Get the currency that the Novoton API returns prices in.
-     * Configurable in addon settings; defaults to EUR.
-     */
     public static function getApiCurrency(): string
     {
         $val = (string)(self::settings()['api_currency'] ?? 'EUR');
@@ -161,11 +150,9 @@ class ConfigService
         return (string)(self::settings()['version'] ?? 'unknown');
     }
 
-    // ========== Array Settings ==========
+    // ── Array Settings ──
 
-    /**
-     * @return string[] Parsed list of selected country names.
-     */
+    /** @return string[] */
     public static function getSelectedCountries(): array
     {
         $val = self::settings()['selected_countries'] ?? '';
@@ -175,47 +162,34 @@ class ConfigService
         return $val !== '' ? array_map('trim', explode(',', $val)) : [];
     }
 
-    /**
-     * @return string[] All configured product code prefixes (e.g. ['NVT']).
-     */
+    /** @return string[] */
     public static function getProductCodePrefixes(): array
     {
         $val = self::settings()['product_code_prefixes'] ?? 'NVT';
         return array_map('trim', explode(',', $val));
     }
 
-    /**
-     * @return string The first (primary) product code prefix.
-     */
     public static function getFirstProductCodePrefix(): string
     {
         return self::getProductCodePrefixes()[0] ?? 'NVT';
     }
 
-    /**
-     * @return string[] Excluded resort names.
-     */
+    /** @return string[] */
     public static function getExcludedResorts(): array
     {
         $val = self::settings()['excluded_resorts'] ?? '';
         return $val !== '' ? array_map('trim', explode(',', $val)) : [];
     }
 
-    // ========== Raw Settings Access ==========
+    // ── Raw Access ──
 
-    /**
-     * Return the full settings array (for passing to components that need it).
-     */
     public static function all(): array
     {
         return self::settings();
     }
 
     /**
-     * Get a single raw setting value by key.
-     *
-     * @param string $key     Setting key name
-     * @param mixed  $default Default if not set
+     * @param mixed $default
      * @return mixed
      */
     public static function get(string $key, $default = null)
@@ -223,62 +197,13 @@ class ConfigService
         return self::settings()[$key] ?? $default;
     }
 
-    // ========== Paths ==========
+    // ── Environment ──
 
-    /**
-     * Get all addon paths (cached).
-     *
-     * @return array
-     */
-    public static function getPaths(): array
-    {
-        if (self::$paths === null) {
-            $addon_dir = Registry::get('config.dir.addons') . self::ADDON_ID . '/';
-            $cache_dir = Registry::get('config.dir.cache_misc') ?? (defined('DIR_ROOT') ? DIR_ROOT . '/var/cache/' : '/tmp/');
-
-            self::$paths = [
-                'addon'     => $addon_dir,
-                'src'       => $addon_dir . 'src/',
-                'helpers'   => $addon_dir . 'Helpers/',
-                'functions' => $addon_dir . 'functions/',
-                'cache'     => $cache_dir . 'novoton/',
-                'reports'   => function_exists('fn_get_files_dir_path')
-                    ? fn_get_files_dir_path() . 'novoton_reports/'
-                    : $addon_dir . 'reports/',
-            ];
-        }
-        return self::$paths;
-    }
-
-    /**
-     * Get a specific addon path.
-     *
-     * @param string $key Path key (addon, src, helpers, functions, cache, reports)
-     * @return string
-     */
-    public static function getPath(string $key): string
-    {
-        $paths = self::getPaths();
-        return $paths[$key] ?? '';
-    }
-
-    // ========== Environment ==========
-
-    /**
-     * Get timezone from CS-Cart settings.
-     *
-     * @return string
-     */
     public static function getTimezone(): string
     {
         return Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
     }
 
-    /**
-     * Get admin email for notifications.
-     *
-     * @return string
-     */
     public static function getAdminEmail(): string
     {
         $email = Registry::get('settings.Company.company_orders_email');
@@ -296,45 +221,8 @@ class ConfigService
         return $email ?: '';
     }
 
-    /**
-     * Get current company ID.
-     *
-     * @return int
-     */
     public static function getCompanyId(): int
     {
         return intval(Registry::get('runtime.company_id') ?: 1);
-    }
-
-    /**
-     * Ensure cache directory exists.
-     *
-     * @return bool
-     */
-    public static function ensureCacheDir(): bool
-    {
-        $cache_dir = self::getPath('cache');
-
-        if (!is_dir($cache_dir)) {
-            return @mkdir($cache_dir, 0755, true);
-        }
-
-        return true;
-    }
-
-    /**
-     * Ensure reports directory exists.
-     *
-     * @return bool
-     */
-    public static function ensureReportsDir(): bool
-    {
-        $reports_dir = self::getPath('reports');
-
-        if (!is_dir($reports_dir)) {
-            return function_exists('fn_mkdir') ? fn_mkdir($reports_dir) : @mkdir($reports_dir, 0755, true);
-        }
-
-        return true;
     }
 }

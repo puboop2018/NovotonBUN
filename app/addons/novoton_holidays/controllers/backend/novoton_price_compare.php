@@ -18,20 +18,9 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
-// Load required classes
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
-
-if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
-if (!class_exists('Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation') && file_exists($services_dir . 'PriceInfoCalculation.php')) {
-    require_once($services_dir . 'PriceInfoCalculation.php');
-}
-
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 /**
  * Mode: compare
@@ -48,7 +37,7 @@ if ($mode == 'compare') {
     $nights = intval($_REQUEST['nights'] ?? 7);
     $adults = intval($_REQUEST['adults'] ?? 2);
     $children_ages = $_REQUEST['children_ages'] ?? '';
-    $show_debug = \Tygh\Addons\NovotonHolidays\Services\ConfigService::isDebugMode();
+    $show_debug = ConfigProvider::isDebugLogging();
 
     // Parse children ages
     $children_arr = [];
@@ -528,7 +517,7 @@ if ($mode == 'compare') {
         }
     }
 
-    $commission = ConfigService::getCommission();
+    $commission = ConfigProvider::getCommission();
     $apiPriceWithCommission = $apiPrice * (1 + $commission / 100);
 
     if ($apiPriceFound) {

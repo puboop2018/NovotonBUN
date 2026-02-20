@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Security Service
  * 
@@ -196,7 +197,9 @@ class SecurityService
             $sanitized['q'] = $this->sanitizeString($params['q'], 200);
         }
 
-        // Debug mode flag
+        // Note: debug mode is gated by server-side ConfigProvider::isDebugLogging(),
+        // not by URL parameters. The 'debug' and 'reset_circuit' URL params are no longer accepted.
+
         // Legacy child_age_N parameters
         for ($i = 1; $i <= 6; $i++) {
             $key = 'child_age_' . $i;
@@ -524,7 +527,7 @@ class SecurityService
         $key = Registry::get('config.crypt_key');
         
         if (empty($key)) {
-            $key = ConfigService::getApiKey();
+            $key = ConfigProvider::getApiKey();
         }
 
         if (empty($key)) {

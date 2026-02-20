@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton HTTP Client
  * Handles HTTP requests, retries with exponential backoff, and circuit breaker.

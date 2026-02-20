@@ -40,7 +40,7 @@ function fn_novoton_csv_escape(string $value): string
  * @param array $summary Summary statistics
  * @return string CSV content
  */
-function fn_novoton_generate_import_csv_report($results, $import_type = 'manual', $summary = [])
+function fn_novoton_generate_import_csv_report($results, $import_type = 'manual', $summary = []): string
 {
     $csv_lines = [];
 
@@ -87,7 +87,7 @@ function fn_novoton_generate_import_csv_report($results, $import_type = 'manual'
  * @param array  $results     Optional detailed results for CSV attachment (empty = no attachment)
  * @return bool Success
  */
-function fn_novoton_send_import_report_email($results, $import_type, $summary, $country = '')
+function fn_novoton_send_import_report_email($results, $import_type, $summary, $country = ''): bool
 {
     // Get admin email from settings
     $admin_email = Registry::get('settings.Company.company_orders_email');
@@ -189,7 +189,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
  * @param string $dir Directory path
  * @param int $days Keep files newer than this many days
  */
-function fn_novoton_cleanup_old_reports($dir, $days = 7)
+function fn_novoton_cleanup_old_reports($dir, $days = 7): void
 {
     if (!is_dir($dir)) {
         return;
@@ -209,7 +209,7 @@ function fn_novoton_cleanup_old_reports($dir, $days = 7)
  * 
  * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string]
  */
-function fn_novoton_generate_hotel_features_csv()
+function fn_novoton_generate_hotel_features_csv(): array
 {
     $result = [
         'success' => false,
@@ -324,7 +324,7 @@ function fn_novoton_generate_hotel_features_csv()
  *
  * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string, 'filename' => string]
  */
-function fn_novoton_generate_hotel_features_xml()
+function fn_novoton_generate_hotel_features_xml(): array
 {
     $result = [
         'success'   => false,

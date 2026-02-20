@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Batched Price Info Sync
  *
@@ -25,7 +26,8 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedPriceInfoSync
 {
@@ -311,7 +313,7 @@ class BatchedPriceInfoSync
                         $synced_this_run++;
                         $this->output("OK ({$seasons_count} seasons)");
                     }
-                } catch (\Exception $e) {
+                } catch (ApiException $e) {
                     $this->output("ERROR: " . $e->getMessage());
                     $state['errors']++;
                     $state['error_ids'][] = "{$hotel_id}/{$package_id}";
@@ -364,7 +366,7 @@ class BatchedPriceInfoSync
                             $state['errors']--;
                             $this->output("  [{$retry_key}] retry OK");
                         }
-                    } catch (\Exception $e) {
+                    } catch (ApiException $e) {
                         $this->output("  [{$retry_key}] retry failed: " . $e->getMessage());
                     }
                 }
@@ -634,11 +636,11 @@ class BatchedPriceInfoSync
     }
 
     /**
-     * Get configured countries — delegates to ConfigService::getSelectedCountries()
+     * Get configured countries — delegates to ConfigProvider::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        return ConfigService::getSelectedCountries();
+        return ConfigProvider::getSelectedCountries();
     }
 
     /**

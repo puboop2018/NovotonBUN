@@ -98,8 +98,6 @@ foreach ($function_files as $file) {
  * - fn_novoton_request_alternatives()
  * - fn_novoton_get_alternatives()
  * - fn_novoton_get_order_bookings()
- * - fn_novoton_calculate_price()      @deprecated — V2 stub, use RoomPriceService / PriceInfoCalculation
- * - fn_novoton_get_stored_price()      @deprecated — V2 stub, not called in any active flow
  * - fn_novoton_cron_resinfo()
  * 
  * EMAIL (functions/email.php):

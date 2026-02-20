@@ -17,10 +17,10 @@ require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 // Authenticate
-$storedKey = ConfigService::getCronAccessKey();
+$storedKey = ConfigProvider::getCronAccessKey();
 
 $providedKey = $_GET['access_key'] ?? '';
 if (empty($providedKey) && isset($argv[1])) {

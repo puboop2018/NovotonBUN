@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Room Price Service
  *
@@ -29,10 +30,10 @@ class RoomPriceService
      */
     public function __construct()
     {
-        $this->commission = ConfigService::getCommission();
-        $this->currency = ConfigService::getApiCurrency();
+        $this->commission = ConfigProvider::getCommission();
+        $this->currency = ConfigProvider::getApiCurrency();
         $this->cache = new CacheService();
-        $this->debug = ConfigService::isDebugLogging();
+        $this->debug = ConfigProvider::isDebugLogging();
     }
     
     /**
@@ -60,7 +61,7 @@ class RoomPriceService
      */
     public static function getApiCurrency(): string
     {
-        return ConfigService::getApiCurrency();
+        return ConfigProvider::getApiCurrency();
     }
 
     /**

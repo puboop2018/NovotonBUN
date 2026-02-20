@@ -26,7 +26,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @param array $user_data User profile data
  * @param array $auth      Authentication context
  */
-function fn_novoton_holidays_user_login_post($user_data, $auth)
+function fn_novoton_holidays_user_login_post($user_data, $auth): void
 {
     if (empty($auth['user_id'])) {
         return;
@@ -70,7 +70,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth)
  *
  * @param array $user_data Newly created user data (includes user_id, email)
  */
-function fn_novoton_holidays_create_user_post($user_data)
+function fn_novoton_holidays_create_user_post($user_data): void
 {
     if (empty($user_data['user_id']) || empty($user_data['email'])) {
         return;

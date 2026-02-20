@@ -8,7 +8,8 @@
  * See CronDispatcher::getAvailableModes() for the full list.
  */
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
@@ -18,7 +19,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 // Authentication
 $provided_access_key = $_REQUEST['access_key'] ?? '';
 if (!CronHelper::validateAccessKey($provided_access_key)) {
-    $storedKey = ConfigService::getCronAccessKey();
+    $storedKey = ConfigProvider::getCronAccessKey();
     if (empty($storedKey)) {
         CronHelper::sendAuthError('Cron Access Key not configured in addon settings.');
     } else {
@@ -35,7 +36,7 @@ $logger = new SyncLogger($mode);
 $logger->outputHeader($mode);
 
 // Load API
-$src_dir = ConfigService::getPath('src');
+$src_dir = PathResolver::getPath('src');
 if (file_exists($src_dir . 'NovotonApi.php')) {
     require_once($src_dir . 'NovotonApi.php');
 }

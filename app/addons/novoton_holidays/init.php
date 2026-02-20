@@ -26,90 +26,6 @@ if (file_exists($config_file)) {
     require_once $config_file;
 }
 
-// Auto-create missing tables for existing installations
-// This runs once per request but checks are fast
-fn_novoton_ensure_tables_exist();
-
-/**
- * Ensure all required tables exist (for updates to existing installations)
- */
-function fn_novoton_ensure_tables_exist()
-{
-    static $checked = false;
-    if ($checked) return;
-    $checked = true;
-    
-    // Drop redundant resort column — city field is the resort (City = Resort in API)
-    $resort_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'resort'");
-    if (!empty($resort_col)) {
-        db_query("ALTER TABLE `?:novoton_hotels` DROP COLUMN `resort`");
-    }
-
-    // Drop redundant stars column — hotel_type stores the original value (e.g. "4*", "Apart")
-    $stars_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'stars'");
-    if (!empty($stars_col)) {
-        db_query("ALTER TABLE `?:novoton_hotels` DROP COLUMN `stars`");
-    }
-
-    // Rename synced_at -> hotel_list_synced_at if old column still exists
-    $old_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'synced_at'");
-    if (!empty($old_col)) {
-        db_query("ALTER TABLE `?:novoton_hotels` CHANGE COLUMN `synced_at` `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date'");
-    } else {
-        $new_col = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotel_list_synced_at'");
-        if (empty($new_col)) {
-            db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync date' AFTER `last_price_check`");
-        }
-    }
-
-    // Add hotelinfo_synced_at column if missing (for existing installations)
-    $col_exists = db_get_field("SHOW COLUMNS FROM `?:novoton_hotels` LIKE 'hotelinfo_synced_at'");
-    if (empty($col_exists)) {
-        db_query("ALTER TABLE `?:novoton_hotels` ADD COLUMN `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync date' AFTER `hotel_list_synced_at`");
-    }
-
-    // Check if sync_log table exists
-    $sync_log_exists = db_get_field("SHOW TABLES LIKE '?:novoton_sync_log'");
-
-    if (empty($sync_log_exists)) {
-        // Column names must match addon.xml schema: products_total, products_updated, etc.
-        db_query("CREATE TABLE IF NOT EXISTS `?:novoton_sync_log` (
-            `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `sync_type` varchar(50) NOT NULL DEFAULT 'hotels',
-            `sync_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `products_total` int(11) NOT NULL DEFAULT 0,
-            `products_updated` int(11) NOT NULL DEFAULT 0,
-            `products_failed` int(11) NOT NULL DEFAULT 0,
-            `duration_seconds` int(11) DEFAULT NULL,
-            `notes` text DEFAULT NULL,
-            `status` enum('running','completed','failed') NOT NULL DEFAULT 'running',
-            PRIMARY KEY (`log_id`),
-            KEY `idx_sync_type` (`sync_type`),
-            KEY `idx_sync_date` (`sync_date`),
-            KEY `idx_type_status_date` (`sync_type`, `status`, `sync_date`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    } else {
-        // Add missing columns to existing table (matching addon.xml schema)
-        $columns = db_get_hash_array("SHOW COLUMNS FROM ?:novoton_sync_log", 'Field');
-
-        if (!isset($columns['products_total'])) {
-            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `products_total` int(11) NOT NULL DEFAULT 0 AFTER `sync_date`");
-        }
-        if (!isset($columns['products_updated'])) {
-            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `products_updated` int(11) NOT NULL DEFAULT 0 AFTER `products_total`");
-        }
-        if (!isset($columns['products_failed'])) {
-            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `products_failed` int(11) NOT NULL DEFAULT 0 AFTER `products_updated`");
-        }
-        if (!isset($columns['duration_seconds'])) {
-            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `duration_seconds` int(11) DEFAULT NULL AFTER `products_failed`");
-        }
-        if (!isset($columns['notes'])) {
-            db_query("ALTER TABLE ?:novoton_sync_log ADD COLUMN `notes` text DEFAULT NULL AFTER `duration_seconds`");
-        }
-    }
-}
-
 // Register PSR-4 autoloader for ALL addon namespaces:
 // Services, Helpers, Repository, Cron, Cron\Commands, ValueObjects, Exceptions, root
 spl_autoload_register(function ($class) {
@@ -122,7 +38,6 @@ spl_autoload_register(function ($class) {
 
     // Non-standard directory mappings (namespace dir doesn't match filesystem)
     $overrides = [
-        'Services/'   => __DIR__ . '/services/',         // lowercase dir
         'Exceptions/' => __DIR__ . '/src/Exceptions/',   // nested inside src/
     ];
 

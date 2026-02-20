@@ -11,7 +11,7 @@
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -25,11 +25,11 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @return array List of country names in uppercase
  */
 if (!function_exists('fn_novoton_parse_countries')) {
-function fn_novoton_parse_countries($selected_countries = null)
+function fn_novoton_parse_countries($selected_countries = null): array
 {
     // If null passed, get from settings
     if ($selected_countries === null) {
-        $selected_countries = ConfigService::get('selected_countries', '');
+        $selected_countries = ConfigProvider::get('selected_countries', '');
     }
     
     $countries = [];
@@ -83,13 +83,13 @@ function fn_novoton_parse_countries($selected_countries = null)
  * 
  * @return bool
  */
-function fn_novoton_is_debug()
+function fn_novoton_is_debug(): bool
 {
     if (!empty($_REQUEST['debug_novoton'])) {
         return true;
     }
     
-    return ConfigService::isDebugMode();
+    return ConfigProvider::isDebugMode();
 }
 
 /**
@@ -97,7 +97,7 @@ function fn_novoton_is_debug()
  * 
  * @return NovotonApi|null
  */
-function fn_novoton_get_api()
+function fn_novoton_get_api(): ?NovotonApi
 {
     static $api = null;
     
@@ -130,7 +130,7 @@ function fn_novoton_get_api()
  * @param int $product_id Product ID
  * @return bool|string True on success, 'no_data', or false on failure
  */
-function fn_novoton_holidays_update_product_prices($product_id)
+function fn_novoton_holidays_update_product_prices($product_id): bool|string
 {
     $api = fn_novoton_get_api();
     if (!$api) {

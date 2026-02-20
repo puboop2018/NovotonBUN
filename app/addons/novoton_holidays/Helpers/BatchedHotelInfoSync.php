@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Batched Hotel Info Sync
  *
@@ -26,7 +27,8 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedHotelInfoSync
 {
@@ -246,7 +248,7 @@ class BatchedHotelInfoSync
             );
 
             // Pre-fetch product_code -> product_id map for unlinked hotels
-            $prefixes = ConfigService::getProductCodePrefixes();
+            $prefixes = ConfigProvider::getProductCodePrefixes();
 
             $code_patterns = [];
             foreach ($batch as $hid) {
@@ -294,7 +296,7 @@ class BatchedHotelInfoSync
                         $packages_count = $this->countPackages($hotel_info);
                         $this->output("OK ({$packages_count} packages)");
                     }
-                } catch (\Exception $e) {
+                } catch (ApiException $e) {
                     $this->output("ERROR: " . $e->getMessage());
                     $state['errors']++;
                     $state['error_ids'][] = $hotel_id;
@@ -336,7 +338,7 @@ class BatchedHotelInfoSync
                             $state['errors']--;
                             $this->output("  [{$retry_id}] retry OK");
                         }
-                    } catch (\Exception $e) {
+                    } catch (ApiException $e) {
                         $this->output("  [{$retry_id}] retry failed: " . $e->getMessage());
                     }
                 }
@@ -556,7 +558,7 @@ class BatchedHotelInfoSync
      */
     private function reconcileProductLinks(): void
     {
-        $prefixes = ConfigService::getProductCodePrefixes();
+        $prefixes = ConfigProvider::getProductCodePrefixes();
 
         // 1. Re-link: hotels with NULL product_id whose product exists (bulk approach)
         $orphaned = db_get_fields(
@@ -720,7 +722,7 @@ class BatchedHotelInfoSync
                 } else {
                     $this->output("  No changes");
                 }
-            } catch (\Exception $e) {
+            } catch (ApiException $e) {
                 $this->output("  Error: " . $e->getMessage());
             }
         }
@@ -743,11 +745,11 @@ class BatchedHotelInfoSync
     }
 
     /**
-     * Get configured countries — delegates to ConfigService::getSelectedCountries()
+     * Get configured countries — delegates to ConfigProvider::getSelectedCountries()
      */
     private function getConfiguredCountries(): array
     {
-        return ConfigService::getSelectedCountries();
+        return ConfigProvider::getSelectedCountries();
     }
 
     /**

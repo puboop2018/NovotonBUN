@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Cron Helper
  *
@@ -19,7 +20,8 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 
 class CronHelper
 {
@@ -56,13 +58,13 @@ class CronHelper
      */
     public static function validateAccessKey(string $providedKey): bool
     {
-        $storedKey = ConfigService::getCronAccessKey();
+        $storedKey = ConfigProvider::getCronAccessKey();
 
         if (empty($storedKey)) {
             return false;
         }
 
-        return !empty($providedKey) && $providedKey === $storedKey;
+        return !empty($providedKey) && hash_equals($storedKey, $providedKey);
     }
 
     /**
@@ -90,7 +92,7 @@ class CronHelper
         header('Content-Type: text/plain; charset=utf-8');
 
         // Load API
-        $srcDir = ConfigService::getPath('src');
+        $srcDir = PathResolver::getPath('src');
         if (file_exists($srcDir . 'NovotonApi.php')) {
             require_once($srcDir . 'NovotonApi.php');
         }
@@ -103,170 +105,6 @@ class CronHelper
             'logger' => $logger,
             'mode' => $mode,
         ];
-    }
-
-    /**
-     * Create CS-Cart product from hotel data
-     *
-     * @param array $hotel Hotel data array
-     * @param NovotonApi $api API instance for fetching additional data
-     * @param int $categoryId Category to assign product to
-     * @return int|null Product ID or null on failure
-     */
-    public static function createProductFromHotel(array $hotel, NovotonApi $api, int $categoryId): ?int
-    {
-        $hotelId = $hotel['hotel_id'];
-        $hotelName = $hotel['hotel_name'] ?? '';
-        $city = $hotel['city'] ?? '';
-        $country = $hotel['country'] ?? '';
-
-        $productCode = DatabaseHelper::getProductCode($hotelId);
-
-        // Check if product already exists
-        $existingProductId = db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            $productCode
-        );
-
-        if ($existingProductId) {
-            // Link existing product to hotel
-            db_query(
-                "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
-                $existingProductId,
-                $hotelId
-            );
-            return (int)$existingProductId;
-        }
-
-        // Build page title
-        $currentYear = date('Y');
-        $pageTitle = self::buildHotelTitle($hotelName, $city, $country, $currentYear);
-
-        // Fetch description
-        $description = '';
-        try {
-            $descResponse = $api->getHotelDescription($hotelId, 'UK');
-            if ($descResponse && isset($descResponse->Description)) {
-                $description = (string)$descResponse->Description;
-            }
-        } catch (\Exception $e) {
-            // Ignore description fetch errors
-        }
-
-        // Create product
-        $productData = [
-            'product' => $hotelName,
-            'product_code' => $productCode,
-            'price' => 0,
-            'status' => 'D', // Disabled until prices are synced
-            'company_id' => ConfigService::getCompanyId(),
-            'main_category' => $categoryId,
-            'category_ids' => [$categoryId],
-            'full_description' => $description,
-            'page_title' => $pageTitle,
-            'meta_description' => $pageTitle,
-        ];
-
-        $productId = fn_update_product($productData, 0, CART_LANGUAGE);
-
-        if (!$productId) {
-            return null;
-        }
-
-        // Link product to hotel
-        db_query(
-            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
-            $productId,
-            $hotelId
-        );
-
-        // Fetch and attach images
-        self::attachHotelImages($productId, $hotelId, $api);
-
-        // Sync facilities
-        try {
-            if (function_exists('fn_novoton_sync_hotel_facilities')) {
-                fn_novoton_sync_hotel_facilities($hotelId);
-            }
-        } catch (\Exception $e) {
-            // Ignore facility sync errors
-        }
-
-        return $productId;
-    }
-
-    /**
-     * Attach images to product from API
-     *
-     * @param int $productId Product ID
-     * @param string $hotelId Hotel ID
-     * @param NovotonApi $api API instance
-     * @return int Number of images attached
-     */
-    public static function attachHotelImages(int $productId, string $hotelId, NovotonApi $api): int
-    {
-        try {
-            $imagesResponse = $api->getHotelImages($hotelId);
-
-            if (!$imagesResponse || !isset($imagesResponse->url)) {
-                return 0;
-            }
-
-            $imgCount = 0;
-            $maxImages = ConfigService::MAX_IMAGES_PER_HOTEL;
-
-            foreach ($imagesResponse->url as $url) {
-                $imageUrl = ConfigService::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
-
-                if (function_exists('fn_novoton_add_product_image')) {
-                    fn_novoton_add_product_image($productId, $imageUrl, $imgCount === 0);
-                }
-
-                $imgCount++;
-                if ($imgCount >= $maxImages) {
-                    break;
-                }
-            }
-
-            return $imgCount;
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Build hotel title for SEO
-     *
-     * @param string $hotelName
-     * @param string $city
-     * @param string $country
-     * @param string $year
-     * @return string
-     */
-    public static function buildHotelTitle(string $hotelName, string $city, string $country, string $year): string
-    {
-        if (function_exists('fn_novoton_build_hotel_title')) {
-            return fn_novoton_build_hotel_title($hotelName, $city, $country, $year);
-        }
-
-        $parts = array_filter([$hotelName, $city, $country, $year]);
-        return implode(' - ', $parts);
-    }
-
-    /**
-     * Get or create category by path
-     *
-     * @param string $categoryPath Path like "BULGARIA///Litoral BULGARIA"
-     * @return int Category ID
-     */
-    public static function getOrCreateCategory(string $categoryPath): int
-    {
-        if (function_exists('fn_novoton_get_or_create_category')) {
-            return fn_novoton_get_or_create_category($categoryPath);
-        }
-
-        // Fallback: just return default category
-        return 1;
     }
 
     /**
@@ -285,7 +123,7 @@ class CronHelper
         }
 
         // Fall back to settings
-        return ConfigService::getExcludedResorts();
+        return ConfigProvider::getExcludedResorts();
     }
 
     /**

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Database Helper
  *
@@ -7,67 +8,30 @@
  * - Upsert operations (INSERT ... ON DUPLICATE KEY UPDATE)
  * - Bulk lookups with caching
  *
- * Injectable: Use DatabaseHelper::getInstance() or inject via constructor.
- * Testable: Use DatabaseHelper::setInstance($mockHelper) in tests.
- *
  * @package NovotonHolidays
- * @since 3.1.0
+ * @since 3.1.0 (instance-based since 3.3.0)
  */
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DatabaseHelper
 {
-    /**
-     * Singleton instance (replaceable for testing)
-     * @var self|null
-     */
-    private static ?self $instance = null;
-
-    /**
-     * Lookup cache for product codes -> product IDs
-     * @var array
-     */
+    /** @var array Lookup cache for product codes -> product IDs */
     private array $productCodeCache = [];
 
-    /**
-     * Lookup cache for hotel IDs -> hotel data
-     * @var array
-     */
+    /** @var array Lookup cache for hotel IDs -> hotel data */
     private array $hotelCache = [];
-
-    /**
-     * Get the singleton instance.
-     */
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
-    /**
-     * Replace the singleton instance (for testing / DI).
-     */
-    public static function setInstance(?self $instance): void
-    {
-        self::$instance = $instance;
-    }
 
     /**
      * Batch update hotels has_prices flag after room_price API checks
      *
-     * Used after calling room_price API to mark which hotels have available prices.
-     * Updates the has_prices column (Y/N) and last_price_check timestamp.
-     *
-     * @param array $withPrices Array of hotel_ids that have prices (set has_prices = 'Y')
-     * @param array $withoutPrices Array of hotel_ids without prices (set has_prices = 'N')
+     * @param array $withPrices Hotel IDs that have prices (set has_prices = 'Y')
+     * @param array $withoutPrices Hotel IDs without prices (set has_prices = 'N')
      * @return int Number of rows updated
      */
-    public static function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
+    public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
     {
         $updated = 0;
 
@@ -95,21 +59,18 @@ class DatabaseHelper
     /**
      * Bulk lookup: Get existing product IDs for multiple hotel IDs
      *
-     * @param array $hotelIds Array of hotel IDs
-     * @return array Map of hotel_id => product_id
+     * @return array<string, int> Map of hotel_id => product_id
      */
-    public static function getProductIdsByHotelIds(array $hotelIds): array
+    public function getProductIdsByHotelIds(array $hotelIds): array
     {
         if (empty($hotelIds)) {
             return [];
         }
 
-        // Generate product codes
         $productCodes = array_map(function ($id) {
-            return ConfigService::PRODUCT_CODE_PREFIX . $id;
+            return ConfigProvider::PRODUCT_CODE_PREFIX . $id;
         }, $hotelIds);
 
-        // Single query to get all existing products
         $results = \db_get_hash_array(
             "SELECT product_code, product_id
              FROM ?:products
@@ -118,10 +79,9 @@ class DatabaseHelper
             $productCodes
         );
 
-        // Map back to hotel IDs
         $map = [];
         foreach ($hotelIds as $hotelId) {
-            $code = ConfigService::PRODUCT_CODE_PREFIX . $hotelId;
+            $code = ConfigProvider::PRODUCT_CODE_PREFIX . $hotelId;
             if (isset($results[$code])) {
                 $map[$hotelId] = $results[$code]['product_id'];
             }
@@ -133,10 +93,9 @@ class DatabaseHelper
     /**
      * Bulk lookup: Check which hotel IDs already exist in database
      *
-     * @param array $hotelIds Array of hotel IDs to check
-     * @return array Array of existing hotel IDs
+     * @return string[] Existing hotel IDs
      */
-    public static function getExistingHotelIds(array $hotelIds): array
+    public function getExistingHotelIds(array $hotelIds): array
     {
         if (empty($hotelIds)) {
             return [];
@@ -151,10 +110,9 @@ class DatabaseHelper
     /**
      * Bulk upsert hotels (INSERT ... ON DUPLICATE KEY UPDATE)
      *
-     * @param array $hotels Array of hotel data arrays
-     * @return array ['inserted' => int, 'updated' => int]
+     * @return array{inserted: int, updated: int}
      */
-    public static function upsertHotels(array $hotels): array
+    public function upsertHotels(array $hotels): array
     {
         if (empty($hotels)) {
             return ['inserted' => 0, 'updated' => 0];
@@ -191,11 +149,9 @@ class DatabaseHelper
     /**
      * Upsert hotel packages (batch)
      *
-     * @param string $hotelId Hotel ID
-     * @param array $packages Array of package data
      * @return int Number of packages upserted
      */
-    public static function upsertHotelPackages(string $hotelId, array $packages): int
+    public function upsertHotelPackages(string $hotelId, array $packages): int
     {
         if (empty($packages)) {
             return 0;
@@ -234,7 +190,7 @@ class DatabaseHelper
      * @param array $links Array of ['hotel_id' => x, 'product_id' => y]
      * @return int Number of links created
      */
-    public static function linkProductsToHotels(array $links): int
+    public function linkProductsToHotels(array $links): int
     {
         if (empty($links)) {
             return 0;
@@ -247,7 +203,6 @@ class DatabaseHelper
                 continue;
             }
 
-            // Reject invalid product_ids — must be a positive integer
             $pid = intval($link['product_id']);
             if ($pid <= 0) {
                 continue;
@@ -267,16 +222,10 @@ class DatabaseHelper
 
     /**
      * Get hotels for sync with optimized field selection
-     *
-     * @param array $conditions Array of conditions ['key' => value]
-     * @param int $limit Limit
-     * @param array $fields Fields to select (empty = minimal set for sync)
-     * @return array
      */
-    public static function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
+    public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
     {
         if (empty($fields)) {
-            // Minimal fields for sync operations (excludes large JSON columns)
             $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_prices', 'product_id'];
         }
 
@@ -310,12 +259,8 @@ class DatabaseHelper
 
     /**
      * Get last sync date for a specific sync type
-     *
-     * @param string $syncType
-     * @param string|null $subType Optional sub-type from notes JSON
-     * @return string|null
      */
-    public static function getLastSyncDate(string $syncType, ?string $subType = null): ?string
+    public function getLastSyncDate(string $syncType, ?string $subType = null): ?string
     {
         $query = "SELECT MAX(sync_date) FROM ?:novoton_sync_log
                   WHERE sync_type = ?s AND status = 'completed'";
@@ -331,12 +276,8 @@ class DatabaseHelper
 
     /**
      * Get sync statistics from sync_log
-     *
-     * @param string $syncType
-     * @param int $days Number of days to look back
-     * @return array
      */
-    public static function getSyncStats(string $syncType, int $days = 30): array
+    public function getSyncStats(string $syncType, int $days = 30): array
     {
         $stats = \db_get_row(
             "SELECT
@@ -364,10 +305,9 @@ class DatabaseHelper
     /**
      * Cleanup old sync logs
      *
-     * @param int $days Keep logs newer than this many days
      * @return int Number of deleted records
      */
-    public static function cleanupOldLogs(int $days = 90): int
+    public function cleanupOldLogs(int $days = 90): int
     {
         return (int) \db_query(
             "DELETE FROM ?:novoton_sync_log
@@ -378,29 +318,22 @@ class DatabaseHelper
 
     /**
      * Get product code for hotel ID
-     *
-     * @param string $hotelId
-     * @return string
      */
-    public static function getProductCode(string $hotelId): string
+    public function getProductCode(string $hotelId): string
     {
-        return ConfigService::PRODUCT_CODE_PREFIX . $hotelId;
+        return ConfigProvider::PRODUCT_CODE_PREFIX . $hotelId;
     }
 
     /**
      * Extract hotel ID from product code
-     *
-     * @param string $productCode
-     * @return string|null
      */
-    public static function extractHotelId(string $productCode): ?string
+    public function extractHotelId(string $productCode): ?string
     {
-        $prefix = ConfigService::PRODUCT_CODE_PREFIX;
+        $prefix = ConfigProvider::PRODUCT_CODE_PREFIX;
         if (strpos($productCode, $prefix) === 0) {
             return substr($productCode, strlen($prefix));
         }
 
-        // Try extracting any number
         preg_match('/\d+/', $productCode, $matches);
         return $matches[0] ?? null;
     }
@@ -408,10 +341,9 @@ class DatabaseHelper
     /**
      * Clear lookup caches
      */
-    public static function clearCache(): void
+    public function clearCache(): void
     {
-        $self = self::getInstance();
-        $self->productCodeCache = [];
-        $self->hotelCache = [];
+        $this->productCodeCache = [];
+        $this->hotelCache = [];
     }
 }

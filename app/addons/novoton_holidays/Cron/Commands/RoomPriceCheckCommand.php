@@ -1,9 +1,10 @@
 <?php
+declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
-use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class RoomPriceCheckCommand extends AbstractCronCommand
 {
@@ -19,6 +20,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
     public function execute(): array
     {
+        $dbHelper = Container::getInstance()->databaseHelper();
         $check_in = $this->getParam('check_in', date('Y-m-d', strtotime('+7 days')));
         $nights = (int)$this->getParam('nights', 7);
         $limit = (int)$this->getParam('limit', 500);
@@ -31,7 +33,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $this->output("");
 
         $conditions = $country ? ['country' => $country] : [];
-        $hotels = DatabaseHelper::getHotelsForSync($conditions, $limit, ['hotel_id', 'hotel_name', 'country']);
+        $hotels = $dbHelper->getHotelsForSync($conditions, $limit, ['hotel_id', 'hotel_name', 'country']);
 
         $withPricesIds = [];
         $withoutPricesIds = [];
@@ -75,19 +77,19 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             // Batch update every 25 hotels
             if (($idx + 1) % 25 == 0) {
-                DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+                $dbHelper->batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
                 $withPricesCount += count($withPricesIds);
                 $withoutPricesCount += count($withoutPricesIds);
                 $withPricesIds = [];
                 $withoutPricesIds = [];
             }
 
-            usleep(ConfigService::API_DELAY_MS * 1000);
+            usleep(ConfigProvider::API_DELAY_MS * 1000);
         }
 
         // Final batch
         if (!empty($withPricesIds) || !empty($withoutPricesIds)) {
-            DatabaseHelper::batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+            $dbHelper->batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
             $withPricesCount += count($withPricesIds);
             $withoutPricesCount += count($withoutPricesIds);
         }
