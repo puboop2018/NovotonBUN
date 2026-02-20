@@ -203,6 +203,9 @@ final class Constants
     public const DEFAULT_NIGHTS = 7;
     public const DEFAULT_ROOMS = 1;
     public const DEFAULT_COMMISSION = 0;
+    public const DEFAULT_ADULT_AGE = 33;
+    public const DEFAULT_ISO_NATIONAL = 'RO';
+    public const DEFAULT_CREATED_BY = 'CS-Cart';
     
     // ========== Debug / Logging Settings Keys ==========
 

@@ -587,7 +587,7 @@ class NovotonApi
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
@@ -811,7 +811,7 @@ class NovotonApi
         <IdExtBoard></IdExtBoard>
         <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($roomGuests[0]['name'] ?? $bookingData['holder']) . '</Holder>
-        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
+        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL) . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
         <Comment>' . htmlspecialchars($comment . ' [Room ' . ($roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
@@ -838,7 +838,7 @@ class NovotonApi
         <IdExtBoard></IdExtBoard>
         <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($bookingData['holder']) . '</Holder>
-        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
+        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL) . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
         <Comment>' . htmlspecialchars($comment) . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
@@ -851,7 +851,7 @@ class NovotonApi
     <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
     <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
     <IdHotel>' . htmlspecialchars($bookingData['hotel_id']) . '</IdHotel>
-    <CreatedBy>CS-Cart</CreatedBy>
+    <CreatedBy>' . htmlspecialchars(Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
     <PackageName>' . htmlspecialchars($bookingData['package_name'] ?? '') . '</PackageName>
     <CheckIn>' . htmlspecialchars($bookingData['check_in']) . '</CheckIn>
     <CheckOut>' . htmlspecialchars($bookingData['check_out']) . '</CheckOut>
@@ -1025,7 +1025,7 @@ class NovotonApi
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
@@ -1173,7 +1173,7 @@ class NovotonApi
   <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
   <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
   <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? 'CS-Cart') . '</CreatedBy>
+  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
   <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
   <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
   <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
@@ -1249,7 +1249,7 @@ class NovotonApi
   <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
   <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
   <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? 'CS-Cart') . '</CreatedBy>
+  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
   <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
   <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
   <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
