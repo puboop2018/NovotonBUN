@@ -10,7 +10,7 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class FacilityRepository
+class FacilityRepository implements FacilityRepositoryInterface
 {
     /**
      * Find facility by ID

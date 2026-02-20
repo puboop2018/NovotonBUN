@@ -248,20 +248,9 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         'flex_days' => $flex_days
     ];
     
-    // Debug mode - enable to see API responses
-    $debug_mode = defined('NOVOTON_DEBUG');
+    // Debug mode - gated behind server-side config (not URL params)
+    $debug_mode = \Tygh\Addons\NovotonHolidays\Services\ConfigService::isDebugMode();
     $debug_log = [];
-
-    // Allow resetting circuit breaker in debug mode via &reset_circuit=1
-    if ($debug_mode && !empty($searchParams['reset_circuit'])) {
-        $api = fn_novoton_get_api();
-        if (method_exists($api, 'resetCircuitBreaker')) {
-            $api->resetCircuitBreaker();
-            $debug_log[] = "=== CIRCUIT BREAKER RESET ===";
-            $debug_log[] = "Circuit breaker has been manually reset.";
-            $debug_log[] = "";
-        }
-    }
     
     // If hotel_id is provided (product page), search for specific hotel
     if (!empty($searchParams['hotel_id'])) {
@@ -377,36 +366,18 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                 $boardTypes = ['ALL INCL', 'AI', 'FB', 'HB', 'BB', 'RO'];
             }
             
-            // If specific meal plan selected, try to find matching board
+            // If specific meal plan selected, reorder to put matching boards first
             if (!$searchAllBoards && !empty($mealPlan)) {
-                // Map user selection to possible API values
-                $boardMapping = [
-                    'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                    'UAI' => ['ULTRA ALL', 'UAI'],
-                    'FB' => ['FB', 'FULL BOARD'],
-                    'HB' => ['HB', 'HALF BOARD'],
-                    'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                    'RO' => ['RO', 'ROOM ONLY']
-                ];
-                
-                $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                
-                // Reorder to put preferred boards first
-                $reordered = [];
-                foreach ($preferredBoards as $pb) {
-                    foreach ($boardTypes as $bt) {
-                        if (stripos($bt, $pb) !== false || stripos($pb, $bt) !== false) {
-                            $reordered[] = $bt;
-                        }
-                    }
-                }
-                // Add remaining boards
+                $matching = [];
+                $others = [];
                 foreach ($boardTypes as $bt) {
-                    if (!in_array($bt, $reordered)) {
-                        $reordered[] = $bt;
+                    if (\Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::matchesMealPlan($bt, $mealPlan)) {
+                        $matching[] = $bt;
+                    } else {
+                        $others[] = $bt;
                     }
                 }
-                $boardTypes = array_unique($reordered);
+                $boardTypes = array_unique(array_merge($matching, $others));
             }
             
             // Get packages from hotelinfo - REQUIRED for room_price API
@@ -563,26 +534,13 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                     
                                     // Filter by meal plan if specified
                                     if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = [
-                                            'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                            'FB' => ['FB', 'FULL BOARD'],
-                                            'HB' => ['HB', 'HALF BOARD'],
-                                            'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                            'RO' => ['RO', 'ROOM ONLY']
-                                        ];
-                                        $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                        $boardMatch = false;
-                                        foreach ($preferredBoards as $pb) {
-                                            if (stripos($boardId, $pb) !== false) {
-                                                $boardMatch = true;
-                                                break;
-                                            }
+                                        if (!\Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::matchesMealPlan($boardId, $mealPlan)) {
+                                            continue;
                                         }
-                                        if (!$boardMatch) continue;
                                     }
-                                    
+
                                     $finalPrice = fn_novoton_get_api()->applyCommission($price);
-                                    
+
                                     $room_results[] = [
                                         'room_id' => $roomId,
                                         'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
@@ -607,25 +565,9 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 $packageName = (string)$xml->PackageName;
                                 
                                 if (!empty($roomId) && $price > 0) {
-                                    $includeMeal = true;
-                                    if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = [
-                                            'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                            'FB' => ['FB', 'FULL BOARD'],
-                                            'HB' => ['HB', 'HALF BOARD'],
-                                            'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                            'RO' => ['RO', 'ROOM ONLY']
-                                        ];
-                                        $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                        $includeMeal = false;
-                                        foreach ($preferredBoards as $pb) {
-                                            if (stripos($boardId, $pb) !== false) {
-                                                $includeMeal = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    
+                                    $includeMeal = $searchAllBoards || empty($mealPlan)
+                                        || \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::matchesMealPlan($boardId, $mealPlan);
+
                                     if ($includeMeal) {
                                         $finalPrice = fn_novoton_get_api()->applyCommission($price);
                                         
@@ -953,25 +895,11 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 
                                 // Filter by meal plan if specified
                                 if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = [
-                                        'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                        'UAI' => ['ULTRA ALL', 'UAI'],
-                                        'FB' => ['FB', 'FULL BOARD'],
-                                        'HB' => ['HB', 'HALF BOARD'],
-                                        'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                        'RO' => ['RO', 'ROOM ONLY']
-                                    ];
-                                    $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                    $boardMatch = false;
-                                    foreach ($preferredBoards as $pb) {
-                                        if (stripos($boardId, $pb) !== false) {
-                                            $boardMatch = true;
-                                            break;
-                                        }
+                                    if (!\Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::matchesMealPlan($boardId, $mealPlan)) {
+                                        continue;
                                     }
-                                    if (!$boardMatch) continue;
                                 }
-                                
+
                                 // Apply commission
                                 $finalPrice = fn_novoton_get_api()->applyCommission($price);
                                 
@@ -1046,27 +974,9 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                             $remark = isset($xml->remark) ? (string)$xml->remark : '';
                             
                             if (!empty($roomId) && $price > 0) {
-                                // Filter by meal plan if specified
-                                $includeMeal = true;
-                                if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = [
-                                        'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                        'UAI' => ['ULTRA ALL', 'UAI'],
-                                        'FB' => ['FB', 'FULL BOARD'],
-                                        'HB' => ['HB', 'HALF BOARD'],
-                                        'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                        'RO' => ['RO', 'ROOM ONLY']
-                                    ];
-                                    $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                    $includeMeal = false;
-                                    foreach ($preferredBoards as $pb) {
-                                        if (stripos($boardId, $pb) !== false) {
-                                            $includeMeal = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                
+                                $includeMeal = $searchAllBoards || empty($mealPlan)
+                                    || \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::matchesMealPlan($boardId, $mealPlan);
+
                                 if ($includeMeal) {
                                     $finalPrice = fn_novoton_get_api()->applyCommission($price);
                                     

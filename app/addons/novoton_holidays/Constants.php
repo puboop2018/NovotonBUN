@@ -17,7 +17,7 @@ final class Constants
 {
     // Addon info
     public const ADDON_ID = 'novoton_holidays';
-    public const VERSION = '2.7.0';
+    public const VERSION = '3.2.0';
     
     // ========== Booking Status ==========
     

@@ -13,15 +13,6 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
 
-require_once __DIR__ . '/Exceptions/NovotonException.php';
-require_once __DIR__ . '/Exceptions/ApiException.php';
-require_once __DIR__ . '/Exceptions/XmlParsingException.php';
-require_once __DIR__ . '/Exceptions/ValidationException.php';
-require_once __DIR__ . '/Exceptions/SyncException.php';
-require_once __DIR__ . '/NovotonHttpClient.php';
-require_once __DIR__ . '/NovotonXmlParser.php';
-require_once __DIR__ . '/CommissionCalculator.php';
-
 class NovotonApi
 {
     /** @var NovotonHttpClient */
@@ -413,11 +404,13 @@ class NovotonApi
         }
 
         // Log raw response for debugging
-        fn_log_event('general', 'runtime', [
-            'message' => 'Novoton room_price - Raw API response',
-            'response_length' => strlen($response),
-            'response_first_500' => substr($response, 0, 500)
-        ]);
+        if (ConfigService::isDebugMode()) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton room_price - Raw API response',
+                'response_length' => strlen($response),
+                'response_first_500' => substr($response, 0, 500)
+            ]);
+        }
 
         try {
             $result = $this->xmlParser->parse($response);
@@ -555,7 +548,7 @@ class NovotonApi
             }
         }
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => "hotel_quota for hotel {$hotelId}: " . json_encode($quotaMap)
             ]);
@@ -587,7 +580,7 @@ class NovotonApi
 
         $response = $this->callApi('hotel_quota', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response ?: '', 0, 500)
             ]);
@@ -633,7 +626,7 @@ class NovotonApi
             <Currency>EUR</Currency>
         </frmsearch>';
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Request',
                 'xml' => $xml,
@@ -643,7 +636,7 @@ class NovotonApi
 
         $response = $this->callApi('frmsearch', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Response',
                 'response' => substr($response ?: '', 0, 2000)
@@ -898,7 +891,7 @@ class NovotonApi
 
         $this->lastRequest = $xml;
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')',
                 'xml' => $xml
@@ -907,7 +900,7 @@ class NovotonApi
 
         $response = $this->callApi('hotel_res_RQ', $xml, $bookingData['lang'] ?? 'UK');
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (ConfigService::isDebugMode()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Response',
                 'response' => $response

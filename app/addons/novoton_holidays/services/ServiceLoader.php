@@ -74,7 +74,7 @@ foreach (['BookingService', 'GuestDataService', 'SearchService', 'RoomPriceServi
 }
 
 // Load repositories
-foreach (['HotelRepository', 'BookingRepository', 'FacilityRepository', 'SyncLogRepository'] as $class) {
+foreach (['HotelRepository', 'BookingRepository', 'FacilityRepository', 'SyncLogRepository', 'AlternativeRequestRepository'] as $class) {
     $file = $repository_dir . $class . '.php';
     if (file_exists($file) && !class_exists("Tygh\\Addons\\NovotonHolidays\\Repository\\{$class}")) {
         require_once $file;

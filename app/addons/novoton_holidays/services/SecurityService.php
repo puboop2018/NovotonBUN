@@ -197,15 +197,6 @@ class SecurityService
         }
 
         // Debug mode flag
-        if (!empty($params['debug'])) {
-            $sanitized['debug'] = true;
-        }
-
-        // Reset circuit breaker flag
-        if (!empty($params['reset_circuit'])) {
-            $sanitized['reset_circuit'] = true;
-        }
-
         // Legacy child_age_N parameters
         for ($i = 1; $i <= 6; $i++) {
             $key = 'child_age_' . $i;

@@ -10,7 +10,7 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class SyncLogRepository
+class SyncLogRepository implements SyncLogRepositoryInterface
 {
     /**
      * Find log by ID
