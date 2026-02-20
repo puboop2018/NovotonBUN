@@ -492,7 +492,7 @@ class SearchService implements SearchServiceInterface
         $results = [];
 
         $prevLibxml = libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($rawXml);
+        $xml = simplexml_load_string($rawXml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($prevLibxml);
 

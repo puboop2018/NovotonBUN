@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Constants
  * 
@@ -26,6 +27,8 @@ final class Constants
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_FAILED = 'failed';
+    public const STATUS_ASK = 'ask';             // On-request (waiting for hotel confirmation)
+    public const STATUS_WAITING = 'waiting';      // Waitlist
     
     // Novoton API status values (hotel_res_RQ response codes)
     public const NOVOTON_STATUS_CONFIRMED = 'OK';      // Reservation accepted and confirmed
@@ -39,12 +42,12 @@ final class Constants
     public const NOVOTON_STATUS_TO_INTERNAL = [
         self::NOVOTON_STATUS_CONFIRMED  => self::STATUS_CONFIRMED,  // OK  -> confirmed
         'Confirmed'                     => self::STATUS_CONFIRMED,
-        self::NOVOTON_STATUS_ON_REQUEST => 'ask',                   // ASK -> ask (on-request)
-        'OnRequest'                     => 'ask',
+        self::NOVOTON_STATUS_ON_REQUEST => self::STATUS_ASK,        // ASK -> ask (on-request)
+        'OnRequest'                     => self::STATUS_ASK,
         self::NOVOTON_STATUS_CANCELLED  => self::STATUS_CANCELLED,  // ST  -> cancelled
         'Cancelled'                     => self::STATUS_CANCELLED,
-        self::NOVOTON_STATUS_WAITLIST   => 'waiting',               // WT  -> waiting
-        'Waitlist'                      => 'waiting',
+        self::NOVOTON_STATUS_WAITLIST   => self::STATUS_WAITING,    // WT  -> waiting
+        'Waitlist'                      => self::STATUS_WAITING,
     ];
     
     // ========== Availability Status ==========

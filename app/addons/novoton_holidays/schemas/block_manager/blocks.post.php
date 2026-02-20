@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays Block Manager Schema
  * Path: app/addons/novoton_holidays/schemas/block_manager/blocks.post.php

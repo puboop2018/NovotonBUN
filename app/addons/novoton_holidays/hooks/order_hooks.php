@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Order Hook Functions
  *
@@ -57,7 +58,7 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
         return;
     }
 
-    $repo = new BookingRepository();
+    $repo = Container::getInstance()->bookingRepository();
     $all_bookings = $repo->findByOrderIds($order_ids);
 
     if (empty($all_bookings)) {
@@ -114,7 +115,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
     $hotels_cache = [];
     if (!empty($hotel_ids)) {
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
         $hotels_cache = $hotelRepo->getLocationsByIds(array_keys($hotel_ids));
     }
 
@@ -199,7 +200,7 @@ function _nvt_enrich_order_product_terms(
     if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
         $booking_id = intval($product['extra']['novoton_booking_id'] ?? 0);
         if ($booking_id > 0) {
-            $repo = new BookingRepository();
+            $repo = Container::getInstance()->bookingRepository();
             $terms = $repo->getTerms($booking_id);
             if (!empty($terms)) {
                 $payment_raw  = $terms['terms_of_payment_raw'] ?? '';

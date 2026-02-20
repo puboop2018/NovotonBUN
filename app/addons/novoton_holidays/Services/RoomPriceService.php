@@ -170,8 +170,13 @@ class RoomPriceService
         if ($this->commission <= 0) {
             return $price_with_commission;
         }
-        
-        return round($price_with_commission / (1 + ($this->commission / 100)), 2);
+
+        $divisor = 1 + ($this->commission / 100);
+        if (abs($divisor) < 0.0001) {
+            return $price_with_commission;
+        }
+
+        return round($price_with_commission / $divisor, 2);
     }
     
     /**

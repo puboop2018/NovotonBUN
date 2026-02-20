@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Installation Functions
  * 
@@ -317,6 +318,34 @@ function fn_novoton_holidays_upgrade_db()
                 $sql .= ", ADD KEY {$key} (`{$column}`)";
             }
             @db_query($sql);
+        }
+    }
+
+    // ── Missing indexes for query performance ──
+    $add_indexes = [
+        '?:novoton_bookings' => [
+            'idx_user_id'    => 'user_id',
+            'idx_status'     => 'status',
+            'idx_hotel_id'   => 'hotel_id',
+            'idx_created_at' => 'created_at',
+        ],
+        '?:novoton_alternative_requests' => [
+            'idx_status'     => 'status',
+            'idx_booking_id' => 'booking_id',
+        ],
+    ];
+
+    foreach ($add_indexes as $table => $indexes) {
+        foreach ($indexes as $index_name => $column) {
+            $idx_exists = db_get_field(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                 AND TABLE_NAME = ?s AND INDEX_NAME = ?s",
+                $table, $index_name
+            );
+            if (!$idx_exists) {
+                @db_query("ALTER TABLE {$table} ADD INDEX `{$index_name}` (`{$column}`)");
+            }
         }
     }
 

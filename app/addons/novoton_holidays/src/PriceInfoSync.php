@@ -34,7 +34,7 @@ class PriceInfoSync
     {
         $prefixConditions = [];
         foreach ($this->productPrefixes as $prefix) {
-            $prefixConditions[] = "product_code LIKE '" . db_quote($prefix) . "%'";
+            $prefixConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
         }
 
         $condition = implode(' OR ', $prefixConditions);
@@ -233,6 +233,9 @@ class PriceInfoSync
     public function syncAllProducts()
     {
         $products = $this->getProductsToSync();
+        if (!is_array($products)) {
+            $products = [];
+        }
         $totalProducts = count($products);
 
         $stats = [
@@ -429,7 +432,12 @@ class PriceInfoSync
             $content .= "\n";
         }
 
-        file_put_contents($filepath, $content);
+        if (file_put_contents($filepath, $content) === false) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton: Failed to write sync log file',
+                'filepath' => $filepath
+            ]);
+        }
 
         return $filename;
     }

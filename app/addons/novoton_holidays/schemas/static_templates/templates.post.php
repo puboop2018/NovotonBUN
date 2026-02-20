@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays Static Templates Schema
  * Path: app/addons/novoton_holidays/schemas/static_templates/templates.post.php

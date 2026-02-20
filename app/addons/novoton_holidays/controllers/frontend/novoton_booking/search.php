@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Controller — Search Mode
  * Extracted from novoton_booking.php for maintainability.
@@ -22,10 +23,14 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
         $check_out_input = $searchParams['check_out'];
         // Calculate nights from dates
         if (!empty($check_in)) {
-            $date1 = new DateTime($check_in);
-            $date2 = new DateTime($check_out_input);
-            $nights = $date1->diff($date2)->days;
-            if ($nights < 1) $nights = 7;
+            try {
+                $date1 = new DateTime($check_in);
+                $date2 = new DateTime($check_out_input);
+                $nights = $date1->diff($date2)->days;
+                if ($nights < 1) $nights = 7;
+            } catch (\Exception $e) {
+                $nights = 7;
+            }
         } else {
             $nights = 7;
         }

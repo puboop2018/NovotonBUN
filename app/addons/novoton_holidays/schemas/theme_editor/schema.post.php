@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Theme Editor Schema Extension
  * Path: app/addons/novoton_holidays/schemas/theme_editor/schema.post.php

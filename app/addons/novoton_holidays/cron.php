@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Cron Job Handler (Legacy Entry Point)
  *
@@ -33,7 +34,7 @@ if (empty($providedKey) && isset($argv[1])) {
 if (empty($storedKey)) {
     die("ERROR: Cron Access Key not set in addon settings.\n");
 }
-if (empty($providedKey) || $providedKey !== $storedKey) {
+if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
     die("ERROR: Invalid or missing API key.\n");
 }
 

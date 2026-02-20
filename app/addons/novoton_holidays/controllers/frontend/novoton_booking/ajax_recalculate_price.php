@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Controller — AJAX Price Recalculation Mode
  * Extracted from novoton_booking.php for maintainability.

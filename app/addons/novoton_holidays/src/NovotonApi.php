@@ -14,15 +14,6 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
 
-require_once __DIR__ . '/Exceptions/NovotonException.php';
-require_once __DIR__ . '/Exceptions/ApiException.php';
-require_once __DIR__ . '/Exceptions/XmlParsingException.php';
-require_once __DIR__ . '/Exceptions/ValidationException.php';
-require_once __DIR__ . '/Exceptions/SyncException.php';
-require_once __DIR__ . '/NovotonHttpClient.php';
-require_once __DIR__ . '/NovotonXmlParser.php';
-require_once __DIR__ . '/CommissionCalculator.php';
-
 class NovotonApi
 {
     /** @var NovotonHttpClient */

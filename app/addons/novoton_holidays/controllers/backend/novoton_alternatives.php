@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Alternative Requests Admin Controller
  * Manages hotel_request and alternative_RS functionality
