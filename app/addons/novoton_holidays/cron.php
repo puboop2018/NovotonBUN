@@ -54,11 +54,7 @@ fn_log_event('novoton_holidays', 'cron_start', [
     'message' => 'Cron job started'
 ]);
 
-// Load API
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-if (file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
+// Classes are auto-loaded via PSR-4 autoloader registered in init.php
 
 try {
     $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();

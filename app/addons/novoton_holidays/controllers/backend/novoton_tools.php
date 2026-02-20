@@ -33,17 +33,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
-// Ensure API class is loaded
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
-
-// Load DiagnosticsService
-$services_dir = Registry::get('config.dir.addons') . 'novoton_holidays/services/';
-if (!class_exists('Tygh\Addons\NovotonHolidays\Services\DiagnosticsService') && file_exists($services_dir . 'DiagnosticsService.php')) {
-    require_once($services_dir . 'DiagnosticsService.php');
-}
+// Classes are auto-loaded via PSR-4 autoloader registered in init.php
 
 /**
  * Mode: export_hotel_features_csv

@@ -282,15 +282,7 @@ if ($mode == 'run_cron') {
         // Include and run the cron logic
         $_REQUEST = array_merge($_REQUEST, $params);
         
-        // Load required files
-        $addon_path = Registry::get('config.dir.addons') . 'novoton_holidays/';
-        
-        if (file_exists($addon_path . 'src/NovotonApi.php')) {
-            require_once($addon_path . 'src/NovotonApi.php');
-        }
-        if (file_exists($addon_path . 'src/PriceInfoSync.php')) {
-            require_once($addon_path . 'src/PriceInfoSync.php');
-        }
+        // Classes are auto-loaded via PSR-4 autoloader registered in init.php
         
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         

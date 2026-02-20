@@ -624,18 +624,17 @@ class HotelSync
     }
 
     /**
-     * Save sync log to database
+     * Save sync log to database via repository
      */
     private function saveLog(): void
     {
-        db_query(
-            "INSERT INTO ?:novoton_sync_log
-             (sync_type, sync_date, products_total, products_updated, products_failed, duration_seconds, status)
-             VALUES ('hotels', NOW(), ?i, ?i, ?i, ?i, 'completed')",
-            $this->stats['hotels_processed'] + $this->stats['packages_processed'],
-            $this->stats['hotels_updated'] + $this->stats['packages_updated'],
-            $this->stats['hotels_failed'] + $this->stats['packages_failed'],
-            $this->stats['duration'] ?? 0
-        );
+        $syncRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+        $syncRepo->create('hotels', [
+            'total'    => $this->stats['hotels_processed'] + $this->stats['packages_processed'],
+            'updated'  => $this->stats['hotels_updated'] + $this->stats['packages_updated'],
+            'failed'   => $this->stats['hotels_failed'] + $this->stats['packages_failed'],
+            'duration' => $this->stats['duration'] ?? 0,
+            'status'   => 'completed',
+        ]);
     }
 }
