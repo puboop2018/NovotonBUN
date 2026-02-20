@@ -356,6 +356,17 @@
                                                     <div style="color: #dc3545; font-size: 11px; margin-top: 2px;">
                                                         <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                                                     </div>
+                                                    {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                                        <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 4px 8px; margin-top: 4px; font-size: 11px;">
+                                                            <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
+                                                            {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
+                                                                <a href="{fn_url("novoton_booking.search?hotel_id=`$novoton_params.hotel_id`&check_in=`$nearby.check_in`&check_out=`$nearby.check_out`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&rooms=`$novoton_params.num_rooms`")}"
+                                                                   style="color: #e65100; text-decoration: underline; white-space: nowrap;">
+                                                                    {$nearby.check_in|date_format:"%b %d"} - {$nearby.check_out|date_format:"%b %d"} ({$nearby.quota} {__("novoton_holidays.rooms_short")|default:"rooms"})
+                                                                </a>{if !$smarty.foreach.nearby_loop.last}, {/if}
+                                                            {/foreach}
+                                                        </div>
+                                                    {/if}
                                                 {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                                                     {if $result.rooms_available > 5}
                                                         <div style="color: #28a745; font-size: 11px; font-weight: 600; margin-top: 2px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
@@ -621,6 +632,19 @@
                                 <span style="display: inline-block; background: #fff3cd; color: #856404; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {__("novoton_holidays.on_request")|default:"La cerere"}
                                 </span>
+                                {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                    <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 8px; margin-top: 6px; font-size: 11px;">
+                                        <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
+                                        {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
+                                            <div style="margin-top: 3px;">
+                                                <a href="{fn_url("novoton_booking.search?hotel_id=`$novoton_params.hotel_id`&check_in=`$nearby.check_in`&check_out=`$nearby.check_out`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&rooms=`$novoton_params.num_rooms`")}"
+                                                   style="color: #e65100; text-decoration: underline;">
+                                                    {$nearby.check_in|date_format:"%b %d"} - {$nearby.check_out|date_format:"%b %d"} ({$nearby.quota} {__("novoton_holidays.rooms_short")|default:"rooms"})
+                                                </a>
+                                            </div>
+                                        {/foreach}
+                                    </div>
+                                {/if}
                             {elseif $result.rooms_available !== null && $result.rooms_available !== '' && $result.rooms_available <= 5}
                                 <span style="display: inline-block; background: #f8d7da; color: #721c24; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {$result.rooms_available} {__("novoton_holidays.left")|default:"disponibile"}
@@ -729,6 +753,17 @@
                             <div style="color: #dc3545; font-size: 13px; margin-top: 8px;">
                                 <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                             </div>
+                            {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 12px;">
+                                    <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
+                                    {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
+                                        <a href="{fn_url("novoton_booking.search?hotel_id=`$novoton_params.hotel_id`&check_in=`$nearby.check_in`&check_out=`$nearby.check_out`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&rooms=`$novoton_params.num_rooms`")}"
+                                           style="color: #e65100; text-decoration: underline; white-space: nowrap;">
+                                            {$nearby.check_in|date_format:"%b %d"} - {$nearby.check_out|date_format:"%b %d"} ({$nearby.quota} {__("novoton_holidays.rooms_short")|default:"rooms"})
+                                        </a>{if !$smarty.foreach.nearby_loop.last}, {/if}
+                                    {/foreach}
+                                </div>
+                            {/if}
                         {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                             {if $result.rooms_available > 5}
                                 <div style="color: #28a745; font-size: 13px; font-weight: 600; margin-top: 8px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>

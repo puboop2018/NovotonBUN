@@ -440,6 +440,8 @@ function fn_novoton_holidays_upgrade_db()
         'novoton_holidays.free_cancellation' => ['en' => 'Free Cancellation', 'ro' => 'Anulare gratuită'],
         'novoton_holidays.free_cancellation_until' => ['en' => 'Free cancellation until', 'ro' => 'Anulare gratuită până la'],
         'novoton_holidays.on_booking' => ['en' => 'on booking', 'ro' => 'la rezervare'],
+        'novoton_holidays.nearby_dates_available' => ['en' => 'Available on nearby dates', 'ro' => 'Disponibil pe date apropiate'],
+        'novoton_holidays.rooms_short' => ['en' => 'rooms', 'ro' => 'camere'],
     ];
 
     foreach ($lang_vars as $name => $translations) {

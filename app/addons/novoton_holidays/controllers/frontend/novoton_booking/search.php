@@ -844,7 +844,44 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                         $debug_log[] = "=== QUOTA FETCH ERROR: " . $e->getMessage() . " ===";
                     }
                 }
-                
+
+                // ========================================
+                // FALLBACK: hotel_quota_add for unavailable rooms
+                // When hotel_quota returns 0/RQ, check ±5 days via hotel_quota_add
+                // ========================================
+                $quotaAddMap = [];
+                $hasUnavailableRooms = false;
+
+                foreach ($quotaMap as $_qRoom => $_qVal) {
+                    $_qVal = trim($_qVal);
+                    if ($_qVal === '' || strtoupper($_qVal) === 'RQ' || strtoupper($_qVal) === 'REQUEST' || intval($_qVal) === 0) {
+                        $hasUnavailableRooms = true;
+                        break;
+                    }
+                }
+
+                if ($hasUnavailableRooms || empty($quotaMap)) {
+                    try {
+                        $quotaAddMap = fn_novoton_get_api()->getHotelQuotaAddAll($hotelId, $checkIn, $checkOut);
+                        if ($debug_mode) {
+                            $debug_log[] = "=== NEARBY AVAILABILITY (hotel_quota_add API) ===";
+                            if (empty($quotaAddMap)) {
+                                $debug_log[] = "  No nearby availability found";
+                            } else {
+                                foreach ($quotaAddMap as $qaRoom => $qaPeriods) {
+                                    foreach ($qaPeriods as $qp) {
+                                        $debug_log[] = "  {$qaRoom}: {$qp['check_in']} to {$qp['check_out']} ({$qp['quota']} rooms)";
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        if ($debug_mode) {
+                            $debug_log[] = "=== QUOTA_ADD FETCH ERROR: " . $e->getMessage() . " ===";
+                        }
+                    }
+                }
+
                 // Parse the raw XML to get all room_price elements
                 $prevLibxml = libxml_use_internal_errors(true);
                 $xml = simplexml_load_string($rawXml);
@@ -932,6 +969,12 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                     }
                                 }
                                 
+                                // Nearby availability from hotel_quota_add (for rooms with 0/RQ)
+                                $nearbyAvailability = [];
+                                if ($isOnRequest && !empty($quotaAddMap[$roomId])) {
+                                    $nearbyAvailability = $quotaAddMap[$roomId];
+                                }
+
                                 $result_item = [
                                     'room' => null,
                                     'room_id' => $roomId,
@@ -948,6 +991,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                     'check_out' => $checkOut,
                                     'rooms_available' => $availability,
                                     'is_on_request' => $isOnRequest,
+                                    'nearby_availability' => $nearbyAvailability,
                                     'remark' => $remark,
                                     'important' => _nvt_get_xml_value($importantElements, $i),
                                     'more_info' => _nvt_get_xml_value($moreInfoElements, $i),
@@ -957,7 +1001,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                     'terms_of_cancellation' => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
                                     'free_cancellation_date' => isset($termsCancellation[0]) ? fn_novoton_get_free_cancellation_date($termsCancellation[0]->asXML()) : null
                                 ];
-                                
+
                                 $results[] = $result_item;
                                 
                                 if ($debug_mode) {
@@ -1004,6 +1048,12 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                         }
                                     }
                                     
+                                    // Nearby availability from hotel_quota_add (for rooms with 0/RQ)
+                                    $nearbyAvailability = [];
+                                    if ($isOnRequest && !empty($quotaAddMap[$roomId])) {
+                                        $nearbyAvailability = $quotaAddMap[$roomId];
+                                    }
+
                                     $result_item = [
                                         'room' => null,
                                         'room_id' => $roomId,
@@ -1020,6 +1070,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                         'check_out' => $checkOut,
                                         'rooms_available' => $availability,
                                         'is_on_request' => $isOnRequest,
+                                        'nearby_availability' => $nearbyAvailability,
                                         'remark' => $remark,
                                         'important' => isset($xml->Important) ? (string)$xml->Important : '',
                                         'more_info' => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
@@ -1029,7 +1080,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                         'terms_of_cancellation' => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
                                         'free_cancellation_date' => isset($xml->TermsOfCancellation) ? fn_novoton_get_free_cancellation_date($xml->TermsOfCancellation->asXML()) : null
                                     ];
-                                    
+
                                     $results[] = $result_item;
                                     
                                     if ($debug_mode) {
@@ -1065,8 +1116,17 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             
             if ($debug_mode) {
                 $debug_log[] = "";
-                $debug_log[] = "=== RESULTS SUMMARY (from room_price + hotel_quota API) ===";
+                $debug_log[] = "=== RESULTS SUMMARY (from room_price + hotel_quota + hotel_quota_add API) ===";
                 $debug_log[] = "Total results found: " . count($results);
+                $nearbyCount = 0;
+                foreach ($results as $_r) {
+                    if (!empty($_r['nearby_availability'])) {
+                        $nearbyCount++;
+                    }
+                }
+                if ($nearbyCount > 0) {
+                    $debug_log[] = "Results with nearby availability (±5 days): " . $nearbyCount;
+                }
             }
             
             } // End of SINGLE ROOM MODE else block

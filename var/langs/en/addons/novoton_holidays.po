@@ -2564,3 +2564,11 @@ msgstr "Novoton: Search button"
 msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Search button (hover)"
+
+msgctxt "Languages::novoton_holidays.nearby_dates_available"
+msgid "Available on nearby dates"
+msgstr "Available on nearby dates"
+
+msgctxt "Languages::novoton_holidays.rooms_short"
+msgid "rooms"
+msgstr "rooms"

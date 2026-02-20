@@ -38,6 +38,7 @@ class NovotonApi
     private $cacheTtl = [
         'room_price' => 300,       // 5 minutes - live booking prices
         'hotel_quota' => 180,      // 3 minutes - live availability
+        'hotel_quota_add' => 180,  // 3 minutes - nearby availability (±5 days)
         'search' => 300,           // 5 minutes - search results (combines live data)
     ];
 
@@ -1158,21 +1159,101 @@ class NovotonApi
     // Transfer functions (17-20) not implemented - not needed for hotel booking
 
     /**
-     * 21. hotel_quota_add - Allotments additional
+     * 21. hotel_quota_add - Additional allotments (nearby date availability)
      *
-     * @return \SimpleXMLElement|false
+     * When hotel_quota returns 0/RQ for a room, this function checks ±5 days
+     * from the requested dates for available periods.
+     * The API automatically searches the nearby window; send the original dates.
+     *
+     * @param string $hotelId Hotel ID
+     * @param string $roomId  Room ID (empty string for all rooms)
+     * @param string $checkIn Check-in date (Y-m-d)
+     * @param string $checkOut Check-out date (Y-m-d)
+     * @return \SimpleXMLElement|false Parsed XML with <room_quota> elements
      */
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
+        <hotel_quota_add>
+            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
+            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        </hotel_quota_add>';
 
         return $this->callApiAndParse('hotel_quota_add', $xml);
+    }
+
+    /**
+     * 21b. hotel_quota_add - Additional allotments for ALL rooms
+     *
+     * Calls hotel_quota_add with empty IdRoom to get nearby availability
+     * for all room types. Returns a structured map:
+     *   room_id => [ ['check_in' => ..., 'check_out' => ..., 'quota' => int], ... ]
+     *
+     * @param string $hotelId  Hotel ID
+     * @param string $checkIn  Original check-in date (Y-m-d)
+     * @param string $checkOut Original check-out date (Y-m-d)
+     * @return array room_id => array of availability periods
+     */
+    public function getHotelQuotaAddAll(string $hotelId, string $checkIn, string $checkOut): array
+    {
+        $cacheParams = ['hotel_id' => $hotelId, 'check_in' => $checkIn, 'check_out' => $checkOut];
+        $cacheKey = $this->buildCacheKey('hotel_quota_add', $cacheParams);
+
+        $cached = $this->getFromCache('hotel_quota_add', $cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $parsed = $this->getHotelQuotaAdditional($hotelId, '', $checkIn, $checkOut);
+
+        if ($parsed === false) {
+            return [];
+        }
+
+        $quotaAddMap = [];
+
+        // Response contains <room_quota> elements
+        if (isset($parsed->room_quota)) {
+            foreach ($parsed->room_quota as $rq) {
+                $roomId = trim((string)($rq->IdRoom ?? ''));
+                $rqCheckIn = trim((string)($rq->CheckIn ?? ''));
+                $rqCheckOut = trim((string)($rq->CheckOut ?? ''));
+                $quota = trim((string)($rq->Quota ?? '0'));
+
+                if (empty($roomId) || empty($rqCheckIn) || empty($rqCheckOut)) {
+                    continue;
+                }
+
+                $quotaInt = is_numeric($quota) ? intval($quota) : 0;
+                if ($quotaInt <= 0) {
+                    continue;
+                }
+
+                if (!isset($quotaAddMap[$roomId])) {
+                    $quotaAddMap[$roomId] = [];
+                }
+
+                $quotaAddMap[$roomId][] = [
+                    'check_in'  => $rqCheckIn,
+                    'check_out' => $rqCheckOut,
+                    'quota'     => $quotaInt,
+                ];
+            }
+        }
+
+        if (ConfigService::isDebugMode()) {
+            fn_log_event('general', 'runtime', [
+                'message' => "hotel_quota_add for hotel {$hotelId}: " . json_encode($quotaAddMap)
+            ]);
+        }
+
+        $this->saveToCache('hotel_quota_add', $cacheKey, $quotaAddMap);
+
+        return $quotaAddMap;
     }
 
     /**

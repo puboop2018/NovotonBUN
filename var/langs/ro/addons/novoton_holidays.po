@@ -1980,3 +1980,11 @@ msgstr "Novoton: Buton căutare"
 msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Buton căutare (hover)"
+
+msgctxt "Languages::novoton_holidays.nearby_dates_available"
+msgid "Available on nearby dates"
+msgstr "Disponibil pe date apropiate"
+
+msgctxt "Languages::novoton_holidays.rooms_short"
+msgid "rooms"
+msgstr "camere"
