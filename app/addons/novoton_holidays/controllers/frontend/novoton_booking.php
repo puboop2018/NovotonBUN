@@ -31,7 +31,7 @@
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
@@ -50,7 +50,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 //   _nvt_booking_repo()      - Booking database access
 //=============================================================================
 
-$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/services/ServiceLoader.php';
+$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
 if (file_exists($service_loader)) {
     require_once $service_loader;
 }

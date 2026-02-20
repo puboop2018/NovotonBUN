@@ -22,24 +22,9 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
-
-// Load API class
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi') && file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
-
-// Load Repository classes
-$repo_dir = Registry::get('config.dir.addons') . 'novoton_holidays/Repository/';
-if (!class_exists('Tygh\Addons\NovotonHolidays\Repository\HotelRepository') && file_exists($repo_dir . 'HotelRepository.php')) {
-    require_once($repo_dir . 'HotelRepository.php');
-}
-if (!class_exists('Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository') && file_exists($repo_dir . 'SyncLogRepository.php')) {
-    require_once($repo_dir . 'SyncLogRepository.php');
-}
 
 /**
  * Mode: update_prices
@@ -644,7 +629,7 @@ if ($mode == 'download_active_prices_csv') {
 if ($mode == 'cron_offers_update') {
     // Verify access key
     $access_key = $_REQUEST['access_key'] ?? '';
-    $expected_key = ConfigService::getCronAccessKey();
+    $expected_key = ConfigProvider::getCronAccessKey();
     
     if (empty($expected_key) || $access_key !== $expected_key) {
         header('HTTP/1.1 403 Forbidden');

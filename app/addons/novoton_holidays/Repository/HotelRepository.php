@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Hotel Repository
  *
@@ -11,7 +12,7 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class HotelRepository
+class HotelRepository implements HotelRepositoryInterface
 {
     /**
      * Find hotel by ID

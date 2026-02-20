@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Sync Logger
  *
@@ -16,7 +17,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
 use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class SyncLogger
 {
@@ -96,7 +97,7 @@ class SyncLogger
     {
         $this->syncType = $syncType;
         $this->startTime = microtime(true);
-        $this->timezone = ConfigService::getTimezone();
+        $this->timezone = ConfigProvider::getTimezone();
     }
 
     /**

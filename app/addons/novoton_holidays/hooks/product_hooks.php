@@ -15,7 +15,7 @@
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
@@ -24,7 +24,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 /**
  * Add Hotel Prices tab to BACKEND (admin product edit page)
  */
-function fn_novoton_holidays_get_product_tabs_post(&$tabs, $product_id)
+function fn_novoton_holidays_get_product_tabs_post(&$tabs, $product_id): void
 {
     // Backend tab is handled separately if needed
     // Frontend tab is auto-discovered from /blocks/product_tabs/ folder
@@ -33,13 +33,13 @@ function fn_novoton_holidays_get_product_tabs_post(&$tabs, $product_id)
 /**
  * Hook: gather additional product data - pass prices to templates
  */
-function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params)
+function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
     if (empty($product['product_id'])) {
         return;
     }
 
-    $addon_settings = ConfigService::all();
+    $addon_settings = ConfigProvider::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }
@@ -92,7 +92,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 /**
  * Hook: Add booking form to product page (after main content)
  */
-function fn_novoton_holidays_products_view_after(&$view)
+function fn_novoton_holidays_products_view_after(&$view): void
 {
     // Template hooks handle this; stub kept for CS-Cart hook discovery.
 }
@@ -100,13 +100,13 @@ function fn_novoton_holidays_products_view_after(&$view)
 /**
  * Hook: after getting product data
  */
-function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $params, $product_id)
+function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $params, $product_id): void
 {
     if (empty($product_id) || empty($product_data)) {
         return;
     }
 
-    $addon_settings = ConfigService::all();
+    $addon_settings = ConfigProvider::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }
@@ -128,7 +128,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
 /**
  * Hook: before updating product
  */
-function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $lang_code, $can_update)
+function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $lang_code, $can_update): void
 {
     // Placeholder for pre-update logic
 }
@@ -136,7 +136,7 @@ function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $la
 /**
  * Hook: after deleting product
  */
-function fn_novoton_holidays_delete_product_post($product_id, $product_deleted)
+function fn_novoton_holidays_delete_product_post($product_id, $product_deleted): void
 {
     if (!$product_deleted) {
         return;

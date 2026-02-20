@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton XML Parser
  * Handles XML cleaning (entity sanitization) and parsing.

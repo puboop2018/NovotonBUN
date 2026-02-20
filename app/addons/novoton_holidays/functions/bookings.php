@@ -32,7 +32,7 @@ function fn_novoton_decrypt_request_pii(array $request): array
     // Lazy-load SecurityService (works in both controller and cron context)
     static $security = null;
     if ($security === null) {
-        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/services/ServiceLoader.php';
+        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
         if (file_exists($loader)) {
             require_once $loader;
         }
@@ -78,7 +78,7 @@ function fn_novoton_decrypt_requests_pii(array $requests): array
  * @param int $booking_id Booking ID (0 = check all pending)
  * @return array Result
  */
-function fn_novoton_check_reservation_status($booking_id = 0)
+function fn_novoton_check_reservation_status($booking_id = 0): array
 {
     $api = fn_novoton_get_api();
     if (!$api) {
@@ -149,7 +149,7 @@ function fn_novoton_check_reservation_status($booking_id = 0)
  * @param int $booking_id Booking ID
  * @return array Result
  */
-function fn_novoton_request_alternatives($booking_id)
+function fn_novoton_request_alternatives($booking_id): array
 {
     $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
     
@@ -190,7 +190,7 @@ function fn_novoton_request_alternatives($booking_id)
  * @param int $booking_id Booking ID
  * @return array Alternatives data
  */
-function fn_novoton_get_alternatives($booking_id)
+function fn_novoton_get_alternatives($booking_id): array
 {
     $request = db_get_row(
         "SELECT * FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
@@ -214,7 +214,7 @@ function fn_novoton_get_alternatives($booking_id)
  * @param int $order_id Order ID
  * @return array Bookings
  */
-function fn_novoton_get_order_bookings($order_id)
+function fn_novoton_get_order_bookings($order_id): array
 {
     return db_get_array(
         "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
@@ -223,143 +223,11 @@ function fn_novoton_get_order_bookings($order_id)
 }
 
 /**
- * Calculate price using stored price info
- *
- * @deprecated V2 stub — superseded by RoomPriceService for real-time prices
- *             and PriceInfoCalculation for stored season prices.
- *             Not called in any active flow. Safe to remove in a future release.
- *
- * @param array $params Search parameters
- * @param array $price_info Price data from packages
- * @param array $hotel_data Optional hotel data
- * @return array Calculated price data
- */
-function fn_novoton_calculate_price($params, $price_info, $hotel_data = [])
-{
-    $result = [
-        'total' => 0,
-        'per_night' => 0,
-        'currency' => \Tygh\Addons\NovotonHolidays\Services\ConfigService::getApiCurrency(),
-        'calculated' => false
-    ];
-    
-    if (empty($price_info)) {
-        return $result;
-    }
-    
-    $check_in = $params['check_in'] ?? '';
-    $check_out = $params['check_out'] ?? '';
-    $adults = intval($params['adults'] ?? 2);
-    $children = intval($params['children'] ?? 0);
-    $room_id = $params['room_id'] ?? '';
-    $board_id = $params['board_id'] ?? '';
-    
-    if (empty($check_in) || empty($check_out)) {
-        return $result;
-    }
-    
-    // Calculate nights
-    $nights = (strtotime($check_out) - strtotime($check_in)) / 86400;
-    if ($nights <= 0) {
-        return $result;
-    }
-    
-    // Find matching price in price_info
-    foreach ($price_info as $package) {
-        // Match room and board if specified
-        if (!empty($room_id) && isset($package['room_id']) && $package['room_id'] != $room_id) {
-            continue;
-        }
-        if (!empty($board_id) && isset($package['board_id']) && $package['board_id'] != $board_id) {
-            continue;
-        }
-        
-        // Check date range
-        $pkg_from = $package['date_from'] ?? '';
-        $pkg_to = $package['date_to'] ?? '';
-        
-        if (!empty($pkg_from) && strtotime($check_in) < strtotime($pkg_from)) {
-            continue;
-        }
-        if (!empty($pkg_to) && strtotime($check_out) > strtotime($pkg_to)) {
-            continue;
-        }
-        
-        // Calculate price
-        $base_price = floatval($package['price'] ?? $package['min_price'] ?? 0);
-        
-        if ($base_price > 0) {
-            $api = fn_novoton_get_api();
-            $total = $api ? $api->applyCommission($base_price) : $base_price;
-            
-            $result['total'] = round($total, 2);
-            $result['per_night'] = round($total / $nights, 2);
-            $result['calculated'] = true;
-            $result['package'] = $package;
-            
-            break;
-        }
-    }
-    
-    return $result;
-}
-
-/**
- * Get stored price for a room
- *
- * @deprecated V2 stub — wraps fn_novoton_calculate_price() which is also deprecated.
- *             Not called in any active flow. Safe to remove in a future release.
- *
- * @param int $product_id Product ID
- * @param string $room_id Room ID
- * @param string $board_id Board ID
- * @param string $check_in Check-in date
- * @param int $nights Number of nights
- * @param int $adults Number of adults
- * @return array Price data
- */
-function fn_novoton_get_stored_price($product_id, $room_id, $board_id, $check_in, $nights = 7, $adults = 2)
-{
-    $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
-    if (empty($hotel_id)) {
-        return ['found' => false];
-    }
-    
-    $hotel = fn_novoton_get_hotel_data($hotel_id);
-    if (empty($hotel['packages'])) {
-        return ['found' => false];
-    }
-    
-    $check_out = date('Y-m-d', strtotime("+{$nights} days", strtotime($check_in)));
-    
-    $params = [
-        'check_in' => $check_in,
-        'check_out' => $check_out,
-        'room_id' => $room_id,
-        'board_id' => $board_id,
-        'adults' => $adults,
-    ];
-    
-    $price_result = fn_novoton_calculate_price($params, $hotel['packages'], $hotel);
-    
-    if ($price_result['calculated']) {
-        return [
-            'found' => true,
-            'total' => $price_result['total'],
-            'per_night' => $price_result['per_night'],
-            'currency' => \Tygh\Addons\NovotonHolidays\Services\ConfigService::getApiCurrency()
-        ];
-    }
-    
-    return ['found' => false];
-}
-
-/**
  * Cron: Sync hotels from ResInfo API
  * 
  * @return array Result
  */
-function fn_novoton_cron_resinfo()
+function fn_novoton_cron_resinfo(): array
 {
     $api = fn_novoton_get_api();
     if (!$api) {

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Commission Calculator
  * Handles commission application and price rounding.

@@ -44,7 +44,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     }
     
     // Get product ID from hotel ID
-    $prefix = ConfigService::getFirstProductCodePrefix();
+    $prefix = ConfigProvider::getFirstProductCodePrefix();
     $product_code = $prefix . $bookingData['hotel_id'];
     
     $product_id = db_get_field(
@@ -425,7 +425,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             'hotel_name' => $hotel_info['hotel_name'] ?? '',
             'hotel_city' => $hotel_info['city'] ?? '',
             'hotel_region' => $hotel_info['region'] ?? '',
-            'hotel_country' => $hotel_info['country'] ?? 'BULGARIA',
+            'hotel_country' => $hotel_info['country'] ?? '',
             'package_name' => $package_name,
             'room_id' => $bookingData['room_id'],
             'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),

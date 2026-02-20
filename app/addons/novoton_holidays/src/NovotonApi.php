@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton API Integration Class
  * Thin facade delegating to NovotonHttpClient, NovotonXmlParser, and CommissionCalculator.
@@ -8,7 +9,7 @@
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ValidationException;
@@ -71,15 +72,15 @@ class NovotonApi
 
     public function __construct()
     {
-        $this->httpClient = new NovotonHttpClient(ConfigService::all());
+        $this->httpClient = new NovotonHttpClient(ConfigProvider::all());
         $this->xmlParser = new NovotonXmlParser();
         $this->commissionCalculator = new CommissionCalculator(
-            ConfigService::getCommission(),
-            ConfigService::isRoundPrices() ? 'Y' : 'N'
+            ConfigProvider::getCommission(),
+            ConfigProvider::isRoundPrices() ? 'Y' : 'N'
         );
 
         // Initialize cache service
-        $this->enableCache = (ConfigService::get('enable_api_cache', 'Y') === 'Y');
+        $this->enableCache = (ConfigProvider::get('enable_api_cache', 'Y') === 'Y');
         if ($this->enableCache) {
             $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
         }
@@ -89,20 +90,22 @@ class NovotonApi
 
     /**
      * Send API request, clean the response, and sync debug state.
-     * Returns cleaned response string or false on failure.
+     * Returns cleaned response string.
+     * Throws ApiException on HTTP/network failures.
      *
      * @param string $function API function name
      * @param string $xml XML request body
      * @param string $lang Language code
-     * @return string|false Cleaned response or false
+     * @return string Cleaned response
+     * @throws ApiException On API communication failure
      */
-    private function callApi(string $function, string $xml, string $lang = 'UK')
+    private function callApi(string $function, string $xml, string $lang = 'UK'): string
     {
         try {
             $raw = $this->httpClient->sendRequest($function, $xml, $lang);
         } catch (ApiException $e) {
             $this->syncDebugState();
-            return false;
+            throw $e;
         }
 
         $this->syncDebugState();
@@ -113,26 +116,18 @@ class NovotonApi
 
     /**
      * Send API request, clean and parse the XML response.
-     * Catches ApiException and XmlParsingException for backward compatibility.
      *
      * @param string $function API function name
      * @param string $xml XML request body
      * @param string $lang Language code
-     * @return \SimpleXMLElement|false Parsed XML or false on failure
+     * @return \SimpleXMLElement Parsed XML
+     * @throws ApiException On API communication failure
+     * @throws XmlParsingException On XML parsing failure
      */
-    private function callApiAndParse(string $function, string $xml, string $lang = 'UK')
+    private function callApiAndParse(string $function, string $xml, string $lang = 'UK'): \SimpleXMLElement
     {
         $response = $this->callApi($function, $xml, $lang);
-
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -408,10 +403,6 @@ class NovotonApi
 
         $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
 
-        if ($response === false) {
-            return false;
-        }
-
         // Log raw response for debugging
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton room_price - Raw API response',
@@ -419,11 +410,7 @@ class NovotonApi
             'response_first_500' => substr($response, 0, 500)
         ]);
 
-        try {
-            $result = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        $result = $this->xmlParser->parse($response);
 
         // Save RAW XML to cache (not SimpleXMLElement) ONLY if we have valid price data
         $prices = $result->xpath('//Price');
@@ -516,16 +503,7 @@ class NovotonApi
         </hotel_quota>';
 
         $response = $this->callApi('hotel_quota', $xml);
-
-        if ($response === false) {
-            return [];
-        }
-
-        try {
-            $parsed = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return [];
-        }
+        $parsed = $this->xmlParser->parse($response);
 
         $quotaMap = [];
 
@@ -555,7 +533,7 @@ class NovotonApi
             }
         }
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => "hotel_quota for hotel {$hotelId}: " . json_encode($quotaMap)
             ]);
@@ -570,9 +548,11 @@ class NovotonApi
     /**
      * 4. hotel_quota - Free allotments for a single room (AVAILABILITY)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
+     * @throws ApiException On API communication failure
+     * @throws XmlParsingException On XML parsing failure
      */
-    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = '')
+    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
         $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
 
@@ -587,21 +567,13 @@ class NovotonApi
 
         $response = $this->callApi('hotel_quota', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
-                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response ?: '', 0, 500)
+                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response, 0, 500)
             ]);
         }
 
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -615,7 +587,7 @@ class NovotonApi
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
@@ -623,7 +595,7 @@ class NovotonApi
         <frmsearch>
             <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-            <Country>' . htmlspecialchars(strtoupper($params['country'] ?? 'BULGARIA')) . '</Country>
+            <Country>' . htmlspecialchars(strtoupper($params['country'] ?? '')) . '</Country>
             <City>' . htmlspecialchars(strtoupper($params['city'] ?? '')) . '</City>
             <Hotel>' . htmlspecialchars(strtoupper($params['hotel'] ?? '')) . '</Hotel>
             <Arr1>' . htmlspecialchars($params['check_in'] ?? '') . '</Arr1>
@@ -633,7 +605,7 @@ class NovotonApi
             <Currency>EUR</Currency>
         </frmsearch>';
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Request',
                 'xml' => $xml,
@@ -643,23 +615,14 @@ class NovotonApi
 
         $response = $this->callApi('frmsearch', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Response',
                 'response' => substr($response ?: '', 0, 2000)
             ]);
         }
 
-        if ($response === false) {
-            return [];
-        }
-
-        try {
-            $result = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return [];
-        }
-
+        $result = $this->xmlParser->parse($response);
         return $this->parseSearchResults($result, $params);
     }
 
@@ -703,7 +666,7 @@ class NovotonApi
                 'nights' => $nights,
                 'total_price' => $this->applyCommission($price),
                 'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                'currency' => ConfigService::getApiCurrency(),
+                'currency' => ConfigProvider::getApiCurrency(),
                 'availability' => $availability
             ];
         }
@@ -741,7 +704,7 @@ class NovotonApi
                     'nights' => $nights,
                     'total_price' => $this->applyCommission($price),
                     'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
-                    'currency' => ConfigService::getApiCurrency(),
+                    'currency' => ConfigProvider::getApiCurrency(),
                     'availability' => intval($data['Availability'] ?? $data['Avail'] ?? 1)
                 ];
             }
@@ -794,7 +757,7 @@ class NovotonApi
      */
     public function createReservation(array $bookingData)
     {
-        $isTestMode = ConfigService::isTestBooking();
+        $isTestMode = ConfigProvider::isTestBooking();
 
         $remark = $bookingData['remark'] ?? '';
         $comment = $bookingData['comment'] ?? '';
@@ -846,9 +809,9 @@ class NovotonApi
         <IdRoom>' . htmlspecialchars($roomData['room_id']) . '</IdRoom>
         <IdBoard>' . htmlspecialchars($roomData['board_id']) . '</IdBoard>
         <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '4*') . '</IdStar>
+        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($roomGuests[0]['name'] ?? $bookingData['holder']) . '</Holder>
-        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
+        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL) . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
         <Comment>' . htmlspecialchars($comment . ' [Room ' . ($roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
@@ -873,9 +836,9 @@ class NovotonApi
         <IdRoom>' . htmlspecialchars($bookingData['room_id']) . '</IdRoom>
         <IdBoard>' . htmlspecialchars($bookingData['board_id']) . '</IdBoard>
         <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '4*') . '</IdStar>
+        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($bookingData['holder']) . '</Holder>
-        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
+        <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL) . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
         <Comment>' . htmlspecialchars($comment) . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
@@ -888,7 +851,7 @@ class NovotonApi
     <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
     <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
     <IdHotel>' . htmlspecialchars($bookingData['hotel_id']) . '</IdHotel>
-    <CreatedBy>CS-Cart</CreatedBy>
+    <CreatedBy>' . htmlspecialchars(Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
     <PackageName>' . htmlspecialchars($bookingData['package_name'] ?? '') . '</PackageName>
     <CheckIn>' . htmlspecialchars($bookingData['check_in']) . '</CheckIn>
     <CheckOut>' . htmlspecialchars($bookingData['check_out']) . '</CheckOut>
@@ -898,7 +861,7 @@ class NovotonApi
 
         $this->lastRequest = $xml;
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')',
                 'xml' => $xml
@@ -907,22 +870,14 @@ class NovotonApi
 
         $response = $this->callApi('hotel_res_RQ', $xml, $bookingData['lang'] ?? 'UK');
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Response',
                 'response' => $response
             ]);
         }
 
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -1044,7 +999,7 @@ class NovotonApi
      *
      * @return \SimpleXMLElement|false
      */
-    public function getResortList(string $country = 'BULGARIA', string $lang = 'UK')
+    public function getResortList(string $country = '', string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <resort_list>
@@ -1070,7 +1025,7 @@ class NovotonApi
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : 33;
+            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
@@ -1218,7 +1173,7 @@ class NovotonApi
   <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
   <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
   <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? 'CS-Cart') . '</CreatedBy>
+  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
   <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
   <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
   <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
@@ -1243,16 +1198,7 @@ class NovotonApi
         ]);
 
         $response = $this->callApi('hotel_request', $xml, $lang);
-
-        if ($response === false) {
-            $parsed = false;
-        } else {
-            try {
-                $parsed = $this->xmlParser->parse($response);
-            } catch (XmlParsingException $e) {
-                $parsed = false;
-            }
-        }
+        $parsed = $this->xmlParser->parse($response);
 
         if ($returnXml) {
             $xmlMasked = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
@@ -1262,7 +1208,7 @@ class NovotonApi
                 'xml_sent' => $xmlMasked,
                 'xml_response' => $response,
                 'parsed' => $parsed,
-                'id_num' => $parsed && isset($parsed->IdNum) ? (string)$parsed->IdNum : null
+                'id_num' => isset($parsed->IdNum) ? (string)$parsed->IdNum : null
             ];
         }
 
@@ -1303,7 +1249,7 @@ class NovotonApi
   <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
   <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
   <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? 'CS-Cart') . '</CreatedBy>
+  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
   <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
   <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
   <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>

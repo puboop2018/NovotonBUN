@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Sync Log Repository
  * 
@@ -10,7 +11,7 @@
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-class SyncLogRepository
+class SyncLogRepository implements SyncLogRepositoryInterface
 {
     /**
      * Find log by ID

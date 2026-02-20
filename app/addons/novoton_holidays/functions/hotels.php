@@ -20,7 +20,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
  * @return array Normalized package data
  */
-function fn_novoton_normalize_package($pkg, $include_priceinfo_details = false)
+function fn_novoton_normalize_package($pkg, $include_priceinfo_details = false): array
 {
     $packageData = [
         'IdCont' => $pkg['package_id'],
@@ -81,7 +81,7 @@ function fn_novoton_normalize_package($pkg, $include_priceinfo_details = false)
  * @param bool $force Force refresh from database
  * @return array|null Hotel data with extracted rooms/boards/ages, or null
  */
-function fn_novoton_get_hotel_data($hotel_id, $force = false)
+function fn_novoton_get_hotel_data($hotel_id, $force = false): ?array
 {
     static $cache = [];
 
@@ -154,7 +154,7 @@ function fn_novoton_get_hotel_data($hotel_id, $force = false)
  * @param bool $force Force refresh
  * @return array Packages with prices data
  */
-function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = null)
+function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = null): array
 {
     static $cache = [];
 
@@ -274,7 +274,7 @@ function fn_novoton_get_hotel_prices($product_id, $force = false, $hotel_id = nu
  * @param string $package_id Package ID (IdCont)
  * @return array|null Priceinfo data or null
  */
-function fn_novoton_get_package_priceinfo($hotel_id, $package_id)
+function fn_novoton_get_package_priceinfo($hotel_id, $package_id): ?array
 {
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
@@ -298,7 +298,7 @@ function fn_novoton_get_package_priceinfo($hotel_id, $package_id)
  * @param string $package_name Package name
  * @return array|null Priceinfo data or null
  */
-function fn_novoton_get_package_priceinfo_by_name($hotel_id, $package_name)
+function fn_novoton_get_package_priceinfo_by_name($hotel_id, $package_name): ?array
 {
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
@@ -319,7 +319,7 @@ function fn_novoton_get_package_priceinfo_by_name($hotel_id, $package_name)
  * 
  * @return int Count
  */
-function fn_novoton_get_hotels_count()
+function fn_novoton_get_hotels_count(): int
 {
     return db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
 }
@@ -330,7 +330,7 @@ function fn_novoton_get_hotels_count()
  *
  * @return int Count
  */
-function fn_novoton_get_hotels_no_packages_count()
+function fn_novoton_get_hotels_no_packages_count(): int
 {
     return db_get_field(
         "SELECT COUNT(*) FROM ?:novoton_hotels h
@@ -346,7 +346,7 @@ function fn_novoton_get_hotels_no_packages_count()
  *
  * @return array Array with country => count
  */
-function fn_novoton_get_hotels_no_packages_by_country()
+function fn_novoton_get_hotels_no_packages_by_country(): array
 {
     return db_get_hash_single_array(
         "SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
@@ -365,7 +365,7 @@ function fn_novoton_get_hotels_no_packages_by_country()
  * @param int $product_id Product ID
  * @return string|null Hotel ID or null
  */
-function fn_novoton_get_hotel_id_by_product($product_id)
+function fn_novoton_get_hotel_id_by_product($product_id): ?string
 {
     return db_get_field(
         "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i",
@@ -379,7 +379,7 @@ function fn_novoton_get_hotel_id_by_product($product_id)
  * @param string $path Category path (e.g., "Bulgaria/Golden Sands")
  * @return int Category ID
  */
-function fn_novoton_get_or_create_category($path)
+function fn_novoton_get_or_create_category($path): int
 {
     $parts = explode('/', $path);
     $parent_id = 0;
@@ -434,7 +434,7 @@ function fn_novoton_get_or_create_category($path)
  * @param string $country Country name (default: BULGARIA)
  * @return array Result with counts
  */
-function fn_novoton_sync_resorts_list($country = 'BULGARIA')
+function fn_novoton_sync_resorts_list($country = 'BULGARIA'): array
 {
     // Ensure table exists (handles upgrades from versions that removed it)
     db_query(
@@ -521,7 +521,7 @@ function fn_novoton_sync_resorts_list($country = 'BULGARIA')
  *
  * @return array Result with counts
  */
-function fn_novoton_sync_facilities_list()
+function fn_novoton_sync_facilities_list(): array
 {
     $api = fn_novoton_get_api();
     if (!$api) {
@@ -584,7 +584,7 @@ function fn_novoton_sync_facilities_list()
  * @param string $hotel_id Hotel ID
  * @return bool Success
  */
-function fn_novoton_sync_hotel_facilities($hotel_id)
+function fn_novoton_sync_hotel_facilities($hotel_id): bool
 {
     $api = fn_novoton_get_api();
     if (!$api) {
@@ -634,7 +634,7 @@ function fn_novoton_sync_hotel_facilities($hotel_id)
  * @param string $lang Language code (en/ro)
  * @return array Facilities list
  */
-function fn_novoton_get_hotel_facilities($hotel_id, $lang = 'en')
+function fn_novoton_get_hotel_facilities($hotel_id, $lang = 'en'): array
 {
     $name_field = ($lang == 'ro') ? 'facility_name_ro' : 'facility_name_en';
     
@@ -653,7 +653,7 @@ function fn_novoton_get_hotel_facilities($hotel_id, $lang = 'en')
  *
  * @return array Resorts grouped by country
  */
-function fn_novoton_get_resorts_for_settings()
+function fn_novoton_get_resorts_for_settings(): array
 {
     $selected_countries = fn_novoton_parse_countries();
 
@@ -692,7 +692,7 @@ function fn_novoton_get_resorts_for_settings()
  * @param int $feature_id Feature ID for stars
  * @return bool Success
  */
-function fn_novoton_assign_star_rating_feature($product_id, $star_rating, $feature_id = 4)
+function fn_novoton_assign_star_rating_feature($product_id, $star_rating, $feature_id = 4): bool
 {
     if ($star_rating < 1 || $star_rating > 5) {
         return false;
@@ -788,7 +788,7 @@ function fn_novoton_assign_star_rating_feature($product_id, $star_rating, $featu
  * @param bool $is_main Whether this is the main product image
  * @return bool Success status
  */
-function fn_novoton_add_product_image($product_id, $image_url, $is_main = false)
+function fn_novoton_add_product_image($product_id, $image_url, $is_main = false): bool
 {
     if (empty($product_id) || empty($image_url)) {
         return false;

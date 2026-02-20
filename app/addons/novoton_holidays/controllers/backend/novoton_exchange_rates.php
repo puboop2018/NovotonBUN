@@ -11,7 +11,7 @@
 
 use Tygh\Registry;
 use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Services\ConfigService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -75,7 +75,7 @@ if ($mode == 'manage') {
 
     Tygh::$app['view']->assign('exchange_info', $exchange_info);
 
-    $cron_password = ConfigService::getCronAccessKey();
+    $cron_password = ConfigProvider::getCronAccessKey();
     Tygh::$app['view']->assign('cron_password', $cron_password);
 
     // Build cron URLs for display
