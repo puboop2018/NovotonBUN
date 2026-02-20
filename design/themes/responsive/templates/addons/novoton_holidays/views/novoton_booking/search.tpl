@@ -138,6 +138,11 @@
                     <p style="margin: 5px 0 0; font-size: 14px; color: #666;">
                          {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
                     </p>
+                    {if $hotel_season_from && $hotel_season_to}
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #0071c2;">
+                        {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+                    </p>
+                    {/if}
                 </div>
                 <div>
                     {if $novoton_results|@count > 0}
@@ -934,12 +939,22 @@
             <p style="color: #666; margin-bottom: 20px;">
                 {$novoton_params.check_in|date_format:"%a, %b %d"} - {$novoton_params.check_out|date_format:"%a, %b %d, %Y"}
             </p>
+            {if $hotel_season_from && $hotel_season_to}
+            <p style="color: #0071c2; font-size: 13px; margin-bottom: 0;">
+                {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+            </p>
+            {/if}
         </div>
     {elseif $no_availability_message}
         <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 40px; text-align: center;">
             <span style="font-size: 48px;"></span>
             <h3 style="margin: 20px 0 10px; color: #333;">{__("novoton_holidays.no_availability")}</h3>
             <p style="color: #666; margin-bottom: 20px;">{__("novoton_holidays.try_different_dates")}</p>
+            {if $hotel_season_from && $hotel_season_to}
+            <p style="color: #0071c2; font-size: 13px; margin-bottom: 20px;">
+                {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+            </p>
+            {/if}
             
             {* Request Alternatives Form *}
             <div style="background: #f0f7ff; border: 1px solid #0071c2; border-radius: 8px; padding: 25px; margin-top: 20px; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">

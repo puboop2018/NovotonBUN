@@ -1347,6 +1347,31 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             if ($active_eb) {
                 Tygh::$app['view']->assign('active_early_booking', $active_eb);
             }
+
+            // Extract hotel season period (first season FromDate to last season ToDate)
+            $season_from = '';
+            $season_to = '';
+            foreach ($packages as $pkg) {
+                if (!empty($pkg['priceinfo_data'])) {
+                    $priceinfo = isset($priceinfo) ? $priceinfo : json_decode($pkg['priceinfo_data'], true);
+                    if (!empty($priceinfo['seasons']['season'])) {
+                        $seasons = $priceinfo['seasons']['season'];
+                        // Normalize single season to array
+                        if (isset($seasons['IdSeason']) || isset($seasons['DateFrom'])) {
+                            $seasons = [$seasons];
+                        }
+                        if (!empty($seasons)) {
+                            $first_season = reset($seasons);
+                            $last_season = end($seasons);
+                            $season_from = $first_season['DateFrom'] ?? $first_season['FromDate'] ?? '';
+                            $season_to = $last_season['DateTo'] ?? $last_season['ToDate'] ?? '';
+                        }
+                    }
+                    break; // Use first package with priceinfo data
+                }
+            }
+            Tygh::$app['view']->assign('hotel_season_from', $season_from);
+            Tygh::$app['view']->assign('hotel_season_to', $season_to);
         } else {
             // Hotel not found in novoton_hotels - try product name
             Tygh::$app['view']->assign('hotel_package_name', '');

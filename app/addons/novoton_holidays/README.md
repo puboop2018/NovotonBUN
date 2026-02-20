@@ -37,6 +37,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - Early booking discounts
 - Flexible date search (+/- days option)
 - Room quota display with availability indicators
+- Hotel season period display (from priceinfo data)
 - Nearby date availability fallback via `hotel_quota_add` API (rooms showing "On request")
 - Alternative dates search when no results found (±10 days automatic scan)
 
@@ -861,7 +862,32 @@ The addon includes a React 19-based booking form for an enhanced user experience
 
 ## Availability Search Features
 
-The search system has two independent fallback layers that help customers find available rooms even when their exact dates don't match.
+The search system shows the hotel's accommodation season and has two independent fallback layers that help customers find available rooms even when their exact dates don't match.
+
+### Season Period Display
+
+**Purpose:** Show when the hotel operates, so customers understand why dates may be unavailable.
+
+**How it works:**
+1. During search, the system reads `priceinfo_data` JSON from `cscart_novoton_hotel_packages`
+2. Extracts the first season's `DateFrom` and the last season's `DateTo`
+3. Displays a blue info line: *"This hotel offers accommodation from 21 May to 30 Sep 2026"*
+
+**Where it appears:**
+- In the hotel header (under the location line) — always visible when results are shown
+- In the "No availability" message — explains why the search returned no results
+- In the "Alternative dates found" panel — provides season context
+
+**Technical details:**
+
+| Aspect | Value |
+|--------|-------|
+| Data source | `cscart_novoton_hotel_packages.priceinfo_data` JSON |
+| Fields | `seasons.season[0].DateFrom` → `seasons.season[N].DateTo` |
+| Template variables | `$hotel_season_from`, `$hotel_season_to` |
+| Date format | `%d %b` for start, `%d %b %Y` for end |
+| Translation key | `novoton_holidays.accommodation_period` |
+| Performance | No API call — reads from synced database |
 
 ### Layer 1: Nearby Date Availability (`hotel_quota_add`)
 
@@ -1034,7 +1060,10 @@ Addon logs events to CS-Cart's logging system:
   - When `hotel_quota` returns 0/RQ for a room, calls `hotel_quota_add` to find ±5 day availability windows
   - Attaches `nearby_availability` data to "On request" rooms in search results
   - New API method: `NovotonApi::getHotelQuotaAddAll()` with 180s cache TTL
-- **Added:** Documentation: new "Availability Search Features" section covering both fallback layers
+- **Added:** Season period display in search results header and no-availability screens
+  - Extracts first/last season dates from `priceinfo_data` JSON (no API call)
+  - Shows *"This hotel offers accommodation from [date] to [date]"* in hotel header and no-availability messages
+- **Added:** Documentation: new "Availability Search Features" section covering season display and both fallback layers
 - **Architecture:** Split monolithic booking controller (3,400 lines) into mode handler files
 - **Architecture:** Moved inline SQL from hooks and cron into Repository classes
 - **Architecture:** Standardized config access on ConfigService; registered all autoloader namespaces
