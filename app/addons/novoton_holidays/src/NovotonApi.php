@@ -556,7 +556,7 @@ class NovotonApi
             }
         }
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => "hotel_quota for hotel {$hotelId}: " . json_encode($quotaMap)
             ]);
@@ -588,7 +588,7 @@ class NovotonApi
 
         $response = $this->callApi('hotel_quota', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response ?: '', 0, 500)
             ]);
@@ -634,7 +634,7 @@ class NovotonApi
             <Currency>EUR</Currency>
         </frmsearch>';
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Request',
                 'xml' => $xml,
@@ -644,7 +644,7 @@ class NovotonApi
 
         $response = $this->callApi('frmsearch', $xml);
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton frmsearch Response',
                 'response' => substr($response ?: '', 0, 2000)
@@ -899,7 +899,7 @@ class NovotonApi
 
         $this->lastRequest = $xml;
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')',
                 'xml' => $xml
@@ -908,7 +908,7 @@ class NovotonApi
 
         $response = $this->callApi('hotel_res_RQ', $xml, $bookingData['lang'] ?? 'UK');
 
-        if (defined('NOVOTON_DEBUG') || !empty($_REQUEST['debug'])) {
+        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton hotel_res_RQ Response',
                 'response' => $response

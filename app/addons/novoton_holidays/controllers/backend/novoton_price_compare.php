@@ -37,7 +37,7 @@ if ($mode == 'compare') {
     $nights = intval($_REQUEST['nights'] ?? 7);
     $adults = intval($_REQUEST['adults'] ?? 2);
     $children_ages = $_REQUEST['children_ages'] ?? '';
-    $show_debug = isset($_REQUEST['debug']);
+    $show_debug = ConfigProvider::isDebugLogging();
 
     // Parse children ages
     $children_arr = [];

@@ -16,6 +16,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -91,7 +92,9 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
  */
 function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
-    if (!empty($_REQUEST['debug'])) {
+    $debugMode = ConfigProvider::isDebugLogging();
+
+    if ($debugMode) {
         fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
     }
 
@@ -116,7 +119,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     foreach ($order['products'] as &$product) {
-        if (!empty($_REQUEST['debug'])) {
+        if ($debugMode) {
             fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', array_keys($product['extra'] ?? [])));
         }
 
@@ -159,7 +162,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [5] Guests data formatting
         _nvt_format_order_guests($product);
 
-        if (!empty($_REQUEST['debug'])) {
+        if ($debugMode) {
             $payment_set    = !empty($product['extra']['terms_of_payment_formatted'])      ? 'YES' : 'NO';
             $payment_amounts = !empty($product['extra']['terms_of_payment_with_amounts'])   ? 'YES' : 'NO';
             $cancel_set     = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';

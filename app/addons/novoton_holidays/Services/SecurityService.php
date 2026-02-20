@@ -197,15 +197,8 @@ class SecurityService
             $sanitized['q'] = $this->sanitizeString($params['q'], 200);
         }
 
-        // Debug mode flag
-        if (!empty($params['debug'])) {
-            $sanitized['debug'] = true;
-        }
-
-        // Reset circuit breaker flag
-        if (!empty($params['reset_circuit'])) {
-            $sanitized['reset_circuit'] = true;
-        }
+        // Note: debug mode is gated by server-side ConfigProvider::isDebugLogging(),
+        // not by URL parameters. The 'debug' and 'reset_circuit' URL params are no longer accepted.
 
         // Legacy child_age_N parameters
         for ($i = 1; $i <= 6; $i++) {

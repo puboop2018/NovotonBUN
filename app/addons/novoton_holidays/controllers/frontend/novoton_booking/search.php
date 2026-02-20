@@ -249,20 +249,9 @@ use Tygh\Addons\NovotonHolidays\Constants;
         'flex_days' => $flex_days
     ];
     
-    // Debug mode - enable to see API responses
-    $debug_mode = defined('NOVOTON_DEBUG');
+    // Debug mode - gated by server-side config, not URL params
+    $debug_mode = defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging();
     $debug_log = [];
-
-    // Allow resetting circuit breaker in debug mode via &reset_circuit=1
-    if ($debug_mode && !empty($searchParams['reset_circuit'])) {
-        $api = fn_novoton_get_api();
-        if (method_exists($api, 'resetCircuitBreaker')) {
-            $api->resetCircuitBreaker();
-            $debug_log[] = "=== CIRCUIT BREAKER RESET ===";
-            $debug_log[] = "Circuit breaker has been manually reset.";
-            $debug_log[] = "";
-        }
-    }
     
     // If hotel_id is provided (product page), search for specific hotel
     if (!empty($searchParams['hotel_id'])) {
