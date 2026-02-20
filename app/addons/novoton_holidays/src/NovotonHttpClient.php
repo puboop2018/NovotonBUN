@@ -122,7 +122,7 @@ class NovotonHttpClient
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-            curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
+            curl_setopt($ch, CURLOPT_REFERER, "http://booking.allinclusive.bg");
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
             curl_setopt($ch, CURLOPT_TIMEOUT, 120);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -217,7 +217,7 @@ class NovotonHttpClient
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-                curl_setopt($ch, CURLOPT_REFERER, "Referer: http://booking.allinclusive.bg");
+                curl_setopt($ch, CURLOPT_REFERER, "http://booking.allinclusive.bg");
                 curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 120);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);

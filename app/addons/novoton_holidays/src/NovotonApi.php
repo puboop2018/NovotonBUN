@@ -624,7 +624,7 @@ class NovotonApi
         <frmsearch>
             <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-            <Country>' . htmlspecialchars(strtoupper($params['country'] ?? 'BULGARIA')) . '</Country>
+            <Country>' . htmlspecialchars(strtoupper($params['country'] ?? '')) . '</Country>
             <City>' . htmlspecialchars(strtoupper($params['city'] ?? '')) . '</City>
             <Hotel>' . htmlspecialchars(strtoupper($params['hotel'] ?? '')) . '</Hotel>
             <Arr1>' . htmlspecialchars($params['check_in'] ?? '') . '</Arr1>
@@ -847,7 +847,7 @@ class NovotonApi
         <IdRoom>' . htmlspecialchars($roomData['room_id']) . '</IdRoom>
         <IdBoard>' . htmlspecialchars($roomData['board_id']) . '</IdBoard>
         <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '4*') . '</IdStar>
+        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($roomGuests[0]['name'] ?? $bookingData['holder']) . '</Holder>
         <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
@@ -874,7 +874,7 @@ class NovotonApi
         <IdRoom>' . htmlspecialchars($bookingData['room_id']) . '</IdRoom>
         <IdBoard>' . htmlspecialchars($bookingData['board_id']) . '</IdBoard>
         <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '4*') . '</IdStar>
+        <IdStar>' . htmlspecialchars($bookingData['star_rating'] ?? '') . '</IdStar>
         <Holder>' . htmlspecialchars($bookingData['holder']) . '</Holder>
         <ISO_National>' . htmlspecialchars($bookingData['iso_national'] ?? 'RO') . '</ISO_National>
         <Remark>' . htmlspecialchars($remark) . '</Remark>
@@ -1045,7 +1045,7 @@ class NovotonApi
      *
      * @return \SimpleXMLElement|false
      */
-    public function getResortList(string $country = 'BULGARIA', string $lang = 'UK')
+    public function getResortList(string $country = '', string $lang = 'UK')
     {
         $xml = '<?xml version="1.0" encoding="windows-1251"?>
         <resort_list>

@@ -6,6 +6,7 @@
  */
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
+use Tygh\Addons\NovotonHolidays\Constants;
 
     // Validate and sanitize search input via SecurityService
     $security = _nvt_get_security_service();
@@ -380,15 +381,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             // If specific meal plan selected, try to find matching board
             if (!$searchAllBoards && !empty($mealPlan)) {
                 // Map user selection to possible API values
-                $boardMapping = [
-                    'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                    'UAI' => ['ULTRA ALL', 'UAI'],
-                    'FB' => ['FB', 'FULL BOARD'],
-                    'HB' => ['HB', 'HALF BOARD'],
-                    'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                    'RO' => ['RO', 'ROOM ONLY']
-                ];
-                
+                $boardMapping = Constants::BOARD_MAPPING;
+
                 $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
                 
                 // Reorder to put preferred boards first
@@ -563,13 +557,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                     
                                     // Filter by meal plan if specified
                                     if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = [
-                                            'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                            'FB' => ['FB', 'FULL BOARD'],
-                                            'HB' => ['HB', 'HALF BOARD'],
-                                            'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                            'RO' => ['RO', 'ROOM ONLY']
-                                        ];
+                                        $boardMapping = Constants::BOARD_MAPPING;
                                         $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
                                         $boardMatch = false;
                                         foreach ($preferredBoards as $pb) {
@@ -609,13 +597,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 if (!empty($roomId) && $price > 0) {
                                     $includeMeal = true;
                                     if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = [
-                                            'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                            'FB' => ['FB', 'FULL BOARD'],
-                                            'HB' => ['HB', 'HALF BOARD'],
-                                            'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                            'RO' => ['RO', 'ROOM ONLY']
-                                        ];
+                                        $boardMapping = Constants::BOARD_MAPPING;
                                         $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
                                         $includeMeal = false;
                                         foreach ($preferredBoards as $pb) {
@@ -953,14 +935,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 
                                 // Filter by meal plan if specified
                                 if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = [
-                                        'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                        'UAI' => ['ULTRA ALL', 'UAI'],
-                                        'FB' => ['FB', 'FULL BOARD'],
-                                        'HB' => ['HB', 'HALF BOARD'],
-                                        'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                        'RO' => ['RO', 'ROOM ONLY']
-                                    ];
+                                    $boardMapping = Constants::BOARD_MAPPING;
                                     $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
                                     $boardMatch = false;
                                     foreach ($preferredBoards as $pb) {
@@ -1049,14 +1024,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 // Filter by meal plan if specified
                                 $includeMeal = true;
                                 if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = [
-                                        'AI' => ['ALL INCL', 'AI', 'ALLINC'],
-                                        'UAI' => ['ULTRA ALL', 'UAI'],
-                                        'FB' => ['FB', 'FULL BOARD'],
-                                        'HB' => ['HB', 'HALF BOARD'],
-                                        'BB' => ['BB', 'BED BREAKFAST', 'B&B'],
-                                        'RO' => ['RO', 'ROOM ONLY']
-                                    ];
+                                    $boardMapping = Constants::BOARD_MAPPING;
                                     $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
                                     $includeMeal = false;
                                     foreach ($preferredBoards as $pb) {
@@ -1211,7 +1179,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                                 'hotel_id' => $hotelId,
                                 'room_id' => $roomId,
                                 'board_id' => $tryBoard,
-                                'star_rating' => '4*',
+                                'star_rating' => '',
                                 'check_in' => $alt_check_in,
                                 'check_out' => $alt_check_out,
                                 'adults' => $adults,
@@ -1402,9 +1370,9 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // Assign hotel display values
     Tygh::$app['view']->assign('hotel_name', $hotel_name_display);
-    Tygh::$app['view']->assign('hotel_city', $hotel_city_display ?: 'GOLDEN SANDS');
+    Tygh::$app['view']->assign('hotel_city', $hotel_city_display ?: '');
     Tygh::$app['view']->assign('hotel_region', $hotel_region_display ?: '');
-    Tygh::$app['view']->assign('hotel_country', $hotel_country_display ?: 'BULGARIA');
+    Tygh::$app['view']->assign('hotel_country', $hotel_country_display ?: '');
     
     // Extract terms from first result (usually same for all rooms)
     $terms_payment_raw = '';

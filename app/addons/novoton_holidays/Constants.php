@@ -183,8 +183,21 @@ final class Constants
     public const ERROR_RATE_LIMITED = 'E006';
     public const ERROR_UNAUTHORIZED = 'E007';
     
+    // ========== Board (Meal Plan) Mapping ==========
+    // Maps user-facing board codes to Novoton API board type identifiers.
+    // Single source of truth — replaces scattered $boardMapping arrays.
+
+    public const BOARD_MAPPING = [
+        'AI'  => ['ALL INCL', 'AI', 'ALLINC'],
+        'UAI' => ['ULTRA ALL', 'UAI'],
+        'FB'  => ['FB', 'FULL BOARD'],
+        'HB'  => ['HB', 'HALF BOARD'],
+        'BB'  => ['BB', 'BED BREAKFAST', 'B&B'],
+        'RO'  => ['RO', 'ROOM ONLY'],
+    ];
+
     // ========== Default Values ==========
-    
+
     public const DEFAULT_ADULTS = 2;
     public const DEFAULT_CHILDREN = 0;
     public const DEFAULT_NIGHTS = 7;

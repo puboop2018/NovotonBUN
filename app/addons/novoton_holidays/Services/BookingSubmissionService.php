@@ -460,11 +460,19 @@ class BookingSubmissionService
                     $name = "Child {$i} Room {$roomNum}";
                 }
 
-                $age = 6;
+                $age = 0;
                 if (isset($guestsData[$guestKey]['age'])) {
                     $age = intval($guestsData[$guestKey]['age']);
                 } elseif (isset($childrenAges[$i - 1])) {
                     $age = intval($childrenAges[$i - 1]);
+                }
+
+                if ($age <= 0) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton - Child age missing, cannot determine correct pricing',
+                        'guest_key' => $guestKey,
+                        'room_num' => $roomNum,
+                    ]);
                 }
 
                 $guest = [
