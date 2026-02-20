@@ -14,8 +14,9 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 
-class SearchService
+class SearchService implements SearchServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
@@ -652,12 +653,8 @@ class SearchService
     {
         $discounts = [];
 
-        $eb_package = db_get_row(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
+        $packageRepo = new HotelPackageRepository();
+        $eb_package = $packageRepo->findEarlyBookingPackage($hotelId);
 
         if (empty($eb_package['priceinfo_data'])) {
             return [];

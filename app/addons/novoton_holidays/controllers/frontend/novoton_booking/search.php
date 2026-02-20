@@ -885,24 +885,18 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $hotel_country_display = '';
 
     if (!empty($hotelId)) {
-        // V3: Optimized query - select only display columns (hotel_data is audit/cache only, never queried for display)
-        $hotel_info = db_get_row(
-            "SELECT hotel_id, hotel_name, city, region, country, hotel_type
-             FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotelId
-        );
+        // V3: Use HotelRepository for display columns
+        $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+        $hotel_info = $hotelRepo->findBasicById($hotelId);
         if ($hotel_info) {
             $hotel_name_display = $hotel_info['hotel_name'] ?? '';
             $hotel_city_display = $hotel_info['city'] ?? '';
             $hotel_region_display = $hotel_info['region'] ?? '';
             $hotel_country_display = $hotel_info['country'] ?? '';
 
-            // V3: Get packages from packages table
-            $packages = db_get_array(
-                "SELECT package_id, package_name, min_price, has_early_booking, priceinfo_data
-                 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-                $hotelId
-            );
+            // V3: Get packages via HotelPackageRepository
+            $packageRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository();
+            $packages = $packageRepo->findByHotelId($hotelId);
 
             if (!empty($packages)) {
                 // Use first non-bracketed package or just first
@@ -1026,20 +1020,15 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $terms_payment = fn_novoton_format_payment_terms($terms_payment_raw);
     $terms_cancellation = fn_novoton_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
-    // V3: Get early booking details from novoton_hotel_packages.priceinfo_data JSON for tooltip
+    // V3: Get early booking details via HotelPackageRepository for tooltip
     if (!empty($hotelId)) {
-        $eb_package = db_get_row(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
+        $packageRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository();
+        $eb_package = $packageRepo->findEarlyBookingPackage($hotelId);
 
         if (!empty($eb_package['priceinfo_data'])) {
             $priceinfo = json_decode($eb_package['priceinfo_data'], true);
             if (!empty($priceinfo['early_booking'])) {
                 $eb_data = $priceinfo['early_booking'];
-                // Normalize single entry to array
                 if (isset($eb_data['Reduction'])) {
                     $eb_data = [$eb_data];
                 }
