@@ -90,20 +90,22 @@ class NovotonApi
 
     /**
      * Send API request, clean the response, and sync debug state.
-     * Returns cleaned response string or false on failure.
+     * Returns cleaned response string.
+     * Throws ApiException on HTTP/network failures.
      *
      * @param string $function API function name
      * @param string $xml XML request body
      * @param string $lang Language code
-     * @return string|false Cleaned response or false
+     * @return string Cleaned response
+     * @throws ApiException On API communication failure
      */
-    private function callApi(string $function, string $xml, string $lang = 'UK')
+    private function callApi(string $function, string $xml, string $lang = 'UK'): string
     {
         try {
             $raw = $this->httpClient->sendRequest($function, $xml, $lang);
         } catch (ApiException $e) {
             $this->syncDebugState();
-            return false;
+            throw $e;
         }
 
         $this->syncDebugState();
@@ -114,26 +116,18 @@ class NovotonApi
 
     /**
      * Send API request, clean and parse the XML response.
-     * Catches ApiException and XmlParsingException for backward compatibility.
      *
      * @param string $function API function name
      * @param string $xml XML request body
      * @param string $lang Language code
-     * @return \SimpleXMLElement|false Parsed XML or false on failure
+     * @return \SimpleXMLElement Parsed XML
+     * @throws ApiException On API communication failure
+     * @throws XmlParsingException On XML parsing failure
      */
-    private function callApiAndParse(string $function, string $xml, string $lang = 'UK')
+    private function callApiAndParse(string $function, string $xml, string $lang = 'UK'): \SimpleXMLElement
     {
         $response = $this->callApi($function, $xml, $lang);
-
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -409,10 +403,6 @@ class NovotonApi
 
         $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
 
-        if ($response === false) {
-            return false;
-        }
-
         // Log raw response for debugging
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton room_price - Raw API response',
@@ -420,11 +410,7 @@ class NovotonApi
             'response_first_500' => substr($response, 0, 500)
         ]);
 
-        try {
-            $result = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        $result = $this->xmlParser->parse($response);
 
         // Save RAW XML to cache (not SimpleXMLElement) ONLY if we have valid price data
         $prices = $result->xpath('//Price');
@@ -517,16 +503,7 @@ class NovotonApi
         </hotel_quota>';
 
         $response = $this->callApi('hotel_quota', $xml);
-
-        if ($response === false) {
-            return [];
-        }
-
-        try {
-            $parsed = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return [];
-        }
+        $parsed = $this->xmlParser->parse($response);
 
         $quotaMap = [];
 
@@ -571,9 +548,11 @@ class NovotonApi
     /**
      * 4. hotel_quota - Free allotments for a single room (AVAILABILITY)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
+     * @throws ApiException On API communication failure
+     * @throws XmlParsingException On XML parsing failure
      */
-    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = '')
+    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
         $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
 
@@ -590,19 +569,11 @@ class NovotonApi
 
         if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
-                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response ?: '', 0, 500)
+                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response, 0, 500)
             ]);
         }
 
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -651,16 +622,7 @@ class NovotonApi
             ]);
         }
 
-        if ($response === false) {
-            return [];
-        }
-
-        try {
-            $result = $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return [];
-        }
-
+        $result = $this->xmlParser->parse($response);
         return $this->parseSearchResults($result, $params);
     }
 
@@ -915,15 +877,7 @@ class NovotonApi
             ]);
         }
 
-        if ($response === false) {
-            return false;
-        }
-
-        try {
-            return $this->xmlParser->parse($response);
-        } catch (XmlParsingException $e) {
-            return false;
-        }
+        return $this->xmlParser->parse($response);
     }
 
     /**
@@ -1244,16 +1198,7 @@ class NovotonApi
         ]);
 
         $response = $this->callApi('hotel_request', $xml, $lang);
-
-        if ($response === false) {
-            $parsed = false;
-        } else {
-            try {
-                $parsed = $this->xmlParser->parse($response);
-            } catch (XmlParsingException $e) {
-                $parsed = false;
-            }
-        }
+        $parsed = $this->xmlParser->parse($response);
 
         if ($returnXml) {
             $xmlMasked = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
@@ -1263,7 +1208,7 @@ class NovotonApi
                 'xml_sent' => $xmlMasked,
                 'xml_response' => $response,
                 'parsed' => $parsed,
-                'id_num' => $parsed && isset($parsed->IdNum) ? (string)$parsed->IdNum : null
+                'id_num' => isset($parsed->IdNum) ? (string)$parsed->IdNum : null
             ];
         }
 

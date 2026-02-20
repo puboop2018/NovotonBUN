@@ -358,4 +358,49 @@ function fn_novoton_holidays_upgrade_db()
             }
         }
     }
+
+    // ── Foreign key constraints (idempotent — only adds if missing) ──
+    $foreign_keys = [
+        [
+            'table'       => '?:novoton_hotel_packages',
+            'constraint'  => 'fk_nhp_hotel_id',
+            'column'      => 'hotel_id',
+            'ref_table'   => '?:novoton_hotels',
+            'ref_column'  => 'hotel_id',
+            'on_delete'   => 'CASCADE',
+        ],
+        [
+            'table'       => '?:novoton_hotel_facilities',
+            'constraint'  => 'fk_nhf_hotel_id',
+            'column'      => 'hotel_id',
+            'ref_table'   => '?:novoton_hotels',
+            'ref_column'  => 'hotel_id',
+            'on_delete'   => 'CASCADE',
+        ],
+        [
+            'table'       => '?:novoton_hotel_facilities',
+            'constraint'  => 'fk_nhf_facility_id',
+            'column'      => 'facility_id',
+            'ref_table'   => '?:novoton_facilities',
+            'ref_column'  => 'facility_id',
+            'on_delete'   => 'CASCADE',
+        ],
+    ];
+
+    foreach ($foreign_keys as $fk) {
+        $fk_exists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?s AND CONSTRAINT_NAME = ?s AND CONSTRAINT_TYPE = 'FOREIGN KEY'",
+            $fk['table'], $fk['constraint']
+        );
+        if (!$fk_exists) {
+            @db_query(
+                "ALTER TABLE {$fk['table']}
+                 ADD CONSTRAINT `{$fk['constraint']}`
+                 FOREIGN KEY (`{$fk['column']}`) REFERENCES {$fk['ref_table']}(`{$fk['ref_column']}`)
+                 ON DELETE {$fk['on_delete']} ON UPDATE CASCADE"
+            );
+        }
+    }
 }

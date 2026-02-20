@@ -143,13 +143,20 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function setHotelFacilities(string $hotel_id, array $facility_ids): bool
     {
-        $this->clearHotelFacilities($hotel_id);
-        
-        foreach ($facility_ids as $facility_id) {
-            $this->linkToHotel($hotel_id, (int) $facility_id);
+        db_query("START TRANSACTION");
+        try {
+            $this->clearHotelFacilities($hotel_id);
+
+            foreach ($facility_ids as $facility_id) {
+                $this->linkToHotel($hotel_id, (int) $facility_id);
+            }
+
+            db_query("COMMIT");
+            return true;
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            throw $e;
         }
-        
-        return true;
     }
     
     /**
