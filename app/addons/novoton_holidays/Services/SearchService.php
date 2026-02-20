@@ -393,9 +393,374 @@ class SearchService
         return 'nvt_' . $prefix . '_' . md5(json_encode($key_data));
     }
     
+    // =========================================================================
+    // BOARD / MEAL PLAN FILTERING (single source of truth)
+    // =========================================================================
+
+    /**
+     * Check if a board ID matches the requested meal plan.
+     *
+     * Uses Constants::BOARD_MAPPING to resolve user-facing codes (AI, UAI, FB…)
+     * to the API board strings they map to.
+     *
+     * @param string $boardId  Board identifier from the API response
+     * @param string $mealPlan User-selected meal plan code (e.g. 'AI', 'HB')
+     * @return bool
+     */
+    public static function matchesMealPlan(string $boardId, string $mealPlan): bool
+    {
+        if (empty($mealPlan)) {
+            return true; // "All boards" — everything matches
+        }
+
+        $mapping = Constants::BOARD_MAPPING;
+        $candidates = $mapping[$mealPlan] ?? [$mealPlan];
+
+        foreach ($candidates as $candidate) {
+            if (stripos($boardId, $candidate) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // =========================================================================
+    // QUOTA INTERPRETATION
+    // =========================================================================
+
+    /**
+     * Interpret a raw quota value from the hotel_quota API.
+     *
+     * @param string|null $quotaValue Raw quota (e.g. "5", "RQ", "REQUEST", "")
+     * @return array{availability: int|null, is_on_request: bool}
+     */
+    public static function parseQuotaValue(?string $quotaValue): array
+    {
+        if ($quotaValue === null) {
+            return ['availability' => null, 'is_on_request' => false];
+        }
+
+        $quotaValue = trim($quotaValue);
+        $upper = strtoupper($quotaValue);
+
+        if ($upper === 'RQ' || $upper === 'REQUEST' || $quotaValue === '') {
+            return ['availability' => 0, 'is_on_request' => true];
+        }
+
+        $intVal = intval($quotaValue);
+        if ($intVal === 0) {
+            return ['availability' => 0, 'is_on_request' => true];
+        }
+
+        return ['availability' => $intVal, 'is_on_request' => false];
+    }
+
+    // =========================================================================
+    // ROOM PRICE RESPONSE PARSING
+    // =========================================================================
+
+    /**
+     * Parse a room_price API XML response into a structured result array.
+     *
+     * Handles both single-result and multi-result responses, applies meal plan
+     * filtering, commission, quota lookup, and builds the standard result items.
+     *
+     * @param string      $rawXml       Raw XML string from room_price API
+     * @param int         $nights       Number of nights
+     * @param string      $checkIn      Check-in date (Y-m-d)
+     * @param string      $checkOut     Check-out date (Y-m-d)
+     * @param string      $mealPlan     Requested meal plan code (empty = all)
+     * @param array       $quotaMap     Room ID => quota value map (from hotel_quota)
+     * @param array       $roomTypeMap  Room ID => Type map (from hotelinfo)
+     * @param int|null    $forRoom      Room number (multi-room), null for single
+     * @param string|null $occupancyStr Occupancy string for display
+     * @return array List of result items
+     */
+    public function parseRoomPriceResponse(
+        string $rawXml,
+        int    $nights,
+        string $checkIn,
+        string $checkOut,
+        string $mealPlan = '',
+        array  $quotaMap = [],
+        array  $roomTypeMap = [],
+        ?int   $forRoom = null,
+        ?string $occupancyStr = null
+    ): array {
+        $results = [];
+
+        $prevLibxml = libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($rawXml);
+        libxml_clear_errors();
+        libxml_use_internal_errors($prevLibxml);
+
+        if ($xml === false) {
+            return [];
+        }
+
+        $priceElements = $xml->xpath('//Price');
+        $numPrices = count($priceElements);
+
+        if ($numPrices === 0) {
+            return [];
+        }
+
+        $searchAllBoards = empty($mealPlan);
+
+        if ($numPrices > 1 || ($xml->getName() !== 'room_price' && $numPrices > 0)) {
+            // Multi-result: parallel xpath arrays
+            $idRooms        = $xml->xpath('//IdRoom');
+            $boards          = $xml->xpath('//Board');
+            $prices          = $xml->xpath('//Price');
+            $packageNames    = $xml->xpath('//PackageName');
+            $remarks         = $xml->xpath('//remark');
+            $earlyBookings   = $xml->xpath('//early_booking');
+            $extras          = $xml->xpath('//extras');
+            $moreInfos       = $xml->xpath('//MoreInfo');
+            $importants      = $xml->xpath('//Important');
+            $termsPayment    = $xml->xpath('//TermsOfPayment');
+            $termsCancellation = $xml->xpath('//TermsOfCancellation');
+
+            for ($i = 0; $i < count($prices); $i++) {
+                $roomId  = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
+                $boardId = isset($boards[$i])  ? (string)$boards[$i]  : '';
+                $price   = isset($prices[$i])  ? floatval((string)$prices[$i]) : 0;
+
+                if (empty($roomId) || $price <= 0) {
+                    continue;
+                }
+
+                if (!$searchAllBoards && !self::matchesMealPlan($boardId, $mealPlan)) {
+                    continue;
+                }
+
+                $finalPrice = $this->api->applyCommission($price);
+                $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
+
+                $item = [
+                    'room'                   => null,
+                    'room_id'                => $roomId,
+                    'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
+                    'room_type_display'      => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                    'board_id'               => $boardId,
+                    'board_name'             => fn_novoton_format_board_name($boardId),
+                    'package_name'           => urldecode(self::xpathValue($packageNames, $i)),
+                    'price_data'             => null,
+                    'nights'                 => $nights,
+                    'total_price'            => $finalPrice,
+                    'price_per_night'        => round($finalPrice / max($nights, 1), 2),
+                    'check_in'               => $checkIn,
+                    'check_out'              => $checkOut,
+                    'rooms_available'        => $quota['availability'],
+                    'is_on_request'          => $quota['is_on_request'],
+                    'remark'                 => self::xpathValue($remarks, $i),
+                    'important'              => self::xpathValue($importants, $i),
+                    'more_info'              => self::xpathValue($moreInfos, $i),
+                    'early_booking_discount' => floatval(self::xpathValue($earlyBookings, $i, '0')),
+                    'extras'                 => self::xpathValue($extras, $i),
+                    'terms_of_payment'       => isset($termsPayment[0]) ? $termsPayment[0]->asXML() : '',
+                    'terms_of_cancellation'  => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
+                    'free_cancellation_date' => isset($termsCancellation[0])
+                        ? fn_novoton_get_free_cancellation_date($termsCancellation[0]->asXML())
+                        : null,
+                ];
+
+                if ($forRoom !== null) {
+                    $item['for_room'] = $forRoom;
+                }
+                if ($occupancyStr !== null) {
+                    $item['occupancy'] = $occupancyStr;
+                }
+
+                $results[] = $item;
+            }
+        } else {
+            // Single result (root is room_price itself)
+            $roomId      = (string)$xml->IdRoom;
+            $boardId     = (string)$xml->Board;
+            $price       = floatval((string)$xml->Price);
+            $packageName = (string)$xml->PackageName;
+            $remark      = isset($xml->remark) ? (string)$xml->remark : '';
+
+            if (empty($roomId) || $price <= 0) {
+                return [];
+            }
+
+            if (!$searchAllBoards && !self::matchesMealPlan($boardId, $mealPlan)) {
+                return [];
+            }
+
+            $finalPrice = $this->api->applyCommission($price);
+            $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
+
+            $item = [
+                'room'                   => null,
+                'room_id'                => $roomId,
+                'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
+                'room_type_display'      => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                'board_id'               => $boardId,
+                'board_name'             => fn_novoton_format_board_name($boardId),
+                'package_name'           => urldecode($packageName),
+                'price_data'             => $xml,
+                'nights'                 => $nights,
+                'total_price'            => $finalPrice,
+                'price_per_night'        => round($finalPrice / max($nights, 1), 2),
+                'check_in'               => $checkIn,
+                'check_out'              => $checkOut,
+                'rooms_available'        => $quota['availability'],
+                'is_on_request'          => $quota['is_on_request'],
+                'remark'                 => $remark,
+                'important'              => isset($xml->Important) ? (string)$xml->Important : '',
+                'more_info'              => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
+                'early_booking_discount' => isset($xml->early_booking) ? floatval((string)$xml->early_booking) : 0,
+                'extras'                 => isset($xml->extras) ? (string)$xml->extras : '',
+                'terms_of_payment'       => isset($xml->TermsOfPayment) ? $xml->TermsOfPayment->asXML() : '',
+                'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
+                'free_cancellation_date' => isset($xml->TermsOfCancellation)
+                    ? fn_novoton_get_free_cancellation_date($xml->TermsOfCancellation->asXML())
+                    : null,
+            ];
+
+            if ($forRoom !== null) {
+                $item['for_room'] = $forRoom;
+            }
+            if ($occupancyStr !== null) {
+                $item['occupancy'] = $occupancyStr;
+            }
+
+            $results[] = $item;
+        }
+
+        return $results;
+    }
+
+    // =========================================================================
+    // EARLY BOOKING DISCOUNTS
+    // =========================================================================
+
+    /**
+     * Extract active early booking discounts from the priceinfo_data JSON
+     * stored in novoton_hotel_packages.
+     *
+     * @param string $hotelId  Hotel ID
+     * @param string $checkIn  Guest check-in date (Y-m-d)
+     * @param string $checkOut Guest check-out date (Y-m-d)
+     * @return array List of applicable discount records
+     */
+    public static function getEarlyBookingDiscounts(string $hotelId, string $checkIn, string $checkOut): array
+    {
+        $discounts = [];
+
+        $eb_package = db_get_row(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
+            $hotelId
+        );
+
+        if (empty($eb_package['priceinfo_data'])) {
+            return [];
+        }
+
+        $priceinfo = json_decode($eb_package['priceinfo_data'], true);
+        if (empty($priceinfo['early_booking'])) {
+            return [];
+        }
+
+        $eb_data = $priceinfo['early_booking'];
+        // Normalize single entry to array
+        if (isset($eb_data['Reduction'])) {
+            $eb_data = [$eb_data];
+        }
+
+        $today = date('Y-m-d');
+        foreach ($eb_data as $eb) {
+            $bookTo   = $eb['BookTo']   ?? '';
+            $stayFrom = $eb['StayFrom'] ?? '';
+            $stayTo   = $eb['StayTo']   ?? '';
+
+            if (!empty($bookTo) && $bookTo < $today) continue;
+            if (!empty($stayFrom) && $stayFrom > $checkOut) continue;
+            if (!empty($stayTo) && $stayTo < $checkIn) continue;
+
+            $discounts[] = [
+                'discount'   => floatval($eb['Reduction'] ?? 0),
+                'room_types' => $eb['RoomTypes'] ?? 'all',
+                'package'    => $eb['PackageId'] ?? '',
+                'min_stay'   => intval($eb['MinStay'] ?? 0),
+                'booking_to' => $bookTo,
+            ];
+        }
+
+        // Sort by discount DESC, limit to 10
+        usort($discounts, fn($a, $b) => $b['discount'] <=> $a['discount']);
+        return array_slice($discounts, 0, 10);
+    }
+
+    /**
+     * Calculate discount range from a list of early booking discounts.
+     *
+     * @param array $discounts From getEarlyBookingDiscounts()
+     * @return array {min, max, all} or empty
+     */
+    public static function getDiscountRange(array $discounts): array
+    {
+        if (empty($discounts)) {
+            return [];
+        }
+
+        $values = array_column($discounts, 'discount');
+        $range = [
+            'min' => min($values),
+            'max' => max($values),
+            'all' => array_unique($values),
+        ];
+        sort($range['all']);
+        return $range;
+    }
+
+    // =========================================================================
+    // RESULT DEDUPLICATION
+    // =========================================================================
+
+    /**
+     * Deduplicate results, keeping the lowest price for each room/board/package.
+     *
+     * @param array $results
+     * @return array Deduplicated results (re-indexed)
+     */
+    public static function deduplicateResults(array $results): array
+    {
+        $unique = [];
+        foreach ($results as $result) {
+            $key = $result['room_id'] . '|' . $result['board_id'] . '|' . ($result['package_name'] ?? '');
+            if (!isset($unique[$key])
+                || ($result['total_price'] > 0 && $result['total_price'] < $unique[$key]['total_price'])) {
+                $unique[$key] = $result;
+            }
+        }
+        return array_values($unique);
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    /**
+     * Safe xpath value accessor.
+     */
+    private static function xpathValue(?array $elements, int $index, string $default = ''): string
+    {
+        if ($elements === null || !isset($elements[$index])) {
+            return $default;
+        }
+        return (string)$elements[$index];
+    }
+
     /**
      * Log debug message
-     * 
+     *
      * @param string $message Log message
      * @param array $context Additional context
      */

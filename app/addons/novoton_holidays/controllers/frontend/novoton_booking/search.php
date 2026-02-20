@@ -7,6 +7,7 @@
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Services\SearchService;
 
     // Validate and sanitize search input via SecurityService
     $security = _nvt_get_security_service();
@@ -512,6 +513,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
                     $priceData = $api->getRoomPrice($priceParams);
 
                     $room_results = [];
+                    $searchSvc = new SearchService();
+                    $occupancyStr = "{$room_adults} adults" . ($room_children_count > 0 ? ", {$room_children_count} children" : '');
 
                     if ($priceData) {
                         $rawXml = $api->getLastResponse();
@@ -520,105 +523,10 @@ use Tygh\Addons\NovotonHolidays\Constants;
                             $debug_log[] = "  API Response received (parsing...)";
                         }
 
-                        $prevLibxml = libxml_use_internal_errors(true);
-                        $xml = simplexml_load_string($rawXml);
-                        libxml_clear_errors();
-                        libxml_use_internal_errors($prevLibxml);
-
-                        if ($xml !== false) {
-                            // Parse results - handle both single and multiple results
-                            $priceElements = $xml->xpath('//Price');
-                            
-                            if (count($priceElements) > 1) {
-                                // Multiple results
-                                $idRooms = $xml->xpath('//IdRoom');
-                                $boards = $xml->xpath('//Board');
-                                $prices = $xml->xpath('//Price');
-                                $packageNames = $xml->xpath('//PackageName');
-                                
-                                for ($i = 0; $i < count($prices); $i++) {
-                                    $roomId = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
-                                    $boardId = isset($boards[$i]) ? (string)$boards[$i] : '';
-                                    $price = isset($prices[$i]) ? floatval((string)$prices[$i]) : 0;
-                                    $packageName = isset($packageNames[$i]) ? (string)$packageNames[$i] : '';
-                                    
-                                    if (empty($roomId) || $price <= 0) continue;
-                                    
-                                    // Filter by meal plan if specified
-                                    if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = Constants::BOARD_MAPPING;
-                                        $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                        $boardMatch = false;
-                                        foreach ($preferredBoards as $pb) {
-                                            if (stripos($boardId, $pb) !== false) {
-                                                $boardMatch = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!$boardMatch) continue;
-                                    }
-                                    
-                                    $finalPrice = fn_novoton_get_api()->applyCommission($price);
-                                    
-                                    $room_results[] = [
-                                        'room_id' => $roomId,
-                                        'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                        'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
-                                        'board_id' => $boardId,
-                                        'board_name' => fn_novoton_format_board_name($boardId),
-                                        'package_name' => urldecode($packageName),
-                                        'nights' => $nights,
-                                        'total_price' => $finalPrice,
-                                        'price_per_night' => round($finalPrice / $nights, 2),
-                                        'check_in' => $checkIn,
-                                        'check_out' => $checkOut,
-                                        'for_room' => $room_num,
-                                        'occupancy' => "{$room_adults} adults" . ($room_children_count > 0 ? ", {$room_children_count} children" : '')
-                                    ];
-                                }
-                            } elseif (count($priceElements) == 1) {
-                                // Single result
-                                $roomId = (string)$xml->IdRoom;
-                                $boardId = (string)$xml->Board;
-                                $price = floatval((string)$xml->Price);
-                                $packageName = (string)$xml->PackageName;
-                                
-                                if (!empty($roomId) && $price > 0) {
-                                    $includeMeal = true;
-                                    if (!$searchAllBoards && !empty($mealPlan)) {
-                                        $boardMapping = Constants::BOARD_MAPPING;
-                                        $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                        $includeMeal = false;
-                                        foreach ($preferredBoards as $pb) {
-                                            if (stripos($boardId, $pb) !== false) {
-                                                $includeMeal = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    
-                                    if ($includeMeal) {
-                                        $finalPrice = fn_novoton_get_api()->applyCommission($price);
-                                        
-                                        $room_results[] = [
-                                            'room_id' => $roomId,
-                                            'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                            'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
-                                            'board_id' => $boardId,
-                                            'board_name' => fn_novoton_format_board_name($boardId),
-                                            'package_name' => urldecode($packageName),
-                                            'nights' => $nights,
-                                            'total_price' => $finalPrice,
-                                            'price_per_night' => round($finalPrice / $nights, 2),
-                                            'check_in' => $checkIn,
-                                            'check_out' => $checkOut,
-                                            'for_room' => $room_num,
-                                            'occupancy' => "{$room_adults} adults" . ($room_children_count > 0 ? ", {$room_children_count} children" : '')
-                                        ];
-                                    }
-                                }
-                            }
-                        }
+                        $room_results = $searchSvc->parseRoomPriceResponse(
+                            $rawXml, $nights, $checkIn, $checkOut,
+                            $mealPlan, [], $roomTypeMap, $room_num, $occupancyStr
+                        );
                     } else {
                         // API returned empty or error
                         if ($debug_mode) {
@@ -654,66 +562,9 @@ use Tygh\Addons\NovotonHolidays\Constants;
                 Tygh::$app['view']->assign('all_room_results', $all_room_results);
                 Tygh::$app['view']->assign('is_multi_room_search', true);
                 
-                // V3: Fetch early booking discounts from novoton_hotel_packages.priceinfo_data JSON
-                $early_booking_discounts = [];
-
-                $eb_package = db_get_row(
-                    "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-                     WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
-                     ORDER BY synced_at DESC LIMIT 1",
-                    $hotelId
-                );
-
-                if (!empty($eb_package['priceinfo_data'])) {
-                    $priceinfo = json_decode($eb_package['priceinfo_data'], true);
-                    if (!empty($priceinfo['early_booking'])) {
-                        $eb_data = $priceinfo['early_booking'];
-                        // Normalize single entry to array
-                        if (isset($eb_data['Reduction'])) {
-                            $eb_data = [$eb_data];
-                        }
-
-                        $today = date('Y-m-d');
-                        foreach ($eb_data as $eb) {
-                            // Filter by booking dates and stay dates
-                            $bookTo = $eb['BookTo'] ?? '';
-                            $stayFrom = $eb['StayFrom'] ?? '';
-                            $stayTo = $eb['StayTo'] ?? '';
-
-                            if (!empty($bookTo) && $bookTo < $today) continue;
-                            if (!empty($stayFrom) && $stayFrom > $checkOut) continue;
-                            if (!empty($stayTo) && $stayTo < $checkIn) continue;
-
-                            $early_booking_discounts[] = [
-                                'discount' => floatval($eb['Reduction'] ?? 0),
-                                'room_types' => $eb['RoomTypes'] ?? 'all',
-                                'package' => $eb['PackageId'] ?? '',
-                                'min_stay' => intval($eb['MinStay'] ?? 0),
-                                'booking_to' => $bookTo
-                            ];
-                        }
-
-                        // Sort by discount DESC
-                        usort($early_booking_discounts, function($a, $b) {
-                            return $b['discount'] <=> $a['discount'];
-                        });
-
-                        // Limit to 10
-                        $early_booking_discounts = array_slice($early_booking_discounts, 0, 10);
-                    }
-                }
-                
-                // Calculate discount range (min and max)
-                $discount_range = [];
-                if (!empty($early_booking_discounts)) {
-                    $discounts = array_column($early_booking_discounts, 'discount');
-                    $discount_range = [
-                        'min' => min($discounts),
-                        'max' => max($discounts),
-                        'all' => array_unique($discounts)
-                    ];
-                    sort($discount_range['all']);
-                }
+                // V3: Fetch early booking discounts via SearchService
+                $early_booking_discounts = SearchService::getEarlyBookingDiscounts($hotelId, $checkIn, $checkOut);
+                $discount_range = SearchService::getDiscountRange($early_booking_discounts);
                 
                 Tygh::$app['view']->assign('early_booking_discounts', $early_booking_discounts);
                 Tygh::$app['view']->assign('early_booking_range', $discount_range);
@@ -844,21 +695,16 @@ use Tygh\Addons\NovotonHolidays\Constants;
                 }
             }
             
-            // Parse the response - room_price returns multiple <room_price> elements
-            // Each element contains: IdRoom, Board, Price, PackageName, etc.
+            // Parse the response via SearchService
             if ($priceData) {
-                // The response could be a single room_price or multiple
-                // Use xpath to get all room_price results
                 $rawXml = fn_novoton_get_api()->getLastResponse();
-                
+
                 if ($debug_mode) {
                     $debug_log[] = "";
                     $debug_log[] = "=== PARSING ROOM_PRICE RESPONSE ===";
                 }
-                
-                // ========================================
-                // FETCH ROOM QUOTA FOR ALL ROOMS AT ONCE
-                // ========================================
+
+                // Fetch room quota for all rooms at once
                 $quotaMap = [];
                 try {
                     $quotaMap = fn_novoton_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
@@ -873,223 +719,18 @@ use Tygh\Addons\NovotonHolidays\Constants;
                         $debug_log[] = "=== QUOTA FETCH ERROR: " . $e->getMessage() . " ===";
                     }
                 }
-                
-                // Parse the raw XML to get all room_price elements
-                $prevLibxml = libxml_use_internal_errors(true);
-                $xml = simplexml_load_string($rawXml);
-                libxml_clear_errors();
-                libxml_use_internal_errors($prevLibxml);
 
-                if ($xml !== false) {
-                    // Get all room_price elements using xpath
-                    $roomPrices = $xml->xpath('//room_price') ?: [$xml];
-                    
-                    // If the root is room_price itself, check if there are sibling room_price elements
-                    if ($xml->getName() === 'room_price') {
-                        // Single result or need to check parent
-                        $roomPrices = [$xml];
-                        
-                        // Check if there are multiple Price elements (indicating multiple results)
-                        $priceElements = $xml->xpath('//Price');
-                        if (count($priceElements) > 1) {
-                            // Multiple results in single response - need to parse differently
-                            // Each set of IdRoom, Board, Price represents one result
-                            $idRooms = $xml->xpath('//IdRoom');
-                            $boards = $xml->xpath('//Board');
-                            $prices = $xml->xpath('//Price');
-                            $packageNames = $xml->xpath('//PackageName');
-                            $remarks = $xml->xpath('//remark');
-                            $earlyBookings = $xml->xpath('//early_booking');
-                            $extrasElements = $xml->xpath('//extras');
-                            $moreInfoElements = $xml->xpath('//MoreInfo');
-                            $importantElements = $xml->xpath('//Important');
-                            
-                            // Get terms (usually same for all)
-                            $termsPayment = $xml->xpath('//TermsOfPayment');
-                            $termsCancellation = $xml->xpath('//TermsOfCancellation');
-                            
-                            if ($debug_mode) {
-                                $debug_log[] = "Multiple results found: " . count($prices) . " price entries";
-                            }
-                            
-                            // Process each result
-                            for ($i = 0; $i < count($prices); $i++) {
-                                $roomId = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
-                                $boardId = isset($boards[$i]) ? (string)$boards[$i] : '';
-                                $price = isset($prices[$i]) ? floatval((string)$prices[$i]) : 0;
-                                $packageName = _nvt_get_xml_value($packageNames, $i);
-                                $remark = _nvt_get_xml_value($remarks, $i);
-                                
-                                if (empty($roomId) || $price <= 0) continue;
-                                
-                                // Filter by meal plan if specified
-                                if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = Constants::BOARD_MAPPING;
-                                    $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                    $boardMatch = false;
-                                    foreach ($preferredBoards as $pb) {
-                                        if (stripos($boardId, $pb) !== false) {
-                                            $boardMatch = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!$boardMatch) continue;
-                                }
-                                
-                                // Apply commission
-                                $finalPrice = fn_novoton_get_api()->applyCommission($price);
-                                
-                                // Get quota for this room from the pre-fetched quotaMap
-                                $availability = null;
-                                $isOnRequest = false;
-                                
-                                if (!empty($quotaMap)) {
-                                    // Look up quota for this room ID
-                                    $quotaValue = isset($quotaMap[$roomId]) ? $quotaMap[$roomId] : null;
-                                    
-                                    if ($quotaValue !== null) {
-                                        $quotaValue = trim($quotaValue);
-                                        if (strtoupper($quotaValue) === 'RQ' || strtoupper($quotaValue) === 'REQUEST' || $quotaValue === '') {
-                                            $isOnRequest = true;
-                                            $availability = 0;
-                                        } else {
-                                            $quotaInt = intval($quotaValue);
-                                            if ($quotaInt === 0) {
-                                                $isOnRequest = true;
-                                                $availability = 0;
-                                            } else {
-                                                $availability = $quotaInt;
-                                            }
-                                        }
-                                        
-                                        if ($debug_mode) {
-                                            $debug_log[] = "  Room {$roomId}: quota={$quotaValue}, availability={$availability}";
-                                        }
-                                    }
-                                }
-                                
-                                $result_item = [
-                                    'room' => null,
-                                    'room_id' => $roomId,
-                                    'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                    'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
-                                    'board_id' => $boardId,
-                                    'board_name' => fn_novoton_format_board_name($boardId),
-                                    'package_name' => urldecode($packageName),
-                                    'price_data' => null,
-                                    'nights' => $nights,
-                                    'total_price' => $finalPrice,
-                                    'price_per_night' => round($finalPrice / $nights, 2),
-                                    'check_in' => $checkIn,
-                                    'check_out' => $checkOut,
-                                    'rooms_available' => $availability,
-                                    'is_on_request' => $isOnRequest,
-                                    'remark' => $remark,
-                                    'important' => _nvt_get_xml_value($importantElements, $i),
-                                    'more_info' => _nvt_get_xml_value($moreInfoElements, $i),
-                                    'early_booking_discount' => _nvt_get_xml_value($earlyBookings, $i, 0, 'float'),
-                                    'extras' => _nvt_get_xml_value($extrasElements, $i),
-                                    'terms_of_payment' => isset($termsPayment[0]) ? $termsPayment[0]->asXML() : '',
-                                    'terms_of_cancellation' => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
-                                    'free_cancellation_date' => isset($termsCancellation[0]) ? fn_novoton_get_free_cancellation_date($termsCancellation[0]->asXML()) : null
-                                ];
-                                
-                                $results[] = $result_item;
-                                
-                                if ($debug_mode) {
-                                    $status = $isOnRequest ? 'ON REQUEST' : ($availability !== null ? "{$availability} rooms" : 'available');
-                                    $debug_log[] = "  -> ADDED: Room={$roomId}, Board={$boardId}, Price={$finalPrice}€, {$status}";
-                                }
-                            }
-                        } else {
-                            // Single result
-                            $roomId = (string)$xml->IdRoom;
-                            $boardId = (string)$xml->Board;
-                            $price = floatval((string)$xml->Price);
-                            $packageName = (string)$xml->PackageName;
-                            $remark = isset($xml->remark) ? (string)$xml->remark : '';
-                            
-                            if (!empty($roomId) && $price > 0) {
-                                // Filter by meal plan if specified
-                                $includeMeal = true;
-                                if (!$searchAllBoards && !empty($mealPlan)) {
-                                    $boardMapping = Constants::BOARD_MAPPING;
-                                    $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-                                    $includeMeal = false;
-                                    foreach ($preferredBoards as $pb) {
-                                        if (stripos($boardId, $pb) !== false) {
-                                            $includeMeal = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                
-                                if ($includeMeal) {
-                                    $finalPrice = fn_novoton_get_api()->applyCommission($price);
-                                    
-                                    // Get quota for this room from the pre-fetched quotaMap
-                                    $availability = null;
-                                    $isOnRequest = false;
-                                    
-                                    if (!empty($quotaMap)) {
-                                        $quotaValue = isset($quotaMap[$roomId]) ? $quotaMap[$roomId] : null;
-                                        
-                                        if ($quotaValue !== null) {
-                                            $quotaValue = trim($quotaValue);
-                                            if (strtoupper($quotaValue) === 'RQ' || strtoupper($quotaValue) === 'REQUEST' || $quotaValue === '') {
-                                                $isOnRequest = true;
-                                                $availability = 0;
-                                            } else {
-                                                $quotaInt = intval($quotaValue);
-                                                if ($quotaInt === 0) {
-                                                    $isOnRequest = true;
-                                                    $availability = 0;
-                                                } else {
-                                                    $availability = $quotaInt;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    
-                                    $result_item = [
-                                        'room' => null,
-                                        'room_id' => $roomId,
-                                        'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                                        'room_type_display' => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
-                                        'board_id' => $boardId,
-                                        'board_name' => fn_novoton_format_board_name($boardId),
-                                        'package_name' => urldecode($packageName),
-                                        'price_data' => $xml,
-                                        'nights' => $nights,
-                                        'total_price' => $finalPrice,
-                                        'price_per_night' => round($finalPrice / $nights, 2),
-                                        'check_in' => $checkIn,
-                                        'check_out' => $checkOut,
-                                        'rooms_available' => $availability,
-                                        'is_on_request' => $isOnRequest,
-                                        'remark' => $remark,
-                                        'important' => isset($xml->Important) ? (string)$xml->Important : '',
-                                        'more_info' => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
-                                        'early_booking_discount' => isset($xml->early_booking) ? floatval((string)$xml->early_booking) : 0,
-                                        'extras' => isset($xml->extras) ? (string)$xml->extras : '',
-                                        'terms_of_payment' => isset($xml->TermsOfPayment) ? $xml->TermsOfPayment->asXML() : '',
-                                        'terms_of_cancellation' => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
-                                        'free_cancellation_date' => isset($xml->TermsOfCancellation) ? fn_novoton_get_free_cancellation_date($xml->TermsOfCancellation->asXML()) : null
-                                    ];
-                                    
-                                    $results[] = $result_item;
-                                    
-                                    if ($debug_mode) {
-                                        $status = $isOnRequest ? 'ON REQUEST' : ($availability !== null ? "{$availability} rooms" : 'available');
-                                        $debug_log[] = "  -> ADDED (single): Room={$roomId}, Board={$boardId}, Price={$finalPrice}€, {$status}";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if ($debug_mode) {
-                        $debug_log[] = "  -> Failed to parse XML response";
+                // Parse results via SearchService (handles multi/single, filtering, commission, quota)
+                $searchSvc = new SearchService();
+                $results = $searchSvc->parseRoomPriceResponse(
+                    $rawXml, $nights, $checkIn, $checkOut,
+                    $mealPlan, $quotaMap, $roomTypeMap
+                );
+
+                if ($debug_mode) {
+                    foreach ($results as $r) {
+                        $status = $r['is_on_request'] ? 'ON REQUEST' : ($r['rooms_available'] !== null ? "{$r['rooms_available']} rooms" : 'available');
+                        $debug_log[] = "  -> ADDED: Room={$r['room_id']}, Board={$r['board_id']}, Price={$r['total_price']}€, {$status}";
                     }
                 }
             } else {
@@ -1097,18 +738,9 @@ use Tygh\Addons\NovotonHolidays\Constants;
                     $debug_log[] = "  -> No response from room_price API";
                 }
             }
-            
-            // Deduplicate results - keep best price for each room/board/package combination
-            $uniqueResults = [];
-            foreach ($results as $result) {
-                // Include package_name in key so different packages show separately
-                $key = $result['room_id'] . '|' . $result['board_id'] . '|' . ($result['package_name'] ?? '');
-                if (!isset($uniqueResults[$key]) || 
-                    ($result['total_price'] > 0 && $result['total_price'] < $uniqueResults[$key]['total_price'])) {
-                    $uniqueResults[$key] = $result;
-                }
-            }
-            $results = array_values($uniqueResults);
+
+            // Deduplicate results via SearchService
+            $results = SearchService::deduplicateResults($results);
             
             if ($debug_mode) {
                 $debug_log[] = "";
