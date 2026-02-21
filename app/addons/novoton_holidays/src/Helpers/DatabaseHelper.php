@@ -220,6 +220,14 @@ class DatabaseHelper
         return $count;
     }
 
+    /** @var string[] Allowed column names for dynamic queries */
+    private const ALLOWED_COLUMNS = [
+        'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
+        'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_prices',
+        'packages_count', 'hotelinfo_synced_at', 'hotel_list_synced_at',
+        'created_at', 'updated_at', 'hotel_data', 'last_price_check',
+    ];
+
     /**
      * Get hotels for sync with optimized field selection
      */
@@ -229,11 +237,21 @@ class DatabaseHelper
             $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_prices', 'product_id'];
         }
 
+        // Validate field names against whitelist
+        $fields = array_intersect($fields, self::ALLOWED_COLUMNS);
+        if (empty($fields)) {
+            $fields = ['hotel_id'];
+        }
+
         $fieldList = implode(', ', $fields);
         $where = [];
         $params = [];
 
         foreach ($conditions as $key => $value) {
+            // Validate column name against whitelist
+            if (!in_array($key, self::ALLOWED_COLUMNS, true)) {
+                continue;
+            }
             if (is_array($value)) {
                 $where[] = "{$key} IN (?a)";
                 $params[] = $value;
@@ -268,7 +286,9 @@ class DatabaseHelper
 
         if ($subType !== null) {
             $query .= " AND notes LIKE ?s";
-            $params[] = '%"sync_type":"' . $subType . '"%';
+            // Escape LIKE wildcards in the value before wrapping with %
+            $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $subType);
+            $params[] = '%"sync_type":"' . $escaped . '"%';
         }
 
         return \db_get_field($query, ...$params) ?: null;

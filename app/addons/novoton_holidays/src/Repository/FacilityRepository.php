@@ -13,6 +13,17 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 class FacilityRepository implements FacilityRepositoryInterface
 {
+    /** @var array<string, string> Allowed facility name columns by language */
+    private const NAME_COLUMNS = [
+        'ro' => 'facility_name_ro',
+        'en' => 'facility_name_en',
+    ];
+
+    private static function nameField(string $lang): string
+    {
+        return self::NAME_COLUMNS[$lang] ?? self::NAME_COLUMNS['en'];
+    }
+
     /**
      * Find facility by ID
      */
@@ -21,14 +32,14 @@ class FacilityRepository implements FacilityRepositoryInterface
         $facility = db_get_row("SELECT * FROM ?:novoton_facilities WHERE facility_id = ?i", $facility_id);
         return $facility ?: null;
     }
-    
+
     /**
      * Find all facilities
      */
     public function findAll(string $lang = 'en'): array
     {
-        $name_field = ($lang == 'ro') ? 'facility_name_ro' : 'facility_name_en';
-        return db_get_array("SELECT facility_id, {$name_field} as facility_name FROM ?:novoton_facilities ORDER BY {$name_field}");
+        $col = self::nameField($lang);
+        return db_get_array("SELECT facility_id, {$col} as facility_name FROM ?:novoton_facilities ORDER BY {$col}");
     }
     
     /**
@@ -88,14 +99,14 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function getForHotel(string $hotel_id, string $lang = 'en'): array
     {
-        $name_field = ($lang == 'ro') ? 'facility_name_ro' : 'facility_name_en';
-        
+        $col = self::nameField($lang);
+
         return db_get_array(
-            "SELECT f.facility_id, f.{$name_field} as facility_name
+            "SELECT f.facility_id, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
-             ORDER BY f.{$name_field}",
+             ORDER BY f.{$col}",
             $hotel_id
         );
     }

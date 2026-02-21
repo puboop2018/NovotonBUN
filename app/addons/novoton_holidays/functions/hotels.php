@@ -637,14 +637,15 @@ function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
  */
 function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): array
 {
-    $name_field = ($lang == 'ro') ? 'facility_name_ro' : 'facility_name_en';
-    
+    $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
+    $col = $allowed[$lang] ?? $allowed['en'];
+
     return db_get_array(
-        "SELECT f.facility_id, f.{$name_field} as facility_name
+        "SELECT f.facility_id, f.{$col} as facility_name
          FROM ?:novoton_hotel_facilities hf
          LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
          WHERE hf.hotel_id = ?s
-         ORDER BY f.{$name_field}",
+         ORDER BY f.{$col}",
         $hotel_id
     );
 }

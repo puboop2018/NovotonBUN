@@ -28,14 +28,14 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 if (!function_exists('fn_novoton_holidays_parse_countries')) {
 function fn_novoton_holidays_parse_countries($selected_countries = null): array
 {
-    // If null passed, get from settings
+    // When called without argument, delegate to ConfigProvider (single source of truth)
     if ($selected_countries === null) {
-        $selected_countries = ConfigProvider::get('selected_countries', '');
+        return ConfigProvider::getSelectedCountries();
     }
-    
+
     $countries = [];
-    
-    // Parse the selected countries from settings
+
+    // Parse the selected countries from raw settings value
     if (is_array($selected_countries)) {
         foreach ($selected_countries as $key => $value) {
             if ($value === 'Y' || $value === '1' || $value === 1) {
@@ -49,32 +49,14 @@ function fn_novoton_holidays_parse_countries($selected_countries = null): array
             return strtoupper(trim($c));
         }, explode(',', $selected_countries));
     }
-    
+
     $countries = array_filter($countries);
-    
-    // If no countries selected, return ALL available countries
+
+    // If no countries resolved, fallback to all available countries
     if (empty($countries)) {
-        // Use Constants if available
-        if (class_exists('\\Tygh\\Addons\\NovotonHolidays\\Constants')) {
-            return Constants::COUNTRIES;
-        }
-        // Fallback list of all Novoton-supported countries
-        return [
-            'ALBANIA',
-            'BULGARIA', 
-            'CYPRUS',
-            'EGYPT',
-            'FRANCE',
-            'GREECE',
-            'ITALY',
-            'MALDIVES',
-            'SPAIN',
-            'TURKEY',
-            'UNITED ARAB EMIRATES',
-            'UNITED KINGDOM',
-        ];
+        return Constants::COUNTRIES;
     }
-    
+
     return $countries;
 }
 } // end function_exists

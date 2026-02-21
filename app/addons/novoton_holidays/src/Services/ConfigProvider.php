@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 class ConfigProvider
 {
@@ -156,19 +157,25 @@ class ConfigProvider
     public static function getSelectedCountries(): array
     {
         $val = self::settings()['selected_countries'] ?? '';
+        $countries = [];
 
         // CS-Cart stores "multiple checkboxes" as ['KEY' => 'Y', 'KEY2' => 'N', ...]
         if (is_array($val)) {
-            $countries = [];
             foreach ($val as $key => $enabled) {
                 if ($enabled === 'Y') {
                     $countries[] = (string) $key;
                 }
             }
-            return $countries;
+        } elseif ($val !== '' && is_string($val)) {
+            $countries = array_filter(array_map('trim', explode(',', $val)));
         }
 
-        return $val !== '' ? array_map('trim', explode(',', $val)) : [];
+        // Fallback: if nothing selected, return all available countries
+        if (empty($countries)) {
+            return Constants::COUNTRIES;
+        }
+
+        return $countries;
     }
 
     /** @return string[] */
