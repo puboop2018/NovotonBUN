@@ -43,7 +43,14 @@ class NovotonHttpClient
                 'Novoton API URL not configured — set api_url in addon settings'
             );
         }
-        $this->apiUrl = $settings['api_url'];
+        $apiUrl = $settings['api_url'];
+        // Preserve scheme if provided in settings, otherwise default to http://
+        // (Novoton API provider specifies http:// — do not force https://)
+        if (preg_match('#^https?://#', $apiUrl)) {
+            $this->apiUrl = $apiUrl;
+        } else {
+            $this->apiUrl = 'http://' . $apiUrl;
+        }
         $this->apiKey = $settings['api_key'] ?? '';
         $this->apiId = $settings['api_id'] ?? '';
         $this->apiUser = $settings['api_user'] ?? '';
@@ -103,7 +110,7 @@ class NovotonHttpClient
             throw ApiException::circuitBreakerOpen($function, $secondsUntilRetry);
         }
 
-        $url = 'https://' . $this->apiUrl . '/index.php';
+        $url = $this->apiUrl . '/index.php';
 
         $postData = [
             'fn' => $function,
@@ -196,7 +203,7 @@ class NovotonHttpClient
             return array_fill_keys(array_keys($requests), false);
         }
 
-        $url = 'https://' . $this->apiUrl . '/index.php';
+        $url = $this->apiUrl . '/index.php';
         $results = [];
         $mh = curl_multi_init();
 
