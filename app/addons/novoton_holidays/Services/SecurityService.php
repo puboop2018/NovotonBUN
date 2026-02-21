@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 class SecurityService
 {
@@ -68,15 +69,15 @@ class SecurityService
         // Validate adults/children
         if (isset($data['adults'])) {
             $adults = intval($data['adults']);
-            if ($adults < 1 || $adults > 10) {
-                $errors[] = 'Adults must be between 1 and 10';
+            if ($adults < 1 || $adults > Constants::MAX_ADULTS) {
+                $errors[] = 'Adults must be between 1 and ' . Constants::MAX_ADULTS;
             }
         }
         
         if (isset($data['children'])) {
             $children = intval($data['children']);
-            if ($children < 0 || $children > 6) {
-                $errors[] = 'Children must be between 0 and 6';
+            if ($children < 0 || $children > Constants::MAX_CHILDREN) {
+                $errors[] = 'Children must be between 0 and ' . Constants::MAX_CHILDREN;
             }
         }
         
@@ -88,8 +89,8 @@ class SecurityService
             
             foreach ($ages as $age) {
                 $age = intval($age);
-                if ($age < 0 || $age > 17) {
-                    $errors[] = 'Child age must be between 0 and 17';
+                if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
+                    $errors[] = 'Child age must be between ' . Constants::MIN_CHILD_AGE . ' and ' . Constants::MAX_CHILD_AGE;
                     break;
                 }
             }
@@ -142,16 +143,16 @@ class SecurityService
         }
 
         // Sanitize nights
-        $sanitized['nights'] = max(1, min(30, intval($params['nights'] ?? 7)));
+        $sanitized['nights'] = max(1, min(Constants::MAX_NIGHTS, intval($params['nights'] ?? Constants::DEFAULT_NIGHTS)));
 
         // Sanitize adults
-        $sanitized['adults'] = max(1, min(10, intval($params['adults'] ?? 2)));
+        $sanitized['adults'] = max(1, min(Constants::MAX_ADULTS, intval($params['adults'] ?? Constants::DEFAULT_ADULTS)));
 
         // Sanitize children
-        $sanitized['children'] = max(0, min(6, intval($params['children'] ?? 0)));
+        $sanitized['children'] = max(0, min(Constants::MAX_CHILDREN, intval($params['children'] ?? Constants::DEFAULT_CHILDREN)));
 
         // Sanitize rooms
-        $sanitized['rooms'] = max(1, min(5, intval($params['rooms'] ?? 1)));
+        $sanitized['rooms'] = max(1, min(Constants::MAX_ROOMS, intval($params['rooms'] ?? Constants::DEFAULT_ROOMS)));
 
         // Sanitize destination (alphanumeric, spaces, common punctuation)
         if (!empty($params['destination'])) {

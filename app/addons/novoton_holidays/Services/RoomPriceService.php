@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class RoomPriceService
+class RoomPriceService implements RoomPriceServiceInterface
 {
     /** @var float Commission percentage */
     private $commission;

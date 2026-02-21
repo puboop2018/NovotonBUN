@@ -22,7 +22,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
-class AlternativeRequestService
+class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
     /** @var SecurityService */
     private $security;

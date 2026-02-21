@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class GuestDataNormalizer
+class GuestDataNormalizer implements GuestDataNormalizerInterface
 {
     /**
      * All fields expected on a canonical guest entry, with defaults.

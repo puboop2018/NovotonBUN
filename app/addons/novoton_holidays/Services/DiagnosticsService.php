@@ -16,7 +16,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-class DiagnosticsService
+class DiagnosticsService implements DiagnosticsServiceInterface
 {
     /** @var NovotonApi|null */
     private $api;

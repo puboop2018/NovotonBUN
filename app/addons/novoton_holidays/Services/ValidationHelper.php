@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 class ValidationHelper
 {
     /**
@@ -142,7 +144,7 @@ class ValidationHelper
      */
     public static function isValidAdults(int $adults): bool
     {
-        return $adults >= 1 && $adults <= 10;
+        return $adults >= 1 && $adults <= Constants::MAX_ADULTS;
     }
     
     /**
@@ -153,7 +155,7 @@ class ValidationHelper
      */
     public static function isValidChildren(int $children): bool
     {
-        return $children >= 0 && $children <= 6;
+        return $children >= 0 && $children <= Constants::MAX_CHILDREN;
     }
     
     /**
@@ -164,7 +166,7 @@ class ValidationHelper
      */
     public static function isValidChildAge(int $age): bool
     {
-        return $age >= 0 && $age <= 17;
+        return $age >= Constants::MIN_CHILD_AGE && $age <= Constants::MAX_CHILD_AGE;
     }
     
     /**
@@ -175,7 +177,7 @@ class ValidationHelper
      */
     public static function isValidRooms(int $rooms): bool
     {
-        return $rooms >= 1 && $rooms <= 5;
+        return $rooms >= 1 && $rooms <= Constants::MAX_ROOMS;
     }
     
     /**
@@ -186,7 +188,7 @@ class ValidationHelper
      */
     public static function isValidNights(int $nights): bool
     {
-        return $nights >= 1 && $nights <= 30;
+        return $nights >= 1 && $nights <= Constants::MAX_NIGHTS;
     }
     
     /**
@@ -225,7 +227,15 @@ class ValidationHelper
      */
     public static function isValidBookingStatus(string $status): bool
     {
-        $valid = ['pending', 'confirmed', 'cancelled', 'completed', 'failed', 'ask', 'waiting'];
+        $valid = [
+            Constants::STATUS_PENDING,
+            Constants::STATUS_CONFIRMED,
+            Constants::STATUS_CANCELLED,
+            Constants::STATUS_COMPLETED,
+            Constants::STATUS_FAILED,
+            Constants::STATUS_ASK,
+            Constants::STATUS_WAITING,
+        ];
         return in_array(strtolower($status), $valid);
     }
     

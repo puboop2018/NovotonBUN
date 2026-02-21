@@ -14,7 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
-class GuestDataService
+class GuestDataService implements GuestDataServiceInterface
 {
     /**
      * Parse guests data from booking form.
