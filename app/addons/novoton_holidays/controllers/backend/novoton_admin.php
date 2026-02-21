@@ -9,7 +9,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Update prices manually
 if ($mode == 'update_prices') {

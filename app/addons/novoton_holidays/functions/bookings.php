@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Decrypt encrypted PII fields on an alternative request row.

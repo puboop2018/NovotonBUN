@@ -15,7 +15,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Authentication
 $provided_access_key = $_REQUEST['access_key'] ?? '';

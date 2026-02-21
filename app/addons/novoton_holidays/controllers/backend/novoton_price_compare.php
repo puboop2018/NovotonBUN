@@ -17,7 +17,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation;

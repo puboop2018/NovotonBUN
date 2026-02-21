@@ -11,7 +11,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Default mode - redirect to manage
 if (empty($mode)) {

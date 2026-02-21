@@ -11,7 +11,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Addon version constant — single source of truth from addon.xml via Registry.
 // Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for use in script cache-busting.

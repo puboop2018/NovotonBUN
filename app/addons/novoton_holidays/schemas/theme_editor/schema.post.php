@@ -16,7 +16,7 @@ declare(strict_types=1);
  * @since   3.1.0
  */
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Ensure colors section exists
 if (!isset($schema['colors'])) {

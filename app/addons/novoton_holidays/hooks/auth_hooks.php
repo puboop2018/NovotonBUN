@@ -17,7 +17,7 @@ declare(strict_types=1);
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Hook: After user login - link session bookings to user account.

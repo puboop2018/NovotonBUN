@@ -32,10 +32,10 @@ if (empty($providedKey) && isset($argv[1])) {
 }
 
 if (empty($storedKey)) {
-    die("ERROR: Cron Access Key not set in addon settings.\n");
+    exit("ERROR: Cron Access Key not set in addon settings.\n");
 }
 if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
-    die("ERROR: Invalid or missing API key.\n");
+    exit("ERROR: Invalid or missing API key.\n");
 }
 
 // Determine mode
@@ -78,7 +78,7 @@ try {
     if (isset($argv)) {
         foreach ($argv as $arg) {
             if (strpos($arg, '=') !== false && strpos($arg, 'access_key') !== 0 && strpos($arg, 'mode') !== 0) {
-                list($k, $v) = explode('=', $arg, 2);
+                [$k, $v] = explode('=', $arg, 2);
                 $params[$k] = $v;
             }
         }

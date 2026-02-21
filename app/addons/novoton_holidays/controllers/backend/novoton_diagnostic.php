@@ -13,7 +13,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Health Check Endpoint - JSON response for automated monitoring

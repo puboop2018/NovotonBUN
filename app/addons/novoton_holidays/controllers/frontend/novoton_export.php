@@ -16,7 +16,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Authentication via access_key
 $provided_key = $_REQUEST['access_key'] ?? '';

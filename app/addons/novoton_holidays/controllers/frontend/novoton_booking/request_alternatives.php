@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Extracted from novoton_booking.php for maintainability.
  * Included by the main controller when $mode == "request_alternatives".
  */
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
     $security = _nvt_get_security_service();
 

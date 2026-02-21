@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Extracted from novoton_booking.php for maintainability.
  * Included by the main controller when $mode == "ajax_recalculate_price".
  */
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
     // This replaces the old blanket error_reporting(0) — real errors are still
@@ -68,7 +68,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         // Set headers and output clean JSON
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-cache, must-revalidate');
-        die(json_encode($response, JSON_UNESCAPED_UNICODE));
+        exit(json_encode($response, JSON_UNESCAPED_UNICODE));
     };
 
     // Get JSON input

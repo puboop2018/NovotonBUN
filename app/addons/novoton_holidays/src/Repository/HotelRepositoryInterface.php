@@ -30,4 +30,7 @@ interface HotelRepositoryInterface
     public function savePackage(string $hotel_id, string $package_id, array $data): bool;
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array;
     public function getLocationsByIds(array $hotel_ids): array;
+    public function findByCountryForListing(string $country): array;
+    public function getLatestPriceinfoData(string $hotel_id): ?string;
+    public function getLatestPackageSyncedAt(string $hotel_id): ?string;
 }

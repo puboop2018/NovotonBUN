@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
 

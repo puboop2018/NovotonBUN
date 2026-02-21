@@ -26,9 +26,15 @@ interface BookingRepositoryInterface
     public function storeApiData(int $booking_id, $request, $response): bool;
     public function delete(int $booking_id): bool;
     public function deleteOrphans(int $hours = 24): int;
+    public function countOrphans(int $hours = 48): int;
     public function getStats(): array;
     public function getUnifiedBookings(array $params = []): array;
     public function linkToUserBySession(int $user_id, string $session_id): int;
     public function linkToUserByEmail(int $user_id, string $email): int;
     public function deleteByProductId(int $product_id): int;
+    public function getGuestsData(int $booking_id): ?string;
+    public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array;
+    public function getTerms(int $booking_id): ?array;
+    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int;
+    public function findWithReservationId(): array;
 }

@@ -24,7 +24,7 @@ use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // ============================================================================
 // ROUTING: Delegate to sub-controllers based on mode

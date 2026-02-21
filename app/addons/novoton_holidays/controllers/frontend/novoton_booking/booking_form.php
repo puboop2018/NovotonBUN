@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Extracted from novoton_booking.php for maintainability.
  * Included by the main controller when $mode == "booking_form".
  */
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
     
     $bookingData = $_REQUEST;

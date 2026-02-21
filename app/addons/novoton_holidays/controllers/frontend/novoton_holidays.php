@@ -13,7 +13,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Cron update
 if ($mode == 'cron_update') {
@@ -26,11 +26,11 @@ if ($mode == 'cron_update') {
     $stored_key = ConfigProvider::getCronAccessKey();
     
     if (empty($stored_key)) {
-        die('ERROR: Cron Access Key not configured in addon settings.');
+        exit('ERROR: Cron Access Key not configured in addon settings.');
     }
     
     if (empty($provided_key) || !hash_equals($stored_key, $provided_key)) {
-        die('ERROR: Invalid or missing API key.');
+        exit('ERROR: Invalid or missing API key.');
     }
     
     // Start output

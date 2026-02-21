@@ -13,7 +13,7 @@ declare(strict_types=1);
  *                                                                          *
  ***************************************************************************/
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\NovotonHolidays\Constants;
 

@@ -14,7 +14,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Parse selected countries from addon settings

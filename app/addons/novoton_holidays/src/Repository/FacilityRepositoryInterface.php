@@ -16,4 +16,6 @@ interface FacilityRepositoryInterface
     public function linkToHotel(string $hotel_id, int $facility_id): bool;
     public function clearHotelFacilities(string $hotel_id): bool;
     public function setHotelFacilities(string $hotel_id, array $facility_ids): bool;
+    public function unlinkFromHotel(string $hotel_id, int $facility_id): bool;
+    public function countHotelsWithFacility(int $facility_id): int;
 }

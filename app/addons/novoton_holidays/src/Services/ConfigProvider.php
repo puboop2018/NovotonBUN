@@ -17,30 +17,30 @@ use Tygh\Addons\NovotonHolidays\Constants;
 
 class ConfigProvider
 {
-    const ADDON_ID = 'novoton_holidays';
+    public const ADDON_ID = 'novoton_holidays';
 
     // API rate limiting
-    const API_DELAY_MS = 100;
+    public const API_DELAY_MS = 100;
 
     // Batch processing defaults
-    const DEFAULT_BATCH_SIZE = 100;
-    const DEFAULT_MAX_EXECUTION_TIME = 300;
-    const MIN_BATCH_SIZE = 10;
-    const MAX_BATCH_SIZE = 500;
-    const MIN_EXECUTION_TIME = 60;
-    const MAX_EXECUTION_TIME = 3600;
+    public const DEFAULT_BATCH_SIZE = 100;
+    public const DEFAULT_MAX_EXECUTION_TIME = 300;
+    public const MIN_BATCH_SIZE = 10;
+    public const MAX_BATCH_SIZE = 500;
+    public const MIN_EXECUTION_TIME = 60;
+    public const MAX_EXECUTION_TIME = 3600;
 
     // Image settings
-    const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
-    const MAX_IMAGES_PER_HOTEL = 10;
+    public const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
+    public const MAX_IMAGES_PER_HOTEL = 10;
 
     // Product code prefix
-    const PRODUCT_CODE_PREFIX = 'NVT';
+    public const PRODUCT_CODE_PREFIX = 'NVT';
 
     // Sync intervals
-    const FULL_SYNC_INTERVAL_DAYS = 180;
-    const PRICE_SYNC_INTERVAL_DAYS = 7;
-    const STALE_HOURS = 24;
+    public const FULL_SYNC_INTERVAL_DAYS = 180;
+    public const PRICE_SYNC_INTERVAL_DAYS = 7;
+    public const STALE_HOURS = 24;
 
     /** @var array|null Cached settings array, loaded once per request. */
     private static $settings;

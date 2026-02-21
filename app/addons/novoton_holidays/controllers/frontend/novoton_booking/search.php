@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Extracted from novoton_booking.php for maintainability.
  * Included by the main controller when $mode == "search".
  */
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
