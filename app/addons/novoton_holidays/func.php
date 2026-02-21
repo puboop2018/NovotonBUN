@@ -47,24 +47,18 @@ foreach ($function_files as $file) {
 /**
  * Variants function for the api_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
+ * Called only from admin settings page where Registry is always populated.
  */
 function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 {
     $currencies = Registry::get('currencies');
+    $result = [];
 
-    if (empty($currencies) && function_exists('fn_get_currencies')) {
-        $currencies = fn_get_currencies();
+    foreach ($currencies as $code => $currency) {
+        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
     }
 
-    if (!empty($currencies)) {
-        $result = [];
-        foreach ($currencies as $code => $currency) {
-            $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
-        }
-        return $result;
-    }
-
-    return ['EUR' => 'EUR'];
+    return $result;
 }
 
 // ============================================================================
