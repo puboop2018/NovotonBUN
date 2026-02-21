@@ -264,6 +264,13 @@ function fn_novoton_holidays_install_email_templates(): bool
  */
 function fn_novoton_holidays_upgrade_db()
 {
+    // Resolve ?:-prefixed table names to actual DB table names (e.g. cscart_novoton_hotels)
+    // for use in INFORMATION_SCHEMA queries where ?s bound params don't resolve the prefix.
+    $table_prefix = Registry::get('config.table_prefix');
+    $resolve = function (string $table) use ($table_prefix): string {
+        return str_replace('?:', $table_prefix, $table);
+    };
+
     // ── Column additions (table => [[column, definition, ?key], ...]) ──
     $add_columns = [
         '?:novoton_hotels' => [
@@ -299,6 +306,7 @@ function fn_novoton_holidays_upgrade_db()
     ];
 
     foreach ($add_columns as $table => $columns) {
+        $resolved_table = $resolve($table);
         foreach ($columns as $spec) {
             [$column, $definition] = $spec;
             $key = $spec[2] ?? null;
@@ -307,7 +315,7 @@ function fn_novoton_holidays_upgrade_db()
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
                  WHERE TABLE_SCHEMA = DATABASE()
                  AND TABLE_NAME = ?s AND COLUMN_NAME = ?s",
-                $table, $column
+                $resolved_table, $column
             );
             if ($exists) {
                 continue;
@@ -315,7 +323,7 @@ function fn_novoton_holidays_upgrade_db()
 
             $sql = "ALTER TABLE {$table} ADD COLUMN `{$column}` {$definition}";
             if ($key) {
-                $sql .= ", ADD KEY {$key} (`{$column}`)";
+                $sql .= ", ADD KEY `{$key}` (`{$column}`)";
             }
             @db_query($sql);
         }
@@ -331,17 +339,17 @@ function fn_novoton_holidays_upgrade_db()
         ],
         '?:novoton_alternative_requests' => [
             'idx_status'     => 'status',
-            'idx_booking_id' => 'booking_id',
         ],
     ];
 
     foreach ($add_indexes as $table => $indexes) {
+        $resolved_table = $resolve($table);
         foreach ($indexes as $index_name => $column) {
             $idx_exists = db_get_field(
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
                  WHERE TABLE_SCHEMA = DATABASE()
                  AND TABLE_NAME = ?s AND INDEX_NAME = ?s",
-                $table, $index_name
+                $resolved_table, $index_name
             );
             if (!$idx_exists) {
                 @db_query("ALTER TABLE {$table} ADD INDEX `{$index_name}` (`{$column}`)");
@@ -353,7 +361,8 @@ function fn_novoton_holidays_upgrade_db()
     $sync_type_info = db_get_row(
         "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = '?:novoton_sync_log' AND COLUMN_NAME = 'sync_type'"
+         AND TABLE_NAME = ?s AND COLUMN_NAME = 'sync_type'",
+        $resolve('?:novoton_sync_log')
     );
     if ($sync_type_info && strpos($sync_type_info['COLUMN_TYPE'], 'enum') !== false) {
         @db_query("ALTER TABLE ?:novoton_sync_log MODIFY COLUMN `sync_type` VARCHAR(50) NOT NULL DEFAULT 'hotels'");
@@ -421,7 +430,7 @@ function fn_novoton_holidays_upgrade_db()
             "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
              WHERE TABLE_SCHEMA = DATABASE()
              AND TABLE_NAME = ?s AND CONSTRAINT_NAME = ?s AND CONSTRAINT_TYPE = 'FOREIGN KEY'",
-            $fk['table'], $fk['constraint']
+            $resolve($fk['table']), $fk['constraint']
         );
         if (!$fk_exists) {
             @db_query(
