@@ -52,6 +52,10 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 {
     $currencies = Registry::get('currencies');
 
+    if (empty($currencies) && function_exists('fn_get_currencies')) {
+        $currencies = fn_get_currencies();
+    }
+
     if (!empty($currencies)) {
         $result = [];
         foreach ($currencies as $code => $currency) {
@@ -60,8 +64,7 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
         return $result;
     }
 
-    // Fallback if currencies not loaded yet
-    return ['EUR' => 'EUR', 'USD' => 'USD', 'GBP' => 'GBP', 'RON' => 'RON', 'BGN' => 'BGN'];
+    return ['EUR' => 'EUR'];
 }
 
 // ============================================================================
