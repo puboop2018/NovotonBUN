@@ -38,7 +38,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("Syncing resort list from Novoton API (country: {$country})...");
         $this->output("");
 
-        $result = fn_novoton_sync_resorts_list($country);
+        $result = fn_novoton_holidays_sync_resorts_list($country);
 
         $added = 0;
         $updated = 0;
@@ -67,7 +67,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("Syncing facilities list from Novoton API...");
         $this->output("");
 
-        $result = fn_novoton_sync_facilities_list();
+        $result = fn_novoton_holidays_sync_facilities_list();
 
         $added = 0;
         $updated = 0;
@@ -100,7 +100,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("===========================");
         $this->output("");
 
-        $result = fn_novoton_update_exchange_rates(true);
+        $result = fn_novoton_holidays_update_exchange_rates(true);
 
         $this->output("Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED'));
         $this->output("Message: " . $result['message']);

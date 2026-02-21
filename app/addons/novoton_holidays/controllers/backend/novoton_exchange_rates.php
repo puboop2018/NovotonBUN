@@ -29,7 +29,7 @@ if ($mode == 'cron') {
     // No password check needed - admin.php already requires admin authentication
 
     // Run exchange rate update
-    $result = fn_novoton_update_exchange_rates(true);
+    $result = fn_novoton_holidays_update_exchange_rates(true);
 
     // Output result for cron logging
     header('Content-Type: text/plain');
@@ -72,7 +72,7 @@ if ($mode == 'cron') {
  */
 if ($mode == 'manage') {
     // Get current exchange rate info
-    $exchange_info = fn_novoton_get_exchange_rate_info();
+    $exchange_info = fn_novoton_holidays_get_exchange_rate_info();
 
     Tygh::$app['view']->assign('exchange_info', $exchange_info);
 
@@ -95,7 +95,7 @@ if ($mode == 'manage') {
  */
 if ($mode == 'update') {
     // Run exchange rate update
-    $result = fn_novoton_update_exchange_rates(true);
+    $result = fn_novoton_holidays_update_exchange_rates(true);
 
     if ($result['success']) {
         fn_set_notification('N', __('notice'), __('novoton_holidays.exchange_rates_updated'));

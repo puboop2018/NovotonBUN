@@ -133,10 +133,10 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         }
         
         // Z3: Format board name consistently
-        $formatted_board_name = fn_novoton_format_board_name($booking['board_id']);
+        $formatted_board_name = fn_novoton_holidays_format_board_name($booking['board_id']);
         if ($formatted_board_name === $booking['board_id'] && !empty($bookingData['board_name'])) {
             // If format function didn't change it, try the passed board_name
-            $formatted_board_name = fn_novoton_format_board_name($bookingData['board_name']);
+            $formatted_board_name = fn_novoton_holidays_format_board_name($bookingData['board_name']);
         }
         
         $booking['rooms_data'] = [
@@ -234,7 +234,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // If not in DB, fetch from API
     if ((empty($age_categories) || empty($room_limits)) && !empty($booking['hotel_id'])) {
-        $api = fn_novoton_get_api();
+        $api = fn_novoton_holidays_get_api();
         if ($api) {
             $hotelInfoResponse = $api->getHotelInfo($booking['hotel_id']);
             if ($hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {

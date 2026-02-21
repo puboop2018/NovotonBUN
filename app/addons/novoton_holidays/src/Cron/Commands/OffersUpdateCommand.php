@@ -108,8 +108,8 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
 
             $category_path = "{$country}///Litoral {$country}";
-            $category_id = fn_novoton_get_or_create_category($category_path);
-            $page_title = fn_novoton_build_hotel_title(
+            $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+            $page_title = fn_novoton_holidays_build_hotel_title(
                 $existing['hotel_name'] ?? $hotel_name,
                 $existing['city'] ?? '',
                 $existing['country'] ?? $country,
@@ -180,7 +180,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                 $count = 0;
                 foreach ($images->url as $url) {
                     $image_url = $baseUrl . str_replace(' ', '%20', (string)$url);
-                    fn_novoton_add_product_image($productId, $image_url, $count == 0);
+                    fn_novoton_holidays_add_product_image($productId, $image_url, $count == 0);
                     if (++$count >= 10) break;
                 }
             }
@@ -189,7 +189,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         }
 
         try {
-            fn_novoton_sync_hotel_facilities($hotelId);
+            fn_novoton_holidays_sync_hotel_facilities($hotelId);
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotelId}", 'error' => $e->getMessage()]);
         }

@@ -228,7 +228,7 @@ if ($mode == 'add_hotels_as_products') {
             
             try {
                 // Build product title
-                $title = fn_novoton_build_hotel_title($hotel_name, $hotel['city'], $country, date('Y'));
+                $title = fn_novoton_holidays_build_hotel_title($hotel_name, $hotel['city'], $country, date('Y'));
                 
                 // Create product
                 $product_data = [
@@ -265,7 +265,7 @@ if ($mode == 'add_hotels_as_products') {
                         // Set star rating feature
                         $star_rating = intval($hotel['hotel_type'] ?? '');
                         if ($star_rating > 0) {
-                            fn_novoton_assign_star_rating_feature($product_id, $star_rating);
+                            fn_novoton_holidays_assign_star_rating_feature($product_id, $star_rating);
                         }
                         
                         $added++;
@@ -321,7 +321,7 @@ if ($mode == 'sync_facilities') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $result = fn_novoton_sync_facilities_list();
+    $result = fn_novoton_holidays_sync_facilities_list();
     
     if ($result['success']) {
         fn_set_notification('N', __('notice'), "Facilities synced! Added: {$result['added']}, Updated: {$result['updated']}");
@@ -395,7 +395,7 @@ if ($mode == 'check_packages') {
     echo '<div class="log">';
 
     // Get all countries from settings
-    $countries = fn_novoton_parse_countries(ConfigProvider::get('selected_countries', ''));
+    $countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
 
     echo "Countries: " . implode(', ', $countries) . "<br>";
     echo "Limit per country: {$limit}<br>";

@@ -24,7 +24,7 @@ class CronService
     public function __construct()
     {
         $this->api = new NovotonApi();
-        $this->countries = fn_novoton_parse_countries(ConfigProvider::get('selected_countries', ''));
+        $this->countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
     }
 
     /**
@@ -138,7 +138,7 @@ class CronService
             Constants::STATUS_PENDING
         );
         // Decrypt encrypted PII (contact_email) for email sending
-        $pending = fn_novoton_decrypt_requests_pii($pending);
+        $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
 
         foreach ($pending as $request) {
             $results['processed']++;

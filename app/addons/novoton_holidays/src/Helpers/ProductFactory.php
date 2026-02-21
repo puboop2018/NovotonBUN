@@ -103,8 +103,8 @@ class ProductFactory
 
         // Sync facilities
         try {
-            if (function_exists('fn_novoton_sync_hotel_facilities')) {
-                fn_novoton_sync_hotel_facilities($hotelId);
+            if (function_exists('fn_novoton_holidays_sync_hotel_facilities')) {
+                fn_novoton_holidays_sync_hotel_facilities($hotelId);
             }
         } catch (\Exception $e) {
             // Ignore facility sync errors
@@ -133,8 +133,8 @@ class ProductFactory
             foreach ($imagesResponse->url as $url) {
                 $imageUrl = ConfigProvider::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
 
-                if (function_exists('fn_novoton_add_product_image')) {
-                    fn_novoton_add_product_image($productId, $imageUrl, $imgCount === 0);
+                if (function_exists('fn_novoton_holidays_add_product_image')) {
+                    fn_novoton_holidays_add_product_image($productId, $imageUrl, $imgCount === 0);
                 }
 
                 $imgCount++;
@@ -154,8 +154,8 @@ class ProductFactory
      */
     public static function buildHotelTitle(string $hotelName, string $city, string $country, string $year): string
     {
-        if (function_exists('fn_novoton_build_hotel_title')) {
-            return fn_novoton_build_hotel_title($hotelName, $city, $country, $year);
+        if (function_exists('fn_novoton_holidays_build_hotel_title')) {
+            return fn_novoton_holidays_build_hotel_title($hotelName, $city, $country, $year);
         }
 
         $parts = array_filter([$hotelName, $city, $country, $year]);
@@ -167,8 +167,8 @@ class ProductFactory
      */
     public static function getOrCreateCategory(string $categoryPath): int
     {
-        if (function_exists('fn_novoton_get_or_create_category')) {
-            return fn_novoton_get_or_create_category($categoryPath);
+        if (function_exists('fn_novoton_holidays_get_or_create_category')) {
+            return fn_novoton_holidays_get_or_create_category($categoryPath);
         }
 
         return 1;

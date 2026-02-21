@@ -51,7 +51,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 //   _nvt_booking_repo()      - Booking database access
 //=============================================================================
 
-$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
+$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/ServiceLoader.php';
 if (file_exists($service_loader)) {
     require_once $service_loader;
 }
@@ -299,7 +299,7 @@ function _nvt_parse_dob($guest) {
     return $birthday;
 }
 
-// API is now lazy-loaded via fn_novoton_get_api() when needed
+// API is now lazy-loaded via fn_novoton_holidays_get_api() when needed
 
 /**
  * Get hotel info from API with caching
@@ -330,7 +330,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     }
 
     // Fetch from API
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return null;
     }

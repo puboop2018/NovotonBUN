@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($request_id > 0) {
             $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-            $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+            $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
             if ($request && !empty($request['novoton_request_id'])) {
                 // Load API
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($request_id > 0) {
             $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-            $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+            $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
             if ($request && !empty($request['alternatives_data'])) {
                 $alternatives = json_decode($request['alternatives_data'], true);
@@ -217,7 +217,7 @@ if ($mode === 'manage') {
     );
     
     // Decrypt PII and decode alternatives data
-    $requests = fn_novoton_decrypt_requests_pii($requests);
+    $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
     // Post-decrypt email filter (LIKE doesn't work on encrypted data)
     if (!empty($search_email_filter)) {
@@ -254,7 +254,7 @@ if ($mode === 'view') {
     
     if ($request_id > 0) {
         $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-        $request = $request ? fn_novoton_decrypt_request_pii($request) : $request;
+        $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
         if ($request) {
             if (!empty($request['alternatives_data'])) {

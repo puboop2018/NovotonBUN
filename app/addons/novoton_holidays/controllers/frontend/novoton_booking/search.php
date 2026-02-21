@@ -289,7 +289,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             $debug_log[] = "";
 
             // Check API circuit breaker status
-            $api = fn_novoton_get_api();
+            $api = fn_novoton_holidays_get_api();
             if (method_exists($api, 'getCircuitStatus')) {
                 $circuitStatus = $api->getCircuitStatus();
                 $debug_log[] = "=== API CIRCUIT BREAKER STATUS ===";
@@ -445,7 +445,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             // Used to display proper room names: "Apartament (1-BR APP 2+2)" instead of raw codes
             $roomTypeMap = [];
             try {
-                $hotelInfoData = fn_novoton_get_api()->getHotelInfo($hotelId);
+                $hotelInfoData = fn_novoton_holidays_get_api()->getHotelInfo($hotelId);
                 if ($hotelInfoData && isset($hotelInfoData->rooms)) {
                     foreach ($hotelInfoData->rooms as $roomNode) {
                         $riId = trim((string)($roomNode->IdRoom ?? ''));
@@ -514,7 +514,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                     }
                     
                     // Get prices from room_price API for this room
-                    $api = fn_novoton_get_api();
+                    $api = fn_novoton_holidays_get_api();
                     $priceData = $api->getRoomPrice($priceParams);
 
                     $room_results = [];
@@ -665,11 +665,11 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 }
                 
                 // Get prices from room_price API
-                $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
+                $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
             
             // Show raw request/response in debug
             if ($debug_mode) {
-                $api = fn_novoton_get_api();
+                $api = fn_novoton_holidays_get_api();
                 $lastReq = $api->getLastRequestFormatted();
                 $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
                 $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
@@ -702,7 +702,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             
             // Parse the response via SearchService
             if ($priceData) {
-                $rawXml = fn_novoton_get_api()->getLastResponse();
+                $rawXml = fn_novoton_holidays_get_api()->getLastResponse();
 
                 if ($debug_mode) {
                     $debug_log[] = "";
@@ -712,7 +712,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 // Fetch room quota for all rooms at once
                 $quotaMap = [];
                 try {
-                    $quotaMap = fn_novoton_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+                    $quotaMap = fn_novoton_holidays_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
                     if ($debug_mode) {
                         $debug_log[] = "=== ROOM QUOTA (hotel_quota API) ===";
                         foreach ($quotaMap as $qRoom => $qValue) {
@@ -812,7 +812,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                                 'children' => $children
                             ];
 
-                            $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
+                            $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
                             
                             if ($priceData && isset($priceData->Price)) {
                                 $rawPrice = floatval((string)$priceData->Price);
@@ -821,13 +821,13 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                                     $alternative_check_in = $alt_check_in;
                                     $alternative_check_out = $alt_check_out;
                                     
-                                    $altPrice = fn_novoton_get_api()->applyCommission($rawPrice);
+                                    $altPrice = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
                                     $alternative_results[] = [
                                         'room' => $room,
                                         'room_id' => $roomId,
                                         'room_name' => $roomName ?: str_replace(['%2b', '%2B'], '+', $roomId),
                                         'board_id' => $tryBoard,
-                                        'board_name' => fn_novoton_format_board_name($tryBoard),
+                                        'board_name' => fn_novoton_holidays_format_board_name($tryBoard),
                                         'price_data' => $priceData,
                                         'nights' => $nights,
                                         'total_price' => $altPrice,
@@ -1039,16 +1039,16 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $check_in_for_terms = $searchParams['check_in'] ?? '';
     
     // Load func.php if not loaded
-    if (!function_exists('fn_novoton_parse_payment_terms')) {
+    if (!function_exists('fn_novoton_holidays_parse_payment_terms')) {
         require_once(Registry::get('config.dir.addons') . 'novoton_holidays/func.php');
     }
     
-    $terms_payment_parsed = fn_novoton_parse_payment_terms($terms_payment_raw);
-    $terms_cancellation_parsed = fn_novoton_parse_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
+    $terms_payment_parsed = fn_novoton_holidays_parse_payment_terms($terms_payment_raw);
+    $terms_cancellation_parsed = fn_novoton_holidays_parse_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
     // Format for display
-    $terms_payment = fn_novoton_format_payment_terms($terms_payment_raw);
-    $terms_cancellation = fn_novoton_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
+    $terms_payment = fn_novoton_holidays_format_payment_terms($terms_payment_raw);
+    $terms_cancellation = fn_novoton_holidays_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
     // V3: Get early booking details via HotelPackageRepository for tooltip
     if (!empty($hotelId)) {

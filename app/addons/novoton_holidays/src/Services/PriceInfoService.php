@@ -38,7 +38,7 @@ class PriceInfoService
      */
     public function __construct()
     {
-        $this->api = fn_novoton_get_api();
+        $this->api = fn_novoton_holidays_get_api();
         $this->commission = ConfigProvider::getCommission();
         $this->debug = ConfigProvider::isDebugLogging();
     }
@@ -55,7 +55,7 @@ class PriceInfoService
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): ?array
     {
         // V3: Get from packages table
-        $priceinfo = fn_novoton_get_package_priceinfo_by_name($hotelId, $packageName);
+        $priceinfo = fn_novoton_holidays_get_package_priceinfo_by_name($hotelId, $packageName);
 
         if (!empty($priceinfo)) {
             $this->log('PriceInfo from database', ['hotel_id' => $hotelId, 'package' => $packageName]);
@@ -91,7 +91,7 @@ class PriceInfoService
 
         // If numeric, get hotel_id from product
         if (is_numeric($productIdOrHotelId)) {
-            $hotelId = fn_novoton_get_hotel_id_by_product((int)$productIdOrHotelId);
+            $hotelId = fn_novoton_holidays_get_hotel_id_by_product((int)$productIdOrHotelId);
             if (empty($hotelId)) {
                 return [];
             }
@@ -132,7 +132,7 @@ class PriceInfoService
      */
     public function getLastUpdate(int $productId): ?string
     {
-        $hotelId = fn_novoton_get_hotel_id_by_product($productId);
+        $hotelId = fn_novoton_holidays_get_hotel_id_by_product($productId);
         if (empty($hotelId)) {
             return null;
         }
@@ -152,7 +152,7 @@ class PriceInfoService
      */
     public function getActivePackage(int $productId): ?string
     {
-        $hotelId = fn_novoton_get_hotel_id_by_product($productId);
+        $hotelId = fn_novoton_holidays_get_hotel_id_by_product($productId);
         if (empty($hotelId)) {
             return null;
         }

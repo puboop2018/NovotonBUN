@@ -45,7 +45,7 @@ if ($mode == 'export_hotel_features_csv') {
     }
 
     try {
-        $result = fn_novoton_generate_hotel_features_csv();
+        $result = fn_novoton_holidays_generate_hotel_features_csv();
 
         if ($result['success']) {
             fn_set_notification('N', __('notice'), "Hotel features CSV generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
@@ -97,7 +97,7 @@ if ($mode == 'export_hotel_features_xml') {
     }
 
     try {
-        $result = fn_novoton_generate_hotel_features_xml();
+        $result = fn_novoton_holidays_generate_hotel_features_xml();
 
         if ($result['success']) {
             fn_set_notification('N', __('notice'), "Hotel features XML generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
@@ -207,7 +207,7 @@ if ($mode == 'test_formats') {
 
     $test_rooms = ['DBL', 'DBL 2+1', 'DBL%202%2B1', 'SGL', 'TRP', 'STUDIO', 'APT', 'FAM 2+2'];
     foreach ($test_rooms as $room) {
-        echo '<tr><td>' . htmlspecialchars($room) . '</td><td>' . fn_novoton_format_room_type($room) . '</td></tr>';
+        echo '<tr><td>' . htmlspecialchars($room) . '</td><td>' . fn_novoton_holidays_format_room_type($room) . '</td></tr>';
     }
     echo '</table>';
 
@@ -217,7 +217,7 @@ if ($mode == 'test_formats') {
 
     $test_boards = ['AI', 'HB', 'FB', 'BB', 'RO', 'UAI', 'ALL INCL'];
     foreach ($test_boards as $board) {
-        echo '<tr><td>' . htmlspecialchars($board) . '</td><td>' . fn_novoton_format_board_name($board) . '</td></tr>';
+        echo '<tr><td>' . htmlspecialchars($board) . '</td><td>' . fn_novoton_holidays_format_board_name($board) . '</td></tr>';
     }
     echo '</table>';
 
@@ -602,7 +602,7 @@ if ($mode == 'cron_export_hotel_features') {
 
     echo "=== NOVOTON Star Ratings CSV Export - " . date('Y-m-d H:i:s') . " ===\n";
 
-    $result = fn_novoton_generate_hotel_features_csv();
+    $result = fn_novoton_holidays_generate_hotel_features_csv();
 
     if ($result['success']) {
         echo "Status: SUCCESS\n";

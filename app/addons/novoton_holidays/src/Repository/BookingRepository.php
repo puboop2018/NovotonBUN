@@ -427,8 +427,8 @@ class BookingRepository implements BookingRepositoryInterface
                     $booking['board_display'] = $booking['board_name'];
                 }
             } else {
-                $booking['room_types_list'] = $booking['room_type'] ?: fn_novoton_format_room_type($booking['room_id']);
-                $booking['board_display'] = $booking['board_name'] ?: fn_novoton_format_board_name($booking['board_id']);
+                $booking['room_types_list'] = $booking['room_type'] ?: fn_novoton_holidays_format_room_type($booking['room_id']);
+                $booking['board_display'] = $booking['board_name'] ?: fn_novoton_holidays_format_board_name($booking['board_id']);
             }
 
             // Parse guests for display

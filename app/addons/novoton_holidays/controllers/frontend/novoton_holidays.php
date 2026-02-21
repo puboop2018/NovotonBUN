@@ -170,7 +170,7 @@ if ($mode == 'cron_export_hotel_features') {
 
     echo "=== NOVOTON Hotel Features CSV Export - " . date('Y-m-d H:i:s') . " ===\n";
     
-    $result = fn_novoton_generate_hotel_features_csv();
+    $result = fn_novoton_holidays_generate_hotel_features_csv();
     
     if ($result['success']) {
         echo "Status: SUCCESS\n";

@@ -32,7 +32,7 @@ class SearchService implements SearchServiceInterface
      */
     public function __construct(?CacheServiceInterface $cache = null)
     {
-        $this->api = fn_novoton_get_api();
+        $this->api = fn_novoton_holidays_get_api();
         $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
@@ -288,7 +288,7 @@ class SearchService implements SearchServiceInterface
         }
         
         // Get hotel details from database or cache
-        $hotel_info = fn_novoton_get_hotel_data($hotel_id);
+        $hotel_info = fn_novoton_holidays_get_hotel_data($hotel_id);
         
         $result = [
             'hotel_id' => $hotel_id,
@@ -348,7 +348,7 @@ class SearchService implements SearchServiceInterface
         
         return [
             'room_id' => $room_id,
-            'room_name' => fn_novoton_format_room_type($room_id),
+            'room_name' => fn_novoton_holidays_format_room_type($room_id),
             'board_id' => (string)($room->IdBoard ?? $room->BoardId ?? 'BB'),
             'board_name' => $this->getBoardName((string)($room->IdBoard ?? $room->BoardId ?? 'BB')),
             'price' => $price_with_commission,
@@ -543,9 +543,9 @@ class SearchService implements SearchServiceInterface
                     'room'                   => null,
                     'room_id'                => $roomId,
                     'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                    'room_type_display'      => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                    'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                     'board_id'               => $boardId,
-                    'board_name'             => fn_novoton_format_board_name($boardId),
+                    'board_name'             => fn_novoton_holidays_format_board_name($boardId),
                     'package_name'           => urldecode(self::xpathValue($packageNames, $i)),
                     'price_data'             => null,
                     'nights'                 => $nights,
@@ -563,7 +563,7 @@ class SearchService implements SearchServiceInterface
                     'terms_of_payment'       => isset($termsPayment[0]) ? $termsPayment[0]->asXML() : '',
                     'terms_of_cancellation'  => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
                     'free_cancellation_date' => isset($termsCancellation[0])
-                        ? fn_novoton_get_free_cancellation_date($termsCancellation[0]->asXML())
+                        ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[0]->asXML())
                         : null,
                 ];
 
@@ -599,9 +599,9 @@ class SearchService implements SearchServiceInterface
                 'room'                   => null,
                 'room_id'                => $roomId,
                 'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                'room_type_display'      => fn_novoton_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                 'board_id'               => $boardId,
-                'board_name'             => fn_novoton_format_board_name($boardId),
+                'board_name'             => fn_novoton_holidays_format_board_name($boardId),
                 'package_name'           => urldecode($packageName),
                 'price_data'             => $xml,
                 'nights'                 => $nights,
@@ -619,7 +619,7 @@ class SearchService implements SearchServiceInterface
                 'terms_of_payment'       => isset($xml->TermsOfPayment) ? $xml->TermsOfPayment->asXML() : '',
                 'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
                 'free_cancellation_date' => isset($xml->TermsOfCancellation)
-                    ? fn_novoton_get_free_cancellation_date($xml->TermsOfCancellation->asXML())
+                    ? fn_novoton_holidays_get_free_cancellation_date($xml->TermsOfCancellation->asXML())
                     : null,
             ];
 

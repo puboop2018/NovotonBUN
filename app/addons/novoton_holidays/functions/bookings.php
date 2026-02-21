@@ -28,12 +28,12 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @param array $request  Single row from novoton_alternative_requests
  * @return array          Same row with decrypted PII fields
  */
-function fn_novoton_decrypt_request_pii(array $request): array
+function fn_novoton_holidays_decrypt_request_pii(array $request): array
 {
     // Lazy-load SecurityService (works in both controller and cron context)
     static $security = null;
     if ($security === null) {
-        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
+        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/ServiceLoader.php';
         if (file_exists($loader)) {
             require_once $loader;
         }
@@ -65,10 +65,10 @@ function fn_novoton_decrypt_request_pii(array $request): array
  * @param array $requests  Array of rows from novoton_alternative_requests
  * @return array           Same rows with decrypted PII fields
  */
-function fn_novoton_decrypt_requests_pii(array $requests): array
+function fn_novoton_holidays_decrypt_requests_pii(array $requests): array
 {
     foreach ($requests as &$request) {
-        $request = fn_novoton_decrypt_request_pii($request);
+        $request = fn_novoton_holidays_decrypt_request_pii($request);
     }
     return $requests;
 }
@@ -79,9 +79,9 @@ function fn_novoton_decrypt_requests_pii(array $requests): array
  * @param int $booking_id Booking ID (0 = check all pending)
  * @return array Result
  */
-function fn_novoton_check_reservation_status($booking_id = 0): array
+function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
 {
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return ['success' => false, 'error' => 'API not available'];
     }
@@ -150,7 +150,7 @@ function fn_novoton_check_reservation_status($booking_id = 0): array
  * @param int $booking_id Booking ID
  * @return array Result
  */
-function fn_novoton_request_alternatives($booking_id): array
+function fn_novoton_holidays_request_alternatives($booking_id): array
 {
     $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
     
@@ -191,7 +191,7 @@ function fn_novoton_request_alternatives($booking_id): array
  * @param int $booking_id Booking ID
  * @return array Alternatives data
  */
-function fn_novoton_get_alternatives($booking_id): array
+function fn_novoton_holidays_get_alternatives($booking_id): array
 {
     $request = db_get_row(
         "SELECT * FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
@@ -215,7 +215,7 @@ function fn_novoton_get_alternatives($booking_id): array
  * @param int $order_id Order ID
  * @return array Bookings
  */
-function fn_novoton_get_order_bookings($order_id): array
+function fn_novoton_holidays_get_order_bookings($order_id): array
 {
     return db_get_array(
         "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
@@ -228,14 +228,14 @@ function fn_novoton_get_order_bookings($order_id): array
  * 
  * @return array Result
  */
-function fn_novoton_cron_resinfo(): array
+function fn_novoton_holidays_cron_resinfo(): array
 {
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return ['success' => false, 'error' => 'API not available'];
     }
     
-    $countries = fn_novoton_parse_countries();
+    $countries = fn_novoton_holidays_parse_countries();
     
     $result = [
         'success' => true,

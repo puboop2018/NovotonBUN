@@ -40,7 +40,7 @@ class BookingService implements BookingServiceInterface
         ?RoomPriceService $priceService = null,
         ?BookingRepository $bookingRepo = null
     ) {
-        $this->api = fn_novoton_get_api();
+        $this->api = fn_novoton_holidays_get_api();
         $this->guestService = $guestService ?? new GuestDataService();
         $this->priceService = $priceService ?? new RoomPriceService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
@@ -71,7 +71,7 @@ class BookingService implements BookingServiceInterface
         $totals = $this->calculateTotals($rooms_data);
         
         // Get hotel info
-        $hotel_info = fn_novoton_get_hotel_data($bookingData['hotel_id']);
+        $hotel_info = fn_novoton_holidays_get_hotel_data($bookingData['hotel_id']);
         
         // Build booking record
         $booking_record = [
@@ -302,7 +302,7 @@ class BookingService implements BookingServiceInterface
         if (empty($rooms_data) || !is_array($rooms_data)) {
             $rooms_data = [[
                 'room_id' => $bookingData['room_id'] ?? '',
-                'room_name' => fn_novoton_format_room_type($bookingData['room_id'] ?? ''),
+                'room_name' => fn_novoton_holidays_format_room_type($bookingData['room_id'] ?? ''),
                 'board_id' => $bookingData['board_id'] ?? 'BB',
                 'adults' => (int) ($bookingData['adults'] ?? 2),
                 'children' => (int) ($bookingData['children'] ?? 0),
@@ -335,14 +335,14 @@ class BookingService implements BookingServiceInterface
             } elseif (!empty($room['room_type_display'])) {
                 $room_types[] = $room['room_type_display'];
             } elseif (!empty($room['room_id'])) {
-                $room_types[] = fn_novoton_format_room_type($room['room_id']);
+                $room_types[] = fn_novoton_holidays_format_room_type($room['room_id']);
             }
         }
         
         // Fallback to bookingData
         if (empty($room_ids) && !empty($bookingData['room_id'])) {
             $room_ids[] = $bookingData['room_id'];
-            $room_types[] = fn_novoton_format_room_type($bookingData['room_id']);
+            $room_types[] = fn_novoton_holidays_format_room_type($bookingData['room_id']);
         }
         
         return [
@@ -601,9 +601,9 @@ class BookingService implements BookingServiceInterface
                 'package_name' => $bookingData['package_name'] ?? '',
                 'room_id' => $bookingData['room_id'],
                 'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
-                'room_type_display' => fn_novoton_format_room_type($bookingData['room_id']),
+                'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
                 'board_id' => $boardId,
-                'board_name' => fn_novoton_format_board_name($boardId),
+                'board_name' => fn_novoton_holidays_format_board_name($boardId),
                 'check_in' => $bookingData['check_in'],
                 'check_out' => $bookingData['check_out'],
                 'nights' => $nights,
@@ -618,8 +618,8 @@ class BookingService implements BookingServiceInterface
                 'contact_email' => $bookingData['contact']['email'] ?? '',
                 'contact_phone' => $bookingData['contact']['phone'] ?? '',
                 'special_requests' => strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000)),
-                'terms_of_payment' => fn_novoton_format_payment_terms($priceResult['terms_of_payment']),
-                'terms_of_cancellation' => fn_novoton_format_cancellation_terms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
+                'terms_of_payment' => fn_novoton_holidays_format_payment_terms($priceResult['terms_of_payment']),
+                'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
                 'terms_of_payment_raw' => $priceResult['terms_of_payment'],
                 'terms_of_cancellation_raw' => $priceResult['terms_of_cancellation'],
                 'remark' => $priceResult['remark'],
@@ -671,8 +671,8 @@ class BookingService implements BookingServiceInterface
 
             // Ensure room_type_display is set
             if (empty($room['room_type_display']) && !empty($room['room_id'])) {
-                $room['room_type_display'] = fn_novoton_format_room_type($room['room_id']);
-                $room['room_name'] = fn_novoton_format_room_type($room['room_id']);
+                $room['room_type_display'] = fn_novoton_holidays_format_room_type($room['room_id']);
+                $room['room_name'] = fn_novoton_holidays_format_room_type($room['room_id']);
             }
 
             // Fix room_id: PHP URL decoding converts + to space

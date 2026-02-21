@@ -116,7 +116,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         'children' => $all_child_ages  // Include children ages from guest form
     ];
     
-    $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
+    $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
 
     // A80: Server-side price validation - safety net
     // If we have children and API returns no data, abort booking
@@ -163,7 +163,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         if (isset($priceData->Price)) {
             $rawPrice = floatval((string)$priceData->Price);
             $base_price = $rawPrice;
-            $api_price = fn_novoton_get_api()->applyCommission($rawPrice);
+            $api_price = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
             // ALWAYS use API price when children are involved (ages affect pricing)
             // Also use if we don't have one, or if it's different
             if (!empty($all_child_ages) || $total_price <= 0 || abs($total_price - $api_price) > 0.01) {
@@ -208,7 +208,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // Format board name for display
     $board_id = $bookingData['board_id'] ?? 'BB';
-    $board_name = fn_novoton_format_board_name($board_id);
+    $board_name = fn_novoton_holidays_format_board_name($board_id);
     
     // Parse rooms_data
     $num_rooms = intval($bookingData['num_rooms'] ?? 1);
@@ -238,8 +238,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         $rooms_data = [
             [
                 'room_id' => $bookingData['room_id'],
-                'room_name' => fn_novoton_format_room_type($bookingData['room_id']),
-                'room_type_display' => fn_novoton_format_room_type($bookingData['room_id']),
+                'room_name' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
+                'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
                 'board_id' => $board_id,
                 'board_name' => $board_name,
                 'adults' => intval($bookingData['adults'] ?? 2),
@@ -278,8 +278,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         }
         // Ensure room_type_display is set (translated room name)
         if (empty($room['room_type_display']) && !empty($room['room_id'])) {
-            $room['room_type_display'] = fn_novoton_format_room_type($room['room_id']);
-            $room['room_name'] = fn_novoton_format_room_type($room['room_id']);
+            $room['room_type_display'] = fn_novoton_holidays_format_room_type($room['room_id']);
+            $room['room_name'] = fn_novoton_holidays_format_room_type($room['room_id']);
         }
     }
     unset($room);
@@ -317,7 +317,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         } elseif (!empty($room['room_type_display'])) {
             $room_types_for_db[] = $room['room_type_display'];
         } elseif (!empty($room['room_id'])) {
-            $room_types_for_db[] = fn_novoton_format_room_type($room['room_id']);
+            $room_types_for_db[] = fn_novoton_holidays_format_room_type($room['room_id']);
         }
         $total_adults += intval($room['adults'] ?? 0);
         $total_children += intval($room['children'] ?? 0);
@@ -326,7 +326,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     // Fallback to bookingData if rooms_data didn't have room_id
     if (empty($room_ids_for_db) && !empty($bookingData['room_id'])) {
         $room_ids_for_db[] = $bookingData['room_id'];
-        $room_types_for_db[] = fn_novoton_format_room_type($bookingData['room_id']);
+        $room_types_for_db[] = fn_novoton_holidays_format_room_type($bookingData['room_id']);
     }
     
     // Use totals from rooms_data if available, otherwise from bookingData
@@ -430,7 +430,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             'package_name' => $package_name,
             'room_id' => $bookingData['room_id'],
             'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
-            'room_type_display' => fn_novoton_format_room_type($bookingData['room_id']),
+            'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
             'board_id' => $board_id,
             'board_name' => $board_name,
             'check_in' => $bookingData['check_in'],
@@ -447,8 +447,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
             'contact_email' => $contact['email'] ?? '',
             'contact_phone' => $contact['phone'] ?? '',
             'special_requests' => $special_requests,
-            'terms_of_payment' => fn_novoton_format_payment_terms($terms_of_payment),
-            'terms_of_cancellation' => fn_novoton_format_cancellation_terms($terms_of_cancellation, $bookingData['check_in']),
+            'terms_of_payment' => fn_novoton_holidays_format_payment_terms($terms_of_payment),
+            'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($terms_of_cancellation, $bookingData['check_in']),
             'terms_of_payment_raw' => $terms_of_payment,
             'terms_of_cancellation_raw' => $terms_of_cancellation,
             'remark' => $remark,

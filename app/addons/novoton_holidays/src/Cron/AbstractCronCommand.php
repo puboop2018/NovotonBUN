@@ -74,8 +74,8 @@ abstract class AbstractCronCommand
 
     protected function sendReport(string $type, array $stats, string $context = ''): void
     {
-        if (function_exists('fn_novoton_send_import_report_email')) {
-            fn_novoton_send_import_report_email([], $type, $stats, $context);
+        if (function_exists('fn_novoton_holidays_send_import_report_email')) {
+            fn_novoton_holidays_send_import_report_email([], $type, $stats, $context);
         }
     }
 }

@@ -20,8 +20,8 @@ final class Constants
     public const ADDON_ID = 'novoton_holidays';
     public const VERSION = '3.2.0';
     
-    // ========== Booking Status ==========
-    
+    // ========== Booking Status (internal) ==========
+
     public const STATUS_PENDING = 'pending';
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_CANCELLED = 'cancelled';
@@ -29,28 +29,36 @@ final class Constants
     public const STATUS_FAILED = 'failed';
     public const STATUS_ASK = 'ask';             // On-request (waiting for hotel confirmation)
     public const STATUS_WAITING = 'waiting';      // Waitlist
-    
-    // Novoton API status values (hotel_res_RQ response codes)
-    public const NOVOTON_STATUS_CONFIRMED = 'OK';      // Reservation accepted and confirmed
-    public const NOVOTON_STATUS_ON_REQUEST = 'ASK';     // Reservation accepted with asking status
-    public const NOVOTON_STATUS_CANCELLED = 'ST';       // Reservation cancelled
-    public const NOVOTON_STATUS_CANCELLED_CX = 'CX';   // Reservation cancelled (alt code)
-    public const NOVOTON_STATUS_WAITLIST = 'WT';        // Reservation with waiting status
-    
+
+    // ========== Novoton API Status Codes ==========
+    //
+    // hotel_res_RQ response:
+    //   OK  – reservation is accepted and confirmed
+    //   ASK – reservation is accepted with asking status
+    //   ST  – reservation is cancelled
+    //   WT  – reservation is with waiting status
+    //
+    // resinfo polling (for ASK reservations):
+    //   OK  – confirmed
+    //   ST  – cancelled / rejected
+    //   RQ  – alternatives pending (retrieve via alternative_RS)
+
+    public const NOVOTON_STATUS_CONFIRMED  = 'OK';
+    public const NOVOTON_STATUS_ON_REQUEST = 'ASK';
+    public const NOVOTON_STATUS_CANCELLED  = 'ST';
+    public const NOVOTON_STATUS_WAITLIST   = 'WT';
+    public const NOVOTON_STATUS_ALTERNATIVES_PENDING = 'RQ';
+
     // ========== Reservation Status Mapping ==========
-    // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses
+    // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses.
+    // Only codes the API actually returns are mapped — no guessed aliases.
 
     public const NOVOTON_STATUS_TO_INTERNAL = [
-        self::NOVOTON_STATUS_CONFIRMED  => self::STATUS_CONFIRMED,  // OK  -> confirmed
-        'Confirmed'                     => self::STATUS_CONFIRMED,
-        self::NOVOTON_STATUS_ON_REQUEST => self::STATUS_ASK,        // ASK -> ask (on-request)
-        'OnRequest'                     => self::STATUS_ASK,
-        self::NOVOTON_STATUS_CANCELLED  => self::STATUS_CANCELLED,  // ST  -> cancelled
-        'Cancelled'                     => self::STATUS_CANCELLED,
-        self::NOVOTON_STATUS_CANCELLED_CX => self::STATUS_CANCELLED,  // CX  -> cancelled (alt code)
-        self::NOVOTON_STATUS_WAITLIST   => self::STATUS_WAITING,    // WT  -> waiting
-        'Waitlist'                      => self::STATUS_WAITING,
-        'RQ'                            => self::STATUS_PENDING,    // RQ  -> pending
+        self::NOVOTON_STATUS_CONFIRMED             => self::STATUS_CONFIRMED,  // OK  -> confirmed
+        self::NOVOTON_STATUS_ON_REQUEST            => self::STATUS_ASK,        // ASK -> ask (poll via resinfo)
+        self::NOVOTON_STATUS_CANCELLED             => self::STATUS_CANCELLED,  // ST  -> cancelled
+        self::NOVOTON_STATUS_WAITLIST              => self::STATUS_WAITING,    // WT  -> waiting
+        self::NOVOTON_STATUS_ALTERNATIVES_PENDING  => self::STATUS_PENDING,    // RQ  -> pending (check alternative_RS)
     ];
     
     // ========== Availability Status ==========
@@ -145,12 +153,15 @@ final class Constants
     
     // ========== Database Tables (V3 Architecture) ==========
 
-    public const TABLE_HOTELS = 'novoton_hotels';
-    public const TABLE_PACKAGES = 'novoton_hotel_packages';  // Packages from hotelinfo API with priceinfo
-    public const TABLE_BOOKINGS = 'novoton_bookings';
-    public const TABLE_FACILITIES = 'novoton_hotel_facilities';
-    public const TABLE_SYNC_LOG = 'novoton_sync_log';
-    public const TABLE_CACHE = 'novoton_cache';
+    public const TABLE_HOTELS           = 'novoton_hotels';
+    public const TABLE_HOTEL_PACKAGES   = 'novoton_hotel_packages';   // Packages from hotelinfo API with priceinfo
+    public const TABLE_BOOKINGS         = 'novoton_bookings';
+    public const TABLE_HOTEL_FACILITIES = 'novoton_hotel_facilities'; // Junction: hotel ↔ facility
+    public const TABLE_FACILITIES       = 'novoton_facilities';       // Facility catalog
+    public const TABLE_RESORTS          = 'novoton_resorts';          // Resort names by country
+    public const TABLE_SYNC_LOG         = 'novoton_sync_log';
+    public const TABLE_CACHE            = 'novoton_cache';
+    public const TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
     
     // ========== Countries ==========
     
@@ -220,6 +231,38 @@ final class Constants
 
     /** Registry key for full debug mode (default N) */
     public const SETTING_DEBUG_MODE = 'addons.novoton_holidays.debug_mode';
+
+    // ========== API Timeouts ==========
+
+    public const API_TIMEOUT = 30;              // seconds
+    public const API_CONNECT_TIMEOUT = 10;      // seconds
+
+    // ========== Cache TTL for cron-synced data (seconds) ==========
+    // These are for DB-cached data that cron refreshes periodically.
+    // See also CACHE_TTL_* above for live API call caching.
+
+    public const CACHE_TTL_HOTEL_INFO = 3600;        // 1 hour
+    public const CACHE_TTL_PRICE_INFO = 1800;        // 30 minutes
+    public const CACHE_TTL_SEARCH_RESULTS = 900;     // 15 minutes
+    public const CACHE_TTL_FACILITIES = 86400;        // 24 hours
+
+    // ========== Cron ==========
+
+    public const CRON_BATCH_SIZE = 100;
+    public const CRON_CHECK_INTERVAL = 86400;         // 24 hours
+
+    // ========== Booking Limits (per-room) ==========
+
+    public const MAX_ADULTS_PER_ROOM = 4;
+    public const MAX_CHILDREN_PER_ROOM = 3;
+
+    // ========== Product ==========
+
+    public const PRODUCT_CODE_PREFIX = 'NVT';
+
+    // ========== Sync Log ==========
+
+    public const SYNC_LOG_RETENTION_DAYS = 30;
 
     // ========== File Paths ==========
 

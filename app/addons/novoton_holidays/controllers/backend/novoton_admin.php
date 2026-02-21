@@ -288,56 +288,56 @@ if ($mode == 'run_cron') {
         // Execute based on mode
         switch ($cron_mode) {
             case 'hotel_list':
-                $result = fn_novoton_admin_sync_hotels($api);
+                $result = fn_novoton_holidays_admin_sync_hotels($api);
                 break;
                 
             case 'room_price':
-                $result = fn_novoton_admin_check_prices($api);
+                $result = fn_novoton_holidays_admin_check_prices($api);
                 break;
                 
             case 'resort_list':
                 $country = $params['country'] ?? 'BULGARIA';
-                $result = fn_novoton_sync_resorts_list($country);
+                $result = fn_novoton_holidays_sync_resorts_list($country);
                 break;
 
             case 'list_facilities':
-                $result = fn_novoton_admin_sync_facilities($api);
+                $result = fn_novoton_holidays_admin_sync_facilities($api);
                 break;
                 
             case 'add_hotels_as_products':
                 $country = $params['country'] ?? 'BULGARIA';
                 $limit = $params['limit'] ?? 50;
-                $result = fn_novoton_admin_add_products($api, $country, $limit);
+                $result = fn_novoton_holidays_admin_add_products($api, $country, $limit);
                 break;
                 
             case 'offers_update':
                 $country = $params['country'] ?? 'BULGARIA';
-                $result = fn_novoton_admin_check_offers($api, $country);
+                $result = fn_novoton_holidays_admin_check_offers($api, $country);
                 break;
                 
             case 'resinfo':
-                $result = fn_novoton_cron_resinfo();
+                $result = fn_novoton_holidays_cron_resinfo();
                 break;
                 
             case 'alternative_rs':
-                $result = fn_novoton_admin_check_alternatives($api, 'requests');
+                $result = fn_novoton_holidays_admin_check_alternatives($api, 'requests');
                 break;
                 
             case 'alternative_rs_bookings':
-                $result = fn_novoton_admin_check_alternatives($api, 'bookings');
+                $result = fn_novoton_holidays_admin_check_alternatives($api, 'bookings');
                 break;
                 
             case 'notify_alternatives':
-                $result = fn_novoton_admin_notify_alternatives();
+                $result = fn_novoton_holidays_admin_notify_alternatives();
                 break;
                 
             case 'cleanup':
-                $result = fn_novoton_admin_cleanup();
+                $result = fn_novoton_holidays_admin_cleanup();
                 break;
                 
             case 'expire_requests':
                 $days = $params['days'] ?? 30;
-                $result = fn_novoton_admin_expire_requests($days);
+                $result = fn_novoton_holidays_admin_expire_requests($days);
                 break;
                 
             default:
@@ -367,8 +367,8 @@ if ($mode == 'run_cron') {
 // A73: Helper functions for admin cron execution
 // ================================================
 
-function fn_novoton_admin_sync_hotels($api) {
-    $countries = fn_novoton_parse_countries();
+function fn_novoton_holidays_admin_sync_hotels($api) {
+    $countries = fn_novoton_holidays_parse_countries();
 
     $total = 0;
     $synced = 0;
@@ -411,7 +411,7 @@ function fn_novoton_admin_sync_hotels($api) {
     return ['success' => true, 'message' => "Total: {$total}, Synced: {$synced}"];
 }
 
-function fn_novoton_admin_check_prices($api) {
+function fn_novoton_holidays_admin_check_prices($api) {
     $hotels = db_get_array(
         "SELECT hotel_id, hotel_name FROM ?:novoton_hotels 
          WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
@@ -443,7 +443,7 @@ function fn_novoton_admin_check_prices($api) {
     return ['success' => true, 'message' => "Checked: {$checked}, With prices: {$with_prices}"];
 }
 
-function fn_novoton_admin_sync_facilities($api) {
+function fn_novoton_holidays_admin_sync_facilities($api) {
     $response = $api->listFacilities();
     
     if (!$response || !isset($response->Facility)) {
@@ -472,7 +472,7 @@ function fn_novoton_admin_sync_facilities($api) {
     return ['success' => true, 'message' => "Synced {$count} facilities"];
 }
 
-function fn_novoton_admin_add_products($api, $country, $limit) {
+function fn_novoton_holidays_admin_add_products($api, $country, $limit) {
     $hotels = db_get_array(
         "SELECT * FROM ?:novoton_hotels 
          WHERE has_prices = 'Y' AND country = ?s AND (product_id IS NULL OR product_id = 0)
@@ -484,7 +484,7 @@ function fn_novoton_admin_add_products($api, $country, $limit) {
         return ['success' => true, 'message' => 'No hotels to add'];
     }
     
-    $category_id = fn_novoton_get_or_create_category("{$country}///Litoral {$country}");
+    $category_id = fn_novoton_holidays_get_or_create_category("{$country}///Litoral {$country}");
     $added = 0;
     
     foreach ($hotels as $hotel) {
@@ -526,7 +526,7 @@ function fn_novoton_admin_add_products($api, $country, $limit) {
     return ['success' => true, 'message' => "Added: {$added} products"];
 }
 
-function fn_novoton_admin_check_offers($api, $country) {
+function fn_novoton_holidays_admin_check_offers($api, $country) {
     $last_check = db_get_field(
         "SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type IN ('offers_update', 'product_import') AND status = 'completed' ORDER BY sync_date DESC LIMIT 1"
     );
@@ -548,7 +548,7 @@ function fn_novoton_admin_check_offers($api, $country) {
     return ['success' => true, 'message' => "Found {$count} offers"];
 }
 
-function fn_novoton_admin_check_alternatives($api, $type) {
+function fn_novoton_holidays_admin_check_alternatives($api, $type) {
     if ($type == 'requests') {
         $items = db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests 
@@ -567,12 +567,12 @@ function fn_novoton_admin_check_alternatives($api, $type) {
     return ['success' => true, 'message' => "Checked: {$checked}"];
 }
 
-function fn_novoton_admin_notify_alternatives() {
+function fn_novoton_holidays_admin_notify_alternatives() {
     $requests = db_get_array(
         "SELECT * FROM ?:novoton_alternative_requests
          WHERE status = 'has_alternatives' AND notified = 0 LIMIT 50"
     );
-    $requests = fn_novoton_decrypt_requests_pii($requests);
+    $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
     $notified = 0;
     foreach ($requests as $request) {
@@ -584,7 +584,7 @@ function fn_novoton_admin_notify_alternatives() {
     return ['success' => true, 'message' => "Notified: {$notified}"];
 }
 
-function fn_novoton_admin_cleanup() {
+function fn_novoton_holidays_admin_cleanup() {
     // Orphan bookings
     $orphans = db_query(
         "DELETE FROM ?:novoton_bookings 
@@ -610,7 +610,7 @@ function fn_novoton_admin_cleanup() {
     return ['success' => true, 'message' => "Cleanup complete"];
 }
 
-function fn_novoton_admin_expire_requests($days) {
+function fn_novoton_holidays_admin_expire_requests($days) {
     $expired = db_query(
         "UPDATE ?:novoton_alternative_requests 
          SET status = 'expired' 

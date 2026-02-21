@@ -38,7 +38,12 @@ class NovotonHttpClient
 
     public function __construct(array $settings)
     {
-        $this->apiUrl = !empty($settings['api_url']) ? $settings['api_url'] : 'b2b.allinclusivebg.com';
+        if (empty($settings['api_url'])) {
+            throw new \InvalidArgumentException(
+                'Novoton API URL not configured — set api_url in addon settings'
+            );
+        }
+        $this->apiUrl = $settings['api_url'];
         $this->apiKey = $settings['api_key'] ?? '';
         $this->apiId = $settings['api_id'] ?? '';
         $this->apiUser = $settings['api_user'] ?? '';

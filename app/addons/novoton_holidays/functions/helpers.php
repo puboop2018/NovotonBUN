@@ -25,8 +25,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @param mixed $selected_countries Countries from settings (array or comma-separated string)
  * @return array List of country names in uppercase
  */
-if (!function_exists('fn_novoton_parse_countries')) {
-function fn_novoton_parse_countries($selected_countries = null): array
+if (!function_exists('fn_novoton_holidays_parse_countries')) {
+function fn_novoton_holidays_parse_countries($selected_countries = null): array
 {
     // If null passed, get from settings
     if ($selected_countries === null) {
@@ -84,7 +84,7 @@ function fn_novoton_parse_countries($selected_countries = null): array
  * 
  * @return bool
  */
-function fn_novoton_is_debug(): bool
+function fn_novoton_holidays_is_debug(): bool
 {
     if (!empty($_REQUEST['debug_novoton'])) {
         return true;
@@ -98,7 +98,7 @@ function fn_novoton_is_debug(): bool
  * 
  * @return NovotonApi|null
  */
-function fn_novoton_get_api(): ?NovotonApi
+function fn_novoton_holidays_get_api(): ?NovotonApi
 {
     static $api = null;
     
@@ -133,7 +133,7 @@ function fn_novoton_get_api(): ?NovotonApi
  */
 function fn_novoton_holidays_update_product_prices($product_id): bool|string
 {
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return false;
     }
@@ -154,7 +154,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         }
 
         // Get hotel_id from novoton_hotels table
-        $hotel_id = fn_novoton_get_hotel_id_by_product($product_id);
+        $hotel_id = fn_novoton_holidays_get_hotel_id_by_product($product_id);
 
         if (empty($hotel_id)) {
             // Try extracting from product code (NVT-XXXX or NVT format)

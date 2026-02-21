@@ -302,7 +302,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     public function testFacilities(): array
     {
         try {
-            $result = fn_novoton_sync_facilities_list();
+            $result = fn_novoton_holidays_sync_facilities_list();
 
             $facilities = db_get_array(
                 "SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en LIMIT 50"

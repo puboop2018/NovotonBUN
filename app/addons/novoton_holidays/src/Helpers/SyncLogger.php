@@ -338,7 +338,7 @@ class SyncLogger
             'duration' => $this->getFormattedDuration(),
         ]);
 
-        return fn_novoton_send_import_report_email($results, $this->syncType, $summary, $country);
+        return fn_novoton_holidays_send_import_report_email($results, $this->syncType, $summary, $country);
     }
 
     /**

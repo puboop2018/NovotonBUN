@@ -301,8 +301,8 @@ class PriceInfoSync
         );
 
         // Send email report
-        if (function_exists('fn_novoton_send_import_report_email')) {
-            fn_novoton_send_import_report_email([], 'room_price', [
+        if (function_exists('fn_novoton_holidays_send_import_report_email')) {
+            fn_novoton_holidays_send_import_report_email([], 'room_price', [
                 'added'    => 0,
                 'updated'  => count($stats['updated']),
                 'skipped'  => count($stats['no_data']),

@@ -130,10 +130,10 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         $booking['rooms_data'] = [
             [
                 'room_id' => $booking_record['room_id'],
-                'room_name' => fn_novoton_format_room_type($booking_record['room_id']),
-                'room_type_display' => fn_novoton_format_room_type($booking_record['room_id']),
+                'room_name' => fn_novoton_holidays_format_room_type($booking_record['room_id']),
+                'room_type_display' => fn_novoton_holidays_format_room_type($booking_record['room_id']),
                 'board_id' => $booking_record['board_id'],
-                'board_name' => fn_novoton_format_board_name($booking_record['board_id']),
+                'board_name' => fn_novoton_holidays_format_board_name($booking_record['board_id']),
                 'adults' => intval($booking_record['adults']),
                 'children' => intval($booking_record['children']),
                 'childrenAges' => $children_ages_arr,

@@ -43,7 +43,7 @@ class AlternativesCommand extends AbstractCronCommand
 
         $altRepo = new AlternativeRequestRepository();
         $pending = $altRepo->findPendingOlderThan(24);
-        $pending = fn_novoton_decrypt_requests_pii($pending);
+        $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
 
         if (empty($pending)) {
             $this->output("No pending requests older than 24 hours found.");
@@ -156,7 +156,7 @@ class AlternativesCommand extends AbstractCronCommand
 
         $altRepo = new AlternativeRequestRepository();
         $requests = $altRepo->findUnnotified();
-        $requests = fn_novoton_decrypt_requests_pii($requests);
+        $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
         if (empty($requests)) {
             $this->output("No requests with alternatives to notify.");

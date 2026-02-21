@@ -157,7 +157,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [4] Board display name
         $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
         if (!empty($board_id)) {
-            $product['extra']['board_display'] = fn_novoton_format_board_name($board_id);
+            $product['extra']['board_display'] = fn_novoton_holidays_format_board_name($board_id);
         }
 
         // [5] Guests data formatting
@@ -213,19 +213,19 @@ function _nvt_enrich_order_product_terms(
 
     // Format payment terms
     if (!empty($payment_raw) && $total_price > 0) {
-        $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_format_payment_terms_with_amounts(
+        $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_holidays_format_payment_terms_with_amounts(
             $payment_raw, $total_price, $currency_code
         );
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_raw)) {
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_text)) {
         $product['extra']['terms_of_payment_formatted'] = $payment_text;
     }
 
     // Format cancellation terms
     if (!empty($cancel_raw)) {
-        $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_format_cancellation_terms($cancel_raw, $check_in);
+        $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_holidays_format_cancellation_terms($cancel_raw, $check_in);
     } elseif (!empty($cancel_text)) {
         $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
     }

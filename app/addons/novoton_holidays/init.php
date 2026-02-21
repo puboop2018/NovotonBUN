@@ -27,8 +27,8 @@ if (file_exists($config_file)) {
     require_once $config_file;
 }
 
-// Register PSR-4 autoloader for ALL addon namespaces:
-// Services, Helpers, Repository, Cron, Cron\Commands, ValueObjects, Exceptions, root
+// Register PSR-4 autoloader for ALL addon namespaces.
+// All classes live under src/ — single PSR-4 root.
 spl_autoload_register(function ($class) {
     $prefix = 'Tygh\\Addons\\NovotonHolidays\\';
     if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
@@ -36,24 +36,17 @@ spl_autoload_register(function ($class) {
     }
 
     $relative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+    $file = __DIR__ . '/src/' . $relative;
 
-    // Non-standard directory mappings (namespace dir doesn't match filesystem)
-    $overrides = [
-        'Exceptions/' => __DIR__ . '/src/Exceptions/',   // nested inside src/
-    ];
-
-    foreach ($overrides as $nsPrefix => $dir) {
-        if (strncmp($nsPrefix, $relative, strlen($nsPrefix)) === 0) {
-            $file = $dir . substr($relative, strlen($nsPrefix));
-            if (file_exists($file)) { require $file; return; }
-        }
+    if (file_exists($file)) {
+        require $file;
+        return;
     }
 
-    // Standard PSR-4: addon root (Helpers, Repository, Cron, ValueObjects, etc.)
-    // Also check src/ for root-namespace classes (NovotonApi, HotelSync, etc.)
-    foreach ([__DIR__ . '/', __DIR__ . '/src/'] as $dir) {
-        $file = $dir . $relative;
-        if (file_exists($file)) { require $file; return; }
+    // Fallback: addon root for Constants.php (lives next to addon.xml)
+    $file = __DIR__ . '/' . $relative;
+    if (file_exists($file)) {
+        require $file;
     }
 });
 

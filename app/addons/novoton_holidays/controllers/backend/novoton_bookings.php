@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'resinfo') {
         $booking_id = isset($_REQUEST['booking_id']) ? intval($_REQUEST['booking_id']) : 0;
         
-        $results = fn_novoton_check_reservation_status($booking_id);
+        $results = fn_novoton_holidays_check_reservation_status($booking_id);
         
         fn_set_notification('N', __('notice'), __('novoton_holidays.status_checked'));
 
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = isset($_REQUEST['booking_id']) ? intval($_REQUEST['booking_id']) : 0;
         
         if ($booking_id > 0) {
-            $alternatives = fn_novoton_request_alternatives($booking_id);
+            $alternatives = fn_novoton_holidays_request_alternatives($booking_id);
             
             if ($alternatives) {
                 fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => count($alternatives)]));
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Check all ASK bookings (bulk)
     if ($mode === 'check_all_status') {
-        $results = fn_novoton_cron_resinfo();
+        $results = fn_novoton_holidays_cron_resinfo();
         
         fn_set_notification('N', __('notice'), 
             __('novoton_holidays.bulk_status_checked', [
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // If ID provided, check status
             if (!empty($novoton_invoice_id)) {
-                fn_novoton_check_reservation_status($booking_id);
+                fn_novoton_holidays_check_reservation_status($booking_id);
             }
         }
         
@@ -226,7 +226,7 @@ if ($mode === 'manage') {
         $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
         
         if ($booking) {
-            $alternatives = fn_novoton_get_alternatives($booking_id);
+            $alternatives = fn_novoton_holidays_get_alternatives($booking_id);
             
             // Enrich alternatives with hotel names
             if ($alternatives) {
@@ -253,7 +253,7 @@ if ($mode === 'manage') {
     $order_id = isset($_REQUEST['order_id']) ? intval($_REQUEST['order_id']) : 0;
     
     if ($order_id > 0) {
-        $bookings = fn_novoton_get_order_bookings($order_id);
+        $bookings = fn_novoton_holidays_get_order_bookings($order_id);
         
         foreach ($bookings as &$booking) {
             if (!empty($booking['guests_data'])) {

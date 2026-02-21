@@ -45,7 +45,7 @@ class AddProductsCommand extends AbstractCronCommand
         }
 
         $category_path = "{$country}///Litoral {$country}";
-        $category_id = fn_novoton_get_or_create_category($category_path);
+        $category_id = fn_novoton_holidays_get_or_create_category($category_path);
         $current_year = date('Y');
         $image_base_url = 'https://booking.allinclusive.bg';
         $added = 0;
@@ -64,7 +64,7 @@ class AddProductsCommand extends AbstractCronCommand
                 continue;
             }
 
-            $page_title = fn_novoton_build_hotel_title($hotel['hotel_name'], $hotel['city'], $hotel['country'], $current_year);
+            $page_title = fn_novoton_holidays_build_hotel_title($hotel['hotel_name'], $hotel['city'], $hotel['country'], $current_year);
 
             $description = '';
             try {
@@ -100,7 +100,7 @@ class AddProductsCommand extends AbstractCronCommand
                         $count = 0;
                         foreach ($images->url as $url) {
                             $image_url = $image_base_url . str_replace(' ', '%20', (string)$url);
-                            fn_novoton_add_product_image($product_id, $image_url, $count == 0);
+                            fn_novoton_holidays_add_product_image($product_id, $image_url, $count == 0);
                             if (++$count >= 10) break;
                         }
                     }
@@ -109,7 +109,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
 
                 try {
-                    fn_novoton_sync_hotel_facilities($hotel_id);
+                    fn_novoton_holidays_sync_hotel_facilities($hotel_id);
                 } catch (\Exception $e) {
                     fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                 }

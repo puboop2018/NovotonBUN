@@ -112,7 +112,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
     
     // Get API instance
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         $debug_log('ERROR: API not available');
         $sendJson(['success' => false, 'message' => 'API not available']);

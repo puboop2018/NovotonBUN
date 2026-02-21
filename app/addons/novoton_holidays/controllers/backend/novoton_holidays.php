@@ -160,7 +160,7 @@ if ($mode == 'manage' || empty($mode)) {
     $addon_settings = ConfigProvider::all();
 
     // Parse selected countries
-    $countries = fn_novoton_parse_countries();
+    $countries = fn_novoton_holidays_parse_countries();
     
     // Gather statistics
     $stats = [
@@ -323,7 +323,7 @@ if ($mode == 'view_hotel') {
     }
     
     // Get facilities
-    $facilities = fn_novoton_get_hotel_facilities($hotel_id);
+    $facilities = fn_novoton_holidays_get_hotel_facilities($hotel_id);
     
     // Get bookings for this hotel
     $bookingRepo = Container::getInstance()->bookingRepository();
