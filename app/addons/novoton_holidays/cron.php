@@ -47,6 +47,9 @@ if (empty($mode)) {
     $mode = 'full';
 }
 
+// Sanitize mode to prevent XSS when echoed
+$mode = preg_replace('/[^a-z0-9_]/', '', $mode);
+
 echo "[" . date('Y-m-d H:i:s') . "] Novoton Cron Started - Mode: {$mode}\n";
 
 fn_log_event('novoton_holidays', 'cron_start', [
@@ -96,11 +99,11 @@ try {
 
     $companyData = fn_get_company_data(0);
     $adminEmail = $companyData['company_users_department'] ?? '';
-    if (!empty($adminEmail)) {
-        fn_send_mail($adminEmail, $adminEmail,
-            'Novoton Cron Error - ' . date('Y-m-d H:i:s'),
-            "Error: " . $e->getMessage() . "\nTime: " . date('Y-m-d H:i:s')
-        );
+    if (!empty($adminEmail) && function_exists('fn_novoton_holidays_send_import_report_email')) {
+        fn_novoton_holidays_send_import_report_email([], 'cron_error', [
+            'error' => $e->getMessage(),
+            'time' => date('Y-m-d H:i:s'),
+        ], 'Cron error notification');
     }
 
     exit(1);

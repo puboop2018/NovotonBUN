@@ -10,7 +10,7 @@ declare(strict_types=1);
  *   - checkout_pre_dispatch: Debug info on checkout pages
  *   - dispatch_before_display: Meta variables, Smarty modifiers, CSS loading
  *
- * Also contains the fn_novoton_add_booking_display_data() helper that formats
+ * Also contains the fn_novoton_holidays_add_booking_display_data() helper that formats
  * booking details for display in cart/checkout.
  *
  * @package NovotonHolidays
@@ -30,7 +30,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth): void
 {
     if (!empty($product['extra']['novoton_booking'])) {
-        fn_novoton_add_booking_display_data($product);
+        fn_novoton_holidays_add_booking_display_data($product);
     }
 }
 
@@ -72,7 +72,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
 
         // Already has booking data with ID — keep it
         if (!empty($product['extra']['novoton_booking']) && !empty($product['extra']['novoton_booking_id'])) {
-            fn_novoton_add_booking_display_data($product, $cart);
+            fn_novoton_holidays_add_booking_display_data($product, $cart);
             $used_booking_ids[] = $product['extra']['novoton_booking_id'];
             continue;
         }
@@ -89,7 +89,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
 
             $used_booking_ids[] = $booking['booking_id'];
             _nvt_inject_booking_into_cart_product($product, $booking, $cart, $cart_id);
-            fn_novoton_add_booking_display_data($product, $cart);
+            fn_novoton_holidays_add_booking_display_data($product, $cart);
             break;
         }
     }
@@ -100,7 +100,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
  */
 function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
-    if (fn_novoton_is_debug()) {
+    if (fn_novoton_holidays_is_debug()) {
         fn_log_event('general', 'runtime', [
             'message'             => 'Novoton calculate_cart_items_post',
             'cart_products_count' => count($cart_products),
@@ -129,7 +129,7 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
  */
 function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_id): void
 {
-    if (fn_novoton_is_debug()) {
+    if (fn_novoton_holidays_is_debug()) {
         \Tygh\Tygh::$app['view']->assign('novoton_checkout_debug', true);
         \Tygh\Tygh::$app['view']->assign('novoton_debug_cart_products', $cart['products'] ?? []);
     }
@@ -142,8 +142,8 @@ function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_i
 function fn_novoton_holidays_dispatch_before_display(): void
 {
     // Register Smarty modifiers for ALL dispatches
-    if (function_exists('fn_novoton_register_smarty_modifiers')) {
-        fn_novoton_register_smarty_modifiers();
+    if (function_exists('fn_novoton_holidays_register_smarty_modifiers')) {
+        fn_novoton_holidays_register_smarty_modifiers();
     }
 
     $dispatch = $_REQUEST['dispatch'] ?? '';
@@ -203,9 +203,9 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['novoton_booking_id'] = $booking['booking_id'];
     $product['extra']['hotel_id']           = $booking['hotel_id'];
     $product['extra']['room_id']            = $booking['room_id'];
-    $product['extra']['room_name']          = fn_novoton_format_room_type($booking['room_id'], $booking['room_type'] ?? '');
+    $product['extra']['room_name']          = fn_novoton_holidays_format_room_type($booking['room_id'], $booking['room_type'] ?? '');
     $product['extra']['board_id']           = $booking['board_id'];
-    $product['extra']['board_name']         = fn_novoton_format_board_name($booking['board_id']);
+    $product['extra']['board_name']         = fn_novoton_holidays_format_board_name($booking['board_id']);
     $product['extra']['check_in']           = $booking['check_in'];
     $product['extra']['check_out']          = $booking['check_out'];
     $product['extra']['nights']             = $booking['nights'];
@@ -217,7 +217,7 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['guests_data']        = GuestDataNormalizer::toJson($booking['guests_data'] ?? '');
     $product['extra']['total_price']        = $booking['total_price'];
     $product['extra']['package_name']       = $booking['package_name'] ?? '';
-    $product['extra']['num_rooms']          = intval($booking['num_rooms'] ?? 1);
+    $product['extra']['num_rooms']          = (int)($booking['num_rooms'] ?? 1);
 
     if (!empty($booking['rooms_data'])) {
         $rooms = json_decode($booking['rooms_data'], true);
@@ -238,7 +238,7 @@ function _nvt_inject_booking_into_cart_product(
  * Populates product_options_value[] with formatted booking details
  * for display in cart, checkout, and order pages.
  */
-function fn_novoton_add_booking_display_data(&$product, $cart = null): void
+function fn_novoton_holidays_add_booking_display_data(&$product, $cart = null): void
 {
     $date_format = Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
 
@@ -248,15 +248,15 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null): void
     $check_in_fmt  = ($check_in_ts  !== false) ? fn_date_format($check_in_ts, $date_format)  : '';
     $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
 
-    $num_rooms  = intval($product['extra']['num_rooms'] ?? 1);
+    $num_rooms  = (int)($product['extra']['num_rooms'] ?? 1);
     $rooms_data = $product['extra']['rooms_data'] ?? [];
     if (is_string($rooms_data)) {
         $rooms_data = json_decode($rooms_data, true) ?: [];
     }
 
     // Build guests string
-    $adults   = intval($product['extra']['adults']   ?? 2);
-    $children = intval($product['extra']['children'] ?? 0);
+    $adults   = (int)($product['extra']['adults']   ?? 2);
+    $children = (int)($product['extra']['children'] ?? 0);
 
     $guests_str = '';
     if ($num_rooms > 1) {
@@ -282,12 +282,12 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null): void
 
     // Board + room name
     $board_id   = $product['extra']['board_id'] ?? '';
-    $board_name = fn_novoton_format_board_name($board_id);
+    $board_name = fn_novoton_holidays_format_board_name($board_id);
     $product['extra']['board_name'] = $board_name;
 
     $room_id   = $product['extra']['room_id']   ?? '';
     $room_type = $product['extra']['room_type'] ?? '';
-    $product['extra']['room_type_display'] = fn_novoton_format_room_type($room_id, $room_type);
+    $product['extra']['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
 
     // Build product_options_value for display
     $product['product_options_value'] = [];
@@ -330,7 +330,7 @@ function fn_novoton_add_booking_display_data(&$product, $cart = null): void
     if ($num_rooms > 1 && !empty($rooms_data)) {
         foreach ($rooms_data as $idx => $room) {
             $room_num    = $idx + 1;
-            $room_guests = intval($room['adults'] ?? 2) . ' adults';
+            $room_guests = (int)($room['adults'] ?? 2) . ' adults';
             if (!empty($room['children']) && $room['children'] > 0) {
                 $room_guests .= ', ' . $room['children'] . ' children';
                 if (!empty($room['childrenAges'])) {
@@ -407,7 +407,7 @@ function _nvt_build_board_display(string $board_name, int $num_rooms, array $roo
     $first = null;
 
     foreach ($rooms_data as $room) {
-        $board = $room['board_name'] ?? fn_novoton_format_board_name($room['board_id'] ?? '');
+        $board = $room['board_name'] ?? fn_novoton_holidays_format_board_name($room['board_id'] ?? '');
         if (!empty($board)) {
             if ($first === null) {
                 $first = $board;

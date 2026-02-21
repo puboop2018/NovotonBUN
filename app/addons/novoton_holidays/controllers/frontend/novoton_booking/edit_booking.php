@@ -8,7 +8,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
     
-    $booking_id = intval($_REQUEST['booking_id'] ?? 0);
+    $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
     
     if (empty($booking_id)) {
@@ -18,7 +18,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // Get booking record — verify ownership (user_id or session_id)
     $auth = Tygh::$app['session']['auth'] ?? [];
-    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
     $current_session_id = Tygh::$app['session']->getID();
 
     $booking_record = db_get_row(
@@ -130,14 +130,14 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         $booking['rooms_data'] = [
             [
                 'room_id' => $booking_record['room_id'],
-                'room_name' => fn_novoton_format_room_type($booking_record['room_id']),
-                'room_type_display' => fn_novoton_format_room_type($booking_record['room_id']),
+                'room_name' => fn_novoton_holidays_format_room_type($booking_record['room_id']),
+                'room_type_display' => fn_novoton_holidays_format_room_type($booking_record['room_id']),
                 'board_id' => $booking_record['board_id'],
-                'board_name' => fn_novoton_format_board_name($booking_record['board_id']),
-                'adults' => intval($booking_record['adults']),
-                'children' => intval($booking_record['children']),
+                'board_name' => fn_novoton_holidays_format_board_name($booking_record['board_id']),
+                'adults' => (int)($booking_record['adults']),
+                'children' => (int)($booking_record['children']),
                 'childrenAges' => $children_ages_arr,
-                'price' => floatval($booking_record['total_price'])
+                'price' => (float)($booking_record['total_price'])
             ]
         ];
     }
@@ -165,7 +165,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     // Get hotel stars
     $hotel_stars = '';
     if (!empty($hotel_info['star_rating'])) {
-        $hotel_stars = str_repeat('★', intval($hotel_info['star_rating']));
+        $hotel_stars = str_repeat('★', (int)($hotel_info['star_rating']));
     }
     
     // V3: Get all packages from novoton_hotel_packages table

@@ -97,13 +97,13 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         'board_id' => $bookingData['board_id'] ?? 'BB',
         'check_in' => $bookingData['check_in'],
         'check_out' => $bookingData['check_out'],
-        'nights' => intval($bookingData['nights'] ?? 7),
-        'adults' => intval($bookingData['adults'] ?? 2),
-        'children' => intval($bookingData['children'] ?? 0),
-        'total_price' => floatval($bookingData['total_price'] ?? $bookingData['price'] ?? 0),
+        'nights' => (int)($bookingData['nights'] ?? 7),
+        'adults' => (int)($bookingData['adults'] ?? 2),
+        'children' => (int)($bookingData['children'] ?? 0),
+        'total_price' => (float)($bookingData['total_price'] ?? $bookingData['price'] ?? 0),
         'children_ages' => $bookingData['children_ages'] ?? '',
         'package_name' => $bookingData['package_name'] ?? '',
-        'num_rooms' => intval($bookingData['num_rooms'] ?? 1),
+        'num_rooms' => (int)($bookingData['num_rooms'] ?? 1),
         'rooms_data' => []
     ];
     
@@ -133,10 +133,10 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
         }
         
         // Z3: Format board name consistently
-        $formatted_board_name = fn_novoton_format_board_name($booking['board_id']);
+        $formatted_board_name = fn_novoton_holidays_format_board_name($booking['board_id']);
         if ($formatted_board_name === $booking['board_id'] && !empty($bookingData['board_name'])) {
             // If format function didn't change it, try the passed board_name
-            $formatted_board_name = fn_novoton_format_board_name($bookingData['board_name']);
+            $formatted_board_name = fn_novoton_holidays_format_board_name($bookingData['board_name']);
         }
         
         $booking['rooms_data'] = [
@@ -182,7 +182,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     // Get hotel stars
     $hotel_stars = '';
     if (!empty($hotel_info['star_rating'])) {
-        $hotel_stars = str_repeat('★', intval($hotel_info['star_rating']));
+        $hotel_stars = str_repeat('★', (int)($hotel_info['star_rating']));
     } elseif (!empty($hotel_info['hotel_name'])) {
         // Try to extract stars from hotel name (e.g. "Hotel Name ****")
         if (preg_match('/(\*+)/', $hotel_info['hotel_name'], $matches)) {
@@ -218,8 +218,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                 $age_categories[] = [
                     'id' => $age['IdAge'] ?? '',
                     'is_child' => ($age['fAge'] ?? '0') === '1',
-                    'from_year' => floatval($age['FromYear'] ?? 0),
-                    'to_year' => floatval($age['ToYear'] ?? 99)
+                    'from_year' => (float)($age['FromYear'] ?? 0),
+                    'to_year' => (float)($age['ToYear'] ?? 99)
                 ];
             }
         }
@@ -234,7 +234,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     
     // If not in DB, fetch from API
     if ((empty($age_categories) || empty($room_limits)) && !empty($booking['hotel_id'])) {
-        $api = fn_novoton_get_api();
+        $api = fn_novoton_holidays_get_api();
         if ($api) {
             $hotelInfoResponse = $api->getHotelInfo($booking['hotel_id']);
             if ($hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
@@ -247,8 +247,8 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                         $age_data = [
                             'id' => (string)($age->IdAge ?? ''),
                             'is_child' => ((string)($age->fAge ?? '0')) === '1',
-                            'from_year' => floatval((string)($age->FromYear ?? 0)),
-                            'to_year' => floatval((string)($age->ToYear ?? 99))
+                            'from_year' => (float)((string)($age->FromYear ?? 0)),
+                            'to_year' => (float)((string)($age->ToYear ?? 99))
                         ];
                         $age_categories[] = $age_data;
                     }
@@ -262,11 +262,11 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                         $room_limits[$room_id] = [
                             'id' => $room_id,
                             'type' => (string)($room->Type ?? ''),
-                            'rb' => intval((string)($room->RB ?? 2)),
-                            'eb' => intval((string)($room->EB ?? 0)),
-                            'max_adults' => intval((string)($room->maxADT ?? 4)),
-                            'max_children' => intval((string)($room->maxCHD ?? 2)),
-                            'min_pax' => intval((string)($room->minPAX ?? 1))
+                            'rb' => (int)((string)($room->RB ?? 2)),
+                            'eb' => (int)((string)($room->EB ?? 0)),
+                            'max_adults' => (int)((string)($room->maxADT ?? 4)),
+                            'max_children' => (int)((string)($room->maxCHD ?? 2)),
+                            'min_pax' => (int)((string)($room->minPAX ?? 1))
                         ];
                     }
                 }

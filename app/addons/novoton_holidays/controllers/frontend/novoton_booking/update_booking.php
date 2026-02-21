@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
     $security = _nvt_get_security_service();
     $bookingData = $_REQUEST;
-    $booking_id = intval($bookingData['booking_id'] ?? 0);
+    $booking_id = (int)($bookingData['booking_id'] ?? 0);
     $cart_id = $bookingData['cart_id'] ?? '';
 
     if (empty($booking_id)) {
@@ -20,7 +20,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
     // Verify booking ownership before allowing update
     $auth = Tygh::$app['session']['auth'] ?? [];
-    $current_user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+    $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
     $current_session_id = Tygh::$app['session']->getID();
 
     $ownership_check = db_get_field(

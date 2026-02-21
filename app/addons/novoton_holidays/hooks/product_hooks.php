@@ -56,7 +56,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
     // Prices from packages table
-    $prices = fn_novoton_get_hotel_prices($product['product_id'], false, $hotel_id);
+    $prices = fn_novoton_holidays_get_hotel_prices($product['product_id'], false, $hotel_id);
     $product['novoton_prices'] = $prices;
 
     // Last sync timestamp
@@ -121,7 +121,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
 
     if (!empty($hotel_id)) {
         $product_data['hotel_id']       = $hotel_id;
-        $product_data['hotel_packages'] = fn_novoton_get_hotel_prices($product_id, false, $hotel_id);
+        $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_id, false, $hotel_id);
     }
 
     $product_data['is_hotel_product'] = true;
@@ -199,7 +199,7 @@ function _nvt_extract_hotel_id(string $product_code): ?string
  */
 function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): void
 {
-    $hotel_info = fn_novoton_get_hotel_data($hotel_id);
+    $hotel_info = fn_novoton_holidays_get_hotel_data($hotel_id);
 
     if (empty($hotel_info)) {
         return;
@@ -362,7 +362,7 @@ function _nvt_parse_early_booking(array $priceinfo): array
  * Age bands are extracted dynamically from actual price entries — not
  * hardcoded — because different hotels define different age ranges.
  *
- * @param array $prices Price rows from fn_novoton_get_hotel_prices()
+ * @param array $prices Price rows from fn_novoton_holidays_get_hotel_prices()
  * @return array<string, array{has_adult_eb: bool, child_bands: array}>
  */
 function _nvt_build_room_age_bands(array $prices): array
@@ -421,7 +421,7 @@ function _nvt_build_room_age_bands(array $prices): array
     // Sort child bands by from_year ascending
     foreach ($room_age_bands as &$rb) {
         usort($rb['child_bands'], function ($a, $b) {
-            return floatval($a['from']) <=> floatval($b['from']);
+            return (float)($a['from']) <=> (float)($b['from']);
         });
     }
     unset($rb);

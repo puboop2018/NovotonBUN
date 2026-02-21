@@ -35,14 +35,14 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             $nights = 7;
         }
     } else {
-        $nights = !empty($searchParams['nights']) ? intval($searchParams['nights']) : 7;
+        $nights = !empty($searchParams['nights']) ? (int)($searchParams['nights']) : 7;
     }
     
-    $adults = !empty($searchParams['adults']) ? intval($searchParams['adults']) : 2;
-    $num_rooms = !empty($searchParams['rooms']) ? intval($searchParams['rooms']) : 1;
+    $adults = !empty($searchParams['adults']) ? (int)($searchParams['adults']) : 2;
+    $num_rooms = !empty($searchParams['rooms']) ? (int)($searchParams['rooms']) : 1;
     
     // Flexible dates parameter (from homepage)
-    $flex_days = !empty($searchParams['flex_days']) ? intval($searchParams['flex_days']) : 0;
+    $flex_days = !empty($searchParams['flex_days']) ? (int)($searchParams['flex_days']) : 0;
     
     // Parse multi-room data if available
     // React form sends 'rooms_data' JSON with childrenAges inside each room
@@ -71,19 +71,19 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
                 foreach ($room['childrenAges'] as $age) {
                     if ($age !== null && $age !== '' && $age !== 'null' && is_numeric($age)) {
-                        $clean_ages[] = intval($age);
+                        $clean_ages[] = (int)($age);
                     }
                 }
             }
-            $rooms_data[$idx]['adults'] = intval($room['adults'] ?? 2);
-            $rooms_data[$idx]['children'] = !empty($clean_ages) ? count($clean_ages) : intval($room['children'] ?? 0);
+            $rooms_data[$idx]['adults'] = (int)($room['adults'] ?? 2);
+            $rooms_data[$idx]['children'] = !empty($clean_ages) ? count($clean_ages) : (int)($room['children'] ?? 0);
             $rooms_data[$idx]['childrenAges'] = $clean_ages;
         }
     }
     
     // If no rooms_data provided, create from individual parameters (legacy/direct URL)
     if (empty($rooms_data)) {
-        $children_count = !empty($searchParams['children']) ? intval($searchParams['children']) : 0;
+        $children_count = !empty($searchParams['children']) ? (int)($searchParams['children']) : 0;
         $children_ages = [];
         
         // Parse children_ages parameter (format: "5,8" or "5,8,10")
@@ -92,7 +92,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             foreach ($ages_arr as $age) {
                 $age = trim($age);
                 if ($age !== '' && is_numeric($age)) {
-                    $children_ages[] = intval($age);
+                    $children_ages[] = (int)($age);
                 }
             }
         }
@@ -115,7 +115,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
         foreach ($ages_arr as $age) {
             $age = trim($age);
             if ($age !== '' && is_numeric($age)) {
-                $url_children_ages[] = intval($age);
+                $url_children_ages[] = (int)($age);
             }
         }
         
@@ -136,13 +136,13 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $all_children_ages = [];
     
     foreach ($rooms_data as $room) {
-        $total_adults += intval($room['adults'] ?? 2);
-        $room_children = intval($room['children'] ?? 0);
+        $total_adults += (int)($room['adults'] ?? 2);
+        $room_children = (int)($room['children'] ?? 0);
         $total_children += $room_children;
         if (!empty($room['childrenAges'])) {
             foreach ($room['childrenAges'] as $age) {
                 if ($age !== null && $age !== 'age_needed') {
-                    $all_children_ages[] = intval($age);
+                    $all_children_ages[] = (int)($age);
                 }
             }
         }
@@ -210,13 +210,13 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $children = $all_children_ages;
     
     // Legacy: Process children ages from direct parameters if rooms_data was empty
-    if (empty($children) && !empty($searchParams['children']) && intval($searchParams['children']) > 0) {
-        $childrenCount = intval($searchParams['children']);
+    if (empty($children) && !empty($searchParams['children']) && (int)($searchParams['children']) > 0) {
+        $childrenCount = (int)($searchParams['children']);
         for ($i = 1; $i <= $childrenCount; $i++) {
             if (isset($searchParams['child_age_' . $i])) {
                 $age = $searchParams['child_age_' . $i];
                 if ($age !== '' && $age !== 'age_needed') {
-                    $children[] = intval($age);
+                    $children[] = (int)($age);
                 }
             }
         }
@@ -262,7 +262,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     // If hotel_id is provided (product page), search for specific hotel
     if (!empty($searchParams['hotel_id'])) {
         $hotelId = $searchParams['hotel_id'];
-        $productId = !empty($searchParams['product_id']) ? intval($searchParams['product_id']) : 0;
+        $productId = !empty($searchParams['product_id']) ? (int)($searchParams['product_id']) : 0;
         
         // If no product_id provided, look it up from hotel_id
         if (empty($productId)) {
@@ -289,7 +289,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             $debug_log[] = "";
 
             // Check API circuit breaker status
-            $api = fn_novoton_get_api();
+            $api = fn_novoton_holidays_get_api();
             if (method_exists($api, 'getCircuitStatus')) {
                 $circuitStatus = $api->getCircuitStatus();
                 $debug_log[] = "=== API CIRCUIT BREAKER STATUS ===";
@@ -438,32 +438,25 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             }
             
             // ========================================
-            // FETCH ROOM TYPES FROM HOTELINFO API
+            // BUILD ROOM TYPE MAP FROM CACHED HOTELINFO
             // ========================================
             // hotelinfo returns <rooms> with <IdRoom> and <Type> for each room
             // We build a map: IdRoom => Type (e.g., "1-BR APP 2+2" => "APP")
-            // Used to display proper room names: "Apartament (1-BR APP 2+2)" instead of raw codes
+            // Reuse $hotelInfo already fetched above (no duplicate API call)
             $roomTypeMap = [];
-            try {
-                $hotelInfoData = fn_novoton_get_api()->getHotelInfo($hotelId);
-                if ($hotelInfoData && isset($hotelInfoData->rooms)) {
-                    foreach ($hotelInfoData->rooms as $roomNode) {
-                        $riId = trim((string)($roomNode->IdRoom ?? ''));
-                        $riType = trim((string)($roomNode->Type ?? ''));
-                        if (!empty($riId) && !empty($riType)) {
-                            $roomTypeMap[$riId] = $riType;
-                        }
+            if ($hotelInfo && isset($hotelInfo->rooms)) {
+                foreach ($rooms as $roomNode) {
+                    $riId = trim((string)($roomNode->IdRoom ?? ''));
+                    $riType = trim((string)($roomNode->Type ?? ''));
+                    if (!empty($riId) && !empty($riType)) {
+                        $roomTypeMap[$riId] = $riType;
                     }
                 }
                 if ($debug_mode) {
-                    $debug_log[] = "=== ROOM TYPE MAP (hotelinfo API) ===";
+                    $debug_log[] = "=== ROOM TYPE MAP (from cached hotelinfo) ===";
                     foreach ($roomTypeMap as $rtId => $rtType) {
                         $debug_log[] = "  {$rtId}: {$rtType}";
                     }
-                }
-            } catch (Exception $e) {
-                if ($debug_mode) {
-                    $debug_log[] = "=== HOTELINFO FETCH ERROR: " . $e->getMessage() . " ===";
                 }
             }
 
@@ -483,14 +476,14 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 
                 foreach ($rooms_data as $room_idx => $room_occupancy) {
                     $room_num = $room_idx + 1;
-                    $room_adults = intval($room_occupancy['adults'] ?? 2);
-                    $room_children_count = intval($room_occupancy['children'] ?? 0);
+                    $room_adults = (int)($room_occupancy['adults'] ?? 2);
+                    $room_children_count = (int)($room_occupancy['children'] ?? 0);
                     $room_children_ages = [];
                     
                     if (!empty($room_occupancy['childrenAges'])) {
                         foreach ($room_occupancy['childrenAges'] as $age) {
                             if ($age !== null && $age !== '' && $age !== 'age_needed') {
-                                $room_children_ages[] = intval($age);
+                                $room_children_ages[] = (int)($age);
                             }
                         }
                     }
@@ -514,7 +507,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                     }
                     
                     // Get prices from room_price API for this room
-                    $api = fn_novoton_get_api();
+                    $api = fn_novoton_holidays_get_api();
                     $priceData = $api->getRoomPrice($priceParams);
 
                     $room_results = [];
@@ -616,8 +609,8 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 $max_children = 0;
                 foreach ($results as $result) {
                     if (preg_match('/(\d+)\+(\d+)/', $result['room_id'], $matches)) {
-                        $room_adults = intval($matches[1]);
-                        $room_children = intval($matches[2]);
+                        $room_adults = (int)($matches[1]);
+                        $room_children = (int)($matches[2]);
                         if ($room_adults > $max_adults) {
                             $max_adults = $room_adults;
                         }
@@ -665,11 +658,11 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 }
                 
                 // Get prices from room_price API
-                $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
+                $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
             
             // Show raw request/response in debug
             if ($debug_mode) {
-                $api = fn_novoton_get_api();
+                $api = fn_novoton_holidays_get_api();
                 $lastReq = $api->getLastRequestFormatted();
                 $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
                 $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
@@ -702,7 +695,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             
             // Parse the response via SearchService
             if ($priceData) {
-                $rawXml = fn_novoton_get_api()->getLastResponse();
+                $rawXml = fn_novoton_holidays_get_api()->getLastResponse();
 
                 if ($debug_mode) {
                     $debug_log[] = "";
@@ -712,7 +705,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                 // Fetch room quota for all rooms at once
                 $quotaMap = [];
                 try {
-                    $quotaMap = fn_novoton_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+                    $quotaMap = fn_novoton_holidays_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
                     if ($debug_mode) {
                         $debug_log[] = "=== ROOM QUOTA (hotel_quota API) ===";
                         foreach ($quotaMap as $qRoom => $qValue) {
@@ -812,22 +805,22 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
                                 'children' => $children
                             ];
 
-                            $priceData = fn_novoton_get_api()->getRoomPrice($priceParams);
+                            $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
                             
                             if ($priceData && isset($priceData->Price)) {
-                                $rawPrice = floatval((string)$priceData->Price);
+                                $rawPrice = (float)((string)$priceData->Price);
                                 if ($rawPrice > 0) {
                                     // Found availability on alternative date!
                                     $alternative_check_in = $alt_check_in;
                                     $alternative_check_out = $alt_check_out;
                                     
-                                    $altPrice = fn_novoton_get_api()->applyCommission($rawPrice);
+                                    $altPrice = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
                                     $alternative_results[] = [
                                         'room' => $room,
                                         'room_id' => $roomId,
                                         'room_name' => $roomName ?: str_replace(['%2b', '%2B'], '+', $roomId),
                                         'board_id' => $tryBoard,
-                                        'board_name' => fn_novoton_format_board_name($tryBoard),
+                                        'board_name' => fn_novoton_holidays_format_board_name($tryBoard),
                                         'price_data' => $priceData,
                                         'nights' => $nights,
                                         'total_price' => $altPrice,
@@ -1039,16 +1032,16 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
     $check_in_for_terms = $searchParams['check_in'] ?? '';
     
     // Load func.php if not loaded
-    if (!function_exists('fn_novoton_parse_payment_terms')) {
+    if (!function_exists('fn_novoton_holidays_parse_payment_terms')) {
         require_once(Registry::get('config.dir.addons') . 'novoton_holidays/func.php');
     }
     
-    $terms_payment_parsed = fn_novoton_parse_payment_terms($terms_payment_raw);
-    $terms_cancellation_parsed = fn_novoton_parse_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
+    $terms_payment_parsed = fn_novoton_holidays_parse_payment_terms($terms_payment_raw);
+    $terms_cancellation_parsed = fn_novoton_holidays_parse_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
     // Format for display
-    $terms_payment = fn_novoton_format_payment_terms($terms_payment_raw);
-    $terms_cancellation = fn_novoton_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
+    $terms_payment = fn_novoton_holidays_format_payment_terms($terms_payment_raw);
+    $terms_cancellation = fn_novoton_holidays_format_cancellation_terms($terms_cancellation_raw, $check_in_for_terms);
     
     // V3: Get early booking details via HotelPackageRepository for tooltip
     if (!empty($hotelId)) {

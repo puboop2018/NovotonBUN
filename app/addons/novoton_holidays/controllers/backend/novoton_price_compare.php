@@ -35,8 +35,8 @@ if ($mode == 'compare') {
     $room_id = $_REQUEST['room_id'] ?? '';
     $board_id = $_REQUEST['board_id'] ?? '';
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $nights = intval($_REQUEST['nights'] ?? 7);
-    $adults = intval($_REQUEST['adults'] ?? 2);
+    $nights = (int)($_REQUEST['nights'] ?? 7);
+    $adults = (int)($_REQUEST['adults'] ?? 2);
     $children_ages = $_REQUEST['children_ages'] ?? '';
     $show_debug = ConfigProvider::isDebugLogging();
 
@@ -494,7 +494,7 @@ if ($mode == 'compare') {
         $numResults = min(count($prices), count($idRooms), count($boards));
 
         for ($i = 0; $i < $numResults; $i++) {
-            $resultPrice = floatval((string)$prices[$i]);
+            $resultPrice = (float)((string)$prices[$i]);
             $resultRoom = rawurldecode((string)$idRooms[$i]);
             $resultBoard = (string)$boards[$i];
 
@@ -513,7 +513,7 @@ if ($mode == 'compare') {
         }
 
         if (!$apiPriceFound && $numResults > 0) {
-            $apiPrice = floatval((string)$prices[0]);
+            $apiPrice = (float)((string)$prices[0]);
             $apiPriceFound = true;
         }
     }
@@ -597,7 +597,7 @@ if ($mode == 'verify') {
     $room_id = $_REQUEST['room_id'] ?? '';
     $board_id = $_REQUEST['board_id'] ?? '';
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $nights = intval($_REQUEST['nights'] ?? 7);
+    $nights = (int)($_REQUEST['nights'] ?? 7);
 
     echo '<!DOCTYPE html><html><head><title>Season-Price Verification</title>
     <style>

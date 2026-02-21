@@ -23,7 +23,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
  * @param string|int $date Date string or timestamp
  * @return string Formatted date
  */
-function fn_novoton_format_date($date): string
+function fn_novoton_holidays_format_date($date): string
 {
     if (empty($date)) {
         return '';
@@ -62,7 +62,7 @@ function fn_novoton_format_date($date): string
  * @param string $boardId Board code (AI, HB, FB, etc.)
  * @return string Formatted board name
  */
-function fn_novoton_format_board_name($boardId): string
+function fn_novoton_holidays_format_board_name($boardId): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardId);
 }
@@ -81,7 +81,7 @@ function fn_novoton_format_board_name($boardId): string
  * @param string $roomType Room type from hotelinfo API (e.g., "DBL", "APP", "SGL")
  * @return string Formatted room display name
  */
-function fn_novoton_format_room_type($roomId, $roomType = ''): string
+function fn_novoton_holidays_format_room_type($roomId, $roomType = ''): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
 }
@@ -95,7 +95,7 @@ function fn_novoton_format_room_type($roomId, $roomType = ''): string
  * @param string $roomCode Room code from API
  * @return string Normalized room code
  */
-function fn_novoton_normalize_room_code($roomCode): string
+function fn_novoton_holidays_normalize_room_code($roomCode): string
 {
     return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::normalizeRoomCode($roomCode);
 }
@@ -110,7 +110,7 @@ function fn_novoton_normalize_room_code($roomCode): string
  * @param string $name Resort or city name
  * @return string Normalized name for comparison
  */
-function fn_novoton_normalize_resort_name($name): string
+function fn_novoton_holidays_normalize_resort_name($name): string
 {
     $name = strtoupper(trim($name));
     $name = str_replace('&', 'AND', $name);
@@ -127,7 +127,7 @@ function fn_novoton_normalize_resort_name($name): string
  * @param string $xml_string Raw XML or CDATA string
  * @return \SimpleXMLElement|null Parsed XML or null on failure
  */
-function fn_novoton_parse_xml_string($xml_string): ?\SimpleXMLElement
+function fn_novoton_holidays_parse_xml_string($xml_string): ?\SimpleXMLElement
 {
     if (empty($xml_string)) {
         return null;
@@ -146,8 +146,11 @@ function fn_novoton_parse_xml_string($xml_string): ?\SimpleXMLElement
     $xml = simplexml_load_string($xml_string, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
 
     if ($xml === false) {
+        libxml_clear_errors();
         $xml = simplexml_load_string('<root>' . $xml_string . '</root>', 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     }
+
+    libxml_clear_errors();
 
     return $xml ?: null;
 }
@@ -164,7 +167,7 @@ function fn_novoton_parse_xml_string($xml_string): ?\SimpleXMLElement
  * @param string $xml_string XML terms string
  * @return array Parsed terms data
  */
-function fn_novoton_parse_payment_terms($xml_string): array
+function fn_novoton_holidays_parse_payment_terms($xml_string): array
 {
     if (empty($xml_string)) {
         return [];
@@ -173,7 +176,7 @@ function fn_novoton_parse_payment_terms($xml_string): array
     $terms = [];
 
     try {
-        $xml = fn_novoton_parse_xml_string($xml_string);
+        $xml = fn_novoton_holidays_parse_xml_string($xml_string);
         if ($xml === null) {
             return [];
         }
@@ -190,7 +193,7 @@ function fn_novoton_parse_payment_terms($xml_string): array
                     $terms[] = [
                         'percent' => $percent,
                         'date' => $tillDate,
-                        'date_formatted' => !empty($tillDate) ? fn_novoton_format_date($tillDate) : '',
+                        'date_formatted' => !empty($tillDate) ? fn_novoton_holidays_format_date($tillDate) : '',
                         'is_on_booking' => empty($tillDate),
                     ];
                 }
@@ -204,7 +207,7 @@ function fn_novoton_parse_payment_terms($xml_string): array
                 $term = [
                     'percent' => (int)round((float)($rule['PerCent'] ?? $rule['percent'] ?? (string)$rule ?? 0)),
                     'date' => $rawDate,
-                    'date_formatted' => !empty($rawDate) ? fn_novoton_format_date($rawDate) : '',
+                    'date_formatted' => !empty($rawDate) ? fn_novoton_holidays_format_date($rawDate) : '',
                     'is_on_booking' => false,
                 ];
 
@@ -234,7 +237,7 @@ function fn_novoton_parse_payment_terms($xml_string): array
  * @param string $check_in Check-in date for relative calculations
  * @return array Parsed cancellation terms
  */
-function fn_novoton_parse_cancellation_terms($xml_string, $check_in = ''): array
+function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = ''): array
 {
     if (empty($xml_string)) {
         return [];
@@ -243,7 +246,7 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = ''): array
     $terms = [];
 
     try {
-        $xml = fn_novoton_parse_xml_string($xml_string);
+        $xml = fn_novoton_holidays_parse_xml_string($xml_string);
         if ($xml === null) {
             return [];
         }
@@ -337,9 +340,9 @@ function fn_novoton_parse_cancellation_terms($xml_string, $check_in = ''): array
  * @param string $currency_code Currency code (default: EUR)
  * @return string Formatted payment terms with amounts
  */
-function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR'): string
+function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR'): string
 {
-    $terms = fn_novoton_parse_payment_terms($xml_string);
+    $terms = fn_novoton_holidays_parse_payment_terms($xml_string);
 
     if (empty($terms)) {
         return '';
@@ -367,7 +370,7 @@ function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price,
         $percent_display = number_format($percent, 0);
 
         if (!empty($date)) {
-            $formatted_date = fn_novoton_format_date($date);
+            $formatted_date = fn_novoton_holidays_format_date($date);
             // "[percent]% ([amount]) - due by [date]" / "[percent]% ([amount]) - până la [date]"
             $lines[] = __('novoton_holidays.payment_percent_amount_until', [
                 '[percent]' => $percent_display,
@@ -394,9 +397,9 @@ function fn_novoton_format_payment_terms_with_amounts($xml_string, $total_price,
  * @param string $xml_string Raw XML string
  * @return string Formatted HTML
  */
-function fn_novoton_format_payment_terms($xml_string): string
+function fn_novoton_holidays_format_payment_terms($xml_string): string
 {
-    $terms = fn_novoton_parse_payment_terms($xml_string);
+    $terms = fn_novoton_holidays_parse_payment_terms($xml_string);
 
     if (empty($terms)) {
         return '';
@@ -409,7 +412,7 @@ function fn_novoton_format_payment_terms($xml_string): string
         $date = $term['date'] ?? '';
 
         if (!empty($date)) {
-            $formatted_date = fn_novoton_format_date($date);
+            $formatted_date = fn_novoton_holidays_format_date($date);
             // "[percent]% until [date]" / "[percent]% până la [date]"
             $lines[] = __('novoton_holidays.payment_percent_until', [
                 '[percent]' => $percent,
@@ -433,9 +436,9 @@ function fn_novoton_format_payment_terms($xml_string): string
  * @param string $check_in Check-in date
  * @return string Formatted HTML
  */
-function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): string
+function fn_novoton_holidays_format_cancellation_terms($xml_string, $check_in = ''): string
 {
-    $terms = fn_novoton_parse_cancellation_terms($xml_string, $check_in);
+    $terms = fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in);
 
     if (empty($terms)) {
         return '';
@@ -454,7 +457,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): stri
             // Free cancellation tier
             if (!empty($tillDate)) {
                 // "Free cancellation before [date]" / "Anulare gratuită până la [date]"
-                $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => fn_novoton_format_date($tillDate)]);
+                $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => fn_novoton_holidays_format_date($tillDate)]);
             } else {
                 // "Free cancellation" / "Anulare gratuită"
                 $lines[] = __('novoton_holidays.cancel_free');
@@ -478,8 +481,8 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): stri
             }
 
             if (!empty($prev_till_date) && !empty($tillDate)) {
-                $from_str = fn_novoton_format_date(strtotime($prev_till_date . ' +1 day'));
-                $to_str = fn_novoton_format_date($tillDate);
+                $from_str = fn_novoton_holidays_format_date(strtotime($prev_till_date . ' +1 day'));
+                $to_str = fn_novoton_holidays_format_date($tillDate);
                 // "Between [from] - [to]: [penalty]" / "Între [from] - [to]: [penalty]"
                 $lines[] = __('novoton_holidays.cancel_between_dates', [
                     '[from]' => $from_str,
@@ -489,7 +492,7 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): stri
             } elseif (!empty($tillDate)) {
                 // "Until [date]: [penalty]" / "Până la [date]: [penalty]"
                 $lines[] = __('novoton_holidays.cancel_until_date', [
-                    '[date]' => fn_novoton_format_date($tillDate),
+                    '[date]' => fn_novoton_holidays_format_date($tillDate),
                     '[penalty]' => $penalty_str
                 ]);
             } else {
@@ -509,9 +512,9 @@ function fn_novoton_format_cancellation_terms($xml_string, $check_in = ''): stri
  * @param string $xml_string Raw XML string
  * @return string|null Date string or null
  */
-function fn_novoton_get_free_cancellation_date($xml_string): ?string
+function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
 {
-    $terms = fn_novoton_parse_cancellation_terms($xml_string);
+    $terms = fn_novoton_holidays_parse_cancellation_terms($xml_string);
     
     if (empty($terms)) {
         return null;
@@ -539,7 +542,7 @@ function fn_novoton_get_free_cancellation_date($xml_string): ?string
  * @param int|string $year Year
  * @return string Formatted title
  */
-function fn_novoton_build_hotel_title($hotel_name, $city, $country, $year): string
+function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $year): string
 {
     // Clean and Title Case the hotel name
     $hotel_name = trim($hotel_name);
@@ -577,20 +580,22 @@ function fn_novoton_build_hotel_title($hotel_name, $city, $country, $year): stri
  * @param \SimpleXMLElement|string $xml XML object or string
  * @return array Converted array
  */
-function fn_novoton_xml_to_array($xml): array
+function fn_novoton_holidays_xml_to_array($xml): array
 {
     if (is_string($xml)) {
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
         if ($xml === false) {
+            libxml_clear_errors();
             return [];
         }
+        libxml_clear_errors();
     }
     
     $result = [];
     
     foreach ($xml->children() as $key => $value) {
-        $arr = fn_novoton_xml_to_array($value);
+        $arr = fn_novoton_holidays_xml_to_array($value);
         
         if (isset($result[$key])) {
             if (!is_array($result[$key]) || !isset($result[$key][0])) {

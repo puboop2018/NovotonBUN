@@ -27,8 +27,8 @@ if (file_exists($config_file)) {
     require_once $config_file;
 }
 
-// Register PSR-4 autoloader for ALL addon namespaces:
-// Services, Helpers, Repository, Cron, Cron\Commands, ValueObjects, Exceptions, root
+// Register PSR-4 autoloader for ALL addon namespaces.
+// All classes live under src/ — single PSR-4 root.
 spl_autoload_register(function ($class) {
     $prefix = 'Tygh\\Addons\\NovotonHolidays\\';
     if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
@@ -36,24 +36,17 @@ spl_autoload_register(function ($class) {
     }
 
     $relative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+    $file = __DIR__ . '/src/' . $relative;
 
-    // Non-standard directory mappings (namespace dir doesn't match filesystem)
-    $overrides = [
-        'Exceptions/' => __DIR__ . '/src/Exceptions/',   // nested inside src/
-    ];
-
-    foreach ($overrides as $nsPrefix => $dir) {
-        if (strncmp($nsPrefix, $relative, strlen($nsPrefix)) === 0) {
-            $file = $dir . substr($relative, strlen($nsPrefix));
-            if (file_exists($file)) { require $file; return; }
-        }
+    if (file_exists($file)) {
+        require $file;
+        return;
     }
 
-    // Standard PSR-4: addon root (Helpers, Repository, Cron, ValueObjects, etc.)
-    // Also check src/ for root-namespace classes (NovotonApi, HotelSync, etc.)
-    foreach ([__DIR__ . '/', __DIR__ . '/src/'] as $dir) {
-        $file = $dir . $relative;
-        if (file_exists($file)) { require $file; return; }
+    // Fallback: addon root for Constants.php (lives next to addon.xml)
+    $file = __DIR__ . '/' . $relative;
+    if (file_exists($file)) {
+        require $file;
     }
 });
 
@@ -70,7 +63,7 @@ if (file_exists($hooks_file)) {
  *
  * Delegates to RoomType value object (single source of truth).
  */
-function fn_novoton_smarty_format_room_type($room_id)
+function fn_novoton_holidays_smarty_format_room_type($room_id)
 {
     if (empty($room_id)) {
         return '';
@@ -90,7 +83,7 @@ function fn_novoton_smarty_format_room_type($room_id)
  *
  * Delegates to BoardType value object (single source of truth).
  */
-function fn_novoton_smarty_format_board($board_id)
+function fn_novoton_holidays_smarty_format_board($board_id)
 {
     if (empty($board_id)) {
         return '';
@@ -103,7 +96,7 @@ function fn_novoton_smarty_format_board($board_id)
  * Register Smarty modifiers
  * Called at the right time when Smarty is ready
  */
-function fn_novoton_register_smarty_modifiers()
+function fn_novoton_holidays_register_smarty_modifiers()
 {
     static $registered = false;
     
@@ -118,10 +111,10 @@ function fn_novoton_register_smarty_modifiers()
                 // Check if already registered to avoid errors
                 $plugins = $smarty->registered_plugins ?? [];
                 if (!isset($plugins['modifier']['novoton_format_room_type'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_smarty_format_room_type');
+                    $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_holidays_smarty_format_room_type');
                 }
                 if (!isset($plugins['modifier']['novoton_format_board'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_smarty_format_board');
+                    $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_holidays_smarty_format_board');
                 }
                 $registered = true;
             }
@@ -138,7 +131,7 @@ function fn_novoton_register_smarty_modifiers()
 }
 
 // Try to register immediately if possible
-fn_novoton_register_smarty_modifiers();
+fn_novoton_holidays_register_smarty_modifiers();
 
 // Register addon hooks
 fn_register_hooks(

@@ -37,7 +37,7 @@ if ($mode == 'update_prices') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $product_id = intval($_REQUEST['product_id'] ?? 0);
+    $product_id = (int)($_REQUEST['product_id'] ?? 0);
     
     if ($product_id > 0) {
         // Update single product
@@ -69,7 +69,7 @@ if ($mode == 'update_prices') {
         .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
     </style></head><body><div class="container"><h1>Updating Product Prices</h1><div class="log">';
     
-    $limit = intval($_REQUEST['limit'] ?? 50);
+    $limit = (int)($_REQUEST['limit'] ?? 50);
     
     // Get hotels with products
     $hotels = db_get_array(
@@ -364,7 +364,7 @@ if ($mode == 'check_prices_hotel') {
     $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
     $check_in = $_REQUEST['check_in'] ?? $default_check_in;
     $check_out = $_REQUEST['check_out'] ?? $default_check_out;
-    $limit = intval($_REQUEST['limit'] ?? 0); // 0 = all hotels
+    $limit = (int)($_REQUEST['limit'] ?? 0); // 0 = all hotels
     $run = isset($_REQUEST['run']);
 
     echo '<!DOCTYPE html><html><head><title>Checking Hotel Prices (Per-Hotel)</title>
@@ -423,7 +423,7 @@ if ($mode == 'check_prices_hotel') {
     echo '<div class="log">';
 
     // Get all hotels for this country
-    $limit_sql = $limit > 0 ? "LIMIT " . intval($limit) : "";
+    $limit_sql = $limit > 0 ? "LIMIT " . (int)($limit) : "";
     $all_hotels = db_get_array(
         "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name {$limit_sql}",
         $country
@@ -484,7 +484,7 @@ if ($mode == 'check_prices_hotel') {
                     $has_prices = !empty($prices) && count($prices) > 0;
                     if ($has_prices) {
                         foreach ($prices as $p) {
-                            $pval = floatval((string)$p);
+                            $pval = (float)((string)$p);
                             if ($pval > 0 && ($min_price == 0 || $pval < $min_price)) {
                                 $min_price = $pval;
                             }
@@ -570,8 +570,8 @@ if ($mode == 'room_price') {
                 'hotel_id' => $hotel_id,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults' => intval($_REQUEST['adults'] ?? 2),
-                'children' => intval($_REQUEST['children'] ?? 0)
+                'adults' => (int)($_REQUEST['adults'] ?? 2),
+                'children' => (int)($_REQUEST['children'] ?? 0)
             ];
             
             $result = $api->getRoomPrice($params);

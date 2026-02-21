@@ -36,7 +36,7 @@ declare(strict_types=1);
  *     fn_novoton_holidays_checkout_pre_dispatch()                          *
  *     fn_novoton_holidays_dispatch_before_display()                        *
  *     smarty_modifier_json_decode()                                        *
- *     fn_novoton_add_booking_display_data()                                *
+ *     fn_novoton_holidays_add_booking_display_data()                                *
  *                                                                          *
  *   AUTH (auth_hooks.php):                                                 *
  *     fn_novoton_holidays_user_login_post()                                *

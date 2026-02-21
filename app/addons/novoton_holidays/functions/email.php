@@ -24,7 +24,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
  * @param string $value Raw field value
  * @return string Safe, quoted CSV field
  */
-function fn_novoton_csv_escape(string $value): string
+function fn_novoton_holidays_csv_escape(string $value): string
 {
     // Neutralise formula injection characters
     if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value)) {
@@ -41,7 +41,7 @@ function fn_novoton_csv_escape(string $value): string
  * @param array $summary Summary statistics
  * @return string CSV content
  */
-function fn_novoton_generate_import_csv_report($results, $import_type = 'manual', $summary = []): string
+function fn_novoton_holidays_generate_import_csv_report($results, $import_type = 'manual', $summary = []): string
 {
     $csv_lines = [];
 
@@ -61,15 +61,15 @@ function fn_novoton_generate_import_csv_report($results, $import_type = 'manual'
     // Data rows
     foreach ($results as $row) {
         $csv_lines[] = implode(';', [
-            fn_novoton_csv_escape((string)($row['hotel_id'] ?? '')),
-            fn_novoton_csv_escape((string)($row['hotel_name'] ?? '')),
-            fn_novoton_csv_escape((string)($row['action'] ?? '')),
-            fn_novoton_csv_escape((string)($row['product_id'] ?? '')),
-            fn_novoton_csv_escape((string)($row['star_rating'] ?? '')),
-            fn_novoton_csv_escape((string)($row['description'] ?? '')),
-            fn_novoton_csv_escape((string)($row['facilities'] ?? '')),
-            fn_novoton_csv_escape((string)($row['error'] ?? '')),
-            fn_novoton_csv_escape((string)($row['timestamp'] ?? date('Y-m-d H:i:s')))
+            fn_novoton_holidays_csv_escape((string)($row['hotel_id'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['hotel_name'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['action'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['product_id'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['star_rating'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['description'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['facilities'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['error'] ?? '')),
+            fn_novoton_holidays_csv_escape((string)($row['timestamp'] ?? date('Y-m-d H:i:s')))
         ]);
     }
 
@@ -88,7 +88,7 @@ function fn_novoton_generate_import_csv_report($results, $import_type = 'manual'
  * @param array  $results     Optional detailed results for CSV attachment (empty = no attachment)
  * @return bool Success
  */
-function fn_novoton_send_import_report_email($results, $import_type, $summary, $country = ''): bool
+function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = ''): bool
 {
     // Get admin email from settings
     $admin_email = Registry::get('settings.Company.company_orders_email');
@@ -137,7 +137,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
     // Generate CSV attachment only if there are detailed results
     $attachments = [];
     if (!empty($results)) {
-        $csv_content = fn_novoton_generate_import_csv_report($results, $import_type, $summary);
+        $csv_content = fn_novoton_holidays_generate_import_csv_report($results, $import_type, $summary);
 
         $filename = 'novoton_' . $import_type . '_report_' . date('Y-m-d_H-i-s') . '.csv';
         $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
@@ -178,7 +178,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
     // Clean up old reports (once a day)
     $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
     if (is_dir($temp_path)) {
-        fn_novoton_cleanup_old_reports($temp_path, 7);
+        fn_novoton_holidays_cleanup_old_reports($temp_path, 7);
     }
 
     return $send_result;
@@ -190,7 +190,7 @@ function fn_novoton_send_import_report_email($results, $import_type, $summary, $
  * @param string $dir Directory path
  * @param int $days Keep files newer than this many days
  */
-function fn_novoton_cleanup_old_reports($dir, $days = 7): void
+function fn_novoton_holidays_cleanup_old_reports($dir, $days = 7): void
 {
     if (!is_dir($dir)) {
         return;
@@ -210,7 +210,7 @@ function fn_novoton_cleanup_old_reports($dir, $days = 7): void
  * 
  * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string]
  */
-function fn_novoton_generate_hotel_features_csv(): array
+function fn_novoton_holidays_generate_hotel_features_csv(): array
 {
     $result = [
         'success' => false,
@@ -251,16 +251,16 @@ function fn_novoton_generate_hotel_features_csv(): array
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
-            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 
-            // V3: Get boards via fn_novoton_get_hotel_data() (hotel_data is audit/cache only)
+            // V3: Get boards via fn_novoton_holidays_get_hotel_data() (hotel_data is audit/cache only)
             $board_names = [];
-            $hotel_full = fn_novoton_get_hotel_data($hotel['hotel_id']);
+            $hotel_full = fn_novoton_holidays_get_hotel_data($hotel['hotel_id']);
             if (!empty($hotel_full['boards'])) {
                 foreach ($hotel_full['boards'] as $b) {
                     $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string)$b;
                     if (!empty($code)) {
-                        $board_names[] = fn_novoton_format_board_name($code);
+                        $board_names[] = fn_novoton_holidays_format_board_name($code);
                     }
                 }
             }
@@ -269,19 +269,19 @@ function fn_novoton_generate_hotel_features_csv(): array
             // Romanian row
             $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';
             $csv_lines[] = implode(';', [
-                fn_novoton_csv_escape($product_code),
-                fn_novoton_csv_escape('ro'),
-                fn_novoton_csv_escape($star_ro),
-                fn_novoton_csv_escape($boards_str)
+                fn_novoton_holidays_csv_escape($product_code),
+                fn_novoton_holidays_csv_escape('ro'),
+                fn_novoton_holidays_csv_escape($star_ro),
+                fn_novoton_holidays_csv_escape($boards_str)
             ]);
 
             // English row
             $star_en = ($stars >= 1 && $stars <= 5) ? $star_labels['en'][$stars - 1] : '';
             $csv_lines[] = implode(';', [
-                fn_novoton_csv_escape($product_code),
-                fn_novoton_csv_escape('en'),
-                fn_novoton_csv_escape($star_en),
-                fn_novoton_csv_escape($boards_str)
+                fn_novoton_holidays_csv_escape($product_code),
+                fn_novoton_holidays_csv_escape('en'),
+                fn_novoton_holidays_csv_escape($star_en),
+                fn_novoton_holidays_csv_escape($boards_str)
             ]);
             
             $result['count']++;
@@ -325,7 +325,7 @@ function fn_novoton_generate_hotel_features_csv(): array
  *
  * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string, 'filename' => string]
  */
-function fn_novoton_generate_hotel_features_xml(): array
+function fn_novoton_holidays_generate_hotel_features_xml(): array
 {
     $result = [
         'success'   => false,
@@ -365,16 +365,16 @@ function fn_novoton_generate_hotel_features_xml(): array
                 ? $hotel['product_code']
                 : 'NVT-' . $hotel['hotel_id'];
 
-            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 
             // Boards via hotel data
             $board_names = [];
-            $hotel_full  = fn_novoton_get_hotel_data($hotel['hotel_id']);
+            $hotel_full  = fn_novoton_holidays_get_hotel_data($hotel['hotel_id']);
             if (!empty($hotel_full['boards'])) {
                 foreach ($hotel_full['boards'] as $b) {
                     $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string) $b;
                     if (!empty($code)) {
-                        $board_names[] = fn_novoton_format_board_name($code);
+                        $board_names[] = fn_novoton_holidays_format_board_name($code);
                     }
                 }
             }

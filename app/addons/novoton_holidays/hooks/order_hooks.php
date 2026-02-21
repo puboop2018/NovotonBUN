@@ -131,7 +131,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         $hotel_id    = $product['extra']['hotel_id']  ?? '';
         $check_in    = $product['extra']['check_in']  ?? '';
         $check_out   = $product['extra']['check_out'] ?? '';
-        $total_price = floatval($product['extra']['total_price'] ?? $product['price'] ?? 0);
+        $total_price = (float)($product['extra']['total_price'] ?? $product['price'] ?? 0);
 
         // [1] Hotel location
         if (!empty($hotel_id) && empty($product['extra']['city']) && isset($hotels_cache[$hotel_id])) {
@@ -157,7 +157,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [4] Board display name
         $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
         if (!empty($board_id)) {
-            $product['extra']['board_display'] = fn_novoton_format_board_name($board_id);
+            $product['extra']['board_display'] = fn_novoton_holidays_format_board_name($board_id);
         }
 
         // [5] Guests data formatting
@@ -198,7 +198,7 @@ function _nvt_enrich_order_product_terms(
 
     // Fallback: fetch from novoton_bookings DB record (terms are persisted at booking creation)
     if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
-        $booking_id = intval($product['extra']['novoton_booking_id'] ?? 0);
+        $booking_id = (int)($product['extra']['novoton_booking_id'] ?? 0);
         if ($booking_id > 0) {
             $repo = Container::getInstance()->bookingRepository();
             $terms = $repo->getTerms($booking_id);
@@ -213,19 +213,19 @@ function _nvt_enrich_order_product_terms(
 
     // Format payment terms
     if (!empty($payment_raw) && $total_price > 0) {
-        $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_format_payment_terms_with_amounts(
+        $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_holidays_format_payment_terms_with_amounts(
             $payment_raw, $total_price, $currency_code
         );
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_raw)) {
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_format_payment_terms($payment_raw);
+        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_text)) {
         $product['extra']['terms_of_payment_formatted'] = $payment_text;
     }
 
     // Format cancellation terms
     if (!empty($cancel_raw)) {
-        $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_format_cancellation_terms($cancel_raw, $check_in);
+        $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_holidays_format_cancellation_terms($cancel_raw, $check_in);
     } elseif (!empty($cancel_text)) {
         $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
     }
@@ -283,7 +283,7 @@ function _nvt_format_order_guests(array &$product): void
             'display_name' => $display_name,
             'name'         => $guest['name'] ?? $display_name,
             'type'         => $guest_type,
-            'age'          => intval($guest['age'] ?? 0),
+            'age'          => (int)($guest['age'] ?? 0),
             'is_holder'    => $is_holder,
             'birthday'     => $guest['birthday'] ?? '',
             'room'         => $guest['room'] ?? 1,

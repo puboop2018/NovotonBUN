@@ -51,7 +51,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 //   _nvt_booking_repo()      - Booking database access
 //=============================================================================
 
-$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/Services/ServiceLoader.php';
+$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/ServiceLoader.php';
 if (file_exists($service_loader)) {
     require_once $service_loader;
 }
@@ -104,8 +104,8 @@ function _nvt_get_xml_value($array, $i, $default = '', $cast = 'string') {
     $value = isset($array[$i]) ? $array[$i] : (isset($array[0]) ? $array[0] : null);
     if ($value === null) return $default;
     switch ($cast) {
-        case 'float': return floatval((string)$value);
-        case 'int': return intval((string)$value);
+        case 'float': return (float)((string)$value);
+        case 'int': return (int)((string)$value);
         default: return (string)$value;
     }
 }
@@ -187,7 +187,7 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
             $guest_names[] = $display_name;
 
             // Calculate age from DOB if available, otherwise use form value or 0
-            $guest_age = intval($guest['age'] ?? 0);
+            $guest_age = (int)($guest['age'] ?? 0);
             if (!empty($birthday)) {
                 try {
                     $dob_date = new DateTime($birthday);
@@ -207,14 +207,14 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
                 'age' => $guest_age,
                 'birthday' => $birthday,
                 'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',  // Display format DD/MM/YYYY
-                'room' => intval($guest['room'] ?? 1),
+                'room' => (int)($guest['room'] ?? 1),
                 'is_holder' => !empty($guest['is_holder']) ? 1 : 0
             ];
         } elseif (!empty($name)) {
             $guest_names[] = $name;
 
             // Calculate age from DOB if available, otherwise use form value or 0
-            $guest_age = intval($guest['age'] ?? 0);
+            $guest_age = (int)($guest['age'] ?? 0);
             if (!empty($birthday)) {
                 try {
                     $dob_date = new DateTime($birthday);
@@ -234,7 +234,7 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
                 'age' => $guest_age,
                 'birthday' => $birthday,
                 'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',  // Display format DD/MM/YYYY
-                'room' => intval($guest['room'] ?? 1),
+                'room' => (int)($guest['room'] ?? 1),
                 'is_holder' => !empty($guest['is_holder']) ? 1 : 0
             ];
         }
@@ -257,11 +257,11 @@ function _nvt_parse_dob($guest) {
     if (!empty($guest['dob'])) {
         $dob_value = trim($guest['dob']);
         if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob_value, $matches)) {
-            $dob_day = intval($matches[1]);
-            $dob_month = intval($matches[2]);
-            $dob_year = intval($matches[3]);
+            $dob_day = (int)($matches[1]);
+            $dob_month = (int)($matches[2]);
+            $dob_year = (int)($matches[3]);
 
-            $current_year = intval(date('Y'));
+            $current_year = (int)(date('Y'));
             if ($dob_day >= 1 && $dob_day <= 31 &&
                 $dob_month >= 1 && $dob_month <= 12 &&
                 $dob_year >= 1925 && $dob_year <= $current_year) {
@@ -271,15 +271,15 @@ function _nvt_parse_dob($guest) {
             }
         } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob_value)) {
             $parts = explode('-', $dob_value);
-            if (checkdate(intval($parts[1]), intval($parts[2]), intval($parts[0]))) {
+            if (checkdate((int)($parts[1]), (int)($parts[2]), (int)($parts[0]))) {
                 $birthday = $dob_value;
             }
         }
     } elseif (!empty($guest['dob_day']) && !empty($guest['dob_month']) && !empty($guest['dob_year'])) {
-        $dob_day = intval($guest['dob_day']);
-        $dob_month = intval($guest['dob_month']);
-        $dob_year = intval($guest['dob_year']);
-        $current_year = intval(date('Y'));
+        $dob_day = (int)($guest['dob_day']);
+        $dob_month = (int)($guest['dob_month']);
+        $dob_year = (int)($guest['dob_year']);
+        $current_year = (int)(date('Y'));
         if ($dob_day >= 1 && $dob_day <= 31 &&
             $dob_month >= 1 && $dob_month <= 12 &&
             $dob_year >= 1925 && $dob_year <= $current_year &&
@@ -290,7 +290,7 @@ function _nvt_parse_dob($guest) {
         $raw = trim($guest['birthday']);
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
             $parts = explode('-', $raw);
-            if (checkdate(intval($parts[1]), intval($parts[2]), intval($parts[0]))) {
+            if (checkdate((int)($parts[1]), (int)($parts[2]), (int)($parts[0]))) {
                 $birthday = $raw;
             }
         }
@@ -299,7 +299,7 @@ function _nvt_parse_dob($guest) {
     return $birthday;
 }
 
-// API is now lazy-loaded via fn_novoton_get_api() when needed
+// API is now lazy-loaded via fn_novoton_holidays_get_api() when needed
 
 /**
  * Get hotel info from API with caching
@@ -330,7 +330,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     }
 
     // Fetch from API
-    $api = fn_novoton_get_api();
+    $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return null;
     }

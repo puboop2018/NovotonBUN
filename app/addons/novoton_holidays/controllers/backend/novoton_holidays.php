@@ -160,7 +160,7 @@ if ($mode == 'manage' || empty($mode)) {
     $addon_settings = ConfigProvider::all();
 
     // Parse selected countries
-    $countries = fn_novoton_parse_countries();
+    $countries = fn_novoton_holidays_parse_countries();
     
     // Gather statistics
     $stats = [
@@ -267,7 +267,7 @@ if ($mode == 'hotels') {
     
     // Pagination
     $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page') ?: 30;
-    $page = intval($_REQUEST['page'] ?? 1);
+    $page = (int)($_REQUEST['page'] ?? 1);
     $offset = ($page - 1) * $items_per_page;
     
     // Get hotels
@@ -323,7 +323,7 @@ if ($mode == 'view_hotel') {
     }
     
     // Get facilities
-    $facilities = fn_novoton_get_hotel_facilities($hotel_id);
+    $facilities = fn_novoton_holidays_get_hotel_facilities($hotel_id);
     
     // Get bookings for this hotel
     $bookingRepo = Container::getInstance()->bookingRepository();
