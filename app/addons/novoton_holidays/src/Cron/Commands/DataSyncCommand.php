@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DataSyncCommand extends AbstractCronCommand
 {
@@ -34,32 +35,47 @@ class DataSyncCommand extends AbstractCronCommand
 
     private function syncResortList(): array
     {
-        $country = $this->getParam('country', 'BULGARIA');
-        $this->output("Syncing resort list from Novoton API (country: {$country})...");
-        $this->output("");
-
-        $result = fn_novoton_holidays_sync_resorts_list($country);
-
-        $added = 0;
-        $updated = 0;
-        $errors = 0;
-
-        if (is_array($result) && !empty($result['success'])) {
-            $added = $result['added'] ?? 0;
-            $updated = $result['updated'] ?? 0;
-            $this->output("Synced " . ($result['total'] ?? ($added + $updated)) . " resorts ({$added} added, {$updated} updated).");
-        } else {
-            $errors = 1;
-            $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
+        $countries = ConfigProvider::getSelectedCountries();
+        if (empty($countries)) {
+            $countries = ['BULGARIA'];
         }
 
-        $this->logToSyncTable('resort_list', $added + $updated, $errors);
+        $this->output("Syncing resort list from Novoton API...");
+        $this->output("Countries: " . implode(', ', $countries));
+        $this->output("");
+
+        $totalAdded = 0;
+        $totalUpdated = 0;
+        $totalErrors = 0;
+
+        foreach ($countries as $country) {
+            $this->output("Fetching {$country}... ", false);
+            $result = fn_novoton_holidays_sync_resorts_list($country);
+
+            if (is_array($result) && !empty($result['success'])) {
+                $added = $result['added'] ?? 0;
+                $updated = $result['updated'] ?? 0;
+                $total = $result['total'] ?? ($added + $updated);
+                $totalAdded += $added;
+                $totalUpdated += $updated;
+                $this->output("{$total} resorts ({$added} added, {$updated} updated)");
+            } else {
+                $totalErrors++;
+                $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
+            }
+        }
+
+        $this->output("");
+        $this->output("Total: " . ($totalAdded + $totalUpdated) . " resorts synced (new: {$totalAdded}), errors: {$totalErrors}");
+
+        $this->logToSyncTable('resort_list', $totalAdded + $totalUpdated, $totalErrors);
         $this->sendReport('resort_list', [
-            'added' => $added, 'updated' => $updated, 'total' => $result['total'] ?? 0,
+            'added' => $totalAdded, 'updated' => $totalUpdated,
+            'countries' => count($countries),
             'duration' => $this->getDuration() . 's'
         ]);
 
-        return ['success' => $errors === 0, 'stats' => ['added' => $added, 'updated' => $updated]];
+        return ['success' => $totalErrors === 0, 'stats' => ['added' => $totalAdded, 'updated' => $totalUpdated]];
     }
 
     private function syncFacilities(): array

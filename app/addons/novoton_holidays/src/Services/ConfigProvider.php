@@ -156,9 +156,18 @@ class ConfigProvider
     public static function getSelectedCountries(): array
     {
         $val = self::settings()['selected_countries'] ?? '';
+
+        // CS-Cart stores "multiple checkboxes" as ['KEY' => 'Y', 'KEY2' => 'N', ...]
         if (is_array($val)) {
-            return $val;
+            $countries = [];
+            foreach ($val as $key => $enabled) {
+                if ($enabled === 'Y') {
+                    $countries[] = (string) $key;
+                }
+            }
+            return $countries;
         }
+
         return $val !== '' ? array_map('trim', explode(',', $val)) : [];
     }
 

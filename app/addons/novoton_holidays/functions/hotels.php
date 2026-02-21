@@ -507,7 +507,7 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
                 "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
                 $country, $api_resort_names
             );
-            $result['removed'] = (int) db_affected_rows();
+            $result['removed'] = (int) db_get_field("SELECT ROW_COUNT()");
         }
 
     } catch (\Exception $e) {
