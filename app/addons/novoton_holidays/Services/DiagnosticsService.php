@@ -16,7 +16,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-class DiagnosticsService
+class DiagnosticsService implements DiagnosticsServiceInterface
 {
     /** @var NovotonApi|null */
     private $api;
@@ -210,7 +210,7 @@ class DiagnosticsService
                 'board_id' => $params['board_id'] ?? 'AI',
                 'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+30 days')),
                 'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+37 days')),
-                'adults' => intval($params['adults'] ?? 2),
+                'adults' => (int) ($params['adults'] ?? 2),
                 'children' => 0,
             ];
 
@@ -219,7 +219,7 @@ class DiagnosticsService
             $price = 0;
             $priceWithCommission = 0;
             if ($result && isset($result->Price)) {
-                $price = floatval($result->Price);
+                $price = (float) $result->Price;
                 $priceWithCommission = $api->applyCommission($price);
             }
 
@@ -259,8 +259,8 @@ class DiagnosticsService
             $searchParams = [
                 'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+30 days')),
                 'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+37 days')),
-                'adults' => intval($params['adults'] ?? 2),
-                'children' => intval($params['children'] ?? 0),
+                'adults' => (int) ($params['adults'] ?? 2),
+                'children' => (int) ($params['children'] ?? 0),
             ];
 
             if (!empty($params['hotel_id'])) {

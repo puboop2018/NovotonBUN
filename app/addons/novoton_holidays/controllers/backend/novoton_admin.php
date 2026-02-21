@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Admin Controller
  * Path: app/addons/novoton_holidays/controllers/backend/novoton_admin.php

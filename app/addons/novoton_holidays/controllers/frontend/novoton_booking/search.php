@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Controller — Search Mode
  * Extracted from novoton_booking.php for maintainability.
@@ -22,10 +23,14 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
         $check_out_input = $searchParams['check_out'];
         // Calculate nights from dates
         if (!empty($check_in)) {
-            $date1 = new DateTime($check_in);
-            $date2 = new DateTime($check_out_input);
-            $nights = $date1->diff($date2)->days;
-            if ($nights < 1) $nights = 7;
+            try {
+                $date1 = new DateTime($check_in);
+                $date2 = new DateTime($check_out_input);
+                $nights = $date1->diff($date2)->days;
+                if ($nights < 1) $nights = 7;
+            } catch (\Exception $e) {
+                $nights = 7;
+            }
         } else {
             $nights = 7;
         }
@@ -960,6 +965,31 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
             if ($active_eb) {
                 Tygh::$app['view']->assign('active_early_booking', $active_eb);
             }
+
+            // Extract hotel season period (first season FromDate to last season ToDate)
+            $season_from = '';
+            $season_to = '';
+            foreach ($packages as $pkg) {
+                if (!empty($pkg['priceinfo_data'])) {
+                    $pi = json_decode($pkg['priceinfo_data'], true);
+                    if (!empty($pi['seasons']['season'])) {
+                        $seasons = $pi['seasons']['season'];
+                        // Normalize single season to array
+                        if (isset($seasons['IdSeason']) || isset($seasons['DateFrom'])) {
+                            $seasons = [$seasons];
+                        }
+                        if (!empty($seasons)) {
+                            $first_season = reset($seasons);
+                            $last_season = end($seasons);
+                            $season_from = $first_season['DateFrom'] ?? $first_season['FromDate'] ?? '';
+                            $season_to = $last_season['DateTo'] ?? $last_season['ToDate'] ?? '';
+                        }
+                    }
+                    break; // Use first package with priceinfo data
+                }
+            }
+            Tygh::$app['view']->assign('hotel_season_from', $season_from);
+            Tygh::$app['view']->assign('hotel_season_to', $season_to);
         } else {
             // Hotel not found in novoton_hotels - try product name
             Tygh::$app['view']->assign('hotel_package_name', '');

@@ -22,7 +22,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
-class AlternativeRequestService
+class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
     /** @var SecurityService */
     private $security;
@@ -91,10 +91,10 @@ class AlternativeRequestService
         $hotelName = $params['hotel_name'] ?? '';
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        $nights = intval($params['nights'] ?? 7);
-        $adults = intval($params['adults'] ?? 2);
-        $children = intval($params['children'] ?? 0);
-        $numRooms = intval($params['num_rooms'] ?? 1);
+        $nights = (int) ($params['nights'] ?? 7);
+        $adults = (int) ($params['adults'] ?? 2);
+        $children = (int) ($params['children'] ?? 0);
+        $numRooms = (int) ($params['num_rooms'] ?? 1);
         $contactEmail = trim($params['contact_email'] ?? '');
         $contactPhone = trim($params['contact_phone'] ?? '');
         $notes = strip_tags(mb_substr(trim($params['notes'] ?? ''), 0, 2000));

@@ -9,9 +9,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-require_once __DIR__ . '/Exceptions/NovotonException.php';
-require_once __DIR__ . '/Exceptions/ApiException.php';
-
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class NovotonHttpClient

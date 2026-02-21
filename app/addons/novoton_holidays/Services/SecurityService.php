@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 
 class SecurityService
 {
@@ -67,16 +68,16 @@ class SecurityService
         
         // Validate adults/children
         if (isset($data['adults'])) {
-            $adults = intval($data['adults']);
-            if ($adults < 1 || $adults > 10) {
-                $errors[] = 'Adults must be between 1 and 10';
+            $adults = (int) $data['adults'];
+            if ($adults < 1 || $adults > Constants::MAX_ADULTS) {
+                $errors[] = 'Adults must be between 1 and ' . Constants::MAX_ADULTS;
             }
         }
         
         if (isset($data['children'])) {
-            $children = intval($data['children']);
-            if ($children < 0 || $children > 6) {
-                $errors[] = 'Children must be between 0 and 6';
+            $children = (int) $data['children'];
+            if ($children < 0 || $children > Constants::MAX_CHILDREN) {
+                $errors[] = 'Children must be between 0 and ' . Constants::MAX_CHILDREN;
             }
         }
         
@@ -87,9 +88,9 @@ class SecurityService
                 : explode(',', $data['children_ages']);
             
             foreach ($ages as $age) {
-                $age = intval($age);
-                if ($age < 0 || $age > 17) {
-                    $errors[] = 'Child age must be between 0 and 17';
+                $age = (int) $age;
+                if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
+                    $errors[] = 'Child age must be between ' . Constants::MIN_CHILD_AGE . ' and ' . Constants::MAX_CHILD_AGE;
                     break;
                 }
             }
@@ -97,7 +98,7 @@ class SecurityService
         
         // Validate price (prevent manipulation)
         if (isset($data['total_price'])) {
-            $price = floatval($data['total_price']);
+            $price = (float) $data['total_price'];
             if ($price < 0 || $price > 100000) {
                 $errors[] = 'Invalid price value';
             }
@@ -142,16 +143,16 @@ class SecurityService
         }
 
         // Sanitize nights
-        $sanitized['nights'] = max(1, min(30, intval($params['nights'] ?? 7)));
+        $sanitized['nights'] = max(1, min(Constants::MAX_NIGHTS, (int) ($params['nights'] ?? Constants::DEFAULT_NIGHTS)));
 
         // Sanitize adults
-        $sanitized['adults'] = max(1, min(10, intval($params['adults'] ?? 2)));
+        $sanitized['adults'] = max(1, min(Constants::MAX_ADULTS, (int) ($params['adults'] ?? Constants::DEFAULT_ADULTS)));
 
         // Sanitize children
-        $sanitized['children'] = max(0, min(6, intval($params['children'] ?? 0)));
+        $sanitized['children'] = max(0, min(Constants::MAX_CHILDREN, (int) ($params['children'] ?? Constants::DEFAULT_CHILDREN)));
 
         // Sanitize rooms
-        $sanitized['rooms'] = max(1, min(5, intval($params['rooms'] ?? 1)));
+        $sanitized['rooms'] = max(1, min(Constants::MAX_ROOMS, (int) ($params['rooms'] ?? Constants::DEFAULT_ROOMS)));
 
         // Sanitize destination (alphanumeric, spaces, common punctuation)
         if (!empty($params['destination'])) {
@@ -165,7 +166,7 @@ class SecurityService
 
         // Pass through product_id (integer)
         if (!empty($params['product_id'])) {
-            $sanitized['product_id'] = intval($params['product_id']);
+            $sanitized['product_id'] = (int) $params['product_id'];
         }
 
         // Pass through children_ages (comma-separated integers)
@@ -189,7 +190,7 @@ class SecurityService
 
         // Pass through flex_days (integer)
         if (!empty($params['flex_days'])) {
-            $sanitized['flex_days'] = max(0, min(30, intval($params['flex_days'])));
+            $sanitized['flex_days'] = max(0, min(30, (int) $params['flex_days']));
         }
 
         // Pass through search query
@@ -204,7 +205,7 @@ class SecurityService
         for ($i = 1; $i <= 6; $i++) {
             $key = 'child_age_' . $i;
             if (isset($params[$key])) {
-                $sanitized[$key] = max(0, min(17, intval($params[$key])));
+                $sanitized[$key] = max(0, min(17, (int) $params[$key]));
             }
         }
 
@@ -230,8 +231,8 @@ class SecurityService
                 'name' => $this->sanitizeName($guest['name'] ?? ''),
                 'api_name' => $this->sanitizeName($guest['api_name'] ?? ''),
                 'type' => in_array($guest['type'] ?? '', ['adult', 'child']) ? $guest['type'] : 'adult',
-                'age' => isset($guest['age']) ? max(0, min(99, intval($guest['age']))) : null,
-                'room' => max(1, min(5, intval($guest['room'] ?? 1))),
+                'age' => isset($guest['age']) ? max(0, min(99, (int) $guest['age'])) : null,
+                'room' => max(1, min(5, (int) ($guest['room'] ?? 1))),
                 'is_holder' => !empty($guest['is_holder']),
             ];
             

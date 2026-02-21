@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Cron Job Handler (Legacy Entry Point)
  *
@@ -33,7 +34,7 @@ if (empty($providedKey) && isset($argv[1])) {
 if (empty($storedKey)) {
     die("ERROR: Cron Access Key not set in addon settings.\n");
 }
-if (empty($providedKey) || $providedKey !== $storedKey) {
+if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
     die("ERROR: Invalid or missing API key.\n");
 }
 
@@ -54,11 +55,7 @@ fn_log_event('novoton_holidays', 'cron_start', [
     'message' => 'Cron job started'
 ]);
 
-// Load API
-$src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-if (file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
+// Classes are auto-loaded via PSR-4 autoloader registered in init.php
 
 try {
     $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();

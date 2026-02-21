@@ -9,9 +9,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-require_once __DIR__ . '/Exceptions/NovotonException.php';
-require_once __DIR__ . '/Exceptions/XmlParsingException.php';
-
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class NovotonXmlParser
@@ -70,36 +67,40 @@ class NovotonXmlParser
             return $this->parseStreaming($xmlString);
         }
 
-        libxml_use_internal_errors(true);
+        $prevLibxml = libxml_use_internal_errors(true);
 
         $options = LIBXML_NOCDATA | LIBXML_NONET;
         if ($size > 100000) {
             $options |= LIBXML_COMPACT | LIBXML_NOBLANKS;
         }
 
-        $xml = simplexml_load_string($xmlString, 'SimpleXMLElement', $options);
+        try {
+            $xml = simplexml_load_string($xmlString, 'SimpleXMLElement', $options);
 
-        if ($xml === false) {
-            $errors = libxml_get_errors();
-            $error_messages = [];
-            foreach ($errors as $err) {
-                $error_messages[] = "Line {$err->line}: {$err->message}";
+            if ($xml === false) {
+                $errors = libxml_get_errors();
+                $error_messages = [];
+                foreach ($errors as $err) {
+                    $error_messages[] = "Line {$err->line}: {$err->message}";
+                }
+                fn_log_event('general', 'runtime', [
+                    'message' => 'XML Parse Error',
+                    'errors' => implode('; ', array_slice($error_messages, 0, 5)),
+                    'response_size' => $size,
+                    'raw_response_first_500' => substr($xmlString, 0, 500)
+                ]);
+                throw new XmlParsingException(
+                    'XML Parse Error: ' . implode('; ', array_slice($error_messages, 0, 5)),
+                    $error_messages,
+                    $size
+                );
             }
-            fn_log_event('general', 'runtime', [
-                'message' => 'XML Parse Error',
-                'errors' => implode('; ', array_slice($error_messages, 0, 5)),
-                'response_size' => $size,
-                'raw_response_first_500' => substr($xmlString, 0, 500)
-            ]);
-            libxml_clear_errors();
-            throw new XmlParsingException(
-                'XML Parse Error: ' . implode('; ', array_slice($error_messages, 0, 5)),
-                $error_messages,
-                $size
-            );
-        }
 
-        return $xml;
+            return $xml;
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($prevLibxml);
+        }
     }
 
     /**

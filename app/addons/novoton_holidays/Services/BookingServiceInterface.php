@@ -21,4 +21,8 @@ interface BookingServiceInterface
     public function addToCart(int $booking_id, int $product_id, array $bookingData): bool;
     public function parseRoomsData(array $bookingData): array;
     public function calculateNights(string $check_in, string $check_out): int;
+    public function verifyPrice(array $params): array;
+    public function assembleCartProduct(int $productId, int $bookingId, array $bookingData, array $hotelInfo, array $guestsData, array $priceResult, array $roomsData): array;
+    public function enrichRoomsData(array $roomsData, array $guestsData): array;
+    public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int;
 }

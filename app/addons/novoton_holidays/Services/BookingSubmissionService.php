@@ -65,7 +65,7 @@ class BookingSubmissionService
             }
 
             $bookingData       = $product['extra'];
-            $originalBookingId = intval($bookingData['novoton_booking_id'] ?? 0);
+            $originalBookingId = (int) ($bookingData['novoton_booking_id'] ?? 0);
 
             // 1. Hydrate booking data from DB (single source of truth)
             $bookingData = $this->hydrateBookingFromDb($bookingData, $originalBookingId, $debugLogging);
@@ -167,7 +167,7 @@ class BookingSubmissionService
                     'context'  => $e->getContext(),
                     'error'    => $e->getMessage(),
                 ]);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 db_query("ROLLBACK");
                 fn_log_event('general', 'runtime', [
                     'message'  => 'Novoton Booking transaction rolled back (unexpected)',
@@ -218,8 +218,8 @@ class BookingSubmissionService
         }
 
         // Numeric casts
-        $bookingData['total_price'] = floatval($bookingData['total_price']);
-        $bookingData['base_price']  = floatval($bookingData['base_price'] ?? 0);
+        $bookingData['total_price'] = (float) $bookingData['total_price'];
+        $bookingData['base_price']  = (float) ($bookingData['base_price'] ?? 0);
 
         // Structured JSON fields — prefer already-parsed arrays from hydrated cache
         if (!empty($dbBooking['rooms_data'])) {
@@ -248,17 +248,17 @@ class BookingSubmissionService
      */
     private function resolveFinalPrice(array $bookingData, array $product): float
     {
-        $price = floatval($bookingData['total_price'] ?? 0);
+        $price = (float) ($bookingData['total_price'] ?? 0);
         if ($price > 0) {
             return $price;
         }
 
-        $price = floatval($product['price'] ?? 0);
+        $price = (float) ($product['price'] ?? 0);
         if ($price > 0) {
             return $price;
         }
 
-        return floatval($product['base_price'] ?? 0);
+        return (float) ($product['base_price'] ?? 0);
     }
 
     /**
@@ -294,8 +294,8 @@ class BookingSubmissionService
                 'package_name'      => $bookingData['package_name'] ?? '',
                 'check_in'          => $bookingData['check_in'],
                 'check_out'         => $bookingData['check_out'],
-                'adults'            => intval($bookingData['adults'] ?? 2),
-                'children'          => intval($bookingData['children'] ?? 0),
+                'adults'            => (int) ($bookingData['adults'] ?? 2),
+                'children'          => (int) ($bookingData['children'] ?? 0),
                 'childrenAges'      => $childrenAges,
                 'price'             => $bookingData['final_price'],
             ]];
@@ -325,7 +325,7 @@ class BookingSubmissionService
         }
 
         // Fallback 1: re-fetch from DB by booking_id
-        $bookingId = intval($bookingData['novoton_booking_id'] ?? 0);
+        $bookingId = (int) ($bookingData['novoton_booking_id'] ?? 0);
         if ($bookingId > 0) {
             $dbGuests = $this->bookingRepo->getGuestsData($bookingId);
             if (!empty($dbGuests)) {
@@ -424,8 +424,8 @@ class BookingSubmissionService
         foreach ($group['rooms'] as $room) {
             $roomIdx      = $room['original_index'];
             $roomNum      = $roomIdx + 1;
-            $adultsCount  = intval($room['adults']   ?? 2);
-            $childrenCount = intval($room['children'] ?? 0);
+            $adultsCount  = (int) ($room['adults']   ?? 2);
+            $childrenCount = (int) ($room['children'] ?? 0);
             $childrenAges = $room['childrenAges'] ?? [];
             $roomGuests   = [];
 
@@ -443,7 +443,7 @@ class BookingSubmissionService
                 $guest = [
                     'name'     => $name,
                     'birthday' => $guestsData[$guestKey]['birthday'] ?? '',
-                    'age'      => intval($guestsData[$guestKey]['age'] ?? 30),
+                    'age'      => (int) ($guestsData[$guestKey]['age'] ?? 30),
                     'type'     => 'adult',
                     'room'     => $roomNum,
                 ];
@@ -462,9 +462,9 @@ class BookingSubmissionService
 
                 $age = 0;
                 if (isset($guestsData[$guestKey]['age'])) {
-                    $age = intval($guestsData[$guestKey]['age']);
+                    $age = (int) $guestsData[$guestKey]['age'];
                 } elseif (isset($childrenAges[$i - 1])) {
-                    $age = intval($childrenAges[$i - 1]);
+                    $age = (int) $childrenAges[$i - 1];
                 }
 
                 if ($age <= 0) {
@@ -487,7 +487,7 @@ class BookingSubmissionService
             }
 
             // Price: reverse commission to get API (net) price
-            $roomPriceWithCommission = floatval($room['price'] ?? 0);
+            $roomPriceWithCommission = (float) ($room['price'] ?? 0);
             $roomApiPrice            = $roomPriceWithCommission / (1 + ($commission / 100));
             $totalApiPrice   += $roomApiPrice;
             $totalGroupPrice += $roomPriceWithCommission;
@@ -593,11 +593,11 @@ class BookingSubmissionService
                 'check_out' => $group['check_out'] ?? '',
                 'error'     => $e->getMessage(),
             ]);
-            $nights = intval($bookingData['nights'] ?? 7);
+            $nights = (int) ($bookingData['nights'] ?? 7);
         }
 
         $orderInfo   = fn_get_order_info($orderId);
-        $orderUserId = intval($orderInfo['user_id'] ?? 0);
+        $orderUserId = (int) ($orderInfo['user_id'] ?? 0);
         $orderEmail  = $orderInfo['email'] ?? '';
 
         return [
@@ -705,7 +705,7 @@ class BookingSubmissionService
                 $update = [
                     'novoton_invoice_id' => $novotonId,
                     'novoton_status'     => $novotonStatus,
-                    'api_price'          => !empty($novotonPrice) ? floatval($novotonPrice) : $totalApiPrice,
+                    'api_price'          => !empty($novotonPrice) ? (float) $novotonPrice : $totalApiPrice,
                     'api_response'       => json_encode([
                         'IdNum'    => $novotonId,
                         'Price'    => $novotonPrice,

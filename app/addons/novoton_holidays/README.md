@@ -1,7 +1,7 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 3.0.0-A86
-**Last Updated:** February 15, 2026
+**Version:** 3.2.0
+**Last Updated:** February 20, 2026
 **Compatibility:** CS-Cart 4.9.3 - 4.19.1 (ULTIMATE edition)
 **PHP:** 7.4 - 8.4
 **Developer:** VacanteLitoral.ro
@@ -21,6 +21,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - [Architecture](#architecture)
 - [Frontend JavaScript](#frontend-javascript)
 - [React Booking Engine](#react-booking-engine)
+- [Availability Search Features](#availability-search-features)
 - [Troubleshooting](#troubleshooting)
 - [Changelog](#changelog)
 
@@ -36,6 +37,9 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - Early booking discounts
 - Flexible date search (+/- days option)
 - Room quota display with availability indicators
+- Hotel season period display (from priceinfo data)
+- Nearby date availability fallback via `hotel_quota_add` API (rooms showing "On request")
+- Alternative dates search when no results found (±10 days automatic scan)
 
 ### User Interface
 - React 19 booking engine with Booking.com-style design
@@ -381,6 +385,7 @@ The `NovotonApi` class (`src/NovotonApi.php`) provides these methods:
 | `getHotelQuota($hotelId, $roomId, $checkIn, $checkOut, $roomType)` | Get room availability |
 | `getHotelQuotaAll($hotelId, $checkIn, $checkOut)` | Get all rooms availability |
 | `getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut)` | Get additional allotments |
+| `getHotelQuotaAddAll($hotelId, $checkIn, $checkOut)` | Get nearby availability for all rooms (±5 days) |
 | `getPriceInfo($hotelId, $packageName)` | Get price info for package |
 | `getSpecialOffers($hotelId, $packageName, $lang)` | Get EB discounts/extras |
 
@@ -855,6 +860,117 @@ The addon includes a React 19-based booking form for an enhanced user experience
 
 ---
 
+## Availability Search Features
+
+The search system shows the hotel's accommodation season and has two independent fallback layers that help customers find available rooms even when their exact dates don't match.
+
+### Season Period Display
+
+**Purpose:** Show when the hotel operates, so customers understand why dates may be unavailable.
+
+**How it works:**
+1. During search, the system reads `priceinfo_data` JSON from `cscart_novoton_hotel_packages`
+2. Extracts the first season's `DateFrom` and the last season's `DateTo`
+3. Displays a blue info line: *"This hotel offers accommodation from 21 May to 30 Sep 2026"*
+
+**Where it appears:**
+- In the hotel header (under the location line) — always visible when results are shown
+- In the "No availability" message — explains why the search returned no results
+- In the "Alternative dates found" panel — provides season context
+
+**Technical details:**
+
+| Aspect | Value |
+|--------|-------|
+| Data source | `cscart_novoton_hotel_packages.priceinfo_data` JSON |
+| Fields | `seasons.season[0].DateFrom` → `seasons.season[N].DateTo` |
+| Template variables | `$hotel_season_from`, `$hotel_season_to` |
+| Date format | `%d %b` for start, `%d %b %Y` for end |
+| Translation key | `novoton_holidays.accommodation_period` |
+| Performance | No API call — reads from synced database |
+
+### Layer 1: Nearby Date Availability (`hotel_quota_add`)
+
+**Purpose:** Show alternative date windows for rooms that appear as "On request" (no quota).
+
+**When it triggers:** During a normal search, after `hotel_quota` returns quota data, the system checks each room. If any room has quota = 0, "RQ", "REQUEST", or empty, this fallback activates.
+
+**How it works:**
+
+1. The search calls `hotel_quota` to get availability for the requested dates
+2. If any rooms are unavailable, calls `hotel_quota_add` API to check ±5 days around the original dates
+3. The API returns alternative check-in/check-out periods where the room becomes available
+4. These periods are attached to each "On request" room as `nearby_availability`
+5. The template displays a suggestion: *"Available on nearby dates: [date range]"*
+
+**Technical details:**
+
+| Aspect | Value |
+|--------|-------|
+| API function | `hotel_quota_add` |
+| PHP method | `NovotonApi::getHotelQuotaAddAll()` |
+| Search range | ±5 days (API-side) |
+| Cache TTL | 180 seconds (3 minutes) |
+| Code location | `search.php` lines 848-883 |
+| Result format | `room_id => [ {check_in, check_out, quota}, ... ]` |
+
+**Example flow:**
+```
+User searches: Hotel Maritza, Jun 15-22, Double Room
+→ hotel_quota returns: Double Room = 0 (no quota)
+→ hotel_quota_add returns: Double Room available Jun 17-24 (3 rooms)
+→ Room shows as "On request" with message: "Available Jun 17-24"
+```
+
+### Layer 2: Alternative Dates Search
+
+**Purpose:** Find any available dates when the search returns zero results entirely.
+
+**When it triggers:** Only when `$results` is completely empty — no room/board combination returned a price for the requested dates.
+
+**How it works:**
+
+1. Search runs `room_price` for the requested dates across all rooms and board types
+2. If zero results come back, builds a list of alternative dates: first +1 to +N days, then -1 to -N days
+3. For each alternative date, iterates all rooms and board types calling `room_price`
+4. Stops on the first date that returns any valid price
+5. Displays a yellow banner: *"No availability on selected dates, but found on: [date range]"* with a "View availability for these dates" link
+
+**Technical details:**
+
+| Aspect | Value |
+|--------|-------|
+| API function | `room_price` (called per date/room/board) |
+| Search range | ±`flex_days` if provided, otherwise ±10 days |
+| Past date handling | Skips dates before today |
+| Search order | Future dates first, then past dates |
+| Code location | `search.php` lines 1136-1225 |
+| Result format | Array of `{room_id, room_name, board_id, board_name, check_in, check_out, total_price, price_per_night, nights}` |
+| Stops early | Yes — breaks on first date with any availability |
+
+**Example flow:**
+```
+User searches: Hotel Maritza, Jun 15-22
+→ room_price returns no prices for any room/board on Jun 15-22
+→ Alternative search tries: Jun 16, Jun 17, Jun 18...
+→ Jun 18-25 returns prices for Double Room AI
+→ Banner shows: "No availability Jun 15-22, found on Jun 18-25"
+```
+
+### How the Two Layers Differ
+
+| | Layer 1: `hotel_quota_add` | Layer 2: Alternative Dates |
+|---|---|---|
+| **Trigger** | Some rooms have quota=0/RQ | Zero results from entire search |
+| **Scope** | Per-room nearby availability windows | Hotel-wide date scanning |
+| **API** | `hotel_quota_add` (single call) | `room_price` (multiple calls) |
+| **Range** | ±5 days (API-determined) | ±10 days (or `flex_days`) |
+| **Result** | Dates attached to "On request" rooms | Separate banner with link to new dates |
+| **Coexists** | Yes — shown alongside priced rooms | Only when no priced rooms exist |
+| **Performance** | Fast (single API call, cached 3 min) | Slower (iterates rooms × boards × dates) |
+
+---
+
 ## Troubleshooting
 
 ### Health Check Endpoint
@@ -938,6 +1054,24 @@ Addon logs events to CS-Cart's logging system:
 ---
 
 ## Changelog
+
+### Version 3.2.0 (February 20, 2026)
+- **Added:** Nearby date availability fallback via `hotel_quota_add` API
+  - When `hotel_quota` returns 0/RQ for a room, calls `hotel_quota_add` to find ±5 day availability windows
+  - Attaches `nearby_availability` data to "On request" rooms in search results
+  - New API method: `NovotonApi::getHotelQuotaAddAll()` with 180s cache TTL
+- **Added:** Season period display in search results header and no-availability screens
+  - Extracts first/last season dates from `priceinfo_data` JSON (no API call)
+  - Shows *"This hotel offers accommodation from [date] to [date]"* in hotel header and no-availability messages
+- **Added:** Documentation: new "Availability Search Features" section covering season display and both fallback layers
+- **Architecture:** Split monolithic booking controller (3,400 lines) into mode handler files
+- **Architecture:** Moved inline SQL from hooks and cron into Repository classes
+- **Architecture:** Standardized config access on ConfigService; registered all autoloader namespaces
+- **Architecture:** Service-based architecture with PSR-4 autoloader (removed stale `require_once` calls)
+- **Changed:** Renamed `PriceService` to `RoomPriceService` for clarity
+- **Changed:** Marked `fn_novoton_calculate_price()` and `fn_novoton_get_stored_price()` as `@deprecated`
+- **Fixed:** sync_log schema mismatch
+- **Fixed:** Multiple bugs, fatal errors, debug leftovers, and security issues found in addon audit
 
 ### Version 3.0.0-A86 (February 17, 2026)
 - **Security:** Removed debug info disclosure via `?debug_novoton=1` and `?debug=1` on customer-facing order pages
@@ -1058,4 +1192,4 @@ Addon logs events to CS-Cart's logging system:
 
 ---
 
-*Documentation last updated: February 17, 2026 - Version 3.0.0-A86*
+*Documentation last updated: February 20, 2026 - Version 3.2.0*

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Booking Functions
  * 
@@ -293,12 +294,15 @@ function fn_novoton_cron_resinfo(): array
         }
     }
     
-    // Log sync
-    db_query(
-        "INSERT INTO ?:novoton_sync_log (sync_type, sync_date, hotels_synced, hotels_added, hotels_updated, errors, details)
-         VALUES ('resinfo', NOW(), ?i, ?i, ?i, ?i, ?s)",
-        $result['synced'], $result['added'], $result['updated'], $result['errors'], json_encode($result['countries'])
-    );
+    // Log sync via repository (column names must match addon.xml schema)
+    $syncRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+    $syncRepo->create('resinfo', [
+        'total'   => $result['synced'],
+        'updated' => $result['updated'],
+        'failed'  => $result['errors'],
+        'status'  => 'completed',
+        'details' => $result['countries'],
+    ]);
     
     return $result;
 }

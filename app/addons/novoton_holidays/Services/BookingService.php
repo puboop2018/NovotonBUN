@@ -14,6 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
@@ -56,7 +57,7 @@ class BookingService implements BookingServiceInterface
     {
         // Get current user/session
         $auth = Tygh::$app['session']['auth'] ?? [];
-        $user_id = !empty($auth['user_id']) ? intval($auth['user_id']) : 0;
+        $user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
         $session_id = session_id();
         
         // Parse and validate data
@@ -98,11 +99,11 @@ class BookingService implements BookingServiceInterface
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
-            'base_price' => floatval($bookingData['base_price'] ?? 0),
-            'api_price' => floatval($bookingData['api_price'] ?? 0),
-            'total_price' => floatval($bookingData['total_price'] ?? 0),
+            'base_price' => (float) ($bookingData['base_price'] ?? 0),
+            'api_price' => (float) ($bookingData['api_price'] ?? 0),
+            'total_price' => (float) ($bookingData['total_price'] ?? 0),
             'currency' => ConfigProvider::getApiCurrency(),
-            'status' => 'pending',
+            'status' => Constants::STATUS_PENDING,
             'special_requests' => $bookingData['special_requests'] ?? '',
             'notes' => $bookingData['special_requests'] ?? '',
         ];
@@ -192,7 +193,7 @@ class BookingService implements BookingServiceInterface
         
         $update = [
             'order_id' => $order_id,
-            'user_id' => intval($order_info['user_id'] ?? 0),
+            'user_id' => (int) ($order_info['user_id'] ?? 0),
             'guest_email' => $order_info['email'] ?? '',
         ];
         
@@ -303,10 +304,10 @@ class BookingService implements BookingServiceInterface
                 'room_id' => $bookingData['room_id'] ?? '',
                 'room_name' => fn_novoton_format_room_type($bookingData['room_id'] ?? ''),
                 'board_id' => $bookingData['board_id'] ?? 'BB',
-                'adults' => intval($bookingData['adults'] ?? 2),
-                'children' => intval($bookingData['children'] ?? 0),
+                'adults' => (int) ($bookingData['adults'] ?? 2),
+                'children' => (int) ($bookingData['children'] ?? 0),
                 'childrenAges' => $this->parseChildrenAges($bookingData),
-                'price' => floatval($bookingData['total_price'] ?? 0),
+                'price' => (float) ($bookingData['total_price'] ?? 0),
             ]];
         }
         
@@ -366,14 +367,14 @@ class BookingService implements BookingServiceInterface
         ];
         
         foreach ($rooms_data as $room) {
-            $totals['adults'] += intval($room['adults'] ?? 0);
-            $totals['children'] += intval($room['children'] ?? 0);
-            $totals['price'] += floatval($room['price'] ?? 0);
+            $totals['adults'] += (int) ($room['adults'] ?? 0);
+            $totals['children'] += (int) ($room['children'] ?? 0);
+            $totals['price'] += (float) ($room['price'] ?? 0);
             
             if (!empty($room['childrenAges'])) {
                 foreach ($room['childrenAges'] as $age) {
                     if ($age !== null && $age !== 'age_needed') {
-                        $totals['ages'][] = intval($age);
+                        $totals['ages'][] = (int) $age;
                     }
                 }
             }
@@ -448,7 +449,7 @@ class BookingService implements BookingServiceInterface
             $booking_record['holder_name']
         );
         
-        return $existing ? intval($existing) : null;
+        return $existing ? (int) $existing : null;
     }
     
     /**
@@ -483,7 +484,7 @@ class BookingService implements BookingServiceInterface
             'star_rating' => '',
             'check_in' => $params['check_in'],
             'check_out' => $params['check_out'],
-            'adults' => intval($params['adults'] ?? 2),
+            'adults' => (int) ($params['adults'] ?? 2),
             'children' => $params['children_ages'] ?? [],
         ];
 
@@ -507,7 +508,7 @@ class BookingService implements BookingServiceInterface
             ];
         }
 
-        $rawPrice = floatval((string)$priceData->Price);
+        $rawPrice = (float) (string) $priceData->Price;
         $totalPrice = $this->api->applyCommission($rawPrice);
 
         // Extract terms
@@ -576,7 +577,7 @@ class BookingService implements BookingServiceInterface
         $childAges = [];
         foreach ($guestsData as $g) {
             if (isset($g['type']) && $g['type'] === 'child' && isset($g['age'])) {
-                $childAges[] = intval($g['age']);
+                $childAges[] = (int) $g['age'];
             }
         }
 
@@ -606,10 +607,10 @@ class BookingService implements BookingServiceInterface
                 'check_in' => $bookingData['check_in'],
                 'check_out' => $bookingData['check_out'],
                 'nights' => $nights,
-                'adults' => intval($bookingData['adults'] ?? 2),
-                'children' => intval($bookingData['children'] ?? 0),
+                'adults' => (int) ($bookingData['adults'] ?? 2),
+                'children' => (int) ($bookingData['children'] ?? 0),
                 'children_ages' => !empty($childAges) ? implode(',', $childAges) : ($bookingData['children_ages'] ?? ''),
-                'num_rooms' => intval($bookingData['num_rooms'] ?? 1),
+                'num_rooms' => (int) ($bookingData['num_rooms'] ?? 1),
                 'rooms_data' => $roomsData,
                 'guest_names' => $guestList,
                 'holder_name' => $holderName,
@@ -648,7 +649,7 @@ class BookingService implements BookingServiceInterface
             $childAgesForRoom = [];
             foreach ($guestsData as $guest) {
                 if (isset($guest['room']) && $guest['room'] == $roomNum && ($guest['type'] ?? '') === 'child') {
-                    $childAgesForRoom[] = intval($guest['age'] ?? 0);
+                    $childAgesForRoom[] = (int) ($guest['age'] ?? 0);
                 }
             }
 

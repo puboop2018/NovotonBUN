@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Main Backend Controller
  * 
@@ -21,6 +22,7 @@ use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -150,9 +152,9 @@ if ($mode == 'fix_tab') {
  */
 if ($mode == 'manage' || empty($mode)) {
     // Initialize repositories
-    $hotelRepo = new HotelRepository();
-    $bookingRepo = new BookingRepository();
-    $syncLogRepo = new SyncLogRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $syncLogRepo = Container::getInstance()->syncLogRepository();
     
     // Get addon settings
     $addon_settings = ConfigProvider::all();
@@ -249,7 +251,7 @@ if ($mode == 'manage' || empty($mode)) {
  * List all hotels with filters
  */
 if ($mode == 'hotels') {
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     
     // Get filters
     $filters = [];
@@ -294,7 +296,7 @@ if ($mode == 'view_hotel') {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
     }
     
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $hotel = $hotelRepo->findById($hotel_id);
     
     if (!$hotel) {
@@ -324,7 +326,7 @@ if ($mode == 'view_hotel') {
     $facilities = fn_novoton_get_hotel_facilities($hotel_id);
     
     // Get bookings for this hotel
-    $bookingRepo = new BookingRepository();
+    $bookingRepo = Container::getInstance()->bookingRepository();
     $bookings = $bookingRepo->findByHotelId($hotel_id);
     
     Tygh::$app['view']->assign('hotel', $hotel);

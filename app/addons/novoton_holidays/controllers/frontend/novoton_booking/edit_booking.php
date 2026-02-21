@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Controller — Edit Booking Mode
  * Extracted from novoton_booking.php for maintainability.

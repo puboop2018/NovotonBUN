@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /***************************************************************************
  *                                                                          *
  *   Frontend Controller for Novoton Holidays Cron                         *
@@ -28,7 +29,7 @@ if ($mode == 'cron_update') {
         die('ERROR: Cron Access Key not configured in addon settings.');
     }
     
-    if (empty($provided_key) || $provided_key !== $stored_key) {
+    if (empty($provided_key) || !hash_equals($stored_key, $provided_key)) {
         die('ERROR: Invalid or missing API key.');
     }
     
@@ -49,7 +50,7 @@ if ($mode == 'cron_update') {
     foreach ($prefixes as $prefix) {
         $prefix = trim($prefix);
         if (!empty($prefix)) {
-            $prefix_conditions[] = "product_code LIKE '" . db_quote($prefix) . "%'";
+            $prefix_conditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
         }
     }
     
@@ -162,11 +163,11 @@ if ($mode == 'cron_export_hotel_features') {
         exit;
     }
     
-    if ($provided_key !== $expected_key) {
+    if (!hash_equals($expected_key, $provided_key)) {
         echo "[ERROR] Invalid API key.\n";
         exit;
     }
-    
+
     echo "=== NOVOTON Hotel Features CSV Export - " . date('Y-m-d H:i:s') . " ===\n";
     
     $result = fn_novoton_generate_hotel_features_csv();
@@ -195,13 +196,13 @@ if ($mode == 'get_hotel_features_csv') {
     $provided_key = $_REQUEST['access_key'] ?? '';
 
     // Verify API key
-    if (empty($expected_key) || $provided_key !== $expected_key) {
+    if (empty($expected_key) || !hash_equals($expected_key, $provided_key)) {
         header('HTTP/1.1 403 Forbidden');
         header('Content-Type: text/plain');
         echo "Access denied. Invalid or missing API key.";
         exit;
     }
-    
+
     $export_dir = fn_get_files_dir_path() . 'novoton_exports/';
     $file_path = $export_dir . 'hotel_features_import.csv';
     

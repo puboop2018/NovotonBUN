@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class GuestDataNormalizer
+class GuestDataNormalizer implements GuestDataNormalizerInterface
 {
     /**
      * All fields expected on a canonical guest entry, with defaults.
@@ -169,7 +169,7 @@ class GuestDataNormalizer
                 $type = 'adult';
             }
 
-            $room = intval($guest['room'] ?? 1);
+            $room = (int) ($guest['room'] ?? 1);
             if ($room < 1) {
                 $room = 1;
             }

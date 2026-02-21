@@ -201,6 +201,34 @@ final class BoardType
     }
 
     /**
+     * Check if an API board code matches a user-selected meal plan.
+     *
+     * Normalizes both codes to canonical form, then matches exactly
+     * or as a "plus" variant (e.g. mealPlan "FB" matches board "FB+").
+     *
+     * @param string $boardId  Board code from API (e.g. "ALL INCL", "FB+", "HB")
+     * @param string $mealPlan Canonical meal plan code the user selected (e.g. "AI", "FB")
+     * @return bool
+     */
+    public static function matchesMealPlan(string $boardId, string $mealPlan): bool
+    {
+        $canonical = self::toCanonicalCode($boardId);
+        $mealPlan = strtoupper(trim($mealPlan));
+
+        // Exact match (e.g. "AI" == "AI", "FB" == "FB")
+        if ($canonical === $mealPlan) {
+            return true;
+        }
+
+        // Plus-variant match (e.g. mealPlan "FB" matches canonical "FB+")
+        if ($canonical === $mealPlan . '+') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Prevent cloning.
      */
     private function __clone() {}

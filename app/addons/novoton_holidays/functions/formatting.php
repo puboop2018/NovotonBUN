@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Formatting Functions
  * 
@@ -142,10 +143,10 @@ function fn_novoton_parse_xml_string($xml_string): ?\SimpleXMLElement
     }
 
     libxml_use_internal_errors(true);
-    $xml = simplexml_load_string($xml_string);
+    $xml = simplexml_load_string($xml_string, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
 
     if ($xml === false) {
-        $xml = simplexml_load_string('<root>' . $xml_string . '</root>');
+        $xml = simplexml_load_string('<root>' . $xml_string . '</root>', 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     }
 
     return $xml ?: null;
@@ -580,7 +581,7 @@ function fn_novoton_xml_to_array($xml): array
 {
     if (is_string($xml)) {
         libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($xml);
+        $xml = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
         if ($xml === false) {
             return [];
         }

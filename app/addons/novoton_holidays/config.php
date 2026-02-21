@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /***************************************************************************
  *                                                                          *
  *   (c) 2024-2026 VacanteLitoral.ro                                       *
@@ -13,7 +14,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 /**
  * Addon version
  */
-define('NOVOTON_HOLIDAYS_VERSION', '3.0.0');
+define('NOVOTON_HOLIDAYS_VERSION', '3.2.0');
 
 /**
  * Addon ID
@@ -22,8 +23,8 @@ define('NOVOTON_HOLIDAYS_ADDON_ID', 'novoton_holidays');
 
 /**
  * API endpoints
+ * Note: API base URL comes from addon settings (api_url), accessed via ConfigService::getApiUrl()
  */
-define('NOVOTON_API_BASE_URL', 'https://xml.novoton.com/');
 define('NOVOTON_API_TIMEOUT', 30);
 define('NOVOTON_API_CONNECT_TIMEOUT', 10);
 

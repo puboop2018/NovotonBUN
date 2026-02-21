@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Prices Controller
  *
@@ -23,6 +24,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -201,7 +203,7 @@ if ($mode == 'check_prices') {
     $total_hotels = count($all_hotels);
 
     $api = new NovotonApi();
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
 
     $resorts = [];
     $resort_list_response = $api->getResortList($country);
@@ -443,7 +445,7 @@ if ($mode == 'check_prices_hotel') {
 
     try {
         $api = new NovotonApi();
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
 
         $with_prices = 0;
         $no_prices = 0;
@@ -631,7 +633,7 @@ if ($mode == 'cron_offers_update') {
     $access_key = $_REQUEST['access_key'] ?? '';
     $expected_key = ConfigProvider::getCronAccessKey();
     
-    if (empty($expected_key) || $access_key !== $expected_key) {
+    if (empty($expected_key) || !hash_equals($expected_key, $access_key)) {
         header('HTTP/1.1 403 Forbidden');
         echo 'Invalid access key';
         exit;
@@ -644,8 +646,8 @@ if ($mode == 'cron_offers_update') {
     
     try {
         $api = new NovotonApi();
-        $hotelRepo = new HotelRepository();
-        $syncLogRepo = new SyncLogRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
+        $syncLogRepo = Container::getInstance()->syncLogRepository();
         
         $updated = 0;
         $errors = 0;

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Bookings Admin Controller
  * Handles booking management, status checking, and alternatives

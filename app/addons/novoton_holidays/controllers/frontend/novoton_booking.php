@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Booking Controller
  * Path: app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
@@ -147,20 +148,24 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
             $guest_type = strtolower($guest['type'] ?? '');
             $is_child_guest = (strpos($key, 'child') !== false || $guest_type === 'child');
             if ($dob_timestamp && $is_child_guest && !empty($check_in)) {
-                $dob_date = new DateTime($birthday);
-                $check_in_date = new DateTime($check_in);
-                $age_at_checkin = $dob_date->diff($check_in_date)->y;
+                try {
+                    $dob_date = new DateTime($birthday);
+                    $check_in_date = new DateTime($check_in);
+                    $age_at_checkin = $dob_date->diff($check_in_date)->y;
 
-                if ($age_at_checkin >= 18) {
-                    fn_log_event('general', 'runtime', [
-                        'message' => 'Novoton: Child age >= 18 at check-in (blocked)',
-                        'guest_key' => $key,
-                        'birthday' => $birthday,
-                        'check_in' => $check_in,
-                        'calculated_age' => $age_at_checkin
-                    ]);
-                    fn_set_notification('E', __('error'), __('novoton_holidays.child_must_be_under_18'));
-                    return false;
+                    if ($age_at_checkin >= 18) {
+                        fn_log_event('general', 'runtime', [
+                            'message' => 'Novoton: Child age >= 18 at check-in (blocked)',
+                            'guest_key' => $key,
+                            'birthday' => $birthday,
+                            'check_in' => $check_in,
+                            'calculated_age' => $age_at_checkin
+                        ]);
+                        fn_set_notification('E', __('error'), __('novoton_holidays.child_must_be_under_18'));
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    $birthday = '';
                 }
             }
         }
@@ -184,9 +189,13 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
             // Calculate age from DOB if available, otherwise use form value or 0
             $guest_age = intval($guest['age'] ?? 0);
             if (!empty($birthday)) {
-                $dob_date = new DateTime($birthday);
-                $today = new DateTime();
-                $guest_age = $dob_date->diff($today)->y;
+                try {
+                    $dob_date = new DateTime($birthday);
+                    $today = new DateTime();
+                    $guest_age = $dob_date->diff($today)->y;
+                } catch (\Exception $e) {
+                    // Invalid date format — keep form-supplied age
+                }
             }
 
             $guests_data[$key] = [
@@ -207,9 +216,13 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
             // Calculate age from DOB if available, otherwise use form value or 0
             $guest_age = intval($guest['age'] ?? 0);
             if (!empty($birthday)) {
-                $dob_date = new DateTime($birthday);
-                $today = new DateTime();
-                $guest_age = $dob_date->diff($today)->y;
+                try {
+                    $dob_date = new DateTime($birthday);
+                    $today = new DateTime();
+                    $guest_age = $dob_date->diff($today)->y;
+                } catch (\Exception $e) {
+                    // Invalid date format — keep form-supplied age
+                }
             }
 
             $guests_data[$key] = [
@@ -307,7 +320,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
             // Convert cached array back to SimpleXMLElement if needed
             if (is_string($cached)) {
                 try {
-                    return simplexml_load_string($cached);
+                    return simplexml_load_string($cached, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
                 } catch (Exception $e) {
                     // Cache corrupted, fetch fresh
                 }

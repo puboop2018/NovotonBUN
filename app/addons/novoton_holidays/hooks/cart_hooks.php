@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Cart Hook Functions
  *
@@ -18,6 +19,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
@@ -49,7 +51,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         return;
     }
 
-    $repo = new BookingRepository();
+    $repo = Container::getInstance()->bookingRepository();
     $all_bookings = $repo->findByProductIds($product_ids);
 
     if (empty($all_bookings)) {

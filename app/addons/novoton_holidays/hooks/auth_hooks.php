@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Auth Hook Functions
  *
@@ -13,6 +14,7 @@
  * @since   3.0.0
  */
 
+use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
@@ -34,7 +36,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
 
     $user_id    = intval($auth['user_id']);
     $session_id = session_id();
-    $repo       = new BookingRepository();
+    $repo       = Container::getInstance()->bookingRepository();
 
     // Link by session
     if (!empty($session_id)) {
@@ -77,7 +79,7 @@ function fn_novoton_holidays_create_user_post($user_data): void
     }
 
     $user_id = intval($user_data['user_id']);
-    $repo    = new BookingRepository();
+    $repo    = Container::getInstance()->bookingRepository();
 
     // Link by email
     $updated = $repo->linkToUserByEmail($user_id, $user_data['email']);

@@ -14,7 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
-class GuestDataService
+class GuestDataService implements GuestDataServiceInterface
 {
     /**
      * Parse guests data from booking form.
@@ -142,7 +142,7 @@ class GuestDataService
             
             // Or parse from key (room1_adult_1)
             if (preg_match('/^room(\d+)_/', $key, $matches)) {
-                $room = intval($matches[1]);
+                $room = (int) $matches[1];
             }
             
             if (!isset($by_room[$room])) {
@@ -347,42 +347,4 @@ class GuestDataService
         return $merged;
     }
     
-    /**
-     * Validate and sanitize birthday - A67 server-side validation
-     * Ensures DOB is not in the future
-     * 
-     * @param string $birthday Birthday in YYYY-MM-DD or DD/MM/YYYY format
-     * @return string Validated birthday or empty string if invalid
-     */
-    private function validateBirthday(string $birthday): string
-    {
-        if (empty($birthday)) {
-            return '';
-        }
-        
-        // Parse different formats
-        $timestamp = null;
-        
-        // Try YYYY-MM-DD format first
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
-            $timestamp = strtotime($birthday);
-        }
-        // Try DD/MM/YYYY format
-        elseif (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $birthday, $matches)) {
-            $timestamp = mktime(0, 0, 0, intval($matches[2]), intval($matches[1]), intval($matches[3]));
-        }
-        
-        // Validate: must be a valid date and not in the future
-        if ($timestamp === null || $timestamp === false) {
-            return '';
-        }
-        
-        $today_midnight = strtotime('today midnight');
-        if ($timestamp > $today_midnight) {
-            // Future date - reject
-            return '';
-        }
-        
-        return $birthday;
-    }
 }

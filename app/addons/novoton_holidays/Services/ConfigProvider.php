@@ -94,12 +94,12 @@ class ConfigProvider
 
     public static function getCommission(): float
     {
-        return floatval(self::settings()['commission'] ?? 0);
+        return max(0.0, (float) (self::settings()['commission'] ?? 0));
     }
 
     public static function getCurrencyRiskCommission(): float
     {
-        return max(0.0, floatval(self::settings()['currency_risk_commission'] ?? 0));
+        return max(0.0, (float) (self::settings()['currency_risk_commission'] ?? 0));
     }
 
     // ── String Settings ──
@@ -223,6 +223,6 @@ class ConfigProvider
 
     public static function getCompanyId(): int
     {
-        return intval(Registry::get('runtime.company_id') ?: 1);
+        return (int) (Registry::get('runtime.company_id') ?: 1);
     }
 }

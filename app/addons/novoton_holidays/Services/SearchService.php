@@ -47,13 +47,13 @@ class SearchService implements SearchServiceInterface
     {
         $params = [
             'check_in' => $request['check_in'] ?? '',
-            'nights' => intval($request['nights'] ?? 7),
-            'adults' => intval($request['adults'] ?? 2),
-            'children' => intval($request['children'] ?? 0),
-            'num_rooms' => intval($request['rooms'] ?? 1),
-            'flex_days' => intval($request['flex_days'] ?? 0),
+            'nights' => (int) ($request['nights'] ?? 7),
+            'adults' => (int) ($request['adults'] ?? 2),
+            'children' => (int) ($request['children'] ?? 0),
+            'num_rooms' => (int) ($request['rooms'] ?? 1),
+            'flex_days' => (int) ($request['flex_days'] ?? 0),
             'hotel_id' => $request['hotel_id'] ?? '',
-            'product_id' => intval($request['product_id'] ?? 0),
+            'product_id' => (int) ($request['product_id'] ?? 0),
             'destination' => $request['destination'] ?? '',
             'country' => $request['country'] ?? '',
             'region' => $request['region'] ?? '',
@@ -104,7 +104,7 @@ class SearchService implements SearchServiceInterface
             if (isset($request['child_age_' . $i])) {
                 $age = $request['child_age_' . $i];
                 if ($age !== '' && $age !== 'age_needed') {
-                    $ages[] = intval($age);
+                    $ages[] = (int) $age;
                 }
             }
         }
@@ -124,12 +124,12 @@ class SearchService implements SearchServiceInterface
         $all_ages = [];
         
         foreach ($rooms_data as $room) {
-            $total_adults += intval($room['adults'] ?? 2);
-            $total_children += intval($room['children'] ?? 0);
+            $total_adults += (int) ($room['adults'] ?? 2);
+            $total_children += (int) ($room['children'] ?? 0);
             if (!empty($room['childrenAges'])) {
                 foreach ($room['childrenAges'] as $age) {
                     if ($age !== null && $age !== 'age_needed') {
-                        $all_ages[] = intval($age);
+                        $all_ages[] = (int) $age;
                     }
                 }
             }
@@ -343,7 +343,7 @@ class SearchService implements SearchServiceInterface
             return null;
         }
         
-        $raw_price = floatval((string)($room->Price ?? 0));
+        $raw_price = (float) (string) ($room->Price ?? 0);
         $price_with_commission = $this->api->applyCommission($raw_price);
         
         return [
@@ -354,7 +354,7 @@ class SearchService implements SearchServiceInterface
             'price' => $price_with_commission,
             'price_raw' => $raw_price,
             'availability' => (string)($room->Availability ?? $room->Status ?? 'OK'),
-            'quota' => intval($room->Quota ?? $room->Available ?? 0),
+            'quota' => (int) ($room->Quota ?? $room->Available ?? 0),
             'cancellation_policy' => (string)($room->CancellationPolicy ?? ''),
             'payment_terms' => (string)($room->PaymentTerms ?? ''),
         ];
@@ -449,7 +449,7 @@ class SearchService implements SearchServiceInterface
             return ['availability' => 0, 'is_on_request' => true];
         }
 
-        $intVal = intval($quotaValue);
+        $intVal = (int) $quotaValue;
         if ($intVal === 0) {
             return ['availability' => 0, 'is_on_request' => true];
         }
@@ -492,7 +492,7 @@ class SearchService implements SearchServiceInterface
         $results = [];
 
         $prevLibxml = libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($rawXml);
+        $xml = simplexml_load_string($rawXml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($prevLibxml);
 
@@ -526,7 +526,7 @@ class SearchService implements SearchServiceInterface
             for ($i = 0; $i < count($prices); $i++) {
                 $roomId  = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
                 $boardId = isset($boards[$i])  ? (string)$boards[$i]  : '';
-                $price   = isset($prices[$i])  ? floatval((string)$prices[$i]) : 0;
+                $price   = isset($prices[$i])  ? (float) (string) $prices[$i] : 0;
 
                 if (empty($roomId) || $price <= 0) {
                     continue;
@@ -558,7 +558,7 @@ class SearchService implements SearchServiceInterface
                     'remark'                 => self::xpathValue($remarks, $i),
                     'important'              => self::xpathValue($importants, $i),
                     'more_info'              => self::xpathValue($moreInfos, $i),
-                    'early_booking_discount' => floatval(self::xpathValue($earlyBookings, $i, '0')),
+                    'early_booking_discount' => (float) self::xpathValue($earlyBookings, $i, '0'),
                     'extras'                 => self::xpathValue($extras, $i),
                     'terms_of_payment'       => isset($termsPayment[0]) ? $termsPayment[0]->asXML() : '',
                     'terms_of_cancellation'  => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
@@ -580,7 +580,7 @@ class SearchService implements SearchServiceInterface
             // Single result (root is room_price itself)
             $roomId      = (string)$xml->IdRoom;
             $boardId     = (string)$xml->Board;
-            $price       = floatval((string)$xml->Price);
+            $price       = (float) (string) $xml->Price;
             $packageName = (string)$xml->PackageName;
             $remark      = isset($xml->remark) ? (string)$xml->remark : '';
 
@@ -614,7 +614,7 @@ class SearchService implements SearchServiceInterface
                 'remark'                 => $remark,
                 'important'              => isset($xml->Important) ? (string)$xml->Important : '',
                 'more_info'              => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
-                'early_booking_discount' => isset($xml->early_booking) ? floatval((string)$xml->early_booking) : 0,
+                'early_booking_discount' => isset($xml->early_booking) ? (float) (string) $xml->early_booking : 0,
                 'extras'                 => isset($xml->extras) ? (string)$xml->extras : '',
                 'terms_of_payment'       => isset($xml->TermsOfPayment) ? $xml->TermsOfPayment->asXML() : '',
                 'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
@@ -682,10 +682,10 @@ class SearchService implements SearchServiceInterface
             if (!empty($stayTo) && $stayTo < $checkIn) continue;
 
             $discounts[] = [
-                'discount'   => floatval($eb['Reduction'] ?? 0),
+                'discount'   => (float) ($eb['Reduction'] ?? 0),
                 'room_types' => $eb['RoomTypes'] ?? 'all',
                 'package'    => $eb['PackageId'] ?? '',
-                'min_stay'   => intval($eb['MinStay'] ?? 0),
+                'min_stay'   => (int) ($eb['MinStay'] ?? 0),
                 'booking_to' => $bookTo,
             ];
         }

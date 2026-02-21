@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Tools Controller
  *
@@ -30,6 +31,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -148,7 +150,7 @@ if ($mode == 'test_api') {
 
     header('Content-Type: text/plain; charset=utf-8');
 
-    $diag = new DiagnosticsService();
+    $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testApiConnection();
 
     echo "========================================\n";
@@ -238,7 +240,7 @@ if ($mode == 'test_hotel_list') {
 
     echo '<h2>Hotel List Test - ' . htmlspecialchars($country) . '</h2>';
 
-    $diag = new DiagnosticsService();
+    $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testHotelList($country, $limit);
 
     if ($result['success']) {
@@ -297,7 +299,7 @@ if ($mode == 'test_room_price') {
     echo '</form>';
 
     if (!empty($hotel_id)) {
-        $diag = new DiagnosticsService();
+        $diag = Container::getInstance()->diagnosticsService();
         $result = $diag->testRoomPrice([
             'hotel_id' => $hotel_id,
             'room_id' => $room_id,
@@ -360,7 +362,7 @@ if ($mode == 'test_search') {
     echo '</form>';
 
     if (!empty($_REQUEST['check_in'])) {
-        $diag = new DiagnosticsService();
+        $diag = Container::getInstance()->diagnosticsService();
         $result = $diag->testSearch([
             'hotel_id' => $hotel_id,
             'check_in' => $check_in,
@@ -409,7 +411,7 @@ if ($mode == 'test_facilities') {
 
     echo '<h2>Facilities Sync Test</h2>';
 
-    $diag = new DiagnosticsService();
+    $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testFacilities();
 
     if ($result['success']) {
@@ -519,7 +521,7 @@ if ($mode == 'test_product') {
     echo "TEST SINGLE PRODUCT: $product_code\n";
     echo "========================================\n\n";
 
-    $diag = new DiagnosticsService();
+    $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testProduct($product_code);
 
     if (!$result['product']) {
@@ -593,7 +595,7 @@ if ($mode == 'cron_export_hotel_features') {
         exit;
     }
 
-    if ($provided_key !== $expected_key) {
+    if (!hash_equals($expected_key, $provided_key)) {
         echo "[ERROR] Invalid API key.\n";
         exit;
     }
@@ -623,7 +625,7 @@ if ($mode == 'get_hotel_features_csv') {
     $expected_key = ConfigProvider::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
 
-    if (empty($expected_key) || $provided_key !== $expected_key) {
+    if (empty($expected_key) || !hash_equals($expected_key, $provided_key)) {
         header('HTTP/1.1 403 Forbidden');
         header('Content-Type: text/plain');
         echo "Access denied. Invalid or missing API key.";

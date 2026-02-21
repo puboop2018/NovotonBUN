@@ -6,10 +6,17 @@ use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 
 abstract class AbstractCronCommand
 {
+    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     protected $api;
+
+    /** @var \Tygh\Addons\NovotonHolidays\Helpers\SyncLogger */
     protected $logger;
-    protected $params = [];
-    protected $startTime;
+
+    /** @var array */
+    protected array $params = [];
+
+    /** @var float */
+    protected float $startTime;
 
     public function __construct($api, $logger, array $params = [])
     {

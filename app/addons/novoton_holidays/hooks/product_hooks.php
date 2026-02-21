@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Product Hook Functions
  *
@@ -16,6 +17,7 @@
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
@@ -58,7 +60,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $product['novoton_prices'] = $prices;
 
     // Last sync timestamp
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $product['novoton_last_update'] = !empty($hotel_id)
         ? $hotelRepo->getLatestPackageSyncedAt($hotel_id)
         : null;
@@ -143,11 +145,11 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
     }
 
     // Clean up bookings
-    $bookingRepo = new BookingRepository();
+    $bookingRepo = Container::getInstance()->bookingRepository();
     $bookingRepo->deleteByProductId($product_id);
 
     // Unlink hotel record (the hotel stays, only the CS-Cart link is removed)
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $hotelRepo->unlinkProduct($product_id);
 }
 
@@ -266,7 +268,7 @@ function _nvt_resolve_active_package(array $packages_data): string
  */
 function _nvt_assign_season_and_early_booking(array &$product, string $hotel_id): void
 {
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $package_data = $hotelRepo->getLatestPriceinfoData($hotel_id);
 
     $season_dates  = [];

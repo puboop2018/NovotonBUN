@@ -28,7 +28,7 @@ class PriceInfoCalculator
     public function __construct(PriceInfoParser $parser, float $commission, ?callable $logger = null)
     {
         $this->parser = $parser;
-        $this->commission = $commission;
+        $this->commission = max(0.0, $commission);
         $this->logger = $logger;
     }
 
@@ -180,8 +180,8 @@ class PriceInfoCalculator
 
             $rawFromDays = PriceInfoFormatter::toScalar($row['FromDays'] ?? '');
             $rawToDays = PriceInfoFormatter::toScalar($row['ToDays'] ?? '');
-            $fromDays = ($rawFromDays !== '') ? intval(preg_replace('/\D+/', '', $rawFromDays) ?: '1') : 1;
-            $toDays = ($rawToDays !== '') ? intval(preg_replace('/\D+/', '', $rawToDays) ?: '9999') : 9999;
+            $fromDays = ($rawFromDays !== '') ? (int) (preg_replace('/\D+/', '', $rawFromDays) ?: '1') : 1;
+            $toDays = ($rawToDays !== '') ? (int) (preg_replace('/\D+/', '', $rawToDays) ?: '9999') : 9999;
             if ($fromDays <= 0) $fromDays = 1;
             if ($toDays <= 0) $toDays = 9999;
 
@@ -236,7 +236,7 @@ class PriceInfoCalculator
         }
 
         if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
-            $percentValue = floatval(str_replace('%', '', $rawPrice));
+            $percentValue = (float) str_replace('%', '', $rawPrice);
             $baseRef = PriceInfoFormatter::toScalar($row['Base'] ?? '');
             $codeIndex = $this->parser->getCodeIndex();
 
@@ -248,7 +248,7 @@ class PriceInfoCalculator
             return 0;
         }
 
-        return floatval($rawPrice);
+        return (float) $rawPrice;
     }
 
     /**
@@ -326,7 +326,7 @@ class PriceInfoCalculator
             $fromDate = $extra['FromDate'] ?? '';
             $toDate = $extra['ToDate'] ?? '';
             $idAge = PriceInfoFormatter::toScalar($extra['IdAge'] ?? '');
-            $price = floatval($extra['Price'] ?? 0);
+            $price = (float) ($extra['Price'] ?? 0);
             $type = $extra['Type'] ?? 'Day';
 
             if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
@@ -377,10 +377,10 @@ class PriceInfoCalculator
             $fromDate = $fee['FromDate'] ?? '';
             $toDate = $fee['ToDate'] ?? '';
             $idAge = PriceInfoFormatter::toScalar($fee['IdAge'] ?? '');
-            $toDays = intval($fee['ToDays'] ?? 3);
-            $fromDays = intval($fee['FromDays'] ?? 4);
-            $price1 = floatval($fee['Price1'] ?? 0);
-            $price2 = floatval($fee['Price2'] ?? 0);
+            $toDays = (int) ($fee['ToDays'] ?? 3);
+            $fromDays = (int) ($fee['FromDays'] ?? 4);
+            $price1 = (float) ($fee['Price1'] ?? 0);
+            $price2 = (float) ($fee['Price2'] ?? 0);
 
             if (!empty($fromDate) && !empty($toDate)) {
                 if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
@@ -438,7 +438,7 @@ class PriceInfoCalculator
         foreach ($extrasSingle as $extra) {
             $fromDate = $extra['FromDate'] ?? '';
             $toDate = $extra['ToDate'] ?? '';
-            $price = floatval($extra['Price'] ?? 0);
+            $price = (float) ($extra['Price'] ?? 0);
             $type = $extra['Type'] ?? 'Stay';
             $idRoom = $extra['IdRoom'] ?? '';
 
@@ -490,7 +490,7 @@ class PriceInfoCalculator
         foreach ($extrasRooms as $extra) {
             $fromDate = $extra['FromDate'] ?? '';
             $toDate = $extra['ToDate'] ?? '';
-            $price = floatval($extra['Price'] ?? 0);
+            $price = (float) ($extra['Price'] ?? 0);
             $type = $extra['Type'] ?? 'Day';
             $idRoom = $extra['IdRoom'] ?? '';
 
@@ -544,7 +544,7 @@ class PriceInfoCalculator
         foreach ($extrasBoard as $extra) {
             $fromDate = $extra['FromDate'] ?? '';
             $toDate = $extra['ToDate'] ?? '';
-            $price = floatval($extra['Price'] ?? 0);
+            $price = (float) ($extra['Price'] ?? 0);
             $type = $extra['Type'] ?? 'Day';
             $idBoard = $extra['IdBoard'] ?? '';
             $idAge = $extra['IdAge'] ?? '';
@@ -601,7 +601,7 @@ class PriceInfoCalculator
 
         foreach ($companyFees as $fee) {
             $feeRoomId = $fee['IdRoom'] ?? '';
-            $price = floatval($fee['Price'] ?? 0);
+            $price = (float) ($fee['Price'] ?? 0);
 
             if (empty($feeRoomId) || PriceInfoFormatter::matchRoom($feeRoomId, $roomId)) {
                 return $price;
@@ -640,8 +640,8 @@ class PriceInfoCalculator
             $bookTo = $eb['BookingTo'] ?? $eb['BookTo'] ?? '';
             $travelFrom = $eb['TravelTimeFrom'] ?? $eb['StayFrom'] ?? '';
             $travelTo = $eb['TravelTimeTo'] ?? $eb['StayTo'] ?? '';
-            $discount = floatval($eb['Discount'] ?? $eb['Reduction'] ?? 0);
-            $minStay = intval($eb['MinimumStay'] ?? $eb['MinStay'] ?? 0);
+            $discount = (float) ($eb['Discount'] ?? $eb['Reduction'] ?? 0);
+            $minStay = (int) ($eb['MinimumStay'] ?? $eb['MinStay'] ?? 0);
 
             if ($bookingDate < $bookFrom || $bookingDate > $bookTo) {
                 continue;
@@ -713,11 +713,11 @@ class PriceInfoCalculator
         $applicable = false;
 
         foreach ($reductions as $red) {
-            $fromNights = intval($red['FromNights'] ?? 0);
-            $toNights = intval($red['ToNights'] ?? 999);
+            $fromNights = (int) ($red['FromNights'] ?? 0);
+            $toNights = (int) ($red['ToNights'] ?? 999);
             $checkInFrom = $red['CheckInFrom'] ?? '';
             $checkInTo = $red['CheckInTo'] ?? '';
-            $freeNights = intval($red['FreeNights'] ?? 0);
+            $freeNights = (int) ($red['FreeNights'] ?? 0);
             $type = $red['Type'] ?? 'End';
 
             if ($nights < $fromNights || $nights > $toNights) {

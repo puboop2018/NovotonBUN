@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Novoton Holidays - Hotels Controller
  * 
@@ -22,6 +23,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
@@ -44,7 +46,7 @@ if ($mode == 'view_hotels_to_add') {
     $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
     $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
     
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     
     if ($filter == 'packages') {
         // V3: Check for packages in novoton_hotel_packages table
@@ -104,7 +106,7 @@ if ($mode == 'add_hotels_as_products') {
         try {
             $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
-            $hotelRepo = new HotelRepository();
+            $hotelRepo = Container::getInstance()->hotelRepository();
 
             $stats = [
                 'total' => $hotelRepo->count(['country' => $country]),
@@ -211,7 +213,7 @@ if ($mode == 'add_hotels_as_products') {
         $skipped = 0;
         $errors = 0;
         
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
         
         foreach ($hotels as $hotel) {
             $hotel_id = $hotel['hotel_id'];
