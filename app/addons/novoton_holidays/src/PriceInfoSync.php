@@ -160,8 +160,8 @@ class PriceInfoSync
                     foreach ($seasonPrices as $sp) {
                         for ($i = 1; $i <= 20; $i++) {
                             $priceKey = 'Price' . $i;
-                            if (isset($sp[$priceKey]) && floatval($sp[$priceKey]) > 0) {
-                                $price = floatval($sp[$priceKey]);
+                            if (isset($sp[$priceKey]) && (float) $sp[$priceKey] > 0) {
+                                $price = (float) $sp[$priceKey];
                                 if ($minPrice === null || $price < $minPrice) {
                                     $minPrice = $price;
                                 }
@@ -221,7 +221,7 @@ class PriceInfoSync
         } catch (XmlParsingException $e) {
             $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (XML error: ' . $e->getMessage() . ')';
             return false;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (Error: ' . $e->getMessage() . ')';
             return false;
         }
@@ -230,7 +230,7 @@ class PriceInfoSync
     /**
      * Sync all products
      */
-    public function syncAllProducts()
+    public function syncAllProducts(): array
     {
         $products = $this->getProductsToSync();
         if (!is_array($products)) {
@@ -360,7 +360,7 @@ class PriceInfoSync
             fn_log_event('general', 'runtime', [
                 'message' => 'API error checking missing products (HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage()
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Error checking missing products: ' . $e->getMessage()
             ]);

@@ -141,7 +141,7 @@ class HotelSync
             } catch (XmlParsingException $e) {
                 $this->stats['errors'][] = "XML parsing error for hotel_list {$countryName}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->stats['errors'][] = "Unexpected error fetching hotel_list for {$countryName}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
@@ -291,7 +291,7 @@ class HotelSync
             } catch (XmlParsingException $e) {
                 $this->stats['errors'][] = "XML parsing error for hotelinfo {$hotelId}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->stats['errors'][] = "Unexpected error syncing hotelinfo for {$hotelId}: " . $e->getMessage();
                 $this->stats['hotels_failed']++;
             }
@@ -405,7 +405,7 @@ class HotelSync
             } catch (XmlParsingException $e) {
                 $this->stats['errors'][] = "XML parsing error for package {$hotelId}/{$packageId}: " . $e->getMessage();
                 $this->stats['packages_failed']++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $syncEx = SyncException::packageSyncFailed($hotelId, $packageId, $e->getMessage(), $e);
                 $this->stats['errors'][] = $syncEx->getMessage();
                 $this->stats['packages_failed']++;
@@ -588,7 +588,7 @@ class HotelSync
             } catch (XmlParsingException $e) {
                 $this->stats['errors'][] = "XML parsing error refreshing {$pkg['hotel_id']}/{$pkg['package_id']}: " . $e->getMessage();
                 $this->stats['packages_failed']++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $syncEx = SyncException::packageSyncFailed($pkg['hotel_id'], $pkg['package_id'], $e->getMessage(), $e);
                 $this->stats['errors'][] = $syncEx->getMessage();
                 $this->stats['packages_failed']++;

@@ -37,8 +37,8 @@ class NovotonApi
      * Static data (hotel_list, hotel_info, priceinfo) is stored in database via cron
      */
     private $cacheTtl = [
-        'room_price' => 300,       // 5 minutes - live booking prices
-        'hotel_quota' => 180,      // 3 minutes - live availability
+        Constants::API_FUNCTION_ROOM_PRICE => 300,       // 5 minutes - live booking prices
+        Constants::API_FUNCTION_HOTEL_QUOTA => 180,      // 3 minutes - live availability
         'search' => 300,           // 5 minutes - search results (combines live data)
     ];
 
@@ -48,9 +48,9 @@ class NovotonApi
      * V3 Architecture: priceinfo stored in novoton_hotel_packages.priceinfo_data JSON
      */
     private $noCacheFunctions = [
-        'hotel_list',    // Stored in novoton_hotels table
-        'hotelinfo',     // Stored in novoton_hotels.hotel_data JSON
-        'priceinfo',     // Stored in novoton_hotel_packages.priceinfo_data JSON
+        Constants::API_FUNCTION_HOTEL_LIST,    // Stored in novoton_hotels table
+        Constants::API_FUNCTION_HOTEL_INFO,     // Stored in novoton_hotels.hotel_data JSON
+        Constants::API_FUNCTION_PRICE_INFO,     // Stored in novoton_hotel_packages.priceinfo_data JSON
     ];
 
     // Debug properties
@@ -243,7 +243,7 @@ class NovotonApi
             </hotelinfo>
         </hotel_list>';
 
-        return $this->callApiAndParse('hotel_list', $xml);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_LIST, $xml);
     }
 
     /**
@@ -258,7 +258,7 @@ class NovotonApi
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotelinfo>';
 
-        return $this->callApiAndParse('hotelinfo', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_INFO, $xml, $lang);
     }
 
     /**
@@ -284,7 +284,7 @@ class NovotonApi
                     <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
                 </hotelinfo>';
 
-            $requests[$hotelId] = ['function' => 'hotelinfo', 'xml' => $xml, 'lang' => $lang];
+            $requests[$hotelId] = ['function' => Constants::API_FUNCTION_HOTEL_INFO, 'xml' => $xml, 'lang' => $lang];
         }
 
         // Send batch via HttpClient
@@ -327,11 +327,11 @@ class NovotonApi
             'adults' => $params['adults'] ?? 2,
             'children' => $params['children'] ?? [],
         ];
-        $cacheKey = $this->buildCacheKey('room_price', $cacheParams);
+        $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
 
         // Check cache first (unless bypassed)
         if (!$bypassCache) {
-            $cachedXml = $this->getFromCache('room_price', $cacheKey);
+            $cachedXml = $this->getFromCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey);
             if ($cachedXml !== null && is_string($cachedXml)) {
                 $this->lastResponse = $cachedXml;
                 try {
@@ -349,7 +349,7 @@ class NovotonApi
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
 
-        $adultsCount = intval($params['adults'] ?? 2);
+        $adultsCount = (int) ($params['adults'] ?? 2);
         if ($adultsCount < 1) {
             $adultsCount = 2;
         }
@@ -358,7 +358,7 @@ class NovotonApi
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . intval($age) . '</Age>';
+                $childrenXml .= '<Age>' . (int) $age . '</Age>';
             }
         }
 
@@ -392,7 +392,7 @@ class NovotonApi
             'adults' => $params['adults'] ?? 2
         ];
 
-        $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
 
         // Log raw response for debugging
         fn_log_event('general', 'runtime', [
@@ -406,7 +406,7 @@ class NovotonApi
         // Save RAW XML to cache (not SimpleXMLElement) ONLY if we have valid price data
         $prices = $result->xpath('//Price');
         if (!empty($prices) && count($prices) > 0) {
-            $this->saveToCache('room_price', $cacheKey, $response);
+            $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $response);
         }
 
         return $result;
@@ -477,10 +477,10 @@ class NovotonApi
     {
         // Build cache key
         $cacheParams = ['hotel_id' => $hotelId, 'check_in' => $checkIn, 'check_out' => $checkOut];
-        $cacheKey = $this->buildCacheKey('hotel_quota', $cacheParams);
+        $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_HOTEL_QUOTA, $cacheParams);
 
         // Check cache first
-        $cached = $this->getFromCache('hotel_quota', $cacheKey);
+        $cached = $this->getFromCache(Constants::API_FUNCTION_HOTEL_QUOTA, $cacheKey);
         if ($cached !== null) {
             return $cached;
         }
@@ -493,7 +493,7 @@ class NovotonApi
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
         </hotel_quota>';
 
-        $response = $this->callApi('hotel_quota', $xml);
+        $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
         $parsed = $this->xmlParser->parse($response);
 
         $quotaMap = [];
@@ -513,8 +513,8 @@ class NovotonApi
                         if (!isset($quotaMap[$roomId])) {
                             $quotaMap[$roomId] = $quota;
                         } else {
-                            $existing = is_numeric($quotaMap[$roomId]) ? intval($quotaMap[$roomId]) : 0;
-                            $new = is_numeric($quota) ? intval($quota) : 0;
+                            $existing = is_numeric($quotaMap[$roomId]) ? (int) $quotaMap[$roomId] : 0;
+                            $new = is_numeric($quota) ? (int) $quota : 0;
                             if ($new < $existing || $quotaMap[$roomId] === 'RQ') {
                                 $quotaMap[$roomId] = $quota;
                             }
@@ -531,7 +531,7 @@ class NovotonApi
         }
 
         // Save to cache
-        $this->saveToCache('hotel_quota', $cacheKey, $quotaMap);
+        $this->saveToCache(Constants::API_FUNCTION_HOTEL_QUOTA, $cacheKey, $quotaMap);
 
         return $quotaMap;
     }
@@ -556,7 +556,7 @@ class NovotonApi
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
         </hotel_quota>';
 
-        $response = $this->callApi('hotel_quota', $xml);
+        $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
 
         if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
@@ -574,11 +574,11 @@ class NovotonApi
      */
     public function searchAvailability(array $params): array
     {
-        $adultsCount = intval($params['adults'] ?? 2);
+        $adultsCount = (int) ($params['adults'] ?? 2);
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
+            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
@@ -604,7 +604,7 @@ class NovotonApi
             ]);
         }
 
-        $response = $this->callApi('frmsearch', $xml);
+        $response = $this->callApi(Constants::API_FUNCTION_SEARCH, $xml);
 
         if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
@@ -641,9 +641,9 @@ class NovotonApi
         foreach ($offers as $offer) {
             $roomType = (string)($offer->IdRoom ?? $offer->Room ?? $offer->room ?? '');
             $boardCode = (string)($offer->IdBoard ?? $offer->Board ?? $offer->board ?? '');
-            $price = floatval($offer->Price ?? $offer->price ?? 0);
-            $nights = intval($offer->Nights ?? $offer->nights ?? 7);
-            $availability = intval($offer->Availability ?? $offer->Avail ?? $offer->avail ?? 0);
+            $price = (float) ($offer->Price ?? $offer->price ?? 0);
+            $nights = (int) ($offer->Nights ?? $offer->nights ?? 7);
+            $availability = (int) ($offer->Availability ?? $offer->Avail ?? $offer->avail ?? 0);
 
             if ($price <= 0) continue;
 
@@ -681,9 +681,9 @@ class NovotonApi
         if (!is_array($data)) return;
 
         if (isset($data['Price']) || isset($data['price'])) {
-            $price = floatval($data['Price'] ?? $data['price'] ?? 0);
+            $price = (float) ($data['Price'] ?? $data['price'] ?? 0);
             if ($price > 0) {
-                $nights = intval($data['Nights'] ?? $data['nights'] ?? 7);
+                $nights = (int) ($data['Nights'] ?? $data['nights'] ?? 7);
                 $boardCode = $data['IdBoard'] ?? $data['Board'] ?? 'AI';
                 $results[] = [
                     'room_id' => $data['IdRoom'] ?? $data['Room'] ?? 'ROOM',
@@ -696,7 +696,7 @@ class NovotonApi
                     'total_price' => $this->applyCommission($price),
                     'price_per_night' => round($this->applyCommission($price) / max($nights, 1), 2),
                     'currency' => ConfigProvider::getApiCurrency(),
-                    'availability' => intval($data['Availability'] ?? $data['Avail'] ?? 1)
+                    'availability' => (int) ($data['Availability'] ?? $data['Avail'] ?? 1)
                 ];
             }
         }
@@ -723,7 +723,7 @@ class NovotonApi
             ' . $packageXml . '
         </hotel_description>';
 
-        return $this->callApiAndParse('hotel_description', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_DESCRIPTION, $xml, $lang);
     }
 
     /**
@@ -738,7 +738,7 @@ class NovotonApi
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_images>';
 
-        return $this->callApiAndParse('hotel_images', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_IMAGES, $xml, $lang);
     }
 
     /**
@@ -768,7 +768,7 @@ class NovotonApi
         <IdGuest>' . $idGuest . '</IdGuest>
         <Name>' . htmlspecialchars($guest['name']) . '</Name>
         <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-        <Age>' . intval($guest['age']) . '</Age>
+        <Age>' . (int) $guest['age'] . '</Age>
     </Guests>';
             $idGuest++;
         }
@@ -859,7 +859,7 @@ class NovotonApi
             ]);
         }
 
-        $response = $this->callApi('hotel_res_RQ', $xml, $bookingData['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_RESERVATION, $xml, $bookingData['lang'] ?? 'UK');
 
         if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
@@ -885,7 +885,7 @@ class NovotonApi
             <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
         </hotel_acc_RQ_html>';
 
-        $response = $this->callApi('hotel_acc_RQ_html', $xml, $lang);
+        $response = $this->callApi(Constants::API_FUNCTION_INVOICE_HTML, $xml, $lang);
         return $response; // Returns HTML directly
     }
 
@@ -903,7 +903,7 @@ class NovotonApi
             <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
         </hotel_acc_RQ>';
 
-        return $this->callApiAndParse('hotel_acc_RQ', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_INVOICE_XML, $xml, $lang);
     }
 
     /**
@@ -923,7 +923,7 @@ class NovotonApi
             ' . $packageXml . '
         </spo>';
 
-        return $this->callApiAndParse('spo', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_SPECIAL_OFFERS, $xml, $lang);
     }
 
     /**
@@ -941,7 +941,7 @@ class NovotonApi
             <PackageName>' . htmlspecialchars($packageName) . '</PackageName>
         </priceinfo>';
 
-        return $this->callApiAndParse('priceinfo', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_PRICE_INFO, $xml, $lang);
     }
 
     /**
@@ -962,7 +962,7 @@ class NovotonApi
             ' . $arrToXml . '
         </list_invoices>';
 
-        return $this->callApiAndParse('list_invoices', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_LIST_INVOICES, $xml, $lang);
     }
 
     /**
@@ -982,7 +982,7 @@ class NovotonApi
             ' . $searchXml . '
         </resinfo>';
 
-        return $this->callApiAndParse('resinfo', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_RES_INFO, $xml, $lang);
     }
 
     /**
@@ -997,7 +997,7 @@ class NovotonApi
             <Country>' . htmlspecialchars($country) . '</Country>
         </resort_list>';
 
-        return $this->callApiAndParse('resort_list', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_RESORT_LIST, $xml, $lang);
     }
 
     /**
@@ -1010,20 +1010,20 @@ class NovotonApi
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        $adultsCount = intval($params['adults'] ?? 2);
+        $adultsCount = (int) ($params['adults'] ?? 2);
         $boardId = $params['board_id'] ?? '';
 
         $adultAges = $params['adult_ages'] ?? [];
         $adultsXml = '';
         for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? intval($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
+            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . intval($age) . '</Age>';
+                $childrenXml .= '<Age>' . (int) $age . '</Age>';
             }
         }
 
@@ -1054,7 +1054,7 @@ class NovotonApi
             'adults' => $adultsCount
         ];
 
-        return $this->callApiAndParse('room_price', $xml, $params['lang'] ?? 'UK');
+        return $this->callApiAndParse(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
     }
 
     /**
@@ -1068,7 +1068,7 @@ class NovotonApi
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
-        $adultsCount = intval($params['adults'] ?? 2);
+        $adultsCount = (int) ($params['adults'] ?? 2);
         if ($adultsCount < 1) {
             $adultsCount = 2;
         }
@@ -1077,7 +1077,7 @@ class NovotonApi
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . intval($age) . '</Age>';
+                $childrenXml .= '<Age>' . (int) $age . '</Age>';
             }
         }
 
@@ -1103,7 +1103,7 @@ class NovotonApi
 
         $this->lastRequest = $xml;
 
-        $response = $this->callApi('room_price', $xml, $params['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
 
         return $response;
     }
@@ -1125,7 +1125,7 @@ class NovotonApi
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
         </hotel_quota>';
 
-        return $this->callApiAndParse('hotel_quota_add', $xml);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_QUOTA_ADD, $xml);
     }
 
     /**
@@ -1143,7 +1143,7 @@ class NovotonApi
   <IdGuest>' . htmlspecialchars($guest['id'] ?? 1) . '</IdGuest>
   <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
   <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-  <Age>' . intval($guest['age'] ?? 30) . '</Age>
+  <Age>' . (int) ($guest['age'] ?? 30) . '</Age>
 </Guests>';
             }
         }
@@ -1188,7 +1188,7 @@ class NovotonApi
             'xml' => $xml
         ]);
 
-        $response = $this->callApi('hotel_request', $xml, $lang);
+        $response = $this->callApi(Constants::API_FUNCTION_HOTEL_REQUEST, $xml, $lang);
         $parsed = $this->xmlParser->parse($response);
 
         if ($returnXml) {
@@ -1219,7 +1219,7 @@ class NovotonApi
   <IdGuest>' . htmlspecialchars($guest['id'] ?? 1) . '</IdGuest>
   <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
   <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-  <Age>' . intval($guest['age'] ?? 30) . '</Age>
+  <Age>' . (int) ($guest['age'] ?? 30) . '</Age>
 </Guests>';
             }
         }
@@ -1285,7 +1285,7 @@ class NovotonApi
             'xml' => $xml
         ]);
 
-        return $this->callApiAndParse('alternative_RS', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_ALTERNATIVE_RS, $xml, $lang);
     }
 
     /**
@@ -1301,7 +1301,7 @@ class NovotonApi
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
         </kickback_RS>';
 
-        return $this->callApiAndParse('kickback_RS', $xml, $lang);
+        return $this->callApiAndParse(Constants::API_FUNCTION_KICKBACK, $xml, $lang);
     }
 
     /**
@@ -1321,7 +1321,7 @@ class NovotonApi
             <Hotel>' . htmlspecialchars($hotel) . '</Hotel>
         </offers_update>';
 
-        return $this->callApiAndParse('offers_update', $xml);
+        return $this->callApiAndParse(Constants::API_FUNCTION_OFFERS_UPDATE, $xml);
     }
 
     /**
@@ -1335,7 +1335,7 @@ class NovotonApi
         <list_facilities>
         </list_facilities>';
 
-        return $this->callApiAndParse('list_facilities', $xml);
+        return $this->callApiAndParse(Constants::API_FUNCTION_LIST_FACILITIES, $xml);
     }
 
     /**
@@ -1350,6 +1350,6 @@ class NovotonApi
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_facilities>';
 
-        return $this->callApiAndParse('hotel_facilities', $xml);
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_FACILITIES, $xml);
     }
 }

@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class CronService
@@ -45,8 +46,10 @@ class CronService
         $bookings = db_get_array(
             "SELECT booking_id, novoton_confirm_id, novoton_invoice_id, hotel_name, novoton_status
              FROM ?:novoton_bookings
-             WHERE novoton_status = 'ASK' AND status IN ('pending', 'ask')
-             ORDER BY created_at DESC LIMIT 50"
+             WHERE novoton_status = ?s AND status IN (?a)
+             ORDER BY created_at DESC LIMIT 50",
+            Constants::NOVOTON_STATUS_ON_REQUEST,
+            [Constants::STATUS_PENDING, Constants::STATUS_ASK]
         );
 
         foreach ($bookings as $booking) {
@@ -129,9 +132,10 @@ class CronService
         $pending = db_get_array(
             "SELECT request_id, novoton_request_id, hotel_name, contact_email
              FROM ?:novoton_alternative_requests
-             WHERE status = 'pending'
+             WHERE status = ?s
                AND novoton_request_id != ''
-               AND novoton_request_id IS NOT NULL"
+               AND novoton_request_id IS NOT NULL",
+            Constants::STATUS_PENDING
         );
         // Decrypt encrypted PII (contact_email) for email sending
         $pending = fn_novoton_decrypt_requests_pii($pending);
@@ -195,20 +199,7 @@ class CronService
      */
     private function mapNovotonStatus(string $novotonStatus): string
     {
-        $map = [
-            'OK' => 'confirmed',
-            'Confirmed' => 'confirmed',
-            'ASK' => 'ask',
-            'OnRequest' => 'ask',
-            'ST' => 'cancelled',
-            'Cancelled' => 'cancelled',
-            'CX' => 'cancelled',
-            'WT' => 'waiting',
-            'Waitlist' => 'waiting',
-            'RQ' => 'pending',
-        ];
-
-        return $map[$novotonStatus] ?? 'pending';
+        return Constants::NOVOTON_STATUS_TO_INTERNAL[$novotonStatus] ?? Constants::STATUS_PENDING;
     }
 
     /**

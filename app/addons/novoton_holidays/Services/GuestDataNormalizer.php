@@ -169,7 +169,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
                 $type = 'adult';
             }
 
-            $room = intval($guest['room'] ?? 1);
+            $room = (int) ($guest['room'] ?? 1);
             if ($room < 1) {
                 $room = 1;
             }

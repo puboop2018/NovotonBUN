@@ -142,8 +142,8 @@ class PriceInfoFormatter
      */
     public static function formatAgeBandLabel(float $from, float $to): string
     {
-        $fromStr = ($from == floor($from)) ? (string)intval($from) : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
-        $toStr = ($to == floor($to)) ? (string)intval($to) : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
+        $fromStr = ($from == floor($from)) ? (string)(int) $from : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
+        $toStr = ($to == floor($to)) ? (string)(int) $to : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
 
         return $fromStr . '-' . $toStr;
     }
@@ -160,7 +160,7 @@ class PriceInfoFormatter
 
         // Check for specific adult positions (3RD ADULT, 4TH ADULT, etc.)
         if (preg_match('/(\d+)(ST|ND|RD|TH)\s*ADULT/i', $idAge, $matches)) {
-            $position = intval($matches[1]);
+            $position = (int) $matches[1];
             if ($numAdults >= $position) {
                 $count = 1;
             }
@@ -174,7 +174,7 @@ class PriceInfoFormatter
 
         // Check for specific child positions (1ST CHD, 2ND CHD, etc.)
         if (preg_match('/(\d+)(ST|ND|RD|TH)\s*(CHD|CHILD)/i', $idAge, $matches)) {
-            $position = intval($matches[1]);
+            $position = (int) $matches[1];
             if ($numChildren >= $position) {
                 $count = 1;
             }
@@ -187,8 +187,8 @@ class PriceInfoFormatter
             $toAge = 17;
 
             if (preg_match('/(\d+)\s*-\s*(\d+)/', $idAge, $ageMatches)) {
-                $fromAge = intval($ageMatches[1]);
-                $toAge = intval($ageMatches[2]);
+                $fromAge = (int) $ageMatches[1];
+                $toAge = (int) $ageMatches[2];
             } elseif (strpos($idAge, '0-1') !== false || strpos($idAge, 'INFANT') !== false) {
                 $fromAge = 0;
                 $toAge = 1;
@@ -299,7 +299,7 @@ class PriceInfoFormatter
             foreach ($parsedSeasons as $season) {
                 $from = $season['FromDate'] ?? '';
                 $to = $season['ToDate'] ?? '';
-                $id = intval($season['Season'] ?? $season['IdSeason'] ?? 1);
+                $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
                     $seasonNum = $id;

@@ -147,8 +147,8 @@ class PriceInfoParser
                 continue;
             }
 
-            $fromYear = floatval($age['FromYear'] ?? 0);
-            $toYear = floatval($age['ToYear'] ?? 0);
+            $fromYear = (float) ($age['FromYear'] ?? 0);
+            $toYear = (float) ($age['ToYear'] ?? 0);
             if ($toYear <= 0) {
                 continue;
             }
@@ -196,11 +196,11 @@ class PriceInfoParser
             $rid = $room['IdRoom'] ?? '';
             if ($rid === $roomId || rawurldecode($rid) === $roomId) {
                 return [
-                    'RB' => intval($room['RegularBeds'] ?? $room['RB'] ?? 2),
-                    'EB' => intval($room['ExtraBeds'] ?? $room['EB'] ?? 1),
-                    'maxADT' => intval($room['maxADT'] ?? $room['MaxAdults'] ?? 2),
-                    'maxCHD' => intval($room['maxCHD'] ?? $room['MaxChildren'] ?? 2),
-                    'minPAX' => intval($room['minPAX'] ?? $room['MinPax'] ?? 1)
+                    'RB' => (int) ($room['RegularBeds'] ?? $room['RB'] ?? 2),
+                    'EB' => (int) ($room['ExtraBeds'] ?? $room['EB'] ?? 1),
+                    'maxADT' => (int) ($room['maxADT'] ?? $room['MaxAdults'] ?? 2),
+                    'maxCHD' => (int) ($room['maxCHD'] ?? $room['MaxChildren'] ?? 2),
+                    'minPAX' => (int) ($room['minPAX'] ?? $room['MinPax'] ?? 1)
                 ];
             }
         }
@@ -512,7 +512,7 @@ class PriceInfoParser
             foreach ($seasons as $season) {
                 $from = $season['FromDate'] ?? '';
                 $to = $season['ToDate'] ?? '';
-                $id = intval($season['Season'] ?? $season['IdSeason'] ?? 1);
+                $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
                     $seasonNum = $id;

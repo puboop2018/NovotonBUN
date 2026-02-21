@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
@@ -23,7 +24,7 @@ class ResInfoCommand extends AbstractCronCommand
         $this->output("");
 
         $repo = new BookingRepository();
-        $ask_bookings = $repo->findByNovotonStatus('ASK', ['pending', 'ask']);
+        $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [Constants::STATUS_PENDING, Constants::STATUS_ASK]);
 
         $checked = count($ask_bookings);
         $updated = 0;
@@ -53,19 +54,19 @@ class ResInfoCommand extends AbstractCronCommand
 
                 $new_status = strtolower((string)$response->Status);
 
-                if ($new_status === 'confirmed' || $new_status === 'ok') {
+                if ($new_status === Constants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
                     $repo->update($booking['booking_id'], [
-                        'status'            => 'confirmed',
-                        'novoton_status'    => 'OK',
+                        'status'            => Constants::STATUS_CONFIRMED,
+                        'novoton_status'    => Constants::NOVOTON_STATUS_CONFIRMED,
                         'last_status_check' => date('Y-m-d H:i:s'),
                         'updated_at'        => date('Y-m-d H:i:s'),
                     ]);
                     $this->output("  -> Updated to CONFIRMED");
                     $updated++;
-                } elseif ($new_status === 'cancelled' || $new_status === 'rejected') {
+                } elseif ($new_status === Constants::STATUS_CANCELLED || $new_status === 'rejected') {
                     $repo->update($booking['booking_id'], [
-                        'status'            => 'cancelled',
-                        'novoton_status'    => 'CX',
+                        'status'            => Constants::STATUS_CANCELLED,
+                        'novoton_status'    => Constants::NOVOTON_STATUS_CANCELLED_CX,
                         'last_status_check' => date('Y-m-d H:i:s'),
                         'updated_at'        => date('Y-m-d H:i:s'),
                     ]);

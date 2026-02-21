@@ -34,6 +34,7 @@ final class Constants
     public const NOVOTON_STATUS_CONFIRMED = 'OK';      // Reservation accepted and confirmed
     public const NOVOTON_STATUS_ON_REQUEST = 'ASK';     // Reservation accepted with asking status
     public const NOVOTON_STATUS_CANCELLED = 'ST';       // Reservation cancelled
+    public const NOVOTON_STATUS_CANCELLED_CX = 'CX';   // Reservation cancelled (alt code)
     public const NOVOTON_STATUS_WAITLIST = 'WT';        // Reservation with waiting status
     
     // ========== Reservation Status Mapping ==========
@@ -46,8 +47,10 @@ final class Constants
         'OnRequest'                     => self::STATUS_ASK,
         self::NOVOTON_STATUS_CANCELLED  => self::STATUS_CANCELLED,  // ST  -> cancelled
         'Cancelled'                     => self::STATUS_CANCELLED,
+        self::NOVOTON_STATUS_CANCELLED_CX => self::STATUS_CANCELLED,  // CX  -> cancelled (alt code)
         self::NOVOTON_STATUS_WAITLIST   => self::STATUS_WAITING,    // WT  -> waiting
         'Waitlist'                      => self::STATUS_WAITING,
+        'RQ'                            => self::STATUS_PENDING,    // RQ  -> pending
     ];
     
     // ========== Availability Status ==========

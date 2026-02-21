@@ -142,7 +142,7 @@ class GuestDataService implements GuestDataServiceInterface
             
             // Or parse from key (room1_adult_1)
             if (preg_match('/^room(\d+)_/', $key, $matches)) {
-                $room = intval($matches[1]);
+                $room = (int) $matches[1];
             }
             
             if (!isset($by_room[$room])) {

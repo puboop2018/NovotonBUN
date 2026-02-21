@@ -100,13 +100,13 @@ class RoomPriceService implements RoomPriceServiceInterface
         // Get source (API) coefficient (1.0 if it is the primary currency)
         $source_coefficient = 1.0;
         if (isset($currencies[$source]['coefficient'])) {
-            $source_coefficient = floatval($currencies[$source]['coefficient']);
+            $source_coefficient = (float) $currencies[$source]['coefficient'];
         }
 
         // Get target (display) coefficient (1.0 if it is the primary currency)
         $target_coefficient = 1.0;
         if (isset($currencies[$target]['coefficient'])) {
-            $target_coefficient = floatval($currencies[$target]['coefficient']);
+            $target_coefficient = (float) $currencies[$target]['coefficient'];
         }
 
         // Guard against invalid coefficient
@@ -133,10 +133,10 @@ class RoomPriceService implements RoomPriceServiceInterface
 
         foreach ($results as &$result) {
             if (isset($result['total_price'])) {
-                $result['total_price'] = self::convertFromApiCurrency(floatval($result['total_price']));
+                $result['total_price'] = self::convertFromApiCurrency((float) $result['total_price']);
             }
             if (isset($result['price_per_night'])) {
-                $result['price_per_night'] = self::convertFromApiCurrency(floatval($result['price_per_night']));
+                $result['price_per_night'] = self::convertFromApiCurrency((float) $result['price_per_night']);
             }
         }
         unset($result);
@@ -190,7 +190,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         $total = 0;
         
         foreach ($rooms_data as $room) {
-            $total += floatval($room['price'] ?? 0);
+            $total += (float) ($room['price'] ?? 0);
         }
         
         return round($total, 2);
@@ -254,7 +254,7 @@ class RoomPriceService implements RoomPriceServiceInterface
             return null;
         }
         
-        $base_price = floatval((string)$response->Price);
+        $base_price = (float) (string)$response->Price;
         $price_with_commission = $this->applyCommission($base_price);
         
         $result = [
