@@ -52,26 +52,6 @@ msgctxt "SettingsOptions::novoton_holidays::api_currency"
 msgid "API prices currency"
 msgstr "Moneda prețurilor API"
 
-msgctxt "SettingsVariants::novoton_holidays::api_currency::EUR"
-msgid "EUR"
-msgstr "EUR"
-
-msgctxt "SettingsVariants::novoton_holidays::api_currency::USD"
-msgid "USD"
-msgstr "USD"
-
-msgctxt "SettingsVariants::novoton_holidays::api_currency::GBP"
-msgid "GBP"
-msgstr "GBP"
-
-msgctxt "SettingsVariants::novoton_holidays::api_currency::RON"
-msgid "RON"
-msgstr "RON"
-
-msgctxt "SettingsVariants::novoton_holidays::api_currency::BGN"
-msgid "BGN"
-msgstr "BGN"
-
 msgctxt "SettingsTooltips::novoton_holidays::api_currency"
 msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 msgstr "Moneda în care API-ul Novoton returnează prețurile. Prețurile vor fi convertite din această monedă în moneda selectată de client."

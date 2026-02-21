@@ -44,6 +44,26 @@ foreach ($function_files as $file) {
     }
 }
 
+/**
+ * Variants function for the api_currency addon setting.
+ * Pulls currencies from CS-Cart's configured currencies.
+ */
+function fn_settings_variants_addons_novoton_holidays_api_currency(): array
+{
+    $currencies = Registry::get('currencies');
+
+    if (!empty($currencies)) {
+        $result = [];
+        foreach ($currencies as $code => $currency) {
+            $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+        }
+        return $result;
+    }
+
+    // Fallback if currencies not loaded yet
+    return ['EUR' => 'EUR', 'USD' => 'USD', 'GBP' => 'GBP', 'RON' => 'RON', 'BGN' => 'BGN'];
+}
+
 // ============================================================================
 // FUNCTION LOCATIONS
 // ============================================================================
