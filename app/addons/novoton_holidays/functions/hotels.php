@@ -255,7 +255,7 @@ function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hote
                 if (is_string($val) && strpos($val, '%') !== false) {
                     $entry[$target_key] = $val; // Keep as string for template to handle
                 } else {
-                    $entry[$target_key] = floatval($val);
+                    $entry[$target_key] = (float)($val);
                 }
             }
         }
@@ -503,11 +503,11 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
 
         // Remove resorts no longer in API response
         if (!empty($api_resort_names)) {
-            $removed = db_query(
+            db_query(
                 "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
                 $country, $api_resort_names
             );
-            $result['removed'] = db_affected_rows();
+            $result['removed'] = (int) db_affected_rows();
         }
 
     } catch (\Exception $e) {

@@ -57,7 +57,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                     $prices = $response->xpath('//Price');
                     if (!empty($prices)) {
                         foreach ($prices as $p) {
-                            $pv = floatval((string)$p);
+                            $pv = (float)((string)$p);
                             if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
                                 $best_price = $pv;
                             }

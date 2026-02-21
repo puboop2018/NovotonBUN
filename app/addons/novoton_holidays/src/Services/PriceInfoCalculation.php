@@ -110,10 +110,10 @@ class PriceInfoCalculation
 
         // Extract parameters
         $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-        $nights = intval($params['nights'] ?? 7);
+        $nights = (int)($params['nights'] ?? 7);
         $roomId = $params['room_id'] ?? '';
         $boardId = $params['board_id'] ?? '';
-        $adults = intval($params['adults'] ?? 2);
+        $adults = (int)($params['adults'] ?? 2);
         $childrenAges = $params['children_ages'] ?? [];
         $bookingDate = $params['booking_date'] ?? date('Y-m-d');
         $this->parser->setIdStar($params['id_star'] ?? '4*');

@@ -55,7 +55,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         $new_hotels = 0;
         $added_to_cart = 0;
         $current_year = date('Y');
-        $image_base_url = 'https://booking.allinclusive.bg';
+        $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
 
         foreach ($offers as $offer) {
             $hotel_id = (string)($offer->IdHotel ?? '');
@@ -102,7 +102,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             // Check CS-Cart core products table
             $existing_product = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
             if ($existing_product) {
-                $hotelRepo->linkProduct($hotel_id, (int)$existing_product);
+                $hotelRepo->linkToProduct($hotel_id, (int)$existing_product);
                 $this->output("linked");
                 continue;
             }
@@ -141,7 +141,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
             if ($product_id) {
-                $hotelRepo->linkProduct($hotel_id, $product_id);
+                $hotelRepo->linkToProduct($hotel_id, $product_id);
                 $this->attachImages($hotel_id, $product_id, $image_base_url);
                 $added_to_cart++;
                 $this->output("ADDED (ID: {$product_id})");

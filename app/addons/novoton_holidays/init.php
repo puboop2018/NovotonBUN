@@ -63,7 +63,7 @@ if (file_exists($hooks_file)) {
  *
  * Delegates to RoomType value object (single source of truth).
  */
-function fn_novoton_smarty_format_room_type($room_id)
+function fn_novoton_holidays_smarty_format_room_type($room_id)
 {
     if (empty($room_id)) {
         return '';
@@ -83,7 +83,7 @@ function fn_novoton_smarty_format_room_type($room_id)
  *
  * Delegates to BoardType value object (single source of truth).
  */
-function fn_novoton_smarty_format_board($board_id)
+function fn_novoton_holidays_smarty_format_board($board_id)
 {
     if (empty($board_id)) {
         return '';
@@ -96,7 +96,7 @@ function fn_novoton_smarty_format_board($board_id)
  * Register Smarty modifiers
  * Called at the right time when Smarty is ready
  */
-function fn_novoton_register_smarty_modifiers()
+function fn_novoton_holidays_register_smarty_modifiers()
 {
     static $registered = false;
     
@@ -111,10 +111,10 @@ function fn_novoton_register_smarty_modifiers()
                 // Check if already registered to avoid errors
                 $plugins = $smarty->registered_plugins ?? [];
                 if (!isset($plugins['modifier']['novoton_format_room_type'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_smarty_format_room_type');
+                    $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_holidays_smarty_format_room_type');
                 }
                 if (!isset($plugins['modifier']['novoton_format_board'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_smarty_format_board');
+                    $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_holidays_smarty_format_board');
                 }
                 $registered = true;
             }
@@ -131,7 +131,7 @@ function fn_novoton_register_smarty_modifiers()
 }
 
 // Try to register immediately if possible
-fn_novoton_register_smarty_modifiers();
+fn_novoton_holidays_register_smarty_modifiers();
 
 // Register addon hooks
 fn_register_hooks(

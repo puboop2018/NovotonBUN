@@ -173,9 +173,9 @@ if ($mode == 'add_hotels_as_products') {
         </style></head><body><div class="container"><h1>🏨 Adding Hotels as Products</h1><div class="log">';
         
         $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-        $category_id = intval($_REQUEST['category_id'] ?? 0);
+        $category_id = (int)($_REQUEST['category_id'] ?? 0);
         $import_mode = in_array($_REQUEST['import_mode'] ?? '', ['new_only', 'update']) ? $_REQUEST['import_mode'] : 'new_only';
-        $limit = max(0, min(5000, intval($_REQUEST['limit'] ?? 0)));
+        $limit = max(0, min(5000, (int)($_REQUEST['limit'] ?? 0)));
         $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_map(function($r) {
             return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr($r, 0, 100));
         }, $_REQUEST['resorts']) : [];
@@ -198,7 +198,7 @@ if ($mode == 'add_hotels_as_products') {
             $params[] = $selected_resorts;
         }
         
-        $limit_sql = $limit > 0 ? " LIMIT " . intval($limit) : "";
+        $limit_sql = $limit > 0 ? " LIMIT " . (int)($limit) : "";
         
         $hotels = db_get_array(
             "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
@@ -236,7 +236,7 @@ if ($mode == 'add_hotels_as_products') {
                     'product_code' => 'NVT-' . $hotel_id,
                     'price' => 0,
                     'status' => 'A',
-                    'company_id' => 1,
+                    'company_id' => Registry::get('runtime.company_id') ?: 1,
                     'main_category' => $category_id > 0 ? $category_id : fn_get_default_category_id(),
                 ];
                 
@@ -263,7 +263,7 @@ if ($mode == 'add_hotels_as_products') {
                         $hotelRepo->update($hotel_id, ['product_id' => $product_id]);
                         
                         // Set star rating feature
-                        $star_rating = intval($hotel['hotel_type'] ?? '');
+                        $star_rating = (int)($hotel['hotel_type'] ?? '');
                         if ($star_rating > 0) {
                             fn_novoton_holidays_assign_star_rating_feature($product_id, $star_rating);
                         }
@@ -343,7 +343,7 @@ if ($mode == 'check_packages') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $limit = max(1, min(2000, intval($_REQUEST['limit'] ?? 500)));
+    $limit = max(1, min(2000, (int)($_REQUEST['limit'] ?? 500)));
     $run = isset($_REQUEST['run']);
 
     echo '<!DOCTYPE html><html><head><title>Check Hotel Packages</title>

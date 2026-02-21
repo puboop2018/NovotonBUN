@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 class AlternativeRequestRepository implements AlternativeRequestRepositoryInterface
 {
     /**
@@ -29,10 +31,11 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     {
         return db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests
-             WHERE status = 'pending'
+             WHERE status = ?s
              AND novoton_request_id IS NOT NULL AND novoton_request_id != ''
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)
              ORDER BY created_at ASC LIMIT ?i",
+            Constants::STATUS_PENDING,
             $hours,
             $limit
         );

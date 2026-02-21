@@ -47,7 +47,7 @@ class AddProductsCommand extends AbstractCronCommand
         $category_path = "{$country}///Litoral {$country}";
         $category_id = fn_novoton_holidays_get_or_create_category($category_path);
         $current_year = date('Y');
-        $image_base_url = 'https://booking.allinclusive.bg';
+        $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
         $added = 0;
 
         foreach ($hotels as $hotel) {
@@ -59,7 +59,7 @@ class AddProductsCommand extends AbstractCronCommand
             // Check if CS-Cart product already exists (core products table)
             $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
             if ($existing) {
-                $hotelRepo->linkProduct($hotel_id, (int)$existing);
+                $hotelRepo->linkToProduct($hotel_id, (int)$existing);
                 $this->output("LINKED");
                 continue;
             }
@@ -92,7 +92,7 @@ class AddProductsCommand extends AbstractCronCommand
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 
             if ($product_id) {
-                $hotelRepo->linkProduct($hotel_id, $product_id);
+                $hotelRepo->linkToProduct($hotel_id, $product_id);
 
                 try {
                     $images = $this->api->getHotelImages($hotel_id);
@@ -136,13 +136,12 @@ class AddProductsCommand extends AbstractCronCommand
 
     private function getExcludedResorts(): array
     {
-        if (!empty($_REQUEST['exclude_resorts'])) {
-            $val = $_REQUEST['exclude_resorts'];
-            if (is_array($val)) return array_filter($val);
-            return array_filter(array_map('trim', explode(',', $val)));
+        $paramVal = $this->getParam('exclude_resorts');
+        if (!empty($paramVal)) {
+            if (is_array($paramVal)) return array_filter($paramVal);
+            return array_filter(array_map('trim', explode(',', $paramVal)));
         }
 
-        $resorts = ConfigProvider::getExcludedResorts();
-        return $resorts;
+        return ConfigProvider::getExcludedResorts();
     }
 }

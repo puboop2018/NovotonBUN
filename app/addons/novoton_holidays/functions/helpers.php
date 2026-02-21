@@ -86,10 +86,15 @@ function fn_novoton_holidays_parse_countries($selected_countries = null): array
  */
 function fn_novoton_holidays_is_debug(): bool
 {
+    // Debug via URL parameter requires authenticated admin session
     if (!empty($_REQUEST['debug_novoton'])) {
-        return true;
+        $auth = \Tygh::$app['session']['auth'] ?? [];
+        if (!empty($auth['user_id']) && ($auth['area'] ?? '') === 'A') {
+            return true;
+        }
+        // Silently ignore for non-admin users (no information leak)
     }
-    
+
     return ConfigProvider::isDebugMode();
 }
 
@@ -225,8 +230,8 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
                 foreach ($seasonPrices as $sp) {
                     for ($i = 1; $i <= 20; $i++) {
                         $priceKey = 'Price' . $i;
-                        if (isset($sp[$priceKey]) && floatval($sp[$priceKey]) > 0) {
-                            $price = floatval($sp[$priceKey]);
+                        if (isset($sp[$priceKey]) && (float)($sp[$priceKey]) > 0) {
+                            $price = (float)($sp[$priceKey]);
                             if ($pkgMinPrice === null || $price < $pkgMinPrice) {
                                 $pkgMinPrice = $price;
                             }

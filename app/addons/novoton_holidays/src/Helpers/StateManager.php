@@ -310,8 +310,6 @@ class StateManager
             $state['duration_seconds'] = time() - strtotime($state['started_at']);
         }
 
-        $this->save($state);
-
         // Clear item_ids to save space (keep other data for reference)
         $state['item_ids'] = [];
         $this->save($state);

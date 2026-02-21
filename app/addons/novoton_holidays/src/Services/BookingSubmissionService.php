@@ -627,7 +627,7 @@ class BookingSubmissionService
             'base_price'       => $totalApiPrice,
             'total_price'      => $totalGroupPrice,
             'currency'         => ConfigProvider::getApiCurrency(),
-            'status'           => 'pending',
+            'status'           => Constants::STATUS_PENDING,
             'special_requests' => $bookingData['special_requests'] ?? '',
             'api_request'      => json_encode($apiData),
             'notes'                          => $disableApi ? 'API submission disabled - test mode' : '',

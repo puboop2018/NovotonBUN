@@ -149,15 +149,12 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Save hotel (insert or update)
+     * Save hotel (insert or update) — uses upsert to avoid TOCTOU race condition
      */
     public function save(string $hotel_id, array $data): bool
     {
-        if ($this->exists($hotel_id)) {
-            return $this->update($hotel_id, $data);
-        }
         $data['hotel_id'] = $hotel_id;
-        return $this->insert($data);
+        return $this->upsert($data);
     }
 
     /**
@@ -242,29 +239,18 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Save package (V3)
+     * Save package (V3) — uses upsert to avoid TOCTOU race condition
      */
     public function savePackage(string $hotel_id, string $package_id, array $data): bool
     {
         $data['hotel_id'] = $hotel_id;
         $data['package_id'] = $package_id;
 
-        $exists = db_get_field(
-            "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-            $hotel_id,
-            $package_id
+        return (bool) db_query(
+            "INSERT INTO ?:novoton_hotel_packages ?e ON DUPLICATE KEY UPDATE ?u",
+            $data,
+            $data
         );
-
-        if ($exists) {
-            return (bool) db_query(
-                "UPDATE ?:novoton_hotel_packages SET ?u WHERE hotel_id = ?s AND package_id = ?s",
-                $data,
-                $hotel_id,
-                $package_id
-            );
-        }
-
-        return (bool) db_query("INSERT INTO ?:novoton_hotel_packages ?e", $data);
     }
 
     /**
@@ -324,18 +310,6 @@ class HotelRepository implements HotelRepositoryInterface
             $hotel_id
         );
         return $ts ?: null;
-    }
-
-    /**
-     * Link a hotel to a CS-Cart product.
-     */
-    public function linkProduct(string $hotel_id, int $product_id): bool
-    {
-        return (bool) db_query(
-            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
-            $product_id,
-            $hotel_id
-        );
     }
 
     /**

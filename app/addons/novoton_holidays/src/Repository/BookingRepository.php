@@ -627,8 +627,9 @@ class BookingRepository implements BookingRepositoryInterface
     {
         return db_get_array(
             "SELECT * FROM ?:novoton_bookings
-             WHERE novoton_status = 'RQ' AND alternatives_requested = 0
+             WHERE novoton_status = ?s AND alternatives_requested = 0
              ORDER BY created_at ASC LIMIT ?i",
+            Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
             $limit
         );
     }

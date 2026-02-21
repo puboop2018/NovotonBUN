@@ -142,8 +142,8 @@ function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_i
 function fn_novoton_holidays_dispatch_before_display(): void
 {
     // Register Smarty modifiers for ALL dispatches
-    if (function_exists('fn_novoton_register_smarty_modifiers')) {
-        fn_novoton_register_smarty_modifiers();
+    if (function_exists('fn_novoton_holidays_register_smarty_modifiers')) {
+        fn_novoton_holidays_register_smarty_modifiers();
     }
 
     $dispatch = $_REQUEST['dispatch'] ?? '';
@@ -217,7 +217,7 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['guests_data']        = GuestDataNormalizer::toJson($booking['guests_data'] ?? '');
     $product['extra']['total_price']        = $booking['total_price'];
     $product['extra']['package_name']       = $booking['package_name'] ?? '';
-    $product['extra']['num_rooms']          = intval($booking['num_rooms'] ?? 1);
+    $product['extra']['num_rooms']          = (int)($booking['num_rooms'] ?? 1);
 
     if (!empty($booking['rooms_data'])) {
         $rooms = json_decode($booking['rooms_data'], true);
@@ -248,15 +248,15 @@ function fn_novoton_holidays_add_booking_display_data(&$product, $cart = null): 
     $check_in_fmt  = ($check_in_ts  !== false) ? fn_date_format($check_in_ts, $date_format)  : '';
     $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
 
-    $num_rooms  = intval($product['extra']['num_rooms'] ?? 1);
+    $num_rooms  = (int)($product['extra']['num_rooms'] ?? 1);
     $rooms_data = $product['extra']['rooms_data'] ?? [];
     if (is_string($rooms_data)) {
         $rooms_data = json_decode($rooms_data, true) ?: [];
     }
 
     // Build guests string
-    $adults   = intval($product['extra']['adults']   ?? 2);
-    $children = intval($product['extra']['children'] ?? 0);
+    $adults   = (int)($product['extra']['adults']   ?? 2);
+    $children = (int)($product['extra']['children'] ?? 0);
 
     $guests_str = '';
     if ($num_rooms > 1) {
@@ -330,7 +330,7 @@ function fn_novoton_holidays_add_booking_display_data(&$product, $cart = null): 
     if ($num_rooms > 1 && !empty($rooms_data)) {
         foreach ($rooms_data as $idx => $room) {
             $room_num    = $idx + 1;
-            $room_guests = intval($room['adults'] ?? 2) . ' adults';
+            $room_guests = (int)($room['adults'] ?? 2) . ' adults';
             if (!empty($room['children']) && $room['children'] > 0) {
                 $room_guests .= ', ' . $room['children'] . ' children';
                 if (!empty($room['childrenAges'])) {

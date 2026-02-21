@@ -251,7 +251,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
-            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 
             // V3: Get boards via fn_novoton_holidays_get_hotel_data() (hotel_data is audit/cache only)
             $board_names = [];
@@ -365,7 +365,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                 ? $hotel['product_code']
                 : 'NVT-' . $hotel['hotel_id'];
 
-            $stars = intval($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 
             // Boards via hotel data
             $board_names = [];

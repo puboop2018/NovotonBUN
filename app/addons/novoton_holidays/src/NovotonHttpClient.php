@@ -103,7 +103,7 @@ class NovotonHttpClient
             throw ApiException::circuitBreakerOpen($function, $secondsUntilRetry);
         }
 
-        $url = 'http://' . $this->apiUrl . '/index.php';
+        $url = 'https://' . $this->apiUrl . '/index.php';
 
         $postData = [
             'fn' => $function,
@@ -196,7 +196,7 @@ class NovotonHttpClient
             return array_fill_keys(array_keys($requests), false);
         }
 
-        $url = 'http://' . $this->apiUrl . '/index.php';
+        $url = 'https://' . $this->apiUrl . '/index.php';
         $results = [];
         $mh = curl_multi_init();
 

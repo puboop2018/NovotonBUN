@@ -87,11 +87,11 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
     $room_id = $data['room_id'] ?? '';
     $board_id = $data['board_id'] ?? '';
     $check_in = $data['check_in'] ?? '';
-    $nights = intval($data['nights'] ?? 7);
-    $adults = intval($data['adults'] ?? 2);
+    $nights = (int)($data['nights'] ?? 7);
+    $adults = (int)($data['adults'] ?? 2);
     $children_ages = $data['children_ages'] ?? [];
     $package_name = $data['package_name'] ?? '';
-    $original_price = floatval($data['original_price'] ?? 0);
+    $original_price = (float)($data['original_price'] ?? 0);
     
     // A73s: Ensure children_ages is an array of integers
     if (!is_array($children_ages)) {
@@ -150,7 +150,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
         // Direct Price element (API returns single result for specific room/board)
         if ($response && isset($response->Price)) {
-            $new_price = floatval((string)$response->Price);
+            $new_price = (float)((string)$response->Price);
             if ($new_price > 0) {
                 $price_found = true;
                 $matched_room = rawurldecode((string)($response->IdRoom ?? $room_id));
@@ -199,7 +199,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                             continue;
                         }
 
-                        $price = floatval((string)($board->Price ?? $board->TotalPrice ?? 0));
+                        $price = (float)((string)($board->Price ?? $board->TotalPrice ?? 0));
                         if ($price > 0) {
                             $new_price = $price;
                             $price_found = true;
@@ -229,7 +229,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
                 $numResults = min(count($prices), count($idRooms), count($idBoards));
 
                 for ($i = 0; $i < $numResults; $i++) {
-                    $resultPrice = floatval((string)$prices[$i]);
+                    $resultPrice = (float)((string)$prices[$i]);
                     $resultRoom = rawurldecode((string)$idRooms[$i]);
                     $resultBoard = (string)$idBoards[$i];
 
@@ -266,7 +266,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
                 // Fallback: use first available price from response
                 if (!$price_found && $numResults > 0) {
-                    $new_price = floatval((string)$prices[0]);
+                    $new_price = (float)((string)$prices[0]);
                     $matched_room = rawurldecode((string)$idRooms[0]);
                     $matched_board = (string)$idBoards[0];
                     if ($new_price > 0) {
@@ -282,7 +282,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
             // Method 3: Direct Price element at root (from all-combinations response)
             if (!$price_found && isset($response->Price)) {
-                $new_price = floatval((string)$response->Price);
+                $new_price = (float)((string)$response->Price);
                 if ($new_price > 0) {
                     $price_found = true;
                     $matched_room = rawurldecode((string)($response->IdRoom ?? ''));

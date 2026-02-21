@@ -173,7 +173,7 @@ class BatchedPriceInfoSync
 
         // Override stale hours if provided
         if (!empty($options['stale_hours'])) {
-            $this->setStaleHours(intval($options['stale_hours']));
+            $this->setStaleHours((int)($options['stale_hours']));
         }
 
         // Check for active job to resume
@@ -441,7 +441,7 @@ class BatchedPriceInfoSync
                             $price_val = (string)$sp->$price_key;
                             // Skip percentages
                             if (strpos($price_val, '%') === false) {
-                                $price = floatval($price_val);
+                                $price = (float)($price_val);
                                 if ($price > 0 && ($min_price === null || $price < $min_price)) {
                                     $min_price = $price;
                                 }

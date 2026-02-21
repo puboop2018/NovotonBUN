@@ -146,8 +146,11 @@ function fn_novoton_holidays_parse_xml_string($xml_string): ?\SimpleXMLElement
     $xml = simplexml_load_string($xml_string, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
 
     if ($xml === false) {
+        libxml_clear_errors();
         $xml = simplexml_load_string('<root>' . $xml_string . '</root>', 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     }
+
+    libxml_clear_errors();
 
     return $xml ?: null;
 }
@@ -583,8 +586,10 @@ function fn_novoton_holidays_xml_to_array($xml): array
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
         if ($xml === false) {
+            libxml_clear_errors();
             return [];
         }
+        libxml_clear_errors();
     }
     
     $result = [];

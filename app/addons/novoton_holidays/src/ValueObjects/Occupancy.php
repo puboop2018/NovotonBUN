@@ -58,7 +58,7 @@ final class Occupancy
         // Ensure ages array matches child count
         $ages = [];
         for ($i = 0; $i < $children; $i++) {
-            $age = isset($childrenAges[$i]) ? intval($childrenAges[$i]) : 0;
+            $age = isset($childrenAges[$i]) ? (int)($childrenAges[$i]) : 0;
             if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
                 $age = max(Constants::MIN_CHILD_AGE, min(Constants::MAX_CHILD_AGE, $age));
             }

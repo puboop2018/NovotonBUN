@@ -34,7 +34,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
         return;
     }
 
-    $user_id    = intval($auth['user_id']);
+    $user_id    = (int)($auth['user_id']);
     $session_id = session_id();
     $repo       = Container::getInstance()->bookingRepository();
 
@@ -78,7 +78,7 @@ function fn_novoton_holidays_create_user_post($user_data): void
         return;
     }
 
-    $user_id = intval($user_data['user_id']);
+    $user_id = (int)($user_data['user_id']);
     $repo    = Container::getInstance()->bookingRepository();
 
     // Link by email

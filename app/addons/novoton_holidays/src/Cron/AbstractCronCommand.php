@@ -18,7 +18,7 @@ abstract class AbstractCronCommand
     /** @var float */
     protected float $startTime;
 
-    public function __construct($api, $logger, array $params = [])
+    public function __construct(\Tygh\Addons\NovotonHolidays\NovotonApi $api, ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger, array $params = [])
     {
         $this->api = $api;
         $this->logger = $logger;
@@ -43,7 +43,7 @@ abstract class AbstractCronCommand
 
     protected function getParam(string $key, $default = null)
     {
-        return $this->params[$key] ?? $_REQUEST[$key] ?? $default;
+        return $this->params[$key] ?? $default;
     }
 
     protected function getDuration(): float

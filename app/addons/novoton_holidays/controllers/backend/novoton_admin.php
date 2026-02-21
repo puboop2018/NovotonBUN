@@ -16,7 +16,7 @@ if ($mode == 'update_prices') {
     
     if (!empty($_REQUEST['single_product']) && !empty($_REQUEST['product_id'])) {
         // Update single product
-        $productId = intval($_REQUEST['product_id']);
+        $productId = (int)($_REQUEST['product_id']);
         
         $sync = new PriceInfoSync();
         $stats = [
@@ -122,7 +122,7 @@ if ($mode == 'bookings') {
 // View booking details
 if ($mode == 'booking_details') {
     
-    $bookingId = intval($_REQUEST['booking_id']);
+    $bookingId = (int)($_REQUEST['booking_id']);
     
     $booking = db_get_row(
         "SELECT b.*, o.*, p.product 
@@ -270,10 +270,10 @@ if ($mode == 'run_cron') {
         $params['country'] = strtoupper($_REQUEST['country']);
     }
     if (!empty($_REQUEST['limit'])) {
-        $params['limit'] = intval($_REQUEST['limit']);
+        $params['limit'] = (int)($_REQUEST['limit']);
     }
     if (!empty($_REQUEST['days'])) {
-        $params['days'] = intval($_REQUEST['days']);
+        $params['days'] = (int)($_REQUEST['days']);
     }
     
     // Capture output
@@ -557,7 +557,9 @@ function fn_novoton_holidays_admin_check_alternatives($api, $type) {
     } else {
         $items = db_get_array(
             "SELECT * FROM ?:novoton_bookings 
-             WHERE novoton_status = 'RQ' AND status NOT IN ('cancelled', 'failed') LIMIT 50"
+             WHERE novoton_status = ?s AND status NOT IN (?a) LIMIT 50",
+            \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
+            [\Tygh\Addons\NovotonHolidays\Constants::STATUS_CANCELLED, 'failed']
         );
     }
     

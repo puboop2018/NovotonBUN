@@ -421,7 +421,7 @@ function _nvt_build_room_age_bands(array $prices): array
     // Sort child bands by from_year ascending
     foreach ($room_age_bands as &$rb) {
         usort($rb['child_bands'], function ($a, $b) {
-            return floatval($a['from']) <=> floatval($b['from']);
+            return (float)($a['from']) <=> (float)($b['from']);
         });
     }
     unset($rb);

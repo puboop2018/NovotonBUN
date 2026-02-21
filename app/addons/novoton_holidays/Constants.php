@@ -91,6 +91,10 @@ final class Constants
     // See: Administration → Currencies in CS-Cart admin panel
     // Default currency uses CART_PRIMARY_CURRENCY constant from CS-Cart
     
+    // ========== External URLs ==========
+
+    public const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
+
     // ========== Limits ==========
     
     public const MAX_ADULTS = 10;

@@ -18,10 +18,10 @@ class CronDispatcher
     /** @var array<string, class-string<AbstractCronCommand>> mode => command class */
     private static $commandMap = [];
     private static $registered = false;
-    private $api;
-    private $logger;
+    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    private ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
 
-    public function __construct($api, $logger)
+    public function __construct(\Tygh\Addons\NovotonHolidays\NovotonApi $api, ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger)
     {
         $this->api = $api;
         $this->logger = $logger;

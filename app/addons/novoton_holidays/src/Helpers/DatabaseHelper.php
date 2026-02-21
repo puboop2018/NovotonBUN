@@ -203,7 +203,7 @@ class DatabaseHelper
                 continue;
             }
 
-            $pid = intval($link['product_id']);
+            $pid = (int)($link['product_id']);
             if ($pid <= 0) {
                 continue;
             }
@@ -294,10 +294,10 @@ class DatabaseHelper
         );
 
         return [
-            'total_runs' => intval($stats['total_runs'] ?? 0),
-            'total_updated' => intval($stats['total_updated'] ?? 0),
-            'total_failed' => intval($stats['total_failed'] ?? 0),
-            'avg_duration' => round(floatval($stats['avg_duration'] ?? 0), 1),
+            'total_runs' => (int)($stats['total_runs'] ?? 0),
+            'total_updated' => (int)($stats['total_updated'] ?? 0),
+            'total_failed' => (int)($stats['total_failed'] ?? 0),
+            'avg_duration' => round((float)($stats['avg_duration'] ?? 0), 1),
             'last_sync' => $stats['last_sync'] ?? null,
         ];
     }

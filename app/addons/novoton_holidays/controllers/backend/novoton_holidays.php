@@ -267,7 +267,7 @@ if ($mode == 'hotels') {
     
     // Pagination
     $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page') ?: 30;
-    $page = intval($_REQUEST['page'] ?? 1);
+    $page = (int)($_REQUEST['page'] ?? 1);
     $offset = ($page - 1) * $items_per_page;
     
     // Get hotels
