@@ -94,7 +94,7 @@ class ConfigProvider
 
     public static function getCommission(): float
     {
-        return floatval(self::settings()['commission'] ?? 0);
+        return max(0.0, floatval(self::settings()['commission'] ?? 0));
     }
 
     public static function getCurrencyRiskCommission(): float

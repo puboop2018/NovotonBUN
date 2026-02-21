@@ -28,7 +28,7 @@ class PriceInfoCalculator
     public function __construct(PriceInfoParser $parser, float $commission, ?callable $logger = null)
     {
         $this->parser = $parser;
-        $this->commission = $commission;
+        $this->commission = max(0.0, $commission);
         $this->logger = $logger;
     }
 

@@ -19,7 +19,7 @@ class CommissionCalculator
 
     public function __construct(float $commission, string $roundPrices = 'Y')
     {
-        $this->commission = $commission;
+        $this->commission = max(0.0, $commission);
         $this->roundPrices = $roundPrices;
     }
 
