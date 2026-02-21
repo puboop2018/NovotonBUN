@@ -94,19 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Cleanup orphan bookings (no order_id and older than 24 hours)
     // With single source of truth architecture, orphans are simply abandoned cart bookings
     if ($mode === 'cleanup_orphans') {
-        // Count before deleting
-        $count = db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_bookings
-             WHERE order_id = 0
-             AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-        );
+        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $count = $bookingRepo->countOrphans(24);
 
         if ($count > 0) {
-            db_query(
-                "DELETE FROM ?:novoton_bookings
-                 WHERE order_id = 0
-                 AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-            );
+            $bookingRepo->deleteOrphans(24);
             fn_set_notification('N', __('notice'),
                 "Cleaned up {$count} orphan booking(s) older than 24 hours.");
         } else {
@@ -123,11 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $novoton_invoice_id = isset($_REQUEST['novoton_invoice_id']) ? trim($_REQUEST['novoton_invoice_id']) : '';
         
         if ($booking_id > 0) {
-            db_query(
-                "UPDATE ?:novoton_bookings SET novoton_invoice_id = ?s WHERE booking_id = ?i",
-                $novoton_invoice_id,
-                $booking_id
-            );
+            $bookingRepoUpdate = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+            $bookingRepoUpdate->update($booking_id, ['novoton_invoice_id' => $novoton_invoice_id]);
             
             fn_set_notification('N', __('notice'), 'Novoton ID updated');
             
@@ -191,9 +180,10 @@ if ($mode === 'manage') {
 } elseif ($mode === 'view') {
     // View single booking details
     $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
-    
+
     if ($booking_id > 0) {
-        $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+        $bookingRepoView = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $booking = $bookingRepoView->findById($booking_id);
         
         if ($booking) {
             // Parse JSON fields
@@ -223,18 +213,17 @@ if ($mode === 'manage') {
     $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
     
     if ($booking_id > 0) {
-        $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
-        
+        $bookingRepoAlt = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $hotelRepoAlt = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+        $booking = $bookingRepoAlt->findById($booking_id);
+
         if ($booking) {
             $alternatives = fn_novoton_holidays_get_alternatives($booking_id);
-            
+
             // Enrich alternatives with hotel names
             if ($alternatives) {
                 foreach ($alternatives as &$alt) {
-                    $hotel = db_get_row(
-                        "SELECT hotel_name, city, country FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                        $alt['hotel_id']
-                    );
+                    $hotel = $hotelRepoAlt->findBasicById($alt['hotel_id']);
                     if ($hotel) {
                         $alt['hotel_name'] = $hotel['hotel_name'];
                         $alt['hotel_city'] = $hotel['city'];

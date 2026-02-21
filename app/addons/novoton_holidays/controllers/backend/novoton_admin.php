@@ -369,23 +369,24 @@ if ($mode == 'run_cron') {
 
 function fn_novoton_holidays_admin_sync_hotels($api) {
     $countries = fn_novoton_holidays_parse_countries();
+    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
 
     $total = 0;
     $synced = 0;
-    
+
     foreach ($countries as $country) {
         echo "Fetching {$country}... ";
         $hotels = $api->getHotelList($country);
-        
+
         if (!empty($hotels)) {
             $count = count($hotels);
             $total += $count;
             echo "{$count} hotels\n";
-            
+
             foreach ($hotels as $hotel) {
                 $hotel_id = (string)($hotel->IdHotel ?? '');
                 if (empty($hotel_id)) continue;
-                
+
                 $data = [
                     'hotel_id' => $hotel_id,
                     'hotel_name' => (string)($hotel->Hotel ?? ''),
@@ -393,27 +394,22 @@ function fn_novoton_holidays_admin_sync_hotels($api) {
                     'country' => $country,
                     'updated_at' => date('Y-m-d H:i:s')
                 ];
-                
-                $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-                if ($exists) {
-                    db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
-                } else {
-                    $data['created_at'] = date('Y-m-d H:i:s');
-                    db_query("INSERT INTO ?:novoton_hotels ?e", $data);
-                }
+
+                $hotelRepo->upsert($data);
                 $synced++;
             }
         } else {
             echo "0 hotels\n";
         }
     }
-    
+
     return ['success' => true, 'message' => "Total: {$total}, Synced: {$synced}"];
 }
 
 function fn_novoton_holidays_admin_check_prices($api) {
+    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
     $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name FROM ?:novoton_hotels 
+        "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
          WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
          LIMIT 100"
     );
@@ -428,10 +424,7 @@ function fn_novoton_holidays_admin_check_prices($api) {
         $response = $api->getRoomPrice($hotel['hotel_id'], $check_in, $check_out, 2, 0, 1);
         $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
         
-        db_query(
-            "UPDATE ?:novoton_hotels SET has_prices = ?s, last_price_check = NOW() WHERE hotel_id = ?s",
-            $has_prices, $hotel['hotel_id']
-        );
+        $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);
         
         $checked++;
         if ($has_prices == 'Y') $with_prices++;
@@ -445,61 +438,53 @@ function fn_novoton_holidays_admin_check_prices($api) {
 
 function fn_novoton_holidays_admin_sync_facilities($api) {
     $response = $api->listFacilities();
-    
+
     if (!$response || !isset($response->Facility)) {
         return ['success' => false, 'message' => 'No facilities returned from API'];
     }
-    
+
+    $facilityRepo = new \Tygh\Addons\NovotonHolidays\Repository\FacilityRepository();
     $facilities = is_array($response->Facility) ? $response->Facility : [$response->Facility];
     $count = 0;
-    
+
     foreach ($facilities as $f) {
-        $data = [
-            'facility_id' => (string)($f->IdFacility ?? ''),
-            'facility_name' => (string)($f->Facility ?? ''),
-            'facility_type' => (string)($f->Type ?? '')
-        ];
-        
-        if (empty($data['facility_id'])) continue;
-        
-        db_query(
-            "INSERT INTO ?:novoton_facilities ?e ON DUPLICATE KEY UPDATE ?u",
-            $data, $data
-        );
+        $facility_id = (int)($f->IdFacility ?? 0);
+        $facility_name = (string)($f->Facility ?? '');
+
+        if (empty($facility_id)) continue;
+
+        $facilityRepo->save($facility_id, $facility_name);
         $count++;
     }
-    
+
     return ['success' => true, 'message' => "Synced {$count} facilities"];
 }
 
 function fn_novoton_holidays_admin_add_products($api, $country, $limit) {
-    $hotels = db_get_array(
-        "SELECT * FROM ?:novoton_hotels 
-         WHERE has_prices = 'Y' AND country = ?s AND (product_id IS NULL OR product_id = 0)
-         ORDER BY hotel_name LIMIT ?i",
-        $country, $limit
-    );
-    
+    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+    $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
+
     if (empty($hotels)) {
         return ['success' => true, 'message' => 'No hotels to add'];
     }
-    
+
     $category_id = fn_novoton_holidays_get_or_create_category("{$country}///Litoral {$country}");
     $added = 0;
-    
+
     foreach ($hotels as $hotel) {
         $hotel_id = $hotel['hotel_id'];
         $product_code = 'NVT' . $hotel_id;
-        
+
         echo "[{$hotel_id}] {$hotel['hotel_name']} ... ";
-        
+
+        // Check if CS-Cart product already exists with this code
         $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
         if ($existing) {
-            db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $existing, $hotel_id);
+            $hotelRepo->linkToProduct($hotel_id, (int) $existing);
             echo "LINKED\n";
             continue;
         }
-        
+
         $product_data = [
             'product' => $hotel['hotel_name'],
             'product_code' => $product_code,
@@ -509,27 +494,27 @@ function fn_novoton_holidays_admin_add_products($api, $country, $limit) {
             'main_category' => $category_id,
             'category_ids' => [$category_id],
         ];
-        
+
         $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
-        
+
         if ($product_id) {
-            db_query("UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s", $product_id, $hotel_id);
+            $hotelRepo->linkToProduct($hotel_id, $product_id);
             $added++;
             echo "ADDED (ID: {$product_id})\n";
         } else {
             echo "FAILED\n";
         }
-        
+
         usleep(50000);
     }
-    
+
     return ['success' => true, 'message' => "Added: {$added} products"];
 }
 
 function fn_novoton_holidays_admin_check_offers($api, $country) {
-    $last_check = db_get_field(
-        "SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type IN ('offers_update', 'product_import') AND status = 'completed' ORDER BY sync_date DESC LIMIT 1"
-    );
+    $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+    $last_check = $syncLogRepo->getLastSyncDate('offers_update')
+                  ?: $syncLogRepo->getLastSyncDate('product_import');
     if (empty($last_check)) {
         $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
     }
@@ -550,16 +535,14 @@ function fn_novoton_holidays_admin_check_offers($api, $country) {
 
 function fn_novoton_holidays_admin_check_alternatives($api, $type) {
     if ($type == 'requests') {
-        $items = db_get_array(
-            "SELECT * FROM ?:novoton_alternative_requests 
-             WHERE status = 'pending' AND novoton_request_id IS NOT NULL LIMIT 50"
-        );
+        $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+        $items = $altRequestRepo->findPendingOlderThan(0, 50);
     } else {
-        $items = db_get_array(
-            "SELECT * FROM ?:novoton_bookings 
-             WHERE novoton_status = ?s AND status NOT IN (?a) LIMIT 50",
+        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $items = $bookingRepo->findByNovotonStatus(
             \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
-            [\Tygh\Addons\NovotonHolidays\Constants::STATUS_CANCELLED, 'failed']
+            [\Tygh\Addons\NovotonHolidays\Constants::STATUS_PENDING, \Tygh\Addons\NovotonHolidays\Constants::STATUS_CONFIRMED],
+            50
         );
     }
     
@@ -570,16 +553,14 @@ function fn_novoton_holidays_admin_check_alternatives($api, $type) {
 }
 
 function fn_novoton_holidays_admin_notify_alternatives() {
-    $requests = db_get_array(
-        "SELECT * FROM ?:novoton_alternative_requests
-         WHERE status = 'has_alternatives' AND notified = 0 LIMIT 50"
-    );
+    $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+    $requests = $altRequestRepo->findUnnotified(50);
     $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
     $notified = 0;
     foreach ($requests as $request) {
         // Send notification email logic here
-        db_query("UPDATE ?:novoton_alternative_requests SET notified = 1 WHERE request_id = ?i", $request['request_id']);
+        $altRequestRepo->markNotified($request['request_id']);
         $notified++;
     }
     
@@ -587,38 +568,27 @@ function fn_novoton_holidays_admin_notify_alternatives() {
 }
 
 function fn_novoton_holidays_admin_cleanup() {
+    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+
     // Orphan bookings
-    $orphans = db_query(
-        "DELETE FROM ?:novoton_bookings 
-         WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)"
-    );
+    $orphans = $bookingRepo->deleteOrphans(48);
     echo "Orphan bookings deleted: {$orphans}\n";
-    
+
     // Old sync logs (keep 100)
-    $total_logs = db_get_field("SELECT COUNT(*) FROM ?:novoton_sync_log");
-    $logs_deleted = 0;
-    if ($total_logs > 100) {
-        $threshold = db_get_field("SELECT log_id FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 1 OFFSET 99");
-        if ($threshold) {
-            $logs_deleted = db_query("DELETE FROM ?:novoton_sync_log WHERE log_id < ?i", $threshold);
-        }
-    }
+    $logs_deleted = $syncLogRepo->trimToLatest(100);
     echo "Sync logs deleted: {$logs_deleted}\n";
-    
+
     // Expired cache
     $cache = db_query("DELETE FROM ?:novoton_cache WHERE expires_at < NOW()");
     echo "Cache entries deleted: {$cache}\n";
-    
+
     return ['success' => true, 'message' => "Cleanup complete"];
 }
 
 function fn_novoton_holidays_admin_expire_requests($days) {
-    $expired = db_query(
-        "UPDATE ?:novoton_alternative_requests 
-         SET status = 'expired' 
-         WHERE status = 'pending' AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
-        $days
-    );
-    
+    $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+    $expired = $altRequestRepo->expireOlderThan($days);
+
     return ['success' => true, 'message' => "Expired: {$expired} requests"];
 }
