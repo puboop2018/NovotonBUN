@@ -309,9 +309,11 @@ if ($mode == 'add_hotels_as_products') {
 if ($mode == 'list_facilities') {
     $facilities = db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
     $count = count($facilities);
+    $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
 
     Tygh::$app['view']->assign('facilities', $facilities);
     Tygh::$app['view']->assign('facilities_count', $count);
+    Tygh::$app['view']->assign('last_sync', $last_sync);
 
     return [CONTROLLER_STATUS_OK];
 }
