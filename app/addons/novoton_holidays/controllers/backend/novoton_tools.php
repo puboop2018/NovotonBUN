@@ -50,7 +50,8 @@ if ($mode == 'export_hotel_features_csv') {
         ob_end_clean();
 
         if ($result['success']) {
-            fn_set_notification('N', __('notice'), "Hotel features CSV generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
+            $download_url = fn_url('novoton_holidays.download_hotel_features_csv&file=' . urlencode($result['filename']));
+            fn_set_notification('N', __('notice'), "Hotel features CSV generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download {$result['filename']}</a>");
         } else {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }
@@ -106,7 +107,8 @@ if ($mode == 'export_hotel_features_xml') {
         ob_end_clean();
 
         if ($result['success']) {
-            fn_set_notification('N', __('notice'), "Hotel features XML generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
+            $download_url = fn_url('novoton_holidays.download_hotel_features_xml&file=' . urlencode($result['filename']));
+            fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download {$result['filename']}</a>");
         } else {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }

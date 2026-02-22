@@ -254,6 +254,21 @@ if ($mode == 'manage' || empty($mode)) {
         }
     }
     Tygh::$app['view']->assign('excluded_resorts', $excluded_resorts);
+
+    // Find latest export files for permanent download links
+    $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
+    $last_exports = ['csv' => '', 'xml' => ''];
+    if (is_dir($reports_dir)) {
+        foreach (['csv', 'xml'] as $ext) {
+            $pattern = $reports_dir . 'novoton_hotel_features_*.' . $ext;
+            $files = glob($pattern);
+            if ($files) {
+                sort($files);
+                $last_exports[$ext] = basename(end($files));
+            }
+        }
+    }
+    Tygh::$app['view']->assign('last_exports', $last_exports);
 }
 
 /**
