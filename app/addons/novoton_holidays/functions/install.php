@@ -298,8 +298,6 @@ function fn_novoton_holidays_upgrade_db()
         '?:novoton_facilities' => [
             ['facility_name_en', "VARCHAR(255) DEFAULT '' AFTER `facility_name`"],
             ['facility_name_ro', "VARCHAR(255) DEFAULT '' AFTER `facility_name_en`"],
-            ['facility_type',    "ENUM('hotel','room') NOT NULL DEFAULT 'hotel' AFTER `facility_name_ro`", 'idx_facility_type'],
-            ['feature_variant_id', "INT(11) DEFAULT NULL AFTER `facility_type`"],
         ],
         '?:novoton_alternative_requests' => [
             ['nights',    "INT(3) DEFAULT NULL AFTER `check_out`"],
