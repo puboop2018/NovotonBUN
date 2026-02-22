@@ -98,8 +98,14 @@ export function injectStyles() {
     -webkit-user-select: text;
     user-select: text;
 }
+.nvt-field:hover {
+    background: transparent !important;
+    background-color: transparent !important;
+}
 .nvt-field-input:hover {
-    background: transparent;
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: inherit !important;
 }
 
 .nvt-field-input-icon {

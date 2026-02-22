@@ -5656,3 +5656,24 @@ div.novoton-desktop-only,
 .nvt-btn-search:hover {
     background: var(--nvt-search-btn-hover, #0057b8) !important;
 }
+
+/* Override theme-level button/input :hover for booking form fields */
+.nvt-booking-engine .nvt-field,
+.nvt-booking-engine .nvt-field:hover,
+.nvt-booking-engine .nvt-field:focus,
+.nvt-booking-engine .nvt-field:active {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+.nvt-booking-engine .nvt-field-input,
+.nvt-booking-engine .nvt-field-input:hover,
+.nvt-booking-engine .nvt-field-input:focus,
+.nvt-booking-engine .nvt-field-input:active,
+.nvt-booking-engine button.nvt-field-input:hover,
+.nvt-booking-engine button.nvt-field-input:focus {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: inherit !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
