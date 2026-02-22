@@ -50,8 +50,8 @@ if ($mode == 'export_hotel_features_csv') {
         ob_end_clean();
 
         if ($result['success']) {
-            $download_url = fn_url('novoton_holidays.download_hotel_features_csv&file=' . urlencode($result['filename']));
-            fn_set_notification('N', __('notice'), "Hotel features CSV generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download {$result['filename']}</a>");
+            $download_url = fn_url('novoton_holidays.download_hotel_features_csv');
+            fn_set_notification('N', __('notice'), "Hotel features CSV generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.csv</a>");
         } else {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }
@@ -65,27 +65,18 @@ if ($mode == 'export_hotel_features_csv') {
 
 /**
  * Mode: download_hotel_features_csv
- * Download the generated CSV file
+ * Download the generated CSV file (static filename)
  */
 if ($mode == 'download_hotel_features_csv') {
-    $file = $_REQUEST['file'] ?? '';
-
-    if (empty($file)) {
-        fn_set_notification('E', __('error'), 'No file specified');
-        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
-    }
-
-    // Security: only allow files from novoton_reports directory
-    $dir = fn_get_files_dir_path() . 'novoton_reports/';
-    $file_path = $dir . basename($file);
+    $file_path = fn_get_files_dir_path() . 'novoton_reports/novoton_hotel_features.csv';
 
     if (!file_exists($file_path)) {
-        fn_set_notification('E', __('error'), 'File not found');
+        fn_set_notification('E', __('error'), 'No CSV export found. Please generate one first.');
         return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
     }
 
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+    header('Content-Disposition: attachment; filename="novoton_hotel_features.csv"');
     header('Content-Length: ' . filesize($file_path));
     readfile($file_path);
     exit;
@@ -107,8 +98,8 @@ if ($mode == 'export_hotel_features_xml') {
         ob_end_clean();
 
         if ($result['success']) {
-            $download_url = fn_url('novoton_holidays.download_hotel_features_xml&file=' . urlencode($result['filename']));
-            fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download {$result['filename']}</a>");
+            $download_url = fn_url('novoton_holidays.download_hotel_features_xml');
+            fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.xml</a>");
         } else {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }
@@ -122,27 +113,18 @@ if ($mode == 'export_hotel_features_xml') {
 
 /**
  * Mode: download_hotel_features_xml
- * Download the generated XML file
+ * Download the generated XML file (static filename)
  */
 if ($mode == 'download_hotel_features_xml') {
-    $file = $_REQUEST['file'] ?? '';
-
-    if (empty($file)) {
-        fn_set_notification('E', __('error'), 'No file specified');
-        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
-    }
-
-    // Security: only allow files from novoton_reports directory
-    $dir = fn_get_files_dir_path() . 'novoton_reports/';
-    $file_path = $dir . basename($file);
+    $file_path = fn_get_files_dir_path() . 'novoton_reports/novoton_hotel_features.xml';
 
     if (!file_exists($file_path)) {
-        fn_set_notification('E', __('error'), 'File not found');
+        fn_set_notification('E', __('error'), 'No XML export found. Please generate one first.');
         return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
     }
 
     header('Content-Type: application/xml; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+    header('Content-Disposition: attachment; filename="novoton_hotel_features.xml"');
     header('Content-Length: ' . filesize($file_path));
     readfile($file_path);
     exit;

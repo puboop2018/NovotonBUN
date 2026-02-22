@@ -123,13 +123,9 @@
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[L] Manage Bookings</a>
             <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-warning">[R] Alternative Requests</a>
             <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Export Hotel Features</a>
-            {if $last_exports.csv}
-                <a href="{"novoton_holidays.download_hotel_features_csv&file=`$last_exports.csv`"|fn_url}" class="novoton-btn novoton-btn-info" title="{$last_exports.csv}" style="font-size:11px;">[CSV] Download Last Export</a>
-            {/if}
+            <a href="{"novoton_holidays.download_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-info" style="font-size:11px;">[CSV] Download</a>
             <a href="{"novoton_holidays.export_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-secondary">[XML] Export Hotel Features</a>
-            {if $last_exports.xml}
-                <a href="{"novoton_holidays.download_hotel_features_xml&file=`$last_exports.xml`"|fn_url}" class="novoton-btn novoton-btn-info" title="{$last_exports.xml}" style="font-size:11px;">[XML] Download Last Export</a>
-            {/if}
+            <a href="{"novoton_holidays.download_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-info" style="font-size:11px;">[XML] Download</a>
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
             <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
             <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[C] Price Comparison Tool</a>
