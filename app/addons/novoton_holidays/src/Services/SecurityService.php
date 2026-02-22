@@ -15,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class SecurityService
+class SecurityService implements SecurityServiceInterface
 {
     /** @var int Rate limit window in seconds */
     private const RATE_LIMIT_WINDOW = 60;

@@ -19,7 +19,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-class SyncLogger
+class SyncLogger implements SyncLoggerInterface
 {
     /**
      * Sync type labels for email subjects

@@ -16,7 +16,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
-class ProductFactory
+class ProductFactory implements ProductFactoryInterface
 {
     private DatabaseHelper $dbHelper;
 

@@ -23,7 +23,7 @@ use Tygh\Addons\NovotonHolidays\Api\ReservationApiClient;
 use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-class NovotonApi
+class NovotonApi implements NovotonApiInterface
 {
     private NovotonHttpClient $httpClient;
     private NovotonXmlParser $xmlParser;

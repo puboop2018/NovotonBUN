@@ -28,7 +28,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 use Tygh\Registry;
 
-class BookingSubmissionService
+class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
     private BookingRepository $bookingRepo;
     private NovotonApi $api;

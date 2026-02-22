@@ -20,42 +20,42 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 // =============================================================================
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\BookingService
+ * @return \Tygh\Addons\NovotonHolidays\Services\BookingServiceInterface
  */
 function _nvt_booking_service() {
     return Container::getInstance()->bookingService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\GuestDataService
+ * @return \Tygh\Addons\NovotonHolidays\Services\GuestDataServiceInterface
  */
 function _nvt_guest_service() {
     return Container::getInstance()->guestDataService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\SearchService
+ * @return \Tygh\Addons\NovotonHolidays\Services\SearchServiceInterface
  */
 function _nvt_search_service() {
     return Container::getInstance()->searchService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\RoomPriceService
+ * @return \Tygh\Addons\NovotonHolidays\Services\RoomPriceServiceInterface
  */
 function _nvt_price_service() {
     return Container::getInstance()->roomPriceService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\SecurityService
+ * @return \Tygh\Addons\NovotonHolidays\Services\SecurityServiceInterface
  */
 function _nvt_security_service() {
     return Container::getInstance()->securityService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\CacheService
+ * @return \Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface
  */
 function _nvt_cache_service() {
     return Container::getInstance()->cacheService();
@@ -69,7 +69,7 @@ function _nvt_validation_helper() {
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\PriceInfoService
+ * @return \Tygh\Addons\NovotonHolidays\Services\PriceInfoServiceInterface
  */
 function _nvt_price_info_service() {
     return Container::getInstance()->priceInfoService();
@@ -83,28 +83,28 @@ function _nvt_date_helper() {
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\CronService
+ * @return \Tygh\Addons\NovotonHolidays\Services\CronServiceInterface
  */
 function _nvt_cron_service() {
     return Container::getInstance()->cronService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\DiagnosticsService
+ * @return \Tygh\Addons\NovotonHolidays\Services\DiagnosticsServiceInterface
  */
 function _nvt_diagnostics_service() {
     return Container::getInstance()->diagnosticsService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\AlternativeRequestService
+ * @return \Tygh\Addons\NovotonHolidays\Services\AlternativeRequestServiceInterface
  */
 function _nvt_alternative_request_service() {
     return Container::getInstance()->alternativeRequestService();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\BookingSubmissionService
+ * @return \Tygh\Addons\NovotonHolidays\Services\BookingSubmissionServiceInterface
  */
 function _nvt_booking_submission_service() {
     return Container::getInstance()->bookingSubmissionService();
@@ -115,28 +115,28 @@ function _nvt_booking_submission_service() {
 // =============================================================================
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Repository\HotelRepository
+ * @return \Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface
  */
 function _nvt_hotel_repo() {
     return Container::getInstance()->hotelRepository();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Repository\BookingRepository
+ * @return \Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface
  */
 function _nvt_booking_repo() {
     return Container::getInstance()->bookingRepository();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Repository\FacilityRepository
+ * @return \Tygh\Addons\NovotonHolidays\Repository\FacilityRepositoryInterface
  */
 function _nvt_facility_repo() {
     return Container::getInstance()->facilityRepository();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository
+ * @return \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepositoryInterface
  */
 function _nvt_sync_log_repo() {
     return Container::getInstance()->syncLogRepository();
@@ -147,14 +147,14 @@ function _nvt_sync_log_repo() {
 // =============================================================================
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator
+ * @return \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface
  */
 function _nvt_db_iterator() {
     return Container::getInstance()->databaseIterator();
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync
+ * @return \Tygh\Addons\NovotonHolidays\Helpers\SyncInterface
  */
 function _nvt_batched_hotelinfo_sync() {
     return Container::getInstance()->batchedHotelInfoSync();

@@ -11,7 +11,7 @@ namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
-class NovotonHttpClient
+class NovotonHttpClient implements HttpClientInterface
 {
     private $apiUrl;
     private $apiKey;

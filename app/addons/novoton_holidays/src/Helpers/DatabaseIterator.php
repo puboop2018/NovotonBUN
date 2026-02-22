@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
-class DatabaseIterator
+class DatabaseIterator implements DatabaseIteratorInterface
 {
     /**
      * Default chunk size for batch processing

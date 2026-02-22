@@ -15,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
-class CronService
+class CronService implements CronServiceInterface
 {
     private $api;
     private $countries;

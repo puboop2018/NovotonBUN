@@ -11,7 +11,7 @@ namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-class NovotonXmlParser
+class NovotonXmlParser implements XmlParserInterface
 {
     /**
      * Clean XML entities

@@ -16,7 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-class DatabaseHelper
+class DatabaseHelper implements DatabaseHelperInterface
 {
     /** @var array Lookup cache for product codes -> product IDs */
     private array $productCodeCache = [];
