@@ -5657,28 +5657,83 @@ div.novoton-desktop-only,
     background: var(--nvt-search-btn-hover, #0057b8) !important;
 }
 
-/* Kill ALL hover/focus/active visuals on booking form row fields */
-.nvt-form-row *,
-.nvt-form-row *:hover,
+/* Remove outline/box-shadow on form row fields only */
 .nvt-form-row *:focus,
-.nvt-form-row *:active,
 .nvt-form-row *:focus-visible {
     outline: none !important;
     box-shadow: none !important;
 }
+/* Keep form field backgrounds transparent (the field containers, not popup children) */
 .nvt-field,
 .nvt-field:hover,
-.nvt-field:focus,
-.nvt-field:active,
 .nvt-field-input,
 .nvt-field-input:hover,
 .nvt-field-input:focus,
-.nvt-field-input:active,
 button.nvt-field-input,
 button.nvt-field-input:hover,
-button.nvt-field-input:focus,
-button.nvt-field-input:active {
+button.nvt-field-input:focus {
     background: transparent !important;
     background-color: transparent !important;
-    border-color: inherit !important;
+}
+
+/* ===== Hover effects for interactive elements ===== */
+
+/* Calendar day hover */
+.nvt-calendar-day:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--empty):not(.nvt-calendar-day--selected) {
+    background: #e8f0fe !important;
+}
+
+/* Calendar nav arrows hover */
+.nvt-calendar-nav:hover:not(:disabled) {
+    background: #f0f0f0 !important;
+}
+
+/* Guest +/- buttons hover */
+.nvt-guest-btn:hover:not(:disabled) {
+    background: #e8f0fe !important;
+    border-color: #003580 !important;
+}
+
+/* Done button hover */
+.nvt-guest-popup .nvt-done-btn:hover {
+    background: #002a66 !important;
+}
+
+/* Add room button hover */
+.nvt-add-room-btn:hover {
+    background: #f0f7ff !important;
+    border-color: #003580 !important;
+}
+
+/* Missing ages alert hover */
+.nvt-missing-ages-alert:hover {
+    background: #ffecb3 !important;
+    border-color: #ffb300 !important;
+}
+
+/* Remove room button hover */
+.nvt-remove-room:hover {
+    background: #ffcdd2 !important;
+}
+
+/* ===== Check-in / Check-out placeholder color (should look like placeholder) ===== */
+.nvt-field-input-text .nvt-value--placeholder {
+    color: #6b6b6b !important;
+}
+
+/* ===== "Please select the age of each child" hint positioning ===== */
+.nvt-child-age-hint {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: auto !important;
+    right: 0 !important;
+    font-size: 12px !important;
+    color: #d32f2f !important;
+    padding: 4px 12px !important;
+    white-space: nowrap !important;
+    background: #fff5f5 !important;
+    border: 1px solid #ffcdd2 !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    z-index: 1 !important;
 }

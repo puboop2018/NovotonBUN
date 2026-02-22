@@ -681,7 +681,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 $api = fn_novoton_holidays_get_api();
                 if ($api) {
                 $lastReq = $api->getLastRequestFormatted();
-                $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
+                $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in=" . ($lastReq['check_in'] ?? '') . ", check_out=" . ($lastReq['check_out'] ?? '') . ", adults=" . ($priceParams['adults'] ?? 2);
                 $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
                 // Show full XML request
                 $fullRequest = $api->getLastRequest();
@@ -939,9 +939,23 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 Tygh::$app['view']->assign('hotel_all_packages', []);
             }
 
-            // Room-level facilities (type=room) for display on search result cards
+            // Room-level facilities for display on search result cards
             $lang_code = CART_LANGUAGE;
+
+            // Auto-sync facilities if none exist for this hotel
+            $has_facilities = db_get_field(
+                "SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s",
+                $hotelId
+            );
+            if (!$has_facilities) {
+                fn_novoton_holidays_sync_hotel_facilities($hotelId);
+            }
+
+            // Try room-type facilities first, fallback to all facilities
             $room_facilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, 'room', $lang_code);
+            if (empty($room_facilities)) {
+                $room_facilities = fn_novoton_holidays_get_hotel_facilities($hotelId, $lang_code);
+            }
             Tygh::$app['view']->assign('novoton_room_facilities', $room_facilities);
 
             // V3: Check for active early booking from priceinfo_data JSON
