@@ -102,7 +102,9 @@ if ($mode == 'add_hotels_as_products') {
     $run_process = isset($_REQUEST['run']);
 
     if (!$run_process) {
-        // Show configuration form
+        // Show configuration form — render directly to avoid template resolution issues
+        header('Content-Type: text/html; charset=utf-8');
+
         try {
             $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
@@ -111,7 +113,7 @@ if ($mode == 'add_hotels_as_products') {
             $stats = [
                 'total' => $hotelRepo->count(['country' => $country]),
                 'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
-                'with_packages' => db_get_field(
+                'with_packages' => (int) db_get_field(
                     "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
                      INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
                      WHERE h.country = ?s",
@@ -144,18 +146,157 @@ if ($mode == 'add_hotels_as_products') {
             // Get languages
             $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
 
-            Tygh::$app['view']->assign('country', $country);
-            Tygh::$app['view']->assign('stats', $stats);
-            Tygh::$app['view']->assign('resorts', $resorts);
-            Tygh::$app['view']->assign('categories', $categories);
-            Tygh::$app['view']->assign('languages', $languages);
+            // Get available countries from settings
+            $available_countries = ConfigProvider::getSelectedCountries();
 
-            return [CONTROLLER_STATUS_OK];
+            // Build form action URL — construct directly for reliability
+            $form_url = fn_url('novoton_holidays.add_hotels_as_products');
+            $back_url = fn_url('novoton_holidays.manage');
+
+            // Render the configuration form directly
+            echo '<!DOCTYPE html><html><head><title>Add Hotels as Products - ' . htmlspecialchars($country) . '</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+                .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                h1 { color: #003580; margin-bottom: 5px; }
+                .subtitle { color: #666; margin-bottom: 25px; font-size: 13px; }
+                .section { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+                .section h3 { margin: 0 0 15px 0; color: #003580; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+                .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+                .stat-item { background: #fff; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #e0e0e0; }
+                .stat-number { font-size: 28px; font-weight: bold; color: #003580; }
+                .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+                .control-group { margin-bottom: 15px; }
+                .control-group label.main-label { font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
+                .control-group .hint { color: #999; font-size: 11px; margin-top: 3px; }
+                select, input[type="number"] { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+                select.wide { min-width: 300px; }
+                .radio-group label, .checkbox-group label { display: inline-block; margin-right: 15px; font-size: 13px; cursor: pointer; }
+                .resort-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
+                .resort-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #f8f9fa; border-radius: 4px; font-size: 12px; }
+                .resort-item input { margin: 0; }
+                .resort-count { color: #666; font-size: 11px; }
+                .btn { display: inline-block; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; }
+                .btn-primary { background: #003580; color: white; }
+                .btn-primary:hover { background: #00275e; }
+                .btn-default { background: #e0e0e0; color: #333; }
+                .btn-default:hover { background: #ccc; }
+                .btn-small { padding: 5px 12px; font-size: 12px; }
+                .buttons-container { margin-top: 25px; display: flex; gap: 10px; }
+                .country-selector { margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+                .country-selector a { display: inline-block; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+                .country-selector a.active { background: #003580; color: white; }
+                .country-selector a:not(.active) { background: white; color: #003580; border: 1px solid #003580; }
+                .country-selector a:not(.active):hover { background: #f0f4ff; }
+            </style></head><body><div class="container">';
+
+            echo '<h1>Add Hotels as Products</h1>';
+            echo '<p class="subtitle">Import hotels from the Novoton API database as CS-Cart products</p>';
+
+            // Country selector tabs
+            if (count($available_countries) > 1) {
+                echo '<div class="country-selector"><strong>Country:</strong> ';
+                foreach ($available_countries as $c) {
+                    $active = ($c === $country) ? ' class="active"' : '';
+                    $c_url = fn_url('novoton_holidays.add_hotels_as_products') . '&country=' . urlencode($c);
+                    echo '<a href="' . htmlspecialchars($c_url) . '"' . $active . '>' . htmlspecialchars($c) . '</a> ';
+                }
+                echo '</div>';
+            }
+
+            // Statistics
+            echo '<div class="section"><h3>Statistics for ' . htmlspecialchars($country) . '</h3>';
+            echo '<div class="stat-grid">';
+            echo '<div class="stat-item"><div class="stat-number">' . (int) $stats['total'] . '</div><div class="stat-label">Total Hotels</div></div>';
+            echo '<div class="stat-item"><div class="stat-number" style="color:#28a745;">' . (int) $stats['with_prices'] . '</div><div class="stat-label">With Prices</div></div>';
+            echo '<div class="stat-item"><div class="stat-number" style="color:#17a2b8;">' . (int) $stats['already_products'] . '</div><div class="stat-label">Already Products</div></div>';
+            echo '<div class="stat-item"><div class="stat-number" style="color:#fd7e14;">' . (int) $stats['to_add'] . '</div><div class="stat-label">To Add</div></div>';
+            echo '</div></div>';
+
+            // Form
+            echo '<form method="get" action="' . htmlspecialchars(strtok($form_url, '?')) . '">';
+            // Preserve dispatch parameters
+            $url_parts = parse_url($form_url);
+            if (!empty($url_parts['query'])) {
+                parse_str($url_parts['query'], $qs);
+                foreach ($qs as $k => $v) {
+                    echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
+                }
+            }
+            echo '<input type="hidden" name="run" value="1">';
+            echo '<input type="hidden" name="country" value="' . htmlspecialchars($country) . '">';
+
+            // Import Settings
+            echo '<div class="section"><h3>Import Settings</h3>';
+
+            // Category
+            echo '<div class="control-group"><label class="main-label">Category:</label>';
+            echo '<select name="category_id" class="wide" required><option value="">-- Select Category --</option>';
+            foreach ($categories as $cat) {
+                echo '<option value="' . (int) $cat['category_id'] . '">' . htmlspecialchars($cat['category'] ?? '') . '</option>';
+            }
+            echo '</select>';
+            echo '<div class="hint">Select the category where hotel products will be created</div></div>';
+
+            // Import Mode
+            echo '<div class="control-group"><label class="main-label">Import Mode:</label>';
+            echo '<div class="radio-group">';
+            echo '<label><input type="radio" name="import_mode" value="new_only" checked> New hotels only</label>';
+            echo '<label><input type="radio" name="import_mode" value="update"> All hotels (update existing)</label>';
+            echo '</div></div>';
+
+            // Languages
+            echo '<div class="control-group"><label class="main-label">Languages:</label>';
+            echo '<div class="checkbox-group">';
+            foreach ($languages as $lang) {
+                $checked = in_array($lang['lang_code'], ['en', 'ro']) ? ' checked' : '';
+                echo '<label><input type="checkbox" name="languages[]" value="' . htmlspecialchars($lang['lang_code']) . '"' . $checked . '> ' . htmlspecialchars($lang['name']) . '</label>';
+            }
+            echo '</div></div>';
+
+            // Limit
+            echo '<div class="control-group"><label class="main-label">Limit:</label>';
+            echo '<input type="number" name="limit" value="50" min="0" max="5000" style="width:80px">';
+            echo '<div class="hint">0 = no limit (process all hotels)</div></div>';
+
+            echo '</div>'; // end Import Settings section
+
+            // Resort Selection
+            if (!empty($resorts)) {
+                echo '<div class="section"><h3>Select Resorts</h3>';
+                echo '<p style="color:#666;font-size:12px;margin-bottom:10px;">Leave all unchecked to import from all resorts, or select specific resorts:</p>';
+                echo '<div style="margin-bottom:10px;">';
+                echo '<button type="button" onclick="toggleAllResorts(true)" class="btn btn-small btn-default">Select All</button> ';
+                echo '<button type="button" onclick="toggleAllResorts(false)" class="btn btn-small btn-default">Deselect All</button>';
+                echo '</div>';
+                echo '<div class="resort-grid">';
+                foreach ($resorts as $resort) {
+                    $city = htmlspecialchars($resort['city'] ?? '');
+                    echo '<label class="resort-item"><input type="checkbox" name="resorts[]" value="' . $city . '">';
+                    echo '<span>' . $city . '</span>';
+                    echo '<span class="resort-count">(' . (int) ($resort['with_prices'] ?? 0) . '/' . (int) ($resort['hotel_count'] ?? 0) . ')</span></label>';
+                }
+                echo '</div></div>';
+            }
+
+            // Submit
+            echo '<div class="buttons-container">';
+            echo '<button type="submit" class="btn btn-primary">Start Import</button>';
+            echo '<a href="' . htmlspecialchars($back_url) . '" class="btn btn-default">Back to Dashboard</a>';
+            echo '</div>';
+
+            echo '</form>';
+
+            echo '<script>function toggleAllResorts(checked) { document.querySelectorAll(\'input[name="resorts[]"]\').forEach(function(cb) { cb.checked = checked; }); }</script>';
+
+            echo '</div></body></html>';
+            exit;
+
         } catch (\Throwable $e) {
             fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
             return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
         }
-        
+
     } else {
         // Process import
         header('Content-Type: text/html; charset=utf-8');
