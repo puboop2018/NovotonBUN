@@ -404,13 +404,13 @@ function fn_novoton_holidays_get_or_create_category($path): int
         if (empty($part)) continue;
         
         // Check if category exists
-        $category_id = db_get_field(
+        $category_id = (int) db_get_field(
             "SELECT c.category_id FROM ?:categories c
              LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
              WHERE c.parent_id = ?i AND cd.category = ?s",
             CART_LANGUAGE, $parent_id, $part
         );
-        
+
         if ($category_id) {
             $parent_id = $category_id;
         } else {
@@ -419,9 +419,9 @@ function fn_novoton_holidays_get_or_create_category($path): int
                 'parent_id' => $parent_id,
                 'status' => 'A'
             ];
-            
-            $category_id = fn_update_category($category_data, 0);
-            
+
+            $category_id = (int) fn_update_category($category_data, 0);
+
             if ($category_id) {
                 // Add descriptions for all languages
                 $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
