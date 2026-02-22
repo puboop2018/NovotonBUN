@@ -405,9 +405,14 @@ class BatchedHotelInfoSync
      */
     private function processHotelInfo(string $hotel_id, $hotel_info, string $now, array $hotel_map = [], array $product_code_map = [], array $prefixes = ['NVT']): void
     {
+        $hotel_data_json = json_encode($hotel_info);
+        if ($hotel_data_json === false) {
+            $hotel_data_json = null;
+        }
+
         $update = [
             'hotelinfo_synced_at' => $now,
-            'hotel_data' => json_encode($hotel_info),
+            'hotel_data' => $hotel_data_json,
         ];
 
         // Link product if not already linked — use pre-fetched maps (no extra queries)
@@ -864,7 +869,7 @@ class BatchedHotelInfoSync
      */
     private function saveState(array $state): void
     {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT));
+        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 
     /**
@@ -904,8 +909,8 @@ class BatchedHotelInfoSync
         $bytes = (int)$limit;
         $unit = strtolower(substr($limit, -1));
         switch ($unit) {
-            case 'g': $bytes *= 1024;
-            case 'm': $bytes *= 1024;
+            case 'g': $bytes *= 1024; // fall through
+            case 'm': $bytes *= 1024; // fall through
             case 'k': $bytes *= 1024;
         }
         return memory_get_usage(true) > (int)($bytes * 0.85);

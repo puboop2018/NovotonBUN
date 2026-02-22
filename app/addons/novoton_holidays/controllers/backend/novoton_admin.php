@@ -202,19 +202,20 @@ if ($mode == 'export_bookings') {
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
     
     foreach ($bookings as $booking) {
+        $children_data = !empty($booking['children']) ? json_decode($booking['children'], true) : [];
         $csv .= implode(',', [
             $booking['novoton_id'],
             $booking['order_id'],
-            '"' . $booking['hotel_name'] . '"',
-            '"' . $booking['room_type'] . '"',
+            '"' . str_replace('"', '""', $booking['hotel_name'] ?? '') . '"',
+            '"' . str_replace('"', '""', $booking['room_type'] ?? '') . '"',
             $booking['check_in'],
             $booking['check_out'],
             $booking['adults'],
-            !empty($booking['children']) ? count(json_decode($booking['children'], true)) : 0,
+            is_array($children_data) ? count($children_data) : 0,
             $booking['total_price'],
             $booking['currency'],
             $booking['status'],
-            '"' . ($booking['email'] ?? '') . '"',
+            '"' . str_replace('"', '""', $booking['email'] ?? '') . '"',
             $booking['created_at']
         ]) . "\n";
     }
@@ -280,8 +281,7 @@ if ($mode == 'run_cron') {
     ob_start();
     
     try {
-        // Include and run the cron logic
-        $_REQUEST = array_merge($_REQUEST, $params);
+        // Include and run the cron logic (use local $params, not $_REQUEST)
         
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         
@@ -432,9 +432,9 @@ function fn_novoton_holidays_admin_check_prices($api) {
         $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);
         
         $checked++;
-        if ($has_prices == 'Y') $with_prices++;
-        
-        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices == 'Y' ? 'HAS PRICES' : 'no prices') . "\n";
+        if ($has_prices === 'Y') $with_prices++;
+
+        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices === 'Y' ? 'HAS PRICES' : 'no prices') . "\n";
         usleep(100000);
     }
     

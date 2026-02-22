@@ -233,6 +233,11 @@ class HotelSync
 
                 // Convert to JSON for storage
                 $hotelDataJson = json_encode($hotelInfo);
+                if ($hotelDataJson === false) {
+                    $this->stats['errors'][] = "json_encode failed for hotelinfo {$hotelId}: " . json_last_error_msg();
+                    $this->stats['hotels_failed']++;
+                    continue;
+                }
 
                 // Extract packages count
                 $packagesCount = 0;
@@ -347,6 +352,9 @@ class HotelSync
 
                 if ($priceInfo) {
                     $priceInfoJson = json_encode($priceInfo);
+                    if ($priceInfoJson === false) {
+                        $priceInfoJson = null;
+                    }
 
                     // Count seasons
                     if (isset($priceInfo->seasons->season)) {
@@ -539,6 +547,9 @@ class HotelSync
                 }
 
                 $priceInfoJson = json_encode($priceInfo);
+                if ($priceInfoJson === false) {
+                    $priceInfoJson = null;
+                }
 
                 // Count seasons
                 $seasonsCount = 0;

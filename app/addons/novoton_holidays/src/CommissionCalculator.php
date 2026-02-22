@@ -33,7 +33,7 @@ class CommissionCalculator implements CommissionCalculatorInterface
     {
         $finalPrice = $price * (1 + ($this->commission / 100));
 
-        if ($this->roundPrices == 'Y') {
+        if ($this->roundPrices === 'Y') {
             $finalPrice = round($finalPrice);
         }
 

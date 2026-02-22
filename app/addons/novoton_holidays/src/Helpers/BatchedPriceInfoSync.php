@@ -265,10 +265,6 @@ class BatchedPriceInfoSync
             }
 
             // Pre-fetch package_names for the batch to avoid N+1
-            $batch_keys = [];
-            foreach ($batch as $pkg) {
-                $batch_keys[] = $pkg['hotel_id'] . '|' . $pkg['package_id'];
-            }
             $pkg_name_map = [];
             if (!empty($batch)) {
                 // Build OR conditions for batch lookup
@@ -747,7 +743,7 @@ class BatchedPriceInfoSync
      */
     private function saveState(array $state): void
     {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT));
+        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 
     /**
@@ -774,8 +770,8 @@ class BatchedPriceInfoSync
         $bytes = (int)$limit;
         $unit = strtolower(substr($limit, -1));
         switch ($unit) {
-            case 'g': $bytes *= 1024;
-            case 'm': $bytes *= 1024;
+            case 'g': $bytes *= 1024; // fall through
+            case 'm': $bytes *= 1024; // fall through
             case 'k': $bytes *= 1024;
         }
         return memory_get_usage(true) > (int)($bytes * 0.85);
