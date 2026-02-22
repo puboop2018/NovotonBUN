@@ -63,6 +63,32 @@ export function injectStyles() {
     position: relative;
 }
 
+/* ---- Kill every hover / focus / active visual on form-row children ---- */
+.nvt-form-row *,
+.nvt-form-row *:hover,
+.nvt-form-row *:focus,
+.nvt-form-row *:active,
+.nvt-form-row *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+.nvt-field,
+.nvt-field:hover,
+.nvt-field:focus,
+.nvt-field:active,
+.nvt-field-input,
+.nvt-field-input:hover,
+.nvt-field-input:focus,
+.nvt-field-input:active,
+button.nvt-field-input,
+button.nvt-field-input:hover,
+button.nvt-field-input:focus,
+button.nvt-field-input:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: inherit !important;
+}
+
 .nvt-field {
     position: relative;
     flex: 1;
@@ -98,9 +124,6 @@ export function injectStyles() {
     -webkit-user-select: text;
     user-select: text;
 }
-.nvt-field-input:hover {
-    background: transparent;
-}
 
 .nvt-field-input-icon {
     flex: 0 0 20px;
@@ -134,7 +157,7 @@ export function injectStyles() {
     cursor: text;
 }
 .nvt-field-input-text .nvt-value--placeholder {
-    color: var(--nvt-text-light);
+    color: var(--nvt-text);
 }
 .nvt-field-input-arrow {
     flex: 0 0 16px;
@@ -352,8 +375,8 @@ export function injectStyles() {
 .nvt-guest-rooms-container {
     flex: 1;
     overflow-y: auto;
-    padding-right: 8px;
-    margin-right: -8px;
+    padding-right: 14px;
+    margin-right: -4px;
 }
 
 .nvt-room-section {
@@ -538,10 +561,15 @@ export function injectStyles() {
 /* ----- Child age hint below guest picker ----- */
 
 .nvt-child-age-hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     font-size: 11px;
     color: var(--nvt-error);
     padding: 2px 14px;
     white-space: nowrap;
+    z-index: 1;
 }
 
 /* ----- Done button inside guest popup ----- */

@@ -118,13 +118,12 @@ class PricingApiClient extends ApiClientBase
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
 
-        fn_log_event('general', 'runtime', [
-            'message' => 'Novoton room_price - Raw API response',
-            'response_length' => strlen($response),
-            'response_first_500' => substr($response, 0, 500)
-        ]);
-
-        $result = $this->xmlParser->parse($response);
+        try {
+            $result = $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            $this->lastError = $e->getMessage();
+            return false;
+        }
 
         $prices = $result->xpath('//Price');
         if (!empty($prices) && count($prices) > 0) {
@@ -207,13 +206,6 @@ class PricingApiClient extends ApiClientBase
         }
         $boardId = $params['board_id'] ?? '';
 
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
-            $adultsXml .= '<Age>' . $age . '</Age>';
-        }
-
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
@@ -235,10 +227,10 @@ class PricingApiClient extends ApiClientBase
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adultsXml . '</Adt>
+            <Adt>' . $adultsCount . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
-            <Remark>No</Remark>
-            <Important>No</Important>
+            <Remark>Yes</Remark>
+            <Important>Yes</Important>
         </room_price>';
 
         $this->lastRequest = $xml;

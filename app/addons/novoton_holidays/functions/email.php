@@ -288,7 +288,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         }
         
         // Save to file in novoton_reports directory
-        $filename = 'novoton_hotel_features_' . date('Ymd_His') . '.csv';
+        $filename = 'novoton_hotel_features.csv';
         $dir = fn_get_files_dir_path() . 'novoton_reports/';
 
         if (!is_dir($dir)) {
@@ -400,7 +400,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
         }
 
         // Save
-        $filename  = 'novoton_hotel_features_' . date('Ymd_His') . '.xml';
+        $filename  = 'novoton_hotel_features.xml';
         $dir       = fn_get_files_dir_path() . 'novoton_reports/';
 
         if (!is_dir($dir)) {

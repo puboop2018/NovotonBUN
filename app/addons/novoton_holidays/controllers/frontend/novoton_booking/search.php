@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
