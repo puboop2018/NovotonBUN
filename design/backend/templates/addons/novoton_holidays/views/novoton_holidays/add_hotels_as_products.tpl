@@ -15,14 +15,30 @@
 .add-products-form .resort-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #f8f9fa; border-radius: 4px; font-size: 12px; }
 .add-products-form .resort-item input { margin: 0; }
 .add-products-form .resort-count { color: #666; font-size: 11px; }
+.add-products-form .country-tabs { margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+.add-products-form .country-tabs a { display: inline-block; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+.add-products-form .country-tabs a.active { background: #003580; color: white; }
+.add-products-form .country-tabs a:not(.active) { background: #e8e8e8; color: #003580; }
+.add-products-form .country-tabs a:not(.active):hover { background: #d0d0d0; }
 {/literal}
 </style>
 
 <div class="add-products-form">
+
+    {** Country selector tabs **}
+    {if $available_countries|count > 1}
+    <div class="country-tabs">
+        {foreach from=$available_countries item=c}
+            <a href="{"novoton_holidays.add_hotels_as_products&country=`$c`"|fn_url}"
+               {if $c == $country}class="active"{/if}>{$c}</a>
+        {/foreach}
+    </div>
+    {/if}
+
     <form action="{"novoton_holidays.add_hotels_as_products"|fn_url}" method="post">
         <input type="hidden" name="run" value="1">
         <input type="hidden" name="country" value="{$country}">
-        
+
         {** Statistics **}
         <div class="section">
             <h3>Statistics for {$country}</h3>
@@ -45,11 +61,11 @@
                 </div>
             </div>
         </div>
-        
+
         {** Import Settings **}
         <div class="section">
             <h3>Import Settings</h3>
-            
+
             <div class="control-group">
                 <label class="control-label">Category:</label>
                 <div class="controls">
@@ -62,7 +78,7 @@
                     <p class="muted">Select the category where hotel products will be created</p>
                 </div>
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">Import Mode:</label>
                 <div class="controls">
@@ -70,33 +86,33 @@
                         <input type="radio" name="import_mode" value="new_only" checked> New hotels only
                     </label>
                     <label class="radio inline">
-                        <input type="radio" name="import_mode" value="all"> All hotels (update existing)
+                        <input type="radio" name="import_mode" value="update"> All hotels (update existing)
                     </label>
                 </div>
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">Languages:</label>
                 <div class="controls">
                     {foreach from=$languages item=lang}
                     <label class="checkbox inline">
-                        <input type="checkbox" name="languages[]" value="{$lang.lang_code}" 
-                               {if $lang.lang_code == 'en' || $lang.lang_code == 'ro'}checked{/if}> 
+                        <input type="checkbox" name="languages[]" value="{$lang.lang_code}"
+                               {if $lang.lang_code == 'en' || $lang.lang_code == 'ro'}checked{/if}>
                         {$lang.name}
                     </label>
                     {/foreach}
                 </div>
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">Limit:</label>
                 <div class="controls">
-                    <input type="number" name="limit" value="50" min="0" max="1000" class="input-small">
+                    <input type="number" name="limit" value="50" min="0" max="5000" class="input-small">
                     <p class="muted">0 = no limit (process all)</p>
                 </div>
             </div>
         </div>
-        
+
         {** Resort Selection **}
         {if $resorts}
         <div class="section">
@@ -117,7 +133,7 @@
             </div>
         </div>
         {/if}
-        
+
         {** Submit **}
         <div class="buttons-container">
             <button type="submit" class="btn btn-primary btn-large">
@@ -144,8 +160,8 @@ function toggleAllResorts(checked) {
     </a>
 {/capture}
 
-{include file="common/mainbox.tpl" 
-    title="Add Hotels as Products - `$country`" 
-    content=$smarty.capture.mainbox 
+{include file="common/mainbox.tpl"
+    title="Add Hotels as Products - `$country`"
+    content=$smarty.capture.mainbox
     buttons=$smarty.capture.buttons
 }

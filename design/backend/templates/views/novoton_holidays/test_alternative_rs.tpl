@@ -1,0 +1,1 @@
+{include file="addons/novoton_holidays/views/novoton_holidays/test_alternative_rs.tpl"}
