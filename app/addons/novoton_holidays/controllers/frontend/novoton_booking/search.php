@@ -939,6 +939,11 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 Tygh::$app['view']->assign('hotel_all_packages', []);
             }
 
+            // Room-level facilities (type=room) for display on search result cards
+            $lang_code = CART_LANGUAGE;
+            $room_facilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, 'room', $lang_code);
+            Tygh::$app['view']->assign('novoton_room_facilities', $room_facilities);
+
             // V3: Check for active early booking from priceinfo_data JSON
             $current_date = date('Y-m-d');
             $active_eb = null;

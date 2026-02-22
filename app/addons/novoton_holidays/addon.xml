@@ -555,9 +555,12 @@
                 `facility_name` varchar(255) DEFAULT '',
                 `facility_name_en` varchar(255) DEFAULT '',
                 `facility_name_ro` varchar(255) DEFAULT '',
+                `facility_type` enum('hotel','room') NOT NULL DEFAULT 'hotel',
+                `feature_variant_id` int(11) DEFAULT NULL,
                 `synced_at` datetime DEFAULT NULL,
                 `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (`facility_id`)
+                PRIMARY KEY (`facility_id`),
+                KEY `idx_facility_type` (`facility_type`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel facilities list'
         </item>
 

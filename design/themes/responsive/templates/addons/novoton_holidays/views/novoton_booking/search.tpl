@@ -610,6 +610,14 @@
                                 {if $result_package_name}
                                     <div style="font-size: 12px; color: #666; margin-top: 3px;">{$result_package_name}</div>
                                 {/if}
+                                {* Room facilities badges *}
+                                {if $novoton_room_facilities}
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;">
+                                        {foreach from=$novoton_room_facilities item=rfac}
+                                            <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 7px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                        {/foreach}
+                                    </div>
+                                {/if}
                                 {* MoreInfo from API *}
                                 {if $result.more_info}
                                     <div style="font-size: 12px; color: #008009; margin-top: 4px;">
@@ -631,7 +639,7 @@
                                 <div style="font-size: 22px; font-weight: 700; color: #1a1a1a;">{math equation="round(x * y)" x=$result.total_price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
                             </div>
                         </div>
-                        
+
                         {* Availability badge *}
                         <div style="margin-top: 8px;">
                             {if $result.is_on_request || $result.rooms_available === 0 || $result.rooms_available === '0'}
@@ -737,23 +745,32 @@
                     <div style="padding: 20px; border-right: 1px solid #e0e0e0;">
                         <div style="font-weight: 700; color: #0071c2; font-size: 16px; margin-bottom: 5px;">{$room_display}</div>
                         {if $result_package_name}
-                            <div style="font-size: 13px; color: #333; margin-bottom: 10px;">{$result_package_name}</div>
+                            <div style="font-size: 13px; color: #333; margin-bottom: 6px;">{$result_package_name}</div>
                         {/if}
-                        
+
+                        {* Room facilities badges *}
+                        {if $novoton_room_facilities}
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+                                {foreach from=$novoton_room_facilities item=rfac}
+                                    <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                {/foreach}
+                            </div>
+                        {/if}
+
                         {* MoreInfo from API - display additional room details *}
                         {if $result.more_info}
                             <div style="font-size: 13px; color: #008009; margin-bottom: 8px;">
                                 ✓ {$result.more_info|replace:'lt;':'<'|replace:'gt;':'>'|replace:'amp;':'&'|strip_tags}
                             </div>
                         {/if}
-                        
+
                         {* Important from API - display important notices *}
                         {if $result.important}
                             <div style="font-size: 12px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px;">
                                 ⚠️ {$result.important|replace:'lt;':'<'|replace:'gt;':'>'|replace:'amp;':'&'|strip_tags}
                             </div>
                         {/if}
-                        
+
                         {* Room availability - Quota display *}
                         {if $result.is_on_request || $result.rooms_available === 0 || $result.rooms_available === '0'}
                             <div style="color: #dc3545; font-size: 13px; margin-top: 8px;">

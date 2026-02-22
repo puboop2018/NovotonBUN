@@ -615,21 +615,22 @@ function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
     }
     
     try {
-        $hotel_info = $api->getHotelInfo($hotel_id);
-        
-        if (empty($hotel_info)) {
+        // Use dedicated hotel_facilities API (function 27) — returns <IdFacility> elements
+        $response = $api->getHotelFacilities($hotel_id);
+
+        if (empty($response)) {
             return false;
         }
-        
+
         // Clear existing facilities for this hotel
         db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
-        
-        // Parse facilities from hotel info
-        $facilities = $hotel_info->xpath('//Facility') ?: $hotel_info->xpath('//facility') ?: [];
-        
-        foreach ($facilities as $facility) {
-            $facility_id = (int)($facility['Id'] ?? $facility['id'] ?? 0);
-            
+
+        // Parse <IdFacility> elements from hotel_facilities API response
+        $facility_nodes = $response->xpath('//IdFacility') ?: [];
+
+        foreach ($facility_nodes as $node) {
+            $facility_id = (int) $node;
+
             if ($facility_id > 0) {
                 db_query(
                     "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES (?s, ?i)",
@@ -637,9 +638,9 @@ function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
                 );
             }
         }
-        
+
         return true;
-        
+
     } catch (\Exception $e) {
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton: Failed to sync hotel facilities',
@@ -674,6 +675,34 @@ function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): arra
          WHERE hf.hotel_id = ?s
          ORDER BY f.{$col}",
         $hotel_id
+    );
+}
+
+/**
+ * Get facilities for a hotel filtered by type
+ *
+ * @param string $hotel_id Hotel ID
+ * @param string $facility_type 'hotel' or 'room'
+ * @param string $lang Language code (en/ro)
+ * @return array Facilities list
+ */
+function fn_novoton_holidays_get_hotel_facilities_by_type($hotel_id, $facility_type, $lang = 'en'): array
+{
+    if ($hotel_id === null || $hotel_id === '') {
+        return [];
+    }
+    $hotel_id = (string) $hotel_id;
+
+    $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
+    $col = $allowed[$lang] ?? $allowed['en'];
+
+    return db_get_array(
+        "SELECT f.facility_id, f.{$col} as facility_name
+         FROM ?:novoton_hotel_facilities hf
+         JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
+         WHERE hf.hotel_id = ?s AND f.facility_type = ?s
+         ORDER BY f.{$col}",
+        $hotel_id, $facility_type
     );
 }
 
