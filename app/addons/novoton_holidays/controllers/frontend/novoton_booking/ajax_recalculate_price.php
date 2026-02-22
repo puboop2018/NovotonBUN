@@ -306,8 +306,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
         // Apply commission so displayed price matches customer-facing price
         $new_price = $api->applyCommission($new_price);
 
-        // Convert from API currency to CS-Cart display currency
-        $new_price = RoomPriceService::convertFromApiCurrency($new_price);
+        // Price stays in primary currency (EUR); fn_format_price handles display conversion
 
         // Check if room changed
         $room_changed = false;

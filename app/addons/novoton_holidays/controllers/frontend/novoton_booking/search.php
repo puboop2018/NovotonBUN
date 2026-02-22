@@ -554,10 +554,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 }
                 
                 // For multi-room, we need to display options per room
-                // Convert prices from EUR (API currency) to display currency
-                foreach ($all_room_results as $rn => $room_results) {
-                    $all_room_results[$rn] = RoomPriceService::convertResultsCurrency($room_results);
-                }
+                // Prices remain in primary currency (EUR); CS-Cart handles display conversion
                 // Pass all_room_results to template
                 Tygh::$app['view']->assign('all_room_results', $all_room_results);
                 Tygh::$app['view']->assign('is_multi_room_search', true);
@@ -860,15 +857,18 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
         return [CONTROLLER_STATUS_REDIRECT, 'products.search?' . http_build_query($redirect_params)];
     }
     
-    // Convert prices from EUR (API currency) to CS-Cart display currency
-    $results = RoomPriceService::convertResultsCurrency($results ?: []);
-    $alternative_results = RoomPriceService::convertResultsCurrency($alternative_results ?: []);
-    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    // Prices remain in primary currency (EUR); CS-Cart handles display conversion
+    $novoton_display_currency = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
+    $currencies = \Tygh\Registry::get('currencies');
+    $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
+    $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;
 
     // Assign to view - ensure no null values
     Tygh::$app['view']->assign('novoton_results', $results);
     Tygh::$app['view']->assign('novoton_params', $novoton_params ?: []);
     Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
+    Tygh::$app['view']->assign('novoton_display_coefficient', $novoton_display_coefficient);
+    Tygh::$app['view']->assign('novoton_display_symbol', $novoton_display_symbol);
 
     // Alternative dates results - ensure no null values
     Tygh::$app['view']->assign('alternative_results', $alternative_results);

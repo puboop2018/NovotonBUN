@@ -209,23 +209,35 @@ function fn_novoton_holidays_update_cscart_currencies($coefficients): array
 
         $old_coefficient = $currency['coefficient'];
 
-        // Update using CS-Cart's fn_update_currency if available
-        if (function_exists('fn_update_currency')) {
-            $currency['coefficient'] = $coefficient;
-            fn_update_currency($currency, $currency['currency_id']);
-        } else {
-            // Direct update as fallback
-            db_query(
-                "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
-                $coefficient,
-                $currency_code
-            );
+        // Use direct SQL update — fn_update_currency() may have side effects
+        // (hooks, recalculations) that silently modify the coefficient
+        db_query(
+            "UPDATE ?:currencies SET coefficient = ?s WHERE currency_code = ?s",
+            (string) round($coefficient, 5),
+            $currency_code
+        );
+
+        // Verify the update was persisted correctly
+        $stored = (float) db_get_field(
+            "SELECT coefficient FROM ?:currencies WHERE currency_code = ?s",
+            $currency_code
+        );
+
+        if (abs($stored - $coefficient) > 0.001) {
+            fn_log_event('general', 'runtime', [
+                'message' => sprintf(
+                    'WARNING: Currency coefficient mismatch after update for %s: expected %s, got %s',
+                    $currency_code,
+                    $coefficient,
+                    $stored
+                )
+            ]);
         }
 
         $results[$currency_code] = [
             'success' => true,
             'old_rate' => $old_coefficient,
-            'new_rate' => $coefficient
+            'new_rate' => $stored
         ];
     }
 
