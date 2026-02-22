@@ -703,16 +703,16 @@
                                 <div id="modal-content-{$row_id}-mobile" style="display: none;">
                                     {* Payment Terms - displayed first *}
                                     {if $result.terms_of_payment}
-                                        {capture name="payment_terms_mobile"}{fn_novoton_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}{/capture}
-                                        {if $smarty.capture.payment_terms_mobile}
-                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$smarty.capture.payment_terms_mobile|nl2br nofilter}</div>
+                                        {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}
+                                        {if $payment_terms_mobile}
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_mobile|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
                                     {* Cancellation Terms - displayed second *}
                                     {if $result.terms_of_cancellation}
-                                        {capture name="cancel_terms_mobile"}{fn_novoton_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}{/capture}
-                                        {if $smarty.capture.cancel_terms_mobile}
-                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_mobile|nl2br nofilter}</div>
+                                        {$cancel_terms_mobile = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
+                                        {if $cancel_terms_mobile}
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_mobile|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
                                     {* Remark/Note field - uses translation key, collapses blank lines *}
@@ -827,16 +827,16 @@
                             <div id="modal-content-{$row_id}" style="display: none;">
                                 {* Payment Terms - displayed first *}
                                 {if $result.terms_of_payment}
-                                    {capture name="payment_terms_desktop"}{fn_novoton_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}{/capture}
-                                    {if $smarty.capture.payment_terms_desktop}
-                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$smarty.capture.payment_terms_desktop|nl2br nofilter}</div>
+                                    {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}
+                                    {if $payment_terms_desktop}
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_desktop|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
                                 {* Cancellation Terms - displayed second *}
                                 {if $result.terms_of_cancellation}
-                                    {capture name="cancel_terms_desktop"}{fn_novoton_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}{/capture}
-                                    {if $smarty.capture.cancel_terms_desktop}
-                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$smarty.capture.cancel_terms_desktop|nl2br nofilter}</div>
+                                    {$cancel_terms_desktop = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
+                                    {if $cancel_terms_desktop}
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_desktop|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
                                 {* Remark/Note field - uses translation key, collapses blank lines *}

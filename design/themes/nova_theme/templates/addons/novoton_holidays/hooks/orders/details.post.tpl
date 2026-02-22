@@ -41,9 +41,9 @@
                 {if $product.extra.terms_of_payment_formatted}
                     {$_payment = $product.extra.terms_of_payment_formatted}
                 {elseif $product.extra.terms_of_payment_raw}
-                    {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
+                    {$_payment = fn_novoton_holidays_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
                 {elseif $product.extra.terms_of_payment}
-                    {$_payment = fn_novoton_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
+                    {$_payment = fn_novoton_holidays_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
                 {/if}
 
                 {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
@@ -51,9 +51,9 @@
                 {if $product.extra.terms_of_cancellation_formatted}
                     {$_cancel = $product.extra.terms_of_cancellation_formatted}
                 {elseif $product.extra.terms_of_cancellation_raw}
-                    {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
+                    {$_cancel = fn_novoton_holidays_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
                 {elseif $product.extra.terms_of_cancellation}
-                    {$_cancel = fn_novoton_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
+                    {$_cancel = fn_novoton_holidays_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
                 {/if}
 
                 {* Add if we have terms *}
