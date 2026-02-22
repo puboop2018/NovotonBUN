@@ -102,22 +102,31 @@ class GuestDataService implements GuestDataServiceInterface
         // Look for holder flag
         foreach ($guests_data as $guest) {
             if (is_array($guest) && !empty($guest['is_holder'])) {
-                return $guest['api_name'] ?? $guest['name'] ?? '';
+                $name = trim($guest['api_name'] ?? $guest['name'] ?? '');
+                if ($name !== '') {
+                    return $name;
+                }
             }
         }
-        
+
         // Look for room1_adult_1 (usually the holder)
-        if (isset($guests_data['room1_adult_1'])) {
+        if (isset($guests_data['room1_adult_1']) && is_array($guests_data['room1_adult_1'])) {
             $guest = $guests_data['room1_adult_1'];
-            return $guest['api_name'] ?? $guest['name'] ?? '';
+            $name = trim($guest['api_name'] ?? $guest['name'] ?? '');
+            if ($name !== '') {
+                return $name;
+            }
         }
-        
+
         // First guest
         $first = reset($guests_data);
         if (is_array($first)) {
-            return $first['api_name'] ?? $first['name'] ?? '';
+            $name = trim($first['api_name'] ?? $first['name'] ?? '');
+            if ($name !== '') {
+                return $name;
+            }
         }
-        
+
         // Fallback to booking data
         return $bookingData['holder_name'] ?? 'Guest';
     }

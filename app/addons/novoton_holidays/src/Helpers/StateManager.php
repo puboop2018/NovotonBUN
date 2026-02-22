@@ -19,7 +19,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Addons\NovotonHolidays\Services\DirectoryManager;
 use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 
-class StateManager
+class StateManager implements StateManagerInterface
 {
     /**
      * State file path

@@ -86,6 +86,12 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
 {
     static $cache = [];
 
+    // PHP 8.1+: prevent null from reaching real_escape_string via db_quote ?s
+    if ($hotel_id === null || $hotel_id === '') {
+        return null;
+    }
+    $hotel_id = (string) $hotel_id;
+
     if (!$force && isset($cache[$hotel_id])) {
         return $cache[$hotel_id];
     }
@@ -144,7 +150,7 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
         $cache[$hotel_id] = $hotel;
     }
 
-    return $hotel;
+    return $hotel ?: null;
 }
 
 /**
@@ -277,11 +283,15 @@ function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hote
  */
 function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?array
 {
+    if ($hotel_id === null || $package_id === null) {
+        return null;
+    }
+
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
          WHERE hotel_id = ?s AND package_id = ?s",
-        $hotel_id,
-        $package_id
+        (string) $hotel_id,
+        (string) $package_id
     );
 
     if (empty($pkg) || empty($pkg['priceinfo_data'])) {
@@ -301,11 +311,15 @@ function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?arr
  */
 function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_name): ?array
 {
+    if ($hotel_id === null || $package_name === null) {
+        return null;
+    }
+
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
          WHERE hotel_id = ?s AND package_name = ?s",
-        $hotel_id,
-        $package_name
+        (string) $hotel_id,
+        (string) $package_name
     );
 
     if (empty($pkg) || empty($pkg['priceinfo_data'])) {
@@ -322,7 +336,7 @@ function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_n
  */
 function fn_novoton_holidays_get_hotels_count(): int
 {
-    return db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
+    return (int)db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
 }
 
 /**
@@ -333,7 +347,7 @@ function fn_novoton_holidays_get_hotels_count(): int
  */
 function fn_novoton_holidays_get_hotels_no_packages_count(): int
 {
-    return db_get_field(
+    return (int)db_get_field(
         "SELECT COUNT(*) FROM ?:novoton_hotels h
          WHERE NOT EXISTS (
              SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
@@ -368,10 +382,11 @@ function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
  */
 function fn_novoton_holidays_get_hotel_id_by_product($product_id): ?string
 {
-    return db_get_field(
+    $result = db_get_field(
         "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i",
         $product_id
     );
+    return ($result !== false && $result !== '') ? (string)$result : null;
 }
 
 /**
@@ -390,13 +405,13 @@ function fn_novoton_holidays_get_or_create_category($path): int
         if (empty($part)) continue;
         
         // Check if category exists
-        $category_id = db_get_field(
+        $category_id = (int) db_get_field(
             "SELECT c.category_id FROM ?:categories c
              LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
              WHERE c.parent_id = ?i AND cd.category = ?s",
             CART_LANGUAGE, $parent_id, $part
         );
-        
+
         if ($category_id) {
             $parent_id = $category_id;
         } else {
@@ -405,9 +420,9 @@ function fn_novoton_holidays_get_or_create_category($path): int
                 'parent_id' => $parent_id,
                 'status' => 'A'
             ];
-            
-            $category_id = fn_update_category($category_data, 0);
-            
+
+            $category_id = (int) fn_update_category($category_data, 0);
+
             if ($category_id) {
                 // Add descriptions for all languages
                 $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
@@ -437,6 +452,8 @@ function fn_novoton_holidays_get_or_create_category($path): int
  */
 function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
 {
+    $country = (string) ($country ?? 'BULGARIA');
+
     // Ensure table exists (handles upgrades from versions that removed it)
     db_query(
         "CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
@@ -503,11 +520,11 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
 
         // Remove resorts no longer in API response
         if (!empty($api_resort_names)) {
-            db_query(
+            $affected = db_query(
                 "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
                 $country, $api_resort_names
             );
-            $result['removed'] = (int) db_get_field("SELECT ROW_COUNT()");
+            $result['removed'] = (int) $affected;
         }
 
     } catch (\Exception $e) {
@@ -587,6 +604,11 @@ function fn_novoton_holidays_sync_facilities_list(): array
  */
 function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
 {
+    if ($hotel_id === null || $hotel_id === '') {
+        return false;
+    }
+    $hotel_id = (string) $hotel_id;
+
     $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return false;
@@ -637,6 +659,11 @@ function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
  */
 function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): array
 {
+    if ($hotel_id === null || $hotel_id === '') {
+        return [];
+    }
+    $hotel_id = (string) $hotel_id;
+
     $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
     $col = $allowed[$lang] ?? $allowed['en'];
 

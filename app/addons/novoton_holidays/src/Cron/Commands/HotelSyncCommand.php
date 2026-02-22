@@ -5,7 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\HotelSync;
 
-class V3SyncCommand extends AbstractCronCommand
+class HotelSyncCommand extends AbstractCronCommand
 {
     public static function getModes(): array
     {
@@ -14,7 +14,7 @@ class V3SyncCommand extends AbstractCronCommand
 
     public static function getDescription(): string
     {
-        return 'V3 hotel sync (hotel_list, hotelinfo, priceinfo)';
+        return 'Hotel sync (hotel_list, hotelinfo, priceinfo)';
     }
 
     public function execute(): array
@@ -24,10 +24,11 @@ class V3SyncCommand extends AbstractCronCommand
         $limit = (int)$this->getParam('limit', 0);
 
         $sync = new HotelSync();
+        $stats = [];
 
         switch ($mode) {
             case 'sync_hotels':
-                $this->output("=== V3 FULL HOTEL SYNC ===");
+                $this->output("=== FULL HOTEL SYNC ===");
                 $stats = $sync->fullSync($country, $limit);
                 $this->output("");
                 $this->output("Hotels processed: " . $stats['hotels_processed']);
@@ -38,7 +39,7 @@ class V3SyncCommand extends AbstractCronCommand
                 break;
 
             case 'sync_hotellist':
-                $this->output("=== V3 HOTEL LIST SYNC ===");
+                $this->output("=== HOTEL LIST SYNC ===");
                 $stats = $sync->syncHotelList($country);
                 $this->output("");
                 $this->output("Hotels processed: " . $stats['hotels_processed']);
@@ -47,7 +48,7 @@ class V3SyncCommand extends AbstractCronCommand
 
             case 'sync_hotelinfo':
                 $limit = $limit ?: 50;
-                $this->output("=== V3 HOTEL INFO SYNC ===");
+                $this->output("=== HOTEL INFO SYNC ===");
                 $stats = $sync->syncHotelInfo(null, $limit);
                 $this->output("");
                 $this->output("Hotels processed: " . $stats['hotels_processed']);
@@ -57,7 +58,7 @@ class V3SyncCommand extends AbstractCronCommand
 
             case 'sync_priceinfo':
                 $limit = $limit ?: 100;
-                $this->output("=== V3 PRICE INFO SYNC ===");
+                $this->output("=== PRICE INFO SYNC ===");
                 $stats = $sync->syncPriceInfoOnly($limit);
                 $this->output("");
                 $this->output("Packages processed: " . $stats['packages_processed']);

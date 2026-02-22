@@ -32,9 +32,9 @@ class ReservationApiClient extends ApiClientBase
             $guestsXml .= '
     <Guests>
         <IdGuest>' . $idGuest . '</IdGuest>
-        <Name>' . htmlspecialchars($guest['name']) . '</Name>
+        <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
         <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-        <Age>' . (int) $guest['age'] . '</Age>
+        <Age>' . (int) ($guest['age'] ?? 0) . '</Age>
     </Guests>';
             $idGuest++;
         }

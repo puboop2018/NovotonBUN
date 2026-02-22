@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-class CommissionCalculator
+class CommissionCalculator implements CommissionCalculatorInterface
 {
     /** @var float Commission percentage */
     private $commission;
@@ -33,7 +33,7 @@ class CommissionCalculator
     {
         $finalPrice = $price * (1 + ($this->commission / 100));
 
-        if ($this->roundPrices == 'Y') {
+        if ($this->roundPrices === 'Y') {
             $finalPrice = round($finalPrice);
         }
 

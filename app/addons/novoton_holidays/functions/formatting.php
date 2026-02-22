@@ -30,9 +30,9 @@ function fn_novoton_holidays_format_date($date): string
     }
 
     // Convert to timestamp if string
-    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    $timestamp = is_numeric($date) ? (int)$date : strtotime((string)$date);
     if (!$timestamp) {
-        return $date;
+        return (string)$date;
     }
 
     // Get date format from CS-Cart settings (Admin > Settings > Appearance > Date format)

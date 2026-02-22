@@ -15,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class SecurityService
+class SecurityService implements SecurityServiceInterface
 {
     /** @var int Rate limit window in seconds */
     private const RATE_LIMIT_WINDOW = 60;
@@ -290,7 +290,7 @@ class SecurityService
      * @param int $window Window in seconds
      * @return array [allowed => bool, remaining => int, reset => int]
      */
-    public function checkRateLimit(string $key, int $maxRequests = null, int $window = null): array
+    public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
         $maxRequests = $maxRequests ?? self::RATE_LIMIT_MAX;
         $window = $window ?? self::RATE_LIMIT_WINDOW;

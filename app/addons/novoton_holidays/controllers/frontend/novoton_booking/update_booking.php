@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
     $security = _nvt_get_security_service();
     $bookingData = $_REQUEST;
@@ -60,10 +61,15 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
     
     // Update booking record
     // First get existing booking data to rebuild api_request - use cached value if same booking
-    $existing_booking = ($existing_for_checkin && $existing_for_checkin['booking_id'] == $booking_id) 
-        ? $existing_for_checkin 
+    $existing_booking = ($existing_for_checkin && $existing_for_checkin['booking_id'] == $booking_id)
+        ? $existing_for_checkin
         : _nvt_booking_repo()->findById($booking_id);
-    
+
+    if (empty($existing_booking)) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
+
     // Build api_request with updated guest names - use api_name for Novoton XML
     $api_guests = [];
     foreach ($guests_data as $key => $guest) {

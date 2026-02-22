@@ -7,7 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-    
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+
     $bookingData = $_REQUEST;
     
     // Fix room_id: PHP URL decoding converts + to space, restore it
@@ -290,7 +292,14 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    Tygh::$app['view']->assign('novoton_display_currency', RoomPriceService::getDisplayCurrency());
+    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    $currencies = \Tygh\Registry::get('currencies');
+    $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
+    $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;
+
+    Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
+    Tygh::$app['view']->assign('novoton_display_coefficient', $novoton_display_coefficient);
+    Tygh::$app['view']->assign('novoton_display_symbol', $novoton_display_symbol);
     Tygh::$app['view']->assign('product_id', $product_id);
     Tygh::$app['view']->assign('hotel_name', $hotel_info['hotel_name'] ?? 'Hotel');
     Tygh::$app['view']->assign('hotel_city', $hotel_info['city'] ?? '');

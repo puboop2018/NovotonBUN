@@ -11,7 +11,7 @@ namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
-class NovotonHttpClient
+class NovotonHttpClient implements HttpClientInterface
 {
     private $apiUrl;
     private $apiKey;
@@ -67,7 +67,7 @@ class NovotonHttpClient
 
         $this->maxRetries = (int)($settings['api_max_retries'] ?? 3);
         $this->retryDelayMs = (int)($settings['api_retry_delay_ms'] ?? 1000);
-        $this->retryMultiplier = (int)($settings['api_retry_multiplier'] ?? 2);
+        $this->retryMultiplier = max(1, (int)($settings['api_retry_multiplier'] ?? 2));
         $this->circuitBreakerThreshold = (int)($settings['circuit_breaker_threshold'] ?? 5);
         $this->circuitBreakerTimeout = (int)($settings['circuit_breaker_timeout'] ?? 60);
     }
@@ -126,6 +126,9 @@ class NovotonHttpClient
 
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
             $ch = curl_init();
+            if ($ch === false) {
+                throw ApiException::requestFailed($function, 'Failed to initialize curl', 0, 1);
+            }
 
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -169,7 +172,7 @@ class NovotonHttpClient
 
         $this->lastHttpCode = $lastHttpCode;
         $this->lastError = $lastError;
-        $this->lastResponseRaw = $response;
+        $this->lastResponseRaw = is_string($response) ? $response : '';
 
         if ($lastError || $lastHttpCode < 200 || $lastHttpCode >= 300) {
             $this->recordFailure();
@@ -183,7 +186,7 @@ class NovotonHttpClient
             throw ApiException::requestFailed($function, $lastError, $lastHttpCode, $attempts);
         }
 
-        return $response;
+        return is_string($response) ? $response : '';
     }
 
     /**
@@ -206,6 +209,9 @@ class NovotonHttpClient
         $url = $this->apiUrl . '/index.php';
         $results = [];
         $mh = curl_multi_init();
+        if ($mh === false) {
+            return array_fill_keys(array_keys($requests), false);
+        }
 
         $chunks = array_chunk($requests, $concurrency, true);
 

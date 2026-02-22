@@ -19,7 +19,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-class SyncLogger
+class SyncLogger implements SyncLoggerInterface
 {
     /**
      * Sync type labels for email subjects
@@ -338,6 +338,9 @@ class SyncLogger
             'duration' => $this->getFormattedDuration(),
         ]);
 
+        if (!function_exists('fn_novoton_holidays_send_import_report_email')) {
+            return false;
+        }
         return fn_novoton_holidays_send_import_report_email($results, $this->syncType, $summary, $country);
     }
 

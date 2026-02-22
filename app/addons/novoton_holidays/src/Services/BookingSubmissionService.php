@@ -22,18 +22,20 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 use Tygh\Registry;
 
-class BookingSubmissionService
+class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
-    private BookingRepository $bookingRepo;
-    private NovotonApi $api;
+    private BookingRepositoryInterface $bookingRepo;
+    private NovotonApiInterface $api;
 
-    public function __construct(BookingRepository $bookingRepo, NovotonApi $api)
+    public function __construct(BookingRepositoryInterface $bookingRepo, NovotonApiInterface $api)
     {
         $this->bookingRepo = $bookingRepo;
         $this->api = $api;

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 interface BookingRepositoryInterface
 {
     public function findById(int $booking_id): ?array;
@@ -12,7 +14,7 @@ interface BookingRepositoryInterface
     public function findByUserId(int $user_id, int $limit = 0): array;
     public function findBySessionId(string $session_id): array;
     public function findByHotelId(string $hotel_id): array;
-    public function findByProductIds(array $product_ids, array $statuses = []): array;
+    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED]): array;
     public function findPending(int $limit = 0): array;
     public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array;
     public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array;

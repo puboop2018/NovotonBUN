@@ -361,7 +361,8 @@ class CacheService implements CacheServiceInterface
         foreach ($files as $file) {
             $filename = basename($file, '.cache');
             
-            if ($prefix === null || strpos($filename, $prefix) === 0) {
+            $safe_prefix = ($prefix !== null) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $prefix) : null;
+            if ($safe_prefix === null || strpos($filename, $safe_prefix) === 0) {
                 if (unlink($file)) {
                     $count++;
                 }

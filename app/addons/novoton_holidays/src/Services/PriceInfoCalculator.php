@@ -643,11 +643,17 @@ class PriceInfoCalculator
             $discount = (float) ($eb['Discount'] ?? $eb['Reduction'] ?? 0);
             $minStay = (int) ($eb['MinimumStay'] ?? $eb['MinStay'] ?? 0);
 
-            if ($bookingDate < $bookFrom || $bookingDate > $bookTo) {
+            if (!empty($bookFrom) && $bookingDate < $bookFrom) {
+                continue;
+            }
+            if (!empty($bookTo) && $bookingDate > $bookTo) {
                 continue;
             }
 
-            if ($checkIn < $travelFrom || $checkIn > $travelTo) {
+            if (!empty($travelFrom) && $checkIn < $travelFrom) {
+                continue;
+            }
+            if (!empty($travelTo) && $checkIn > $travelTo) {
                 continue;
             }
 

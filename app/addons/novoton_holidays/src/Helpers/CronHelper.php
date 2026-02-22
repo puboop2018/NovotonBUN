@@ -87,7 +87,7 @@ class CronHelper
      */
     public static function initialize(): array
     {
-        $mode = $_REQUEST['mode'] ?? 'resinfo';
+        $mode = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['mode'] ?? 'resinfo');
 
         header('Content-Type: text/plain; charset=utf-8');
 

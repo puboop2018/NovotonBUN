@@ -24,10 +24,17 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 $storedKey = ConfigProvider::getCronAccessKey();
 
 $providedKey = $_GET['access_key'] ?? '';
-if (empty($providedKey) && isset($argv[1])) {
-    $arg = $argv[1];
-    if (strpos($arg, 'access_key=') === 0) {
-        $providedKey = str_replace('access_key=', '', $arg);
+$mode = $_GET['mode'] ?? '';
+
+// Parse CLI arguments (key=value format, position-independent)
+if (isset($argv) && is_array($argv)) {
+    foreach ($argv as $i => $arg) {
+        if ($i === 0) continue; // skip script name
+        if (strpos($arg, 'access_key=') === 0) {
+            $providedKey = substr($arg, strlen('access_key='));
+        } elseif (strpos($arg, 'mode=') === 0) {
+            $mode = substr($arg, strlen('mode='));
+        }
     }
 }
 
@@ -37,18 +44,12 @@ if (empty($storedKey)) {
 if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
     exit("ERROR: Invalid or missing API key.\n");
 }
-
-// Determine mode
-$mode = $_GET['mode'] ?? '';
-if (empty($mode) && isset($argv[2])) {
-    $mode = str_replace('mode=', '', $argv[2]);
-}
 if (empty($mode)) {
     $mode = 'full';
 }
 
 // Sanitize mode to prevent XSS when echoed
-$mode = preg_replace('/[^a-z0-9_]/', '', $mode);
+$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
 
 echo "[" . date('Y-m-d H:i:s') . "] Novoton Cron Started - Mode: {$mode}\n";
 

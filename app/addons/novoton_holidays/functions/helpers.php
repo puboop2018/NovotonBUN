@@ -229,22 +229,35 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
             // Save to novoton_hotel_packages
             $packageData = [
-                'hotel_id' => $hotel_id,
-                'package_id' => $packageId,
-                'package_name' => $packageName,
-                'priceinfo_data' => !empty($priceData) ? json_encode($priceData) : null,
+                'hotel_id' => (string) $hotel_id,
+                'package_id' => (string) $packageId,
+                'package_name' => (string) $packageName,
                 'seasons_count' => $seasonsCount,
                 'has_early_booking' => $hasEarlyBooking,
-                'min_price' => $pkgMinPrice,
                 'synced_at' => date('Y-m-d H:i:s')
             ];
+            // Only include nullable fields when they have values
+            // (avoids passing null to real_escape_string on PHP 8.1+)
+            if (!empty($priceData)) {
+                $packageData['priceinfo_data'] = json_encode($priceData);
+            }
+            if ($pkgMinPrice !== null) {
+                $packageData['min_price'] = $pkgMinPrice;
+            }
 
             $existingId = db_get_field(
                 "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-                $hotel_id, $packageId
+                (string) $hotel_id, (string) $packageId
             );
 
             if ($existingId) {
+                // For UPDATE: explicitly set nullable columns to NULL when empty
+                if (empty($priceData)) {
+                    $packageData['priceinfo_data'] = '';
+                }
+                if ($pkgMinPrice === null) {
+                    $packageData['min_price'] = 0;
+                }
                 db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
             } else {
                 db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);

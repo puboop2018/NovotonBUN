@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class PriceInfoCalculation
+class PriceInfoCalculation implements PriceInfoCalculationInterface
 {
     /** @var float Commission percentage */
     private $commission;

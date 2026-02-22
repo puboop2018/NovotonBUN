@@ -38,7 +38,7 @@ class HotelRepository implements HotelRepositoryInterface
     public function getHotelIdByProduct(int $product_id): ?string
     {
         $hotel_id = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
-        return $hotel_id ?: null;
+        return ($hotel_id !== false && $hotel_id !== '') ? (string)$hotel_id : null;
     }
 
     /**
@@ -162,6 +162,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function insert(array $data): bool
     {
+        $data = self::filterNullValues($data);
         return (bool) db_query("INSERT INTO ?:novoton_hotels ?e", $data);
     }
 
@@ -170,6 +171,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function update(string $hotel_id, array $data): bool
     {
+        $data = self::filterNullValues($data);
         return (bool) db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
     }
 
@@ -245,6 +247,7 @@ class HotelRepository implements HotelRepositoryInterface
     {
         $data['hotel_id'] = $hotel_id;
         $data['package_id'] = $package_id;
+        $data = self::filterNullValues($data);
 
         return (bool) db_query(
             "INSERT INTO ?:novoton_hotel_packages ?e ON DUPLICATE KEY UPDATE ?u",
@@ -314,9 +317,11 @@ class HotelRepository implements HotelRepositoryInterface
 
     /**
      * Insert or update a hotel record (upsert).
+     * Filters null values to prevent PHP 8.1+ real_escape_string deprecation.
      */
     public function upsert(array $data): bool
     {
+        $data = self::filterNullValues($data);
         return (bool) db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $data, $data);
     }
 
@@ -346,6 +351,16 @@ class HotelRepository implements HotelRepositoryInterface
         }
 
         return db_get_array($query, ...$params);
+    }
+
+    /**
+     * Filter null values from data array to prevent PHP 8.1+
+     * real_escape_string() deprecation when passed to ?e / ?u placeholders.
+     * Null values are removed so the DB column keeps its DEFAULT / current value.
+     */
+    private static function filterNullValues(array $data): array
+    {
+        return array_filter($data, static fn($v) => $v !== null);
     }
 
     /**

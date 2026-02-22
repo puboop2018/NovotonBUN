@@ -338,7 +338,31 @@ class BatchedHotelInfoSync
             if (!empty($state['error_ids']) && empty($state['retry_done'])) {
                 $retry_ids = array_unique($state['error_ids']);
                 $this->output("\nRetrying " . count($retry_ids) . " failed hotels...");
+
+                // Pre-fetch maps for retry IDs so product linking works
+                $retry_hotel_map = db_get_hash_array(
+                    "SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+                    'hotel_id', $retry_ids
+                );
+                $retry_prefixes = ConfigProvider::getProductCodePrefixes();
+                $retry_code_patterns = [];
+                foreach ($retry_ids as $rid) {
+                    if (empty($retry_hotel_map[$rid]['product_id'])) {
+                        foreach ($retry_prefixes as $pfx) {
+                            $retry_code_patterns[] = $pfx . $rid;
+                        }
+                    }
+                }
+                $retry_product_code_map = [];
+                if (!empty($retry_code_patterns)) {
+                    $retry_product_code_map = db_get_hash_single_array(
+                        "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                        ['product_code', 'product_id'], $retry_code_patterns
+                    );
+                }
+
                 $recovered = 0;
+                $recovered_ids = [];
                 foreach ($retry_ids as $retry_id) {
                     if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                         break;
@@ -347,8 +371,9 @@ class BatchedHotelInfoSync
                     try {
                         $hotel_info = $api->getHotelInfo($retry_id);
                         if ($hotel_info) {
-                            $this->processHotelInfo($retry_id, $hotel_info, $now);
+                            $this->processHotelInfo($retry_id, $hotel_info, $now, $retry_hotel_map, $retry_product_code_map, $retry_prefixes);
                             $recovered++;
+                            $recovered_ids[] = $retry_id;
                             $state['synced']++;
                             $state['errors']--;
                             $this->output("  [{$retry_id}] retry OK");
@@ -357,7 +382,7 @@ class BatchedHotelInfoSync
                         $this->output("  [{$retry_id}] retry failed: " . $e->getMessage());
                     }
                 }
-                $state['error_ids'] = array_values(array_diff($state['error_ids'], array_slice($retry_ids, 0, $recovered)));
+                $state['error_ids'] = array_values(array_diff($state['error_ids'], $recovered_ids));
                 $state['retry_done'] = true;
                 $this->saveState($state);
                 if ($recovered > 0) {
@@ -377,7 +402,11 @@ class BatchedHotelInfoSync
             ];
         }
 
-        // Still in progress
+        // Still in progress — save state in case break 2 skipped in-loop save
+        $state['processed'] = $offset;
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+        $this->saveState($state);
+
         $remaining = $state['total'] - $offset;
         $runs_remaining = ceil($remaining / ($processed_this_run ?: $this->batch_size));
 
@@ -405,9 +434,14 @@ class BatchedHotelInfoSync
      */
     private function processHotelInfo(string $hotel_id, $hotel_info, string $now, array $hotel_map = [], array $product_code_map = [], array $prefixes = ['NVT']): void
     {
+        $hotel_data_json = json_encode($hotel_info);
+        if ($hotel_data_json === false) {
+            $hotel_data_json = null;
+        }
+
         $update = [
             'hotelinfo_synced_at' => $now,
-            'hotel_data' => json_encode($hotel_info),
+            'hotel_data' => $hotel_data_json,
         ];
 
         // Link product if not already linked — use pre-fetched maps (no extra queries)
@@ -864,7 +898,7 @@ class BatchedHotelInfoSync
      */
     private function saveState(array $state): void
     {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT));
+        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 
     /**
@@ -904,8 +938,8 @@ class BatchedHotelInfoSync
         $bytes = (int)$limit;
         $unit = strtolower(substr($limit, -1));
         switch ($unit) {
-            case 'g': $bytes *= 1024;
-            case 'm': $bytes *= 1024;
+            case 'g': $bytes *= 1024; // fall through
+            case 'm': $bytes *= 1024; // fall through
             case 'k': $bytes *= 1024;
         }
         return memory_get_usage(true) > (int)($bytes * 0.85);

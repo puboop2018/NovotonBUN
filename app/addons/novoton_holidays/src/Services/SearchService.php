@@ -560,11 +560,11 @@ class SearchService implements SearchServiceInterface
                     'more_info'              => self::xpathValue($moreInfos, $i),
                     'early_booking_discount' => (float) self::xpathValue($earlyBookings, $i, '0'),
                     'extras'                 => self::xpathValue($extras, $i),
-                    'terms_of_payment'       => isset($termsPayment[0]) ? $termsPayment[0]->asXML() : '',
-                    'terms_of_cancellation'  => isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : '',
-                    'free_cancellation_date' => isset($termsCancellation[0])
-                        ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[0]->asXML())
-                        : null,
+                    'terms_of_payment'       => isset($termsPayment[$i]) ? $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? $termsPayment[0]->asXML() : ''),
+                    'terms_of_cancellation'  => isset($termsCancellation[$i]) ? $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : ''),
+                    'free_cancellation_date' => isset($termsCancellation[$i])
+                        ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[$i]->asXML())
+                        : (isset($termsCancellation[0]) ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[0]->asXML()) : null),
                 ];
 
                 if ($forRoom !== null) {
@@ -603,7 +603,7 @@ class SearchService implements SearchServiceInterface
                 'board_id'               => $boardId,
                 'board_name'             => fn_novoton_holidays_format_board_name($boardId),
                 'package_name'           => urldecode($packageName),
-                'price_data'             => $xml,
+                'price_data'             => null, // SimpleXMLElement not serializable for cache
                 'nights'                 => $nights,
                 'total_price'            => $finalPrice,
                 'price_per_night'        => round($finalPrice / max($nights, 1), 2),

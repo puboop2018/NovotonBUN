@@ -7,6 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -116,7 +119,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
         'children' => $all_child_ages  // Include children ages from guest form
     ];
     
-    $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
+    $api = fn_novoton_holidays_get_api();
+    $priceData = $api ? $api->getRoomPrice($priceParams) : null;
 
     // A80: Server-side price validation - safety net
     // If we have children and API returns no data, abort booking
@@ -146,7 +150,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
             'children_ages' => $children_ages,
             'rooms' => $bookingData['num_rooms'] ?? 1
         ];
-        $return_url = 'novoton_booking.form?' . http_build_query($return_params);
+        $return_url = 'novoton_booking.booking_form?' . http_build_query($return_params);
 
         return [CONTROLLER_STATUS_REDIRECT, $return_url];
     }

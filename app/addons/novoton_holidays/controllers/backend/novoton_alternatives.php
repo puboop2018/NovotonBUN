@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Notify customer about alternatives
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Delete request
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             fn_set_notification('N', __('notice'), __('novoton_holidays.request_deleted'));
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Bulk check all pending requests
@@ -132,6 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $found = 0;
             
             foreach ($pending as $request) {
+                if (empty($request['novoton_request_id'])) {
+                    continue;
+                }
                 $response = $api->getAlternatives($request['novoton_request_id']);
                 
                 if ($response && isset($response->alternative)) {
@@ -162,14 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             fn_set_notification('I', __('information'), __('novoton_holidays.no_pending_requests'));
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
 }
 
 // View/manage alternative requests
 if ($mode === 'manage') {
     
-    $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page');
+    $items_per_page = (int)(Registry::get('settings.Appearance.admin_elements_per_page') ?: 30);
     $page = isset($_REQUEST['page']) ? (int)($_REQUEST['page']) : 1;
     
     // Filters

@@ -38,7 +38,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
         'num_rooms' => $sanitized['rooms'] ?? 1,
         'contact_email' => trim($_REQUEST['contact_email'] ?? ''),
         'contact_phone' => trim($_REQUEST['contact_phone'] ?? ''),
-        'notes' => $_REQUEST['notes'] ?? '',
+        'notes' => strip_tags(mb_substr(trim($_REQUEST['notes'] ?? ''), 0, 1000)),
     ]);
 
     if (!empty($result['error']) && $result['error'] === 'missing_required_fields') {
@@ -56,4 +56,4 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
         fn_set_notification('N', __('notice'), __('novoton_holidays.' . $result['message']));
     }
 
-    return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . $hotel_id . '&check_in=' . $check_in . '&nights=' . $nights)];
+    return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id) . '&check_in=' . urlencode($check_in) . '&nights=' . (int)$nights)];

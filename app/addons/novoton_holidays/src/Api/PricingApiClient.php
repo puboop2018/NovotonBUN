@@ -91,7 +91,7 @@ class PricingApiClient extends ApiClientBase
         <room_price>
             <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-            <IdHotel>' . htmlspecialchars($params['hotel_id']) . '</IdHotel>
+            <IdHotel>' . htmlspecialchars($params['hotel_id'] ?? '') . '</IdHotel>
             <PackageName></PackageName>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
@@ -108,12 +108,12 @@ class PricingApiClient extends ApiClientBase
 
         $this->lastRequest = $xml;
         $this->lastRequestFormatted = [
-            'hotel_id' => $params['hotel_id'],
+            'hotel_id' => $params['hotel_id'] ?? '',
             'check_in' => $checkIn,
             'check_out' => $checkOut,
             'room_id' => $roomId ?: '(empty - all rooms)',
             'board_id' => $boardId ?: '(empty - all boards)',
-            'adults' => $params['adults'] ?? 2
+            'adults' => $adultsCount
         ];
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
@@ -207,6 +207,13 @@ class PricingApiClient extends ApiClientBase
         }
         $boardId = $params['board_id'] ?? '';
 
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = '';
+        for ($i = 0; $i < $adultsCount; $i++) {
+            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
+            $adultsXml .= '<Age>' . $age . '</Age>';
+        }
+
         $childrenXml = '';
         if (!empty($params['children']) && is_array($params['children'])) {
             foreach ($params['children'] as $age) {
@@ -228,7 +235,7 @@ class PricingApiClient extends ApiClientBase
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adultsCount . '</Adt>
+            <Adt>' . $adultsXml . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>No</Remark>
             <Important>No</Important>

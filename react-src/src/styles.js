@@ -99,7 +99,7 @@ export function injectStyles() {
     user-select: text;
 }
 .nvt-field-input:hover {
-    background: var(--nvt-bg-light);
+    background: transparent;
 }
 
 .nvt-field-input-icon {
@@ -163,7 +163,7 @@ export function injectStyles() {
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
-    background: #0057b8;
+    background: #006ce4;
 }
 
 /* ---------- Validation message ---------- */
@@ -243,7 +243,7 @@ export function injectStyles() {
     padding: 0;
 }
 .nvt-calendar-nav:hover {
-    background: var(--nvt-bg-light);
+    background: var(--nvt-bg);
 }
 .nvt-calendar-nav:disabled {
     opacity: 0.3;
@@ -282,7 +282,7 @@ export function injectStyles() {
     transition: background 0.1s;
 }
 .nvt-calendar-day:hover {
-    background: var(--nvt-bg-light);
+    background: transparent;
 }
 .nvt-calendar-day--disabled {
     color: #ccc;
@@ -327,7 +327,7 @@ export function injectStyles() {
     cursor: pointer;
 }
 .nvt-done-btn:hover {
-    background: var(--nvt-primary-light);
+    background: var(--nvt-primary);
 }
 
 /* ======================================================================
@@ -343,7 +343,7 @@ export function injectStyles() {
     border-radius: var(--nvt-radius);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     padding: 20px;
-    min-width: 320px;
+    min-width: 340px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -352,6 +352,8 @@ export function injectStyles() {
 .nvt-guest-rooms-container {
     flex: 1;
     overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
 }
 
 .nvt-room-section {
@@ -392,9 +394,9 @@ export function injectStyles() {
     transition: background 0.15s, border-color 0.15s;
 }
 .nvt-remove-room:hover {
-    background: #ffcdd2;
-    border-color: #e57373;
-    color: #c62828;
+    background: #ffebee;
+    border-color: #ef9a9a;
+    color: #b71c1c;
 }
 
 .nvt-guest-row {
@@ -434,7 +436,7 @@ export function injectStyles() {
     transition: background 0.1s;
 }
 .nvt-guest-btn:hover {
-    background: var(--nvt-bg-light);
+    background: var(--nvt-bg);
 }
 .nvt-guest-btn:disabled {
     opacity: 0.3;
@@ -509,7 +511,7 @@ export function injectStyles() {
     transition: background 0.15s;
 }
 .nvt-missing-ages-alert:hover {
-    background: #ffe69c;
+    background: #fff3cd;
 }
 
 /* ----- Add room button ----- */
@@ -529,8 +531,17 @@ export function injectStyles() {
     text-align: center;
 }
 .nvt-add-room-btn:hover {
-    border-color: var(--nvt-primary);
-    background: var(--nvt-bg-light);
+    border-color: var(--nvt-border);
+    background: transparent;
+}
+
+/* ----- Child age hint below guest picker ----- */
+
+.nvt-child-age-hint {
+    font-size: 11px;
+    color: var(--nvt-error);
+    padding: 2px 14px;
+    white-space: nowrap;
 }
 
 /* ----- Done button inside guest popup ----- */

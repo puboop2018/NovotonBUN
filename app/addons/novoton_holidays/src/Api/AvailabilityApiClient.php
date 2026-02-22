@@ -60,14 +60,18 @@ class AvailabilityApiClient extends ApiClientBase
         if (isset($parsed->Package)) {
             foreach ($parsed->Package as $package) {
                 $packageXml = $package->asXML();
+                if ($packageXml === false) {
+                    continue;
+                }
 
                 preg_match_all('/<IdRoom>([^<]+)<\/IdRoom>/', $packageXml, $roomMatches);
                 preg_match_all('/<Quota>([^<]+)<\/Quota>/', $packageXml, $quotaMatches);
 
                 if (!empty($roomMatches[1]) && !empty($quotaMatches[1])) {
-                    for ($i = 0; $i < count($roomMatches[1]); $i++) {
+                    $matchCount = min(count($roomMatches[1]), count($quotaMatches[1]));
+                    for ($i = 0; $i < $matchCount; $i++) {
                         $roomId = trim($roomMatches[1][$i]);
-                        $quota = isset($quotaMatches[1][$i]) ? trim($quotaMatches[1][$i]) : '0';
+                        $quota = trim($quotaMatches[1][$i]);
 
                         if (!isset($quotaMap[$roomId])) {
                             $quotaMap[$roomId] = $quota;
@@ -197,13 +201,16 @@ class AvailabilityApiClient extends ApiClientBase
             return $results;
         }
 
+        // SimpleXMLElement children are Traversable - iterating directly handles
+        // both single and multiple child elements correctly (is_array() is always
+        // false for SimpleXMLElement, so wrapping in [$x] would lose siblings).
         $offers = [];
         if (isset($result->offer)) {
-            $offers = is_array($result->offer) ? $result->offer : [$result->offer];
+            $offers = $result->offer;
         } elseif (isset($result->hotel->offer)) {
-            $offers = is_array($result->hotel->offer) ? $result->hotel->offer : [$result->hotel->offer];
+            $offers = $result->hotel->offer;
         } elseif (isset($result->room)) {
-            $offers = is_array($result->room) ? $result->room : [$result->room];
+            $offers = $result->room;
         }
 
         foreach ($offers as $offer) {
@@ -254,8 +261,8 @@ class AvailabilityApiClient extends ApiClientBase
                     'room_name' => $data['Room'] ?? $data['IdRoom'] ?? 'Room',
                     'board_id' => $boardCode,
                     'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
-                    'check_in' => $params['check_in'],
-                    'check_out' => $params['check_out'],
+                    'check_in' => $params['check_in'] ?? '',
+                    'check_out' => $params['check_out'] ?? '',
                     'nights' => $nights,
                     'total_price' => $this->commissionCalculator->apply($price),
                     'price_per_night' => round($this->commissionCalculator->apply($price) / max($nights, 1), 2),

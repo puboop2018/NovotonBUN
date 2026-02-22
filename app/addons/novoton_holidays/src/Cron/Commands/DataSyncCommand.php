@@ -117,9 +117,12 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("");
 
         $result = fn_novoton_holidays_update_exchange_rates(true);
+        if (!is_array($result)) {
+            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
+        }
 
-        $this->output("Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED'));
-        $this->output("Message: " . $result['message']);
+        $this->output("Status: " . (($result['success'] ?? false) ? 'SUCCESS' : 'FAILED'));
+        $this->output("Message: " . ($result['message'] ?? 'Unknown'));
 
         if (!empty($result['publishing_date'])) {
             $this->output("Publishing Date: " . $result['publishing_date']);

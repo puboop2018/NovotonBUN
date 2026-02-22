@@ -7,7 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-    
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
     
@@ -185,7 +187,14 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    Tygh::$app['view']->assign('novoton_display_currency', RoomPriceService::getDisplayCurrency());
+    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    $currencies = \Tygh\Registry::get('currencies');
+    $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
+    $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;
+
+    Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
+    Tygh::$app['view']->assign('novoton_display_coefficient', $novoton_display_coefficient);
+    Tygh::$app['view']->assign('novoton_display_symbol', $novoton_display_symbol);
     Tygh::$app['view']->assign('booking_id', $booking_id);
     Tygh::$app['view']->assign('cart_id', $cart_id);
     Tygh::$app['view']->assign('is_edit_mode', true);

@@ -19,10 +19,10 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelSync
 {
-    private $api;
-    private $selectedCountries;
-    private $productPrefixes;
-    private $stats;
+    private NovotonApi $api;
+    private array $selectedCountries;
+    private array $productPrefixes;
+    private array $stats;
 
     public function __construct()
     {
@@ -158,7 +158,7 @@ class HotelSync
      *
      * @param array $batchData Array of hotel data arrays
      */
-    private function executeBatchHotelUpsert(array $batchData)
+    private function executeBatchHotelUpsert(array $batchData): void
     {
         if (empty($batchData)) {
             return;
@@ -166,15 +166,16 @@ class HotelSync
 
         $values = [];
         foreach ($batchData as $hotel) {
+            $star = $hotel['star_rating'];
+            $starSql = ($star !== null) ? db_quote("?i", $star) : "NULL";
             $values[] = db_quote(
-                "(?s, ?s, ?s, ?s, ?s, ?i, NOW(), NOW())",
+                "(?s, ?s, ?s, ?s, ?s, ",
                 $hotel['hotel_id'],
                 $hotel['hotel_name'],
                 $hotel['city'],
                 $hotel['country'],
-                $hotel['hotel_type'],
-                $hotel['star_rating']
-            );
+                $hotel['hotel_type']
+            ) . $starSql . db_quote(", NOW(), NOW())");
         }
 
         $sql = "INSERT INTO ?:novoton_hotels
@@ -233,6 +234,11 @@ class HotelSync
 
                 // Convert to JSON for storage
                 $hotelDataJson = json_encode($hotelInfo);
+                if ($hotelDataJson === false) {
+                    $this->stats['errors'][] = "json_encode failed for hotelinfo {$hotelId}: " . json_last_error_msg();
+                    $this->stats['hotels_failed']++;
+                    continue;
+                }
 
                 // Extract packages count
                 $packagesCount = 0;
@@ -347,6 +353,9 @@ class HotelSync
 
                 if ($priceInfo) {
                     $priceInfoJson = json_encode($priceInfo);
+                    if ($priceInfoJson === false) {
+                        $priceInfoJson = null;
+                    }
 
                     // Count seasons
                     if (isset($priceInfo->seasons->season)) {
@@ -432,7 +441,7 @@ class HotelSync
      * @param \SimpleXMLElement $priceInfo Price info from API
      * @return float|null Minimum price or null
      */
-    private function calculateMinPrice($priceInfo)
+    private function calculateMinPrice($priceInfo): ?float
     {
         $minPrice = null;
 
@@ -539,6 +548,9 @@ class HotelSync
                 }
 
                 $priceInfoJson = json_encode($priceInfo);
+                if ($priceInfoJson === false) {
+                    $priceInfoJson = null;
+                }
 
                 // Count seasons
                 $seasonsCount = 0;

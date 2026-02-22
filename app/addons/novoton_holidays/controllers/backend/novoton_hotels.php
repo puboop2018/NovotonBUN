@@ -111,7 +111,7 @@ if ($mode == 'add_hotels_as_products') {
             $stats = [
                 'total' => $hotelRepo->count(['country' => $country]),
                 'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
-                'with_packages' => db_get_field(
+                'with_packages' => (int) db_get_field(
                     "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
                      INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
                      WHERE h.country = ?s",
@@ -144,18 +144,22 @@ if ($mode == 'add_hotels_as_products') {
             // Get languages
             $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
 
+            // Get available countries for country-selector tabs
+            $available_countries = ConfigProvider::getSelectedCountries();
+
             Tygh::$app['view']->assign('country', $country);
             Tygh::$app['view']->assign('stats', $stats);
             Tygh::$app['view']->assign('resorts', $resorts);
             Tygh::$app['view']->assign('categories', $categories);
             Tygh::$app['view']->assign('languages', $languages);
+            Tygh::$app['view']->assign('available_countries', $available_countries);
 
             return [CONTROLLER_STATUS_OK];
         } catch (\Throwable $e) {
             fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
             return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
         }
-        
+
     } else {
         // Process import
         header('Content-Type: text/html; charset=utf-8');
@@ -281,7 +285,7 @@ if ($mode == 'add_hotels_as_products') {
                 echo "<span class='error'>✗ Error: {$hotel_name} - " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
             }
             
-            if (($added + $updated) % 10 == 0) {
+            if (($added + $updated) > 0 && ($added + $updated) % 10 == 0) {
                 flush();
             }
         }

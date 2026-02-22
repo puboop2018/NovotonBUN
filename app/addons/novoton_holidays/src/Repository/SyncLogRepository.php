@@ -67,10 +67,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      */
     public function getLastSyncDate(string $type): ?string
     {
-        return db_get_field(
+        $result = db_get_field(
             "SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type = ?s ORDER BY sync_date DESC LIMIT 1",
             $type
         );
+        return $result ?: null;
     }
     
     /**
@@ -86,9 +87,10 @@ class SyncLogRepository implements SyncLogRepositoryInterface
             'products_failed' => $data['failed'] ?? $data['errors'] ?? $data['products_failed'] ?? 0,
             'duration_seconds' => $data['duration'] ?? $data['duration_seconds'] ?? 0,
             'status' => $data['status'] ?? 'completed',
-            'notes' => isset($data['details']) ? (is_array($data['details']) ? json_encode($data['details']) : $data['details']) : null
+            'notes' => isset($data['details']) ? (is_array($data['details']) ? json_encode($data['details']) : $data['details']) : ''
         ];
 
+        $log_data = array_filter($log_data, static fn($v) => $v !== null);
         $log_id = db_query("INSERT INTO ?:novoton_sync_log ?e", $log_data);
         return (int) $log_id;
     }

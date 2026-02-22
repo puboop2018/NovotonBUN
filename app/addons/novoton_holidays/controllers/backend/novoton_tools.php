@@ -45,7 +45,9 @@ if ($mode == 'export_hotel_features_csv') {
     }
 
     try {
+        ob_start();
         $result = fn_novoton_holidays_generate_hotel_features_csv();
+        ob_end_clean();
 
         if ($result['success']) {
             fn_set_notification('N', __('notice'), "Hotel features CSV generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
@@ -53,6 +55,7 @@ if ($mode == 'export_hotel_features_csv') {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }
     } catch (Exception $e) {
+        ob_end_clean();
         fn_set_notification('E', __('error'), "Exception: " . $e->getMessage());
     }
 
@@ -97,7 +100,10 @@ if ($mode == 'export_hotel_features_xml') {
     }
 
     try {
+        // Buffer output to prevent PHP 8.1+ deprecation notices from corrupting response
+        ob_start();
         $result = fn_novoton_holidays_generate_hotel_features_xml();
+        ob_end_clean();
 
         if ($result['success']) {
             fn_set_notification('N', __('notice'), "Hotel features XML generated!<br>File: {$result['filename']}<br>Hotels: {$result['count']}");
@@ -105,6 +111,7 @@ if ($mode == 'export_hotel_features_xml') {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
         }
     } catch (Exception $e) {
+        ob_end_clean();
         fn_set_notification('E', __('error'), "Exception: " . $e->getMessage());
     }
 

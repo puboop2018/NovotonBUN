@@ -161,7 +161,7 @@ if ($mode === 'manage') {
     } else {
         // Default: order_id DESC
         usort($bookings, function($a, $b) use ($sort_order) {
-            $cmp = ($a['order_id'] ?? 0) - ($b['order_id'] ?? 0);
+            $cmp = ((int)($a['order_id'] ?? 0)) <=> ((int)($b['order_id'] ?? 0));
             return $sort_order === 'ASC' ? $cmp : -$cmp;
         });
     }

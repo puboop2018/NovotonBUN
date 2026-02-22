@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
-class DatabaseIterator
+class DatabaseIterator implements DatabaseIteratorInterface
 {
     /**
      * Default chunk size for batch processing
@@ -314,6 +314,31 @@ class DatabaseIterator
     }
 
     /**
+     * Allowed table names for countItems() to prevent SQL injection.
+     */
+    private const ALLOWED_TABLES = [
+        'novoton_hotels',
+        'novoton_hotel_packages',
+        'novoton_bookings',
+        'novoton_sync_log',
+        'novoton_cache',
+        'novoton_hotel_facilities',
+        'novoton_facilities',
+        'novoton_resorts',
+        'novoton_alternative_requests',
+    ];
+
+    /**
+     * Allowed column names for countItems() filters to prevent SQL injection.
+     */
+    private const ALLOWED_COLUMNS = [
+        'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
+        'hotel_type', 'star_rating', 'has_prices', 'status', 'novoton_status',
+        'order_id', 'user_id', 'booking_id', 'package_id', 'sync_type',
+        'log_id', 'facility_id', 'resort_id', 'packages_count',
+    ];
+
+    /**
      * Count total items matching filters
      *
      * @param string $table Table name (without prefix)
@@ -322,10 +347,17 @@ class DatabaseIterator
      */
     public function countItems(string $table, array $filters = []): int
     {
+        if (!in_array($table, self::ALLOWED_TABLES, true)) {
+            throw new \InvalidArgumentException("Invalid table name: {$table}");
+        }
+
         $where_parts = [];
         $params = [];
 
         foreach ($filters as $key => $value) {
+            if (!in_array($key, self::ALLOWED_COLUMNS, true)) {
+                throw new \InvalidArgumentException("Invalid column name: {$key}");
+            }
             if (is_array($value)) {
                 $where_parts[] = "{$key} IN (?a)";
                 $params[] = $value;

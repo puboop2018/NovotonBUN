@@ -16,9 +16,9 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class PriceInfoSync
 {
-    private $api;
-    private $defaultCountry;
-    private $productPrefixes;
+    private NovotonApi $api;
+    private string $defaultCountry;
+    private array $productPrefixes;
 
     public function __construct()
     {
@@ -30,11 +30,15 @@ class PriceInfoSync
     /**
      * Get products to sync based on prefix
      */
-    private function getProductsToSync()
+    private function getProductsToSync(): array
     {
         $prefixConditions = [];
         foreach ($this->productPrefixes as $prefix) {
             $prefixConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
+        }
+
+        if (empty($prefixConditions)) {
+            return [];
         }
 
         $condition = implode(' OR ', $prefixConditions);
@@ -52,7 +56,7 @@ class PriceInfoSync
     /**
      * Extract hotel ID from product
      */
-    private function getHotelIdFromProduct($product)
+    private function getHotelIdFromProduct(array $product): ?string
     {
         // Try to get from novoton_hotels table
         $hotelId = db_get_field(
@@ -62,8 +66,16 @@ class PriceInfoSync
 
         if (empty($hotelId)) {
             // Try to extract from product code (e.g., NVT442)
-            preg_match('/\d+/', $product['product_code'], $matches);
-            $hotelId = $matches[0] ?? null;
+            // Strip known prefixes first, then take trailing digits
+            $code = $product['product_code'];
+            foreach ($this->productPrefixes as $prefix) {
+                if (strpos($code, $prefix) === 0) {
+                    $code = substr($code, strlen($prefix));
+                    break;
+                }
+            }
+            preg_match('/^(\d+)/', $code, $matches);
+            $hotelId = $matches[1] ?? null;
         }
 
         return $hotelId;
@@ -73,7 +85,7 @@ class PriceInfoSync
      * Sync priceinfo for a single product
      * V3: Writes priceinfo to novoton_hotel_packages table
      */
-    public function syncProductPrices($productId, &$stats)
+    public function syncProductPrices(int $productId, array &$stats): bool
     {
         $product = db_get_row(
             "SELECT p.product_id, pd.product, p.product_code
@@ -318,7 +330,7 @@ class PriceInfoSync
      * Check for products in API but not in CS-Cart
      * Optimized: Fetches all matching products once instead of querying per hotel
      */
-    private function checkMissingProducts(&$stats)
+    private function checkMissingProducts(array &$stats): void
     {
         try {
             $apiHotels = $this->api->getHotelList($this->defaultCountry);
@@ -370,7 +382,7 @@ class PriceInfoSync
     /**
      * Save log file
      */
-    private function saveLogFile($stats)
+    private function saveLogFile(array $stats): string
     {
         $logDir = fn_get_files_dir_path() . 'novoton_logs/';
 
@@ -445,10 +457,13 @@ class PriceInfoSync
     /**
      * Clear cached data for a specific hotel
      */
-    private function clearHotelCache($hotelId)
+    private function clearHotelCache(string $hotelId): void
     {
-        // Clear live API cache from database
-        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l", '%' . $hotelId . '%');
+        // Clear live API cache from database (use delimiters to prevent over-matching)
+        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l OR cache_key LIKE ?l",
+            '%_' . $hotelId . '_%',
+            '%_' . $hotelId
+        );
 
         // Clear from file cache if exists
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
@@ -471,7 +486,7 @@ class PriceInfoSync
     /**
      * Clear all Novoton API cache
      */
-    public static function clearAllCache()
+    public static function clearAllCache(): bool
     {
         db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE 'nvt_api_%'");
 

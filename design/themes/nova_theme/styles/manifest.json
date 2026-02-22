@@ -1,0 +1,7 @@
+{
+    "default_style": "novoton_default",
+    "names": {
+        "novoton_default": "Novoton Default"
+    },
+    "default": ["novoton_default"]
+}

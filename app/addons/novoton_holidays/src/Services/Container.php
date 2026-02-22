@@ -18,14 +18,23 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
+use Tygh\Addons\NovotonHolidays\Repository\FacilityRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
+use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelperInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
+use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
+use Tygh\Addons\NovotonHolidays\Helpers\ProductFactoryInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
+use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class Container
@@ -87,27 +96,27 @@ class Container
     // REPOSITORIES
     // ═══════════════════════════════════════════════════════════════════
 
-    public function hotelRepository(): HotelRepository
+    public function hotelRepository(): HotelRepositoryInterface
     {
         return $this->resolve('hotelRepository', fn() => new HotelRepository());
     }
 
-    public function bookingRepository(): BookingRepository
+    public function bookingRepository(): BookingRepositoryInterface
     {
         return $this->resolve('bookingRepository', fn() => new BookingRepository());
     }
 
-    public function facilityRepository(): FacilityRepository
+    public function facilityRepository(): FacilityRepositoryInterface
     {
         return $this->resolve('facilityRepository', fn() => new FacilityRepository());
     }
 
-    public function syncLogRepository(): SyncLogRepository
+    public function syncLogRepository(): SyncLogRepositoryInterface
     {
         return $this->resolve('syncLogRepository', fn() => new SyncLogRepository());
     }
 
-    public function alternativeRequestRepository(): AlternativeRequestRepository
+    public function alternativeRequestRepository(): AlternativeRequestRepositoryInterface
     {
         return $this->resolve('alternativeRequestRepository', fn() => new AlternativeRequestRepository());
     }
@@ -116,7 +125,7 @@ class Container
     // SERVICES
     // ═══════════════════════════════════════════════════════════════════
 
-    public function bookingService(): BookingService
+    public function bookingService(): BookingServiceInterface
     {
         return $this->resolve('bookingService', fn() => new BookingService(
             $this->guestDataService(),
@@ -125,29 +134,29 @@ class Container
         ));
     }
 
-    public function guestDataService(): GuestDataService
+    public function guestDataService(): GuestDataServiceInterface
     {
         return $this->resolve('guestDataService', fn() => new GuestDataService());
     }
 
-    public function searchService(): SearchService
+    public function searchService(): SearchServiceInterface
     {
         return $this->resolve('searchService', fn() => new SearchService(
             $this->cacheService()
         ));
     }
 
-    public function roomPriceService(): RoomPriceService
+    public function roomPriceService(): RoomPriceServiceInterface
     {
         return $this->resolve('roomPriceService', fn() => new RoomPriceService());
     }
 
-    public function securityService(): SecurityService
+    public function securityService(): SecurityServiceInterface
     {
         return $this->resolve('securityService', fn() => new SecurityService());
     }
 
-    public function cacheService(): CacheService
+    public function cacheService(): CacheServiceInterface
     {
         return $this->resolve('cacheService', fn() => new CacheService());
     }
@@ -157,7 +166,7 @@ class Container
         return $this->resolve('validationHelper', fn() => new ValidationHelper());
     }
 
-    public function priceInfoService(): PriceInfoService
+    public function priceInfoService(): PriceInfoServiceInterface
     {
         return $this->resolve('priceInfoService', fn() => new PriceInfoService());
     }
@@ -167,24 +176,24 @@ class Container
         return $this->resolve('dateHelper', fn() => new DateHelper());
     }
 
-    public function cronService(): CronService
+    public function cronService(): CronServiceInterface
     {
         return $this->resolve('cronService', fn() => new CronService());
     }
 
-    public function diagnosticsService(): DiagnosticsService
+    public function diagnosticsService(): DiagnosticsServiceInterface
     {
         return $this->resolve('diagnosticsService', fn() => new DiagnosticsService());
     }
 
-    public function alternativeRequestService(): AlternativeRequestService
+    public function alternativeRequestService(): AlternativeRequestServiceInterface
     {
         return $this->resolve('alternativeRequestService', fn() => new AlternativeRequestService(
-            $this->alternativeRequestRepository()
+            $this->securityService()
         ));
     }
 
-    public function bookingSubmissionService(): BookingSubmissionService
+    public function bookingSubmissionService(): BookingSubmissionServiceInterface
     {
         return $this->resolve('bookingSubmissionService', fn() => new BookingSubmissionService(
             $this->bookingRepository(),
@@ -196,17 +205,17 @@ class Container
     // HELPERS
     // ═══════════════════════════════════════════════════════════════════
 
-    public function databaseHelper(): DatabaseHelper
+    public function databaseHelper(): DatabaseHelperInterface
     {
         return $this->resolve('databaseHelper', fn() => new DatabaseHelper());
     }
 
-    public function databaseIterator(): DatabaseIterator
+    public function databaseIterator(): DatabaseIteratorInterface
     {
         return $this->resolve('databaseIterator', fn() => new DatabaseIterator());
     }
 
-    public function productFactory(): ProductFactory
+    public function productFactory(): ProductFactoryInterface
     {
         return $this->resolve('productFactory', fn() => new ProductFactory(
             $this->databaseHelper()
@@ -216,7 +225,7 @@ class Container
     /**
      * BatchedHotelInfoSync is NOT a singleton — new instance each call.
      */
-    public function batchedHotelInfoSync(): BatchedHotelInfoSync
+    public function batchedHotelInfoSync(): SyncInterface
     {
         if (isset($this->overrides['batchedHotelInfoSync'])) {
             return ($this->overrides['batchedHotelInfoSync'])();

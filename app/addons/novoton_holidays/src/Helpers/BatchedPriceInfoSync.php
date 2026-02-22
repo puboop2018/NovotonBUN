@@ -265,10 +265,6 @@ class BatchedPriceInfoSync
             }
 
             // Pre-fetch package_names for the batch to avoid N+1
-            $batch_keys = [];
-            foreach ($batch as $pkg) {
-                $batch_keys[] = $pkg['hotel_id'] . '|' . $pkg['package_id'];
-            }
             $pkg_name_map = [];
             if (!empty($batch)) {
                 // Build OR conditions for batch lookup
@@ -300,7 +296,13 @@ class BatchedPriceInfoSync
                 $package_id = $pkg['package_id'];
                 $package_name = $pkg_name_map[$hotel_id . '|' . $package_id]
                     ?? $pkg['package_name']
-                    ?? '?';
+                    ?? '';
+
+                if (empty($package_name) || $package_name === '?') {
+                    $this->output("[{$hotel_id}/{$package_id}] SKIP (no package_name)");
+                    $offset++;
+                    continue;
+                }
 
                 $this->output("[{$hotel_id}/{$package_id}] {$package_name} ... ", false);
 
@@ -396,7 +398,11 @@ class BatchedPriceInfoSync
             ];
         }
 
-        // Still in progress
+        // Still in progress — save state in case break 2 skipped in-loop save
+        $state['processed'] = $offset;
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+        $this->saveState($state);
+
         $remaining = $state['total'] - $offset;
         $runs_remaining = ceil($remaining / ($processed_this_run ?: $this->batch_size));
 
@@ -747,7 +753,7 @@ class BatchedPriceInfoSync
      */
     private function saveState(array $state): void
     {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT));
+        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 
     /**
@@ -774,8 +780,8 @@ class BatchedPriceInfoSync
         $bytes = (int)$limit;
         $unit = strtolower(substr($limit, -1));
         switch ($unit) {
-            case 'g': $bytes *= 1024;
-            case 'm': $bytes *= 1024;
+            case 'g': $bytes *= 1024; // fall through
+            case 'm': $bytes *= 1024; // fall through
             case 'k': $bytes *= 1024;
         }
         return memory_get_usage(true) > (int)($bytes * 0.85);

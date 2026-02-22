@@ -28,6 +28,8 @@ if (!isset($schema['colors']['fields'])) {
 
 // Novoton Holidays color fields
 // Variable names become @variable_name in LESS files
+
+// Brand colors
 $schema['colors']['fields']['novoton-primary'] = [
     'description' => 'theme_editor.novoton_primary_color',
 ];
@@ -42,6 +44,27 @@ $schema['colors']['fields']['novoton-search-btn-bg'] = [
 
 $schema['colors']['fields']['novoton-search-btn-hover'] = [
     'description' => 'theme_editor.novoton_search_btn_hover_color',
+];
+
+// UI colors
+$schema['colors']['fields']['novoton-text'] = [
+    'description' => 'theme_editor.novoton_text_color',
+];
+
+$schema['colors']['fields']['novoton-bg'] = [
+    'description' => 'theme_editor.novoton_bg_color',
+];
+
+$schema['colors']['fields']['novoton-border'] = [
+    'description' => 'theme_editor.novoton_border_color',
+];
+
+$schema['colors']['fields']['novoton-success'] = [
+    'description' => 'theme_editor.novoton_success_color',
+];
+
+$schema['colors']['fields']['novoton-danger'] = [
+    'description' => 'theme_editor.novoton_danger_color',
 ];
 
 return $schema;

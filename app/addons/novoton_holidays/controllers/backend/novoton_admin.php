@@ -202,19 +202,20 @@ if ($mode == 'export_bookings') {
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
     
     foreach ($bookings as $booking) {
+        $children_data = !empty($booking['children']) ? json_decode($booking['children'], true) : [];
         $csv .= implode(',', [
             $booking['novoton_id'],
             $booking['order_id'],
-            '"' . $booking['hotel_name'] . '"',
-            '"' . $booking['room_type'] . '"',
+            '"' . str_replace('"', '""', $booking['hotel_name'] ?? '') . '"',
+            '"' . str_replace('"', '""', $booking['room_type'] ?? '') . '"',
             $booking['check_in'],
             $booking['check_out'],
             $booking['adults'],
-            !empty($booking['children']) ? count(json_decode($booking['children'], true)) : 0,
+            is_array($children_data) ? count($children_data) : 0,
             $booking['total_price'],
             $booking['currency'],
             $booking['status'],
-            '"' . ($booking['email'] ?? '') . '"',
+            '"' . str_replace('"', '""', $booking['email'] ?? '') . '"',
             $booking['created_at']
         ]) . "\n";
     }
@@ -280,8 +281,7 @@ if ($mode == 'run_cron') {
     ob_start();
     
     try {
-        // Include and run the cron logic
-        $_REQUEST = array_merge($_REQUEST, $params);
+        // Include and run the cron logic (use local $params, not $_REQUEST)
         
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         
@@ -305,9 +305,14 @@ if ($mode == 'run_cron') {
                 break;
                 
             case 'add_hotels_as_products':
-                $country = $params['country'] ?? 'BULGARIA';
-                $limit = $params['limit'] ?? 50;
-                $result = fn_novoton_holidays_admin_add_products($api, $country, $limit);
+                $limit = (int) ($params['limit'] ?? 50);
+                // Use explicit country param, or all selected countries from settings
+                if (!empty($params['country'])) {
+                    $countries = [strtoupper($params['country'])];
+                } else {
+                    $countries = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getSelectedCountries();
+                }
+                $result = fn_novoton_holidays_admin_add_products($api, $countries, $limit);
                 break;
                 
             case 'offers_update':
@@ -427,9 +432,9 @@ function fn_novoton_holidays_admin_check_prices($api) {
         $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);
         
         $checked++;
-        if ($has_prices == 'Y') $with_prices++;
-        
-        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices == 'Y' ? 'HAS PRICES' : 'no prices') . "\n";
+        if ($has_prices === 'Y') $with_prices++;
+
+        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices === 'Y' ? 'HAS PRICES' : 'no prices') . "\n";
         usleep(100000);
     }
     
@@ -460,55 +465,72 @@ function fn_novoton_holidays_admin_sync_facilities($api) {
     return ['success' => true, 'message' => "Synced {$count} facilities"];
 }
 
-function fn_novoton_holidays_admin_add_products($api, $country, $limit) {
-    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
-    $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
-
-    if (empty($hotels)) {
-        return ['success' => true, 'message' => 'No hotels to add'];
+function fn_novoton_holidays_admin_add_products($api, $countries, $limit) {
+    // Support legacy single-country string or new array format
+    if (is_string($countries)) {
+        $countries = [$countries];
     }
 
-    $category_id = fn_novoton_holidays_get_or_create_category("{$country}///Litoral {$country}");
-    $added = 0;
+    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+    $grand_added = 0;
+    $grand_total = 0;
 
-    foreach ($hotels as $hotel) {
-        $hotel_id = $hotel['hotel_id'];
-        $product_code = 'NVT' . $hotel_id;
+    foreach ($countries as $country) {
+        echo "=== {$country} ===\n";
 
-        echo "[{$hotel_id}] {$hotel['hotel_name']} ... ";
+        $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
 
-        // Check if CS-Cart product already exists with this code
-        $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
-        if ($existing) {
-            $hotelRepo->linkToProduct($hotel_id, (int) $existing);
-            echo "LINKED\n";
+        if (empty($hotels)) {
+            echo "No hotels to add.\n\n";
             continue;
         }
 
-        $product_data = [
-            'product' => $hotel['hotel_name'],
-            'product_code' => $product_code,
-            'price' => 0,
-            'status' => 'D',
-            'company_id' => Registry::get('runtime.company_id') ?: 1,
-            'main_category' => $category_id,
-            'category_ids' => [$category_id],
-        ];
+        $category_id = fn_novoton_holidays_get_or_create_category("{$country}///Litoral {$country}");
+        $added = 0;
 
-        $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
+        foreach ($hotels as $hotel) {
+            $hotel_id = $hotel['hotel_id'];
+            $product_code = 'NVT' . $hotel_id;
 
-        if ($product_id) {
-            $hotelRepo->linkToProduct($hotel_id, $product_id);
-            $added++;
-            echo "ADDED (ID: {$product_id})\n";
-        } else {
-            echo "FAILED\n";
+            echo "[{$hotel_id}] {$hotel['hotel_name']} ... ";
+
+            // Check if CS-Cart product already exists with this code
+            $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
+            if ($existing) {
+                $hotelRepo->linkToProduct($hotel_id, (int) $existing);
+                echo "LINKED\n";
+                continue;
+            }
+
+            $product_data = [
+                'product' => $hotel['hotel_name'],
+                'product_code' => $product_code,
+                'price' => 0,
+                'status' => 'D',
+                'company_id' => Registry::get('runtime.company_id') ?: 1,
+                'main_category' => $category_id,
+                'category_ids' => [$category_id],
+            ];
+
+            $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
+
+            if ($product_id) {
+                $hotelRepo->linkToProduct($hotel_id, $product_id);
+                $added++;
+                echo "ADDED (ID: {$product_id})\n";
+            } else {
+                echo "FAILED\n";
+            }
+
+            usleep(50000);
         }
 
-        usleep(50000);
+        echo "{$country}: Added {$added} of " . count($hotels) . "\n\n";
+        $grand_added += $added;
+        $grand_total += count($hotels);
     }
 
-    return ['success' => true, 'message' => "Added: {$added} products"];
+    return ['success' => true, 'message' => "Added: {$grand_added} products across " . count($countries) . " countries (total candidates: {$grand_total})"];
 }
 
 function fn_novoton_holidays_admin_check_offers($api, $country) {

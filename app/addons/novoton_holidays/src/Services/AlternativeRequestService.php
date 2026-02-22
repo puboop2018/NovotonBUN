@@ -24,13 +24,13 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
-    /** @var SecurityService */
+    /** @var SecurityServiceInterface|null */
     private $security;
 
     /** @var NovotonApi|null */
     private $api;
 
-    public function __construct(?SecurityService $security = null, ?NovotonApi $api = null)
+    public function __construct(?SecurityServiceInterface $security = null, ?NovotonApi $api = null)
     {
         $this->security = $security;
         $this->api = $api;
@@ -39,7 +39,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     /**
      * Get or lazy-create SecurityService.
      */
-    private function getSecurity(): SecurityService
+    private function getSecurity(): SecurityServiceInterface
     {
         if ($this->security === null) {
             $this->security = new SecurityService();
