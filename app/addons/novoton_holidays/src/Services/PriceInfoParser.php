@@ -142,7 +142,8 @@ class PriceInfoParser
         }
 
         foreach ($ages as $age) {
-            $isChild = ($age['fAge'] ?? '0') === '1' || ($age['fAge'] ?? 0) === 1;
+            $fAge = (string)($age['fAge'] ?? '0');
+            $isChild = $fAge === '1';
             if (!$isChild) {
                 continue;
             }
@@ -419,8 +420,9 @@ class PriceInfoParser
             if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
 
             $rowAge = '';
-            if (!empty($row['fAge']) && is_string($row['fAge'])) {
-                $rowAge = $row['fAge'];
+            $fAgeVal = $row['fAge'] ?? null;
+            if (!empty($fAgeVal) && is_string($fAgeVal)) {
+                $rowAge = $fAgeVal;
             } else {
                 $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
                 static $ageTypeMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
@@ -462,8 +464,9 @@ class PriceInfoParser
             if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
 
             $rowAge = '';
-            if (!empty($row['fAge']) && is_string($row['fAge'])) {
-                $rowAge = $row['fAge'];
+            $fAgeVal2 = $row['fAge'] ?? null;
+            if (!empty($fAgeVal2) && is_string($fAgeVal2)) {
+                $rowAge = $fAgeVal2;
             } else {
                 $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
                 static $ageMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];

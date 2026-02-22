@@ -116,9 +116,15 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByUserId(int $user_id, int $limit = 0): array
     {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        if ($limit > 0) {
+            return db_get_array(
+                "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i",
+                $user_id,
+                $limit
+            );
+        }
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC {$limit_clause}",
+            "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC",
             $user_id
         );
     }
@@ -147,9 +153,14 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findPending(int $limit = 0): array
     {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        if ($limit > 0) {
+            return db_get_array(
+                "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC LIMIT ?i",
+                $limit
+            );
+        }
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC {$limit_clause}"
+            "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC"
         );
     }
     
@@ -400,7 +411,7 @@ class BookingRepository implements BookingRepositoryInterface
                 'alternatives_data' => $nb['alternatives_data'] ?? null,
                 // Order info from joined orders table
                 'order_status' => $nb['order_status'] ?? '',
-                'created_at' => $nb['created_at'] ?? ($nb['order_timestamp'] ? date('Y-m-d H:i:s', $nb['order_timestamp']) : ''),
+                'created_at' => $nb['created_at'] ?? (!empty($nb['order_timestamp']) ? date('Y-m-d H:i:s', (int)$nb['order_timestamp']) : ''),
                 // Source indicator
                 '_source' => ($nb['order_id'] > 0) ? 'novoton_bookings' : 'orphan',
             ];

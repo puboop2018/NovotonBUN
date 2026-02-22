@@ -19,10 +19,10 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelSync
 {
-    private $api;
-    private $selectedCountries;
-    private $productPrefixes;
-    private $stats;
+    private NovotonApi $api;
+    private array $selectedCountries;
+    private array $productPrefixes;
+    private array $stats;
 
     public function __construct()
     {
@@ -158,7 +158,7 @@ class HotelSync
      *
      * @param array $batchData Array of hotel data arrays
      */
-    private function executeBatchHotelUpsert(array $batchData)
+    private function executeBatchHotelUpsert(array $batchData): void
     {
         if (empty($batchData)) {
             return;
@@ -432,7 +432,7 @@ class HotelSync
      * @param \SimpleXMLElement $priceInfo Price info from API
      * @return float|null Minimum price or null
      */
-    private function calculateMinPrice($priceInfo)
+    private function calculateMinPrice($priceInfo): ?float
     {
         $minPrice = null;
 

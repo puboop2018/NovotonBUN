@@ -65,9 +65,10 @@ class AvailabilityApiClient extends ApiClientBase
                 preg_match_all('/<Quota>([^<]+)<\/Quota>/', $packageXml, $quotaMatches);
 
                 if (!empty($roomMatches[1]) && !empty($quotaMatches[1])) {
-                    for ($i = 0; $i < count($roomMatches[1]); $i++) {
+                    $matchCount = min(count($roomMatches[1]), count($quotaMatches[1]));
+                    for ($i = 0; $i < $matchCount; $i++) {
                         $roomId = trim($roomMatches[1][$i]);
-                        $quota = isset($quotaMatches[1][$i]) ? trim($quotaMatches[1][$i]) : '0';
+                        $quota = trim($quotaMatches[1][$i]);
 
                         if (!isset($quotaMap[$roomId])) {
                             $quotaMap[$roomId] = $quota;
