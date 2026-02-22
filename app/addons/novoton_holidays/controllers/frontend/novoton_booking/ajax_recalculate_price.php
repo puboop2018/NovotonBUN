@@ -7,6 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
     // This replaces the old blanket error_reporting(0) — real errors are still
     // logged, but PHP won't echo anything that corrupts our JSON response.

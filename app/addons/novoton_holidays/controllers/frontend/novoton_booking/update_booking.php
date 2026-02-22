@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
     $security = _nvt_get_security_service();
     $bookingData = $_REQUEST;

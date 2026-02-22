@@ -7,7 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-    
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+
     $bookingData = $_REQUEST;
     
     // Fix room_id: PHP URL decoding converts + to space, restore it

@@ -7,7 +7,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-    
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
     
