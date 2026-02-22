@@ -5657,23 +5657,28 @@ div.novoton-desktop-only,
     background: var(--nvt-search-btn-hover, #0057b8) !important;
 }
 
-/* Override theme-level button/input :hover for booking form fields */
-.nvt-booking-engine .nvt-field,
-.nvt-booking-engine .nvt-field:hover,
-.nvt-booking-engine .nvt-field:focus,
-.nvt-booking-engine .nvt-field:active {
-    background: transparent !important;
-    background-color: transparent !important;
+/* Kill ALL hover/focus/active visuals on booking form row fields */
+.nvt-form-row *,
+.nvt-form-row *:hover,
+.nvt-form-row *:focus,
+.nvt-form-row *:active,
+.nvt-form-row *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
 }
-.nvt-booking-engine .nvt-field-input,
-.nvt-booking-engine .nvt-field-input:hover,
-.nvt-booking-engine .nvt-field-input:focus,
-.nvt-booking-engine .nvt-field-input:active,
-.nvt-booking-engine button.nvt-field-input:hover,
-.nvt-booking-engine button.nvt-field-input:focus {
+.nvt-field,
+.nvt-field:hover,
+.nvt-field:focus,
+.nvt-field:active,
+.nvt-field-input,
+.nvt-field-input:hover,
+.nvt-field-input:focus,
+.nvt-field-input:active,
+button.nvt-field-input,
+button.nvt-field-input:hover,
+button.nvt-field-input:focus,
+button.nvt-field-input:active {
     background: transparent !important;
     background-color: transparent !important;
     border-color: inherit !important;
-    outline: none !important;
-    box-shadow: none !important;
 }
