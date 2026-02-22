@@ -337,6 +337,36 @@ if ($mode == 'sync_facilities') {
 }
 
 /**
+ * Mode: save_facility_types
+ * Save facility type classifications (hotel/room) from admin form
+ */
+if ($mode == 'save_facility_types') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
+    $facility_types = $_REQUEST['facility_types'] ?? [];
+    $allowed = ['hotel', 'room'];
+    $updated = 0;
+
+    foreach ($facility_types as $facility_id => $type) {
+        $facility_id = (int) $facility_id;
+        if ($facility_id <= 0 || !in_array($type, $allowed, true)) {
+            continue;
+        }
+        db_query(
+            "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
+            $type, $facility_id
+        );
+        $updated++;
+    }
+
+    fn_set_notification('N', __('notice'), "Facility types saved ({$updated} updated).");
+
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+}
+
+/**
  * Mode: check_packages
  * Check hotel packages from API (hotelinfo) for all countries
  */

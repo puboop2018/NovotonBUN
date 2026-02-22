@@ -180,4 +180,36 @@ class FacilityRepository implements FacilityRepositoryInterface
             $facility_id
         );
     }
+
+    // =========================================================================
+    // Type-filtered queries
+    // =========================================================================
+
+    /**
+     * Get facilities for a hotel filtered by type (hotel/room)
+     */
+    public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array
+    {
+        $col = self::nameField($lang);
+
+        return db_get_array(
+            "SELECT f.facility_id, f.{$col} as facility_name
+             FROM ?:novoton_hotel_facilities hf
+             JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
+             WHERE hf.hotel_id = ?s AND f.facility_type = ?s
+             ORDER BY f.{$col}",
+            $hotel_id, $facility_type
+        );
+    }
+
+    /**
+     * Update facility type classification
+     */
+    public function updateType(int $facility_id, string $facility_type): bool
+    {
+        return (bool) db_query(
+            "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
+            $facility_type, $facility_id
+        );
+    }
 }
