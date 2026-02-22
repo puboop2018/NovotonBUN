@@ -458,7 +458,7 @@ if ($mode == 'check_prices_hotel') {
     echo '<div class="form-group"><label>Check-in</label><input type="text" name="check_in" value="' . htmlspecialchars($check_in) . '" style="width:130px"></div>';
     echo '<div class="form-group"><label>Check-out</label><input type="text" name="check_out" value="' . htmlspecialchars($check_out) . '" style="width:130px"></div>';
     echo '<div class="form-group"><label>Country</label><input type="text" name="country" value="' . htmlspecialchars($country) . '" style="width:120px"></div>';
-    echo '<div class="form-group"><label>Limit (0=all)</label><input type="number" name="limit" value="' . htmlspecialchars($limit) . '" style="width:80px"></div>';
+    echo '<div class="form-group"><label>Limit (0=all)</label><input type="number" name="limit" value="' . $limit . '" style="width:80px"></div>';
     echo '<div class="form-group"><label>&nbsp;</label><button type="submit" class="btn-run">Check Prices</button></div>';
     echo '</div></form>';
 
