@@ -183,7 +183,7 @@
             }
         } else {
             // Fallback: find error element by adjacency (matches random ID from showDOBError)
-            var nextEl = field.nextSibling;
+            var nextEl = field.nextElementSibling;
             if (nextEl && nextEl.className === 'novoton-dob-error-message') {
                 nextEl.style.display = 'none';
             }
@@ -201,7 +201,12 @@
     function isChildDOBField(field) {
         var name = field.name || '';
         var id = field.id || '';
-        
+
+        // Skip if field has an inline onblur handler (booking_form.tpl's
+        // validateAndCheckAge already handles price recalculation for these
+        // fields — triggering here too would cause duplicate AJAX calls)
+        if (field.getAttribute('onblur')) return false;
+
         // Check if it's a child DOB field (matches pattern like guests[room1_child_1][dob])
         return (name.includes('child') && name.includes('dob')) ||
                (id.includes('child') && id.includes('dob'));
@@ -478,7 +483,7 @@
     /**
      * A73: Update the displayed price
      */
-    function updatePriceDisplay(newPrice, priceDifference) {
+    function updatePriceDisplay(newPrice, formattedPrice, priceDifference) {
         var priceElements = document.querySelectorAll(
             '.price-total, .booking-price-box .price-total, .novoton-total-price'
         );
