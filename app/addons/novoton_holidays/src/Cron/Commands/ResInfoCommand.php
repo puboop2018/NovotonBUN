@@ -63,7 +63,7 @@ class ResInfoCommand extends AbstractCronCommand
                     ]);
                     $this->output("  -> Updated to CONFIRMED");
                     $updated++;
-                } elseif ($new_status === Constants::STATUS_CANCELLED || $new_status === 'rejected') {
+                } elseif ($new_status === Constants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
                     $repo->update($booking['booking_id'], [
                         'status'            => Constants::STATUS_CANCELLED,
                         'novoton_status'    => Constants::NOVOTON_STATUS_CANCELLED,

@@ -198,13 +198,16 @@ class AvailabilityApiClient extends ApiClientBase
             return $results;
         }
 
+        // SimpleXMLElement children are Traversable - iterating directly handles
+        // both single and multiple child elements correctly (is_array() is always
+        // false for SimpleXMLElement, so wrapping in [$x] would lose siblings).
         $offers = [];
         if (isset($result->offer)) {
-            $offers = is_array($result->offer) ? $result->offer : [$result->offer];
+            $offers = $result->offer;
         } elseif (isset($result->hotel->offer)) {
-            $offers = is_array($result->hotel->offer) ? $result->hotel->offer : [$result->hotel->offer];
+            $offers = $result->hotel->offer;
         } elseif (isset($result->room)) {
-            $offers = is_array($result->room) ? $result->room : [$result->room];
+            $offers = $result->room;
         }
 
         foreach ($offers as $offer) {

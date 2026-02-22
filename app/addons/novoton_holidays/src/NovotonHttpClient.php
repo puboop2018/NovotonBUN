@@ -169,7 +169,7 @@ class NovotonHttpClient implements HttpClientInterface
 
         $this->lastHttpCode = $lastHttpCode;
         $this->lastError = $lastError;
-        $this->lastResponseRaw = $response;
+        $this->lastResponseRaw = is_string($response) ? $response : '';
 
         if ($lastError || $lastHttpCode < 200 || $lastHttpCode >= 300) {
             $this->recordFailure();

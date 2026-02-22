@@ -24,6 +24,7 @@ class V3SyncCommand extends AbstractCronCommand
         $limit = (int)$this->getParam('limit', 0);
 
         $sync = new HotelSync();
+        $stats = [];
 
         switch ($mode) {
             case 'sync_hotels':

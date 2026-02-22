@@ -339,6 +339,7 @@ class BatchedHotelInfoSync
                 $retry_ids = array_unique($state['error_ids']);
                 $this->output("\nRetrying " . count($retry_ids) . " failed hotels...");
                 $recovered = 0;
+                $recovered_ids = [];
                 foreach ($retry_ids as $retry_id) {
                     if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                         break;
@@ -349,6 +350,7 @@ class BatchedHotelInfoSync
                         if ($hotel_info) {
                             $this->processHotelInfo($retry_id, $hotel_info, $now);
                             $recovered++;
+                            $recovered_ids[] = $retry_id;
                             $state['synced']++;
                             $state['errors']--;
                             $this->output("  [{$retry_id}] retry OK");
@@ -357,7 +359,7 @@ class BatchedHotelInfoSync
                         $this->output("  [{$retry_id}] retry failed: " . $e->getMessage());
                     }
                 }
-                $state['error_ids'] = array_values(array_diff($state['error_ids'], array_slice($retry_ids, 0, $recovered)));
+                $state['error_ids'] = array_values(array_diff($state['error_ids'], $recovered_ids));
                 $state['retry_done'] = true;
                 $this->saveState($state);
                 if ($recovered > 0) {
