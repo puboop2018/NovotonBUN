@@ -84,6 +84,11 @@ class BatchedPriceInfoSync
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
+
+        // CLI has no execution time limit — skip artificial batching
+        if (PHP_SAPI === 'cli') {
+            $this->unlimited = true;
+        }
     }
 
     /**
