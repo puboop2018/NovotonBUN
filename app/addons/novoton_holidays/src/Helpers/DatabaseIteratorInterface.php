@@ -20,7 +20,7 @@ interface DatabaseIteratorInterface
      * @param int   $chunk_size
      * @return \Generator Yields one hotel row at a time
      */
-    public function iterateHotels(array $filters = [], int $chunk_size = 500): \Generator;
+    public function iterateHotels(array $filters = [], int $chunk_size = 100): \Generator;
 
     /**
      * Iterate over hotel IDs only (more memory efficient).
@@ -29,7 +29,7 @@ interface DatabaseIteratorInterface
      * @param int   $chunk_size
      * @return \Generator Yields one hotel_id at a time
      */
-    public function iterateHotelIds(array $filters = [], int $chunk_size = 500): \Generator;
+    public function iterateHotelIds(array $filters = [], int $chunk_size = 100): \Generator;
 
     /**
      * Iterate over hotel packages.
@@ -38,7 +38,7 @@ interface DatabaseIteratorInterface
      * @param int   $chunk_size
      * @return \Generator Yields one package row at a time
      */
-    public function iteratePackages(array $filters = [], int $chunk_size = 500): \Generator;
+    public function iteratePackages(array $filters = [], int $chunk_size = 100): \Generator;
 
     /**
      * Iterate over bookings.
@@ -47,7 +47,7 @@ interface DatabaseIteratorInterface
      * @param int   $chunk_size
      * @return \Generator Yields one booking row at a time
      */
-    public function iterateBookings(array $filters = [], int $chunk_size = 500): \Generator;
+    public function iterateBookings(array $filters = [], int $chunk_size = 100): \Generator;
 
     /**
      * Iterate over sync logs.
@@ -56,7 +56,7 @@ interface DatabaseIteratorInterface
      * @param int    $chunk_size
      * @return \Generator Yields one log row at a time
      */
-    public function iterateSyncLogs(string $type = '', int $chunk_size = 500): \Generator;
+    public function iterateSyncLogs(string $type = '', int $chunk_size = 100): \Generator;
 
     /**
      * Generic query iterator — iterate over any query results.
@@ -66,7 +66,7 @@ interface DatabaseIteratorInterface
      * @param int    $chunk_size
      * @return \Generator Yields one row at a time
      */
-    public function iterateQuery(string $query, array $params = [], int $chunk_size = 500): \Generator;
+    public function iterateQuery(string $query, array $params = [], int $chunk_size = 100): \Generator;
 
     /**
      * Count total items matching filters.

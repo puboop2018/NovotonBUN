@@ -189,7 +189,7 @@ class Container
     public function alternativeRequestService(): AlternativeRequestServiceInterface
     {
         return $this->resolve('alternativeRequestService', fn() => new AlternativeRequestService(
-            $this->alternativeRequestRepository()
+            $this->securityService()
         ));
     }
 

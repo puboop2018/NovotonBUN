@@ -12,15 +12,15 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
-use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class ProductFactory implements ProductFactoryInterface
 {
-    private DatabaseHelper $dbHelper;
+    private DatabaseHelperInterface $dbHelper;
 
-    public function __construct(DatabaseHelper $dbHelper)
+    public function __construct(DatabaseHelperInterface $dbHelper)
     {
         $this->dbHelper = $dbHelper;
     }
@@ -29,11 +29,11 @@ class ProductFactory implements ProductFactoryInterface
      * Create CS-Cart product from hotel data
      *
      * @param array $hotel Hotel data array
-     * @param NovotonApi $api API instance for fetching additional data
+     * @param NovotonApiInterface $api API instance for fetching additional data
      * @param int $categoryId Category to assign product to
      * @return int|null Product ID or null on failure
      */
-    public function createFromHotel(array $hotel, NovotonApi $api, int $categoryId): ?int
+    public function createFromHotel(array $hotel, NovotonApiInterface $api, int $categoryId): ?int
     {
         $hotelId = $hotel['hotel_id'];
         $hotelName = $hotel['hotel_name'] ?? '';
@@ -118,7 +118,7 @@ class ProductFactory implements ProductFactoryInterface
      *
      * @return int Number of images attached
      */
-    public function attachHotelImages(int $productId, string $hotelId, NovotonApi $api): int
+    public function attachHotelImages(int $productId, string $hotelId, NovotonApiInterface $api): int
     {
         try {
             $imagesResponse = $api->getHotelImages($hotelId);

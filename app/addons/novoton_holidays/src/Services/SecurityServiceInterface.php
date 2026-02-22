@@ -61,7 +61,7 @@ interface SecurityServiceInterface
      * @param int|null $window      Window in seconds
      * @return array{allowed: bool, remaining: int, reset: int}
      */
-    public function checkRateLimit(string $key, int $maxRequests = null, int $window = null): array;
+    public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array;
 
     /**
      * Check booking rate limit (stricter).

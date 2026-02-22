@@ -17,28 +17,29 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
 class BookingService implements BookingServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
-    
-    /** @var GuestDataService */
+
+    /** @var GuestDataServiceInterface */
     private $guestService;
-    
-    /** @var RoomPriceService */
+
+    /** @var RoomPriceServiceInterface */
     private $priceService;
-    
+
     /** @var bool */
     private $debug = false;
-    
+
     /**
      * Constructor
      */
     public function __construct(
-        ?GuestDataService $guestService = null,
-        ?RoomPriceService $priceService = null,
-        ?BookingRepository $bookingRepo = null
+        ?GuestDataServiceInterface $guestService = null,
+        ?RoomPriceServiceInterface $priceService = null,
+        ?BookingRepositoryInterface $bookingRepo = null
     ) {
         $this->api = fn_novoton_holidays_get_api();
         $this->guestService = $guestService ?? new GuestDataService();

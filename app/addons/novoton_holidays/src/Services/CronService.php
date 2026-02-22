@@ -62,7 +62,7 @@ class CronService implements CronServiceInterface
                     continue;
                 }
 
-                $resInfo = $this->api->getResInfo($idNum);
+                $resInfo = $this->api->getReservationInfo($idNum);
 
                 if (!$resInfo) {
                     $results['unchanged']++;

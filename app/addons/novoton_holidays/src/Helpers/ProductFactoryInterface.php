@@ -23,7 +23,7 @@ interface ProductFactoryInterface
      * @param int                $categoryId Category to assign product to
      * @return int|null Product ID or null on failure
      */
-    public function createFromHotel(array $hotel, $api, int $categoryId): ?int;
+    public function createFromHotel(array $hotel, NovotonApiInterface $api, int $categoryId): ?int;
 
     /**
      * Attach images to product from API.
@@ -33,5 +33,5 @@ interface ProductFactoryInterface
      * @param NovotonApiInterface $api
      * @return int Number of images attached
      */
-    public function attachHotelImages(int $productId, string $hotelId, $api): int;
+    public function attachHotelImages(int $productId, string $hotelId, NovotonApiInterface $api): int;
 }

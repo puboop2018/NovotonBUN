@@ -290,7 +290,7 @@ class SecurityService implements SecurityServiceInterface
      * @param int $window Window in seconds
      * @return array [allowed => bool, remaining => int, reset => int]
      */
-    public function checkRateLimit(string $key, int $maxRequests = null, int $window = null): array
+    public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
         $maxRequests = $maxRequests ?? self::RATE_LIMIT_MAX;
         $window = $window ?? self::RATE_LIMIT_WINDOW;
