@@ -103,7 +103,7 @@ if ($mode == 'update_prices') {
             $failed++;
         }
         
-        if ($updated % 10 == 0) {
+        if ($updated > 0 && $updated % 10 == 0) {
             flush();
         }
     }

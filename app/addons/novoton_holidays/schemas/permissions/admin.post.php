@@ -73,9 +73,13 @@ $schema['novoton_bookings'] = [
 // ── novoton_alternatives controller ──
 $schema['novoton_alternatives'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_bookings'],
-        'view'    => ['permissions' => 'novoton_manage_bookings'],
-        'update'  => ['permissions' => 'novoton_manage_bookings'],
+        'manage'              => ['permissions' => 'novoton_manage_bookings'],
+        'view'                => ['permissions' => 'novoton_manage_bookings'],
+        'update'              => ['permissions' => 'novoton_manage_bookings'],
+        'check_alternatives'  => ['permissions' => 'novoton_manage_bookings'],
+        'notify_customer'     => ['permissions' => 'novoton_manage_bookings'],
+        'delete'              => ['permissions' => 'novoton_manage_bookings'],
+        'check_all_pending'   => ['permissions' => 'novoton_manage_bookings'],
     ],
 ];
 
@@ -91,8 +95,9 @@ $schema['novoton_exchange_rates'] = [
 // ── novoton_diagnostic controller ──
 $schema['novoton_diagnostic'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_sync'],
-        'run'     => ['permissions' => 'novoton_manage_sync'],
+        'health'  => ['permissions' => 'novoton_manage_sync'],
+        'check'   => ['permissions' => 'novoton_manage_sync'],
+        'test'    => ['permissions' => 'novoton_manage_sync'],
     ],
 ];
 

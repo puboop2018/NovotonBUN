@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Notify customer about alternatives
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Delete request
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             fn_set_notification('N', __('notice'), __('novoton_holidays.request_deleted'));
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
     
     // Bulk check all pending requests
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             fn_set_notification('I', __('information'), __('novoton_holidays.no_pending_requests'));
         }
         
-        return [CONTROLLER_STATUS_OK, 'novoton_alternatives.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
 }
 

@@ -35,9 +35,9 @@ if ($mode == 'cron') {
     header('Content-Type: text/plain');
     echo "Novoton Exchange Rates Update\n";
     echo "============================\n";
-    echo "Timestamp: " . $result['timestamp'] . "\n";
-    echo "Status: " . ($result['success'] ? 'SUCCESS' : 'FAILED') . "\n";
-    echo "Message: " . $result['message'] . "\n";
+    echo "Timestamp: " . ($result['timestamp'] ?? date('Y-m-d H:i:s')) . "\n";
+    echo "Status: " . (!empty($result['success']) ? 'SUCCESS' : 'FAILED') . "\n";
+    echo "Message: " . ($result['message'] ?? 'No message') . "\n";
 
     if (!empty($result['bnr_rates'])) {
         echo "\nBNR Rates (RON-based):\n";

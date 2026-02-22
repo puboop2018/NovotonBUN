@@ -285,7 +285,7 @@ if ($mode == 'add_hotels_as_products') {
                 echo "<span class='error'>✗ Error: {$hotel_name} - " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
             }
             
-            if (($added + $updated) % 10 == 0) {
+            if (($added + $updated) > 0 && ($added + $updated) % 10 == 0) {
                 flush();
             }
         }

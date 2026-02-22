@@ -292,7 +292,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
             // Check API circuit breaker status
             $api = fn_novoton_holidays_get_api();
-            if (method_exists($api, 'getCircuitStatus')) {
+            if ($api && method_exists($api, 'getCircuitStatus')) {
                 $circuitStatus = $api->getCircuitStatus();
                 $debug_log[] = "=== API CIRCUIT BREAKER STATUS ===";
                 $debug_log[] = "Circuit Open: " . ($circuitStatus['is_open'] ? 'YES (BLOCKING REQUESTS!)' : 'NO');
@@ -678,6 +678,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             // Show raw request/response in debug
             if ($debug_mode) {
                 $api = fn_novoton_holidays_get_api();
+                if ($api) {
                 $lastReq = $api->getLastRequestFormatted();
                 $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
                 $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
@@ -706,8 +707,9 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                         }
                     }
                 }
+                } // end if ($api)
             }
-            
+
             // Parse the response via SearchService
             if ($priceData) {
                 $rawXml = $searchApi->getLastResponse();

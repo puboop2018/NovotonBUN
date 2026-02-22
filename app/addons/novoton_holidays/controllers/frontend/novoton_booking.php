@@ -57,22 +57,32 @@ if (file_exists($service_loader)) {
 }
 
 // Legacy alias for backward compatibility
-function _nvt_get_cache_service() {
-    return _nvt_cache_service();
+if (!function_exists('_nvt_get_cache_service')) {
+    function _nvt_get_cache_service() {
+        return _nvt_cache_service();
+    }
 }
 
 // Service delegation helpers (wired up for gradual migration from inline code)
-function _nvt_get_search_service() {
-    return _nvt_search_service();
+if (!function_exists('_nvt_get_search_service')) {
+    function _nvt_get_search_service() {
+        return _nvt_search_service();
+    }
 }
-function _nvt_get_booking_service() {
-    return _nvt_booking_service();
+if (!function_exists('_nvt_get_booking_service')) {
+    function _nvt_get_booking_service() {
+        return _nvt_booking_service();
+    }
 }
-function _nvt_get_price_service() {
-    return _nvt_price_service();
+if (!function_exists('_nvt_get_price_service')) {
+    function _nvt_get_price_service() {
+        return _nvt_price_service();
+    }
 }
-function _nvt_get_security_service() {
-    return _nvt_security_service();
+if (!function_exists('_nvt_get_security_service')) {
+    function _nvt_get_security_service() {
+        return _nvt_security_service();
+    }
 }
 
 //=============================================================================
@@ -100,6 +110,7 @@ unset($_nvt_array_params, $_nvt_param);
 /**
  * Get value from XML array at index $i, fallback to index 0, or return default
  */
+if (!function_exists('_nvt_get_xml_value')) {
 function _nvt_get_xml_value($array, $i, $default = '', $cast = 'string') {
     $value = isset($array[$i]) ? $array[$i] : (isset($array[0]) ? $array[0] : null);
     if ($value === null) return $default;
@@ -108,6 +119,7 @@ function _nvt_get_xml_value($array, $i, $default = '', $cast = 'string') {
         case 'int': return (int)((string)$value);
         default: return (string)$value;
     }
+}
 }
 
 /**
@@ -119,6 +131,7 @@ function _nvt_get_xml_value($array, $i, $default = '', $cast = 'string') {
  * @param string $cart_id Cart ID for error redirect
  * @return array|false Parsed guests data or false if validation fails
  */
+if (!function_exists('_nvt_parse_and_validate_guests')) {
 function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0, $cart_id = '') {
     $guest_names = [];
     $guests_data = [];
@@ -247,10 +260,12 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
         'holder_name' => $guest_names[0] ?? ''
     ];
 }
+} // end function_exists _nvt_parse_and_validate_guests
 
 /**
  * Parse DOB from various form formats
  */
+if (!function_exists('_nvt_parse_dob')) {
 function _nvt_parse_dob($guest) {
     $birthday = '';
 
@@ -298,6 +313,7 @@ function _nvt_parse_dob($guest) {
 
     return $birthday;
 }
+} // end function_exists _nvt_parse_dob
 
 // API is now lazy-loaded via fn_novoton_holidays_get_api() when needed
 
@@ -309,6 +325,7 @@ function _nvt_parse_dob($guest) {
  * @param bool $force Force fresh fetch
  * @return object|null Hotel info XML or null
  */
+if (!function_exists('_nvt_get_cached_hotel_info')) {
 function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     $cache_key = 'nvt_hotel_info_' . $hotel_id;
 
@@ -345,6 +362,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
 
     return $hotelInfo;
 }
+} // end function_exists _nvt_get_cached_hotel_info
 
 // A72: Use RoomPriceService::getRoomPrice() for room prices (it has built-in caching)
 // Example: $priceService = _nvt_get_price_service(); $price = $priceService->getRoomPrice($params);
