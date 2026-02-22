@@ -199,15 +199,17 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function create(array $data): int
     {
+        $data = self::filterNullValues($data);
         $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $data);
         return (int) $booking_id;
     }
-    
+
     /**
      * Update booking
      */
     public function update(int $booking_id, array $data): bool
     {
+        $data = self::filterNullValues($data);
         return (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
     }
     
@@ -644,6 +646,15 @@ class BookingRepository implements BookingRepositoryInterface
              WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
             $hours
         );
+    }
+
+    /**
+     * Filter null values from data array to prevent PHP 8.1+
+     * real_escape_string() deprecation when passed to ?e / ?u placeholders.
+     */
+    private static function filterNullValues(array $data): array
+    {
+        return array_filter($data, static fn($v) => $v !== null);
     }
 
     /**

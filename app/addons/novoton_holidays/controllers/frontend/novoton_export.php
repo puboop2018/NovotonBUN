@@ -45,7 +45,11 @@ if ($mode == 'hotel_features_xml') {
         exit;
     }
 
+    // Buffer output to prevent PHP deprecation notices (e.g. real_escape_string
+    // receiving null on PHP 8.1+) from corrupting the XML response.
+    ob_start();
     $result = fn_novoton_holidays_generate_hotel_features_xml();
+    ob_end_clean();
 
     if (!$result['success'] || empty($result['file_path']) || !file_exists($result['file_path'])) {
         header('HTTP/1.1 500 Internal Server Error');
