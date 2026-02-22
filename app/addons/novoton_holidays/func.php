@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Get addon directory
 $addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/';
@@ -42,6 +42,23 @@ foreach ($function_files as $file) {
     if (file_exists($path)) {
         require_once $path;
     }
+}
+
+/**
+ * Variants function for the api_currency addon setting.
+ * Pulls currencies from CS-Cart's configured currencies.
+ * Called only from admin settings page where Registry is always populated.
+ */
+function fn_settings_variants_addons_novoton_holidays_api_currency(): array
+{
+    $currencies = Registry::get('currencies');
+    $result = [];
+
+    foreach ($currencies as $code => $currency) {
+        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+    }
+
+    return $result;
 }
 
 // ============================================================================

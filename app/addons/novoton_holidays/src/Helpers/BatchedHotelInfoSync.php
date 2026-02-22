@@ -216,11 +216,16 @@ class BatchedHotelInfoSync
         $now = date('Y-m-d H:i:s');
 
         while ($offset < $state['total']) {
-            // Check time limit (skip if unlimited mode)
+            // Check time and memory limits (skip if unlimited mode)
             if (!$this->unlimited) {
                 $elapsed = time() - $start_time;
                 if ($elapsed > $this->max_execution_time) {
                     $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
+                    break;
+                }
+                if ($this->isMemoryLimitReached()) {
+                    $mem = round(memory_get_usage(true) / 1024 / 1024, 1);
+                    $this->output("\nMemory limit approaching ({$mem}MB). Saving state for resume.");
                     break;
                 }
             }
@@ -270,9 +275,11 @@ class BatchedHotelInfoSync
             $batch_results = $api->getHotelInfoBatch($batch);
 
             foreach ($batch as $hotel_id) {
-                // Check time limit within batch (skip if unlimited mode)
-                if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
-                    break 2; // Exit both loops
+                // Check time and memory limits within batch (skip if unlimited mode)
+                if (!$this->unlimited) {
+                    if ((time() - $start_time) > $this->max_execution_time || $this->isMemoryLimitReached()) {
+                        break 2; // Exit both loops
+                    }
                 }
 
                 $hotel_name = $hotel_map[$hotel_id]['hotel_name'] ?? '?';
@@ -280,6 +287,7 @@ class BatchedHotelInfoSync
 
                 $this->output("[{$hotel_id}] " . ($hotel_name ?: '?') . " ... ", false);
 
+                $itemStart = hrtime(true);
                 try {
                     if (!$hotel_info) {
                         $this->output("API returned empty");
@@ -301,6 +309,13 @@ class BatchedHotelInfoSync
                     $state['errors']++;
                     $state['error_ids'][] = $hotel_id;
                     $errors_this_run++;
+                }
+
+                // Warn about slow items
+                $itemDurationMs = (int)((hrtime(true) - $itemStart) / 1_000_000);
+                if ($itemDurationMs > 30000) {
+                    $secs = round($itemDurationMs / 1000, 1);
+                    $this->output("Warning: hotel {$hotel_id} took {$secs}s");
                 }
 
                 $offset++;
@@ -873,5 +888,26 @@ class BatchedHotelInfoSync
             echo $message . ($newline ? "\n" : "");
             flush();
         }
+    }
+
+    /**
+     * Check if memory usage is approaching the PHP memory_limit.
+     * Uses 85% threshold to allow time for state save before OOM.
+     */
+    private function isMemoryLimitReached(): bool
+    {
+        $limit = ini_get('memory_limit');
+        if ($limit === '-1' || $limit === false) {
+            return false;
+        }
+        $limit = trim($limit);
+        $bytes = (int)$limit;
+        $unit = strtolower(substr($limit, -1));
+        switch ($unit) {
+            case 'g': $bytes *= 1024;
+            case 'm': $bytes *= 1024;
+            case 'k': $bytes *= 1024;
+        }
+        return memory_get_usage(true) > (int)($bytes * 0.85);
     }
 }

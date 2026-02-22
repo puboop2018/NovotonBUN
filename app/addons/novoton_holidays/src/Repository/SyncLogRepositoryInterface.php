@@ -14,4 +14,7 @@ interface SyncLogRepositoryInterface
     public function deleteOld(int $days = 30): int;
     public function count(string $type = ''): int;
     public function getStats(int $days = 7): array;
+    public function findByType(string $type, int $limit = 0): array;
+    public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array;
+    public function trimToLatest(int $keep = 100): int;
 }

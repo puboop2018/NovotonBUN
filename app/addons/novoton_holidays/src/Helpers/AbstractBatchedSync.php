@@ -8,6 +8,8 @@ declare(strict_types=1);
  * - Unified logging
  * - Progress tracking
  * - Time limit handling
+ * - Memory limit monitoring
+ * - Per-item timeout tracking
  *
  * Subclasses must implement:
  * - getSyncName(): Unique name for this sync type
@@ -68,6 +70,18 @@ abstract class AbstractBatchedSync implements SyncInterface
      * @var int
      */
     protected int $startTime;
+
+    /**
+     * Memory usage threshold as fraction of PHP memory_limit (0.0 to 1.0)
+     * @var float
+     */
+    protected float $memoryThreshold = 0.85;
+
+    /**
+     * Per-item warning threshold in seconds
+     * @var int
+     */
+    protected int $itemTimeoutWarning = 30;
 
     /**
      * Constructor
@@ -184,6 +198,52 @@ abstract class AbstractBatchedSync implements SyncInterface
     }
 
     /**
+     * Check if memory usage is approaching the PHP memory_limit.
+     *
+     * Returns true when current usage exceeds memoryThreshold fraction
+     * of the configured limit, giving the process time to save state
+     * before OOM.
+     */
+    protected function isMemoryLimitReached(): bool
+    {
+        $limit = self::parseMemoryLimit();
+        if ($limit <= 0) {
+            return false; // unlimited or unparseable
+        }
+        return memory_get_usage(true) > (int)($limit * $this->memoryThreshold);
+    }
+
+    /**
+     * Check if any resource limit (time or memory) is reached.
+     */
+    protected function isLimitReached(): bool
+    {
+        return $this->isTimeLimitReached() || $this->isMemoryLimitReached();
+    }
+
+    /**
+     * Parse PHP memory_limit to bytes.
+     */
+    private static function parseMemoryLimit(): int
+    {
+        $limit = ini_get('memory_limit');
+        if ($limit === '-1' || $limit === false) {
+            return 0; // unlimited
+        }
+        $limit = trim($limit);
+        $value = (int)$limit;
+        $unit = strtolower(substr($limit, -1));
+        switch ($unit) {
+            case 'g': $value *= 1024;
+            // fall through
+            case 'm': $value *= 1024;
+            // fall through
+            case 'k': $value *= 1024;
+        }
+        return $value;
+    }
+
+    /**
      * Run the sync operation
      *
      * @param array $options
@@ -264,10 +324,11 @@ abstract class AbstractBatchedSync implements SyncInterface
         $total = $status['total'];
 
         while ($offset < $total) {
-            // Check time limit
-            if ($this->isTimeLimitReached()) {
+            // Check time and memory limits before batch
+            if ($this->isLimitReached()) {
                 $elapsed = time() - $this->startTime;
-                $this->logger->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
+                $mem = round(memory_get_usage(true) / 1024 / 1024, 1);
+                $this->logger->output("\nLimit reached (time: {$elapsed}s, mem: {$mem}MB). Saving state for resume.");
                 break;
             }
 
@@ -279,12 +340,20 @@ abstract class AbstractBatchedSync implements SyncInterface
             }
 
             foreach ($batch as $itemId) {
-                // Check time limit within batch
-                if ($this->isTimeLimitReached()) {
+                // Check limits within batch
+                if ($this->isLimitReached()) {
                     break 2;
                 }
 
+                $itemStart = hrtime(true);
                 $result = $this->processItem($itemId);
+                $itemDurationMs = (int)((hrtime(true) - $itemStart) / 1_000_000);
+
+                // Warn about slow items
+                if ($itemDurationMs > $this->itemTimeoutWarning * 1000) {
+                    $secs = round($itemDurationMs / 1000, 1);
+                    $this->logger->output("Warning: item {$itemId} took {$secs}s (threshold: {$this->itemTimeoutWarning}s)");
+                }
 
                 $offset++;
                 $processedThisRun++;
@@ -375,13 +444,8 @@ abstract class AbstractBatchedSync implements SyncInterface
         $status = $this->state->getStatus();
 
         if ($status['status'] === 'idle') {
-            // Check last completed sync from database
-            $lastSync = db_get_row(
-                "SELECT * FROM ?:novoton_sync_log
-                 WHERE sync_type = ?s AND status = 'completed'
-                 ORDER BY sync_date DESC LIMIT 1",
-                $this->getSyncName()
-            );
+            $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+            $lastSync = $syncLogRepo->getLastSync($this->getSyncName());
 
             if ($lastSync) {
                 $notes = json_decode($lastSync['notes'] ?? '{}', true);

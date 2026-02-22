@@ -46,7 +46,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Include domain-specific hook files
 $hooks_dir = __DIR__ . '/hooks/';

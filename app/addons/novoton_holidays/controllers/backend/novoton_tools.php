@@ -33,7 +33,7 @@ use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Mode: export_hotel_features_csv

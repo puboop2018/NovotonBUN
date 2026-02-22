@@ -243,11 +243,16 @@ class BatchedPriceInfoSync
         $now = date('Y-m-d H:i:s');
 
         while ($offset < $state['total']) {
-            // Check time limit (skip if unlimited mode)
+            // Check time and memory limits (skip if unlimited mode)
             if (!$this->unlimited) {
                 $elapsed = time() - $start_time;
                 if ($elapsed > $this->max_execution_time) {
                     $this->output("\nTime limit reached ({$elapsed}s). Saving state for resume.");
+                    break;
+                }
+                if ($this->isMemoryLimitReached()) {
+                    $mem = round(memory_get_usage(true) / 1024 / 1024, 1);
+                    $this->output("\nMemory limit approaching ({$mem}MB). Saving state for resume.");
                     break;
                 }
             }
@@ -284,9 +289,11 @@ class BatchedPriceInfoSync
             }
 
             foreach ($batch as $pkg) {
-                // Check time limit within batch (skip if unlimited mode)
-                if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
-                    break 2; // Exit both loops
+                // Check time and memory limits within batch (skip if unlimited mode)
+                if (!$this->unlimited) {
+                    if ((time() - $start_time) > $this->max_execution_time || $this->isMemoryLimitReached()) {
+                        break 2; // Exit both loops
+                    }
                 }
 
                 $hotel_id = $pkg['hotel_id'];
@@ -751,5 +758,26 @@ class BatchedPriceInfoSync
         if (file_exists($this->state_file)) {
             unlink($this->state_file);
         }
+    }
+
+    /**
+     * Check if memory usage is approaching the PHP memory_limit.
+     * Uses 85% threshold to allow time for state save before OOM.
+     */
+    private function isMemoryLimitReached(): bool
+    {
+        $limit = ini_get('memory_limit');
+        if ($limit === '-1' || $limit === false) {
+            return false;
+        }
+        $limit = trim($limit);
+        $bytes = (int)$limit;
+        $unit = strtolower(substr($limit, -1));
+        switch ($unit) {
+            case 'g': $bytes *= 1024;
+            case 'm': $bytes *= 1024;
+            case 'k': $bytes *= 1024;
+        }
+        return memory_get_usage(true) > (int)($bytes * 0.85);
     }
 }

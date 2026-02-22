@@ -7,16 +7,18 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+$altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    
+
     // Check alternatives for a request
     if ($mode === 'check_alternatives' || $mode === 'alternative_rs') {
         $request_id = (int)($_REQUEST['request_id'] ?? 0);
-        
+
         if ($request_id > 0) {
-            $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
+            $request = $altRequestRepo->findById($request_id);
             $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
             if ($request && !empty($request['novoton_request_id'])) {
@@ -47,11 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         ];
                     }
                     
-                    db_query(
-                        "UPDATE ?:novoton_alternative_requests SET alternatives_data = ?s, status = 'alternatives_found', updated_at = NOW() WHERE request_id = ?i",
-                        json_encode($alternatives),
-                        $request_id
-                    );
+                    $altRequestRepo->markAlternativesFound($request_id, json_encode($alternatives));
                     
                     fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => count($alternatives)]));
                 } else {
@@ -70,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $request_id = (int)($_REQUEST['request_id'] ?? 0);
         
         if ($request_id > 0) {
-            $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
+            $request = $altRequestRepo->findById($request_id);
             $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
             if ($request && !empty($request['alternatives_data'])) {
@@ -96,10 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     ], 'A');
                     
                     if ($result) {
-                        db_query(
-                            "UPDATE ?:novoton_alternative_requests SET status = 'notified', notified_at = NOW() WHERE request_id = ?i",
-                            $request_id
-                        );
+                        $altRequestRepo->markNotified($request_id);
                         fn_set_notification('N', __('notice'), __('novoton_holidays.customer_notified'));
                     } else {
                         fn_set_notification('E', __('error'), __('novoton_holidays.email_send_failed'));
@@ -116,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $request_id = (int)($_REQUEST['request_id'] ?? 0);
         
         if ($request_id > 0) {
-            db_query("DELETE FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
+            $altRequestRepo->delete($request_id);
             fn_set_notification('N', __('notice'), __('novoton_holidays.request_deleted'));
         }
         
@@ -125,9 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Bulk check all pending requests
     if ($mode === 'check_all_pending') {
-        $pending = db_get_array(
-            "SELECT * FROM ?:novoton_alternative_requests WHERE status = 'pending' AND novoton_request_id != '' AND novoton_request_id IS NOT NULL"
-        );
+        $pending = $altRequestRepo->findPendingOlderThan(0);
         
         if (!empty($pending)) {
             $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
@@ -156,11 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     
                     if (!empty($alternatives)) {
-                        db_query(
-                            "UPDATE ?:novoton_alternative_requests SET alternatives_data = ?s, status = 'alternatives_found' WHERE request_id = ?i",
-                            json_encode($alternatives),
-                            $request['request_id']
-                        );
+                        $altRequestRepo->markAlternativesFound($request['request_id'], json_encode($alternatives));
                         $found++;
                     }
                 }
@@ -253,7 +242,7 @@ if ($mode === 'view') {
     $request_id = (int)($_REQUEST['request_id'] ?? 0);
     
     if ($request_id > 0) {
-        $request = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
+        $request = $altRequestRepo->findById($request_id);
         $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
         if ($request) {

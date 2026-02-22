@@ -13,7 +13,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Health Check Endpoint - JSON response for automated monitoring
@@ -40,16 +40,20 @@ if ($mode == 'health') {
 
     // 1. Database connectivity
     try {
+        $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+
         $db_start = microtime(true);
-        $hotels_count = db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
-        $bookings_count = db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings");
+        $hotels_count = $hotelRepo->count();
+        $bookings_count = $bookingRepo->count();
         $db_time = round((microtime(true) - $db_start) * 1000, 2);
 
         $health['components']['database'] = [
             'status' => 'healthy',
             'response_time_ms' => $db_time,
-            'hotels_count' => (int)$hotels_count,
-            'bookings_count' => (int)$bookings_count
+            'hotels_count' => $hotels_count,
+            'bookings_count' => $bookings_count
         ];
     } catch (Exception $e) {
         $health['components']['database'] = [
@@ -123,11 +127,8 @@ if ($mode == 'health') {
 
     // 4. Recent sync status
     try {
-        $last_sync = db_get_row(
-            "SELECT sync_type, sync_date, status, duration_seconds
-             FROM ?:novoton_sync_log
-             ORDER BY sync_date DESC LIMIT 1"
-        );
+        $recent = $syncLogRepo->findRecent(1);
+        $last_sync = !empty($recent) ? $recent[0] : null;
 
         if ($last_sync) {
             $sync_age_hours = (time() - strtotime($last_sync['sync_date'])) / 3600;
@@ -164,33 +165,16 @@ if ($mode == 'health') {
 
     // 5. Key metrics
     try {
-        // Bookings in last 24 hours
-        $recent_bookings = db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_bookings
-             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-        );
-
-        // Pending bookings
-        $pending_bookings = db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_bookings WHERE status = 'pending'"
-        );
-
-        // Failed bookings in last 24 hours
-        $failed_bookings = db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_bookings
-             WHERE status = 'failed' AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-        );
-
-        // Hotels with prices
-        $hotels_with_prices = db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE has_prices = 'Y'"
-        );
+        $recent_bookings = $bookingRepo->count(['check_in_from' => date('Y-m-d H:i:s', strtotime('-24 hours'))]);
+        $pending_bookings = $bookingRepo->count(['status' => 'pending']);
+        $failed_bookings = $bookingRepo->count(['status' => 'failed']);
+        $hotels_with_prices = $hotelRepo->count(['has_prices' => 'Y']);
 
         $health['metrics'] = [
-            'bookings_24h' => (int)$recent_bookings,
-            'pending_bookings' => (int)$pending_bookings,
-            'failed_bookings_24h' => (int)$failed_bookings,
-            'hotels_with_prices' => (int)$hotels_with_prices,
+            'bookings_24h' => $recent_bookings,
+            'pending_bookings' => $pending_bookings,
+            'failed_bookings_24h' => $failed_bookings,
+            'hotels_with_prices' => $hotels_with_prices,
             'failure_rate_24h' => $recent_bookings > 0
                 ? round(($failed_bookings / $recent_bookings) * 100, 1) . '%'
                 : '0%'

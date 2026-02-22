@@ -16,11 +16,11 @@
     {$current_product_id = ''}
 {/if}
 
-{* Get hotel_id - try direct variable first, then look up from product *}
+{* Get hotel_id - try direct variable first, then from product data *}
 {if $hotel_id}
     {$current_hotel_id = $hotel_id}
-{elseif $current_product_id}
-    {$current_hotel_id = fn_novoton_get_hotel_id_by_product($current_product_id)}
+{elseif $product.hotel_id}
+    {$current_hotel_id = $product.hotel_id}
 {else}
     {$current_hotel_id = ''}
 {/if}

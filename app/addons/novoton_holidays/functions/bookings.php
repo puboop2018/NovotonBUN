@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Decrypt encrypted PII fields on an alternative request row.
@@ -85,46 +85,41 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
     if (!$api) {
         return ['success' => false, 'error' => 'API not available'];
     }
-    
-    $condition = "novoton_reservation_id IS NOT NULL AND novoton_reservation_id != ''";
-    
+
+    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+
     if ($booking_id > 0) {
-        $condition .= db_quote(" AND booking_id = ?i", $booking_id);
+        $booking = $bookingRepo->findById($booking_id);
+        $bookings = $booking ? [$booking] : [];
     } else {
-        $condition .= " AND status = 'pending'";
+        $bookings = $bookingRepo->findWithReservationId();
+        // Filter to only pending
+        $bookings = array_filter($bookings, fn($b) => $b['status'] === 'pending');
     }
-    
-    $bookings = db_get_array(
-        "SELECT booking_id, novoton_reservation_id, status 
-         FROM ?:novoton_bookings 
-         WHERE {$condition}"
-    );
-    
+
     $result = [
         'success' => true,
         'checked' => 0,
         'updated' => 0,
         'details' => []
     ];
-    
+
     foreach ($bookings as $booking) {
+        if (empty($booking['novoton_reservation_id'])) continue;
         $result['checked']++;
-        
+
         try {
             $status_response = $api->getReservationStatus($booking['novoton_reservation_id']);
-            
+
             if (!empty($status_response)) {
                 $new_status = (string)($status_response['Status'] ?? $status_response['status'] ?? '');
-                
+
                 // Map Novoton API status codes to internal status via centralized constant
                 $internal_status = \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_TO_INTERNAL[$new_status]
                     ?? $booking['status'];
-                
+
                 if ($internal_status != $booking['status']) {
-                    db_query(
-                        "UPDATE ?:novoton_bookings SET status = ?s, novoton_status = ?s WHERE booking_id = ?i",
-                        $internal_status, $new_status, $booking['booking_id']
-                    );
+                    $bookingRepo->updateStatus($booking['booking_id'], $internal_status, $new_status);
                     $result['updated']++;
                     $result['details'][$booking['booking_id']] = [
                         'old' => $booking['status'],
@@ -133,14 +128,14 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
                     ];
                 }
             }
-            
+
         } catch (\Exception $e) {
             $result['details'][$booking['booking_id']] = [
                 'error' => $e->getMessage()
             ];
         }
     }
-    
+
     return $result;
 }
 
@@ -152,22 +147,23 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
  */
 function fn_novoton_holidays_request_alternatives($booking_id): array
 {
-    $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
-    
+    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $booking = $bookingRepo->findById($booking_id);
+
     if (empty($booking)) {
         return ['success' => false, 'error' => 'Booking not found'];
     }
-    
+
     // Check if request already exists
     $existing = db_get_field(
         "SELECT request_id FROM ?:novoton_alternative_requests WHERE booking_id = ?i AND status = 'pending'",
         $booking_id
     );
-    
+
     if ($existing) {
         return ['success' => false, 'error' => 'Alternative request already pending', 'request_id' => $existing];
     }
-    
+
     // Create new request
     $request_data = [
         'booking_id' => $booking_id,
@@ -175,9 +171,9 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
         'status' => 'pending',
         'notes' => 'Requested by customer'
     ];
-    
+
     $request_id = db_query("INSERT INTO ?:novoton_alternative_requests ?e", $request_data);
-    
+
     return [
         'success' => true,
         'request_id' => $request_id,
@@ -217,10 +213,8 @@ function fn_novoton_holidays_get_alternatives($booking_id): array
  */
 function fn_novoton_holidays_get_order_bookings($order_id): array
 {
-    return db_get_array(
-        "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
-        $order_id
-    );
+    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    return $bookingRepo->findByOrderId($order_id);
 }
 
 /**
@@ -256,29 +250,21 @@ function fn_novoton_holidays_cron_resinfo(): array
             if (!empty($hotels)) {
                 $country_stats = ['synced' => 0, 'added' => 0, 'updated' => 0];
                 
+                $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
                 foreach ($hotels as $hotel) {
                     $hotel_id = (string)($hotel['HotelId'] ?? $hotel['hotelId'] ?? '');
                     if (empty($hotel_id)) continue;
-                    
+
                     $hotel_data = [
+                        'hotel_id' => $hotel_id,
                         'hotel_name' => (string)($hotel['HotelName'] ?? $hotel['hotelName'] ?? ''),
                         'country' => $country,
                         'city' => (string)($hotel['City'] ?? $hotel['city'] ?? ''),
                         'hotel_type' => (string)($hotel['HotelType'] ?? $hotel['hotelType'] ?? ''),
                         'last_sync' => date('Y-m-d H:i:s')
                     ];
-                    
-                    $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-                    
-                    if ($exists) {
-                        db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $hotel_data, $hotel_id);
-                        $country_stats['updated']++;
-                    } else {
-                        $hotel_data['hotel_id'] = $hotel_id;
-                        db_query("INSERT INTO ?:novoton_hotels ?e", $hotel_data);
-                        $country_stats['added']++;
-                    }
-                    
+
+                    $hotelRepo->upsert($hotel_data);
                     $country_stats['synced']++;
                 }
                 

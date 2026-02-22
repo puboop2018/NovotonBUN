@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
-if (!defined('BOOTSTRAP')) { die('Access denied'); }
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // =============================================================================
 // SERVICE GETTERS
