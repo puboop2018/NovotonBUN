@@ -37,6 +37,10 @@ class PriceInfoSync
             $prefixConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
         }
 
+        if (empty($prefixConditions)) {
+            return [];
+        }
+
         $condition = implode(' OR ', $prefixConditions);
 
         return db_get_array(
@@ -62,8 +66,16 @@ class PriceInfoSync
 
         if (empty($hotelId)) {
             // Try to extract from product code (e.g., NVT442)
-            preg_match('/\d+/', $product['product_code'], $matches);
-            $hotelId = $matches[0] ?? null;
+            // Strip known prefixes first, then take trailing digits
+            $code = $product['product_code'];
+            foreach ($this->productPrefixes as $prefix) {
+                if (strpos($code, $prefix) === 0) {
+                    $code = substr($code, strlen($prefix));
+                    break;
+                }
+            }
+            preg_match('/^(\d+)/', $code, $matches);
+            $hotelId = $matches[1] ?? null;
         }
 
         return $hotelId;
@@ -447,8 +459,11 @@ class PriceInfoSync
      */
     private function clearHotelCache(string $hotelId): void
     {
-        // Clear live API cache from database
-        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l", '%' . $hotelId . '%');
+        // Clear live API cache from database (use delimiters to prevent over-matching)
+        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l OR cache_key LIKE ?l",
+            '%_' . $hotelId . '_%',
+            '%_' . $hotelId
+        );
 
         // Clear from file cache if exists
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';

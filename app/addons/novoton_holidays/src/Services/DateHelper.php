@@ -145,8 +145,12 @@ class DateHelper
      */
     public static function calculateNights(string $checkIn, string $checkOut): int
     {
-        $diff = strtotime($checkOut) - strtotime($checkIn);
-        return max(0, (int) floor($diff / 86400));
+        $in = strtotime($checkIn);
+        $out = strtotime($checkOut);
+        if ($in === false || $out === false) {
+            return 0;
+        }
+        return max(0, (int) floor(($out - $in) / 86400));
     }
     
     /**

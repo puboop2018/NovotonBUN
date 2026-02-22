@@ -338,6 +338,9 @@ class SyncLogger implements SyncLoggerInterface
             'duration' => $this->getFormattedDuration(),
         ]);
 
+        if (!function_exists('fn_novoton_holidays_send_import_report_email')) {
+            return false;
+        }
         return fn_novoton_holidays_send_import_report_email($results, $this->syncType, $summary, $country);
     }
 

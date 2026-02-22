@@ -626,12 +626,12 @@ if ($mode == 'verify') {
     echo '<h1>Season-Price Verification</h1>';
 
     echo '<div class="params">';
-    echo "<strong>Hotel ID:</strong> {$hotel_id}<br>";
-    echo "<strong>Package:</strong> {$package_name}<br>";
-    echo "<strong>Room:</strong> " . rawurldecode($room_id) . "<br>";
-    echo "<strong>Board:</strong> {$board_id}<br>";
-    echo "<strong>Check-in:</strong> {$check_in}<br>";
-    echo "<strong>Nights:</strong> {$nights}<br>";
+    echo "<strong>Hotel ID:</strong> " . htmlspecialchars($hotel_id) . "<br>";
+    echo "<strong>Package:</strong> " . htmlspecialchars($package_name) . "<br>";
+    echo "<strong>Room:</strong> " . htmlspecialchars(rawurldecode($room_id)) . "<br>";
+    echo "<strong>Board:</strong> " . htmlspecialchars($board_id) . "<br>";
+    echo "<strong>Check-in:</strong> " . htmlspecialchars($check_in) . "<br>";
+    echo "<strong>Nights:</strong> " . htmlspecialchars((string)$nights) . "<br>";
     echo '</div>';
 
     // Load priceinfo

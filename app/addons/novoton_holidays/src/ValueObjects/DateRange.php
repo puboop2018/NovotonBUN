@@ -80,7 +80,7 @@ final class DateRange
             throw new InvalidArgumentException("Check-out ({$checkOut}) must be after check-in ({$checkIn})");
         }
 
-        $nights = (int) round(($tsOut - $tsIn) / 86400);
+        $nights = (new \DateTime(date('Y-m-d', $tsIn)))->diff(new \DateTime(date('Y-m-d', $tsOut)))->days;
 
         return new self(date('Y-m-d', $tsIn), date('Y-m-d', $tsOut), $nights);
     }

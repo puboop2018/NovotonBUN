@@ -132,6 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $found = 0;
             
             foreach ($pending as $request) {
+                if (empty($request['novoton_request_id'])) {
+                    continue;
+                }
                 $response = $api->getAlternatives($request['novoton_request_id']);
                 
                 if ($response && isset($response->alternative)) {
@@ -169,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // View/manage alternative requests
 if ($mode === 'manage') {
     
-    $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page');
+    $items_per_page = (int)(Registry::get('settings.Appearance.admin_elements_per_page') ?: 30);
     $page = isset($_REQUEST['page']) ? (int)($_REQUEST['page']) : 1;
     
     // Filters

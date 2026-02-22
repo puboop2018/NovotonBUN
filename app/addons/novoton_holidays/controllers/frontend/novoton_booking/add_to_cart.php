@@ -119,7 +119,8 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
         'children' => $all_child_ages  // Include children ages from guest form
     ];
     
-    $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
+    $api = fn_novoton_holidays_get_api();
+    $priceData = $api ? $api->getRoomPrice($priceParams) : null;
 
     // A80: Server-side price validation - safety net
     // If we have children and API returns no data, abort booking
@@ -149,7 +150,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'children_ages' => $children_ages,
             'rooms' => $bookingData['num_rooms'] ?? 1
         ];
-        $return_url = 'novoton_booking.form?' . http_build_query($return_params);
+        $return_url = 'novoton_booking.booking_form?' . http_build_query($return_params);
 
         return [CONTROLLER_STATUS_REDIRECT, $return_url];
     }

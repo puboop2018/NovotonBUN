@@ -58,6 +58,13 @@ function fn_novoton_holidays_fetch_bnr_rates(): string|false
         return false;
     }
 
+    if (empty($response) || !is_string($response)) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'BNR exchange rate fetch returned empty response'
+        ]);
+        return false;
+    }
+
     return $response;
 }
 

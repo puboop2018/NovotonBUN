@@ -38,7 +38,7 @@ class HotelRepository implements HotelRepositoryInterface
     public function getHotelIdByProduct(int $product_id): ?string
     {
         $hotel_id = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
-        return $hotel_id ?: null;
+        return ($hotel_id !== false && $hotel_id !== '') ? (string)$hotel_id : null;
     }
 
     /**

@@ -296,7 +296,13 @@ class BatchedPriceInfoSync
                 $package_id = $pkg['package_id'];
                 $package_name = $pkg_name_map[$hotel_id . '|' . $package_id]
                     ?? $pkg['package_name']
-                    ?? '?';
+                    ?? '';
+
+                if (empty($package_name) || $package_name === '?') {
+                    $this->output("[{$hotel_id}/{$package_id}] SKIP (no package_name)");
+                    $offset++;
+                    continue;
+                }
 
                 $this->output("[{$hotel_id}/{$package_id}] {$package_name} ... ", false);
 
@@ -392,7 +398,11 @@ class BatchedPriceInfoSync
             ];
         }
 
-        // Still in progress
+        // Still in progress — save state in case break 2 skipped in-loop save
+        $state['processed'] = $offset;
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+        $this->saveState($state);
+
         $remaining = $state['total'] - $offset;
         $runs_remaining = ceil($remaining / ($processed_this_run ?: $this->batch_size));
 

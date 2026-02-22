@@ -54,6 +54,10 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
     $currencies = Registry::get('currencies');
     $result = [];
 
+    if (empty($currencies) || !is_array($currencies)) {
+        return $result;
+    }
+
     foreach ($currencies as $code => $currency) {
         $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
     }

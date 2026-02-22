@@ -66,7 +66,12 @@ if (in_array($mode, $hotels_modes)) {
 }
 
 if (!$_routed && in_array($mode, $prices_modes)) {
-    $__result = include($addon_dir . 'novoton_prices.php');
+    $__file = $addon_dir . 'novoton_prices.php';
+    if (!file_exists($__file)) {
+        fn_set_notification('E', __('error'), "Controller file not found: novoton_prices.php");
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+    }
+    $__result = include($__file);
     if (is_array($__result)) {
         return $__result;
     }
@@ -74,7 +79,12 @@ if (!$_routed && in_array($mode, $prices_modes)) {
 }
 
 if (!$_routed && in_array($mode, $tools_modes)) {
-    $__result = include($addon_dir . 'novoton_tools.php');
+    $__file = $addon_dir . 'novoton_tools.php';
+    if (!file_exists($__file)) {
+        fn_set_notification('E', __('error'), "Controller file not found: novoton_tools.php");
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+    }
+    $__result = include($__file);
     if (is_array($__result)) {
         return $__result;
     }

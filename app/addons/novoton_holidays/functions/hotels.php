@@ -150,7 +150,7 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
         $cache[$hotel_id] = $hotel;
     }
 
-    return $hotel;
+    return $hotel ?: null;
 }
 
 /**
@@ -336,7 +336,7 @@ function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_n
  */
 function fn_novoton_holidays_get_hotels_count(): int
 {
-    return db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
+    return (int)db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
 }
 
 /**
@@ -347,7 +347,7 @@ function fn_novoton_holidays_get_hotels_count(): int
  */
 function fn_novoton_holidays_get_hotels_no_packages_count(): int
 {
-    return db_get_field(
+    return (int)db_get_field(
         "SELECT COUNT(*) FROM ?:novoton_hotels h
          WHERE NOT EXISTS (
              SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
@@ -382,10 +382,11 @@ function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
  */
 function fn_novoton_holidays_get_hotel_id_by_product($product_id): ?string
 {
-    return db_get_field(
+    $result = db_get_field(
         "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i",
         $product_id
     );
+    return ($result !== false && $result !== '') ? (string)$result : null;
 }
 
 /**
@@ -519,11 +520,11 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
 
         // Remove resorts no longer in API response
         if (!empty($api_resort_names)) {
-            db_query(
+            $affected = db_query(
                 "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
                 $country, $api_resort_names
             );
-            $result['removed'] = (int) db_get_field("SELECT ROW_COUNT()");
+            $result['removed'] = (int) $affected;
         }
 
     } catch (\Exception $e) {

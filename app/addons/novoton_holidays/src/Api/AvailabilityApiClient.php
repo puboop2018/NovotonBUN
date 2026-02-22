@@ -60,6 +60,9 @@ class AvailabilityApiClient extends ApiClientBase
         if (isset($parsed->Package)) {
             foreach ($parsed->Package as $package) {
                 $packageXml = $package->asXML();
+                if ($packageXml === false) {
+                    continue;
+                }
 
                 preg_match_all('/<IdRoom>([^<]+)<\/IdRoom>/', $packageXml, $roomMatches);
                 preg_match_all('/<Quota>([^<]+)<\/Quota>/', $packageXml, $quotaMatches);
@@ -258,8 +261,8 @@ class AvailabilityApiClient extends ApiClientBase
                     'room_name' => $data['Room'] ?? $data['IdRoom'] ?? 'Room',
                     'board_id' => $boardCode,
                     'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
-                    'check_in' => $params['check_in'],
-                    'check_out' => $params['check_out'],
+                    'check_in' => $params['check_in'] ?? '',
+                    'check_out' => $params['check_out'] ?? '',
                     'nights' => $nights,
                     'total_price' => $this->commissionCalculator->apply($price),
                     'price_per_night' => round($this->commissionCalculator->apply($price) / max($nights, 1), 2),

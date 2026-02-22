@@ -67,10 +67,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      */
     public function getLastSyncDate(string $type): ?string
     {
-        return db_get_field(
+        $result = db_get_field(
             "SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type = ?s ORDER BY sync_date DESC LIMIT 1",
             $type
         );
+        return $result ?: null;
     }
     
     /**

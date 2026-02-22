@@ -622,7 +622,7 @@ if ($mode == 'room_price') {
                 'check_in' => $check_in,
                 'check_out' => $check_out,
                 'adults' => (int)($_REQUEST['adults'] ?? 2),
-                'children' => (int)($_REQUEST['children'] ?? 0)
+                'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
             ];
             
             $result = $api->getRoomPrice($params);

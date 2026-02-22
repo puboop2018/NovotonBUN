@@ -59,7 +59,7 @@ if ($mode == 'cron_update') {
         exit;
     }
     
-    $condition = implode(' OR ', $prefix_conditions);
+    $condition = '(' . implode(' OR ', $prefix_conditions) . ')';
     
     $products = db_get_array(
         "SELECT p.product_id, p.product_code, pd.product 

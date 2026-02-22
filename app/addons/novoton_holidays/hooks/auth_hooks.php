@@ -70,15 +70,19 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
 /**
  * Hook: After user registration - link bookings by email and session.
  *
- * @param array $user_data Newly created user data (includes user_id, email)
+ * CS-Cart passes: ($user_id, $user_data, $auth)
+ *
+ * @param int   $user_id   Newly created user ID
+ * @param array $user_data Newly created user data (includes email)
+ * @param array $auth      Authentication context
  */
-function fn_novoton_holidays_create_user_post($user_data): void
+function fn_novoton_holidays_create_user_post($user_id, $user_data, $auth): void
 {
-    if (empty($user_data['user_id']) || empty($user_data['email'])) {
+    if (empty($user_id) || empty($user_data['email'])) {
         return;
     }
 
-    $user_id = (int)($user_data['user_id']);
+    $user_id = (int)$user_id;
     $repo    = Container::getInstance()->bookingRepository();
 
     // Link by email

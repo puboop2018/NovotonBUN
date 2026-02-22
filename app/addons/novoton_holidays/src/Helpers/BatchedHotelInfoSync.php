@@ -379,7 +379,11 @@ class BatchedHotelInfoSync
             ];
         }
 
-        // Still in progress
+        // Still in progress — save state in case break 2 skipped in-loop save
+        $state['processed'] = $offset;
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+        $this->saveState($state);
+
         $remaining = $state['total'] - $offset;
         $runs_remaining = ceil($remaining / ($processed_this_run ?: $this->batch_size));
 

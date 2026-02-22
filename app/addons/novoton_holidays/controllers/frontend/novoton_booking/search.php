@@ -466,6 +466,16 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             // For multi-room bookings, we need to search for each room's occupancy separately
             // This matches how Novoton's website works
 
+            $searchApi = fn_novoton_holidays_get_api();
+            if (!$searchApi) {
+                fn_set_notification('W', __('warning'), __('novoton_holidays.api_unavailable', ['[default]' => 'API is temporarily unavailable. Please try again later.']));
+                $results = [];
+                $alternative_results = [];
+                Tygh::$app['view']->assign('search_results', []);
+                Tygh::$app['view']->assign('alternative_results', []);
+                return [CONTROLLER_STATUS_OK];
+            }
+
             $all_room_results = []; // Store results per room
 
             if ($num_rooms > 1 && count($rooms_data) > 1) {
@@ -510,6 +520,12 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                     
                     // Get prices from room_price API for this room
                     $api = fn_novoton_holidays_get_api();
+                    if (!$api) {
+                        if ($debug_mode) {
+                            $debug_log[] = "  ERROR: API client not available";
+                        }
+                        continue;
+                    }
                     $priceData = $api->getRoomPrice($priceParams);
 
                     $room_results = [];
@@ -657,7 +673,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 }
                 
                 // Get prices from room_price API
-                $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
+                $priceData = $searchApi->getRoomPrice($priceParams);
             
             // Show raw request/response in debug
             if ($debug_mode) {
@@ -694,7 +710,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             
             // Parse the response via SearchService
             if ($priceData) {
-                $rawXml = fn_novoton_holidays_get_api()->getLastResponse();
+                $rawXml = $searchApi->getLastResponse();
 
                 if ($debug_mode) {
                     $debug_log[] = "";
@@ -704,7 +720,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 // Fetch room quota for all rooms at once
                 $quotaMap = [];
                 try {
-                    $quotaMap = fn_novoton_holidays_get_api()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+                    $quotaMap = $searchApi->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
                     if ($debug_mode) {
                         $debug_log[] = "=== ROOM QUOTA (hotel_quota API) ===";
                         foreach ($quotaMap as $qRoom => $qValue) {
@@ -804,7 +820,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                                 'children' => $children
                             ];
 
-                            $priceData = fn_novoton_holidays_get_api()->getRoomPrice($priceParams);
+                            $priceData = $searchApi->getRoomPrice($priceParams);
                             
                             if ($priceData && isset($priceData->Price)) {
                                 $rawPrice = (float)((string)$priceData->Price);
@@ -813,7 +829,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                                     $alternative_check_in = $alt_check_in;
                                     $alternative_check_out = $alt_check_out;
                                     
-                                    $altPrice = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
+                                    $altPrice = $searchApi->applyCommission($rawPrice);
                                     $alternative_results[] = [
                                         'room' => $room,
                                         'room_id' => $roomId,

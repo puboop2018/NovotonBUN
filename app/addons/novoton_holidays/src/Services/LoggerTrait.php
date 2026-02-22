@@ -18,6 +18,9 @@ trait LoggerTrait
 {
     /** @var bool Debug mode enabled */
     private $debugEnabled;
+
+    /** @var array Performance timers */
+    private array $timers = [];
     
     /** @var string Service name for log prefix */
     private $logPrefix;
@@ -156,9 +159,6 @@ trait LoggerTrait
      */
     protected function startTimer(string $label): void
     {
-        if (!isset($this->timers)) {
-            $this->timers = [];
-        }
         $this->timers[$label] = microtime(true);
     }
     

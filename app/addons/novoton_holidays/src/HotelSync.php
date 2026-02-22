@@ -166,15 +166,16 @@ class HotelSync
 
         $values = [];
         foreach ($batchData as $hotel) {
+            $star = $hotel['star_rating'];
+            $starSql = ($star !== null) ? db_quote("?i", $star) : "NULL";
             $values[] = db_quote(
-                "(?s, ?s, ?s, ?s, ?s, ?i, NOW(), NOW())",
+                "(?s, ?s, ?s, ?s, ?s, ",
                 $hotel['hotel_id'],
                 $hotel['hotel_name'],
                 $hotel['city'],
                 $hotel['country'],
-                $hotel['hotel_type'],
-                $hotel['star_rating']
-            );
+                $hotel['hotel_type']
+            ) . $starSql . db_quote(", NOW(), NOW())");
         }
 
         $sql = "INSERT INTO ?:novoton_hotels
