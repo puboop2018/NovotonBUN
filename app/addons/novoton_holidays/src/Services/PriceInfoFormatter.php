@@ -149,65 +149,63 @@ class PriceInfoFormatter
     }
 
     /**
-     * Count persons matching the IdAge specification
+     * Count persons matching the IdAge specification.
+     *
+     * IdAge strings from the B2B API encode two independent dimensions:
+     *   1. An optional ordinal position  ("1 ST", "2ND", "3 RD" …)
+     *   2. A person-type with optional age band ("ADULT", "CHD 2-11,99", "INFANT")
+     *
+     * Algorithm:
+     *   - Parse the positional prefix (if any) and the type separately.
+     *   - Count all persons that match the type (including age-band filter).
+     *   - If positional: return 1 when the Nth matching person exists, else 0.
+     *   - If non-positional: return the full count.
      */
     public static function countMatchingPersons(array $occupancy, string $idAge): int
     {
-        $count = 0;
         $idAge = strtoupper(trim($idAge));
-        $numAdults = count($occupancy['adults']);
-        $numChildren = count($occupancy['children']);
-
-        // Check for specific adult positions (3RD ADULT, 4TH ADULT, etc.)
-        if (preg_match('/(\d+)(ST|ND|RD|TH)\s*ADULT/i', $idAge, $matches)) {
-            $position = (int) $matches[1];
-            if ($numAdults >= $position) {
-                $count = 1;
-            }
-            return $count;
+        if ($idAge === '') {
+            return 0;
         }
 
-        // Regular adults (not positional)
-        if ($idAge === 'ADULT' || $idAge === 'ADT' || $idAge === 'ADULTS') {
-            return $numAdults;
+        // --- Step 1: Extract optional positional prefix ---
+        // Handles "1ST", "1 ST", "2ND", "2 ND", "3RD", "3 RD", "4TH" etc.
+        $position = null;
+        $type = $idAge;
+
+        if (preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+(.+)$/i', $idAge, $m)) {
+            $position = (int) $m[1];
+            $type = trim($m[3]);
+        } elseif (preg_match('/^(\d+)(ST|ND|RD|TH)(.+)$/i', $idAge, $m)) {
+            // No space variant: "1STCHD 2-11,99" or "2NDADULT"
+            $position = (int) $m[1];
+            $type = trim($m[3]);
         }
 
-        // Check for specific child positions (1ST CHD, 2ND CHD, etc.)
-        if (preg_match('/(\d+)(ST|ND|RD|TH)\s*(CHD|CHILD)/i', $idAge, $matches)) {
-            $position = (int) $matches[1];
-            if ($numChildren >= $position) {
-                $count = 1;
-            }
-            return $count;
+        // --- Step 2: Count persons matching the type ---
+        $typeCount = self::countByType($occupancy, $type);
+
+        // --- Step 3: Apply positional constraint ---
+        if ($position !== null) {
+            return ($typeCount >= $position) ? 1 : 0;
         }
 
-        // Children with age bands
-        if (strpos($idAge, 'CHD') !== false || strpos($idAge, 'CHILD') !== false) {
-            $fromAge = 0;
-            $toAge = 17;
+        return $typeCount;
+    }
 
-            if (preg_match('/(\d+)\s*-\s*(\d+)/', $idAge, $ageMatches)) {
-                $fromAge = (int) $ageMatches[1];
-                $toAge = (int) $ageMatches[2];
-            } elseif (strpos($idAge, '0-1') !== false || strpos($idAge, 'INFANT') !== false) {
-                $fromAge = 0;
-                $toAge = 1;
-            } elseif (strpos($idAge, '2-11') !== false) {
-                $fromAge = 2;
-                $toAge = 11;
-            }
-
-            foreach ($occupancy['children'] as $child) {
-                $childAge = $child['age'] ?? 0;
-                if ($childAge >= $fromAge && $childAge <= $toAge) {
-                    $count++;
-                }
-            }
-            return $count;
+    /**
+     * Count persons matching a (non-positional) type string.
+     */
+    private static function countByType(array $occupancy, string $type): int
+    {
+        // Adult types
+        if ($type === 'ADULT' || $type === 'ADT' || $type === 'ADULTS') {
+            return count($occupancy['adults']);
         }
 
-        // Infant specific
-        if (strpos($idAge, 'INFANT') !== false || strpos($idAge, 'INF') !== false) {
+        // Infant types
+        if (strpos($type, 'INFANT') !== false || $type === 'INF') {
+            $count = 0;
             foreach ($occupancy['children'] as $child) {
                 if (($child['age'] ?? 0) < 2) {
                     $count++;
@@ -216,6 +214,37 @@ class PriceInfoFormatter
             return $count;
         }
 
+        // Child types (with optional age band)
+        if (strpos($type, 'CHD') !== false || strpos($type, 'CHILD') !== false) {
+            return self::countChildrenInBand($occupancy, $type);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Count children whose age falls within the band encoded in the type string.
+     *
+     * Parses age ranges like "CHD 2-11,99", "CHD 0-1,99", bare "CHD" (0-17).
+     */
+    private static function countChildrenInBand(array $occupancy, string $type): int
+    {
+        $fromAge = 0;
+        $toAge = 17;
+
+        // "2-11", "0-1", "12-17" — extract numeric range
+        if (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
+            $fromAge = (int) $m[1];
+            $toAge = (int) $m[2];
+        }
+
+        $count = 0;
+        foreach ($occupancy['children'] as $child) {
+            $childAge = $child['age'] ?? 0;
+            if ($childAge >= $fromAge && $childAge <= $toAge) {
+                $count++;
+            }
+        }
         return $count;
     }
 
