@@ -338,6 +338,29 @@ class BatchedHotelInfoSync
             if (!empty($state['error_ids']) && empty($state['retry_done'])) {
                 $retry_ids = array_unique($state['error_ids']);
                 $this->output("\nRetrying " . count($retry_ids) . " failed hotels...");
+
+                // Pre-fetch maps for retry IDs so product linking works
+                $retry_hotel_map = db_get_hash_array(
+                    "SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+                    'hotel_id', $retry_ids
+                );
+                $retry_prefixes = ConfigProvider::getProductCodePrefixes();
+                $retry_code_patterns = [];
+                foreach ($retry_ids as $rid) {
+                    if (empty($retry_hotel_map[$rid]['product_id'])) {
+                        foreach ($retry_prefixes as $pfx) {
+                            $retry_code_patterns[] = $pfx . $rid;
+                        }
+                    }
+                }
+                $retry_product_code_map = [];
+                if (!empty($retry_code_patterns)) {
+                    $retry_product_code_map = db_get_hash_single_array(
+                        "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                        ['product_code', 'product_id'], $retry_code_patterns
+                    );
+                }
+
                 $recovered = 0;
                 $recovered_ids = [];
                 foreach ($retry_ids as $retry_id) {
@@ -348,7 +371,7 @@ class BatchedHotelInfoSync
                     try {
                         $hotel_info = $api->getHotelInfo($retry_id);
                         if ($hotel_info) {
-                            $this->processHotelInfo($retry_id, $hotel_info, $now);
+                            $this->processHotelInfo($retry_id, $hotel_info, $now, $retry_hotel_map, $retry_product_code_map, $retry_prefixes);
                             $recovered++;
                             $recovered_ids[] = $retry_id;
                             $state['synced']++;

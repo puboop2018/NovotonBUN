@@ -339,9 +339,19 @@ abstract class AbstractBatchedSync implements SyncInterface
                 break;
             }
 
+            // Accumulate counters per batch to avoid per-item file I/O
+            $batchProcessed = 0;
+            $batchSynced = 0;
+            $batchErrors = 0;
+            $batchErrorIds = [];
+
             foreach ($batch as $itemId) {
                 // Check limits within batch
                 if ($this->isLimitReached()) {
+                    // Save accumulated batch progress before breaking
+                    if ($batchProcessed > 0) {
+                        $this->state->updateProgress($offset, $status['synced'] + $syncedThisRun, $status['errors'] + $errorsThisRun, $batchErrorIds);
+                    }
                     break 2;
                 }
 
@@ -357,18 +367,23 @@ abstract class AbstractBatchedSync implements SyncInterface
 
                 $offset++;
                 $processedThisRun++;
+                $batchProcessed++;
 
                 if ($result['success']) {
                     $syncedThisRun++;
-                    $this->state->increment(1, 1, 0);
+                    $batchSynced++;
                 } else {
                     $errorsThisRun++;
-                    $this->state->increment(1, 0, 1, (string)$itemId);
+                    $batchErrors++;
+                    $batchErrorIds[] = (string)$itemId;
                 }
 
                 // Small delay to avoid API rate limits
                 usleep(ConfigProvider::API_DELAY_MS * 1000);
             }
+
+            // Save state once per batch instead of per item
+            $this->state->updateProgress($offset, $status['synced'] + $syncedThisRun, $status['errors'] + $errorsThisRun, $batchErrorIds);
 
             // Progress output
             $this->logger->outputProgress($offset, $total);
