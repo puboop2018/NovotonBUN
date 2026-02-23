@@ -118,6 +118,10 @@ export default function BookingEngine({ config }) {
     const [paramsChanged, setParamsChanged] = useState(false);
 
     const engineRef = useRef(null);
+    const retryTimerRef = useRef(null);
+
+    // Clean up any pending retry timer on unmount
+    useEffect(() => () => { clearTimeout(retryTimerRef.current); }, []);
 
     // -----------------------------------------------------------------------
     // Derived values
@@ -287,7 +291,7 @@ export default function BookingEngine({ config }) {
                 })
                 .catch(() => {
                     if (attempt < maxRetries) {
-                        setTimeout(() => attemptFetch(attempt + 1), 1000 * Math.pow(2, attempt));
+                        retryTimerRef.current = setTimeout(() => attemptFetch(attempt + 1), 1000 * Math.pow(2, attempt));
                     } else {
                         setIsSearching(false);
                         setFetchError(t('searchFailed', 'Search failed. Please try again.'));
