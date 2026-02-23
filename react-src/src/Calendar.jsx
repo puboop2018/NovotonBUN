@@ -88,7 +88,6 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
     const popupRef = useRef(null);
-    const closeTimerRef = useRef(null);
 
     // Close on outside click or Escape key
     useEffect(() => {
@@ -109,13 +108,6 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [onClose]);
-
-    // Clean up auto-close timer on unmount
-    useEffect(() => {
-        return () => {
-            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-        };
-    }, []);
 
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -147,10 +139,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
             setTempCheckOut(date);
             setSelecting(null);
             onSelect(tempCheckIn, date);
-            // Auto-close calendar after brief delay so user sees selection
-            closeTimerRef.current = setTimeout(() => { onClose && onClose(); }, 350);
         }
-    }, [tempCheckIn, tempCheckOut, today, onSelect, onClose]);
+    }, [tempCheckIn, tempCheckOut, today, onSelect]);
 
     // Two consecutive months
     const month1Year = viewDate.getFullYear();
@@ -288,6 +278,15 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
 
             <div className="nvt-calendar-footer">
                 <span>{footerText}</span>
+                {tempCheckIn && tempCheckOut && (
+                    <button
+                        type="button"
+                        className="nvt-done-btn"
+                        onClick={() => onClose && onClose()}
+                    >
+                        {t('done', 'Done')}
+                    </button>
+                )}
             </div>
 
             {priceFooterText && (
