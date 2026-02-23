@@ -90,15 +90,24 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const popupRef = useRef(null);
     const closeTimerRef = useRef(null);
 
-    // Close on outside click
+    // Close on outside click or Escape key
     useEffect(() => {
         function handleClick(e) {
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
         }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                onClose && onClose();
+            }
+        }
         document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, [onClose]);
 
     // Clean up auto-close timer on unmount
@@ -191,6 +200,24 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                         if (inRange) className += ' nvt-calendar-day--in-range';
                         if (hasNoPrice) className += ' nvt-calendar-day--no-price';
 
+                        // Build accessible label for screen readers
+                        const ariaLabel = (() => {
+                            const dateStr = `${day} ${monthNames[month]} ${year}`;
+                            if (isPast) return `${dateStr}, ${t('unavailable', 'unavailable')}`;
+
+                            const parts = [dateStr];
+                            if (isSelectedCheckIn) parts.push(t('selectedCheckIn', 'selected as check-in'));
+                            else if (isSelectedCheckOut) parts.push(t('selectedCheckOut', 'selected as check-out'));
+                            else if (inRange) parts.push(t('withinStay', 'within your stay'));
+
+                            if (hasPrices && dayPrice !== undefined) {
+                                parts.push(`${dayPrice} ${pricesCurrency || ''} ${t('perNight', 'per night')}`.trim());
+                            } else if (hasPrices) {
+                                parts.push(t('priceUnavailable', 'price unavailable'));
+                            }
+                            return parts.join(', ');
+                        })();
+
                         return (
                             <button
                                 key={day}
@@ -198,6 +225,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                                 className={className}
                                 disabled={isPast}
                                 onClick={() => handleDayClick(date)}
+                                aria-label={ariaLabel}
+                                aria-pressed={isSelectedCheckIn || isSelectedCheckOut || undefined}
                             >
                                 <span className="nvt-calendar-day-num">{day}</span>
                                 {hasPrices && !isPast && (
@@ -231,13 +260,14 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         : '';
 
     return (
-        <div className="nvt-calendar-popup" ref={popupRef}>
+        <div className="nvt-calendar-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('datePicker', 'Date picker')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <button
                     type="button"
                     className="nvt-calendar-nav"
                     onClick={goToPrev}
                     disabled={!canGoPrev}
+                    aria-label={t('previousMonth', 'Previous month')}
                 >
                     <ChevronLeft />
                 </button>
@@ -245,6 +275,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                     type="button"
                     className="nvt-calendar-nav"
                     onClick={goToNext}
+                    aria-label={t('nextMonth', 'Next month')}
                 >
                     <ChevronRight />
                 </button>

@@ -230,6 +230,8 @@ button.nvt-field-input:active {
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     padding: 20px;
     min-width: 600px;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
 }
 
 .nvt-calendar-months {
@@ -419,9 +421,11 @@ button.nvt-field-input:active {
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     padding: 20px;
     min-width: 340px;
+    max-width: calc(100vw - 24px);
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .nvt-guest-rooms-container {
@@ -635,6 +639,22 @@ button.nvt-field-input:active {
    Responsive
    ====================================================================== */
 
+/* Tablet: stack calendar months, scale button text */
+@media (max-width: 1024px) {
+    .nvt-calendar-months {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .nvt-calendar-popup {
+        min-width: 320px;
+    }
+    .nvt-btn-search {
+        font-size: 20px;
+        padding: 16px 28px;
+        min-height: 64px;
+    }
+}
+
 @media (max-width: 768px) {
     .nvt-form-row {
         flex-direction: column;
@@ -655,15 +675,19 @@ button.nvt-field-input:active {
         border-left: none;
         border-top: 3px solid var(--nvt-yellow);
         border-radius: 0 0 var(--nvt-radius) var(--nvt-radius);
+        font-size: 18px;
+        padding: 14px 24px;
+        min-height: 56px;
     }
     .nvt-calendar-popup {
         min-width: 100%;
         left: 0;
         right: 0;
     }
-    .nvt-calendar-months {
-        flex-direction: column;
-        gap: 20px;
+    .nvt-guest-popup {
+        left: 0;
+        right: 0;
+        min-width: 100%;
     }
 }
 `;

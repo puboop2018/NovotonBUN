@@ -21,15 +21,24 @@ export default function GuestPicker({
 }) {
     const popupRef = useRef(null);
 
-    // Close on outside click
+    // Close on outside click or Escape key
     useEffect(() => {
         function handleClick(e) {
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
         }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                onClose && onClose();
+            }
+        }
         document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, [onClose]);
 
     const updateRoom = useCallback((roomIdx, field, value) => {
@@ -121,7 +130,7 @@ export default function GuestPicker({
     }, []);
 
     return (
-        <div className="nvt-guest-popup" ref={popupRef}>
+        <div className="nvt-guest-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('guestsAndRooms', 'Guests and rooms')}>
             <div className="nvt-guest-rooms-container">
                 {rooms.map((room, roomIdx) => (
                     <div key={roomIdx} className="nvt-room-section" data-room-idx={roomIdx}>
@@ -152,15 +161,17 @@ export default function GuestPicker({
                                     className="nvt-guest-btn"
                                     disabled={room.adults <= 1}
                                     onClick={() => updateRoom(roomIdx, 'adults', room.adults - 1)}
+                                    aria-label={`${t('removeAdult', 'Remove 1 adult')}, ${t('room', 'Room')} ${roomIdx + 1}`}
                                 >
                                     &minus;
                                 </button>
-                                <span className="nvt-guest-count">{room.adults}</span>
+                                <span className="nvt-guest-count" aria-live="polite">{room.adults}</span>
                                 <button
                                     type="button"
                                     className="nvt-guest-btn"
                                     disabled={room.adults >= maxAdults}
                                     onClick={() => updateRoom(roomIdx, 'adults', room.adults + 1)}
+                                    aria-label={`${t('addAdult', 'Add 1 adult')}, ${t('room', 'Room')} ${roomIdx + 1}`}
                                 >
                                     +
                                 </button>
@@ -179,15 +190,17 @@ export default function GuestPicker({
                                     className="nvt-guest-btn"
                                     disabled={room.children <= 0}
                                     onClick={() => updateRoom(roomIdx, 'children', room.children - 1)}
+                                    aria-label={`${t('removeChild', 'Remove 1 child')}, ${t('room', 'Room')} ${roomIdx + 1}`}
                                 >
                                     &minus;
                                 </button>
-                                <span className="nvt-guest-count">{room.children}</span>
+                                <span className="nvt-guest-count" aria-live="polite">{room.children}</span>
                                 <button
                                     type="button"
                                     className="nvt-guest-btn"
                                     disabled={room.children >= maxChildren}
                                     onClick={() => updateRoom(roomIdx, 'children', room.children + 1)}
+                                    aria-label={`${t('addChild', 'Add 1 child')}, ${t('room', 'Room')} ${roomIdx + 1}`}
                                 >
                                     +
                                 </button>
@@ -222,6 +235,8 @@ export default function GuestPicker({
                                                     const val = e.target.value;
                                                     setChildAge(roomIdx, childIdx, val === '' ? null : parseInt(val));
                                                 }}
+                                                aria-label={`${t('ageOfChild', 'Age of child')} ${childIdx + 1}, ${t('room', 'Room')} ${roomIdx + 1}`}
+                                                aria-invalid={error || undefined}
                                             >
                                                 <option value="">
                                                     {t('selectAge', 'Select age')}

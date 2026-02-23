@@ -422,6 +422,8 @@ export default function BookingEngine({ config }) {
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowCalendar(!showCalendar); setShowGuests(false); }}
+                        aria-expanded={showCalendar}
+                        aria-haspopup="dialog"
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
@@ -454,6 +456,8 @@ export default function BookingEngine({ config }) {
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowGuests(!showGuests); setShowCalendar(false); }}
+                        aria-expanded={showGuests}
+                        aria-haspopup="dialog"
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
