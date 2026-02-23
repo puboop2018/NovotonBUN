@@ -278,15 +278,6 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
 
             <div className="nvt-calendar-footer">
                 <span>{footerText}</span>
-                {tempCheckIn && tempCheckOut && (
-                    <button
-                        type="button"
-                        className="nvt-done-btn"
-                        onClick={() => onClose && onClose()}
-                    >
-                        {t('done', 'Done')}
-                    </button>
-                )}
             </div>
 
             {priceFooterText && (
