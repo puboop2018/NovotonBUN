@@ -500,7 +500,7 @@
             '.price-total, .booking-price-box .price-total, .novoton-total-price'
         );
 
-        var formattedPrice = newPrice.toFixed(2);
+        formattedPrice = formattedPrice || newPrice.toFixed(2);
 
         priceElements.forEach(function(el) {
             // Check if it's a price-only element or includes currency

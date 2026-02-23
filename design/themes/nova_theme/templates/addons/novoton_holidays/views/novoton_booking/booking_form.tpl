@@ -585,7 +585,7 @@ window.bookingData = {ldelim}
     maxChildren: roomLimits.max_children || 2,
     minPax: roomLimits.min_pax || 1,
     totalCapacity: (roomLimits.rb || 2) + (roomLimits.eb || 0),
-    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if},
+    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{json_decode($booking_data.rooms_data, true)|default:[]|json_encode nofilter}{else}[]{/if},
     calendarPrices: {$calendar_prices_json|default:'{}' nofilter},
     calendarPricesCurrency: '{$calendar_prices_currency|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}',
     showCalendarPrices: {if $show_calendar_prices == 'Y'}true{else}false{/if}
