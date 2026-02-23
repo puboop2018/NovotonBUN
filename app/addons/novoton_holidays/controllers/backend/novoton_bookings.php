@@ -61,10 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
         
         if ($booking_id > 0) {
-            $alternatives = fn_novoton_holidays_request_alternatives($booking_id);
-            
-            if ($alternatives) {
-                fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => count($alternatives)]));
+            $result = fn_novoton_holidays_request_alternatives($booking_id);
+
+            if (!empty($result['success'])) {
+                fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => 1]));
             } else {
                 fn_set_notification('W', __('warning'), __('novoton_holidays.no_alternatives'));
             }

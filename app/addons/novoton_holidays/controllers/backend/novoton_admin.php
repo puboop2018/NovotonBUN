@@ -6,6 +6,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 
 
@@ -426,7 +427,14 @@ function fn_novoton_holidays_admin_check_prices($api) {
         $check_in = date('Y-m-d', strtotime('+30 days'));
         $check_out = date('Y-m-d', strtotime('+37 days'));
         
-        $response = $api->getRoomPrice($hotel['hotel_id'], $check_in, $check_out, 2, 0, 1);
+        $response = $api->getRoomPrice([
+            'hotel_id' => $hotel['hotel_id'],
+            'check_in' => $check_in,
+            'check_out' => $check_out,
+            'adults' => 2,
+            'children' => 0,
+            'rooms' => 1,
+        ]);
         $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
         
         $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);
