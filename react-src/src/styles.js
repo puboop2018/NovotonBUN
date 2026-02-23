@@ -28,6 +28,9 @@ export function injectStyles() {
     --nvt-bg-light: #f5f5f5;
     --nvt-error: #d32f2f;
     --nvt-radius: 8px;
+    --nvt-z-popup: 1000;
+    --nvt-btn-height: 84px;
+    --nvt-btn-font: 26px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--nvt-text);
     position: relative;
@@ -178,11 +181,11 @@ button.nvt-field-input:active {
     color: #fff;
     border: none;
     border-left: 3px solid var(--nvt-yellow);
-    font-size: 26px;
+    font-size: var(--nvt-btn-font);
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    min-height: 84px;
+    min-height: var(--nvt-btn-height);
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
@@ -224,7 +227,7 @@ button.nvt-field-input:active {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
+    z-index: var(--nvt-z-popup);
     background: var(--nvt-bg);
     border-radius: var(--nvt-radius);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
@@ -415,7 +418,7 @@ button.nvt-field-input:active {
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 1000;
+    z-index: var(--nvt-z-popup);
     background: var(--nvt-bg);
     border-radius: var(--nvt-radius);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
@@ -635,6 +638,81 @@ button.nvt-field-input:active {
     width: 100%;
 }
 
+/* ---------- Calendar nav bar (prev/next buttons) ---------- */
+
+.nvt-calendar-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* ---------- Homepage location input ---------- */
+
+.nvt-field--location {
+    flex: 1.5;
+}
+.nvt-field-input--location {
+    padding: 0;
+}
+.nvt-homepage-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    background: transparent;
+}
+
+/* ---------- Search loading spinner ---------- */
+
+.nvt-search-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 16px;
+    font-size: 14px;
+    color: var(--nvt-text-light);
+}
+.nvt-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--nvt-border);
+    border-top-color: var(--nvt-primary);
+    border-radius: 50%;
+    animation: nvt-spin 0.7s linear infinite;
+}
+@keyframes nvt-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Fetch error message ---------- */
+
+.nvt-fetch-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--nvt-error);
+    background: #fef2f2;
+    border-radius: var(--nvt-radius);
+}
+
+/* ---------- Error boundary fallback ---------- */
+
+.nvt-error-boundary {
+    padding: 20px;
+    text-align: center;
+    color: var(--nvt-error, #d32f2f);
+    font-size: 14px;
+}
+
 /* ======================================================================
    Responsive
    ====================================================================== */
@@ -645,8 +723,12 @@ button.nvt-field-input:active {
         flex-direction: column;
         gap: 20px;
     }
+    .nvt-field--date {
+        position: static;
+    }
     .nvt-calendar-popup {
-        min-width: 320px;
+        min-width: 280px;
+        max-width: calc(100vw - 24px);
     }
     .nvt-btn-search {
         font-size: 20px;
@@ -687,7 +769,8 @@ button.nvt-field-input:active {
     .nvt-guest-popup {
         left: 0;
         right: 0;
-        min-width: 100%;
+        min-width: 0;
+        width: 100%;
     }
 }
 `;

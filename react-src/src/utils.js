@@ -62,12 +62,20 @@ export function t(key, fallback) {
 
 /**
  * Parse a "YYYY-MM-DD" string into a Date (noon, to avoid TZ issues).
+ * Validates month (1-12) and day bounds for the given month.
  */
 export function parseDate(str) {
     if (!str) return null;
     const parts = str.split('-');
     if (parts.length !== 3) return null;
-    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+    if (month < 1 || month > 12) return null;
+    const maxDay = new Date(year, month, 0).getDate();
+    if (day < 1 || day > maxDay) return null;
+    return new Date(year, month - 1, day, 12, 0, 0);
 }
 
 /**
@@ -98,4 +106,33 @@ export function formatDateShort(date) {
 export function nightsBetween(checkIn, checkOut) {
     if (!checkIn || !checkOut) return 0;
     return Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86400000);
+}
+
+/**
+ * Romanian-aware pluralization.
+ *
+ * Romanian has 3 plural forms:
+ *   one: n == 1                    (1 noapte)
+ *   few: n == 0 or n % 100 in 2..19   (2 nopți, 0 nopți, 112 nopți)
+ *   other: everything else            (20 de nopți, 100 de nopți)
+ *
+ * @param {number} n - the count
+ * @param {string} oneKey - translation key for singular
+ * @param {string} fewKey - translation key for few (2-19 pattern)
+ * @param {string} otherKey - translation key for other (20+ pattern), falls back to fewKey
+ * @param {string} oneFallback - fallback for singular
+ * @param {string} fewFallback - fallback for few
+ * @param {string} otherFallback - fallback for other, defaults to fewFallback
+ */
+export function tPlural(n, oneKey, fewKey, otherKey, oneFallback, fewFallback, otherFallback) {
+    const locale = getLocale();
+    if (locale !== 'ro') {
+        // English: simple singular/plural
+        return n === 1 ? t(oneKey, oneFallback) : t(fewKey, fewFallback);
+    }
+    // Romanian plural rules
+    if (n === 1) return t(oneKey, oneFallback);
+    const mod100 = n % 100;
+    if (n === 0 || (mod100 >= 2 && mod100 <= 19)) return t(fewKey, fewFallback);
+    return t(otherKey || fewKey, otherFallback || fewFallback);
 }
