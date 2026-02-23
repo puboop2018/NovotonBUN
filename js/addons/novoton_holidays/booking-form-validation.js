@@ -233,7 +233,7 @@
         var html = '<div id="room-change-warning" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
             '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
             '<div style="text-align:center;margin-bottom:20px;">' +
-                '<div style="font-size:40px;margin-bottom:10px;">⚠️</div>' +
+                '<div style="font-size:40px;margin-bottom:10px;"><i class="icon-warning-sign" style="color:#856404;"></i></div>' +
                 '<h3 style="margin:0;color:#856404;font-size:18px;">' + t.roomChangedTitle + '</h3>' +
             '</div>' +
             '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">' + t.roomChangedDueToAge + '</p>' +
@@ -259,8 +259,8 @@
                 '</div>' +
             '</div>' +
             '<div style="display:flex;gap:10px;justify-content:center;">' +
-                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">← ' + t.goBackToSearch + '</button>' +
-                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + t.continueWithNewRoom + ' →</button>' +
+                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;"><i class="icon-arrow-left"></i> ' + t.goBackToSearch + '</button>' +
+                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + t.continueWithNewRoom + ' <i class="icon-arrow-right"></i></button>' +
             '</div>' +
             '</div></div>';
         
@@ -295,7 +295,7 @@
         var notif = document.createElement('div');
         notif.id = 'room-change-confirmation';
         notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
-        notif.innerHTML = '✓ <strong>' + escapeHtml(t.roomUpdated) + '</strong> ' +
+        notif.innerHTML = '<i class="icon-ok"></i> <strong>' + escapeHtml(t.roomUpdated) + '</strong> ' +
             escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
         
         var section = document.querySelector('.guest-names-section h3, .booking-form-header');

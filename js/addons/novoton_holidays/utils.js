@@ -227,7 +227,7 @@ window.NovotonUtils = (function() {
 
         if (loading) {
             element.dataset.originalText = element.textContent;
-            element.textContent = '⟳ ' + text;
+            element.innerHTML = '<i class="icon-refresh"></i> ' + text;
             element.disabled = true;
         } else {
             element.textContent = element.dataset.originalText || element.textContent;

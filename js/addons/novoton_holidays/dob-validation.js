@@ -146,7 +146,7 @@
             errorElement.id = errorId;
             errorElement.className = 'novoton-dob-error-message';
             errorElement.style.cssText = 'color: #dc3545; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 4px;';
-            errorElement.textContent = '⚠️ ' + errorMessage;
+            errorElement.innerHTML = '<i class="icon-warning-sign"></i> ' + errorMessage;
             
             // Insert after the field
             field.parentNode.insertBefore(errorElement, field.nextSibling);
@@ -435,7 +435,7 @@
                 // Show warning if age is 18+
                 if (age >= 18) {
                     ageDisplay.style.color = '#dc3545';
-                    ageDisplay.textContent += ' ⚠️ ' + ((window.NovotonTranslations && window.NovotonTranslations.childMustBeUnder18) || 'Must be under 18');
+                    ageDisplay.innerHTML += ' <i class="icon-warning-sign"></i> ' + ((window.NovotonTranslations && window.NovotonTranslations.childMustBeUnder18) || 'Must be under 18');
                 } else {
                     ageDisplay.style.color = '';
                 }
@@ -462,7 +462,7 @@
         
         priceElements.forEach(function(el) {
             el.dataset.originalText = el.textContent;
-            el.textContent = '⟳';
+            el.innerHTML = '<i class="icon-refresh"></i>';
             el.style.opacity = '0.7';
         });
     }
@@ -541,12 +541,12 @@
             notification.style.backgroundColor = '#fff5f5';
             notification.style.color = '#dc3545';
             notification.style.border = '1px solid #dc3545';
-            notification.textContent = '📈 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Price increased') + ': ' + text;
+            notification.innerHTML = '<i class="icon-arrow-up"></i> ' + ((window.NovotonTranslations && window.NovotonTranslations.priceIncreased) || 'Price increased') + ': ' + text;
         } else {
             notification.style.backgroundColor = '#f0fff4';
             notification.style.color = '#28a745';
             notification.style.border = '1px solid #28a745';
-            notification.textContent = '📉 ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Price decreased') + ': ' + text;
+            notification.innerHTML = '<i class="icon-arrow-down"></i> ' + ((window.NovotonTranslations && window.NovotonTranslations.priceDecreased) || 'Price decreased') + ': ' + text;
         }
         
         document.body.appendChild(notification);
