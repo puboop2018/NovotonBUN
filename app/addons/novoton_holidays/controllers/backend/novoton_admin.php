@@ -139,7 +139,7 @@ if ($mode == 'booking_details') {
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         
         try {
-            $invoice = $api->getInvoiceXml($booking['novoton_id']);
+            $invoice = $api->getInvoiceXml($booking['novoton_invoice_id']);
             $booking['invoice'] = $invoice;
         } catch (Exception $e) {
             fn_set_notification('W', __('warning'), __('novoton_holidays.failed_to_get_invoice'));
@@ -203,16 +203,16 @@ if ($mode == 'export_bookings') {
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
     
     foreach ($bookings as $booking) {
-        $children_data = !empty($booking['children']) ? json_decode($booking['children'], true) : [];
+        $num_children = (int)($booking['children'] ?? 0);
         $csv .= implode(',', [
-            $booking['novoton_id'],
+            $booking['novoton_invoice_id'] ?? '',
             $booking['order_id'],
             '"' . str_replace('"', '""', $booking['hotel_name'] ?? '') . '"',
             '"' . str_replace('"', '""', $booking['room_type'] ?? '') . '"',
             $booking['check_in'],
             $booking['check_out'],
             $booking['adults'],
-            is_array($children_data) ? count($children_data) : 0,
+            $num_children,
             $booking['total_price'],
             $booking['currency'],
             $booking['status'],
