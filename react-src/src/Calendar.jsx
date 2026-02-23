@@ -3,6 +3,10 @@
  *
  * Shows two consecutive months side-by-side. The user picks a check-in
  * date first, then a check-out date. Selected range is highlighted.
+ *
+ * When `prices` prop is provided, each day cell displays a small per-night
+ * price label below the day number, similar to Booking.com. Dates without
+ * prices show "_" and are greyed out.
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
@@ -41,10 +45,32 @@ function isInRange(date, checkIn, checkOut) {
     return date > checkIn && date < checkOut;
 }
 
-export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
+/**
+ * Convert a Date to "YYYY-MM-DD" string for price map lookup.
+ */
+function toDateKey(year, month, day) {
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${year}-${m}-${d}`;
+}
+
+/**
+ * Format a price for compact calendar display.
+ * 5000 → "5k", 12500 → "13k", 350 → "350", 99 → "99"
+ */
+function formatCalendarPrice(price) {
+    if (price >= 1000) {
+        return Math.round(price / 1000) + 'k';
+    }
+    return String(Math.round(price));
+}
+
+export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices, pricesCurrency }) {
     const locale = getLocale();
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
+
+    const hasPrices = prices && typeof prices === 'object' && Object.keys(prices).length > 0;
 
     // Memoize today so it doesn't invalidate useCallback deps on every render
     const today = useMemo(() => {
@@ -139,7 +165,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
                 <div className="nvt-calendar-weekdays">
                     {weekdays.map((d, i) => <span key={i}>{d}</span>)}
                 </div>
-                <div className="nvt-calendar-days">
+                <div className={`nvt-calendar-days${hasPrices ? ' nvt-calendar-days--with-prices' : ''}`}>
                     {cells.map((day, i) => {
                         if (day === null) {
                             return <span key={`e${i}`} className="nvt-calendar-day nvt-calendar-day--empty" />;
@@ -152,11 +178,18 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
                         const isSelectedCheckOut = isSameDay(date, tempCheckOut);
                         const inRange = isInRange(date, tempCheckIn, tempCheckOut);
 
+                        // Price lookup
+                        const dateKey = toDateKey(year, month, day);
+                        const dayPrice = hasPrices ? prices[dateKey] : undefined;
+                        const hasNoPrice = hasPrices && !isPast && dayPrice === undefined;
+
                         let className = 'nvt-calendar-day';
+                        if (hasPrices) className += ' nvt-calendar-day--has-prices';
                         if (isPast) className += ' nvt-calendar-day--disabled';
                         if (isToday) className += ' nvt-calendar-day--today';
                         if (isSelectedCheckIn || isSelectedCheckOut) className += ' nvt-calendar-day--selected';
                         if (inRange) className += ' nvt-calendar-day--in-range';
+                        if (hasNoPrice) className += ' nvt-calendar-day--no-price';
 
                         return (
                             <button
@@ -166,7 +199,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
                                 disabled={isPast}
                                 onClick={() => handleDayClick(date)}
                             >
-                                {day}
+                                <span className="nvt-calendar-day-num">{day}</span>
+                                {hasPrices && !isPast && (
+                                    <span className="nvt-calendar-day-price">
+                                        {dayPrice !== undefined ? formatCalendarPrice(dayPrice) : '_'}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}
@@ -186,6 +224,11 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
         }
         return t('selectCheckIn', 'Select check-in date');
     })();
+
+    // Price footer text — "Approximate prices in EUR for a 1-night stay"
+    const priceFooterText = hasPrices && pricesCurrency
+        ? t('calendarPriceFooter', 'Approximate prices in %s for a 1-night stay').replace('%s', pricesCurrency)
+        : '';
 
     return (
         <div className="nvt-calendar-popup" ref={popupRef}>
@@ -215,6 +258,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose }) {
             <div className="nvt-calendar-footer">
                 <span>{footerText}</span>
             </div>
+
+            {priceFooterText && (
+                <div className="nvt-calendar-price-footer">
+                    {priceFooterText}
+                </div>
+            )}
         </div>
     );
 }

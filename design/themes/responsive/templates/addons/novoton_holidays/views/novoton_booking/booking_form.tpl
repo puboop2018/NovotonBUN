@@ -510,6 +510,7 @@ window.NovotonTranslations.night = window.NovotonTranslations.night || '{__("nov
 window.NovotonTranslations.nights = window.NovotonTranslations.nights || '{__("novoton_holidays.nights")|default:"nights"|escape:"javascript"}';
 window.NovotonTranslations.nightsMany = window.NovotonTranslations.nightsMany || '{__("novoton_holidays.nights_many")|default:"nights"|escape:"javascript"}';
 window.NovotonTranslations.loading = window.NovotonTranslations.loading || '{__("novoton_holidays.loading")|default:"Loading..."|escape:"javascript"}';
+window.NovotonTranslations.calendarPriceFooter = '{__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}';
 
 // HTML escape utility to prevent XSS
 function escapeHtml(str) {
@@ -583,7 +584,10 @@ window.bookingData = {ldelim}
     maxChildren: roomLimits.max_children || 2,
     minPax: roomLimits.min_pax || 1,
     totalCapacity: (roomLimits.rb || 2) + (roomLimits.eb || 0),
-    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if}
+    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if},
+    calendarPrices: {$calendar_prices_json|default:'{}' nofilter},
+    calendarPricesCurrency: '{$calendar_prices_currency|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}',
+    showCalendarPrices: {if $show_calendar_prices == 'Y'}true{else}false{/if}
 {rdelim};
 
 // A74e: These functions are defined in booking-form-validation.js

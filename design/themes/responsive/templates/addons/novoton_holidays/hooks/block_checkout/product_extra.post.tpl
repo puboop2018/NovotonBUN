@@ -74,7 +74,7 @@
                 {* Room header - clickable for collapse *}
                 <div onclick="toggleCheckoutRoom('{$collapse_id}')" style="padding: 10px 14px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <span style="font-weight: 600; color: #1a1a1a; font-size: 13px;">{__("novoton_holidays.room")} {$room_number}: {$room.room_type_display|default:$room.room_name}</span>
+                        <span style="font-weight: 600; color: #1a1a1a; font-size: 13px;">{__("novoton_holidays.room")} {$room_number}: {$room.room_type_display|default:$room.room_name|escape:html}</span>
                         <span style="color: #666; margin-left: 8px; font-size: 12px;">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
                     </div>
                     <span id="{$collapse_id}_icon" style="font-size: 16px; color: #666;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s; transform: {if $is_first}rotate(180deg){else}rotate(0deg){/if}"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
@@ -115,7 +115,7 @@
                     {* Meal plan *}
                     <div style="background: #f0f7ff; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 12px;">
                         <span style="font-size: 16px;"></span>
-                        <span><strong>{__("novoton_holidays.meal_plan")}:</strong> {$room.board_name}</span>
+                        <span><strong>{__("novoton_holidays.meal_plan")}:</strong> {$room.board_name|escape:html}</span>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
         <div class="novoton-room-card" style="padding: 14px; background: #fff;">
             {* Room type *}
             <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 10px; font-size: 14px;">
-                {$product.extra.room_type_display|default:$product.extra.room_name}
+                {$product.extra.room_type_display|default:$product.extra.room_name|escape:html}
             </div>
             
             {* Occupancy *}
@@ -160,14 +160,14 @@
             {elseif $product.extra.holder_name}
                 <div style="margin-bottom: 8px; font-size: 12px;">
                     <span style="color: #666; text-transform: uppercase;">{__("novoton_holidays.guest_names")}:</span>
-                    <span style="margin-left: 6px;">{$product.extra.holder_name}</span>
+                    <span style="margin-left: 6px;">{$product.extra.holder_name|escape:html}</span>
                 </div>
             {/if}
             
             {* Meal plan *}
             <div style="background: #f0f7ff; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 12px;">
                 <span style="font-size: 16px;"></span>
-                <span><strong>{__("novoton_holidays.meal_plan")}:</strong> {$product.extra.board_name}</span>
+                <span><strong>{__("novoton_holidays.meal_plan")}:</strong> {$product.extra.board_name|escape:html}</span>
             </div>
         </div>
     {/if}

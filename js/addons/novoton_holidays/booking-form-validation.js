@@ -1,21 +1,29 @@
 /**
  * Novoton Holidays - Booking Form Validation & Price Recalculation
- * Version: 3.0.0-A86
- * 
+ * Version: 3.1.0
+ *
  * Features:
  * - DOB input masking (DD/MM/YYYY)
  * - Age validation at check-in date
  * - Price recalculation via AJAX
  * - Room change warning modal
+ *
+ * All public functions namespaced under window.Novoton.
  */
 
 (function() {
     'use strict';
 
     // =========================================================================
+    // NAMESPACE SETUP
+    // =========================================================================
+
+    window.Novoton = window.Novoton || {};
+
+    // =========================================================================
     // CONFIGURATION
     // =========================================================================
-    
+
     var CONFIG = {
         debug: (window.NovotonConfig && window.NovotonConfig.debug) || (window.location.search.indexOf('novoton_debug') !== -1),
         selectors: {
@@ -27,7 +35,7 @@
     // =========================================================================
     // LOGGING UTILITIES
     // =========================================================================
-    
+
     function log(message, data) {
         if (CONFIG.debug && console && console.log) {
             if (data !== undefined) {
@@ -45,14 +53,28 @@
     }
 
     // =========================================================================
+    // HTML ESCAPING UTILITY
+    // =========================================================================
+
+    function escapeHtml(str) {
+        if (window.NovotonUtils && window.NovotonUtils.escapeHtml) {
+            return window.NovotonUtils.escapeHtml(str);
+        }
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // =========================================================================
     // DOB MASKING (DD/MM/YYYY)
     // =========================================================================
-    
+
     var dobLastKeyWasBackspace = false;
 
-    window.handleDobKeydown = function(e) {
+    function handleDobKeydown(e) {
         dobLastKeyWasBackspace = (e.key === 'Backspace' || e.key === 'Delete');
-    };
+    }
 
     function formatDobDigits(digits) {
         var masked = '';
@@ -68,12 +90,12 @@
         return masked;
     }
 
-    window.applyDobMask = function(input) {
+    function applyDobMask(input) {
         var cursorPos = input.selectionStart;
         var oldValue = input.value;
         var oldLen = oldValue.length;
         var digits = oldValue.replace(/\D/g, '');
-        
+
         if (dobLastKeyWasBackspace) {
             dobLastKeyWasBackspace = false;
             var masked = formatDobDigits(digits);
@@ -82,16 +104,16 @@
             try { input.setSelectionRange(newPos, newPos); } catch(e) {}
             return;
         }
-        
+
         var masked = '';
         if (digits.length > 0) masked = digits.substring(0, Math.min(2, digits.length));
         if (digits.length >= 2) masked = digits.substring(0, 2) + '/';
         if (digits.length > 2) masked = digits.substring(0, 2) + '/' + digits.substring(2, Math.min(4, digits.length));
         if (digits.length >= 4) masked = digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/';
         if (digits.length > 4) masked = digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4, Math.min(8, digits.length));
-        
+
         input.value = masked;
-        
+
         var newLen = masked.length;
         var newPos = cursorPos;
         if (newLen > oldLen) {
@@ -100,70 +122,73 @@
             else newPos = newLen;
         }
         try { input.setSelectionRange(newPos, newPos); } catch(e) {}
-    };
+    }
 
-    window.parseDobMasked = function(dobString) {
+    function parseDobMasked(dobString) {
         if (!dobString || dobString.length !== 10) return null;
         var parts = dobString.split('/');
         if (parts.length !== 3) return null;
-        
+
         var day = parseInt(parts[0], 10);
         var month = parseInt(parts[1], 10);
         var year = parseInt(parts[2], 10);
-        
+
         if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
         return { day: day, month: month, year: year };
-    };
+    }
 
-    window.calculateAgeAtDate = function(birthDate, targetDate) {
+    function calculateAgeAtDate(birthDate, targetDate) {
+        if (window.NovotonUtils && window.NovotonUtils.calculateAge) {
+            return window.NovotonUtils.calculateAge(birthDate, targetDate);
+        }
         var age = targetDate.getFullYear() - birthDate.getFullYear();
         var m = targetDate.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && targetDate.getDate() < birthDate.getDate())) {
             age--;
         }
         return age;
-    };
+    }
 
     // =========================================================================
     // PRICE DISPLAY UPDATES
     // =========================================================================
-    
-    window.updatePriceDisplay = function(newPrice, formattedPrice, difference) {
+
+    function updatePriceDisplay(newPrice, formattedPrice, difference) {
         log('updatePriceDisplay', { newPrice: newPrice, formattedPrice: formattedPrice, difference: difference });
-        
+
         var priceElements = document.querySelectorAll(CONFIG.selectors.priceDisplay);
         log('Found price elements: ' + priceElements.length);
-        
+
         if (priceElements.length === 0) {
             logError('No price elements found! Selector: ' + CONFIG.selectors.priceDisplay);
             return;
         }
-        
+
         var displayValue = newPrice ? parseFloat(newPrice).toFixed(2) : (formattedPrice || '0.00');
-        
+
         priceElements.forEach(function(el) {
             log('Updating: ' + el.className + ' from "' + el.textContent + '" to "' + displayValue + '"');
             el.textContent = displayValue;
         });
-        
+
         // Hide recalc notice
         var recalcNotice = document.getElementById('price-recalc-notice');
         if (recalcNotice) recalcNotice.style.display = 'none';
-        
+
         // Show price change notification above guest details heading
         if (difference && difference !== 0) {
             var notif = document.getElementById('price-change-notification');
             if (!notif) {
                 notif = document.createElement('div');
                 notif.id = 'price-change-notification';
-                notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:8px 15px;margin:0 0 10px 0;border-radius:4px;font-size:14px;';
+                notif.className = 'novoton-price-change-notif';
                 var heading = document.querySelector('.guest-names-section h3');
                 if (heading && heading.parentNode) {
                     heading.parentNode.insertBefore(notif, heading);
                 }
             }
             var changeText = difference > 0 ? '+' + difference.toFixed(2) : difference.toFixed(2);
-            var changeColor = difference > 0 ? '#dc3545' : '#28a745';
+            var changeColor = difference > 0 ? 'var(--nvt-danger, #dc3545)' : 'var(--nvt-success, #28a745)';
             var t = window.NovotonTranslations || {};
             notif.textContent = '';
             notif.appendChild(document.createTextNode(
@@ -175,39 +200,49 @@
             notif.appendChild(strong);
             notif.style.display = 'block';
         }
-    };
+    }
 
-    window.showPriceRecalculationNotice = function(message) {
+    function showPriceRecalculationNotice(message) {
         var notif = document.getElementById('price-recalc-notice');
         if (!notif) {
             notif = document.createElement('div');
             notif.id = 'price-recalc-notice';
-            notif.style.cssText = 'background:#e7f3ff;border-left:4px solid #0071c2;color:#004085;padding:10px 15px;margin:10px 0;border-radius:4px;font-size:13px;';
+            notif.className = 'novoton-recalc-notice';
             var priceSection = document.querySelector(CONFIG.selectors.priceSection);
             if (priceSection && priceSection.parentNode) {
                 priceSection.parentNode.insertBefore(notif, priceSection.nextSibling);
             }
         }
-        notif.textContent = 'ℹ️ ' + message;
+        // Use DOM methods to avoid innerHTML with message text
+        notif.textContent = '';
+        var icon = document.createElement('i');
+        icon.className = 'icon-info-sign';
+        notif.appendChild(icon);
+        notif.appendChild(document.createTextNode(' ' + message));
         notif.style.display = 'block';
-    };
-
-    // =========================================================================
-    // HTML ESCAPING UTILITY
-    // =========================================================================
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
     }
 
     // =========================================================================
     // ROOM CHANGE WARNING MODAL
     // =========================================================================
 
-    window.showRoomChangeWarning = function(data) {
+    // Internal state for room change flow
+    var _roomChangeState = {
+        data: null,
+        isActive: false,
+
+        set: function(newData) {
+            this.data = newData;
+            this.isActive = true;
+        },
+
+        clear: function() {
+            this.data = null;
+            this.isActive = false;
+        }
+    };
+
+    function showRoomChangeWarning(data) {
         log('showRoomChangeWarning', data);
 
         var existing = document.getElementById('room-change-warning');
@@ -218,115 +253,135 @@
         var originalPrice = parseFloat(data.original_price) || 0;
         var originalRoom = escapeHtml(data.original_room || '');
         var newRoom = escapeHtml(data.new_room || '');
-        
-        var priceDiffText = '', priceDiffStyle = '';
+
+        var priceDiffText = '', priceDiffClass = '';
         if (priceDiff > 0) {
             priceDiffText = '+' + priceDiff.toFixed(2) + ' €';
-            priceDiffStyle = 'color:#dc3545;font-weight:bold;';
+            priceDiffClass = 'color: var(--nvt-danger, #dc3545); font-weight: bold;';
         } else if (priceDiff < 0) {
             priceDiffText = priceDiff.toFixed(2) + ' €';
-            priceDiffStyle = 'color:#28a745;font-weight:bold;';
+            priceDiffClass = 'color: var(--nvt-success, #28a745); font-weight: bold;';
         }
-        
+
         var t = window.NovotonTranslations || {};
-        
-        var html = '<div id="room-change-warning" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
-            '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
-            '<div style="text-align:center;margin-bottom:20px;">' +
-                '<div style="font-size:40px;margin-bottom:10px;">⚠️</div>' +
-                '<h3 style="margin:0;color:#856404;font-size:18px;">' + t.roomChangedTitle + '</h3>' +
+
+        // Build modal HTML — all translations escaped
+        var html = '<div id="room-change-warning" class="novoton-modal-overlay">' +
+            '<div class="novoton-modal-content">' +
+            '<div class="novoton-modal-header">' +
+                '<div class="novoton-modal-icon"><i class="icon-warning-sign"></i></div>' +
+                '<h3 class="novoton-modal-title">' + escapeHtml(t.roomChangedTitle) + '</h3>' +
             '</div>' +
-            '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">' + t.roomChangedDueToAge + '</p>' +
-            '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin-bottom:20px;">' +
-                '<div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">' +
+            '<p class="novoton-modal-body">' + escapeHtml(t.roomChangedDueToAge) + '</p>' +
+            '<div class="novoton-room-change-info">' +
+                '<div class="novoton-room-change-compare">' +
                     '<div style="text-align:center;">' +
-                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + t.originalRoom + '</div>' +
-                        '<div style="font-weight:600;color:#856404;text-decoration:line-through;">' + originalRoom + '</div>' +
+                        '<div class="novoton-room-change-label">' + escapeHtml(t.originalRoom) + '</div>' +
+                        '<div class="novoton-room-change-old">' + originalRoom + '</div>' +
                     '</div>' +
-                    '<div style="font-size:24px;color:#856404;">→</div>' +
+                    '<div class="novoton-room-change-arrow"><i class="icon-arrow-right"></i></div>' +
                     '<div style="text-align:center;">' +
-                        '<div style="font-size:11px;color:#666;text-transform:uppercase;">' + t.newRoom + '</div>' +
-                        '<div style="font-weight:600;color:#155724;">' + newRoom + '</div>' +
+                        '<div class="novoton-room-change-label">' + escapeHtml(t.newRoom) + '</div>' +
+                        '<div class="novoton-room-change-new">' + newRoom + '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
-            '<div style="background:#f8f9fa;border-radius:8px;padding:15px;margin-bottom:20px;text-align:center;">' +
-                '<div style="font-size:12px;color:#666;margin-bottom:5px;">' + t.priceChange + '</div>' +
-                '<div style="font-size:20px;">' +
+            '<div class="novoton-price-change-box">' +
+                '<div class="novoton-price-change-label">' + escapeHtml(t.priceChange) + '</div>' +
+                '<div class="novoton-price-change-values">' +
                     '<span style="text-decoration:line-through;color:#999;">' + originalPrice.toFixed(2) + ' €</span> ' +
-                    '<span style="' + priceDiffStyle + '">(' + priceDiffText + ')</span> ' +
-                    '<span style="font-weight:bold;color:#003580;">' + newPrice.toFixed(2) + ' €</span>' +
+                    '<span style="' + priceDiffClass + '">(' + priceDiffText + ')</span> ' +
+                    '<span style="font-weight:bold;color:var(--nvt-primary, #003580);">' + newPrice.toFixed(2) + ' €</span>' +
                 '</div>' +
             '</div>' +
-            '<div style="display:flex;gap:10px;justify-content:center;">' +
-                '<button type="button" onclick="goBackToSearch()" style="padding:12px 20px;border:2px solid #003580;background:#fff;color:#003580;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">← ' + t.goBackToSearch + '</button>' +
-                '<button type="button" onclick="acceptRoomChange()" style="padding:12px 20px;border:none;background:#003580;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">' + t.continueWithNewRoom + ' →</button>' +
+            '<div class="novoton-modal-actions">' +
+                '<button type="button" onclick="Novoton.goBackToSearch()" class="novoton-modal-btn-secondary"><i class="icon-arrow-left"></i> ' + escapeHtml(t.goBackToSearch) + '</button>' +
+                '<button type="button" onclick="Novoton.acceptRoomChange()" class="novoton-modal-btn-primary">' + escapeHtml(t.continueWithNewRoom) + ' <i class="icon-arrow-right"></i></button>' +
             '</div>' +
             '</div></div>';
-        
-        window._roomChangeData = data;
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = html;
-        document.body.appendChild(wrapper.firstChild);
-        log('Modal displayed');
-    };
 
-    window.acceptRoomChange = function() {
-        var data = window._roomChangeData || {};
+        _roomChangeState.set(data);
+
+        // Error boundary: if modal fails to render, fall back to alert
+        try {
+            var wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+            var modal = wrapper.firstChild;
+            if (!modal) throw new Error('Modal rendering failed');
+            document.body.appendChild(modal);
+            log('Modal displayed');
+        } catch (e) {
+            logError('Modal render error', e);
+            _roomChangeState.clear();
+            alert((t.roomChangedTitle || 'Room changed') + ': ' + (data.original_room || '') + ' → ' + (data.new_room || '') +
+                  '\n' + (t.priceChange || 'Price') + ': ' + (data.new_price || 0).toFixed(2) + ' €');
+        }
+    }
+
+    function acceptRoomChange() {
+        var data = _roomChangeState.data || {};
         log('acceptRoomChange', data);
-        
+
         var warning = document.getElementById('room-change-warning');
         if (warning) warning.remove();
-        
+        _roomChangeState.clear();
+
         document.querySelectorAll('.room-name, .selected-room-name, [data-room-name]').forEach(function(el) {
             el.textContent = data.new_room || '';
         });
-        
+
         var roomIdInput = document.querySelector('input[name="room_id"]');
         if (roomIdInput) roomIdInput.value = data.new_room || '';
-        
+
         if (window.bookingData) {
             window.bookingData.roomId = data.new_room || '';
             window.bookingData.currentPrice = parseFloat(data.new_price) || 0;
         }
-        
+
         // Show confirmation
         var t = window.NovotonTranslations || {};
         var notif = document.createElement('div');
         notif.id = 'room-change-confirmation';
-        notif.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;color:#155724;padding:15px;margin:15px 0;border-radius:4px;font-size:14px;';
-        notif.innerHTML = '✓ <strong>' + escapeHtml(t.roomUpdated) + '</strong> ' +
-            escapeHtml(data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €';
-        
+        notif.className = 'novoton-room-confirmed';
+        // Build safely with DOM methods
+        var icon = document.createElement('i');
+        icon.className = 'icon-ok';
+        notif.appendChild(icon);
+        notif.appendChild(document.createTextNode(' '));
+        var strong = document.createElement('strong');
+        strong.textContent = t.roomUpdated || 'Room updated';
+        notif.appendChild(strong);
+        notif.appendChild(document.createTextNode(' ' + (data.new_room || '') + ' - ' + (parseFloat(data.new_price) || 0).toFixed(2) + ' €'));
+
         var section = document.querySelector('.guest-names-section h3, .booking-form-header');
         if (section && section.parentNode) {
             section.parentNode.insertBefore(notif, section.nextSibling);
         }
-        
+
         setTimeout(function() {
             if (notif.parentNode) {
                 notif.style.opacity = '0';
-                notif.style.transition = 'opacity 0.3s';
                 setTimeout(function() { notif.remove(); }, 300);
             }
         }, 10000);
-    };
+    }
 
-    window.goBackToSearch = function() {
+    function goBackToSearch() {
         log('goBackToSearch');
         var warning = document.getElementById('room-change-warning');
         if (warning) warning.remove();
-        
+        _roomChangeState.clear();
+
         var backBtn = document.querySelector('.btn-back, a[href*="novoton_booking.search"]');
         if (backBtn) backBtn.click();
         else window.history.back();
-    };
+    }
 
     // =========================================================================
     // PRICE RECALCULATION (AJAX)
     // =========================================================================
-    
-    window.triggerPriceRecalculation = function(childrenAges, roomNum) {
+
+    function triggerPriceRecalculation(childrenAges, roomNum) {
         roomNum = roomNum || 1;
         log('triggerPriceRecalculation room ' + roomNum, childrenAges);
 
@@ -431,9 +486,9 @@
             var t3 = window.NovotonTranslations || {};
             showPriceRecalculationNotice(t3.priceWillBeVerified || 'Price will be verified at checkout.');
         });
-    };
+    }
 
-    window.updateFormWithNewPricing = function(data) {
+    function updateFormWithNewPricing(data) {
         var priceInput = document.querySelector('input[name="total_price"]');
         if (priceInput && data.new_price !== undefined) priceInput.value = data.new_price;
 
@@ -447,12 +502,41 @@
             if (data.new_price !== undefined) window.bookingData.currentPrice = data.new_price;
             if (data.new_adults) window.bookingData.adults = data.new_adults;
         }
-    };
+    }
+
+    // =========================================================================
+    // PUBLIC API — namespaced under window.Novoton
+    // =========================================================================
+
+    window.Novoton.handleDobKeydown = handleDobKeydown;
+    window.Novoton.applyDobMask = applyDobMask;
+    window.Novoton.parseDobMasked = parseDobMasked;
+    window.Novoton.calculateAgeAtDate = calculateAgeAtDate;
+    window.Novoton.updatePriceDisplay = updatePriceDisplay;
+    window.Novoton.showRoomChangeWarning = showRoomChangeWarning;
+    window.Novoton.acceptRoomChange = acceptRoomChange;
+    window.Novoton.goBackToSearch = goBackToSearch;
+    window.Novoton.triggerPriceRecalculation = triggerPriceRecalculation;
+    window.Novoton.updateFormWithNewPricing = updateFormWithNewPricing;
+    window.Novoton.showPriceRecalculationNotice = showPriceRecalculationNotice;
+
+    // Backwards compatibility: expose on window for existing onblur/onclick handlers in TPL
+    window.handleDobKeydown = handleDobKeydown;
+    window.applyDobMask = applyDobMask;
+    window.parseDobMasked = parseDobMasked;
+    window.calculateAgeAtDate = calculateAgeAtDate;
+    window.updatePriceDisplay = updatePriceDisplay;
+    window.showRoomChangeWarning = showRoomChangeWarning;
+    window.acceptRoomChange = acceptRoomChange;
+    window.goBackToSearch = goBackToSearch;
+    window.triggerPriceRecalculation = triggerPriceRecalculation;
+    window.updateFormWithNewPricing = updateFormWithNewPricing;
+    window.showPriceRecalculationNotice = showPriceRecalculationNotice;
 
     // =========================================================================
     // INITIALIZATION
     // =========================================================================
-    
+
     log('Booking form validation loaded');
 
 })();

@@ -18,6 +18,8 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
+use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
@@ -89,6 +91,23 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 
     \Tygh\Tygh::$app['view']->assign('show_novoton_booking_form', $show_booking_form);
     \Tygh\Tygh::$app['view']->assign('novoton_booking_form_position', $booking_form_position);
+
+    // Calendar prices: per-date approximate totals for the cheapest room
+    // Computed for the product page calendar (before user selects a room)
+    $calendar_prices_json = '{}';
+    $calendar_prices_currency = '';
+    if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
+        $display_currency = RoomPriceService::getDisplayCurrency();
+        $priceInfoService = new PriceInfoService();
+        $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
+        if (!empty($calendarData['prices'])) {
+            $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
+            $calendar_prices_currency = $calendarData['currency'];
+        }
+    }
+    \Tygh\Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
+    \Tygh\Tygh::$app['view']->assign('calendar_prices_currency', $calendar_prices_currency);
+    \Tygh\Tygh::$app['view']->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
 }
 
 /**

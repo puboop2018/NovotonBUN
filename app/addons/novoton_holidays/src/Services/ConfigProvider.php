@@ -91,6 +91,11 @@ class ConfigProvider
         return (self::settings()['delete_products_on_uninstall'] ?? 'N') === 'Y';
     }
 
+    public static function isShowCalendarPrices(): bool
+    {
+        return (self::settings()['show_calendar_prices'] ?? 'Y') === 'Y';
+    }
+
     // ── Float Settings ──
 
     public static function getCommission(): float

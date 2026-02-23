@@ -29,6 +29,9 @@ function fn_novoton_holidays_uninstall(): bool
         @unlink($ajax_file);
     }
 
+    // Remove auto-generated Theme Editor preset files
+    fn_novoton_holidays_remove_theme_presets();
+
     // Remove product tabs
     $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");
     if (!empty($tab_ids)) {
@@ -150,6 +153,9 @@ function fn_novoton_holidays_post_install(): bool
         }
     }
     
+    // Create Theme Editor preset files (must live at design/themes/{theme}/styles/data/)
+    fn_novoton_holidays_create_theme_presets();
+
     // Upgrade database schema
     fn_novoton_holidays_upgrade_db();
 
@@ -439,6 +445,108 @@ function fn_novoton_holidays_upgrade_db()
                  FOREIGN KEY (`{$fk['column']}`) REFERENCES {$fk['ref_table']}(`{$fk['ref_column']}`)
                  ON DELETE {$fk['on_delete']} ON UPDATE CASCADE"
             );
+        }
+    }
+}
+
+/**
+ * Create Theme Editor preset files.
+ *
+ * CS-Cart's Theme Editor reads preset data from a hardcoded path:
+ *   design/themes/{theme}/styles/data/{preset_name}/styles.less
+ *
+ * These files MUST live outside addons/novoton_holidays/ — the Theme Editor
+ * won't find them otherwise. We auto-generate them here so the addon repo
+ * stays clean (the generated files are .gitignored).
+ *
+ * Idempotent — skips files that already exist.
+ *
+ * @return void
+ */
+function fn_novoton_holidays_create_theme_presets(): void
+{
+    $root = rtrim(Registry::get('config.dir.root'), '/');
+    $themes = ['nova_theme', 'responsive'];
+
+    $content = <<<'LESS'
+/**
+ * Novoton Default Style — Theme Editor Preset
+ *
+ * These LESS variables are managed by the CS-Cart Theme Editor.
+ * When an admin changes a color via Design > Themes > Theme Editor,
+ * CS-Cart updates this file and recompiles the CSS.
+ *
+ * Per CS-Cart docs, LESS functions (darken, lighten, fade) belong HERE
+ * in the preset file. The computed values are bridged to CSS custom
+ * properties in css/addons/novoton_holidays/styles.less.
+ *
+ * Variable names must match the field names in schema.json.
+ */
+
+// Colors — Brand (Theme Editor fields)
+@novoton-primary:           #003580;
+@novoton-accent:            #febb02;
+@novoton-search-btn-bg:     #006ce4;
+@novoton-search-btn-hover:  #0057b8;
+
+// Colors — UI (Theme Editor fields)
+@novoton-text:              #333333;
+@novoton-bg:                #ffffff;
+@novoton-border:            #e0e0e0;
+@novoton-success:           #28a745;
+@novoton-danger:            #dc3545;
+
+// Fonts (Theme Editor fields)
+@novoton-font-family:       Arial, Helvetica, sans-serif;
+@novoton-font-size-base-value: 14px;
+@novoton-font-weight:       normal;
+
+// Backgrounds (Theme Editor fields)
+@novoton-bg-pattern:        none;
+@novoton-bg-repeat:         no-repeat;
+@novoton-bg-transparent:    false;
+
+// General
+@full_width:                false;
+LESS;
+
+    foreach ($themes as $theme) {
+        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
+        $file = "{$dir}/styles.less";
+
+        if (file_exists($file)) {
+            continue;
+        }
+
+        if (!is_dir($dir)) {
+            fn_mkdir($dir);
+        }
+
+        file_put_contents($file, $content . "\n");
+    }
+}
+
+/**
+ * Remove Theme Editor preset files on uninstall.
+ *
+ * @return void
+ */
+function fn_novoton_holidays_remove_theme_presets(): void
+{
+    $root = rtrim(Registry::get('config.dir.root'), '/');
+    $themes = ['nova_theme', 'responsive'];
+
+    foreach ($themes as $theme) {
+        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
+        $file = "{$dir}/styles.less";
+
+        if (file_exists($file)) {
+            @unlink($file);
+        }
+
+        // Remove directory if empty
+        if (is_dir($dir) && count(scandir($dir)) === 2) {
+            @rmdir($dir);
         }
     }
 }

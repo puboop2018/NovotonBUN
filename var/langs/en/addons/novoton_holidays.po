@@ -340,6 +340,18 @@ msgctxt "SettingsTooltips::novoton_holidays::show_booking_form"
 msgid "Automatically display the booking search form on hotel product pages"
 msgstr "Automatically display the booking search form on hotel product pages"
 
+msgctxt "SettingsOptions::novoton_holidays::show_calendar_prices"
+msgid "Show Calendar Prices"
+msgstr "Show Calendar Prices"
+
+msgctxt "SettingsTooltips::novoton_holidays::show_calendar_prices"
+msgid "Display approximate per-night prices on calendar date cells in the booking form"
+msgstr "Display approximate per-night prices on calendar date cells in the booking form"
+
+msgctxt "Languages::novoton_holidays.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Approximate prices in %s for a 1-night stay"
+
 msgctxt "SettingsOptions::novoton_holidays::booking_form_position"
 msgid "Booking Form Position"
 msgstr "Booking Form Position"

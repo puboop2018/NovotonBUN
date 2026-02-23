@@ -96,16 +96,43 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     $children_ages = $data['children_ages'] ?? [];
     $package_name = $data['package_name'] ?? '';
     $original_price = (float)($data['original_price'] ?? 0);
-    
-    // A73s: Ensure children_ages is an array of integers
+
+    // Input range validation
+    if ($nights < 1 || $nights > 365) {
+        $debug_log('ERROR: Invalid nights value', $nights);
+        $sendJson(['success' => false, 'message' => 'Invalid night count']);
+    }
+
+    if ($adults < 1 || $adults > 12) {
+        $debug_log('ERROR: Invalid adults value', $adults);
+        $sendJson(['success' => false, 'message' => 'Invalid adult count']);
+    }
+
+    if ($original_price < 0 || $original_price > 999999) {
+        $debug_log('ERROR: Invalid original_price value', $original_price);
+        $sendJson(['success' => false, 'message' => 'Invalid price']);
+    }
+
+    // Validate check_in is a valid date format (YYYY-MM-DD)
+    if ($check_in && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $check_in)) {
+        $debug_log('ERROR: Invalid check_in format', $check_in);
+        $sendJson(['success' => false, 'message' => 'Invalid check-in date format']);
+    }
+
+    // A73s: Ensure children_ages is an array of integers within valid range
     if (!is_array($children_ages)) {
         $children_ages = [];
     } else {
         $children_ages = array_map('intval', array_values($children_ages));
+        // Filter to valid child ages (0-17), max 10 children
+        $children_ages = array_filter($children_ages, function($age) {
+            return $age >= 0 && $age <= 17;
+        });
+        $children_ages = array_slice(array_values($children_ages), 0, 10);
     }
-    
+
     $debug_log('Parsed children_ages', $children_ages);
-    
+
     // Validate required fields
     if (empty($hotel_id) || empty($check_in)) {
         $debug_log('ERROR: Missing required fields');

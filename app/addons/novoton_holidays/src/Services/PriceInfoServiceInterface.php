@@ -73,4 +73,18 @@ interface PriceInfoServiceInterface
      * @return array|null Active discount or null
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array;
+
+    /**
+     * Get per-date calendar prices for a hotel.
+     *
+     * Returns the cheapest room's 1-night total for the given number
+     * of adults, with commission and currency conversion applied.
+     * Used for calendar price display on the product detail page.
+     *
+     * @param string      $hotelId        Hotel ID
+     * @param string|null $targetCurrency  Target currency code (null = display currency)
+     * @param int         $adults          Number of adults (default 2)
+     * @return array ['prices' => [date => price], 'currency' => string]
+     */
+    public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array;
 }
