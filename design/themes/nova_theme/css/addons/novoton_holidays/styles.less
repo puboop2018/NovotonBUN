@@ -34,6 +34,21 @@
 @novoton-warning:           #ffc107;
 @novoton-danger:            #dc3545;
 
+// Status derived (LESS functions — per CS-Cart docs, computed values belong here,
+// then bridged to CSS vars below; components must NOT call darken/lighten directly)
+@novoton-success-dark:      darken(@novoton-success, 10%);
+@novoton-success-light:     lighten(@novoton-success, 40%);
+@novoton-warning-dark:      darken(@novoton-warning, 25%);
+@novoton-warning-light:     lighten(@novoton-warning, 35%);
+@novoton-danger-dark:       darken(@novoton-danger, 10%);
+@novoton-danger-light:      lighten(@novoton-danger, 35%);
+@novoton-info:              #17a2b8;
+@novoton-info-dark:         darken(@novoton-info, 15%);
+@novoton-info-light:        lighten(@novoton-info, 40%);
+
+// Primary focus ring (10% opacity)
+@novoton-primary-focus:     fade(@novoton-primary, 10%);
+
 // Text
 @novoton-text:              #333333;
 @novoton-text-light:        #6b6b6b;
@@ -85,8 +100,20 @@
 
     // Status
     --nvt-success:          @novoton-success;
+    --nvt-success-light:    @novoton-success-light;
+    --nvt-success-dark:     @novoton-success-dark;
     --nvt-warning:          @novoton-warning;
+    --nvt-warning-light:    @novoton-warning-light;
+    --nvt-warning-dark:     @novoton-warning-dark;
     --nvt-danger:           @novoton-danger;
+    --nvt-danger-light:     @novoton-danger-light;
+    --nvt-danger-dark:      @novoton-danger-dark;
+    --nvt-info:             @novoton-info;
+    --nvt-info-light:       @novoton-info-light;
+    --nvt-info-dark:        @novoton-info-dark;
+
+    // Focus
+    --nvt-primary-focus:    @novoton-primary-focus;
 
     // Text
     --nvt-text:             @novoton-text;
@@ -147,7 +174,7 @@
     &:focus {
         outline: none;
         border-color: @novoton-primary;
-        box-shadow: 0 0 0 3px fade(@novoton-primary, 10%);
+        box-shadow: 0 0 0 3px @novoton-primary-focus;
     }
 }
 
@@ -183,7 +210,7 @@
     color: #fff;
 
     &:hover {
-        background-color: darken(@novoton-success, 10%);
+        background-color: @novoton-success-dark;
         color: #fff;
     }
 }
@@ -277,23 +304,23 @@
     border-radius: 12px;
 
     &.badge-success {
-        background-color: lighten(@novoton-success, 40%);
-        color: darken(@novoton-success, 10%);
+        background-color: @novoton-success-light;
+        color: @novoton-success-dark;
     }
 
     &.badge-warning {
-        background-color: lighten(@novoton-warning, 35%);
-        color: darken(@novoton-warning, 25%);
+        background-color: @novoton-warning-light;
+        color: @novoton-warning-dark;
     }
 
     &.badge-danger {
-        background-color: lighten(@novoton-danger, 35%);
-        color: darken(@novoton-danger, 10%);
+        background-color: @novoton-danger-light;
+        color: @novoton-danger-dark;
     }
 
     &.badge-info {
-        background-color: lighten(#17a2b8, 40%);
-        color: darken(#17a2b8, 15%);
+        background-color: @novoton-info-light;
+        color: @novoton-info-dark;
     }
 }
 

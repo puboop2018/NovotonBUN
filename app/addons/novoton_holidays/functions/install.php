@@ -470,34 +470,38 @@ function fn_novoton_holidays_create_theme_presets(): void
 
     $content = <<<'LESS'
 /**
- * Novoton Default Style - Theme Editor Preset
+ * Novoton Default Style — Theme Editor Preset
  *
  * These LESS variables are managed by the CS-Cart Theme Editor.
- * When an admin changes a color in Design > Themes > Theme Editor,
+ * When an admin changes a color via Design > Themes > Theme Editor,
  * CS-Cart updates this file and recompiles the CSS.
+ *
+ * Per CS-Cart docs, LESS functions (darken, lighten, fade) belong HERE
+ * in the preset file. The computed values are bridged to CSS custom
+ * properties in css/addons/novoton_holidays/styles.less.
  *
  * Variable names must match the field names in schema.json.
  */
 
-// Colors - Brand
+// Colors — Brand (Theme Editor fields)
 @novoton-primary:           #003580;
 @novoton-accent:            #febb02;
 @novoton-search-btn-bg:     #006ce4;
 @novoton-search-btn-hover:  #0057b8;
 
-// Colors - UI
+// Colors — UI (Theme Editor fields)
 @novoton-text:              #333333;
 @novoton-bg:                #ffffff;
 @novoton-border:            #e0e0e0;
 @novoton-success:           #28a745;
 @novoton-danger:            #dc3545;
 
-// Fonts
+// Fonts (Theme Editor fields)
 @novoton-font-family:       Arial, Helvetica, sans-serif;
 @novoton-font-size-base-value: 14px;
 @novoton-font-weight:       normal;
 
-// Backgrounds
+// Backgrounds (Theme Editor fields)
 @novoton-bg-pattern:        none;
 @novoton-bg-repeat:         no-repeat;
 @novoton-bg-transparent:    false;
