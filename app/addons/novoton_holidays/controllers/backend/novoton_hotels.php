@@ -339,6 +339,33 @@ if ($mode == 'sync_facilities') {
 }
 
 /**
+ * Mode: sync_hotel_facilities
+ * Populate novoton_hotel_facilities junction table by calling the API for each hotel
+ */
+if ($mode == 'sync_hotel_facilities') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
+    $hotel_ids = db_get_fields("SELECT hotel_id FROM ?:novoton_hotels");
+    $synced = 0;
+    $failed = 0;
+
+    foreach ($hotel_ids as $hid) {
+        $ok = fn_novoton_holidays_sync_hotel_facilities($hid);
+        if ($ok) {
+            $synced++;
+        } else {
+            $failed++;
+        }
+    }
+
+    fn_set_notification('N', __('notice'), "Hotel facilities synced for {$synced} hotels. Failed: {$failed}.");
+
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+}
+
+/**
  * Mode: save_facility_types
  * Save facility type classifications (hotel/room) from admin form
  */

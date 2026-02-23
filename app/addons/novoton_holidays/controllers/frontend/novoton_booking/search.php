@@ -681,7 +681,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 $api = fn_novoton_holidays_get_api();
                 if ($api) {
                 $lastReq = $api->getLastRequestFormatted();
-                $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in={$lastReq['check_in']}, check_out={$lastReq['check_out']}, adults=" . ($priceParams['adults'] ?? 2);
+                $debug_log[] = "  -> API Request Params: hotel_id={$hotelId}, check_in=" . ($lastReq['check_in'] ?? '') . ", check_out=" . ($lastReq['check_out'] ?? '') . ", adults=" . ($priceParams['adults'] ?? 2);
                 $debug_log[] = "  -> Children ages: " . json_encode($priceParams['children'] ?? []);
                 // Show full XML request
                 $fullRequest = $api->getLastRequest();
@@ -939,11 +939,6 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
                 Tygh::$app['view']->assign('hotel_all_packages', []);
             }
 
-            // Room-level facilities (type=room) for display on search result cards
-            $lang_code = CART_LANGUAGE;
-            $room_facilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, 'room', $lang_code);
-            Tygh::$app['view']->assign('novoton_room_facilities', $room_facilities);
-
             // V3: Check for active early booking from priceinfo_data JSON
             $current_date = date('Y-m-d');
             $active_eb = null;
@@ -1013,7 +1008,12 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             // Hotel not found in novoton_hotels - try product name
             Tygh::$app['view']->assign('hotel_package_name', '');
         }
-        
+
+        // Room-level facilities (type=room) for display on search result cards
+        $lang_code = CART_LANGUAGE;
+        $room_facilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, 'room', $lang_code);
+        Tygh::$app['view']->assign('novoton_room_facilities', $room_facilities);
+
         // Fallback: if hotel_name still empty, get from product
         if (empty($hotel_name_display) && !empty($productId)) {
             $product_name = db_get_field(

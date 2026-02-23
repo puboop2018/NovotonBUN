@@ -58,6 +58,26 @@ class PricingApiClient extends ApiClientBase
         ];
         $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
 
+        $roomId = $params['room_id'] ?? '';
+        $boardId = $params['board_id'] ?? '';
+        $checkIn = $params['check_in'] ?? '';
+        $checkOut = $params['check_out'] ?? '';
+
+        $adultsCount = (int) ($params['adults'] ?? 2);
+        if ($adultsCount < 1) {
+            $adultsCount = 2;
+        }
+
+        // Always set lastRequestFormatted so debug/logging works even on cache hits
+        $this->lastRequestFormatted = [
+            'hotel_id' => $params['hotel_id'] ?? '',
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'room_id' => $roomId ?: '(empty - all rooms)',
+            'board_id' => $boardId ?: '(empty - all boards)',
+            'adults' => $adultsCount
+        ];
+
         if (!$bypassCache) {
             $cachedXml = $this->getFromCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey);
             if ($cachedXml !== null && is_string($cachedXml)) {
@@ -68,16 +88,6 @@ class PricingApiClient extends ApiClientBase
                     // Cached data corrupted, fall through
                 }
             }
-        }
-
-        $roomId = $params['room_id'] ?? '';
-        $boardId = $params['board_id'] ?? '';
-        $checkIn = $params['check_in'] ?? '';
-        $checkOut = $params['check_out'] ?? '';
-
-        $adultsCount = (int) ($params['adults'] ?? 2);
-        if ($adultsCount < 1) {
-            $adultsCount = 2;
         }
 
         $childrenXml = '';
@@ -107,14 +117,6 @@ class PricingApiClient extends ApiClientBase
         </room_price>';
 
         $this->lastRequest = $xml;
-        $this->lastRequestFormatted = [
-            'hotel_id' => $params['hotel_id'] ?? '',
-            'check_in' => $checkIn,
-            'check_out' => $checkOut,
-            'room_id' => $roomId ?: '(empty - all rooms)',
-            'board_id' => $boardId ?: '(empty - all boards)',
-            'adults' => $adultsCount
-        ];
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
 

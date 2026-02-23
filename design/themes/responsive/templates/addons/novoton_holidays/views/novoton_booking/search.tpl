@@ -611,10 +611,12 @@
                                     <div style="font-size: 12px; color: #666; margin-top: 3px;">{$result_package_name}</div>
                                 {/if}
                                 {* Room facilities badges *}
-                                {if $novoton_room_facilities}
+                                {if $novoton_room_facilities && $novoton_room_facilities|count > 0}
                                     <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;">
                                         {foreach from=$novoton_room_facilities item=rfac}
-                                            <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 7px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                            {if $rfac.facility_name}
+                                                <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 7px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                            {/if}
                                         {/foreach}
                                     </div>
                                 {/if}
@@ -749,10 +751,12 @@
                         {/if}
 
                         {* Room facilities badges *}
-                        {if $novoton_room_facilities}
+                        {if $novoton_room_facilities && $novoton_room_facilities|count > 0}
                             <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
                                 {foreach from=$novoton_room_facilities item=rfac}
-                                    <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                    {if $rfac.facility_name}
+                                        <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                    {/if}
                                 {/foreach}
                             </div>
                         {/if}
