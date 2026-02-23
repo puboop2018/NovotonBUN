@@ -11,6 +11,30 @@
     },
     "colors": {
         "fields": {
+            "main_color": {
+                "description": "theme_editor.main_color"
+            },
+            "secondary_color": {
+                "description": "theme_editor.secondary_color"
+            },
+            "links_color": {
+                "description": "theme_editor.links_color"
+            },
+            "top_menu_bg": {
+                "description": "theme_editor.top_menu_bg"
+            },
+            "top_menu_color": {
+                "description": "theme_editor.top_menu_color"
+            },
+            "header_bottom_bg": {
+                "description": "theme_editor.header_bottom_bg"
+            },
+            "footer_bg": {
+                "description": "theme_editor.footer_bg"
+            },
+            "footer_color": {
+                "description": "theme_editor.footer_color"
+            },
             "novoton-primary": {
                 "description": "theme_editor.novoton_primary_color"
             },
@@ -52,6 +76,23 @@
             "'Lucida Console', Monaco, monospace"
         ],
         "fields": {
+            "base_font": {
+                "description": "theme_editor.base_font",
+                "properties": {
+                    "size": {
+                        "match": "base-font-size-value",
+                        "unit": "px",
+                        "values": [11, 12, 13, 14, 15, 16]
+                    },
+                    "style": {
+                        "B": {
+                            "match": "base-font-weight",
+                            "property": "font-weight",
+                            "default": "normal"
+                        }
+                    }
+                }
+            },
             "novoton-font-family": {
                 "description": "theme_editor.novoton_base_font",
                 "properties": {
@@ -73,6 +114,19 @@
     },
     "backgrounds": {
         "fields": {
+            "body_bg": {
+                "description": "theme_editor.body_bg",
+                "properties": {
+                    "color": {
+                        "match": "bg_color"
+                    },
+                    "pattern": "body_bg_pattern",
+                    "repeat": "body_bg_repeat"
+                },
+                "transparent": {
+                    "match": "body_bg_transparent"
+                }
+            },
             "novoton-page-bg": {
                 "description": "theme_editor.novoton_page_background",
                 "properties": {

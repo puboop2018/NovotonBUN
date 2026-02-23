@@ -1981,6 +1981,78 @@ msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Buton căutare (hover)"
 
+msgctxt "Languages::theme_editor.novoton_text_color"
+msgid "Novoton: Text color"
+msgstr "Novoton: Culoare text"
+
+msgctxt "Languages::theme_editor.novoton_bg_color"
+msgid "Novoton: Background color"
+msgstr "Novoton: Culoare fundal"
+
+msgctxt "Languages::theme_editor.novoton_border_color"
+msgid "Novoton: Border color"
+msgstr "Novoton: Culoare chenar"
+
+msgctxt "Languages::theme_editor.novoton_success_color"
+msgid "Novoton: Success color"
+msgstr "Novoton: Culoare succes"
+
+msgctxt "Languages::theme_editor.novoton_danger_color"
+msgid "Novoton: Danger color"
+msgstr "Novoton: Culoare pericol"
+
+msgctxt "Languages::theme_editor.novoton_base_font"
+msgid "Novoton: Base font"
+msgstr "Novoton: Font de bază"
+
+msgctxt "Languages::theme_editor.novoton_page_background"
+msgid "Novoton: Page background"
+msgstr "Novoton: Fundal pagină"
+
+msgctxt "Languages::theme_editor.full_width"
+msgid "Full width"
+msgstr "Lățime completă"
+
+msgctxt "Languages::theme_editor.main_color"
+msgid "Main color"
+msgstr "Culoare principală"
+
+msgctxt "Languages::theme_editor.secondary_color"
+msgid "Secondary color"
+msgstr "Culoare secundară"
+
+msgctxt "Languages::theme_editor.links_color"
+msgid "Links color"
+msgstr "Culoare linkuri"
+
+msgctxt "Languages::theme_editor.top_menu_bg"
+msgid "Top menu background"
+msgstr "Fundal meniu sus"
+
+msgctxt "Languages::theme_editor.top_menu_color"
+msgid "Top menu text"
+msgstr "Text meniu sus"
+
+msgctxt "Languages::theme_editor.header_bottom_bg"
+msgid "Header bottom background"
+msgstr "Fundal header jos"
+
+msgctxt "Languages::theme_editor.footer_bg"
+msgid "Footer background"
+msgstr "Fundal footer"
+
+msgctxt "Languages::theme_editor.footer_color"
+msgid "Footer text"
+msgstr "Text footer"
+
+msgctxt "Languages::theme_editor.base_font"
+msgid "Base font"
+msgstr "Font de bază"
+
+msgctxt "Languages::theme_editor.body_bg"
+msgid "Page background"
+msgstr "Fundal pagină"
+
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Disponibil pe date apropiate"
