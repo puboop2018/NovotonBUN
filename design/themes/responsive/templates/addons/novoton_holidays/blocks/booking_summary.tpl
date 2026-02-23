@@ -10,7 +10,7 @@
     {* Hotel name if available *}
     {if $product.extra.hotel_name}
     <div style="font-weight: 600; color: #003580; font-size: 14px; margin-bottom: 8px;">
-         {$product.extra.hotel_name}
+         {$product.extra.hotel_name|escape:html}
     </div>
     {/if}
     
@@ -24,7 +24,7 @@
     {* Room info *}
     <div style="margin-bottom: 4px; font-size: 13px;">
         <strong style="color: #003580;"></strong> 
-        {$product.extra.room_name|default:$product.extra.room_id|replace:'%2b':'+'|replace:'%2B':'+'}
+        {$product.extra.room_name|default:$product.extra.room_id|replace:'%2b':'+'|replace:'%2B':'+'|escape:html}
     </div>
     
     {* Board type *}
@@ -35,7 +35,7 @@
         {elseif $product.extra.board_id == 'HB'}Half Board
         {elseif $product.extra.board_id == 'BB'}Bed & Breakfast
         {elseif $product.extra.board_id == 'RO'}Room Only
-        {else}{$product.extra.board_name|default:$product.extra.board_id|default:'All Inclusive'}{/if}
+        {else}{$product.extra.board_name|default:$product.extra.board_id|default:'All Inclusive'|escape:html}{/if}
     </div>
     
     {* Guests *}
@@ -55,7 +55,7 @@
     {* Guest name *}
     {if $product.extra.holder_name}
     <div style="padding-top: 6px; border-top: 1px dashed #ddd; margin-top: 6px; font-size: 13px;">
-        <strong style="color: #003580;"></strong> {$product.extra.holder_name}
+        <strong style="color: #003580;"></strong> {$product.extra.holder_name|escape:html}
     </div>
     {/if}
     

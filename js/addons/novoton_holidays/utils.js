@@ -211,6 +211,24 @@ window.NovotonUtils = (function() {
         }
     };
     
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // Calculate age at a target date
+    function calculateAge(birthDate, targetDate) {
+        var age = targetDate.getFullYear() - birthDate.getFullYear();
+        var m = targetDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && targetDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
     // Scroll to element smoothly
     function scrollTo(element, offset = 100) {
         const y = element.getBoundingClientRect().top + window.pageYOffset - offset;
@@ -243,6 +261,8 @@ window.NovotonUtils = (function() {
         formatDate,
         parseDate,
         calculateNights,
+        calculateAge,
+        escapeHtml,
         getElement,
         clearCache,
         parseJSON,

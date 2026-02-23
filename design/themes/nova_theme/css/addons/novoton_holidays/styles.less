@@ -128,6 +128,15 @@
     // Layout
     --nvt-radius:           @novoton-radius;
     --nvt-radius-sm:        @novoton-radius-sm;
+
+    // Z-index scale
+    --nvt-z-dropdown:       1000;
+    --nvt-z-sticky:         1020;
+    --nvt-z-fixed:          1030;
+    --nvt-z-modal-backdrop: 1040;
+    --nvt-z-modal:          1050;
+    --nvt-z-notification:   1060;
+    --nvt-z-tooltip:        1070;
 }
 
 // ============================================================================
@@ -322,6 +331,253 @@
         background-color: @novoton-info-light;
         color: @novoton-info-dark;
     }
+}
+
+// ============================================================================
+// JS-COMPONENT STYLES (used by dob-validation.js, booking-form-validation.js)
+// ============================================================================
+
+// DOB field error state
+.novoton-dob-error {
+    border-color: @novoton-danger;
+    background-color: @novoton-danger-light;
+}
+
+// DOB inline error message
+.novoton-dob-error-message {
+    color: @novoton-danger;
+    font-size: @novoton-font-size-small;
+    margin-top: @novoton-spacing-xs;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+// Modal overlay (room change warning)
+.novoton-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: var(--nvt-z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.novoton-modal-content {
+    background: @novoton-bg;
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 450px;
+    margin: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.novoton-modal-header {
+    text-align: center;
+    margin-bottom: @novoton-spacing-lg;
+}
+
+.novoton-modal-icon {
+    font-size: 40px;
+    margin-bottom: @novoton-spacing-sm;
+    color: @novoton-warning-dark;
+}
+
+.novoton-modal-title {
+    margin: 0;
+    color: @novoton-warning-dark;
+    font-size: 18px;
+}
+
+.novoton-modal-body {
+    text-align: center;
+    color: @novoton-text-light;
+    margin-bottom: @novoton-spacing-lg;
+    font-size: @novoton-font-size-base;
+}
+
+.novoton-modal-actions {
+    display: flex;
+    gap: @novoton-spacing-sm;
+    justify-content: center;
+}
+
+.novoton-modal-btn-secondary {
+    padding: 12px 20px;
+    border: 2px solid @novoton-primary;
+    background: @novoton-bg;
+    color: @novoton-primary;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: @novoton-font-size-base;
+}
+
+.novoton-modal-btn-primary {
+    padding: 12px 20px;
+    border: none;
+    background: @novoton-primary;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: @novoton-font-size-base;
+}
+
+// Room change info box
+.novoton-room-change-info {
+    background: @novoton-warning-light;
+    border: 1px solid @novoton-warning;
+    border-radius: @novoton-radius;
+    padding: @novoton-spacing-md;
+    margin-bottom: @novoton-spacing-lg;
+}
+
+.novoton-room-change-compare {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: @novoton-spacing-md;
+    flex-wrap: wrap;
+}
+
+.novoton-room-change-label {
+    font-size: 11px;
+    color: @novoton-text-light;
+    text-transform: uppercase;
+}
+
+.novoton-room-change-old {
+    font-weight: 600;
+    color: @novoton-warning-dark;
+    text-decoration: line-through;
+}
+
+.novoton-room-change-new {
+    font-weight: 600;
+    color: @novoton-success-dark;
+}
+
+.novoton-room-change-arrow {
+    font-size: 24px;
+    color: @novoton-warning-dark;
+}
+
+// Price section in modal
+.novoton-price-change-box {
+    background: @novoton-bg-light;
+    border-radius: @novoton-radius;
+    padding: @novoton-spacing-md;
+    margin-bottom: @novoton-spacing-lg;
+    text-align: center;
+}
+
+.novoton-price-change-label {
+    font-size: @novoton-font-size-small;
+    color: @novoton-text-light;
+    margin-bottom: @novoton-spacing-xs;
+}
+
+.novoton-price-change-values {
+    font-size: 20px;
+}
+
+// Toast notification (price change, etc.)
+.novoton-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: @novoton-spacing-md 25px;
+    border-radius: @novoton-radius;
+    font-weight: 600;
+    z-index: var(--nvt-z-notification);
+    box-shadow: @novoton-shadow-lg;
+    transition: opacity 0.3s;
+
+    &.novoton-toast--increase {
+        background-color: @novoton-danger-light;
+        color: @novoton-danger;
+        border: 1px solid @novoton-danger;
+    }
+
+    &.novoton-toast--decrease {
+        background-color: @novoton-success-light;
+        color: @novoton-success;
+        border: 1px solid @novoton-success;
+    }
+}
+
+// Price recalculation notice
+.novoton-recalc-notice {
+    background: lighten(@novoton-info, 45%);
+    border-left: 4px solid @novoton-primary-light;
+    color: darken(@novoton-info, 30%);
+    padding: @novoton-spacing-sm @novoton-spacing-md;
+    margin: @novoton-spacing-sm 0;
+    border-radius: @novoton-radius-sm;
+    font-size: 13px;
+}
+
+// Price change notification bar
+.novoton-price-change-notif {
+    background: @novoton-warning-light;
+    border-left: 4px solid @novoton-warning;
+    color: @novoton-warning-dark;
+    padding: 8px @novoton-spacing-md;
+    margin: 0 0 @novoton-spacing-sm 0;
+    border-radius: @novoton-radius-sm;
+    font-size: @novoton-font-size-base;
+}
+
+// Room change confirmation
+.novoton-room-confirmed {
+    background: @novoton-success-light;
+    border-left: 4px solid @novoton-success;
+    color: @novoton-success-dark;
+    padding: @novoton-spacing-md;
+    margin: @novoton-spacing-md 0;
+    border-radius: @novoton-radius-sm;
+    font-size: @novoton-font-size-base;
+    transition: opacity 0.3s;
+}
+
+// Price loading state
+.novoton-price-loading {
+    opacity: 0.7;
+}
+
+// Desktop/mobile visibility (replaces JS !important hacks)
+.novoton-mobile-only.novoton-mobile-visible {
+    display: block;
+    visibility: visible;
+    height: auto;
+    position: relative;
+    left: auto;
+}
+
+.novoton-mobile-only.novoton-mobile-hidden {
+    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    position: absolute;
+    left: -9999px;
+}
+
+.novoton-desktop-only.novoton-desktop-visible {
+    display: grid;
+    visibility: visible;
+    position: relative;
+    left: auto;
+}
+
+.novoton-desktop-only.novoton-desktop-hidden {
+    display: none;
+    visibility: hidden;
 }
 
 // ============================================================================

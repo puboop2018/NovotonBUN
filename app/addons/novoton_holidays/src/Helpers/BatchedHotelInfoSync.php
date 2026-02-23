@@ -504,7 +504,7 @@ class BatchedHotelInfoSync
                 $sql = "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at) VALUES "
                     . implode(', ', $values)
                     . " ON DUPLICATE KEY UPDATE package_name = VALUES(package_name)";
-                call_user_func_array('db_query', array_merge([$sql], $params));
+                db_query($sql, ...$params);
             }
 
             db_query("COMMIT");

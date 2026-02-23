@@ -190,7 +190,7 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
 function fn_novoton_holidays_get_alternatives($booking_id): array
 {
     $request = db_get_row(
-        "SELECT * FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
+        "SELECT request_id, booking_id, order_id, status, alternatives_data, notes, created_at, updated_at FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
         $booking_id
     );
     
