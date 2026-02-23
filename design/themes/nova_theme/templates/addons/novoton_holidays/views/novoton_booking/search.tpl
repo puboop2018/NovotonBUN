@@ -610,12 +610,12 @@
                                 {if $result_package_name}
                                     <div style="font-size: 12px; color: #666; margin-top: 3px;">{$result_package_name}</div>
                                 {/if}
-                                {* Room facilities badges *}
+                                {* Room facilities *}
                                 {if $novoton_room_facilities && $novoton_room_facilities|count > 0}
-                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 5px;">
                                         {foreach from=$novoton_room_facilities item=rfac}
                                             {if $rfac.facility_name}
-                                                <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 7px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                                <span style="display: inline-flex; align-items: center; gap: 4px; color: #333; font-size: 12px; line-height: 20px;"><i class="icon-ok" style="color: #28a745; font-size: 10px;"></i>{$rfac.facility_name}</span>
                                             {/if}
                                         {/foreach}
                                     </div>
@@ -705,8 +705,7 @@
                                 <div id="modal-content-{$row_id}-mobile" style="display: none;">
                                     {* Payment Terms - displayed first *}
                                     {if $result.terms_of_payment}
-                                        {math equation="x * y" x=$result.total_price y=$novoton_display_coefficient|default:1 assign="_display_price_mobile"}
-                                        {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $_display_price_mobile, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY)}
+                                        {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
                                         {if $payment_terms_mobile}
                                             <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_mobile|nl2br nofilter}</div>
                                         {/if}
@@ -751,12 +750,12 @@
                             <div style="font-size: 13px; color: #333; margin-bottom: 6px;">{$result_package_name}</div>
                         {/if}
 
-                        {* Room facilities badges *}
+                        {* Room facilities *}
                         {if $novoton_room_facilities && $novoton_room_facilities|count > 0}
-                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 2px 12px; margin-bottom: 8px;">
                                 {foreach from=$novoton_room_facilities item=rfac}
                                     {if $rfac.facility_name}
-                                        <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 3px;">{$rfac.facility_name}</span>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; color: #333; font-size: 12px; line-height: 20px;"><i class="icon-ok" style="color: #28a745; font-size: 10px;"></i>{$rfac.facility_name}</span>
                                     {/if}
                                 {/foreach}
                             </div>
@@ -832,8 +831,7 @@
                             <div id="modal-content-{$row_id}" style="display: none;">
                                 {* Payment Terms - displayed first *}
                                 {if $result.terms_of_payment}
-                                    {math equation="x * y" x=$result.total_price y=$novoton_display_coefficient|default:1 assign="_display_price_desktop"}
-                                    {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $_display_price_desktop, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY)}
+                                    {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
                                     {if $payment_terms_desktop}
                                         <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_desktop|nl2br nofilter}</div>
                                     {/if}

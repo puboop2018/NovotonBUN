@@ -333,14 +333,19 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
 /**
  * Format payment terms with calculated amounts for display
  *
- * Format: "10% (150.00€) - due by 05.03.2026"
+ * Uses CS-Cart's currency coefficient for conversion to match sitewide
+ * price display (same approach as room prices on search results).
+ *
+ * Format: "10% (150 EUR) - due by 05.03.2026"
  *
  * @param string $xml_string Raw XML string with payment terms
- * @param float $total_price Total booking price to calculate amounts from
- * @param string $currency_code Currency code (default: EUR)
+ * @param float $total_price Total booking price in primary currency (EUR)
+ * @param string $currency_code Display currency code (default: EUR)
+ * @param float $coefficient Currency conversion coefficient (default: 1.0)
+ * @param string $currency_symbol Currency symbol for display (default: '')
  * @return string Formatted payment terms with amounts
  */
-function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR'): string
+function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $total_price, $currency_code = 'EUR', $coefficient = 1.0, $currency_symbol = ''): string
 {
     $terms = fn_novoton_holidays_parse_payment_terms($xml_string);
 
@@ -348,8 +353,19 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
         return '';
     }
 
-    // Get rounding setting from addon
-    $round_prices = ConfigProvider::isRoundPrices();
+    // Resolve currency symbol from CS-Cart registry if not provided
+    if (empty($currency_symbol) && !empty($currency_code)) {
+        $currencies = \Tygh\Registry::get('currencies');
+        if (!empty($currencies[$currency_code]['symbol'])) {
+            $currency_symbol = $currencies[$currency_code]['symbol'];
+        } else {
+            $currency_symbol = $currency_code;
+        }
+        // Also resolve coefficient from registry if still default
+        if ($coefficient == 1.0 && !empty($currencies[$currency_code]['coefficient'])) {
+            $coefficient = (float)$currencies[$currency_code]['coefficient'];
+        }
+    }
 
     $lines = [];
 
@@ -357,28 +373,24 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
         $percent = isset($term['percent']) ? (float)$term['percent'] : 0;
         $date = $term['date'] ?? '';
 
-        // Calculate amount from percentage
-        $amount = ($percent / 100) * (float)$total_price;
+        // Calculate amount from percentage and convert to display currency
+        $amount = ($percent / 100) * (float)$total_price * (float)$coefficient;
 
-        // Round if setting is enabled
-        if ($round_prices) {
-            $amount = round($amount);
-        }
+        // Round to match room price display (always round for display)
+        $amount = round($amount);
 
-        // Format amount using CS-Cart's currency formatting
-        $formatted_amount = fn_format_price($amount, $currency_code);
+        // Format: "amount symbol" — consistent with room price display on search page
+        $formatted_amount = number_format($amount, 0, '', '.') . ' ' . $currency_symbol;
         $percent_display = number_format($percent, 0);
 
         if (!empty($date)) {
             $formatted_date = fn_novoton_holidays_format_date($date);
-            // "[percent]% ([amount]) - due by [date]" / "[percent]% ([amount]) - până la [date]"
             $lines[] = __('novoton_holidays.payment_percent_amount_until', [
                 '[percent]' => $percent_display,
                 '[amount]' => $formatted_amount,
                 '[date]' => $formatted_date
             ]);
         } elseif (!empty($term['is_on_booking'])) {
-            // "[percent]% ([amount]) on booking" / "[percent]% ([amount]) la rezervare"
             $lines[] = __('novoton_holidays.payment_percent_amount_on_booking', [
                 '[percent]' => $percent_display,
                 '[amount]' => $formatted_amount
