@@ -312,12 +312,14 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     Tygh::$app['view']->assign('hotel_all_packages', $all_packages);
     Tygh::$app['view']->assign('auth', Tygh::$app['session']['auth'] ?? []);
 
-    // Calendar prices: per-date minimum prices for the calendar widget
+    // Calendar prices: per-date approximate total for the cheapest room
+    // Uses guest count to calculate realistic per-night totals
     $calendar_prices_json = '{}';
     $calendar_prices_currency = $novoton_display_currency;
     if (ConfigProvider::isShowCalendarPrices() && !empty($bookingData['hotel_id'])) {
+        $calendar_adults = max(1, (int)($booking['adults'] ?? 2));
         $priceInfoService = new PriceInfoService();
-        $calendarData = $priceInfoService->getCalendarPrices($bookingData['hotel_id'], $novoton_display_currency);
+        $calendarData = $priceInfoService->getCalendarPrices($bookingData['hotel_id'], $novoton_display_currency, $calendar_adults);
         if (!empty($calendarData['prices'])) {
             $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
             $calendar_prices_currency = $calendarData['currency'];

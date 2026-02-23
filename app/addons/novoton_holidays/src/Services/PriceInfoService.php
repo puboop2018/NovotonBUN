@@ -290,19 +290,28 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Get per-date calendar prices for a hotel.
      *
      * Returns a flat map of "YYYY-MM-DD" => price (float) representing
-     * the minimum 1-night adult price across all rooms for that date.
-     * Prices include commission and are converted to the target currency.
+     * the estimated 1-night-stay total for a given number of adults in
+     * the cheapest suitable room. Prices include commission and are
+     * converted to the target currency.
+     *
+     * The method groups season_price rows by room, then for each room
+     * calculates what the guests would pay:
+     *  - RoomPrice=Yes → per-room price (used once)
+     *  - RoomPrice=No  → per-person price × number of adults
+     * The cheapest room total per season becomes the calendar price.
      *
      * Dates that fall outside any season will not appear in the map —
      * the Calendar UI should treat missing dates as "no price" (grey/dash).
      *
      * @param string      $hotelId        Hotel ID
      * @param string|null $targetCurrency  Target currency code (null = display currency)
+     * @param int         $adults          Number of adults (default 2)
      * @return array ['prices' => [date => price], 'currency' => string]
      */
-    public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null): array
+    public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array
     {
         $currency = $targetCurrency ?? RoomPriceService::getDisplayCurrency();
+        $adults = max(1, $adults);
 
         $priceinfoJson = db_get_field(
             "SELECT priceinfo_data FROM ?:novoton_hotel_packages
@@ -338,16 +347,18 @@ class PriceInfoService implements PriceInfoServiceInterface
             return ['prices' => [], 'currency' => $currency];
         }
 
-        // 3. For each season, find the minimum adult price across all rooms
-        $minPriceBySeason = $this->getMinAdultPriceBySeason($seasonPrices, $seasons);
+        // 3. For each season, find the cheapest room total for N adults
+        $cheapestByseason = $this->getCheapestRoomTotalBySeason($seasonPrices, $seasons, $adults);
 
         // 4. Expand season ranges into per-date prices
         $dateMap = [];
         $roundPrices = ConfigProvider::isRoundPrices();
+        $today = date('Y-m-d');
+        $maxDate = date('Y-m-d', strtotime('+18 months'));
 
         foreach ($seasons as $season) {
             $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? 0);
-            if ($seasonNum <= 0 || !isset($minPriceBySeason[$seasonNum])) {
+            if ($seasonNum <= 0 || !isset($cheapestByseason[$seasonNum])) {
                 continue;
             }
 
@@ -357,7 +368,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
 
-            $rawPrice = $minPriceBySeason[$seasonNum];
+            $rawPrice = $cheapestByseason[$seasonNum];
 
             // Apply commission
             $priceWithCommission = $rawPrice * (1 + ($this->commission / 100));
@@ -371,8 +382,6 @@ class PriceInfoService implements PriceInfoServiceInterface
             }
 
             // Only include future dates (and dates within ~18 months)
-            $today = date('Y-m-d');
-            $maxDate = date('Y-m-d', strtotime('+18 months'));
             $startDate = max($from, $today);
             $endDate = min($to, $maxDate);
 
@@ -396,6 +405,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         $this->log('Calendar prices computed', [
             'hotel_id' => $hotelId,
             'currency' => $currency,
+            'adults' => $adults,
             'dates_count' => count($dateMap)
         ]);
 
@@ -403,17 +413,21 @@ class PriceInfoService implements PriceInfoServiceInterface
     }
 
     /**
-     * Find minimum adult price for each season number.
+     * Find the cheapest room's nightly total for N adults, per season.
      *
-     * Scans season_price rows for adult regular-bed entries and picks
-     * the lowest Price{N} value per season, resolving percentage-based
-     * prices against their Base code row.
+     * Groups season_price rows by IdRoom, then for each room calculates
+     * the 1-night cost for the given number of adults:
+     *  - RoomPrice=Yes → use Price{N} once (it's a per-room rate)
+     *  - RoomPrice=No  → Price{N} × $adults (it's per-person)
+     *
+     * Picks the minimum total across all rooms for each season.
      *
      * @param array $seasonPrices season_price rows
-     * @param array $seasons      seasons array (for determining which PriceN columns exist)
-     * @return array [seasonNum => minPrice]
+     * @param array $seasons      seasons array
+     * @param int   $adults       number of adults
+     * @return array [seasonNum => cheapestRoomTotal]
      */
-    private function getMinAdultPriceBySeason(array $seasonPrices, array $seasons): array
+    private function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
     {
         // Build a code index for percentage resolution
         $codeIndex = [];
@@ -431,9 +445,8 @@ class PriceInfoService implements PriceInfoServiceInterface
             if ($num > $maxSeason) $maxSeason = $num;
         }
 
-        $result = [];
-
-        // Filter to adult regular rows
+        // Group adult regular rows by room
+        $roomRows = [];
         foreach ($seasonPrices as $row) {
             $fAge = $this->toScalarSafe($row['fAge'] ?? '');
             $idAge = $this->toScalarSafe($row['IdAge'] ?? '');
@@ -451,7 +464,24 @@ class PriceInfoService implements PriceInfoServiceInterface
             // Only consider regular bed (not extra bed)
             if ($accType !== '' && $accType !== 'REGULAR') continue;
 
-            // Check each season price column
+            $roomId = $this->toScalarSafe($row['IdRoom'] ?? '');
+            if ($roomId === '') $roomId = '_default';
+
+            $roomRows[$roomId][] = $row;
+        }
+
+        if (empty($roomRows)) {
+            return [];
+        }
+
+        // For each season, find the cheapest room total
+        $result = [];
+
+        foreach ($roomRows as $roomId => $rows) {
+            // Use the first matching row for this room (most general)
+            $row = $rows[0];
+            $isRoomPrice = strtoupper($this->toScalarSafe($row['RoomPrice'] ?? 'No')) === 'YES';
+
             for ($s = 1; $s <= min($maxSeason, 20); $s++) {
                 $priceKey = 'Price' . $s;
                 $rawPrice = $row[$priceKey] ?? null;
@@ -460,11 +490,14 @@ class PriceInfoService implements PriceInfoServiceInterface
                     continue;
                 }
 
-                $price = $this->resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
-                if ($price <= 0) continue;
+                $unitPrice = $this->resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
+                if ($unitPrice <= 0) continue;
 
-                if (!isset($result[$s]) || $price < $result[$s]) {
-                    $result[$s] = $price;
+                // Calculate nightly total for the given occupancy
+                $nightlyTotal = $isRoomPrice ? $unitPrice : ($unitPrice * $adults);
+
+                if (!isset($result[$s]) || $nightlyTotal < $result[$s]) {
+                    $result[$s] = $nightlyTotal;
                 }
             }
         }

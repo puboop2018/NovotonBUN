@@ -31,6 +31,16 @@ function readConfig(el) {
         return fallback;
     };
 
+    // Calendar prices: JSON map from data-calendar-prices attribute
+    let calendarPrices = null;
+    let calendarPricesCurrency = '';
+    if (el.dataset.calendarPrices) {
+        try {
+            calendarPrices = JSON.parse(el.dataset.calendarPrices);
+            calendarPricesCurrency = el.dataset.calendarPricesCurrency || '';
+        } catch (_) { /* ignore malformed JSON */ }
+    }
+
     return {
         hotelId:             str('hotel_id',   'hotelId'),
         productId:           str('product_id', 'productId'),
@@ -46,6 +56,8 @@ function readConfig(el) {
         maxChildren:         parseInt(el.dataset.maxChildren)  || 4,
         buttonText:          el.dataset.buttonText || '',
         roomsData:           url.get('rooms_data') || el.dataset.roomsData || '',
+        calendarPrices,
+        calendarPricesCurrency,
     };
 }
 

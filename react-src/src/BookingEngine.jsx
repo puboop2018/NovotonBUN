@@ -38,6 +38,8 @@ export default function BookingEngine({ config }) {
         maxChildren = 4,
         buttonText = '',
         roomsData = '',
+        calendarPrices: configCalendarPrices = null,
+        calendarPricesCurrency: configCalendarPricesCurrency = '',
     } = config;
 
     // -----------------------------------------------------------------------
@@ -78,8 +80,18 @@ export default function BookingEngine({ config }) {
         return roomArr;
     });
 
-    // Calendar prices: per-date minimum prices from window.bookingData
+    // Calendar prices: per-date approximate totals for cheapest room
+    // Source 1: config prop (from data-calendar-prices on product page)
+    // Source 2: window.bookingData (from booking form page template)
     const calendarPrices = useMemo(() => {
+        // Prefer config (data-* attribute on product page)
+        if (configCalendarPrices && typeof configCalendarPrices === 'object' && Object.keys(configCalendarPrices).length > 0) {
+            return {
+                prices: configCalendarPrices,
+                currency: configCalendarPricesCurrency || ''
+            };
+        }
+        // Fallback: window.bookingData (booking form page)
         if (typeof window !== 'undefined' && window.bookingData && window.bookingData.showCalendarPrices) {
             return {
                 prices: window.bookingData.calendarPrices || {},
@@ -87,7 +99,7 @@ export default function BookingEngine({ config }) {
             };
         }
         return { prices: {}, currency: '' };
-    }, []);
+    }, [configCalendarPrices, configCalendarPricesCurrency]);
 
     const [showCalendar, setShowCalendar] = useState(false);
     const [showGuests, setShowGuests] = useState(false);
