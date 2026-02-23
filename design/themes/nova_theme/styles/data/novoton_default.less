@@ -1,36 +1,106 @@
 // =============================================================================
 // Novoton Default – Theme Editor preset
 //
-// Each variable here corresponds to a field in schema.json.
-// When the admin changes a color in the Theme Editor, CS-Cart updates
-// this file and recompiles all LESS.
+// Every variable matches a field in schema.json (theme) or
+// schema.post.php (addon).  When the admin changes a value in the
+// Theme Editor, CS-Cart rewrites this file and recompiles all LESS.
 // =============================================================================
 
 // ---- General ----------------------------------------------------------------
-@full_width: false;
+@rounded_corners: true;
 
-// ---- Standard theme colors --------------------------------------------------
-@main_color:        #0070c0;
-@secondary_color:   #444444;
-@links_color:       #0070c0;
-@top_menu_bg:       #333333;
-@top_menu_color:    #ffffff;
-@header_bottom_bg:  #f7f7f7;
-@footer_bg:         #333333;
-@footer_color:      #ffffff;
+// ---- Colors  (schema.json → colors.fields) ---------------------------------
+@links:             #0070c0;
+@menu:              #333333;
+@menu_links:        #ffffff;
+@base:              #333333;
+@font:              #333333;
+@primary_button:    #003580;
+@secondary_button:  #808080;
+@tertiary_button:   #f0f0f0;
+@sidebar:           #f5f5f5;
+@price:             #e74c3c;
+@discount_label:    #e74c3c;
+@in_stock:          #28a745;
+@out_of_stock:      #dc3545;
+@top_panel_links:   #ffffff;
+@top_panel_text:    #ffffff;
+@footer_text:       #ffffff;
+@decorative:        #003580;
 
-// ---- Standard fonts ---------------------------------------------------------
-@base_font:             Arial, Helvetica, sans-serif;
-@base-font-size-value:  14;
-@base-font-weight:      normal;
+// Checkout colors
+@checkout_link:                         #4fbe31;
+@checkout_input_border:                 #acbdcd;
+@checkout_selected_input_border:        #4fbe31;
+@checkout_step_title:                   #2e3a47;
+@checkout_input_text:                   #2e3a47;
+@checkout_input_label:                  #a1a6aa;
+@checkout_control_border:               #acbdcd;
+@checkout_selected_control_border:      #4fbe31;
+@checkout_control_background:           #fff;
+@checkout_selected_control_background:  #fff;
+@checkout_control_title:                #4fbe31;
+@checkout_control_description:          #6c6c6c;
+@checkout_control_label:                #2e3a47;
+@checkout_terms_background:             #f9f9f9;
 
-// ---- Standard background ----------------------------------------------------
-@bg_color:              #f5f5f5;
-@body_bg_pattern:       none;
-@body_bg_repeat:        no-repeat;
-@body_bg_transparent:   false;
+// ---- Fonts  (schema.json → fonts.fields) ------------------------------------
+@body_font:                 Inter,'Helvetica Neue',-apple-system,sans-serif;
+@body_font_size:            14;
+@body_font_style:           normal;
+@body_font_weight:          normal;
 
-// ---- Novoton addon colors ---------------------------------------------------
+@headings_font:             Inter,'Helvetica Neue',-apple-system,sans-serif;
+@headings_font_size:        26;
+@headings_font_decoration:  none;
+@headings_font_style:       normal;
+@headings_font_weight:      bold;
+
+@links_font:                Inter,'Helvetica Neue',-apple-system,sans-serif;
+@links_font_size:           14;
+@links_font_decoration:     none;
+@links_font_style:          normal;
+@links_font_weight:         normal;
+
+@price_font:                Inter,'Helvetica Neue',-apple-system,sans-serif;
+@price_font_size:           18;
+@price_font_decoration:     none;
+@price_font_style:          normal;
+@price_font_weight:         bold;
+
+@buttons_font:              Inter,'Helvetica Neue',-apple-system,sans-serif;
+@buttons_font_size:         14;
+@buttons_font_decoration:   none;
+@buttons_font_style:        normal;
+@buttons_font_weight:       bold;
+
+// ---- Backgrounds  (schema.json → backgrounds.fields) ------------------------
+@general_bg_color:      #f5f5f5;
+@general_bg_image:      none;
+@general_bg_position:   center top;
+@general_bg_repeat:     no-repeat;
+@general_bg_scroll:     scroll;
+
+@top_panel_bg:              #333333;
+@top_panel_bg_full:         true;
+@top_panel_bg_transparent:  false;
+@top_panel_bg_grad_stop:    '';
+
+@header_bg:                 #ffffff;
+@header_bg_full:            true;
+@header_bg_transparent:     false;
+@header_bg_grad_stop:       '';
+
+@content_bg:                #ffffff;
+@content_bg_full:           true;
+@content_bg_transparent:    false;
+
+@footer_bg:                 #333333;
+@footer_bg_full:            true;
+@footer_bg_transparent:     false;
+@footer_bg_grad_stop:       '';
+
+// ---- Novoton addon colors  (schema.post.php → colors) -----------------------
 @novoton-primary:           #003580;
 @novoton-accent:            #febb02;
 @novoton-search-btn-bg:     #006ce4;
@@ -41,12 +111,12 @@
 @novoton-success:           #28a745;
 @novoton-danger:            #dc3545;
 
-// ---- Novoton fonts ----------------------------------------------------------
+// ---- Novoton addon fonts  (schema.post.php → fonts) -------------------------
 @novoton-font-family:           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 @novoton-font-size-base-value:  14;
 @novoton-font-weight:           normal;
 
-// ---- Novoton background -----------------------------------------------------
+// ---- Novoton addon background  (schema.post.php → backgrounds) --------------
 @novoton-bg-pattern:        none;
 @novoton-bg-repeat:         no-repeat;
 @novoton-bg-transparent:    false;

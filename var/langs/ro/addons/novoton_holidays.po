@@ -2009,50 +2009,6 @@ msgctxt "Languages::theme_editor.novoton_page_background"
 msgid "Novoton: Page background"
 msgstr "Novoton: Fundal pagină"
 
-msgctxt "Languages::theme_editor.full_width"
-msgid "Full width"
-msgstr "Lățime completă"
-
-msgctxt "Languages::theme_editor.main_color"
-msgid "Main color"
-msgstr "Culoare principală"
-
-msgctxt "Languages::theme_editor.secondary_color"
-msgid "Secondary color"
-msgstr "Culoare secundară"
-
-msgctxt "Languages::theme_editor.links_color"
-msgid "Links color"
-msgstr "Culoare linkuri"
-
-msgctxt "Languages::theme_editor.top_menu_bg"
-msgid "Top menu background"
-msgstr "Fundal meniu sus"
-
-msgctxt "Languages::theme_editor.top_menu_color"
-msgid "Top menu text"
-msgstr "Text meniu sus"
-
-msgctxt "Languages::theme_editor.header_bottom_bg"
-msgid "Header bottom background"
-msgstr "Fundal header jos"
-
-msgctxt "Languages::theme_editor.footer_bg"
-msgid "Footer background"
-msgstr "Fundal footer"
-
-msgctxt "Languages::theme_editor.footer_color"
-msgid "Footer text"
-msgstr "Text footer"
-
-msgctxt "Languages::theme_editor.base_font"
-msgid "Base font"
-msgstr "Font de bază"
-
-msgctxt "Languages::theme_editor.body_bg"
-msgid "Page background"
-msgstr "Fundal pagină"
-
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Disponibil pe date apropiate"
