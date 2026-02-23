@@ -2616,3 +2616,7 @@ msgstr "Available on nearby dates"
 msgctxt "Languages::novoton_holidays.rooms_short"
 msgid "rooms"
 msgstr "rooms"
+
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Price updated based on child age"

@@ -2000,3 +2000,7 @@ msgstr "Afișează prețuri aproximative pe noapte pe celulele calendarului din 
 msgctxt "Languages::novoton_holidays.calendar_price_footer"
 msgid "Approximate prices in %s for a 1-night stay"
 msgstr "Prețuri aproximative în %s pentru un sejur de 1 noapte"
+
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Prețul a fost actualizat în funcție de vârsta copilului"
