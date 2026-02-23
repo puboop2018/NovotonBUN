@@ -288,6 +288,10 @@ button.nvt-field-input:active {
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
 }
+/* When prices are displayed, switch from circles to rectangles */
+.nvt-calendar-days--with-prices {
+    gap: 1px;
+}
 
 .nvt-calendar-day {
     display: flex;
@@ -304,8 +308,20 @@ button.nvt-field-input:active {
     padding: 0;
     transition: background 0.1s;
 }
+/* With prices: flex-column for number + price, rectangular cells */
+.nvt-calendar-day--has-prices {
+    flex-direction: column;
+    aspect-ratio: auto;
+    border-radius: 4px;
+    padding: 4px 2px 3px;
+    min-height: 44px;
+    gap: 1px;
+}
 .nvt-calendar-day:hover {
     background: transparent;
+}
+.nvt-calendar-day--has-prices:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--selected) {
+    background: #f0f4f8;
 }
 .nvt-calendar-day--disabled {
     color: #ccc;
@@ -320,12 +336,38 @@ button.nvt-field-input:active {
     color: #fff !important;
     font-weight: 600;
 }
+.nvt-calendar-day--selected .nvt-calendar-day-price {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
 .nvt-calendar-day--in-range {
     background: #e8f0fe;
     border-radius: 0;
 }
+.nvt-calendar-day--in-range.nvt-calendar-day--has-prices {
+    border-radius: 4px;
+}
 .nvt-calendar-day--empty {
     visibility: hidden;
+}
+/* No-price dates: greyed out with reduced opacity */
+.nvt-calendar-day--no-price {
+    opacity: 0.45;
+}
+.nvt-calendar-day--no-price .nvt-calendar-day-price {
+    color: #999;
+}
+
+/* Day number inside price-enabled cells */
+.nvt-calendar-day-num {
+    line-height: 1.2;
+}
+/* Price label below the day number */
+.nvt-calendar-day-price {
+    font-size: 9px;
+    line-height: 1;
+    color: var(--nvt-primary, #003580);
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .nvt-calendar-footer {
@@ -337,6 +379,16 @@ button.nvt-field-input:active {
     border-top: 1px solid var(--nvt-border);
     font-size: 13px;
     color: var(--nvt-text-light);
+}
+/* Approximate prices disclaimer footer */
+.nvt-calendar-price-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #999;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--nvt-border, #e0e0e0);
+    font-style: italic;
 }
 
 .nvt-done-btn {

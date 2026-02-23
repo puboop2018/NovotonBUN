@@ -1988,3 +1988,15 @@ msgstr "Disponibil pe date apropiate"
 msgctxt "Languages::novoton_holidays.rooms_short"
 msgid "rooms"
 msgstr "camere"
+
+msgctxt "SettingsOptions::novoton_holidays::show_calendar_prices"
+msgid "Show Calendar Prices"
+msgstr "Afișare prețuri pe calendar"
+
+msgctxt "SettingsTooltips::novoton_holidays::show_calendar_prices"
+msgid "Display approximate per-night prices on calendar date cells in the booking form"
+msgstr "Afișează prețuri aproximative pe noapte pe celulele calendarului din formularul de rezervare"
+
+msgctxt "Languages::novoton_holidays.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Prețuri aproximative în %s pentru un sejur de 1 noapte"

@@ -12,7 +12,7 @@
  *   "homepage" – on the homepage (includes a location search input)
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { CalendarIcon, GuestIcon, ChevronDown, RefreshIcon } from './icons';
@@ -77,6 +77,17 @@ export default function BookingEngine({ config }) {
         }
         return roomArr;
     });
+
+    // Calendar prices: per-date minimum prices from window.bookingData
+    const calendarPrices = useMemo(() => {
+        if (typeof window !== 'undefined' && window.bookingData && window.bookingData.showCalendarPrices) {
+            return {
+                prices: window.bookingData.calendarPrices || {},
+                currency: window.bookingData.calendarPricesCurrency || ''
+            };
+        }
+        return { prices: {}, currency: '' };
+    }, []);
 
     const [showCalendar, setShowCalendar] = useState(false);
     const [showGuests, setShowGuests] = useState(false);
@@ -419,6 +430,8 @@ export default function BookingEngine({ config }) {
                             checkOut={checkOut}
                             onSelect={handleDateSelect}
                             onClose={() => setShowCalendar(false)}
+                            prices={calendarPrices.prices}
+                            pricesCurrency={calendarPrices.currency}
                         />
                     )}
                 </div>

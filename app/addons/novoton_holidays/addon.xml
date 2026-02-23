@@ -219,6 +219,11 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="show_calendar_prices">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                     <item id="booking_form_position">
                         <type>selectbox</type>
                         <default_value>before_tabs</default_value>

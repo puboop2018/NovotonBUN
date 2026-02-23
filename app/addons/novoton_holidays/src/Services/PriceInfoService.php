@@ -287,6 +287,234 @@ class PriceInfoService implements PriceInfoServiceInterface
     }
 
     /**
+     * Get per-date calendar prices for a hotel.
+     *
+     * Returns a flat map of "YYYY-MM-DD" => price (float) representing
+     * the minimum 1-night adult price across all rooms for that date.
+     * Prices include commission and are converted to the target currency.
+     *
+     * Dates that fall outside any season will not appear in the map —
+     * the Calendar UI should treat missing dates as "no price" (grey/dash).
+     *
+     * @param string      $hotelId        Hotel ID
+     * @param string|null $targetCurrency  Target currency code (null = display currency)
+     * @return array ['prices' => [date => price], 'currency' => string]
+     */
+    public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null): array
+    {
+        $currency = $targetCurrency ?? RoomPriceService::getDisplayCurrency();
+
+        $priceinfoJson = db_get_field(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
+            $hotelId
+        );
+
+        if (empty($priceinfoJson)) {
+            return ['prices' => [], 'currency' => $currency];
+        }
+
+        $priceinfo = json_decode($priceinfoJson, true);
+        if (empty($priceinfo)) {
+            return ['prices' => [], 'currency' => $currency];
+        }
+
+        // 1. Parse seasons
+        $seasons = $priceinfo['seasons']['season'] ?? $priceinfo['seasons'] ?? [];
+        if (isset($seasons['IdSeason']) || isset($seasons['Season'])) {
+            $seasons = [$seasons];
+        }
+        if (empty($seasons) || !is_array($seasons)) {
+            return ['prices' => [], 'currency' => $currency];
+        }
+
+        // 2. Parse season_price rows
+        $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+        if (empty($seasonPrices)) {
+            return ['prices' => [], 'currency' => $currency];
+        }
+
+        // 3. For each season, find the minimum adult price across all rooms
+        $minPriceBySeason = $this->getMinAdultPriceBySeason($seasonPrices, $seasons);
+
+        // 4. Expand season ranges into per-date prices
+        $dateMap = [];
+        $roundPrices = ConfigProvider::isRoundPrices();
+
+        foreach ($seasons as $season) {
+            $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? 0);
+            if ($seasonNum <= 0 || !isset($minPriceBySeason[$seasonNum])) {
+                continue;
+            }
+
+            $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
+            $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
+            if (empty($from) || empty($to)) {
+                continue;
+            }
+
+            $rawPrice = $minPriceBySeason[$seasonNum];
+
+            // Apply commission
+            $priceWithCommission = $rawPrice * (1 + ($this->commission / 100));
+
+            // Convert currency
+            $converted = RoomPriceService::convertFromApiCurrency((float) $priceWithCommission, $currency);
+
+            // Round if enabled
+            if ($roundPrices) {
+                $converted = round($converted);
+            }
+
+            // Only include future dates (and dates within ~18 months)
+            $today = date('Y-m-d');
+            $maxDate = date('Y-m-d', strtotime('+18 months'));
+            $startDate = max($from, $today);
+            $endDate = min($to, $maxDate);
+
+            if ($startDate > $endDate) {
+                continue;
+            }
+
+            try {
+                $current = new \DateTime($startDate);
+                $end = new \DateTime($endDate);
+
+                while ($current <= $end) {
+                    $dateMap[$current->format('Y-m-d')] = $converted;
+                    $current->modify('+1 day');
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        $this->log('Calendar prices computed', [
+            'hotel_id' => $hotelId,
+            'currency' => $currency,
+            'dates_count' => count($dateMap)
+        ]);
+
+        return ['prices' => $dateMap, 'currency' => $currency];
+    }
+
+    /**
+     * Find minimum adult price for each season number.
+     *
+     * Scans season_price rows for adult regular-bed entries and picks
+     * the lowest Price{N} value per season, resolving percentage-based
+     * prices against their Base code row.
+     *
+     * @param array $seasonPrices season_price rows
+     * @param array $seasons      seasons array (for determining which PriceN columns exist)
+     * @return array [seasonNum => minPrice]
+     */
+    private function getMinAdultPriceBySeason(array $seasonPrices, array $seasons): array
+    {
+        // Build a code index for percentage resolution
+        $codeIndex = [];
+        foreach ($seasonPrices as $row) {
+            $code = $this->toScalarSafe($row['Code'] ?? '');
+            if ($code !== '') {
+                $codeIndex[$code][] = $row;
+            }
+        }
+
+        // Get max season number
+        $maxSeason = 0;
+        foreach ($seasons as $s) {
+            $num = (int) ($s['Season'] ?? $s['IdSeason'] ?? 0);
+            if ($num > $maxSeason) $maxSeason = $num;
+        }
+
+        $result = [];
+
+        // Filter to adult regular rows
+        foreach ($seasonPrices as $row) {
+            $fAge = $this->toScalarSafe($row['fAge'] ?? '');
+            $idAge = $this->toScalarSafe($row['IdAge'] ?? '');
+            $accType = strtoupper(trim($this->toScalarSafe($row['IdAcc'] ?? '')));
+
+            // Only consider adult entries
+            $isAdult = false;
+            if (stripos($fAge, 'ADULT') !== false) {
+                $isAdult = true;
+            } elseif ($idAge === '1') {
+                $isAdult = true;
+            }
+            if (!$isAdult) continue;
+
+            // Only consider regular bed (not extra bed)
+            if ($accType !== '' && $accType !== 'REGULAR') continue;
+
+            // Check each season price column
+            for ($s = 1; $s <= min($maxSeason, 20); $s++) {
+                $priceKey = 'Price' . $s;
+                $rawPrice = $row[$priceKey] ?? null;
+
+                if ($rawPrice === null || $rawPrice === '' || $rawPrice === 0 || $rawPrice === '0') {
+                    continue;
+                }
+
+                $price = $this->resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
+                if ($price <= 0) continue;
+
+                if (!isset($result[$s]) || $price < $result[$s]) {
+                    $result[$s] = $price;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Resolve a single price value, handling percentage references.
+     *
+     * @param mixed  $rawPrice  Price value (numeric or "85%")
+     * @param string $priceKey  Column key (e.g. "Price2")
+     * @param array  $codeIndex Code-indexed season_price rows
+     * @return float Resolved price
+     */
+    private function resolveCalendarPrice($rawPrice, string $priceKey, array $codeIndex): float
+    {
+        if (is_array($rawPrice) || is_object($rawPrice)) {
+            return 0.0;
+        }
+
+        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+            $percent = (float) str_replace('%', '', $rawPrice);
+            // Resolve from Base code row
+            if (isset($codeIndex['Base'][0])) {
+                $baseRaw = $codeIndex['Base'][0][$priceKey] ?? 0;
+                if (is_string($baseRaw) && strpos($baseRaw, '%') !== false) {
+                    return 0.0; // Avoid infinite recursion
+                }
+                $basePrice = (float) $baseRaw;
+                return round($basePrice * ($percent / 100), 2);
+            }
+            return 0.0;
+        }
+
+        return (float) $rawPrice;
+    }
+
+    /**
+     * Safely convert a value to scalar string.
+     */
+    private function toScalarSafe($val): string
+    {
+        if (is_array($val) || is_object($val)) {
+            return '';
+        }
+        return (string) $val;
+    }
+
+    /**
      * Extract prices from priceinfo response
      *
      * @param array $priceinfo Priceinfo data

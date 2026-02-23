@@ -9,6 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
     $bookingData = $_REQUEST;
@@ -310,10 +311,25 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     Tygh::$app['view']->assign('package_name', $package_name);
     Tygh::$app['view']->assign('hotel_all_packages', $all_packages);
     Tygh::$app['view']->assign('auth', Tygh::$app['session']['auth'] ?? []);
-    
+
+    // Calendar prices: per-date minimum prices for the calendar widget
+    $calendar_prices_json = '{}';
+    $calendar_prices_currency = $novoton_display_currency;
+    if (ConfigProvider::isShowCalendarPrices() && !empty($bookingData['hotel_id'])) {
+        $priceInfoService = new PriceInfoService();
+        $calendarData = $priceInfoService->getCalendarPrices($bookingData['hotel_id'], $novoton_display_currency);
+        if (!empty($calendarData['prices'])) {
+            $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
+            $calendar_prices_currency = $calendarData['currency'];
+        }
+    }
+    Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
+    Tygh::$app['view']->assign('calendar_prices_currency', $calendar_prices_currency);
+    Tygh::$app['view']->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
+
     // Terms are now fetched directly from API at checkout (Option A)
     // No need to pass through booking form
-    
+
     // Page setup
     $page_title = __('novoton_holidays.complete_booking');
     Tygh::$app['view']->assign('page_title', $page_title);
