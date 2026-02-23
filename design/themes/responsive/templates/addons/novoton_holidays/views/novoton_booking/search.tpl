@@ -705,7 +705,8 @@
                                 <div id="modal-content-{$row_id}-mobile" style="display: none;">
                                     {* Payment Terms - displayed first *}
                                     {if $result.terms_of_payment}
-                                        {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}
+                                        {math equation="x * y" x=$result.total_price y=$novoton_display_coefficient|default:1 assign="_display_price_mobile"}
+                                        {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $_display_price_mobile, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY)}
                                         {if $payment_terms_mobile}
                                             <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_mobile|nl2br nofilter}</div>
                                         {/if}
@@ -831,7 +832,8 @@
                             <div id="modal-content-{$row_id}" style="display: none;">
                                 {* Payment Terms - displayed first *}
                                 {if $result.terms_of_payment}
-                                    {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $smarty.const.CART_PRIMARY_CURRENCY)}
+                                    {math equation="x * y" x=$result.total_price y=$novoton_display_coefficient|default:1 assign="_display_price_desktop"}
+                                    {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $_display_price_desktop, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY)}
                                     {if $payment_terms_desktop}
                                         <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_desktop|nl2br nofilter}</div>
                                     {/if}
