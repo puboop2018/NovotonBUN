@@ -135,7 +135,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
  * @param array  $params    Query parameters
  * @param string $lang_code Language code
  */
-function fn_novoton_holidays_get_product_tabs_post(&$tabs, $params, $lang_code): void
+function fn_novoton_holidays_get_product_tabs_post(&$tabs, $params, $lang_code = CART_LANGUAGE): void
 {
     // No-op: hook is registered to prevent "not callable" errors.
     // Future: add a "Hotel Info" tab for hotel products in admin.
