@@ -55,7 +55,8 @@ if (in_array($mode, $hotels_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    // Only pass through redirects (2-element arrays); template modes fall through
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
@@ -68,7 +69,7 @@ if (!$_routed && in_array($mode, $prices_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
@@ -81,15 +82,17 @@ if (!$_routed && in_array($mode, $tools_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
 }
 
-// If routed to a sub-controller, stop here (let template render)
+// If routed to a sub-controller, stop here and let CS-Cart render the template.
+// Do NOT return [CONTROLLER_STATUS_OK] — that's for redirects with a URL.
+// Falling through without returning tells CS-Cart to render the template.
 if ($_routed) {
-    return [CONTROLLER_STATUS_OK];
+    return;
 }
 
 // ============================================================================
@@ -223,7 +226,10 @@ if ($mode == 'manage' || empty($mode)) {
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
         'exchange_rates' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=exchange_rates",
     ];
-    
+
+    // Live XML feed URL (for CS-Cart Advanced Import "Link to file")
+    $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
+
     // Assign to view
     Tygh::$app['view']->assign('stats', $stats);
     Tygh::$app['view']->assign('countries', $countries);
@@ -231,6 +237,7 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('last_syncs', $last_syncs);
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);
+    Tygh::$app['view']->assign('xml_feed_url', $xml_feed_url);
     Tygh::$app['view']->assign('addon_settings', $addon_settings);
     Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
     

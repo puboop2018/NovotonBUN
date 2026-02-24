@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Responsible for:
  *   - gather_additional_product_data_post: Enrich product page with hotel data
  *   - get_product_data_post: Attach hotel_id and packages to product data
+ *   - get_product_tabs_post: Add custom tab in admin product edit
+ *   - update_product_pre: Before updating product data
  *   - delete_product_post: Clean up bookings when product is deleted
  *
  * @package NovotonHolidays
@@ -121,6 +123,39 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
     }
 
     $product_data['is_hotel_product'] = true;
+}
+
+/**
+ * Hook: get_product_tabs_post - Add custom tab in admin product edit for hotel products.
+ *
+ * CS-Cart calls this after retrieving product tabs. Currently a no-op stub
+ * to satisfy the fn_register_hooks() registration in init.php.
+ *
+ * @param array  $tabs      Product tabs (passed by reference)
+ * @param array  $params    Query parameters
+ * @param string $lang_code Language code
+ */
+function fn_novoton_holidays_get_product_tabs_post(&$tabs, $params, $lang_code): void
+{
+    // No-op: hook is registered to prevent "not callable" errors.
+    // Future: add a "Hotel Info" tab for hotel products in admin.
+}
+
+/**
+ * Hook: update_product_pre - Before updating a product.
+ *
+ * CS-Cart calls this before saving product data. Currently a no-op stub
+ * to satisfy the fn_register_hooks() registration in init.php.
+ *
+ * @param array  $product_data Product data (passed by reference)
+ * @param int    $product_id   Product ID
+ * @param string $lang_code    Language code
+ * @param bool   $can_update   Whether the update is allowed (passed by reference)
+ */
+function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $lang_code, &$can_update): void
+{
+    // No-op: hook is registered to prevent "not callable" errors.
+    // Future: validate or transform hotel-specific product fields before save.
 }
 
 /**
