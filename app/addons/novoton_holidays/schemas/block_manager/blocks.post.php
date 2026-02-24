@@ -8,12 +8,18 @@
  * @package NovotonHolidays
  */
 
-$schema['template']['templates']['blocks/static_templates/addons/novoton_holidays/homepage_booking.tpl'] = [
-    'settings' => [],
-];
+if (isset($schema['template']) && is_array($schema['template'])) {
+    if (!isset($schema['template']['templates']) || !is_array($schema['template']['templates'])) {
+        $schema['template']['templates'] = [];
+    }
 
-$schema['template']['templates']['blocks/static_templates/addons/novoton_holidays/booking_engine.tpl'] = [
-    'settings' => [],
-];
+    $schema['template']['templates']['blocks/static_templates/addons/novoton_holidays/homepage_booking.tpl'] = [
+        'settings' => [],
+    ];
+
+    $schema['template']['templates']['blocks/static_templates/addons/novoton_holidays/booking_engine.tpl'] = [
+        'settings' => [],
+    ];
+}
 
 return $schema;

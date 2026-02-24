@@ -34,7 +34,6 @@ $schema['novoton_holidays'] = [
 
         'download_active_prices_csv' => ['permissions' => 'manage_catalog'],
         'export_hotel_features_csv'  => ['permissions' => 'manage_catalog'],
-        'download_hotel_features_csv'=> ['permissions' => 'manage_catalog'],
         'get_hotel_features_csv'     => ['permissions' => 'manage_catalog'],
         'cron_export_hotel_features' => ['permissions' => 'novoton_manage_sync'],
 
