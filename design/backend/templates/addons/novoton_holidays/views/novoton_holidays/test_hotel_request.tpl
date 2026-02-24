@@ -82,15 +82,15 @@
     </div>
 </form>
 
-{* if $xml_preview}
+{if $xml_preview}
 <hr>
 <div class="well">
     <h4><i class="icon-code"></i> XML Preview (hotel_request)</h4>
     <pre style="max-height: 500px; overflow: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; white-space: pre-wrap;">{$xml_preview|escape:'html'}</pre>
 </div>
-{* /if *}
+{/if}
 
-{* if $id_num}
+{if $id_num}
 <div class="alert alert-success">
     <h4><i class="icon-ok"></i> Request Sent Successfully!</h4>
     <p><strong>IdNum received:</strong> <span style="font-size: 18px; font-weight: bold;">{$id_num}</span></p>
@@ -99,14 +99,14 @@
         <i class="icon-search"></i> Check Alternatives for IdNum {$id_num}
     </a>
 </div>
-{* /if *}
+{/if}
 
-{* if $api_response}
+{if $api_response}
 <div class="well">
     <h4><i class="icon-download-alt"></i> API Response</h4>
     <pre style="max-height: 300px; overflow: auto; background: #f8f9fa; padding: 15px; border-radius: 4px; font-size: 11px; font-family: 'Courier New', monospace; white-space: pre-wrap;">{$api_response|escape:'html'}</pre>
 </div>
-{* /if *}
+{/if}
 
 <hr>
 <div class="well">

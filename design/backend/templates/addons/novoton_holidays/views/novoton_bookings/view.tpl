@@ -261,7 +261,10 @@
 <a class="btn" href="{"novoton_bookings.manage"|fn_url}">&larr; Back to Bookings</a>
 {if $booking}
     {if $booking.novoton_status == 'ASK' || $booking.novoton_invoice_id}
-        <a href="{"novoton_bookings.resinfo?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-primary">Check Status</a>
+        <form action="{"novoton_bookings.resinfo"|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
+            <button type="submit" class="btn btn-primary">Check Status</button>
+        </form>
     {/if}
     {if $booking.novoton_status == 'RQ' || $booking.alternatives_requested}
         <a href="{"novoton_bookings.alternatives?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-success">View Alternatives</a>

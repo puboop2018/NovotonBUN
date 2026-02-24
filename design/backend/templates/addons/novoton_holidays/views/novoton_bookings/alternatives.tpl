@@ -5,7 +5,7 @@
 
 {* capture name="mainbox" - DISABLED *}
 
-{* if $booking}
+{if $booking}
 <div class="novoton-alternatives-view">
     
     {* Original Booking Info *}
@@ -148,9 +148,9 @@
         <a href="{"novoton_bookings.manage"|fn_url}" class="btn">&larr; Back to Bookings</a>
     </div>
 </div>
-{* else *}
+{else}
 <p class="no-items">Booking not found</p>
-{* /if *}
+{/if}
 
 {* /capture - DISABLED *}
 

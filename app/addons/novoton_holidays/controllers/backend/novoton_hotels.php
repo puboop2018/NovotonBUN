@@ -84,10 +84,18 @@ if ($mode == 'view_hotels_to_add') {
         'ready_to_add' => count($hotels)
     ];
     
+    // Country list for the filter dropdown
+    $countries = db_get_array(
+        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_prices = 'Y' GROUP BY country ORDER BY country"
+    );
+
     Tygh::$app['view']->assign('hotels', $hotels);
     Tygh::$app['view']->assign('country', $country);
     Tygh::$app['view']->assign('filter', $filter);
     Tygh::$app['view']->assign('stats', $stats);
+    Tygh::$app['view']->assign('countries', $countries);
+    Tygh::$app['view']->assign('in_cart_count', $stats['with_product']);
+    Tygh::$app['view']->assign('current_year', date('Y'));
 
     return [CONTROLLER_STATUS_OK];
 }
