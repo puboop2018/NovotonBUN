@@ -55,7 +55,8 @@ if (in_array($mode, $hotels_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    // Only pass through redirects (2-element arrays); template modes fall through
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
@@ -68,7 +69,7 @@ if (!$_routed && in_array($mode, $prices_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
@@ -81,15 +82,17 @@ if (!$_routed && in_array($mode, $tools_modes)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
     $__result = include($__file);
-    if (is_array($__result)) {
+    if (is_array($__result) && isset($__result[1])) {
         return $__result;
     }
     $_routed = true;
 }
 
-// If routed to a sub-controller, stop here (let template render)
+// If routed to a sub-controller, stop here and let CS-Cart render the template.
+// Do NOT return [CONTROLLER_STATUS_OK] — that's for redirects with a URL.
+// Falling through without returning tells CS-Cart to render the template.
 if ($_routed) {
-    return [CONTROLLER_STATUS_OK];
+    return;
 }
 
 // ============================================================================
