@@ -8,6 +8,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -82,26 +83,24 @@ if ($mode == 'sync_logs') {
 
 // View bookings
 if ($mode == 'bookings') {
-    
-    $params = $_REQUEST;
-    
+
     $condition = '';
-    $join = '';
-    
-    if (!empty($params['order_id'])) {
-        $condition .= db_quote(" AND b.order_id = ?i", $params['order_id']);
+
+    if (!empty($_REQUEST['order_id'])) {
+        $condition .= db_quote(" AND b.order_id = ?i", (int)$_REQUEST['order_id']);
     }
-    
-    if (!empty($params['status'])) {
-        $condition .= db_quote(" AND b.status = ?s", $params['status']);
+
+    $allowed_statuses = ['pending', 'confirmed', 'cancelled', 'failed', 'ASK', 'OK', 'XX'];
+    if (!empty($_REQUEST['status']) && in_array($_REQUEST['status'], $allowed_statuses, true)) {
+        $condition .= db_quote(" AND b.status = ?s", $_REQUEST['status']);
     }
-    
-    if (!empty($params['date_from'])) {
-        $condition .= db_quote(" AND b.check_in >= ?s", $params['date_from']);
+
+    if (!empty($_REQUEST['date_from']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_REQUEST['date_from'])) {
+        $condition .= db_quote(" AND b.check_in >= ?s", $_REQUEST['date_from']);
     }
-    
-    if (!empty($params['date_to'])) {
-        $condition .= db_quote(" AND b.check_in <= ?s", $params['date_to']);
+
+    if (!empty($_REQUEST['date_to']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_REQUEST['date_to'])) {
+        $condition .= db_quote(" AND b.check_in <= ?s", $_REQUEST['date_to']);
     }
     
     $bookings = db_get_array(
@@ -117,14 +116,19 @@ if ($mode == 'bookings') {
     );
     
     Tygh::$app['view']->assign('bookings', $bookings);
-    Tygh::$app['view']->assign('search', $params);
+    Tygh::$app['view']->assign('search', $_REQUEST);
 }
 
 // View booking details
 if ($mode == 'booking_details') {
-    
-    $bookingId = (int)($_REQUEST['booking_id']);
-    
+
+    $bookingId = (int)($_REQUEST['booking_id'] ?? 0);
+
+    if ($bookingId <= 0) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.booking_not_found'));
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.bookings'];
+    }
+
     $booking = db_get_row(
         "SELECT b.*, o.*, p.product 
          FROM ?:novoton_bookings b
@@ -253,7 +257,10 @@ if ($mode == 'test_api') {
 if ($mode == 'run_cron') {
     header('Content-Type: application/json');
     
-    $cron_mode = $_REQUEST['mode'] ?? '';
+    // Accept 'cron_mode' or legacy 'task' parameter for the cron job to run
+    $cron_mode = $_REQUEST['cron_mode'] ?? ($_REQUEST['task'] ?? '');
+    // Sanitize: only alphanumeric and underscores
+    $cron_mode = preg_replace('/[^a-z0-9_]/', '', strtolower($cron_mode));
     $allowed_modes = [
         'hotel_list', 'room_price', 'list_facilities', 'resort_list',
         'add_hotels_as_products', 'offers_update',
@@ -261,8 +268,8 @@ if ($mode == 'run_cron') {
         'cleanup', 'expire_requests'
     ];
     
-    if (!in_array($cron_mode, $allowed_modes)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid mode: ' . $cron_mode]);
+    if (!in_array($cron_mode, $allowed_modes, true)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid cron mode']);
         exit;
     }
     
@@ -370,12 +377,16 @@ if ($mode == 'run_cron') {
 }
 
 // ================================================
-// A73: Helper functions for admin cron execution
+// Admin cron execution helpers
+//
+// TODO: Migrate these functions to CronService or a dedicated AdminCronService.
+// They currently live here because they echo progress during execution, but
+// should be refactored to use a callback/output pattern instead.
 // ================================================
 
 function fn_novoton_holidays_admin_sync_hotels($api) {
     $countries = fn_novoton_holidays_parse_countries();
-    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
 
     $total = 0;
     $synced = 0;
@@ -413,7 +424,7 @@ function fn_novoton_holidays_admin_sync_hotels($api) {
 }
 
 function fn_novoton_holidays_admin_check_prices($api) {
-    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $hotels = db_get_array(
         "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
          WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
@@ -456,7 +467,7 @@ function fn_novoton_holidays_admin_sync_facilities($api) {
         return ['success' => false, 'message' => 'No facilities returned from API'];
     }
 
-    $facilityRepo = new \Tygh\Addons\NovotonHolidays\Repository\FacilityRepository();
+    $facilityRepo = Container::getInstance()->facilityRepository();
     $facilities = is_array($response->Facility) ? $response->Facility : [$response->Facility];
     $count = 0;
 
@@ -479,7 +490,7 @@ function fn_novoton_holidays_admin_add_products($api, $countries, $limit) {
         $countries = [$countries];
     }
 
-    $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+    $hotelRepo = Container::getInstance()->hotelRepository();
     $grand_added = 0;
     $grand_total = 0;
 
@@ -542,7 +553,7 @@ function fn_novoton_holidays_admin_add_products($api, $countries, $limit) {
 }
 
 function fn_novoton_holidays_admin_check_offers($api, $country) {
-    $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+    $syncLogRepo = Container::getInstance()->syncLogRepository();
     $last_check = $syncLogRepo->getLastSyncDate('offers_update')
                   ?: $syncLogRepo->getLastSyncDate('product_import');
     if (empty($last_check)) {
@@ -565,10 +576,10 @@ function fn_novoton_holidays_admin_check_offers($api, $country) {
 
 function fn_novoton_holidays_admin_check_alternatives($api, $type) {
     if ($type == 'requests') {
-        $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+        $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
         $items = $altRequestRepo->findPendingOlderThan(0, 50);
     } else {
-        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $bookingRepo = Container::getInstance()->bookingRepository();
         $items = $bookingRepo->findByNovotonStatus(
             \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
             [\Tygh\Addons\NovotonHolidays\Constants::STATUS_PENDING, \Tygh\Addons\NovotonHolidays\Constants::STATUS_CONFIRMED],
@@ -583,7 +594,7 @@ function fn_novoton_holidays_admin_check_alternatives($api, $type) {
 }
 
 function fn_novoton_holidays_admin_notify_alternatives() {
-    $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+    $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
     $requests = $altRequestRepo->findUnnotified(50);
     $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
@@ -598,8 +609,8 @@ function fn_novoton_holidays_admin_notify_alternatives() {
 }
 
 function fn_novoton_holidays_admin_cleanup() {
-    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
-    $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $syncLogRepo = Container::getInstance()->syncLogRepository();
 
     // Orphan bookings
     $orphans = $bookingRepo->deleteOrphans(48);
@@ -617,7 +628,7 @@ function fn_novoton_holidays_admin_cleanup() {
 }
 
 function fn_novoton_holidays_admin_expire_requests($days) {
-    $altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+    $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
     $expired = $altRequestRepo->expireOlderThan($days);
 
     return ['success' => true, 'message' => "Expired: {$expired} requests"];

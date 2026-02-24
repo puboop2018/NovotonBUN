@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -94,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Cleanup orphan bookings (no order_id and older than 24 hours)
     // With single source of truth architecture, orphans are simply abandoned cart bookings
     if ($mode === 'cleanup_orphans') {
-        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $bookingRepo = Container::getInstance()->bookingRepository();
         $count = $bookingRepo->countOrphans(24);
 
         if ($count > 0) {
@@ -112,11 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update Novoton ID manually (Issue 7.8)
     if ($mode === 'update_novoton_id') {
         $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
-        $novoton_invoice_id = isset($_REQUEST['novoton_invoice_id']) ? trim($_REQUEST['novoton_invoice_id']) : '';
+        $novoton_invoice_id = isset($_REQUEST['novoton_invoice_id']) ? preg_replace('/[^a-zA-Z0-9\-_]/', '', trim($_REQUEST['novoton_invoice_id'])) : '';
         
         if ($booking_id > 0) {
-            $bookingRepoUpdate = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
-            $bookingRepoUpdate->update($booking_id, ['novoton_invoice_id' => $novoton_invoice_id]);
+            $bookingRepo = Container::getInstance()->bookingRepository();
+            $bookingRepo->update($booking_id, ['novoton_invoice_id' => $novoton_invoice_id]);
             
             fn_set_notification('N', __('notice'), 'Novoton ID updated');
             
@@ -132,14 +133,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // GET modes
 if ($mode === 'manage') {
-    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $bookingRepo = Container::getInstance()->bookingRepository();
 
     // List all bookings from novoton_bookings (single source of truth)
     $params = $_REQUEST;
     $params['items_per_page'] = Registry::get('settings.Appearance.admin_elements_per_page');
 
-    // Sorting toggle for template
-    $sort_by = !empty($params['sort_by']) ? $params['sort_by'] : 'order_id';
+    // Sorting toggle for template (whitelist allowed sort columns)
+    $allowed_sort = ['order_id', 'check_in', 'created_at', 'hotel_name', 'status'];
+    $sort_by = (!empty($params['sort_by']) && in_array($params['sort_by'], $allowed_sort, true)) ? $params['sort_by'] : 'order_id';
     $sort_order = (!empty($params['sort_order']) && strtolower($params['sort_order']) === 'asc') ? 'ASC' : 'DESC';
     $sort_order_toggle = ($sort_order === 'ASC') ? 'desc' : 'asc';
     Tygh::$app['view']->assign('sort_order_toggle', $sort_order_toggle);
@@ -182,8 +184,8 @@ if ($mode === 'manage') {
     $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
 
     if ($booking_id > 0) {
-        $bookingRepoView = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
-        $booking = $bookingRepoView->findById($booking_id);
+        $bookingRepo = Container::getInstance()->bookingRepository();
+        $booking = $bookingRepo->findById($booking_id);
         
         if ($booking) {
             // Parse JSON fields
@@ -213,9 +215,9 @@ if ($mode === 'manage') {
     $booking_id = isset($_REQUEST['booking_id']) ? (int)($_REQUEST['booking_id']) : 0;
     
     if ($booking_id > 0) {
-        $bookingRepoAlt = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
-        $hotelRepoAlt = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
-        $booking = $bookingRepoAlt->findById($booking_id);
+        $bookingRepo = Container::getInstance()->bookingRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
+        $booking = $bookingRepo->findById($booking_id);
 
         if ($booking) {
             $alternatives = fn_novoton_holidays_get_alternatives($booking_id);
@@ -223,7 +225,7 @@ if ($mode === 'manage') {
             // Enrich alternatives with hotel names
             if ($alternatives) {
                 foreach ($alternatives as &$alt) {
-                    $hotel = $hotelRepoAlt->findBasicById($alt['hotel_id']);
+                    $hotel = $hotelRepo->findBasicById($alt['hotel_id']);
                     if ($hotel) {
                         $alt['hotel_name'] = $hotel['hotel_name'];
                         $alt['hotel_city'] = $hotel['city'];

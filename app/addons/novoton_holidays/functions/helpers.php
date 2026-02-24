@@ -290,3 +290,98 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         return false;
     }
 }
+
+// ============================================================================
+// STREAMING HTML HELPERS
+// ============================================================================
+
+/**
+ * Output the opening HTML for a streaming progress page.
+ *
+ * Used by controllers that echo real-time progress (check_prices, check_packages,
+ * add_hotels_as_products, etc.) so they share one consistent layout and CSS.
+ *
+ * @param string $title  Page title
+ * @param string $extra_css  Optional additional CSS rules
+ */
+function fn_novoton_holidays_stream_page_open(string $title, string $extra_css = ''): void
+{
+    header('Content-Type: text/html; charset=utf-8');
+
+    echo '<!DOCTYPE html><html><head><title>' . htmlspecialchars($title) . '</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #003580; margin-top: 0; }
+        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 600px; overflow-y: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .skip { color: #999; }
+        .resort-header { color: #003580; font-weight: bold; margin-top: 8px; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
+        .country-header { color: #fff; background: #003580; font-weight: bold; margin-top: 12px; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; margin-right: 10px; }
+        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
+        .progress { margin: 10px 0; padding: 8px; background: #e3f2fd; border-radius: 4px; font-weight: bold; }
+        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
+        .form-group input, .form-group select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .info-box { background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .country-checkboxes { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+        .country-checkboxes label { font-size: 12px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .country-checkboxes input[type="checkbox"] { margin: 0; }
+        .summary-table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        .summary-table th, .summary-table td { border: 1px solid #dee2e6; padding: 6px 10px; text-align: left; font-size: 12px; }
+        .summary-table th { background: #f8f9fa; color: #003580; }
+        .hint { color: #666; font-size: 13px; }
+        ' . $extra_css . '
+    </style></head><body><div class="container"><h1>' . htmlspecialchars($title) . '</h1>';
+}
+
+/**
+ * Output the closing HTML for a streaming progress page.
+ *
+ * @param string $back_url  URL for the "Back" button (defaults to manage page)
+ * @param array  $extra_buttons  Optional additional buttons [['url' => ..., 'label' => ...], ...]
+ */
+function fn_novoton_holidays_stream_page_close(string $back_url = '', array $extra_buttons = []): void
+{
+    if (empty($back_url)) {
+        $back_url = fn_url('novoton_holidays.manage');
+    }
+
+    echo '<a href="' . htmlspecialchars($back_url) . '" class="btn">&larr; Back</a>';
+
+    foreach ($extra_buttons as $btn) {
+        echo '<a href="' . htmlspecialchars($btn['url']) . '" class="btn">' . htmlspecialchars($btn['label']) . '</a>';
+    }
+
+    echo '</div></body></html>';
+}
+
+/**
+ * Build a hidden-field set from a CS-Cart fn_url() result.
+ *
+ * Streaming forms need to preserve the dispatch & security hash that
+ * fn_url() returns as query parameters. This helper generates the
+ * hidden inputs so they don't have to be repeated in every controller.
+ *
+ * @param string $dispatch_url  Full URL from fn_url()
+ * @return array{action: string, hidden_fields: string}
+ */
+function fn_novoton_holidays_stream_form_fields(string $dispatch_url): array
+{
+    $action = htmlspecialchars(strtok($dispatch_url, '?'));
+    $hidden = '';
+    $url_parts = parse_url($dispatch_url);
+
+    if (!empty($url_parts['query'])) {
+        parse_str($url_parts['query'], $qs);
+        foreach ($qs as $k => $v) {
+            $hidden .= '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
+        }
+    }
+
+    return ['action' => $action, 'hidden_fields' => $hidden];
+}
