@@ -105,8 +105,8 @@ function fn_novoton_holidays_register_smarty_modifiers()
     }
     
     try {
-        if (class_exists('Tygh') && !empty(\Tygh::$app) && \Tygh::$app->offsetExists('view')) {
-            $smarty = \Tygh::$app['view'];
+        if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
+            $smarty = \Tygh\Tygh::$app['view'];
             if ($smarty && method_exists($smarty, 'registerPlugin')) {
                 // Check if already registered to avoid errors
                 $plugins = $smarty->registered_plugins ?? [];
@@ -139,7 +139,7 @@ fn_register_hooks(
     'gather_additional_product_data_post',    // Pass data to templates (for tabs)
     'update_product_pre',                      // Before updating products
     'delete_product_post',                     // Cleanup after product deletion
-    'place_order',                             // Create bookings on order
+    'place_order_post',                        // Create bookings on order (post — needs order_id)
     'get_orders_post',                         // Add booking info to orders
     'get_order_info',                          // Format terms on order detail page
     'get_product_tabs_post',                   // Add tab in ADMIN product edit

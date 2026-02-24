@@ -5,34 +5,19 @@ declare(strict_types=1);
  *
  * Responsible for:
  *   - gather_additional_product_data_post: Enrich product page with hotel data
- *   - products_view_after: (stub) product page display
  *   - get_product_data_post: Attach hotel_id and packages to product data
- *   - update_product_pre: Pre-update logic
  *   - delete_product_post: Clean up bookings when product is deleted
- *   - get_product_tabs_post: Backend tab registration
  *
  * @package NovotonHolidays
  * @since   3.0.0
  */
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
-
-/**
- * Add Hotel Prices tab to BACKEND (admin product edit page)
- */
-function fn_novoton_holidays_get_product_tabs_post(&$tabs, $product_id): void
-{
-    // Backend tab is handled separately if needed
-    // Frontend tab is auto-discovered from /blocks/product_tabs/ folder
-}
 
 /**
  * Hook: gather additional product data - pass prices to templates
@@ -111,14 +96,6 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 }
 
 /**
- * Hook: Add booking form to product page (after main content)
- */
-function fn_novoton_holidays_products_view_after(&$view): void
-{
-    // Template hooks handle this; stub kept for CS-Cart hook discovery.
-}
-
-/**
  * Hook: after getting product data
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
@@ -144,14 +121,6 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
     }
 
     $product_data['is_hotel_product'] = true;
-}
-
-/**
- * Hook: before updating product
- */
-function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $lang_code, $can_update): void
-{
-    // Placeholder for pre-update logic
 }
 
 /**

@@ -16,7 +16,7 @@
                     <option value="notified" {if $status_filter == 'notified'}selected{/if}>Notified ({$status_counts.notified|default:0})</option>
                     <option value="expired" {if $status_filter == 'expired'}selected{/if}>Expired ({$status_counts.expired|default:0})</option>
                 </select>
-                <input type="text" name="email" value="{$search_email}" placeholder="Search by email..." class="input-medium">
+                <input type="text" name="email" value="{$search_email|escape:'html'}" placeholder="Search by email..." class="input-medium">
                 <button type="submit" class="btn">{__("search")}</button>
             </form>
         </div>
@@ -49,7 +49,7 @@
             <tr>
                 <td>#{$request.request_id}</td>
                 <td>
-                    <strong>{$request.hotel_name|default:$request.hotel_id}</strong>
+                    <strong>{$request.hotel_name|default:$request.hotel_id|escape:'html'}</strong>
                     <br><small class="muted">{$request.adults} adults{if $request.children > 0}, {$request.children} children{/if}, {$request.num_rooms} room(s)</small>
                 </td>
                 <td>
@@ -57,8 +57,8 @@
                     <small class="muted">{$request.nights} nights</small>
                 </td>
                 <td>
-                    <a href="mailto:{$request.contact_email}">{$request.contact_email}</a>
-                    {if $request.contact_phone}<br><small>{$request.contact_phone}</small>{/if}
+                    <a href="mailto:{$request.contact_email|escape:'url'}">{$request.contact_email|escape:'html'}</a>
+                    {if $request.contact_phone}<br><small>{$request.contact_phone|escape:'html'}</small>{/if}
                 </td>
                 <td>
                     {if $request.status == 'pending'}

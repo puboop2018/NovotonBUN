@@ -18,12 +18,9 @@ declare(strict_types=1);
  * @since 2.8.0
  */
 
-use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
-use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
@@ -56,19 +53,8 @@ if ($mode == 'update_prices') {
     }
     
     // Batch update
-    header('Content-Type: text/html; charset=utf-8');
-    
-    echo '<!DOCTYPE html><html><head><title>Updating Prices</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-        h1 { color: #003580; }
-        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 500px; overflow-y: auto; }
-        .success { color: green; }
-        .error { color: red; }
-        .warning { color: orange; }
-        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-    </style></head><body><div class="container"><h1>Updating Product Prices</h1><div class="log">';
+    fn_novoton_holidays_stream_page_open('Updating Product Prices');
+    echo '<div class="log">';
     
     $limit = (int)($_REQUEST['limit'] ?? 50);
     
@@ -113,8 +99,8 @@ if ($mode == 'update_prices') {
     echo "No data: {$no_data}<br>";
     echo "Failed: {$failed}<br>";
     
-    echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">← Back</a>';
-    echo '</div></body></html>';
+    echo '</div>';
+    fn_novoton_holidays_stream_page_close();
     exit;
 }
 
@@ -132,8 +118,6 @@ if ($mode == 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-
-    header('Content-Type: text/html; charset=utf-8');
 
     // Default dates: July 7 - July 14, use next year if current date is Nov-Dec
     $month_now = (int) date('n');
@@ -160,40 +144,12 @@ if ($mode == 'check_prices') {
         $selected_countries = ConfigProvider::getSelectedCountries();
     }
 
-    echo '<!DOCTYPE html><html><head><title>Checking Hotel Prices</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-        h1 { color: #003580; }
-        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 600px; overflow-y: auto; }
-        .success { color: green; }
-        .error { color: red; }
-        .skip { color: #999; }
-        .resort-header { color: #003580; font-weight: bold; margin-top: 8px; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
-        .country-header { color: #fff; background: #003580; font-weight: bold; margin-top: 12px; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
-        .progress { margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; }
-        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
-        .form-group input, .form-group select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .country-checkboxes { display: flex; flex-wrap: wrap; gap: 6px 14px; }
-        .country-checkboxes label { font-size: 12px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .country-checkboxes input[type="checkbox"] { margin: 0; }
-    </style></head><body><div class="container"><h1>Checking Hotel Prices (Resort-based)</h1>';
+    fn_novoton_holidays_stream_page_open('Checking Hotel Prices (Resort-based)');
 
     // Date / settings form
-    $dispatch_url = fn_url('novoton_holidays.check_prices');
-    echo '<form method="get" action="' . htmlspecialchars(strtok($dispatch_url, '?')) . '">';
-    // Preserve dispatch and security hash from fn_url
-    $url_parts = parse_url($dispatch_url);
-    if (!empty($url_parts['query'])) {
-        parse_str($url_parts['query'], $qs);
-        foreach ($qs as $k => $v) {
-            echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
-        }
-    }
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices'));
+    echo '<form method="get" action="' . $form['action'] . '">';
+    echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
     echo '<div class="form-row">';
     echo '<div class="form-group"><label>Check-in</label><input type="text" name="check_in" value="' . htmlspecialchars($check_in) . '" placeholder="e.g. ' . htmlspecialchars($default_check_in) . '" style="width:130px"></div>';
@@ -211,10 +167,9 @@ if ($mode == 'check_prices') {
     echo '</form>';
 
     if (!$run || empty($selected_countries)) {
-        echo '<p style="color:#666;">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
+        echo '<p class="hint">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
         echo 'Uses resort-based bulk queries (1 API call per resort instead of 1 per hotel).</p>';
-        echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-        echo '</div></body></html>';
+        fn_novoton_holidays_stream_page_close();
         exit;
     }
 
@@ -381,8 +336,8 @@ if ($mode == 'check_prices') {
         }
     }
 
-    echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-    echo '</div></body></html>';
+    echo '</div>';
+    fn_novoton_holidays_stream_page_close();
     exit;
 }
 
@@ -403,8 +358,6 @@ if ($mode == 'check_prices_hotel') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-
-    header('Content-Type: text/html; charset=utf-8');
 
     // Default dates: July 7 - July 14, use next year if current date is Nov-Dec
     $month_now = (int) date('n');
@@ -432,28 +385,7 @@ if ($mode == 'check_prices_hotel') {
         $selected_countries = ConfigProvider::getSelectedCountries();
     }
 
-    echo '<!DOCTYPE html><html><head><title>Checking Hotel Prices (Per-Hotel)</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-        h1 { color: #003580; }
-        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 600px; overflow-y: auto; }
-        .success { color: green; }
-        .error { color: red; }
-        .skip { color: #999; }
-        .country-header { color: #fff; background: #003580; font-weight: bold; margin-top: 12px; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; margin-right: 10px; }
-        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
-        .progress { margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; }
-        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
-        .form-group input, .form-group select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .info-box { background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
-        .country-checkboxes { display: flex; flex-wrap: wrap; gap: 6px 14px; }
-        .country-checkboxes label { font-size: 12px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .country-checkboxes input[type="checkbox"] { margin: 0; }
-    </style></head><body><div class="container"><h1>Checking Hotel Prices (Per-Hotel)</h1>';
+    fn_novoton_holidays_stream_page_open('Checking Hotel Prices (Per-Hotel)');
 
     echo '<div class="info-box">';
     echo '<strong>Hotel-based query:</strong> Queries each hotel by hotel_id individually.<br>';
@@ -462,15 +394,9 @@ if ($mode == 'check_prices_hotel') {
     echo '</div>';
 
     // Date / settings form
-    $dispatch_url = fn_url('novoton_holidays.check_prices_hotel');
-    echo '<form method="get" action="' . htmlspecialchars(strtok($dispatch_url, '?')) . '">';
-    $url_parts = parse_url($dispatch_url);
-    if (!empty($url_parts['query'])) {
-        parse_str($url_parts['query'], $qs);
-        foreach ($qs as $k => $v) {
-            echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
-        }
-    }
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices_hotel'));
+    echo '<form method="get" action="' . $form['action'] . '">';
+    echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
     echo '<div class="form-row">';
     echo '<div class="form-group"><label>Check-in</label><input type="text" name="check_in" value="' . htmlspecialchars($check_in) . '" style="width:130px"></div>';
@@ -489,11 +415,11 @@ if ($mode == 'check_prices_hotel') {
     echo '</form>';
 
     if (!$run || empty($selected_countries)) {
-        echo '<p style="color:#666;">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
+        echo '<p class="hint">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
         echo 'This method queries each hotel individually by hotel_id (slower but complete).</p>';
-        echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-        echo '<a href="' . fn_url('novoton_holidays.check_prices') . '" class="btn">Resort-based Check</a>';
-        echo '</div></body></html>';
+        fn_novoton_holidays_stream_page_close('', [
+            ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
+        ]);
         exit;
     }
 
@@ -645,9 +571,9 @@ if ($mode == 'check_prices_hotel') {
     echo "<br><strong>Compare this with resort-based check to see discrepancies.</strong><br>";
 
     echo '</div>';
-    echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-    echo '<a href="' . fn_url('novoton_holidays.check_prices') . '" class="btn">Resort-based Check</a>';
-    echo '</div></body></html>';
+    fn_novoton_holidays_stream_page_close('', [
+        ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
+    ]);
     exit;
 }
 

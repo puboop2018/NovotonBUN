@@ -234,7 +234,7 @@ if ($mode == 'check') {
         'fn_novoton_holidays_get_product_tabs_post',
         'fn_novoton_holidays_get_product_data_post',
         'fn_novoton_holidays_delete_product_post',
-        'fn_novoton_holidays_place_order',
+        'fn_novoton_holidays_place_order_post',
         'fn_novoton_holidays_get_orders_post'
     );
     

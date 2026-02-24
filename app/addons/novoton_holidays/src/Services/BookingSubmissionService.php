@@ -21,14 +21,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
-use Tygh\Registry;
 
 class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
@@ -44,7 +41,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     /**
      * Submit all Novoton bookings in the cart to the API.
      *
-     * Called from the fn_novoton_holidays_place_order hook after CS-Cart
+     * Called from the fn_novoton_holidays_place_order_post hook after CS-Cart
      * creates the order record.
      *
      * For multi-room bookings:

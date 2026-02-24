@@ -18,7 +18,7 @@
     </button>
 </form>
 
-{* if $recent_requests}
+{if $recent_requests}
 <div class="well">
     <h5>Recent Alternative Requests (for reference)</h5>
     <table class="table table-condensed table-striped" style="font-size: 12px;">
@@ -52,9 +52,9 @@
         </tbody>
     </table>
 </div>
-{* /if *}
+{/if}
 
-{* if $id_num && $alternatives}
+{if $id_num && $alternatives}
 <div class="alert alert-success">
     <h4><i class="icon-ok"></i> {$alternatives|@count} Alternatives Found!</h4>
 </div>
@@ -102,19 +102,19 @@
         {/foreach}
     </tbody>
 </table>
-{* elseif $id_num && !$alternatives}
+{elseif $id_num && !$alternatives}
 <div class="alert alert-warning">
     <h4><i class="icon-time"></i> No Alternatives Available Yet</h4>
     <p>Alternatives are typically available 24-48 hours after the hotel_request is submitted. Please check again later.</p>
 </div>
-{* /if *}
+{/if}
 
-{* if $api_response}
+{if $api_response}
 <div class="well">
     <h4><i class="icon-download-alt"></i> Raw API Response (alternative_list)</h4>
     <pre style="max-height: 400px; overflow: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; font-size: 11px; font-family: 'Courier New', monospace; white-space: pre-wrap;">{$api_response|escape:'html'}</pre>
 </div>
-{* /if *}
+{/if}
 
 <hr>
 <div class="well">

@@ -3,25 +3,6 @@
 {capture name="mainbox"}
 
 <div class="novoton-price-compare">
-    <style>
-        .novoton-price-compare { max-width: 800px; }
-        .novoton-price-compare .form-group { margin-bottom: 15px; }
-        .novoton-price-compare label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .novoton-price-compare input, .novoton-price-compare select {
-            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
-        }
-        .novoton-price-compare .form-row { display: flex; gap: 15px; }
-        .novoton-price-compare .form-row > div { flex: 1; }
-        .novoton-price-compare .info-box {
-            background: #e3f2fd; border: 1px solid #2196f3;
-            padding: 15px; border-radius: 6px; margin-bottom: 20px;
-        }
-        .novoton-price-compare .btn-compare {
-            background: #003580; color: white; padding: 12px 30px;
-            border: none; border-radius: 4px; cursor: pointer; font-size: 16px;
-        }
-        .novoton-price-compare .btn-compare:hover { background: #002855; }
-    </style>
 
     <div class="info-box">
         <strong>Price Comparison Tool</strong><br>
@@ -36,7 +17,7 @@
 
         <div class="form-group">
             <label for="hotel_id">Hotel</label>
-            <select name="hotel_id" id="hotel_id" required onchange="loadPackages(this.value); loadRooms(this.value)">
+            <select name="hotel_id" id="hotel_id" required>
                 <option value="">-- Select Hotel --</option>
                 {foreach from=$hotels item=hotel}
                     <option value="{$hotel.hotel_id}">{$hotel.hotel_name} ({$hotel.hotel_id})</option>
@@ -58,7 +39,7 @@
                     <option value="">-- Select Hotel First --</option>
                 </select>
                 <input type="text" name="room_id" id="room_id_text" placeholder="e.g., DBL, DBL 2+1, SGL">
-                <small id="room_id_hint" style="color:#666;">Select a hotel to load available room types</small>
+                <small id="room_id_hint" class="field-hint">Select a hotel to load available room types</small>
             </div>
             <div class="form-group">
                 <label for="board_id">Board Type</label>
@@ -102,7 +83,7 @@
             <div class="form-group">
                 <label for="children_ages">Children Ages (comma-separated)</label>
                 <input type="text" name="children_ages" id="children_ages" placeholder="e.g., 1.5,7">
-                <small style="color:#666;">Leave empty for no children. Example: 1.5,7 for 2 children aged 1.5 and 7 years</small>
+                <small class="field-hint">Leave empty for no children. Example: 1.5,7 for 2 children aged 1.5 and 7 years</small>
             </div>
         </div>
 
@@ -112,9 +93,9 @@
             </label>
         </div>
 
-        <div class="form-group" style="display: flex; gap: 15px;">
+        <div class="form-group form-actions">
             <button type="submit" class="btn-compare">Compare Prices</button>
-            <button type="button" class="btn-compare" style="background: #ff9800;" onclick="verifySeasons()">
+            <button type="button" class="btn-compare btn-compare-verify" id="btn-verify-seasons">
                 Verify Season-Price Mapping
             </button>
         </div>
@@ -122,6 +103,21 @@
 </div>
 
 <script>
+// Bind events
+document.addEventListener('DOMContentLoaded', function() {
+    var hotelSelect = document.getElementById('hotel_id');
+    if (hotelSelect) {
+        hotelSelect.addEventListener('change', function() {
+            loadPackages(this.value);
+            loadRooms(this.value);
+        });
+    }
+    var verifyBtn = document.getElementById('btn-verify-seasons');
+    if (verifyBtn) {
+        verifyBtn.addEventListener('click', verifySeasons);
+    }
+});
+
 function loadPackages(hotelId) {
     var packageSelect = document.getElementById('package_name');
     packageSelect.innerHTML = '<option value="">Loading...</option>';

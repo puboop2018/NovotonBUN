@@ -40,7 +40,7 @@
     </div>
 </div>
 
-{* if $hotels|@count > 0}
+{if $hotels|@count > 0}
 
 {* Action Buttons *}
 <div class="well">
@@ -111,15 +111,15 @@
     </tbody>
 </table>
 
-{* if $hotels|@count > 100}
+{if $hotels|@count > 100}
 <p class="muted">Showing first 100 of {$hotels|@count} hotels.</p>
-{* /if *}
+{/if}
 
-{* else *}
+{else}
 <div class="alert alert-success">
     <i class="icon-ok"></i> All hotels with active prices from {$country} are already in CS-Cart!
 </div>
-{* /if *}
+{/if}
 
 {* /capture - DISABLED *}
 

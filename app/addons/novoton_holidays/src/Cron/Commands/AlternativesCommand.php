@@ -220,7 +220,7 @@ class AlternativesCommand extends AbstractCronCommand
                 'request' => $request,
             ];
 
-            $mailer = \Tygh::$app['mailer'];
+            $mailer = \Tygh\Tygh::$app['mailer'];
             return (bool)$mailer->send([
                 'to' => $request['contact_email'],
                 'from' => 'default_company_orders_department',

@@ -4,7 +4,7 @@
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
 
     {if $product.extra.hotel_name}
-    <strong>Hotel:</strong> {$product.extra.hotel_name}<br>
+    <strong>Hotel:</strong> {$product.extra.hotel_name|escape:'html'}<br>
     {/if}
 
     <strong>Check-in:</strong> {$product.extra.check_in|date_format:"%d.%m.%Y"} |
@@ -42,10 +42,10 @@
 
             <strong>{__("novoton_holidays.guests")}:</strong><br>
             {if $adult_guests}
-                &nbsp;&nbsp;{__("novoton_holidays.adults")}: {foreach from=$adult_guests item=guest name=adults}{$guest.name}{if $guest.room} ({__("novoton_holidays.room")} {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
+                &nbsp;&nbsp;{__("novoton_holidays.adults")}: {foreach from=$adult_guests item=guest name=adults}{$guest.name|escape:'html'}{if $guest.room} ({__("novoton_holidays.room")} {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
             {/if}
             {if $child_guests}
-                &nbsp;&nbsp;{__("novoton_holidays.children")}: {foreach from=$child_guests item=guest name=children}{$guest.name} ({$guest.age}){if $guest.room} ({__("novoton_holidays.room")} {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
+                &nbsp;&nbsp;{__("novoton_holidays.children")}: {foreach from=$child_guests item=guest name=children}{$guest.name|escape:'html'} ({$guest.age}){if $guest.room} ({__("novoton_holidays.room")} {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
             {/if}
         {/if}
     {elseif $product.extra.holder_name}

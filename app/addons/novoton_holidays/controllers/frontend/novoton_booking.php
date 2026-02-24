@@ -31,8 +31,6 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }

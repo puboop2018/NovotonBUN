@@ -9,8 +9,6 @@ declare(strict_types=1);
  * @since 2.8.0
  */
 
-use Tygh\Registry;
-
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**

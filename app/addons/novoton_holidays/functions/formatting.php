@@ -12,7 +12,6 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 /**
  * Format date using CS-Cart's date format from Admin > Settings > Appearance
@@ -115,7 +114,7 @@ function fn_novoton_holidays_normalize_resort_name($name): string
     $name = strtoupper(trim($name));
     $name = str_replace('&', 'AND', $name);
     $name = str_replace(['.', ',', '-', "'", '"'], ' ', $name);
-    $name = preg_replace('/\s+/', ' ', $name);
+    $name = preg_replace('/\s+/', ' ', $name) ?? $name;
     return trim($name);
 }
 

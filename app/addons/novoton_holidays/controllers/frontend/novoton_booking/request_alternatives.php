@@ -7,6 +7,8 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Tygh;
+
     $security = _nvt_get_security_service();
 
     // --- Rate limiting ---

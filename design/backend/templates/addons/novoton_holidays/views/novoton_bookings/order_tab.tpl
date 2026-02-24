@@ -3,7 +3,7 @@
  * Shows alternative hotels when booking is cancelled/rejected
  *}
 
-{* if $bookings}
+{if $bookings}
 <div class="novoton-alternatives-tab">
     {foreach from=$bookings item=booking}
     <div class="booking-section" style="margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
@@ -121,8 +121,8 @@
     </div>
     {/foreach}
 </div>
-{* else *}
+{else}
 <div style="padding: 20px; text-align: center; color: #999;">
     <i class="icon-info-sign"></i> No hotel bookings found for this order.
 </div>
-{* /if *}
+{/if}

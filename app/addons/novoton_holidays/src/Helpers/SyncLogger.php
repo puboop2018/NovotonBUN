@@ -15,8 +15,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
-use Tygh\Registry;
-use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class SyncLogger implements SyncLoggerInterface

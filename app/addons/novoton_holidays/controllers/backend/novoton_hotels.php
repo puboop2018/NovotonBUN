@@ -20,8 +20,6 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
-use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
@@ -84,10 +82,18 @@ if ($mode == 'view_hotels_to_add') {
         'ready_to_add' => count($hotels)
     ];
     
+    // Country list for the filter dropdown
+    $countries = db_get_array(
+        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_prices = 'Y' GROUP BY country ORDER BY country"
+    );
+
     Tygh::$app['view']->assign('hotels', $hotels);
     Tygh::$app['view']->assign('country', $country);
     Tygh::$app['view']->assign('filter', $filter);
     Tygh::$app['view']->assign('stats', $stats);
+    Tygh::$app['view']->assign('countries', $countries);
+    Tygh::$app['view']->assign('in_cart_count', $stats['with_product']);
+    Tygh::$app['view']->assign('current_year', date('Y'));
 
     return [CONTROLLER_STATUS_OK];
 }
@@ -162,19 +168,8 @@ if ($mode == 'add_hotels_as_products') {
 
     } else {
         // Process import
-        header('Content-Type: text/html; charset=utf-8');
-        
-        echo '<!DOCTYPE html><html><head><title>Adding Hotels as Products</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-            .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-            h1 { color: #003580; }
-            .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 600px; overflow-y: auto; }
-            .success { color: green; }
-            .error { color: red; }
-            .skip { color: #999; }
-            .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-        </style></head><body><div class="container"><h1>🏨 Adding Hotels as Products</h1><div class="log">';
+        fn_novoton_holidays_stream_page_open('Adding Hotels as Products');
+        echo '<div class="log">';
         
         $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
         $category_id = (int)($_REQUEST['category_id'] ?? 0);
@@ -296,8 +291,8 @@ if ($mode == 'add_hotels_as_products') {
         echo "Skipped: {$skipped}<br>";
         echo "Errors: {$errors}<br>";
         
-        echo '</div><a href="' . fn_url('novoton_holidays.manage') . '" class="btn">← Back to Dashboard</a>';
-        echo '</div></body></html>';
+        echo '</div>';
+        fn_novoton_holidays_stream_page_close();
         exit;
     }
 }
@@ -404,44 +399,16 @@ if ($mode == 'check_packages') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    header('Content-Type: text/html; charset=utf-8');
-
     $limit = max(1, min(2000, (int)($_REQUEST['limit'] ?? 500)));
     $run = isset($_REQUEST['run']);
 
-    echo '<!DOCTYPE html><html><head><title>Check Hotel Packages</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #003580; }
-        .log { background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 700px; overflow-y: auto; }
-        .success { color: green; }
-        .error { color: red; }
-        .skip { color: #999; }
-        .country-header { color: #003580; font-weight: bold; margin-top: 10px; padding: 5px 0; border-bottom: 1px solid #dee2e6; }
-        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-        .btn-run { background: #28a745; font-size: 14px; border: none; cursor: pointer; color: white; padding: 10px 25px; border-radius: 4px; }
-        .progress { margin: 10px 0; padding: 8px; background: #e3f2fd; border-radius: 4px; font-weight: bold; }
-        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: #333; }
-        .form-group input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .summary-table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        .summary-table th, .summary-table td { border: 1px solid #dee2e6; padding: 6px 10px; text-align: left; font-size: 12px; }
-        .summary-table th { background: #f8f9fa; color: #003580; }
-    </style></head><body><div class="container"><h1>Check Hotel Packages</h1>
-    <p style="color:#666;">Retrieves <code>&lt;PackageName&gt;</code> from <code>hotelinfo</code> API for all hotels across all countries.</p>';
+    fn_novoton_holidays_stream_page_open('Check Hotel Packages');
+    echo '<p class="hint">Retrieves <code>&lt;PackageName&gt;</code> from <code>hotelinfo</code> API for all hotels across all countries.</p>';
 
     // Form
-    $dispatch_url = fn_url('novoton_holidays.check_packages');
-    echo '<form method="get" action="' . htmlspecialchars(strtok($dispatch_url, '?')) . '">';
-    $url_parts = parse_url($dispatch_url);
-    if (!empty($url_parts['query'])) {
-        parse_str($url_parts['query'], $qs);
-        foreach ($qs as $k => $v) {
-            echo '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
-        }
-    }
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_packages'));
+    echo '<form method="get" action="' . $form['action'] . '">';
+    echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
     echo '<div class="form-row">';
     echo '<div class="form-group"><label>Limit per country</label><input type="number" name="limit" value="' . $limit . '" min="1" max="2000" style="width:80px"></div>';
@@ -449,9 +416,8 @@ if ($mode == 'check_packages') {
     echo '</div></form>';
 
     if (!$run) {
-        echo '<p style="color:#666;">Click <strong>Check Packages</strong> to retrieve package names from the API for all countries.</p>';
-        echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-        echo '</div></body></html>';
+        echo '<p class="hint">Click <strong>Check Packages</strong> to retrieve package names from the API for all countries.</p>';
+        fn_novoton_holidays_stream_page_close();
         exit;
     }
 
@@ -600,8 +566,7 @@ if ($mode == 'check_packages') {
         echo '</div>';
     }
 
-    echo '<a href="' . fn_url('novoton_holidays.manage') . '" class="btn">&larr; Back</a>';
-    echo '</div></body></html>';
+    fn_novoton_holidays_stream_page_close();
     exit;
 }
 

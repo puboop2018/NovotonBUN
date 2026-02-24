@@ -465,7 +465,7 @@ class SecurityService implements SecurityServiceInterface
     private function sanitizeName(string $name): string
     {
         // Remove anything that's not a letter, space, hyphen, or apostrophe
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
+        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name) ?? $name;
         return mb_substr(trim($name), 0, 100);
     }
     

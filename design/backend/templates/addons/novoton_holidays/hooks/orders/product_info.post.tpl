@@ -4,7 +4,7 @@
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
     
     {if $oi.extra.hotel_name}
-    <strong>Hotel:</strong> {$oi.extra.hotel_name}<br>
+    <strong>Hotel:</strong> {$oi.extra.hotel_name|escape:'html'}<br>
     {/if}
     
     <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} | 
@@ -12,7 +12,7 @@
     <strong>Nights:</strong> {$oi.extra.nights}<br>
     
     {if $oi.extra.package_name}
-    <strong>Package:</strong> {$oi.extra.package_name}<br>
+    <strong>Package:</strong> {$oi.extra.package_name|escape:'html'}<br>
     {/if}
     
     {* Pre-assign room type translations *}
@@ -106,14 +106,14 @@
             
             <strong>Guest Names:</strong><br>
             {if $adult_list}
-                &nbsp;&nbsp;Adults: {foreach from=$adult_list item=guest name=adults}{$guest.name}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
+                &nbsp;&nbsp;Adults: {foreach from=$adult_list item=guest name=adults}{$guest.name|escape:'html'}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
             {/if}
             {if $child_list}
-                &nbsp;&nbsp;Children: {foreach from=$child_list item=guest name=children}{$guest.name}{if $guest.age && $guest.age <= 17} ({$guest.age} yrs){/if}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
+                &nbsp;&nbsp;Children: {foreach from=$child_list item=guest name=children}{$guest.name|escape:'html'}{if $guest.age && $guest.age <= 17} ({$guest.age} yrs){/if}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
             {/if}
         {/if}
     {elseif $oi.extra.holder_name}
-        <strong>Holder:</strong> {$oi.extra.holder_name}<br>
+        <strong>Holder:</strong> {$oi.extra.holder_name|escape:'html'}<br>
     {/if}
     
     {* Payment and Cancellation Terms — use pre-formatted data from PHP hook *}
@@ -129,7 +129,7 @@
     {/if}
     
     {if $oi.extra.special_requests}
-    <strong>Special Requests:</strong> {$oi.extra.special_requests}<br>
+    <strong>Special Requests:</strong> {$oi.extra.special_requests|escape:'html'}<br>
     {/if}
     
     {if $oi.extra.novoton_reservation_id}

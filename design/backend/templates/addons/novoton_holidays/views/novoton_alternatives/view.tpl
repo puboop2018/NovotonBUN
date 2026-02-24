@@ -74,7 +74,7 @@
 {if $request.api_request_xml}
 <div class="well">
     <h4><i class="icon-code"></i> hotel_request XML Sent to API</h4>
-    <pre style="max-height: 400px; overflow: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; font-size: 11px; font-family: 'Courier New', monospace; white-space: pre-wrap;">{$request.api_request_xml|escape:'html'}</pre>
+    <pre class="novoton-xml-preview">{$request.api_request_xml|escape:'html'}</pre>
 </div>
 {/if}
 
@@ -82,7 +82,7 @@
 {if $request.api_response}
 <div class="well">
     <h4><i class="icon-download-alt"></i> API Response (hotel_request_RS)</h4>
-    <pre style="max-height: 200px; overflow: auto; background: #f8f9fa; padding: 15px; border-radius: 4px; font-size: 11px; font-family: 'Courier New', monospace; white-space: pre-wrap;">{$request.api_response|escape:'html'}</pre>
+    <pre class="novoton-code-preview">{$request.api_response|escape:'html'}</pre>
 </div>
 {/if}
 

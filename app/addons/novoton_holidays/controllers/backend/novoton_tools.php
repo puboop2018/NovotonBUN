@@ -27,7 +27,7 @@ declare(strict_types=1);
  * @since 2.8.0
  */
 
-use Tygh\Registry;
+use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
@@ -190,6 +190,10 @@ if ($mode == 'test_api') {
  * Test room type and board name formatting (pure presentation, no service needed)
  */
 if ($mode == 'test_formats') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
     header('Content-Type: text/html; charset=utf-8');
 
     echo '<h2>Room Type Formatting Tests</h2>';
@@ -436,7 +440,15 @@ if ($mode == 'test_facilities') {
 if ($mode == 'test_hotel_request') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
+    // Pass all form values back to template so they persist after submission
     Tygh::$app['view']->assign('hotel_id', $hotel_id);
+    Tygh::$app['view']->assign('package_name', $_REQUEST['package_name'] ?? '');
+    Tygh::$app['view']->assign('check_in', $_REQUEST['check_in'] ?? '');
+    Tygh::$app['view']->assign('check_out', $_REQUEST['check_out'] ?? '');
+    Tygh::$app['view']->assign('adults', $_REQUEST['adults'] ?? '2');
+    Tygh::$app['view']->assign('room_id', $_REQUEST['room_id'] ?? '');
+    Tygh::$app['view']->assign('board_id', $_REQUEST['board_id'] ?? '');
+    Tygh::$app['view']->assign('holder', $_REQUEST['holder'] ?? '');
 
     if (!empty($hotel_id)) {
         try {
@@ -465,10 +477,12 @@ if ($mode == 'test_hotel_request') {
  */
 if ($mode == 'test_alternative_rs') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $id_num = $_REQUEST['id_num'] ?? '';
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
     $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
 
     Tygh::$app['view']->assign('hotel_id', $hotel_id);
+    Tygh::$app['view']->assign('id_num', $id_num);
     Tygh::$app['view']->assign('check_in', $check_in);
     Tygh::$app['view']->assign('check_out', $check_out);
 
