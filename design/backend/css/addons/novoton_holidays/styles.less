@@ -211,11 +211,11 @@
     .sync-success {
         color: @admin-success;
     }
-    
+
     .sync-error {
         color: @admin-danger;
     }
-    
+
     .sync-type {
         display: inline-block;
         padding: 2px 8px;
@@ -224,4 +224,804 @@
         border-radius: 10px;
         font-size: 11px;
     }
+}
+
+// ============================================================================
+// DASHBOARD - STATS, ACTIONS, SECTIONS (extracted from manage.tpl inline CSS)
+// ============================================================================
+
+.novoton-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.novoton-stat-card {
+    background: @admin-card-bg;
+    border: 1px solid @admin-border;
+    border-radius: 8px;
+    padding: 20px;
+    min-width: 180px;
+    flex: 1;
+
+    h3 {
+        margin: 0 0 15px 0;
+        color: @admin-primary;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+}
+
+.novoton-stat-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: @admin-text;
+}
+
+.novoton-stat-label {
+    font-size: 12px;
+    color: @admin-text-muted;
+    margin-top: 5px;
+}
+
+.novoton-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.novoton-actions {
+    background: @admin-bg;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+
+    h3 {
+        margin: 0 0 15px 0;
+        color: @admin-text;
+    }
+}
+
+.novoton-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.novoton-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: @admin-primary;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: background 0.2s;
+
+    &:hover {
+        background: darken(@admin-primary, 10%);
+        color: #fff;
+    }
+}
+
+.novoton-btn-secondary {
+    background: #6c757d;
+
+    &:hover {
+        background: #5a6268;
+    }
+}
+
+.novoton-btn-success {
+    background: @admin-success;
+
+    &:hover {
+        background: darken(@admin-success, 10%);
+    }
+}
+
+.novoton-btn-warning {
+    background: @admin-warning;
+    color: @admin-text;
+
+    &:hover {
+        background: darken(@admin-warning, 10%);
+    }
+}
+
+.novoton-btn-info {
+    background: @admin-info;
+
+    &:hover {
+        background: darken(@admin-info, 10%);
+    }
+}
+
+.novoton-btn-danger {
+    background: @admin-danger;
+    color: #fff;
+
+    &:hover {
+        background: darken(@admin-danger, 10%);
+    }
+}
+
+.novoton-btn-sm {
+    font-size: 11px;
+    padding: 4px 10px;
+}
+
+.novoton-btn-xs {
+    font-size: 11px;
+    padding: 6px 12px;
+}
+
+// ============================================================================
+// DASHBOARD - SECTIONS & TABLES
+// ============================================================================
+
+.novoton-section {
+    background: @admin-card-bg;
+    border: 1px solid @admin-border;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+
+    h3 {
+        margin: 0 0 15px 0;
+        color: @admin-primary;
+        border-bottom: 2px solid @admin-border;
+        padding-bottom: 10px;
+    }
+}
+
+.novoton-cron-url {
+    background: @admin-bg;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    word-break: break-all;
+    margin: 5px 0;
+}
+
+.novoton-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+        padding: 5px 10px;
+        text-align: left;
+        border-bottom: 1px solid @admin-border;
+    }
+
+    th {
+        background: @admin-bg;
+        font-weight: 600;
+        color: @admin-text;
+    }
+
+    tr:hover {
+        background: @admin-bg;
+    }
+}
+
+// ============================================================================
+// DASHBOARD - COUNTRY GRID
+// ============================================================================
+
+.novoton-country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.novoton-country-card {
+    background: @admin-bg;
+    border-radius: 6px;
+    padding: 15px;
+
+    h4 {
+        margin: 0 0 10px 0;
+        color: @admin-primary;
+    }
+
+    .country-actions {
+        margin-top: 10px;
+    }
+}
+
+// ============================================================================
+// BADGES
+// ============================================================================
+
+.novoton-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.novoton-badge-success {
+    background: lighten(@admin-success, 45%);
+    color: darken(@admin-success, 10%);
+}
+
+.novoton-badge-warning {
+    background: lighten(@admin-warning, 35%);
+    color: darken(@admin-warning, 25%);
+}
+
+.novoton-badge-info {
+    background: lighten(@admin-info, 45%);
+    color: darken(@admin-info, 15%);
+}
+
+.novoton-badge-danger {
+    background: lighten(@admin-danger, 40%);
+    color: darken(@admin-danger, 10%);
+}
+
+// ============================================================================
+// CRON JOB HIGHLIGHTED BOXES
+// ============================================================================
+
+.novoton-cron-recommended {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+
+    .cron-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .cron-tag {
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    .cron-title {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .cron-description {
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .cron-url-box {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+
+    .cron-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .cron-hint {
+        color: @admin-text-muted;
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    &.cron-hotel-info {
+        background: linear-gradient(135deg, lighten(@admin-success, 45%) 0%, lighten(@admin-success, 40%) 100%);
+        border: 2px solid @admin-success;
+
+        .cron-tag {
+            background: @admin-success;
+        }
+
+        .cron-description {
+            color: darken(@admin-success, 30%);
+        }
+    }
+
+    &.cron-price-info {
+        background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%);
+        border: 2px solid #0066cc;
+
+        .cron-tag {
+            background: #0066cc;
+        }
+
+        .cron-description {
+            color: #004085;
+        }
+    }
+}
+
+// ============================================================================
+// EXCLUDED RESORTS MANAGEMENT
+// ============================================================================
+
+.novoton-resorts-toolbar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.novoton-resorts-search {
+    flex: 1;
+    min-width: 200px;
+
+    input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+}
+
+.novoton-resorts-filter {
+    select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 150px;
+    }
+}
+
+.novoton-resorts-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.novoton-resorts-container {
+    max-height: 450px;
+    overflow-y: auto;
+    border: 1px solid @admin-border;
+    border-radius: 4px;
+    padding: 15px;
+    background: #f9f9f9;
+}
+
+.novoton-country-group {
+    margin-bottom: 20px;
+
+    h4 {
+        margin: 0 0 10px 0;
+        color: @admin-primary;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .country-count {
+        font-weight: normal;
+        font-size: 12px;
+        color: @admin-text-muted;
+    }
+
+    .country-links {
+        font-size: 11px;
+
+        a {
+            color: @admin-primary;
+
+            &.deselect-link {
+                color: @admin-text-muted;
+            }
+        }
+    }
+}
+
+.novoton-resort-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.resort-item {
+    display: inline-flex;
+    align-items: center;
+    background: @admin-card-bg;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+
+    &:hover {
+        border-color: @admin-primary;
+        background: lighten(@admin-primary, 55%);
+    }
+
+    input[type="checkbox"] {
+        margin-right: 6px;
+    }
+}
+
+.novoton-resorts-footer {
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .excluded-info {
+        color: @admin-text-muted;
+        font-size: 12px;
+    }
+
+    .visible-info {
+        color: #999;
+        font-size: 12px;
+    }
+}
+
+.novoton-no-results {
+    display: none;
+    padding: 20px;
+    text-align: center;
+    color: @admin-text-muted;
+}
+
+// ============================================================================
+// ALERT BOXES
+// ============================================================================
+
+.novoton-alert {
+    padding: 15px;
+    border-radius: 4px;
+
+    &.novoton-alert-warning {
+        background: lighten(@admin-warning, 35%);
+        color: darken(@admin-warning, 30%);
+    }
+
+    &.novoton-alert-info {
+        background: lighten(@admin-info, 45%);
+        color: darken(@admin-info, 20%);
+    }
+}
+
+// ============================================================================
+// BOOKINGS MANAGE
+// ============================================================================
+
+.novoton-bookings-manage {
+    .search-form {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: @admin-bg;
+        border-radius: 4px;
+    }
+
+    .muted-text {
+        color: @admin-text-muted;
+    }
+
+    .multi-room-badge {
+        color: #0066cc;
+    }
+}
+
+// ============================================================================
+// BOOKING DETAIL VIEW (extracted from view.tpl inline CSS)
+// ============================================================================
+
+.novoton-booking-view {
+    max-width: 1200px;
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .info-section {
+        background: @admin-bg;
+        padding: 15px;
+        border-radius: 6px;
+
+        h4 {
+            margin: 0 0 12px 0;
+            color: @admin-primary;
+            font-size: 14px;
+            border-bottom: 2px solid @admin-border;
+            padding-bottom: 8px;
+        }
+    }
+
+    .info-table {
+        width: 100%;
+        font-size: 13px;
+
+        td {
+            padding: 6px 0;
+            vertical-align: top;
+
+            &:first-child {
+                color: @admin-text-muted;
+                width: 40%;
+            }
+        }
+    }
+
+    .debug-section pre {
+        max-height: 300px;
+        overflow: auto;
+        background: @admin-card-bg;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        border: 1px solid #ddd;
+    }
+
+    .booking-header {
+        background: linear-gradient(135deg, @admin-primary, lighten(@admin-primary, 15%));
+        color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+
+        .header-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .subtitle {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+
+        .novoton-id-box {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .status-label {
+            font-size: 14px;
+            padding: 6px 12px;
+        }
+    }
+
+    .price-section {
+        background: #e8f4f8;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+
+        .price-label {
+            color: @admin-text-muted;
+            font-size: 13px;
+        }
+
+        .price-total {
+            font-size: 28px;
+            font-weight: bold;
+            color: @admin-primary;
+        }
+
+        .price-api {
+            font-size: 18px;
+            color: @admin-success;
+        }
+    }
+
+    .rooms-section,
+    .guests-section,
+    .novoton-id-section,
+    .debug-toggle-section {
+        background: @admin-bg;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+
+        h4 {
+            margin: 0 0 15px 0;
+            color: @admin-primary;
+        }
+    }
+
+    .rooms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+    }
+
+    .room-card {
+        background: @admin-card-bg;
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 4px solid @admin-primary;
+
+        .room-details {
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .room-price {
+            margin-top: 5px;
+            font-weight: bold;
+            color: @admin-primary;
+        }
+    }
+
+    .special-requests {
+        background: lighten(@admin-warning, 35%);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid @admin-warning;
+
+        h4 {
+            margin: 0 0 10px 0;
+            color: darken(@admin-warning, 30%);
+        }
+
+        p {
+            margin: 0;
+            color: darken(@admin-warning, 30%);
+        }
+    }
+
+    .alternatives-preview {
+        background: lighten(@admin-success, 45%);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid @admin-success;
+
+        h4 {
+            margin: 0 0 15px 0;
+            color: darken(@admin-success, 30%);
+        }
+    }
+
+    .debug-toggle {
+        cursor: pointer;
+    }
+
+    .debug-hint {
+        font-size: 12px;
+        color: @admin-text-muted;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+// ============================================================================
+// PRICE COMPARISON TOOL (extracted from price_compare/manage.tpl)
+// ============================================================================
+
+.novoton-price-compare {
+    max-width: 800px;
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+
+        > div {
+            flex: 1;
+        }
+    }
+
+    .info-box {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .btn-compare {
+        background: @admin-primary;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+
+        &:hover {
+            background: darken(@admin-primary, 10%);
+        }
+    }
+
+    .btn-compare-verify {
+        background: #ff9800;
+
+        &:hover {
+            background: darken(#ff9800, 10%);
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+    }
+
+    .field-hint {
+        color: @admin-text-muted;
+    }
+}
+
+// ============================================================================
+// XML/CODE PREVIEW BLOCKS
+// ============================================================================
+
+.novoton-xml-preview {
+    max-height: 400px;
+    overflow: auto;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+}
+
+.novoton-code-preview {
+    max-height: 200px;
+    overflow: auto;
+    background: @admin-bg;
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
 }
