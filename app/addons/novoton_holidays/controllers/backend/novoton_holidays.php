@@ -226,7 +226,10 @@ if ($mode == 'manage' || empty($mode)) {
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
         'exchange_rates' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=exchange_rates",
     ];
-    
+
+    // Live XML feed URL (for CS-Cart Advanced Import "Link to file")
+    $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
+
     // Assign to view
     Tygh::$app['view']->assign('stats', $stats);
     Tygh::$app['view']->assign('countries', $countries);
@@ -234,6 +237,7 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('last_syncs', $last_syncs);
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);
+    Tygh::$app['view']->assign('xml_feed_url', $xml_feed_url);
     Tygh::$app['view']->assign('addon_settings', $addon_settings);
     Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
     

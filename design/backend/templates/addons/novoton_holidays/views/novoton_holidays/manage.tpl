@@ -83,6 +83,9 @@
             <a href="{"novoton_holidays.download_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-info novoton-btn-sm">[CSV] Download</a>
             <a href="{"novoton_holidays.export_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-secondary">[XML] Export Hotel Features</a>
             <a href="{"novoton_holidays.download_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-info novoton-btn-sm">[XML] Download</a>
+            {if $xml_feed_url}
+            <a href="{$xml_feed_url}" class="novoton-btn novoton-btn-info novoton-btn-sm" target="_blank">[XML] Live Feed</a>
+            {/if}
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
             <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
             <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[C] Price Comparison Tool</a>
@@ -175,6 +178,23 @@
                 <strong>Shared hosting:</strong> Add <code>&batch_size=30&max_time=120</code>
             </p>
         </div>
+
+        {* Hotel Features XML Feed *}
+        {if $xml_feed_url}
+        <div class="novoton-cron-recommended" style="border-left: 4px solid #17a2b8; background: #f0f9ff;">
+            <div class="cron-header">
+                <span class="cron-tag" style="background: #17a2b8;">XML FEED</span>
+                <span class="cron-title">Hotel Features XML</span>
+            </div>
+            <p class="cron-description">
+                Live XML feed with all hotel features. Use this URL in CS-Cart Advanced Import "Link to file" or open directly in browser.
+            </p>
+            <div class="novoton-cron-url cron-url-box">{$xml_feed_url}</div>
+            <div class="cron-actions">
+                <a href="{$xml_feed_url}" target="_blank" class="novoton-btn novoton-btn-info">Open XML</a>
+            </div>
+        </div>
+        {/if}
 
         {* Other Cron Jobs Table *}
         <p><strong>Other Cron Jobs:</strong></p>
