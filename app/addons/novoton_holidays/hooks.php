@@ -44,8 +44,6 @@ declare(strict_types=1);
  *                                                                          *
  ***************************************************************************/
 
-use Tygh\Registry;
-
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Include domain-specific hook files

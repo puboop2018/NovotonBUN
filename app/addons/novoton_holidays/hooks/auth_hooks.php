@@ -15,7 +15,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 

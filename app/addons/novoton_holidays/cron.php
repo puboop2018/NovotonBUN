@@ -16,7 +16,6 @@ if (!defined('AREA')) {
 
 require dirname(__FILE__) . '/../../../init.php';
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 

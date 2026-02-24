@@ -12,7 +12,6 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 /**
  * Format date using CS-Cart's date format from Admin > Settings > Appearance

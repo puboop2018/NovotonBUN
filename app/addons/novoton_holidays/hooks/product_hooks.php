@@ -12,13 +12,10 @@ declare(strict_types=1);
  * @since   3.0.0
  */
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 

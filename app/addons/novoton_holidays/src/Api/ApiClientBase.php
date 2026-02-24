@@ -5,9 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
-use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 abstract class ApiClientBase
 {

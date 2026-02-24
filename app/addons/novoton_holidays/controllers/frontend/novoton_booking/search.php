@@ -12,7 +12,6 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 
     // Validate and sanitize search input via SecurityService
     $security = _nvt_get_security_service();
