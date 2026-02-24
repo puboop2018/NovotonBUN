@@ -2605,10 +2605,6 @@ msgctxt "Languages::theme_editor.novoton_page_background"
 msgid "Novoton: Page background"
 msgstr "Novoton: Page background"
 
-msgctxt "Languages::theme_editor.full_width"
-msgid "Full width"
-msgstr "Full width"
-
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Available on nearby dates"
@@ -2616,3 +2612,7 @@ msgstr "Available on nearby dates"
 msgctxt "Languages::novoton_holidays.rooms_short"
 msgid "rooms"
 msgstr "rooms"
+
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Price updated based on child age"

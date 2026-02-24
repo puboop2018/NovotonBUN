@@ -241,6 +241,12 @@
                 <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Hotel Facilities</strong><br><small style="color:#666;">Assign facilities to hotels</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.hotel_facilities_batched}</div></td>
+                <td>Weekly</td>
+                <td><a href="{$cron_urls.hotel_facilities_batched}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
+            </tr>
+            <tr>
                 <td><strong>Resort List</strong><br><small style="color:#666;">Sync resort names</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.resort_list}</div></td>
                 <td>Weekly</td>

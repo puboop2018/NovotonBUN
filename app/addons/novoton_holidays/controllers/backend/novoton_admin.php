@@ -6,6 +6,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 
 
@@ -138,7 +139,7 @@ if ($mode == 'booking_details') {
         $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
         
         try {
-            $invoice = $api->getInvoiceXml($booking['novoton_id']);
+            $invoice = $api->getInvoiceXml($booking['novoton_invoice_id']);
             $booking['invoice'] = $invoice;
         } catch (Exception $e) {
             fn_set_notification('W', __('warning'), __('novoton_holidays.failed_to_get_invoice'));
@@ -202,16 +203,16 @@ if ($mode == 'export_bookings') {
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
     
     foreach ($bookings as $booking) {
-        $children_data = !empty($booking['children']) ? json_decode($booking['children'], true) : [];
+        $num_children = (int)($booking['children'] ?? 0);
         $csv .= implode(',', [
-            $booking['novoton_id'],
+            $booking['novoton_invoice_id'] ?? '',
             $booking['order_id'],
             '"' . str_replace('"', '""', $booking['hotel_name'] ?? '') . '"',
             '"' . str_replace('"', '""', $booking['room_type'] ?? '') . '"',
             $booking['check_in'],
             $booking['check_out'],
             $booking['adults'],
-            is_array($children_data) ? count($children_data) : 0,
+            $num_children,
             $booking['total_price'],
             $booking['currency'],
             $booking['status'],
@@ -426,7 +427,14 @@ function fn_novoton_holidays_admin_check_prices($api) {
         $check_in = date('Y-m-d', strtotime('+30 days'));
         $check_out = date('Y-m-d', strtotime('+37 days'));
         
-        $response = $api->getRoomPrice($hotel['hotel_id'], $check_in, $check_out, 2, 0, 1);
+        $response = $api->getRoomPrice([
+            'hotel_id' => $hotel['hotel_id'],
+            'check_in' => $check_in,
+            'check_out' => $check_out,
+            'adults' => 2,
+            'children' => 0,
+            'rooms' => 1,
+        ]);
         $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
         
         $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);

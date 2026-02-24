@@ -1,20 +1,20 @@
 <?php
-declare(strict_types=1);
 /**
  * Novoton Holidays - Admin Permissions Schema
  *
  * Registers all backend controller modes with granular permission groups:
  *
- *   manage_catalog            — hotel & product management (hotels, prices, sync, facilities)
- *   novoton_manage_bookings   — view/manage bookings and alternatives
- *   novoton_manage_sync       — run syncs, diagnostics, cron tools
- *   novoton_manage_settings   — addon settings, exchange rates, API config
+ *   manage_catalog            - hotel & product management
+ *   novoton_manage_bookings   - view/manage bookings and alternatives
+ *   novoton_manage_sync       - run syncs, diagnostics, cron tools
+ *   novoton_manage_settings   - addon settings, exchange rates, API config
+ *
+ * @package NovotonHolidays
  */
 
-// ── novoton_holidays controller (main dashboard, hotel catalog, sync) ──
+// novoton_holidays controller (main dashboard, hotel catalog, sync)
 $schema['novoton_holidays'] = [
     'modes' => [
-        // Hotel catalog (read/write)
         'manage'                     => ['permissions' => 'manage_catalog'],
         'add_hotels_as_products'     => ['permissions' => 'manage_catalog'],
         'view_hotels_to_add'         => ['permissions' => 'manage_catalog'],
@@ -23,7 +23,6 @@ $schema['novoton_holidays'] = [
         'list_facilities'            => ['permissions' => 'manage_catalog'],
         'save_excluded_resorts'      => ['permissions' => 'manage_catalog'],
 
-        // Sync operations
         'sync_facilities'            => ['permissions' => 'novoton_manage_sync'],
         'check_packages'             => ['permissions' => 'novoton_manage_sync'],
         'update_prices'              => ['permissions' => 'novoton_manage_sync'],
@@ -33,14 +32,12 @@ $schema['novoton_holidays'] = [
         'cron_offers_update'         => ['permissions' => 'novoton_manage_sync'],
         'fix_tab'                    => ['permissions' => 'novoton_manage_sync'],
 
-        // Export / reports
         'download_active_prices_csv' => ['permissions' => 'manage_catalog'],
         'export_hotel_features_csv'  => ['permissions' => 'manage_catalog'],
         'download_hotel_features_csv'=> ['permissions' => 'manage_catalog'],
         'get_hotel_features_csv'     => ['permissions' => 'manage_catalog'],
         'cron_export_hotel_features' => ['permissions' => 'novoton_manage_sync'],
 
-        // API testing / diagnostics
         'test_api'                   => ['permissions' => 'novoton_manage_sync'],
         'test_formats'               => ['permissions' => 'novoton_manage_sync'],
         'test_product'               => ['permissions' => 'novoton_manage_sync'],
@@ -53,13 +50,12 @@ $schema['novoton_holidays'] = [
     ],
 ];
 
-// ── novoton_bookings controller ──
+// novoton_bookings controller
 $schema['novoton_bookings'] = [
     'modes' => [
         'manage'               => ['permissions' => 'novoton_manage_bookings'],
         'view'                 => ['permissions' => 'novoton_manage_bookings'],
         'update'               => ['permissions' => 'novoton_manage_bookings'],
-        'details'              => ['permissions' => 'novoton_manage_bookings'],
         'resinfo'              => ['permissions' => 'novoton_manage_bookings'],
         'check_all_status'     => ['permissions' => 'novoton_manage_bookings'],
         'cleanup_orphans'      => ['permissions' => 'novoton_manage_bookings'],
@@ -70,12 +66,11 @@ $schema['novoton_bookings'] = [
     ],
 ];
 
-// ── novoton_alternatives controller ──
+// novoton_alternatives controller
 $schema['novoton_alternatives'] = [
     'modes' => [
         'manage'              => ['permissions' => 'novoton_manage_bookings'],
         'view'                => ['permissions' => 'novoton_manage_bookings'],
-        'update'              => ['permissions' => 'novoton_manage_bookings'],
         'check_alternatives'  => ['permissions' => 'novoton_manage_bookings'],
         'notify_customer'     => ['permissions' => 'novoton_manage_bookings'],
         'delete'              => ['permissions' => 'novoton_manage_bookings'],
@@ -83,7 +78,7 @@ $schema['novoton_alternatives'] = [
     ],
 ];
 
-// ── novoton_exchange_rates controller ──
+// novoton_exchange_rates controller
 $schema['novoton_exchange_rates'] = [
     'modes' => [
         'manage'  => ['permissions' => 'novoton_manage_settings'],
@@ -92,7 +87,7 @@ $schema['novoton_exchange_rates'] = [
     ],
 ];
 
-// ── novoton_diagnostic controller ──
+// novoton_diagnostic controller
 $schema['novoton_diagnostic'] = [
     'modes' => [
         'health'  => ['permissions' => 'novoton_manage_sync'],
@@ -101,15 +96,23 @@ $schema['novoton_diagnostic'] = [
     ],
 ];
 
-// ── novoton_admin controller (settings & config) ──
+// novoton_admin controller (settings & config)
 $schema['novoton_admin'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_settings'],
-        'update'  => ['permissions' => 'novoton_manage_settings'],
+        'manage'           => ['permissions' => 'novoton_manage_settings'],
+        'update'           => ['permissions' => 'novoton_manage_settings'],
+        'update_prices'    => ['permissions' => 'novoton_manage_sync'],
+        'sync_logs'        => ['permissions' => 'novoton_manage_sync'],
+        'bookings'         => ['permissions' => 'novoton_manage_bookings'],
+        'booking_details'  => ['permissions' => 'novoton_manage_bookings'],
+        'download_log'     => ['permissions' => 'novoton_manage_settings'],
+        'export_bookings'  => ['permissions' => 'novoton_manage_bookings'],
+        'test_api'         => ['permissions' => 'novoton_manage_sync'],
+        'run_cron'         => ['permissions' => 'novoton_manage_sync'],
     ],
 ];
 
-// ── novoton_hotels controller ──
+// novoton_hotels controller
 $schema['novoton_hotels'] = [
     'modes' => [
         'manage'               => ['permissions' => 'manage_catalog'],
@@ -120,7 +123,7 @@ $schema['novoton_hotels'] = [
     ],
 ];
 
-// ── novoton_prices controller ──
+// novoton_prices controller
 $schema['novoton_prices'] = [
     'modes' => [
         'manage'  => ['permissions' => 'manage_catalog'],
@@ -128,14 +131,18 @@ $schema['novoton_prices'] = [
     ],
 ];
 
-// ── novoton_price_compare controller ──
+// novoton_price_compare controller
 $schema['novoton_price_compare'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'manage_catalog'],
+        'manage'        => ['permissions' => 'manage_catalog'],
+        'compare'       => ['permissions' => 'manage_catalog'],
+        'verify'        => ['permissions' => 'manage_catalog'],
+        'get_packages'  => ['permissions' => 'manage_catalog'],
+        'get_rooms'     => ['permissions' => 'manage_catalog'],
     ],
 ];
 
-// ── novoton_tools controller ──
+// novoton_tools controller
 $schema['novoton_tools'] = [
     'modes' => [
         'manage'  => ['permissions' => 'novoton_manage_sync'],

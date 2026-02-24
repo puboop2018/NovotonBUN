@@ -121,9 +121,9 @@ function fn_novoton_holidays_products_view_after(&$view): void
 /**
  * Hook: after getting product data
  */
-function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $params, $product_id): void
+function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
-    if (empty($product_id) || empty($product_data)) {
+    if (empty($product_data)) {
         return;
     }
 
@@ -140,7 +140,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $param
 
     if (!empty($hotel_id)) {
         $product_data['hotel_id']       = $hotel_id;
-        $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_id, false, $hotel_id);
+        $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_data['product_id'], false, $hotel_id);
     }
 
     $product_data['is_hotel_product'] = true;

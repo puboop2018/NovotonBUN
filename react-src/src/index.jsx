@@ -6,10 +6,31 @@
  */
 
 import { createRoot } from 'react-dom/client';
+import { Component } from 'react';
 import BookingEngine from './BookingEngine';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
-import { getLocale, parseDate, toDateString } from './utils';
+import { getLocale, parseDate, toDateString, t } from './utils';
+
+class ErrorBoundary extends Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="nvt-error-boundary">
+                    {t('componentError', 'Something went wrong. Please reload the page.')}
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 /**
  * Read data-* attributes from an element and build a config object.
@@ -72,7 +93,7 @@ function init() {
         loadTranslations(productRoot);
         const config = readConfig(productRoot);
         config.mode = 'product';
-        createRoot(productRoot).render(<BookingEngine config={config} />);
+        createRoot(productRoot).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
     }
 
     // 2. Search results form
@@ -81,7 +102,7 @@ function init() {
         loadTranslations(searchRoot);
         const config = readConfig(searchRoot);
         config.mode = 'search';
-        createRoot(searchRoot).render(<BookingEngine config={config} />);
+        createRoot(searchRoot).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
     }
 
     // 3. Homepage search bar
@@ -90,7 +111,7 @@ function init() {
         loadTranslations(homepageRoot);
         const config = readConfig(homepageRoot);
         config.mode = 'homepage';
-        createRoot(homepageRoot).render(<BookingEngine config={config} />);
+        createRoot(homepageRoot).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
     }
 }
 

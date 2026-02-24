@@ -1,35 +1,15 @@
 <?php
-declare(strict_types=1);
 /**
  * Novoton Holidays - Theme Editor Schema Extension
- * Path: app/addons/novoton_holidays/schemas/theme_editor/schema.post.php
  *
- * Adds addon color fields to the CS-Cart Theme Editor "Colors" section.
- * Each field name becomes a LESS variable (@field_name) that can be
- * used in the addon's styles.less.
+ * Adds addon-specific color, font, and background fields to the CS-Cart
+ * Theme Editor. Each field name becomes a LESS variable (@field_name)
+ * that can be used in the addon's styles.less.
  *
- * CS-Cart Theme Editor schema uses 4 top-level keys:
- *   general, colors, fonts, backgrounds
- *
- * @see https://docs.cs-cart.com/latest/developer_guide/addons/tutorials/theme_editor.html
  * @package NovotonHolidays
- * @since   3.1.0
  */
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
-
-// Ensure colors section exists
-if (!isset($schema['colors'])) {
-    $schema['colors'] = [];
-}
-if (!isset($schema['colors']['fields'])) {
-    $schema['colors']['fields'] = [];
-}
-
-// Novoton Holidays color fields
-// Variable names become @variable_name in LESS files
-
-// Brand colors
+// Colors
 $schema['colors']['fields']['novoton-primary'] = [
     'description' => 'theme_editor.novoton_primary_color',
 ];
@@ -46,7 +26,6 @@ $schema['colors']['fields']['novoton-search-btn-hover'] = [
     'description' => 'theme_editor.novoton_search_btn_hover_color',
 ];
 
-// UI colors
 $schema['colors']['fields']['novoton-text'] = [
     'description' => 'theme_editor.novoton_text_color',
 ];
@@ -65,6 +44,41 @@ $schema['colors']['fields']['novoton-success'] = [
 
 $schema['colors']['fields']['novoton-danger'] = [
     'description' => 'theme_editor.novoton_danger_color',
+];
+
+// Fonts
+$schema['fonts']['fields']['novoton-font-family'] = [
+    'description' => 'theme_editor.novoton_base_font',
+    'properties'  => [
+        'size' => [
+            'match'  => 'novoton-font-size-base-value',
+            'unit'   => 'px',
+            'values' => [11, 12, 13, 14, 15, 16],
+        ],
+        'style' => [
+            'B' => [
+                'match'    => 'novoton-font-weight',
+                'property' => 'font-weight',
+                'default'  => 'normal',
+            ],
+        ],
+    ],
+];
+
+// Backgrounds
+$schema['backgrounds']['fields']['novoton-page-bg'] = [
+    'description' => 'theme_editor.novoton_page_background',
+    'properties'  => [
+        'color' => [
+            'enable' => true,
+            'match'  => 'novoton-bg',
+        ],
+        'pattern' => 'novoton-bg-pattern',
+        'repeat'  => 'novoton-bg-repeat',
+    ],
+    'transparent' => [
+        'match' => 'novoton-bg-transparent',
+    ],
 ];
 
 return $schema;

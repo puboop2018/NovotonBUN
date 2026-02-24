@@ -327,7 +327,7 @@ if ($mode == 'check') {
     // Check tables (V3 architecture)
     $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
-        $exists = db_get_field("SHOW TABLES LIKE ?s", 'cscart_' . $table);
+        $exists = db_get_field("SHOW TABLES LIKE ?s", Registry::get('config.table_prefix') . $table);
         echo ($exists ? "[OK]" : "[MISSING]") . " Table: $table\n";
     }
     echo "\n";

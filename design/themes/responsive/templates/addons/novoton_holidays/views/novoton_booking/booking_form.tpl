@@ -89,6 +89,7 @@
 
 <div class="novoton-reservation-form">
     <form action="{fn_url("novoton_booking.add_to_cart")}" method="post" id="novoton-booking-form">
+        <input type="hidden" name="security_hash" value="{$security_hash}" />
         <input type="hidden" name="hotel_id" value="{$booking_data.hotel_id}" />
         <input type="hidden" name="room_id" value="{$booking_data.room_id}" />
         <input type="hidden" name="board_id" value="{$booking_data.board_id}" />
@@ -584,7 +585,7 @@ window.bookingData = {ldelim}
     maxChildren: roomLimits.max_children || 2,
     minPax: roomLimits.min_pax || 1,
     totalCapacity: (roomLimits.rb || 2) + (roomLimits.eb || 0),
-    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{$booking_data.rooms_data nofilter}{else}[]{/if},
+    roomsData: {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}{$booking_data.rooms_data|json_encode nofilter}{elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}{json_decode($booking_data.rooms_data, true)|default:[]|json_encode nofilter}{else}[]{/if},
     calendarPrices: {$calendar_prices_json|default:'{}' nofilter},
     calendarPricesCurrency: '{$calendar_prices_currency|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}',
     showCalendarPrices: {if $show_calendar_prices == 'Y'}true{else}false{/if}
@@ -855,14 +856,15 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
     })
     .then(function(data) {
         novotonLog('AJAX response', data);
-        
+
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        
+
         if (data.success) {
             // Hide any previous error message
             hidePriceError();
 
+            try {
             var newPrice = parseFloat(data.new_price) || 0;
             var coeff = window.NovotonTranslations.currencyCoeff || 1;
             var currSym = window.NovotonTranslations.currency || 'EUR';
@@ -930,16 +932,21 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 // Update bookingData (EUR)
                 window.bookingData.currentPrice = newPrice;
             }
-            
+
             // Show room change warning if needed
             if (data.room_changed) {
                 showRoomChangeModal(data);
             }
-            
+
             // Hide any previous notice
             var notice = document.getElementById('price-recalc-notice');
             if (notice) notice.style.display = 'none';
-            
+
+            } catch (uiError) {
+                // JS error in UI update must NOT propagate to .catch() which disables submit
+                novotonLog('UI update error (non-fatal): ' + uiError.message);
+            }
+
         } else {
             novotonLog('Recalculation failed: ' + (data.message || ''));
             // API returned success:false — show info notice, keep form submittable
@@ -951,8 +958,9 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
         novotonLog('AJAX error (no API response): ' + error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (priceEl) priceEl.style.opacity = '1';
-        // No API response at all — disable submit, price cannot be verified
-        showPriceError('{__("novoton_holidays.api_unavailable")|default:"Serviciul de prețuri nu este disponibil. Încercați din nou."}');
+        // Network/JSON parse error — show warning but keep form submittable
+        // Server-side will verify the price at checkout anyway
+        showInfoNotice('{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"}');
     });
 }
 

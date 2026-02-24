@@ -389,8 +389,9 @@ if ($mode == 'search') {
     if ($__nvt_result !== 1) return $__nvt_result;
 
 } elseif ($mode == 'book') {
-    // Legacy redirect — 3 lines, kept inline
-    $bookingData = $_REQUEST;
+    // Legacy redirect — only forward known booking parameters
+    $allowed_keys = ['hotel_id', 'check_in', 'check_out', 'adults', 'children', 'rooms', 'package_name', 'room_id', 'board_id'];
+    $bookingData = array_intersect_key($_REQUEST, array_flip($allowed_keys));
     $redirect_url = 'novoton_booking.booking_form?' . http_build_query($bookingData);
     return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
 

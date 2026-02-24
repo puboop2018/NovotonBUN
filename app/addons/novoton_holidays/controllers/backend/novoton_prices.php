@@ -264,8 +264,8 @@ if ($mode == 'check_prices') {
         $total_resorts = count($resorts);
         $grand_resorts += $total_resorts;
 
-        echo "Resorts: {$total_resorts} | Hotels in DB: {$total_hotels}<br>";
-        echo "Check-in: {$check_in} | Check-out: {$check_out}<br>\n";
+        echo "Resorts: " . (int)$total_resorts . " | Hotels in DB: " . (int)$total_hotels . "<br>";
+        echo "Check-in: " . htmlspecialchars($check_in) . " | Check-out: " . htmlspecialchars($check_out) . "<br>\n";
         flush();
 
         try {
@@ -530,8 +530,8 @@ if ($mode == 'check_prices_hotel') {
         }
         $grand_no_city += $hotels_with_no_city;
 
-        echo "Total Hotels: {$total_hotels} | Empty city: {$hotels_with_no_city}<br>";
-        echo "Check-in: {$check_in} | Check-out: {$check_out}<br>\n";
+        echo "Total Hotels: " . (int)$total_hotels . " | Empty city: " . (int)$hotels_with_no_city . "<br>";
+        echo "Check-in: " . htmlspecialchars($check_in) . " | Check-out: " . htmlspecialchars($check_out) . "<br>\n";
         flush();
 
         $with_prices = 0;
@@ -701,8 +701,8 @@ if ($mode == 'download_active_prices_csv') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $country = strtoupper($_REQUEST['country'] ?? 'BULGARIA');
-    
+    $country = preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+
     $hotels = db_get_array(
         "SELECT hotel_id, hotel_name, city, hotel_type, has_prices, product_id, last_price_check
          FROM ?:novoton_hotels

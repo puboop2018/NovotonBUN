@@ -108,10 +108,10 @@ if ($mode == 'compare') {
     echo "<strong>Package:</strong> " . htmlspecialchars($package_name) . "<br>";
     echo "<strong>Room:</strong> " . htmlspecialchars(rawurldecode($room_id)) . "<br>";
     echo "<strong>Board:</strong> " . htmlspecialchars($board_id) . "<br>";
-    echo "<strong>Check-in:</strong> {$check_in}<br>";
-    echo "<strong>Check-out:</strong> {$check_out}<br>";
-    echo "<strong>Nights:</strong> {$nights}<br>";
-    echo "<strong>Adults:</strong> {$adults}<br>";
+    echo "<strong>Check-in:</strong> " . htmlspecialchars($check_in) . "<br>";
+    echo "<strong>Check-out:</strong> " . htmlspecialchars($check_out) . "<br>";
+    echo "<strong>Nights:</strong> " . (int)$nights . "<br>";
+    echo "<strong>Adults:</strong> " . (int)$adults . "<br>";
     echo "<strong>Children:</strong> " . (empty($children_arr) ? 'None' : implode(', ', $children_arr) . ' years') . "<br>";
     echo "<strong>Booking Date:</strong> " . date('Y-m-d') . "<br>";
     echo '</div>';

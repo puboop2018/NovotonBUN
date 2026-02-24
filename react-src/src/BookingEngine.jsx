@@ -16,7 +16,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { CalendarIcon, GuestIcon, ChevronDown, RefreshIcon } from './icons';
-import { parseDate, toDateString, formatDateShort, nightsBetween, t } from './utils';
+import { parseDate, toDateString, formatDateShort, nightsBetween, t, tPlural } from './utils';
 import { injectStyles } from './styles';
 
 export default function BookingEngine({ config }) {
@@ -107,6 +107,7 @@ export default function BookingEngine({ config }) {
     const [ageErrors, setAgeErrors] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [fetchError, setFetchError] = useState('');
 
     // Button state: "Search" → "Change search" → "Apply changes"
     // In search mode, user already searched so start with hasSearched=true.
@@ -117,6 +118,10 @@ export default function BookingEngine({ config }) {
     const [paramsChanged, setParamsChanged] = useState(false);
 
     const engineRef = useRef(null);
+    const retryTimerRef = useRef(null);
+
+    // Clean up any pending retry timer on unmount
+    useEffect(() => () => { clearTimeout(retryTimerRef.current); }, []);
 
     // -----------------------------------------------------------------------
     // Derived values
@@ -151,7 +156,7 @@ export default function BookingEngine({ config }) {
     // Date display text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
-            const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
+            const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
             return `${formatDateShort(checkIn)} - ${formatDateShort(checkOut)} — ${nights} ${nightLabel}`;
         }
         if (checkIn) {
@@ -178,22 +183,24 @@ export default function BookingEngine({ config }) {
     }, [hasSearched]);
 
     const buildSearchUrl = useCallback(() => {
-        let url;
+        const base = window.location.origin + '/index.php';
+        const params = new URLSearchParams();
+
         if (mode === 'homepage') {
-            url = window.location.origin + '/index.php?dispatch=products.search&q=' +
-                  encodeURIComponent(searchQuery);
+            params.set('dispatch', 'products.search');
+            params.set('q', searchQuery);
         } else {
-            url = window.location.origin + '/index.php?dispatch=novoton_booking.search';
-            if (hotelId) url += '&hotel_id=' + hotelId;
-            if (productId) url += '&product_id=' + productId;
+            params.set('dispatch', 'novoton_booking.search');
+            if (hotelId) params.set('hotel_id', hotelId);
+            if (productId) params.set('product_id', productId);
         }
 
-        url += '&check_in=' + toDateString(checkIn);
-        url += '&check_out=' + toDateString(checkOut);
-        url += '&adults=' + totalAdults;
-        url += '&children=' + totalChildren;
-        url += '&rooms=' + rooms.length;
-        url += '&rooms_data=' + encodeURIComponent(JSON.stringify(rooms));
+        params.set('check_in', toDateString(checkIn));
+        params.set('check_out', toDateString(checkOut));
+        params.set('adults', totalAdults);
+        params.set('children', totalChildren);
+        params.set('rooms', rooms.length);
+        params.set('rooms_data', JSON.stringify(rooms));
 
         // Collect all child ages
         const allAges = [];
@@ -203,87 +210,100 @@ export default function BookingEngine({ config }) {
             });
         });
         if (allAges.length > 0) {
-            url += '&children_ages=' + allAges.join(',');
+            params.set('children_ages', allAges.join(','));
         }
 
-        return url;
+        return base + '?' + params.toString();
     }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, totalAdults, totalChildren]);
 
     const performAjaxSearch = useCallback((url) => {
         setIsSearching(true);
+        setFetchError('');
         setShowCalendar(false);
         setShowGuests(false);
 
-        const fetchUrl = url + '&_t=' + Date.now();
+        const fetchUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        const maxRetries = 2;
 
-        fetch(fetchUrl)
-            .then(r => r.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+        const attemptFetch = (attempt) => {
+            fetch(fetchUrl)
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
 
-                const newPage = doc.querySelector('.novoton-search-results-page');
-                const curPage = document.querySelector('.novoton-search-results-page');
+                    const newPage = doc.querySelector('.novoton-search-results-page');
+                    const curPage = document.querySelector('.novoton-search-results-page');
 
-                if (!newPage || !curPage) {
-                    window.location.href = fetchUrl;
-                    return;
-                }
+                    if (!newPage || !curPage) {
+                        window.location.href = fetchUrl;
+                        return;
+                    }
 
-                const curForm = curPage.querySelector('.novoton-search-form-wrapper');
-                const newForm = newPage.querySelector('.novoton-search-form-wrapper');
+                    const curForm = curPage.querySelector('.novoton-search-form-wrapper');
+                    const newForm = newPage.querySelector('.novoton-search-form-wrapper');
 
-                if (!curForm || !newForm) {
-                    window.location.href = fetchUrl;
-                    return;
-                }
+                    if (!curForm || !newForm) {
+                        window.location.href = fetchUrl;
+                        return;
+                    }
 
-                // Remove current results (everything after form wrapper)
-                while (curForm.nextSibling) {
-                    curForm.nextSibling.remove();
-                }
+                    // Remove current results (everything after form wrapper)
+                    while (curForm.nextSibling) {
+                        curForm.nextSibling.remove();
+                    }
 
-                // Append new results from fetched page
-                const fragment = document.createDocumentFragment();
-                let node = newForm.nextSibling;
-                while (node) {
-                    fragment.appendChild(document.importNode(node, true));
-                    node = node.nextSibling;
-                }
-                curPage.appendChild(fragment);
+                    // Append new results from fetched page
+                    const fragment = document.createDocumentFragment();
+                    let node = newForm.nextSibling;
+                    while (node) {
+                        fragment.appendChild(document.importNode(node, true));
+                        node = node.nextSibling;
+                    }
+                    curPage.appendChild(fragment);
 
-                // Execute inline scripts in the new content
-                curPage.querySelectorAll('script').forEach(oldScript => {
-                    if (oldScript.closest('.novoton-search-form-wrapper')) return;
-                    // Skip already-loaded external scripts (React, DOB validation)
-                    if (oldScript.src && (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation'))) return;
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => {
-                        newScript.setAttribute(attr.name, attr.value);
+                    // Execute inline scripts in the new content
+                    curPage.querySelectorAll('script').forEach(oldScript => {
+                        if (oldScript.closest('.novoton-search-form-wrapper')) return;
+                        if (oldScript.src && (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation'))) return;
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                    newScript.textContent = oldScript.textContent;
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
+
+                    // Scroll to results area
+                    const resultsTop = curForm.getBoundingClientRect().bottom + window.pageYOffset - 20;
+                    window.scrollTo({ top: resultsTop, behavior: 'smooth' });
+
+                    // Update browser URL without page reload
+                    window.history.pushState({}, '', url);
+
+                    // Reset button state
+                    setHasSearched(true);
+                    setParamsChanged(false);
+                    setIsSearching(false);
+                })
+                .catch(() => {
+                    if (attempt < maxRetries) {
+                        retryTimerRef.current = setTimeout(() => attemptFetch(attempt + 1), 1000 * Math.pow(2, attempt));
+                    } else {
+                        setIsSearching(false);
+                        setFetchError(t('searchFailed', 'Search failed. Please try again.'));
+                    }
                 });
+        };
 
-                // Scroll to results area
-                const resultsTop = curForm.getBoundingClientRect().bottom + window.pageYOffset - 20;
-                window.scrollTo({ top: resultsTop, behavior: 'smooth' });
-
-                // Update browser URL without page reload
-                window.history.pushState({}, '', url);
-
-                // Reset button state
-                setHasSearched(true);
-                setParamsChanged(false);
-                setIsSearching(false);
-            })
-            .catch(() => {
-                // Fallback to full page navigation on error
-                window.location.href = fetchUrl;
-            });
+        attemptFetch(0);
     }, []);
 
     const handleSearch = useCallback(() => {
+        setFetchError('');
         // Validate dates
         if (!checkIn || !checkOut) {
             setValidationError(t('pleaseEnterDates', 'Please select check-in and check-out dates'));
@@ -395,22 +415,14 @@ export default function BookingEngine({ config }) {
             <div className="nvt-form-row">
                 {/* Homepage location input */}
                 {mode === 'homepage' && (
-                    <div className="nvt-field" style={{ flex: 1.5 }}>
-                        <div className="nvt-field-input" style={{ padding: 0 }}>
+                    <div className="nvt-field nvt-field--location">
+                        <div className="nvt-field-input nvt-field-input--location">
                             <input
                                 type="text"
+                                className="nvt-homepage-input"
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder={t('whereAreYouGoing', 'Where are you going?')}
-                                style={{
-                                    border: 'none',
-                                    outline: 'none',
-                                    width: '100%',
-                                    padding: '12px 14px',
-                                    fontSize: '14px',
-                                    fontFamily: 'inherit',
-                                    background: 'transparent',
-                                }}
                             />
                         </div>
                     </div>
@@ -422,6 +434,8 @@ export default function BookingEngine({ config }) {
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowCalendar(!showCalendar); setShowGuests(false); }}
+                        aria-expanded={showCalendar}
+                        aria-haspopup="dialog"
                     >
                         <span className="nvt-field-input-icon"><CalendarIcon /></span>
                         <span className="nvt-field-input-text">
@@ -454,6 +468,8 @@ export default function BookingEngine({ config }) {
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowGuests(!showGuests); setShowCalendar(false); }}
+                        aria-expanded={showGuests}
+                        aria-haspopup="dialog"
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
                         <span className="nvt-field-input-text">
@@ -500,6 +516,22 @@ export default function BookingEngine({ config }) {
                 <div className="nvt-validation-message">
                     <span className="nvt-warning-icon">!</span>
                     {validationError}
+                </div>
+            )}
+
+            {/* Fetch error message */}
+            {fetchError && (
+                <div className="nvt-fetch-error">
+                    <span className="nvt-warning-icon">!</span>
+                    {fetchError}
+                </div>
+            )}
+
+            {/* Loading spinner during AJAX search */}
+            {isSearching && (
+                <div className="nvt-search-loading">
+                    <span className="nvt-spinner" />
+                    <span>{t('searching', 'Searching...')}</span>
                 </div>
             )}
         </div>

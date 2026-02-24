@@ -17,19 +17,12 @@ export function injectStyles() {
    ====================================================================== */
 
 .nvt-booking-engine {
-    --nvt-primary: #003580;
-    --nvt-primary-light: #0057b8;
-    --nvt-accent: #ffb700;
-    --nvt-yellow: #febb02;
-    --nvt-text: #1a1a1a;
-    --nvt-text-light: #6b6b6b;
-    --nvt-border: #e0e0e0;
-    --nvt-bg: #ffffff;
-    --nvt-bg-light: #f5f5f5;
-    --nvt-error: #d32f2f;
-    --nvt-radius: 8px;
+    /* React-only variables (no LESS equivalent) */
+    --nvt-z-popup: 1000;
+    --nvt-btn-height: 84px;
+    --nvt-btn-font: 26px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     position: relative;
 }
 
@@ -41,12 +34,12 @@ export function injectStyles() {
 .nvt-availability-title {
     font-size: 18px;
     font-weight: 700;
-    color: var(--nvt-primary);
+    color: var(--nvt-primary, #003580);
     margin: 0 0 4px;
 }
 .nvt-availability-subtitle {
     font-size: 13px;
-    color: var(--nvt-error);
+    color: var(--nvt-danger, #d32f2f);
     margin: 0;
 }
 
@@ -56,9 +49,9 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 0;
-    border: 3px solid var(--nvt-yellow);
-    border-radius: var(--nvt-radius);
-    background: var(--nvt-bg);
+    border: 3px solid var(--nvt-accent, #febb02);
+    border-radius: var(--nvt-radius, 8px);
+    background: var(--nvt-bg, #ffffff);
     overflow: visible;
     position: relative;
 }
@@ -92,7 +85,7 @@ button.nvt-field-input:active {
 .nvt-field {
     position: relative;
     flex: 1;
-    border-right: 1px solid var(--nvt-border);
+    border-right: 1px solid var(--nvt-border, #e0e0e0);
 }
 .nvt-field:last-child {
     border-right: none;
@@ -127,7 +120,7 @@ button.nvt-field-input:active {
 
 .nvt-field-input-icon {
     flex: 0 0 20px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
     display: flex;
     align-items: center;
 }
@@ -139,7 +132,7 @@ button.nvt-field-input:active {
     display: block;
     font-size: 11px;
     font-weight: 600;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 2px;
@@ -148,7 +141,7 @@ button.nvt-field-input:active {
     display: block;
     font-size: 14px;
     font-weight: 500;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -157,11 +150,11 @@ button.nvt-field-input:active {
     cursor: text;
 }
 .nvt-field-input-text .nvt-value--placeholder {
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
 }
 .nvt-field-input-arrow {
     flex: 0 0 16px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
     display: flex;
     align-items: center;
 }
@@ -177,12 +170,12 @@ button.nvt-field-input:active {
     background: #006ce4;
     color: #fff;
     border: none;
-    border-left: 3px solid var(--nvt-yellow);
-    font-size: 26px;
+    border-left: 3px solid var(--nvt-accent, #febb02);
+    font-size: var(--nvt-btn-font);
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    min-height: 84px;
+    min-height: var(--nvt-btn-height);
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
@@ -198,16 +191,16 @@ button.nvt-field-input:active {
     margin-top: 8px;
     padding: 8px 12px;
     font-size: 13px;
-    color: var(--nvt-error);
+    color: var(--nvt-danger, #d32f2f);
     background: #fef2f2;
-    border-radius: var(--nvt-radius);
+    border-radius: var(--nvt-radius, 8px);
 }
 .nvt-warning-icon {
     flex: 0 0 20px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--nvt-error);
+    background: var(--nvt-danger, #d32f2f);
     color: #fff;
     display: flex;
     align-items: center;
@@ -224,12 +217,14 @@ button.nvt-field-input:active {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
-    background: var(--nvt-bg);
-    border-radius: var(--nvt-radius);
+    z-index: var(--nvt-z-popup);
+    background: var(--nvt-bg, #ffffff);
+    border-radius: var(--nvt-radius, 8px);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     padding: 20px;
     min-width: 600px;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
 }
 
 .nvt-calendar-months {
@@ -250,7 +245,7 @@ button.nvt-field-input:active {
     margin: 0;
     font-size: 15px;
     font-weight: 700;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
 }
 .nvt-calendar-nav {
     display: flex;
@@ -259,14 +254,14 @@ button.nvt-field-input:active {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid var(--nvt-border);
-    background: var(--nvt-bg);
+    border: 1px solid var(--nvt-border, #e0e0e0);
+    background: var(--nvt-bg, #ffffff);
     cursor: pointer;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     padding: 0;
 }
 .nvt-calendar-nav:hover {
-    background: var(--nvt-bg);
+    background: var(--nvt-bg, #ffffff);
 }
 .nvt-calendar-nav:disabled {
     opacity: 0.3;
@@ -279,7 +274,7 @@ button.nvt-field-input:active {
     text-align: center;
     font-size: 12px;
     font-weight: 600;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
     margin-bottom: 4px;
 }
 
@@ -304,7 +299,7 @@ button.nvt-field-input:active {
     background: transparent;
     font-size: 13px;
     cursor: pointer;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     padding: 0;
     transition: background 0.1s;
 }
@@ -332,7 +327,7 @@ button.nvt-field-input:active {
     font-weight: 700;
 }
 .nvt-calendar-day--selected {
-    background: var(--nvt-primary) !important;
+    background: var(--nvt-primary, #003580) !important;
     color: #fff !important;
     font-weight: 600;
 }
@@ -376,9 +371,9 @@ button.nvt-field-input:active {
     justify-content: space-between;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid var(--nvt-border);
+    border-top: 1px solid var(--nvt-border, #e0e0e0);
     font-size: 13px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
 }
 /* Approximate prices disclaimer footer */
 .nvt-calendar-price-footer {
@@ -393,16 +388,16 @@ button.nvt-field-input:active {
 
 .nvt-done-btn {
     padding: 8px 20px;
-    background: var(--nvt-primary);
+    background: var(--nvt-primary, #003580);
     color: #fff;
     border: none;
-    border-radius: var(--nvt-radius);
+    border-radius: var(--nvt-radius, 8px);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
 .nvt-done-btn:hover {
-    background: var(--nvt-primary);
+    background: var(--nvt-primary, #003580);
 }
 
 /* ======================================================================
@@ -413,15 +408,17 @@ button.nvt-field-input:active {
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 1000;
-    background: var(--nvt-bg);
-    border-radius: var(--nvt-radius);
+    z-index: var(--nvt-z-popup);
+    background: var(--nvt-bg, #ffffff);
+    border-radius: var(--nvt-radius, 8px);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     padding: 20px;
     min-width: 340px;
+    max-width: calc(100vw - 24px);
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .nvt-guest-rooms-container {
@@ -434,7 +431,7 @@ button.nvt-field-input:active {
 .nvt-room-section {
     padding-bottom: 16px;
     margin-bottom: 16px;
-    border-bottom: 1px solid var(--nvt-border);
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
 }
 .nvt-room-section:last-child {
     border-bottom: none;
@@ -452,7 +449,7 @@ button.nvt-field-input:active {
     margin: 0;
     font-size: 14px;
     font-weight: 700;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
 }
 .nvt-remove-room {
     display: inline-flex;
@@ -482,12 +479,12 @@ button.nvt-field-input:active {
 }
 .nvt-guest-label {
     font-size: 13px;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
 }
 .nvt-guest-label small {
     display: block;
     font-size: 11px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
 }
 
 .nvt-guest-controls {
@@ -502,16 +499,16 @@ button.nvt-field-input:active {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid var(--nvt-border);
-    background: var(--nvt-bg);
+    border: 1px solid var(--nvt-border, #e0e0e0);
+    background: var(--nvt-bg, #ffffff);
     font-size: 18px;
     cursor: pointer;
-    color: var(--nvt-primary);
+    color: var(--nvt-primary, #003580);
     padding: 0;
     transition: background 0.1s;
 }
 .nvt-guest-btn:hover {
-    background: var(--nvt-bg);
+    background: var(--nvt-bg, #ffffff);
 }
 .nvt-guest-btn:disabled {
     opacity: 0.3;
@@ -529,18 +526,18 @@ button.nvt-field-input:active {
 .nvt-child-ages {
     margin-top: 8px;
     padding: 10px 12px;
-    background: var(--nvt-bg-light);
+    background: var(--nvt-bg-light, #f5f5f5);
     border-radius: 6px;
 }
 .nvt-child-ages-header {
     font-size: 12px;
     font-weight: 600;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     margin-bottom: 4px;
 }
 .nvt-child-ages-message {
     font-size: 11px;
-    color: var(--nvt-text-light);
+    color: var(--nvt-text-light, #6b6b6b);
     margin-bottom: 8px;
 }
 .nvt-child-age-row {
@@ -551,20 +548,20 @@ button.nvt-field-input:active {
 }
 .nvt-child-age-row label {
     font-size: 12px;
-    color: var(--nvt-text);
+    color: var(--nvt-text, #1a1a1a);
     min-width: 60px;
 }
 .nvt-child-age-select {
     flex: 1;
     padding: 6px 8px;
-    border: 1px solid var(--nvt-border);
+    border: 1px solid var(--nvt-border, #e0e0e0);
     border-radius: 4px;
     font-size: 13px;
-    color: var(--nvt-text);
-    background: var(--nvt-bg);
+    color: var(--nvt-text, #1a1a1a);
+    background: var(--nvt-bg, #ffffff);
 }
 .nvt-age-error .nvt-child-age-select {
-    border-color: var(--nvt-error);
+    border-color: var(--nvt-danger, #d32f2f);
     background: #fff5f5;
 }
 
@@ -577,7 +574,7 @@ button.nvt-field-input:active {
     margin-top: 12px;
     background: #fff3cd;
     border: 1px solid #ffc107;
-    border-radius: var(--nvt-radius);
+    border-radius: var(--nvt-radius, 8px);
     color: #856404;
     font-size: 13px;
     font-weight: 600;
@@ -596,17 +593,17 @@ button.nvt-field-input:active {
     width: 100%;
     padding: 10px;
     margin-top: 12px;
-    border: 2px dashed var(--nvt-border);
-    border-radius: var(--nvt-radius);
+    border: 2px dashed var(--nvt-border, #e0e0e0);
+    border-radius: var(--nvt-radius, 8px);
     background: transparent;
-    color: var(--nvt-primary);
+    color: var(--nvt-primary, #003580);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     text-align: center;
 }
 .nvt-add-room-btn:hover {
-    border-color: var(--nvt-border);
+    border-color: var(--nvt-border, #e0e0e0);
     background: transparent;
 }
 
@@ -618,7 +615,7 @@ button.nvt-field-input:active {
     left: 0;
     right: 0;
     font-size: 11px;
-    color: var(--nvt-error);
+    color: var(--nvt-danger, #d32f2f);
     padding: 2px 14px;
     white-space: nowrap;
     z-index: 1;
@@ -631,18 +628,113 @@ button.nvt-field-input:active {
     width: 100%;
 }
 
+/* ---------- Calendar nav bar (prev/next buttons) ---------- */
+
+.nvt-calendar-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* ---------- Homepage location input ---------- */
+
+.nvt-field--location {
+    flex: 1.5;
+}
+.nvt-field-input--location {
+    padding: 0;
+}
+.nvt-homepage-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    background: transparent;
+}
+
+/* ---------- Search loading spinner ---------- */
+
+.nvt-search-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 16px;
+    font-size: 14px;
+    color: var(--nvt-text-light, #6b6b6b);
+}
+.nvt-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--nvt-border, #e0e0e0);
+    border-top-color: var(--nvt-primary, #003580);
+    border-radius: 50%;
+    animation: nvt-spin 0.7s linear infinite;
+}
+@keyframes nvt-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Fetch error message ---------- */
+
+.nvt-fetch-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--nvt-danger, #d32f2f);
+    background: #fef2f2;
+    border-radius: var(--nvt-radius, 8px);
+}
+
+/* ---------- Error boundary fallback ---------- */
+
+.nvt-error-boundary {
+    padding: 20px;
+    text-align: center;
+    color: var(--nvt-danger, #d32f2f);
+    font-size: 14px;
+}
+
 /* ======================================================================
    Responsive
    ====================================================================== */
 
+/* Tablet: stack calendar months, scale button text */
+@media (max-width: 1024px) {
+    .nvt-calendar-months {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .nvt-field--date {
+        position: static;
+    }
+    .nvt-calendar-popup {
+        min-width: 280px;
+        max-width: calc(100vw - 24px);
+    }
+    .nvt-btn-search {
+        font-size: 20px;
+        padding: 16px 28px;
+        min-height: 64px;
+    }
+}
+
 @media (max-width: 768px) {
     .nvt-form-row {
         flex-direction: column;
-        border-radius: var(--nvt-radius);
+        border-radius: var(--nvt-radius, 8px);
     }
     .nvt-field {
         border-right: none;
-        border-bottom: 1px solid var(--nvt-border);
+        border-bottom: 1px solid var(--nvt-border, #e0e0e0);
     }
     .nvt-field:last-child {
         border-bottom: none;
@@ -653,17 +745,22 @@ button.nvt-field-input:active {
     .nvt-btn-search {
         width: 100%;
         border-left: none;
-        border-top: 3px solid var(--nvt-yellow);
-        border-radius: 0 0 var(--nvt-radius) var(--nvt-radius);
+        border-top: 3px solid var(--nvt-accent, #febb02);
+        border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
+        font-size: 18px;
+        padding: 14px 24px;
+        min-height: 56px;
     }
     .nvt-calendar-popup {
         min-width: 100%;
         left: 0;
         right: 0;
     }
-    .nvt-calendar-months {
-        flex-direction: column;
-        gap: 20px;
+    .nvt-guest-popup {
+        left: 0;
+        right: 0;
+        min-width: 0;
+        width: 100%;
     }
 }
 `;

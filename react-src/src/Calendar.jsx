@@ -10,7 +10,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { getLocale, nightsBetween, formatDateShort, t } from './utils';
+import { getLocale, nightsBetween, formatDateShort, t, tPlural } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
 import { ChevronLeft, ChevronRight } from './icons';
 
@@ -84,29 +84,29 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                                : new Date(today.getFullYear(), today.getMonth(), 1);
 
     const [viewDate, setViewDate] = useState(startMonth);
-    const [selecting, setSelecting] = useState(null); // null | 'checkIn' | 'checkOut'
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
     const popupRef = useRef(null);
-    const closeTimerRef = useRef(null);
 
-    // Close on outside click
+    // Close on outside click or Escape key
     useEffect(() => {
         function handleClick(e) {
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
         }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                onClose && onClose();
+            }
+        }
         document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, [onClose]);
-
-    // Clean up auto-close timer on unmount
-    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
         return () => {
-            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKeyDown);
         };
-    }, []);
+    }, [onClose]);
 
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -123,25 +123,20 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         if (!tempCheckIn || (tempCheckIn && tempCheckOut)) {
             setTempCheckIn(date);
             setTempCheckOut(null);
-            setSelecting('checkOut');
             onSelect(date, null);
         }
         // CASE 3: Only check-in + click before/on → new CHECK-IN
         else if (date <= tempCheckIn) {
             setTempCheckIn(date);
             setTempCheckOut(null);
-            setSelecting('checkOut');
             onSelect(date, null);
         }
         // CASE 2: Only check-in + click after → CHECK-OUT (complete)
         else {
             setTempCheckOut(date);
-            setSelecting(null);
             onSelect(tempCheckIn, date);
-            // Auto-close calendar after brief delay so user sees selection
-            closeTimerRef.current = setTimeout(() => { onClose && onClose(); }, 350);
         }
-    }, [tempCheckIn, tempCheckOut, today, onSelect, onClose]);
+    }, [tempCheckIn, tempCheckOut, today, onSelect]);
 
     // Two consecutive months
     const month1Year = viewDate.getFullYear();
@@ -191,6 +186,28 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                         if (inRange) className += ' nvt-calendar-day--in-range';
                         if (hasNoPrice) className += ' nvt-calendar-day--no-price';
 
+                        // Build accessible label for screen readers
+                        const ariaLabel = (() => {
+                            const dateStr = `${day} ${monthNames[month]} ${year}`;
+                            if (isPast) return `${dateStr}, ${t('unavailable', 'unavailable')}`;
+
+                            const parts = [dateStr];
+                            if (isSelectedCheckIn) parts.push(t('selectedCheckIn', 'selected as check-in'));
+                            else if (isSelectedCheckOut) parts.push(t('selectedCheckOut', 'selected as check-out'));
+                            else if (inRange) parts.push(t('withinStay', 'within your stay'));
+
+                            if (hasPrices && dayPrice !== undefined) {
+                                parts.push(`${dayPrice} ${pricesCurrency || ''} ${t('perNight', 'per night')}`.trim());
+                            } else if (hasPrices) {
+                                parts.push(t('priceUnavailable', 'price unavailable'));
+                            }
+                            return parts.join(', ');
+                        })();
+
+                        const tooltip = hasPrices && dayPrice !== undefined && !isPast
+                            ? `${dayPrice} ${pricesCurrency || ''}`.trim()
+                            : undefined;
+
                         return (
                             <button
                                 key={day}
@@ -198,6 +215,9 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                                 className={className}
                                 disabled={isPast}
                                 onClick={() => handleDayClick(date)}
+                                aria-label={ariaLabel}
+                                aria-pressed={isSelectedCheckIn || isSelectedCheckOut || undefined}
+                                title={tooltip}
                             >
                                 <span className="nvt-calendar-day-num">{day}</span>
                                 {hasPrices && !isPast && (
@@ -216,7 +236,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     // Footer text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
     const footerText = (() => {
         if (tempCheckIn && tempCheckOut) {
-            const nightLabel = nights === 1 ? t('night', 'night') : t('nights', 'nights');
+            const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
             return `${formatDateShort(tempCheckIn)} - ${formatDateShort(tempCheckOut)} — ${nights} ${nightLabel}`;
         }
         if (tempCheckIn) {
@@ -231,13 +251,14 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         : '';
 
     return (
-        <div className="nvt-calendar-popup" ref={popupRef}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div className="nvt-calendar-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('datePicker', 'Date picker')}>
+            <div className="nvt-calendar-nav-bar">
                 <button
                     type="button"
                     className="nvt-calendar-nav"
                     onClick={goToPrev}
                     disabled={!canGoPrev}
+                    aria-label={t('previousMonth', 'Previous month')}
                 >
                     <ChevronLeft />
                 </button>
@@ -245,6 +266,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                     type="button"
                     className="nvt-calendar-nav"
                     onClick={goToNext}
+                    aria-label={t('nextMonth', 'Next month')}
                 >
                     <ChevronRight />
                 </button>
