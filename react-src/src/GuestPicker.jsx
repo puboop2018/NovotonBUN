@@ -18,12 +18,15 @@ export default function GuestPicker({
     onUpdate,
     onClose,
     ageErrors = [],
+    triggerRef,
 }) {
     const popupRef = useRef(null);
 
     // Close on outside click or Escape key
     useEffect(() => {
         function handleClick(e) {
+            // Ignore clicks on the trigger button (prevents close-then-reopen flicker)
+            if (triggerRef && triggerRef.current && triggerRef.current.contains(e.target)) return;
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
@@ -39,7 +42,7 @@ export default function GuestPicker({
             document.removeEventListener('mousedown', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose]);
+    }, [onClose, triggerRef]);
 
     const updateRoom = useCallback((roomIdx, field, value) => {
         const updated = rooms.map((room, i) => {

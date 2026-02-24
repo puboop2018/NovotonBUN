@@ -119,6 +119,8 @@ export default function BookingEngine({ config }) {
 
     const engineRef = useRef(null);
     const retryTimerRef = useRef(null);
+    const dateTriggerRef = useRef(null);
+    const guestTriggerRef = useRef(null);
 
     // Clean up any pending retry timer on unmount
     useEffect(() => () => { clearTimeout(retryTimerRef.current); }, []);
@@ -431,6 +433,7 @@ export default function BookingEngine({ config }) {
                 {/* Date field */}
                 <div className="nvt-field nvt-field--date">
                     <button
+                        ref={dateTriggerRef}
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowCalendar(!showCalendar); setShowGuests(false); }}
@@ -458,6 +461,7 @@ export default function BookingEngine({ config }) {
                             onClose={() => setShowCalendar(false)}
                             prices={calendarPrices.prices}
                             pricesCurrency={calendarPrices.currency}
+                            triggerRef={dateTriggerRef}
                         />
                     )}
                 </div>
@@ -465,6 +469,7 @@ export default function BookingEngine({ config }) {
                 {/* Guests field */}
                 <div className="nvt-field nvt-field--guests">
                     <button
+                        ref={guestTriggerRef}
                         type="button"
                         className="nvt-field-input"
                         onClick={() => { setShowGuests(!showGuests); setShowCalendar(false); }}
@@ -493,6 +498,7 @@ export default function BookingEngine({ config }) {
                             onUpdate={handleRoomsUpdate}
                             onClose={() => setShowGuests(false)}
                             ageErrors={ageErrors}
+                            triggerRef={guestTriggerRef}
                         />
                     )}
                 </div>

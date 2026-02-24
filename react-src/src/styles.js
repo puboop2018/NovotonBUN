@@ -65,6 +65,13 @@ export function injectStyles() {
     outline: none !important;
     box-shadow: none !important;
 }
+/* Kill hover backgrounds on all buttons inside booking engine popups */
+.nvt-booking-engine button:hover,
+.nvt-booking-engine button:focus,
+.nvt-booking-engine button:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
 .nvt-field,
 .nvt-field:hover,
 .nvt-field:focus,
@@ -261,7 +268,7 @@ button.nvt-field-input:active {
     padding: 0;
 }
 .nvt-calendar-nav:hover {
-    background: var(--nvt-bg, #ffffff);
+    background: transparent !important;
 }
 .nvt-calendar-nav:disabled {
     opacity: 0.3;
@@ -313,10 +320,10 @@ button.nvt-field-input:active {
     gap: 1px;
 }
 .nvt-calendar-day:hover {
-    background: transparent;
+    background: transparent !important;
 }
 .nvt-calendar-day--has-prices:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--selected) {
-    background: #f0f4f8;
+    background: transparent !important;
 }
 .nvt-calendar-day--disabled {
     color: #ccc;
@@ -466,9 +473,9 @@ button.nvt-field-input:active {
     transition: background 0.15s, border-color 0.15s;
 }
 .nvt-remove-room:hover {
-    background: #ffebee;
-    border-color: #ef9a9a;
-    color: #b71c1c;
+    background: #ffebee !important;
+    border-color: #ef9a9a !important;
+    color: #b71c1c !important;
 }
 
 .nvt-guest-row {
@@ -508,7 +515,7 @@ button.nvt-field-input:active {
     transition: background 0.1s;
 }
 .nvt-guest-btn:hover {
-    background: var(--nvt-bg, #ffffff);
+    background: transparent !important;
 }
 .nvt-guest-btn:disabled {
     opacity: 0.3;
@@ -583,7 +590,7 @@ button.nvt-field-input:active {
     transition: background 0.15s;
 }
 .nvt-missing-ages-alert:hover {
-    background: #fff3cd;
+    background: #fff3cd !important;
 }
 
 /* ----- Add room button ----- */
@@ -603,8 +610,8 @@ button.nvt-field-input:active {
     text-align: center;
 }
 .nvt-add-room-btn:hover {
-    border-color: var(--nvt-border, #e0e0e0);
-    background: transparent;
+    border-color: var(--nvt-border, #e0e0e0) !important;
+    background: transparent !important;
 }
 
 /* ----- Child age hint below guest picker ----- */
