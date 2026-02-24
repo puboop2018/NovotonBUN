@@ -30,7 +30,7 @@
 
 .novoton-cron-url { background: #f5f5f5; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all; margin: 5px 0; }
 .novoton-table { width: 100%; border-collapse: collapse; }
-.novoton-table th, .novoton-table td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+.novoton-table th, .novoton-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
 .novoton-table th { background: #f8f9fa; font-weight: 600; color: #333; }
 .novoton-table tr:hover { background: #f8f9fa; }
 
@@ -231,7 +231,7 @@
             <tr>
                 <td><strong>Hotel List</strong><br><small style="color:#666;">Basic hotel data</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
-                <td>Daily</td>
+                <td>Every 3–7 days</td>
                 <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn" style="font-size:11px;padding:4px 10px;">Run</a></td>
             </tr>
             <tr>
