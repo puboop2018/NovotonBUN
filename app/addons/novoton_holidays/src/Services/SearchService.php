@@ -144,12 +144,17 @@ class SearchService implements SearchServiceInterface
     
     /**
      * Search hotel availability
-     * 
+     *
      * @param array $params Search parameters
      * @return array Search results
      */
     public function searchAvailability(array $params): array
     {
+        if (!$this->api) {
+            $this->log('Search aborted: API not available');
+            return [];
+        }
+
         // Check cache first
         $cache_key = $this->buildCacheKey('availability', $params);
         $cached = $this->cache->get($cache_key);
@@ -157,7 +162,7 @@ class SearchService implements SearchServiceInterface
             $this->log('Search cache hit', ['key' => $cache_key]);
             return $cached;
         }
-        
+
         // Build API parameters
         $api_params = $this->buildApiParams($params);
 
@@ -344,7 +349,7 @@ class SearchService implements SearchServiceInterface
         }
         
         $raw_price = (float) (string) ($room->Price ?? 0);
-        $price_with_commission = $this->api->applyCommission($raw_price);
+        $price_with_commission = $this->api ? $this->api->applyCommission($raw_price) : $raw_price;
         
         return [
             'room_id' => $room_id,
@@ -536,7 +541,7 @@ class SearchService implements SearchServiceInterface
                     continue;
                 }
 
-                $finalPrice = $this->api->applyCommission($price);
+                $finalPrice = $this->api ? $this->api->applyCommission($price) : $price;
                 $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
                 $item = [
@@ -592,7 +597,7 @@ class SearchService implements SearchServiceInterface
                 return [];
             }
 
-            $finalPrice = $this->api->applyCommission($price);
+            $finalPrice = $this->api ? $this->api->applyCommission($price) : $price;
             $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
             $item = [
