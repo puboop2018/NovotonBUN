@@ -19,8 +19,7 @@ declare(strict_types=1);
  * - test_hotel_request: Test hotel info request
  * - test_alternative_rs: Test alternative search
  * - test_facilities: Test facilities sync
- * - export_hotel_features_csv: Generate features CSV
- * - download_hotel_features_csv: Download CSV file
+ * - export_hotel_features_csv: Generate and download features CSV
  * - get_hotel_features_csv: Get CSV content
  *
  * @package NovotonHolidays
@@ -37,7 +36,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Mode: export_hotel_features_csv
- * Generate CSV file with star ratings for CS-Cart import
+ * Generate and immediately download CSV file with hotel features
  */
 if ($mode == 'export_hotel_features_csv') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -49,37 +48,21 @@ if ($mode == 'export_hotel_features_csv') {
         $result = fn_novoton_holidays_generate_hotel_features_csv();
         ob_end_clean();
 
-        if ($result['success']) {
-            $download_url = fn_url('novoton_holidays.download_hotel_features_csv');
-            fn_set_notification('N', __('notice'), "Hotel features CSV generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.csv</a>");
-        } else {
-            fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
+        if ($result['success'] && !empty($result['file_path']) && file_exists($result['file_path'])) {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="novoton_hotel_features.csv"');
+            header('Content-Length: ' . filesize($result['file_path']));
+            readfile($result['file_path']);
+            exit;
         }
+
+        fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
     } catch (Exception $e) {
         ob_end_clean();
         fn_set_notification('E', __('error'), "Exception: " . $e->getMessage());
     }
 
-    return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
-}
-
-/**
- * Mode: download_hotel_features_csv
- * Download the generated CSV file (static filename)
- */
-if ($mode == 'download_hotel_features_csv') {
-    $file_path = fn_get_files_dir_path() . 'novoton_reports/novoton_hotel_features.csv';
-
-    if (!file_exists($file_path)) {
-        fn_set_notification('E', __('error'), 'No CSV export found. Please generate one first.');
-        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
-    }
-
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="novoton_hotel_features.csv"');
-    header('Content-Length: ' . filesize($file_path));
-    readfile($file_path);
-    exit;
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
 }
 
 /**
@@ -92,7 +75,6 @@ if ($mode == 'export_hotel_features_xml') {
     }
 
     try {
-        // Buffer output to prevent PHP 8.1+ deprecation notices from corrupting response
         ob_start();
         $result = fn_novoton_holidays_generate_hotel_features_xml();
         ob_end_clean();

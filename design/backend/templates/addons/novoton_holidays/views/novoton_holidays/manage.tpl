@@ -79,8 +79,7 @@
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[L] Manage Bookings</a>
             <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-warning">[R] Alternative Requests</a>
-            <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Export Hotel Features</a>
-            <a href="{"novoton_holidays.download_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-info novoton-btn-sm">[CSV] Download</a>
+            <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Download Hotel Features</a>
             <a href="{"novoton_holidays.export_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-secondary">[XML] Export Hotel Features</a>
             <a href="{"novoton_holidays.download_hotel_features_xml"|fn_url}" class="novoton-btn novoton-btn-info novoton-btn-sm">[XML] Download</a>
             {if $xml_feed_url}
