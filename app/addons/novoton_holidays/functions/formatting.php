@@ -115,7 +115,7 @@ function fn_novoton_holidays_normalize_resort_name($name): string
     $name = strtoupper(trim($name));
     $name = str_replace('&', 'AND', $name);
     $name = str_replace(['.', ',', '-', "'", '"'], ' ', $name);
-    $name = preg_replace('/\s+/', ' ', $name);
+    $name = preg_replace('/\s+/', ' ', $name) ?? $name;
     return trim($name);
 }
 

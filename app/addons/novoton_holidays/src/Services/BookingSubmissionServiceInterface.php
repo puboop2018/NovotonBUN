@@ -17,7 +17,7 @@ interface BookingSubmissionServiceInterface
     /**
      * Submit all Novoton bookings in the cart to the API.
      *
-     * Called from the fn_novoton_holidays_place_order hook after CS-Cart
+     * Called from the fn_novoton_holidays_place_order_post hook after CS-Cart
      * creates the order record.
      *
      * For multi-room bookings:

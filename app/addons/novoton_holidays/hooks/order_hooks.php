@@ -22,17 +22,22 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // ============================================================================
-// HOOK: place_order
+// HOOK: place_order_post
 // ============================================================================
 
 /**
- * Hook: place_order - Send booking to Novoton API after order is placed.
+ * Hook: place_order_post - Send booking to Novoton API after order is placed.
+ *
+ * Must be place_order_post (not place_order) because $order_id is only
+ * available after the order record has been created.
+ *
+ * CS-Cart signature: fn_set_hook('place_order_post', $order_id, $action, $order_status, $cart, $auth)
  *
  * Delegates entirely to BookingSubmissionService which encapsulates:
  *   1. DB hydration, room/guest resolution, room grouping
  *   2. API payload construction, DB upsert, API submission
  */
-function fn_novoton_holidays_place_order(&$order_id, &$action, &$order_status, &$cart, &$auth): void
+function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
     Container::getInstance()->bookingSubmissionService()->submitOrder($order_id, $cart);
 }

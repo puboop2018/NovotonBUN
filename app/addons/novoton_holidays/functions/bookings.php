@@ -109,10 +109,11 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
         $result['checked']++;
 
         try {
-            $status_response = $api->getReservationStatus($booking['novoton_reservation_id']);
+            $status_response = $api->getReservationInfo($booking['novoton_reservation_id']);
 
             if (!empty($status_response)) {
-                $new_status = (string)($status_response['Status'] ?? $status_response['status'] ?? '');
+                // getReservationInfo returns an XML object — access via object properties
+                $new_status = (string)($status_response->Status ?? $status_response->status ?? '');
 
                 // Map Novoton API status codes to internal status via centralized constant
                 $internal_status = \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_TO_INTERNAL[$new_status]

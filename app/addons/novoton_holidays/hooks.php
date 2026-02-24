@@ -25,7 +25,7 @@ declare(strict_types=1);
  *     fn_novoton_holidays_delete_product_post()                            *
  *                                                                          *
  *   ORDER (order_hooks.php):                                               *
- *     fn_novoton_holidays_place_order()                                    *
+ *     fn_novoton_holidays_place_order_post()                               *
  *     fn_novoton_holidays_get_orders_post()                                *
  *     fn_novoton_holidays_get_order_info()                                 *
  *                                                                          *

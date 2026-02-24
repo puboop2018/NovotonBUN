@@ -49,7 +49,7 @@ if (empty($mode)) {
 }
 
 // Sanitize mode to prevent XSS when echoed
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
+$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode)) ?? 'full';
 
 echo "[" . date('Y-m-d H:i:s') . "] Novoton Cron Started - Mode: {$mode}\n";
 
