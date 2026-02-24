@@ -13,6 +13,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
+try {
+
     // Validate and sanitize search input via SecurityService
     $security = _nvt_get_security_service();
     $searchParams = $security->validateSearchParams($_REQUEST);
@@ -1141,3 +1143,73 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
     
     // Set breadcrumbs
     fn_add_breadcrumb($page_title);
+
+} catch (\Throwable $e) {
+    // =========================================================================
+    // ERROR BOUNDARY — catch any exception/error in the search flow
+    // Log the real cause for debugging, show a friendly message to the user
+    // =========================================================================
+    fn_log_event('general', 'runtime', [
+        'message' => 'Novoton Search Error: ' . $e->getMessage(),
+        'file'    => $e->getFile() . ':' . $e->getLine(),
+        'trace'   => $e->getTraceAsString(),
+    ]);
+
+    $page_title = __('novoton_holidays.search_results') ?: 'Search Results';
+
+    fn_set_notification('E', __('error'),
+        __('novoton_holidays.search_error',
+            ['[default]' => 'An error occurred while searching. Please try again later.']
+        )
+    );
+
+    // Assign safe defaults so the template renders without secondary errors
+    Tygh::$app['view']->assign('novoton_results', []);
+    Tygh::$app['view']->assign('novoton_params', [
+        'check_in' => '', 'check_out' => '', 'nights' => 7,
+        'adults' => 2, 'children' => [], 'children_count' => 0,
+        'children_ages' => '', 'children_ages_str' => '',
+        'children_ages_array' => [], 'num_rooms' => 1,
+        'rooms_data' => [], 'rooms_data_json' => '[]',
+        'flex_days' => 0,
+        'meal_plan' => __('novoton_holidays.all_boards') ?: 'All Boards',
+        'hotel_id' => '', 'product_id' => 0,
+    ]);
+    Tygh::$app['view']->assign('alternative_results', []);
+    Tygh::$app['view']->assign('alternative_check_in', '');
+    Tygh::$app['view']->assign('alternative_check_out', '');
+    Tygh::$app['view']->assign('no_availability_message', true);
+    Tygh::$app['view']->assign('hotel_name', '');
+    Tygh::$app['view']->assign('hotel_city', '');
+    Tygh::$app['view']->assign('hotel_country', '');
+    Tygh::$app['view']->assign('hotel_region', '');
+    Tygh::$app['view']->assign('hotel_package_name', '');
+    Tygh::$app['view']->assign('hotel_url', '');
+    Tygh::$app['view']->assign('terms_of_payment', '');
+    Tygh::$app['view']->assign('terms_of_cancellation', '');
+    Tygh::$app['view']->assign('early_booking_details', '');
+    Tygh::$app['view']->assign('page_title', $page_title);
+
+    Registry::set('navigation.dynamic.page_title', $page_title);
+    Registry::set('navigation.dynamic.meta_description', '');
+    Registry::set('navigation.dynamic.meta_keywords', '');
+    Registry::set('runtime.page_title', $page_title);
+    Tygh::$app['view']->assign('meta_description', '');
+    Tygh::$app['view']->assign('meta_keywords', '');
+    Tygh::$app['view']->assign('canonical_url', '');
+    Tygh::$app['view']->assign('og_image', '');
+    Tygh::$app['view']->assign('og_title', $page_title);
+    Tygh::$app['view']->assign('og_description', '');
+
+    // Show real error in debug mode
+    if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
+        Tygh::$app['view']->assign('novoton_debug', [
+            '=== SEARCH ERROR ===',
+            $e->getMessage(),
+            $e->getFile() . ':' . $e->getLine(),
+            $e->getTraceAsString(),
+        ]);
+    }
+
+    fn_add_breadcrumb($page_title);
+}

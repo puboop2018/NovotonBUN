@@ -29,10 +29,15 @@ class SearchService implements SearchServiceInterface
     
     /**
      * Constructor
+     *
+     * @throws \RuntimeException if the Novoton API is not available
      */
     public function __construct(?CacheServiceInterface $cache = null)
     {
         $this->api = fn_novoton_holidays_get_api();
+        if (!$this->api) {
+            throw new \RuntimeException('Novoton API is not available. Check addon settings and API credentials.');
+        }
         $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
@@ -150,11 +155,6 @@ class SearchService implements SearchServiceInterface
      */
     public function searchAvailability(array $params): array
     {
-        if (!$this->api) {
-            $this->log('Search aborted: API not available');
-            return [];
-        }
-
         // Check cache first
         $cache_key = $this->buildCacheKey('availability', $params);
         $cached = $this->cache->get($cache_key);
@@ -349,7 +349,7 @@ class SearchService implements SearchServiceInterface
         }
         
         $raw_price = (float) (string) ($room->Price ?? 0);
-        $price_with_commission = $this->api ? $this->api->applyCommission($raw_price) : $raw_price;
+        $price_with_commission = $this->api->applyCommission($raw_price);
         
         return [
             'room_id' => $room_id,
@@ -541,7 +541,7 @@ class SearchService implements SearchServiceInterface
                     continue;
                 }
 
-                $finalPrice = $this->api ? $this->api->applyCommission($price) : $price;
+                $finalPrice = $this->api->applyCommission($price);
                 $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
                 $item = [
@@ -597,7 +597,7 @@ class SearchService implements SearchServiceInterface
                 return [];
             }
 
-            $finalPrice = $this->api ? $this->api->applyCommission($price) : $price;
+            $finalPrice = $this->api->applyCommission($price);
             $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
             $item = [
