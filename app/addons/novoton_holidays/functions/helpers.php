@@ -70,7 +70,7 @@ function fn_novoton_holidays_is_debug(): bool
 {
     // Debug via URL parameter requires authenticated admin session
     if (!empty($_REQUEST['debug_novoton'])) {
-        $auth = \Tygh::$app['session']['auth'] ?? [];
+        $auth = \Tygh\Tygh::$app['session']['auth'] ?? [];
         if (!empty($auth['user_id']) && ($auth['area'] ?? '') === 'A') {
             return true;
         }

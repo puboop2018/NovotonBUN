@@ -105,8 +105,8 @@ function fn_novoton_holidays_register_smarty_modifiers()
     }
     
     try {
-        if (class_exists('Tygh') && !empty(\Tygh::$app) && \Tygh::$app->offsetExists('view')) {
-            $smarty = \Tygh::$app['view'];
+        if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
+            $smarty = \Tygh\Tygh::$app['view'];
             if ($smarty && method_exists($smarty, 'registerPlugin')) {
                 // Check if already registered to avoid errors
                 $plugins = $smarty->registered_plugins ?? [];

@@ -116,7 +116,7 @@ if ($mode == 'bookings') {
     );
     
     Tygh::$app['view']->assign('bookings', $bookings);
-    Tygh::$app['view']->assign('search', $_REQUEST);
+    Tygh::$app['view']->assign('search', array_intersect_key($_REQUEST, array_flip(['order_id', 'status', 'date_from', 'date_to', 'dispatch'])));
 }
 
 // View booking details

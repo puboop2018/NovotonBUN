@@ -6,7 +6,7 @@
         <div style="margin:10px 0;font-size:13px;line-height:1.8;">
             
             {if $oi.extra.hotel_name}
-            <strong>Hotel:</strong> {$oi.extra.hotel_name}{if $oi.extra.hotel_city} ({$oi.extra.hotel_city}){/if}<br>
+            <strong>Hotel:</strong> {$oi.extra.hotel_name|escape:'html'}{if $oi.extra.hotel_city} ({$oi.extra.hotel_city|escape:'html'}){/if}<br>
             {/if}
             
             <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} |
@@ -14,7 +14,7 @@
             <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$oi.extra.nights}<br>
 
             {if $oi.extra.package_name}
-            <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$oi.extra.package_name}<br>
+            <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$oi.extra.package_name|escape:'html'}<br>
             {/if}
             
             {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}
@@ -44,14 +44,14 @@
                     
                     <strong>Guest Names:</strong><br>
                     {if $adult_list}
-                        &nbsp;&nbsp;Adults: {foreach from=$adult_list item=guest name=adults}{$guest.name}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
+                        &nbsp;&nbsp;Adults: {foreach from=$adult_list item=guest name=adults}{$guest.name|escape:'html'}{if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.adults.last}, {/if}{/foreach}<br>
                     {/if}
                     {if $child_list}
-                        &nbsp;&nbsp;Children: {foreach from=$child_list item=guest name=children}{$guest.name} ({$guest.age} yrs){if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
+                        &nbsp;&nbsp;Children: {foreach from=$child_list item=guest name=children}{$guest.name|escape:'html'} ({$guest.age} yrs){if $guest.room} (Room {$guest.room}){/if}{if !$smarty.foreach.children.last}, {/if}{/foreach}<br>
                     {/if}
                 {/if}
             {elseif $oi.extra.holder_name}
-                <strong>Holder:</strong> {$oi.extra.holder_name}<br>
+                <strong>Holder:</strong> {$oi.extra.holder_name|escape:'html'}<br>
             {/if}
             
             {* Payment Terms with Amounts - use raw XML for consistent date format *}

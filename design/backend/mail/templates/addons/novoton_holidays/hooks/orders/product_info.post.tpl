@@ -19,7 +19,7 @@
                 {if $oi.extra.hotel_country}
                     {$location_parts[] = $oi.extra.hotel_country|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
                 {/if}
-                <strong>{$hotel_display}{if $location_parts}, {", "|implode:$location_parts}{/if}</strong><br>
+                <strong>{$hotel_display|escape:'html'}{if $location_parts}, {", "|implode:$location_parts|escape:'html'}{/if}</strong><br>
             {/if}
 
             {* 2. Dates and nights - bold values, format: "05 Jul 2026, 12 Jul 2026, 7" *}
@@ -57,7 +57,7 @@
                                 {if $guest.room == $room_num}
                                     {$guest_number = $guest_number + 1}
                                     {$guest_name = $guest.name|default:"`$guest.last_name`, `$guest.first_name`"|trim}
-                                    &nbsp;&nbsp;{$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
+                                    &nbsp;&nbsp;{$guest_name|escape:'html'}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
                                 {/if}
                             {/foreach}
                         {/for}
@@ -66,7 +66,7 @@
                         {foreach from=$guests_list item=guest}
                             {$guest_number = $guest_number + 1}
                             {$guest_name = $guest.name|default:"`$guest.last_name`, `$guest.first_name`"|trim}
-                            &nbsp;&nbsp;{$guest_name}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
+                            &nbsp;&nbsp;{$guest_name|escape:'html'}{if $guest.is_holder} ({__("novoton_holidays.holder")|default:"Holder"}){elseif $guest.type == 'child'} ({__("novoton_holidays.child")|default:"copil"}, {__("novoton_holidays.n_years", [$guest.age])}){/if}<br>
                         {/foreach}
                     {/if}
                 {/if}

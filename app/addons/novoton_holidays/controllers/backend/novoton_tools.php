@@ -28,6 +28,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
@@ -190,6 +191,10 @@ if ($mode == 'test_api') {
  * Test room type and board name formatting (pure presentation, no service needed)
  */
 if ($mode == 'test_formats') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
     header('Content-Type: text/html; charset=utf-8');
 
     echo '<h2>Room Type Formatting Tests</h2>';
