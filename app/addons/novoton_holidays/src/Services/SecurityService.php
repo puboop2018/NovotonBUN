@@ -447,7 +447,7 @@ class SecurityService implements SecurityServiceInterface
     private function isValidHotelId(string $hotelId): bool
     {
         // Allow alphanumeric, hyphens, underscores (typical ID formats)
-        return preg_match('/^[a-zA-Z0-9_-]{1,50}$/', $hotelId);
+        return (bool) preg_match('/^[a-zA-Z0-9_-]{1,50}$/', $hotelId);
     }
     
     /**
@@ -456,7 +456,7 @@ class SecurityService implements SecurityServiceInterface
     private function isValidName(string $name): bool
     {
         // Allow letters (including accented), spaces, hyphens, apostrophes
-        return preg_match('/^[\p{L}\s\'-]{1,100}$/u', $name);
+        return (bool) preg_match('/^[\p{L}\s\'-]{1,100}$/u', $name);
     }
     
     /**
