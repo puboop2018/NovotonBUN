@@ -260,19 +260,19 @@ abstract class AbstractBatchedSync implements SyncInterface
             return ['status' => 'reset'];
         }
 
-        // Check for stale state (abandoned sync) and clear it
-        if ($this->state->isStale()) {
-            $status = $this->state->getStatus();
-            $this->logger->output("Stale state detected (no activity since {$status['last_run_at']}). Clearing and starting fresh.");
-            $this->state->clear();
-        }
+        // Load state once and decide: stale → clear, active → resume, else → fresh
+        $currentState = $this->state->load();
 
-        // Check for active job to resume
-        if ($this->state->shouldResume()) {
-            $status = $this->state->getStatus();
-            $this->logger->output("Resuming {$status['sync_type']} sync...");
-            $this->logger->output("Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)");
-            return $this->resumeSync();
+        if ($currentState['status'] === 'in_progress') {
+            if ($this->state->isStale()) {
+                $this->logger->output("Stale state detected (no activity since {$currentState['last_run_at']}). Clearing and starting fresh.");
+                $this->state->clear();
+            } elseif ($currentState['processed'] < $currentState['total']) {
+                $status = $this->state->getStatus();
+                $this->logger->output("Resuming {$status['sync_type']} sync...");
+                $this->logger->output("Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)");
+                return $this->resumeSync();
+            }
         }
 
         // Determine sync type needed

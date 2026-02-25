@@ -32,6 +32,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 class BatchedPriceInfoSync
 {
     use OutputWriterTrait;
+    use SyncStateTrait;
 
     /**
      * State file path
@@ -705,103 +706,4 @@ class BatchedPriceInfoSync
         return $data['sync_type'] ?? 'unknown';
     }
 
-    /**
-     * Format duration in human readable format
-     */
-    private function formatDuration(int $seconds): string
-    {
-        if ($seconds < 60) {
-            return "{$seconds}s";
-        }
-        if ($seconds < 3600) {
-            $m = floor($seconds / 60);
-            $s = $seconds % 60;
-            return "{$m}m {$s}s";
-        }
-        $h = floor($seconds / 3600);
-        $m = floor(($seconds % 3600) / 60);
-        return "{$h}h {$m}m";
-    }
-
-    /**
-     * Load state from file
-     */
-    private function loadState(): array
-    {
-        if (file_exists($this->state_file)) {
-            $content = file_get_contents($this->state_file);
-            $state = json_decode($content, true);
-            if (is_array($state)) {
-                return $state;
-            }
-        }
-        return [];
-    }
-
-    /**
-     * Save state to file
-     */
-    private function saveState(array $state): void
-    {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
-    }
-
-    /**
-     * Clear state file and auxiliary files (.bak, .lock, .tmp)
-     */
-    private function clearState(): void
-    {
-        foreach (['', '.bak', '.lock', '.tmp'] as $suffix) {
-            $file = $this->state_file . $suffix;
-            if (file_exists($file)) {
-                @unlink($file);
-            }
-        }
-    }
-
-    /**
-     * Check if an in-progress state is stale (no activity for 6+ hours).
-     */
-    private function isStateStale(array $state, int $maxAgeHours = 6): bool
-    {
-        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
-        if ($lastRun === null) {
-            return true;
-        }
-        return (time() - strtotime($lastRun)) > ($maxAgeHours * 3600);
-    }
-
-    /**
-     * Human-readable description of state age.
-     */
-    private function stateAgeDescription(array $state): string
-    {
-        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
-        if ($lastRun === null) {
-            return 'unknown age';
-        }
-        $hours = round((time() - strtotime($lastRun)) / 3600, 1);
-        return "{$hours}h";
-    }
-
-    /**
-     * Check if memory usage is approaching the PHP memory_limit.
-     * Uses 85% threshold to allow time for state save before OOM.
-     */
-    private function isMemoryLimitReached(): bool
-    {
-        $limit = ini_get('memory_limit');
-        if ($limit === '-1' || $limit === false) {
-            return false;
-        }
-        $limit = trim($limit);
-        $bytes = (int)$limit;
-        $unit = strtolower(substr($limit, -1));
-        switch ($unit) {
-            case 'g': $bytes *= 1024; // fall through
-            case 'm': $bytes *= 1024; // fall through
-            case 'k': $bytes *= 1024;
-        }
-        return memory_get_usage(true) > (int)($bytes * 0.85);
-    }
 }

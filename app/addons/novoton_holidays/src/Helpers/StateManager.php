@@ -168,7 +168,12 @@ class StateManager implements StateManagerInterface
     }
 
     /**
-     * Clear state file and all auxiliary files (.bak, .lock, .tmp).
+     * Clear state file and data-related auxiliary files (.bak, .tmp).
+     *
+     * The .lock file is intentionally NOT deleted — it is a coordination
+     * mechanism that other processes may hold an flock() on. Deleting it
+     * while held would cause the next acquireLock() to create a new inode,
+     * allowing two processes to hold "exclusive" locks simultaneously.
      *
      * @return bool Success
      */
@@ -176,7 +181,7 @@ class StateManager implements StateManagerInterface
     {
         $ok = true;
 
-        foreach (['', '.bak', '.lock', '.tmp'] as $suffix) {
+        foreach (['', '.bak', '.tmp'] as $suffix) {
             $file = $this->stateFile . $suffix;
             if (file_exists($file)) {
                 if (!@unlink($file)) {
