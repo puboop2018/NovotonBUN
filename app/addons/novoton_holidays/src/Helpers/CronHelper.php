@@ -67,7 +67,10 @@ class CronHelper
     }
 
     /**
-     * Send authentication error response
+     * Send authentication error response.
+     *
+     * Inside CS-Cart dispatch: sets notification and redirects.
+     * Standalone cron entry: writes to STDERR and exits with code 1.
      *
      * @param string $message Error message
      */
@@ -75,8 +78,16 @@ class CronHelper
     {
         header('Content-Type: text/plain');
         http_response_code(403);
-        echo "ERROR: {$message}\n";
-        exit;
+
+        if (defined('BOOTSTRAP')) {
+            fn_set_notification('E', __('error'), "ERROR: {$message}");
+            fn_redirect(fn_url(''));
+            return;
+        }
+
+        // Standalone CLI / cron entry point — direct output is acceptable
+        fwrite(STDERR, "ERROR: {$message}\n");
+        exit(1);
     }
 
     /**

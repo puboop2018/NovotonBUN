@@ -285,351 +285,95 @@ if ($mode == 'run_cron') {
         $params['days'] = (int)($_REQUEST['days']);
     }
     
-    // Capture output
-    ob_start();
-    
     try {
-        // Include and run the cron logic (use local $params, not $_REQUEST)
-        
-        $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
-        
+        $api     = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+        $service = new \Tygh\Addons\NovotonHolidays\Services\AdminCronService($api);
+
+        // Capture output via callback instead of ob_start()
+        $outputLines = [];
+        $service->setOutputCallback(function (string $msg) use (&$outputLines) {
+            $outputLines[] = rtrim($msg, "\n");
+        });
+
         // Execute based on mode
         switch ($cron_mode) {
             case 'hotel_list':
-                $result = fn_novoton_holidays_admin_sync_hotels($api);
+                $result = $service->syncHotels();
                 break;
-                
+
             case 'room_price':
-                $result = fn_novoton_holidays_admin_check_prices($api);
+                $result = $service->checkPrices();
                 break;
-                
+
             case 'resort_list':
                 $country = $params['country'] ?? 'BULGARIA';
                 $result = fn_novoton_holidays_sync_resorts_list($country);
                 break;
 
             case 'list_facilities':
-                $result = fn_novoton_holidays_admin_sync_facilities($api);
+                $result = $service->syncFacilities();
                 break;
-                
+
             case 'add_hotels_as_products':
                 $limit = (int) ($params['limit'] ?? 50);
-                // Use explicit country param, or all selected countries from settings
                 if (!empty($params['country'])) {
                     $countries = [strtoupper($params['country'])];
                 } else {
                     $countries = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getSelectedCountries();
                 }
-                $result = fn_novoton_holidays_admin_add_products($api, $countries, $limit);
+                $result = $service->addProducts($countries, $limit);
                 break;
-                
+
             case 'offers_update':
                 $country = $params['country'] ?? 'BULGARIA';
-                $result = fn_novoton_holidays_admin_check_offers($api, $country);
+                $result = $service->checkOffers($country);
                 break;
-                
+
             case 'resinfo':
                 $result = fn_novoton_holidays_cron_resinfo();
                 break;
-                
+
             case 'alternative_rs':
-                $result = fn_novoton_holidays_admin_check_alternatives($api, 'requests');
+                $result = $service->checkAlternatives('requests');
                 break;
-                
+
             case 'alternative_rs_bookings':
-                $result = fn_novoton_holidays_admin_check_alternatives($api, 'bookings');
+                $result = $service->checkAlternatives('bookings');
                 break;
-                
+
             case 'notify_alternatives':
-                $result = fn_novoton_holidays_admin_notify_alternatives();
+                $result = $service->notifyAlternatives();
                 break;
-                
+
             case 'cleanup':
-                $result = fn_novoton_holidays_admin_cleanup();
+                $result = $service->cleanup();
                 break;
-                
+
             case 'expire_requests':
-                $days = $params['days'] ?? 30;
-                $result = fn_novoton_holidays_admin_expire_requests($days);
+                $days = (int) ($params['days'] ?? 30);
+                $result = $service->expireRequests($days);
                 break;
-                
+
             default:
                 $result = ['success' => false, 'message' => 'Unknown mode'];
         }
-        
-        $output = ob_get_clean();
-        
+
+        $output = implode("\n", $outputLines);
+
         echo json_encode([
             'success' => true,
-            'output' => $output . "\n" . ($result['message'] ?? json_encode($result))
+            'output'  => $output . "\n" . ($result['message'] ?? json_encode($result)),
         ]);
-        
+
     } catch (Exception $e) {
-        $output = ob_get_clean();
+        $output = implode("\n", $outputLines ?? []);
         echo json_encode([
             'success' => false,
-            'error' => $e->getMessage(),
-            'output' => $output
+            'error'   => $e->getMessage(),
+            'output'  => $output,
         ]);
     }
-    
+
     exit;
 }
 
-// ================================================
-// Admin cron execution helpers
-//
-// TODO: Migrate these functions to CronService or a dedicated AdminCronService.
-// They currently live here because they echo progress during execution, but
-// should be refactored to use a callback/output pattern instead.
-// ================================================
-
-function fn_novoton_holidays_admin_sync_hotels($api) {
-    $countries = fn_novoton_holidays_parse_countries();
-    $hotelRepo = Container::getInstance()->hotelRepository();
-
-    $total = 0;
-    $synced = 0;
-
-    foreach ($countries as $country) {
-        echo "Fetching {$country}... ";
-        $hotels = $api->getHotelList($country);
-
-        if (!empty($hotels)) {
-            $count = count($hotels);
-            $total += $count;
-            echo "{$count} hotels\n";
-
-            foreach ($hotels as $hotel) {
-                $hotel_id = (string)($hotel->IdHotel ?? '');
-                if (empty($hotel_id)) continue;
-
-                $data = [
-                    'hotel_id' => $hotel_id,
-                    'hotel_name' => (string)($hotel->Hotel ?? ''),
-                    'city' => (string)($hotel->City ?? ''),
-                    'country' => $country,
-                    'updated_at' => date('Y-m-d H:i:s')
-                ];
-
-                $hotelRepo->upsert($data);
-                $synced++;
-            }
-        } else {
-            echo "0 hotels\n";
-        }
-    }
-
-    return ['success' => true, 'message' => "Total: {$total}, Synced: {$synced}"];
-}
-
-function fn_novoton_holidays_admin_check_prices($api) {
-    $hotelRepo = Container::getInstance()->hotelRepository();
-    $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
-         WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
-         LIMIT 100"
-    );
-    
-    $checked = 0;
-    $with_prices = 0;
-    
-    foreach ($hotels as $hotel) {
-        $check_in = date('Y-m-d', strtotime('+30 days'));
-        $check_out = date('Y-m-d', strtotime('+37 days'));
-        
-        $response = $api->getRoomPrice([
-            'hotel_id' => $hotel['hotel_id'],
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'adults' => 2,
-            'children' => 0,
-            'rooms' => 1,
-        ]);
-        $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
-        
-        $hotelRepo->update($hotel['hotel_id'], ['has_prices' => $has_prices, 'last_price_check' => date('Y-m-d H:i:s')]);
-        
-        $checked++;
-        if ($has_prices === 'Y') $with_prices++;
-
-        echo "[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices === 'Y' ? 'HAS PRICES' : 'no prices') . "\n";
-        usleep(100000);
-    }
-    
-    return ['success' => true, 'message' => "Checked: {$checked}, With prices: {$with_prices}"];
-}
-
-function fn_novoton_holidays_admin_sync_facilities($api) {
-    $response = $api->listFacilities();
-
-    if (!$response || !isset($response->Facility)) {
-        return ['success' => false, 'message' => 'No facilities returned from API'];
-    }
-
-    $facilityRepo = Container::getInstance()->facilityRepository();
-    $facilities = is_array($response->Facility) ? $response->Facility : [$response->Facility];
-    $count = 0;
-
-    foreach ($facilities as $f) {
-        $facility_id = (int)($f->IdFacility ?? 0);
-        $facility_name = (string)($f->Facility ?? '');
-
-        if (empty($facility_id)) continue;
-
-        $facilityRepo->save($facility_id, $facility_name);
-        $count++;
-    }
-
-    return ['success' => true, 'message' => "Synced {$count} facilities"];
-}
-
-function fn_novoton_holidays_admin_add_products($api, $countries, $limit) {
-    // Support legacy single-country string or new array format
-    if (is_string($countries)) {
-        $countries = [$countries];
-    }
-
-    $hotelRepo = Container::getInstance()->hotelRepository();
-    $grand_added = 0;
-    $grand_total = 0;
-
-    foreach ($countries as $country) {
-        echo "=== {$country} ===\n";
-
-        $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
-
-        if (empty($hotels)) {
-            echo "No hotels to add.\n\n";
-            continue;
-        }
-
-        $category_id = fn_novoton_holidays_get_or_create_category("{$country}///Litoral {$country}");
-        $added = 0;
-
-        foreach ($hotels as $hotel) {
-            $hotel_id = $hotel['hotel_id'];
-            $product_code = 'NVT' . $hotel_id;
-
-            echo "[{$hotel_id}] {$hotel['hotel_name']} ... ";
-
-            // Check if CS-Cart product already exists with this code
-            $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
-            if ($existing) {
-                $hotelRepo->linkToProduct($hotel_id, (int) $existing);
-                echo "LINKED\n";
-                continue;
-            }
-
-            $product_data = [
-                'product' => $hotel['hotel_name'],
-                'product_code' => $product_code,
-                'price' => 0,
-                'status' => 'D',
-                'company_id' => Registry::get('runtime.company_id') ?: 1,
-                'main_category' => $category_id,
-                'category_ids' => [$category_id],
-            ];
-
-            $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
-
-            if ($product_id) {
-                $hotelRepo->linkToProduct($hotel_id, $product_id);
-                $added++;
-                echo "ADDED (ID: {$product_id})\n";
-            } else {
-                echo "FAILED\n";
-            }
-
-            usleep(50000);
-        }
-
-        echo "{$country}: Added {$added} of " . count($hotels) . "\n\n";
-        $grand_added += $added;
-        $grand_total += count($hotels);
-    }
-
-    return ['success' => true, 'message' => "Added: {$grand_added} products across " . count($countries) . " countries (total candidates: {$grand_total})"];
-}
-
-function fn_novoton_holidays_admin_check_offers($api, $country) {
-    $syncLogRepo = Container::getInstance()->syncLogRepository();
-    $last_check = $syncLogRepo->getLastSyncDate('offers_update')
-                  ?: $syncLogRepo->getLastSyncDate('product_import');
-    if (empty($last_check)) {
-        $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
-    }
-
-    echo "Checking offers since: {$last_check}\n";
-
-    $response = $api->getOffersUpdate($last_check, $country);
-
-    if (!$response || !isset($response->Offer)) {
-        return ['success' => true, 'message' => 'No new offers found'];
-    }
-
-    $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
-    $count = count($offers);
-
-    return ['success' => true, 'message' => "Found {$count} offers"];
-}
-
-function fn_novoton_holidays_admin_check_alternatives($api, $type) {
-    if ($type == 'requests') {
-        $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
-        $items = $altRequestRepo->findPendingOlderThan(0, 50);
-    } else {
-        $bookingRepo = Container::getInstance()->bookingRepository();
-        $items = $bookingRepo->findByNovotonStatus(
-            \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
-            [\Tygh\Addons\NovotonHolidays\Constants::STATUS_PENDING, \Tygh\Addons\NovotonHolidays\Constants::STATUS_CONFIRMED],
-            50
-        );
-    }
-    
-    $checked = count($items);
-    echo "Checking {$checked} {$type}...\n";
-    
-    return ['success' => true, 'message' => "Checked: {$checked}"];
-}
-
-function fn_novoton_holidays_admin_notify_alternatives() {
-    $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
-    $requests = $altRequestRepo->findUnnotified(50);
-    $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
-
-    $notified = 0;
-    foreach ($requests as $request) {
-        // Send notification email logic here
-        $altRequestRepo->markNotified($request['request_id']);
-        $notified++;
-    }
-    
-    return ['success' => true, 'message' => "Notified: {$notified}"];
-}
-
-function fn_novoton_holidays_admin_cleanup() {
-    $bookingRepo = Container::getInstance()->bookingRepository();
-    $syncLogRepo = Container::getInstance()->syncLogRepository();
-
-    // Orphan bookings
-    $orphans = $bookingRepo->deleteOrphans(48);
-    echo "Orphan bookings deleted: {$orphans}\n";
-
-    // Old sync logs (keep 100)
-    $logs_deleted = $syncLogRepo->trimToLatest(100);
-    echo "Sync logs deleted: {$logs_deleted}\n";
-
-    // Expired cache
-    $cache = db_query("DELETE FROM ?:novoton_cache WHERE expires_at < NOW()");
-    echo "Cache entries deleted: {$cache}\n";
-
-    return ['success' => true, 'message' => "Cleanup complete"];
-}
-
-function fn_novoton_holidays_admin_expire_requests($days) {
-    $altRequestRepo = Container::getInstance()->alternativeRequestRepository();
-    $expired = $altRequestRepo->expireOlderThan($days);
-
-    return ['success' => true, 'message' => "Expired: {$expired} requests"];
-}

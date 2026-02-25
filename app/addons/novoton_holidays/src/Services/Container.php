@@ -181,6 +181,16 @@ class Container
         return $this->resolve('cronService', fn() => new CronService());
     }
 
+    public function searchParameterNormalizer(): SearchParameterNormalizer
+    {
+        return $this->resolve('searchParameterNormalizer', fn() => new SearchParameterNormalizer());
+    }
+
+    public function searchResultFormatter(): SearchResultFormatter
+    {
+        return $this->resolve('searchResultFormatter', fn() => new SearchResultFormatter());
+    }
+
     public function diagnosticsService(): DiagnosticsServiceInterface
     {
         return $this->resolve('diagnosticsService', fn() => new DiagnosticsService());

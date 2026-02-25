@@ -1,27 +1,32 @@
 /**
  * Novoton Holidays - Admin Panel LESS Styles
- * 
- * Admin panel specific styles with LESS variables.
- * 
+ *
+ * Inherits from CS-Cart admin's Bootstrap/LESS context so the addon's
+ * admin UI matches the native admin panel.  The variables below
+ * (@linkColor, @textColor, @bodyBackground, etc.) are provided by
+ * CS-Cart's admin LESS compilation pipeline (Bootstrap 2.x base).
+ *
  * @package NovotonHolidays
- * @since 2.8.0
+ * @since 2.9.0
  */
 
 // ============================================================================
-// ADMIN VARIABLES
+// ADMIN VARIABLES — inherited from CS-Cart admin Bootstrap context
 // ============================================================================
 
-@admin-primary: #003580;
-@admin-success: #28a745;
-@admin-warning: #ffc107;
-@admin-danger: #dc3545;
-@admin-info: #17a2b8;
+// Core chrome — follow CS-Cart admin's own palette
+@admin-primary:     @linkColor;             // admin's link / action color
+@admin-text:        @textColor;             // admin's body text (#333)
+@admin-text-muted:  @gray;                  // admin's secondary text (#555)
+@admin-bg:          @grayLighter;           // admin's light background (#eee)
+@admin-card-bg:     @white;                 // admin's card / content bg (#fff)
+@admin-border:      @grayLighter;           // admin's borders / dividers
 
-@admin-bg: #f5f5f5;
-@admin-card-bg: #ffffff;
-@admin-border: #e0e0e0;
-@admin-text: #333333;
-@admin-text-muted: #666666;
+// Status — CS-Cart admin's Bootstrap alert text colors
+@admin-success:     @successText;
+@admin-warning:     @warningText;
+@admin-danger:      @errorText;
+@admin-info:        @infoText;
 
 // ============================================================================
 // DASHBOARD STYLES
@@ -126,7 +131,7 @@
         }
         
         .hotel-stars {
-            color: #ffc107;
+            color: @admin-warning;
         }
     }
 }
@@ -154,16 +159,16 @@
         
         &.btn-primary {
             background: @admin-primary;
-            color: #fff;
-            
+            color: @admin-card-bg;
+
             &:hover {
                 background: darken(@admin-primary, 10%);
             }
         }
-        
+
         &.btn-success {
             background: @admin-success;
-            color: #fff;
+            color: @admin-card-bg;
             
             &:hover {
                 background: darken(@admin-success, 10%);
@@ -171,11 +176,11 @@
         }
         
         &.btn-secondary {
-            background: #6c757d;
-            color: #fff;
-            
+            background: @gray;
+            color: @white;
+
             &:hover {
-                background: #5a6268;
+                background: darken(@gray, 5%);
             }
         }
     }
@@ -186,14 +191,14 @@
 // ============================================================================
 
 .novoton-cron-info {
-    background: #e3f2fd;
-    border: 1px solid #90caf9;
+    background: @infoBackground;
+    border: 1px solid lighten(@admin-info, 30%);
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 20px;
-    
+
     .cron-url {
-        background: #f5f5f5;
+        background: @admin-bg;
         padding: 8px 12px;
         border-radius: 4px;
         font-family: monospace;
@@ -269,7 +274,7 @@
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid @admin-border;
 
     &:last-child {
         border-bottom: none;
@@ -298,7 +303,7 @@
     display: inline-block;
     padding: 10px 20px;
     background: @admin-primary;
-    color: #fff;
+    color: @admin-card-bg;
     text-decoration: none;
     border-radius: 4px;
     font-size: 13px;
@@ -306,15 +311,15 @@
 
     &:hover {
         background: darken(@admin-primary, 10%);
-        color: #fff;
+        color: @admin-card-bg;
     }
 }
 
 .novoton-btn-secondary {
-    background: #6c757d;
+    background: @gray;
 
     &:hover {
-        background: #5a6268;
+        background: darken(@gray, 5%);
     }
 }
 
@@ -345,7 +350,7 @@
 
 .novoton-btn-danger {
     background: @admin-danger;
-    color: #fff;
+    color: @admin-card-bg;
 
     &:hover {
         background: darken(@admin-danger, 10%);
@@ -486,7 +491,7 @@
     }
 
     .cron-tag {
-        color: white;
+        color: @admin-card-bg;
         padding: 3px 8px;
         border-radius: 4px;
         font-size: 11px;
@@ -504,7 +509,7 @@
     }
 
     .cron-url-box {
-        background: white;
+        background: @admin-card-bg;
         padding: 10px;
         border-radius: 4px;
         margin-bottom: 10px;
@@ -536,15 +541,15 @@
     }
 
     &.cron-price-info {
-        background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%);
-        border: 2px solid #0066cc;
+        background: linear-gradient(135deg, lighten(@admin-info, 45%) 0%, lighten(@admin-info, 38%) 100%);
+        border: 2px solid @admin-info;
 
         .cron-tag {
-            background: #0066cc;
+            background: @admin-info;
         }
 
         .cron-description {
-            color: #004085;
+            color: darken(@admin-info, 30%);
         }
     }
 }
@@ -568,7 +573,7 @@
     input {
         width: 100%;
         padding: 8px 12px;
-        border: 1px solid #ddd;
+        border: 1px solid @admin-border;
         border-radius: 4px;
         font-size: 14px;
     }
@@ -577,7 +582,7 @@
 .novoton-resorts-filter {
     select {
         padding: 8px 12px;
-        border: 1px solid #ddd;
+        border: 1px solid @admin-border;
         border-radius: 4px;
         font-size: 14px;
         min-width: 150px;
@@ -595,7 +600,7 @@
     border: 1px solid @admin-border;
     border-radius: 4px;
     padding: 15px;
-    background: #f9f9f9;
+    background: @admin-bg;
 }
 
 .novoton-country-group {
@@ -604,7 +609,7 @@
     h4 {
         margin: 0 0 10px 0;
         color: @admin-primary;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid @admin-border;
         padding-bottom: 5px;
         display: flex;
         justify-content: space-between;
@@ -640,7 +645,7 @@
     display: inline-flex;
     align-items: center;
     background: @admin-card-bg;
-    border: 1px solid #ddd;
+    border: 1px solid @admin-border;
     border-radius: 4px;
     padding: 4px 10px;
     cursor: pointer;
@@ -670,7 +675,7 @@
     }
 
     .visible-info {
-        color: #999;
+        color: @admin-text-muted;
         font-size: 12px;
     }
 }
@@ -718,7 +723,7 @@
     }
 
     .multi-room-badge {
-        color: #0066cc;
+        color: @admin-info;
     }
 }
 
@@ -771,12 +776,12 @@
         padding: 10px;
         border-radius: 4px;
         font-size: 11px;
-        border: 1px solid #ddd;
+        border: 1px solid @admin-border;
     }
 
     .booking-header {
         background: linear-gradient(135deg, @admin-primary, lighten(@admin-primary, 15%));
-        color: #fff;
+        color: @admin-card-bg;
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 20px;
@@ -813,7 +818,7 @@
     }
 
     .price-section {
-        background: #e8f4f8;
+        background: lighten(@admin-info, 48%);
         padding: 20px;
         border-radius: 8px;
         margin: 20px 0;
@@ -946,7 +951,7 @@
     input, select {
         width: 100%;
         padding: 8px;
-        border: 1px solid #ccc;
+        border: 1px solid @admin-border;
         border-radius: 4px;
     }
 
@@ -960,8 +965,8 @@
     }
 
     .info-box {
-        background: #e3f2fd;
-        border: 1px solid #2196f3;
+        background: lighten(@admin-info, 48%);
+        border: 1px solid @admin-info;
         padding: 15px;
         border-radius: 6px;
         margin-bottom: 20px;
@@ -969,7 +974,7 @@
 
     .btn-compare {
         background: @admin-primary;
-        color: white;
+        color: @admin-card-bg;
         padding: 12px 30px;
         border: none;
         border-radius: 4px;
@@ -982,10 +987,10 @@
     }
 
     .btn-compare-verify {
-        background: #ff9800;
+        background: @admin-warning;
 
         &:hover {
-            background: darken(#ff9800, 10%);
+            background: darken(@admin-warning, 10%);
         }
     }
 

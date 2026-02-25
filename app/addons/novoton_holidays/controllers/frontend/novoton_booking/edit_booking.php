@@ -11,6 +11,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
@@ -69,12 +70,10 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     
     // Try cart first, then database
     if ($cart_item && !empty($cart_item['extra']['rooms_data'])) {
-        $rooms_data = is_string($cart_item['extra']['rooms_data']) 
-            ? json_decode($cart_item['extra']['rooms_data'], true) 
-            : $cart_item['extra']['rooms_data'];
+        $rooms_data = JsonDecoder::decode($cart_item['extra']['rooms_data'], 'edit_booking:cart_rooms_data');
     }
     if (empty($rooms_data)) {
-        $rooms_data = json_decode($booking_record['rooms_data'], true) ?: [];
+        $rooms_data = JsonDecoder::decode($booking_record['rooms_data'] ?? '', 'edit_booking:db_rooms_data');
     }
     
     if ($cart_item && !empty($cart_item['extra']['guests_data'])) {

@@ -34,11 +34,17 @@ abstract class AbstractCronCommand
 
     protected function output(string $message, bool $newline = true): void
     {
-        if ($this->logger && method_exists($this->logger, 'output')) {
+        if ($this->logger) {
             $this->logger->output($message, $newline);
-        } else {
-            echo $message . ($newline ? "\n" : "");
+            return;
         }
+
+        // Last-resort fallback: should not normally be reached since
+        // all callers inject a SyncLogger. Log event so the message
+        // is captured even when logger is missing.
+        fn_log_event('general', 'runtime', [
+            'message' => 'CronCommand output (no logger): ' . $message,
+        ]);
     }
 
     protected function getParam(string $key, $default = null)

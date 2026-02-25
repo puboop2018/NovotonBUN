@@ -13,6 +13,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 class BookingRepository implements BookingRepositoryInterface
 {
@@ -73,13 +74,7 @@ class BookingRepository implements BookingRepositoryInterface
     public static function hydrateJsonFields(array $booking): array
     {
         // rooms_data
-        if (!empty($booking['rooms_data']) && is_string($booking['rooms_data'])) {
-            $booking['rooms_data_parsed'] = json_decode($booking['rooms_data'], true) ?: [];
-        } elseif (is_array($booking['rooms_data'] ?? null)) {
-            $booking['rooms_data_parsed'] = $booking['rooms_data'];
-        } else {
-            $booking['rooms_data_parsed'] = [];
-        }
+        $booking['rooms_data_parsed'] = JsonDecoder::decode($booking['rooms_data'] ?? '', 'rooms_data');
 
         // guests_data — always normalize to canonical keyed format
         if (!empty($booking['guests_data'])) {

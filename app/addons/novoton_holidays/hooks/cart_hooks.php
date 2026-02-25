@@ -20,6 +20,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -250,7 +251,7 @@ function fn_novoton_holidays_add_booking_display_data(&$product, $cart = null): 
     $num_rooms  = (int)($product['extra']['num_rooms'] ?? 1);
     $rooms_data = $product['extra']['rooms_data'] ?? [];
     if (is_string($rooms_data)) {
-        $rooms_data = json_decode($rooms_data, true) ?: [];
+        $rooms_data = JsonDecoder::decode($rooms_data, 'rooms_data');
     }
 
     // Build guests string

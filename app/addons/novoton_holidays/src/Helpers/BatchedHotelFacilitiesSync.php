@@ -27,6 +27,9 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class BatchedHotelFacilitiesSync
 {
+    use OutputWriterTrait;
+    use SyncStateTrait;
+
     private string $state_file;
     private int $batch_size = 100;
     private int $max_execution_time = 300; // 5 minutes
@@ -37,8 +40,6 @@ class BatchedHotelFacilitiesSync
 
     /** Delay between API calls in microseconds (100ms) */
     private int $api_delay_us = 100000;
-
-    private $output_callback = null;
 
     public function __construct()
     {
@@ -54,11 +55,6 @@ class BatchedHotelFacilitiesSync
         if (PHP_SAPI === 'cli') {
             $this->unlimited = true;
         }
-    }
-
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->output_callback = $callback;
     }
 
     public function setBatchSize(int $size): void
@@ -96,10 +92,19 @@ class BatchedHotelFacilitiesSync
         $state = $this->loadState();
 
         if (!empty($state) && $state['status'] === 'in_progress') {
-            $this->output("Resuming hotel facilities sync...");
-            $this->output("Progress: {$state['processed']}/{$state['total']} (" .
-                round($state['processed'] / max(1, $state['total']) * 100, 1) . "%)");
-            return $this->resumeSync($state, $start_time);
+            // Detect stale state: if no activity for 6+ hours, the previous
+            // process likely died. Clear and start fresh.
+            if ($this->isStateStale($state)) {
+                $age = $this->stateAgeDescription($state);
+                $this->output("Stale state detected ({$age} since last activity). Clearing and starting fresh.");
+                $this->clearState();
+                $state = [];
+            } else {
+                $this->output("Resuming hotel facilities sync...");
+                $this->output("Progress: {$state['processed']}/{$state['total']} (" .
+                    round($state['processed'] / max(1, $state['total']) * 100, 1) . "%)");
+                return $this->resumeSync($state, $start_time);
+            }
         }
 
         // Determine sync type
@@ -447,69 +452,4 @@ class BatchedHotelFacilitiesSync
         ];
     }
 
-    private function formatDuration(int $seconds): string
-    {
-        if ($seconds < 60) {
-            return "{$seconds}s";
-        }
-        if ($seconds < 3600) {
-            $m = floor($seconds / 60);
-            $s = $seconds % 60;
-            return "{$m}m {$s}s";
-        }
-        $h = floor($seconds / 3600);
-        $m = floor(($seconds % 3600) / 60);
-        return "{$h}h {$m}m";
-    }
-
-    private function loadState(): array
-    {
-        if (file_exists($this->state_file)) {
-            $content = file_get_contents($this->state_file);
-            $state = json_decode($content, true);
-            if (is_array($state)) {
-                return $state;
-            }
-        }
-        return [];
-    }
-
-    private function saveState(array $state): void
-    {
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
-    }
-
-    private function clearState(): void
-    {
-        if (file_exists($this->state_file)) {
-            unlink($this->state_file);
-        }
-    }
-
-    private function output(string $message, bool $newline = true): void
-    {
-        if ($this->output_callback) {
-            call_user_func($this->output_callback, $message . ($newline ? "\n" : ""));
-        } else {
-            echo $message . ($newline ? "\n" : "");
-            flush();
-        }
-    }
-
-    private function isMemoryLimitReached(): bool
-    {
-        $limit = ini_get('memory_limit');
-        if ($limit === '-1' || $limit === false) {
-            return false;
-        }
-        $limit = trim($limit);
-        $bytes = (int)$limit;
-        $unit = strtolower(substr($limit, -1));
-        switch ($unit) {
-            case 'g': $bytes *= 1024; // fall through
-            case 'm': $bytes *= 1024; // fall through
-            case 'k': $bytes *= 1024;
-        }
-        return memory_get_usage(true) > (int)($bytes * 0.85);
-    }
 }

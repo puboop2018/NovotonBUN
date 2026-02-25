@@ -100,21 +100,15 @@
 @footer_bg_transparent:     false;
 @footer_bg_grad_stop:       '';
 
-// ---- Novoton addon colors  (schema.post.php → colors) -----------------------
+// ---- Novoton addon brand colors  (schema.post.php → colors) -----------------
+// Only brand colors that have NO theme equivalent remain here.
+// Text, surfaces, borders, status, and fonts are now inherited from the
+// theme variables above (@font, @content_bg, @inputBorder, @in_stock, etc.)
+// so the addon automatically adapts when the merchant switches presets.
 @novoton-primary:           #003580;
 @novoton-accent:            #febb02;
 @novoton-search-btn-bg:     #006ce4;
 @novoton-search-btn-hover:  #0057b8;
-@novoton-text:              #333333;
-@novoton-bg:                #ffffff;
-@novoton-border:            #e0e0e0;
-@novoton-success:           #28a745;
-@novoton-danger:            #dc3545;
-
-// ---- Novoton addon fonts  (schema.post.php → fonts) -------------------------
-@novoton-font-family:           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-@novoton-font-size-base-value:  14;
-@novoton-font-weight:           normal;
 
 // ---- Novoton addon background  (schema.post.php → backgrounds) --------------
 @novoton-bg-pattern:        none;
