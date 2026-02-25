@@ -45,6 +45,9 @@ class ConfigProvider
     /** @var array|null Cached settings array, loaded once per request. */
     private static $settings;
 
+    /** @var string|null Cached addon version, loaded once per request. */
+    private static $version;
+
     public static function settings(): array
     {
         if (self::$settings === null) {
@@ -56,6 +59,7 @@ class ConfigProvider
     public static function reset(): void
     {
         self::$settings = null;
+        self::$version = null;
     }
 
     // ── Boolean Settings ──
@@ -153,19 +157,14 @@ class ConfigProvider
 
     public static function getVersion(): string
     {
-        // Settings may contain version (some CS-Cart builds include it)
-        $version = self::settings()['version'] ?? '';
-        if (!empty($version)) {
-            return (string) $version;
+        if (self::$version === null) {
+            self::$version = (string) db_get_field(
+                "SELECT version FROM ?:addons WHERE addon = ?s",
+                self::ADDON_ID
+            ) ?: 'unknown';
         }
 
-        // Primary source: addon metadata in the addons table
-        $version = db_get_field(
-            "SELECT version FROM ?:addons WHERE addon = ?s",
-            self::ADDON_ID
-        );
-
-        return !empty($version) ? (string) $version : 'unknown';
+        return self::$version;
     }
 
     // ── Array Settings ──
