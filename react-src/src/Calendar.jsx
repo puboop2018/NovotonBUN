@@ -65,7 +65,7 @@ function formatCalendarPrice(price) {
     return String(Math.round(price));
 }
 
-export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices, pricesCurrency }) {
+export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices, pricesCurrency, triggerRef }) {
     const locale = getLocale();
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
@@ -89,8 +89,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const popupRef = useRef(null);
 
     // Close on outside click or Escape key
+    // Use 'click' (not 'mousedown') so the toggle button's onClick fires first
+    // and can set a flag to prevent the close handler from interfering.
     useEffect(() => {
         function handleClick(e) {
+            // Ignore clicks on the trigger button (prevents close-then-reopen flicker)
+            if (triggerRef && triggerRef.current && triggerRef.current.contains(e.target)) return;
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
@@ -106,7 +110,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
             document.removeEventListener('mousedown', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose]);
+    }, [onClose, triggerRef]);
 
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));

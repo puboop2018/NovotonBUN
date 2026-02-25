@@ -147,4 +147,12 @@ interface SyncLoggerInterface
      * Clear collected messages.
      */
     public function clearMessages(): void;
+
+    /**
+     * Get type label for display.
+     *
+     * @param string|null $type Sync type (uses current if not provided)
+     * @return string
+     */
+    public static function getTypeLabel(?string $type = null): string;
 }

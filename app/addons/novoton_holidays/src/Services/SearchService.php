@@ -29,10 +29,15 @@ class SearchService implements SearchServiceInterface
     
     /**
      * Constructor
+     *
+     * @throws \RuntimeException if the Novoton API is not available
      */
     public function __construct(?CacheServiceInterface $cache = null)
     {
         $this->api = fn_novoton_holidays_get_api();
+        if (!$this->api) {
+            throw new \RuntimeException('Novoton API is not available. Check addon settings and API credentials.');
+        }
         $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
@@ -144,7 +149,7 @@ class SearchService implements SearchServiceInterface
     
     /**
      * Search hotel availability
-     * 
+     *
      * @param array $params Search parameters
      * @return array Search results
      */
@@ -157,7 +162,7 @@ class SearchService implements SearchServiceInterface
             $this->log('Search cache hit', ['key' => $cache_key]);
             return $cached;
         }
-        
+
         // Build API parameters
         $api_params = $this->buildApiParams($params);
 

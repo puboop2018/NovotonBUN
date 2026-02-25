@@ -39,4 +39,19 @@ interface BookingRepositoryInterface
     public function getTerms(int $booking_id): ?array;
     public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int;
     public function findWithReservationId(): array;
+
+    /**
+     * Decode JSON fields on a raw booking row in-place.
+     *
+     * @param array $booking Raw DB row
+     * @return array Booking with rooms_data_parsed, guests_data_parsed
+     */
+    public static function hydrateJsonFields(array $booking): array;
+
+    /**
+     * Invalidate the memo cache for a specific booking (e.g. after update).
+     *
+     * @param int $booking_id Specific booking ID, or 0 to clear all
+     */
+    public static function invalidateCache(int $booking_id = 0): void;
 }

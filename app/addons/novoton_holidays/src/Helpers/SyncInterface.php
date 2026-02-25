@@ -52,4 +52,11 @@ interface SyncInterface
      * @param bool $unlimited
      */
     public function setUnlimited(bool $unlimited): void;
+
+    /**
+     * Set output callback for logger.
+     *
+     * @param callable $callback
+     */
+    public function setOutputCallback(callable $callback): void;
 }
