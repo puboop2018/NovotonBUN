@@ -138,8 +138,6 @@ class SearchResultFormatter
                 __($warningLangKey) ?: 'Please fill in required search fields'
             );
         }
-
-        fn_add_breadcrumb($pageTitle);
     }
 
     // =====================================================================
@@ -175,9 +173,13 @@ class SearchResultFormatter
                 $hotelRegion  = $hotelInfo['region'] ?? '';
                 $hotelCountry = $hotelInfo['country'] ?? '';
 
-                $this->assignPackages($view, $hotelId);
-                $this->assignActiveEarlyBooking($view, $hotelId);
-                $this->assignSeasonPeriod($view, $hotelId);
+                // Fetch packages once, reuse across sub-methods
+                $packageRepo = new HotelPackageRepository();
+                $packages    = $packageRepo->findByHotelId($hotelId);
+
+                $this->assignPackages($view, $packages);
+                $this->assignActiveEarlyBooking($view, $packages);
+                $this->assignSeasonPeriod($view, $packages);
             } else {
                 $view->assign('hotel_package_name', '');
             }
@@ -205,11 +207,8 @@ class SearchResultFormatter
         $view->assign('hotel_country', $hotelCountry);
     }
 
-    private function assignPackages($view, string $hotelId): void
+    private function assignPackages($view, array $packages): void
     {
-        $packageRepo = new HotelPackageRepository();
-        $packages    = $packageRepo->findByHotelId($hotelId);
-
         if (empty($packages)) {
             $view->assign('hotel_package_name', '');
             $view->assign('hotel_all_packages', []);
@@ -233,10 +232,8 @@ class SearchResultFormatter
         $view->assign('hotel_all_packages', $packages);
     }
 
-    private function assignActiveEarlyBooking($view, string $hotelId): void
+    private function assignActiveEarlyBooking($view, array $packages): void
     {
-        $packageRepo = new HotelPackageRepository();
-        $packages    = $packageRepo->findByHotelId($hotelId);
         $currentDate = date('Y-m-d');
         $activeEb    = null;
 
@@ -280,10 +277,8 @@ class SearchResultFormatter
         }
     }
 
-    private function assignSeasonPeriod($view, string $hotelId): void
+    private function assignSeasonPeriod($view, array $packages): void
     {
-        $packageRepo = new HotelPackageRepository();
-        $packages    = $packageRepo->findByHotelId($hotelId);
         $seasonFrom  = '';
         $seasonTo    = '';
 

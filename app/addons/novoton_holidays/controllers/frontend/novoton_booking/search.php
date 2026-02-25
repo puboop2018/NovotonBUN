@@ -19,7 +19,6 @@ use Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\SearchResultFormatter;
-use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 try {

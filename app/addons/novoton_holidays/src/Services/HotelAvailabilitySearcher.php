@@ -17,8 +17,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
 
 class HotelAvailabilitySearcher
 {
-    /** @var SearchService */
-    private SearchService $searchService;
+    /** @var SearchServiceInterface */
+    private SearchServiceInterface $searchService;
 
     /** @var bool */
     private bool $debug;
@@ -307,6 +307,8 @@ class HotelAvailabilitySearcher
         $this->log("=== RESULTS SUMMARY ===");
         $this->log("Total results found: " . count($results));
 
+        $earlyBookingDiscounts = SearchService::getEarlyBookingDiscounts($hotelId, $checkIn, $checkOut);
+
         return [
             'results'                => $results,
             'all_room_results'       => [],
@@ -314,10 +316,8 @@ class HotelAvailabilitySearcher
             'multi_room_total_options' => 0,
             'no_availability'        => empty($results),
             'max_room_capacity'      => $this->calculateMaxCapacity($results),
-            'early_booking_discounts' => SearchService::getEarlyBookingDiscounts($hotelId, $checkIn, $checkOut),
-            'early_booking_range'    => SearchService::getDiscountRange(
-                SearchService::getEarlyBookingDiscounts($hotelId, $checkIn, $checkOut)
-            ),
+            'early_booking_discounts' => $earlyBookingDiscounts,
+            'early_booking_range'    => SearchService::getDiscountRange($earlyBookingDiscounts),
         ];
     }
 
