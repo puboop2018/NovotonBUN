@@ -16,9 +16,12 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 
 class HotelSync
 {
+    use OutputWriterTrait;
+
     private NovotonApi $api;
     private array $selectedCountries;
     private array $productPrefixes;
@@ -623,12 +626,12 @@ class HotelSync
     }
 
     /**
-     * Log message
+     * Log message to output and event log.
      */
     private function log(string $message): void
     {
         if (defined('CONSOLE') && CONSOLE) {
-            echo "[" . date('Y-m-d H:i:s') . "] {$message}\n";
+            $this->output("[" . date('Y-m-d H:i:s') . "] {$message}");
         }
 
         fn_log_event('novoton_holidays', 'sync', [

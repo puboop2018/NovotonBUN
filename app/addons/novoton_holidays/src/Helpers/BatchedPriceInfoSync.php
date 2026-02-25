@@ -31,6 +31,8 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedPriceInfoSync
 {
+    use OutputWriterTrait;
+
     /**
      * State file path
      */
@@ -67,11 +69,6 @@ class BatchedPriceInfoSync
     private ?NovotonApi $api = null;
 
     /**
-     * Output callback for logging
-     */
-    private $output_callback = null;
-
-    /**
      * Constructor
      */
     public function __construct()
@@ -89,14 +86,6 @@ class BatchedPriceInfoSync
         if (PHP_SAPI === 'cli') {
             $this->unlimited = true;
         }
-    }
-
-    /**
-     * Set output callback for logging
-     */
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->output_callback = $callback;
     }
 
     /**
@@ -129,19 +118,6 @@ class BatchedPriceInfoSync
     public function setUnlimited(bool $unlimited): void
     {
         $this->unlimited = $unlimited;
-    }
-
-    /**
-     * Output message
-     */
-    private function output(string $message, bool $newline = true): void
-    {
-        if ($this->output_callback) {
-            call_user_func($this->output_callback, $message . ($newline ? "\n" : ""));
-        } else {
-            echo $message . ($newline ? "\n" : "");
-            flush();
-        }
     }
 
     /**

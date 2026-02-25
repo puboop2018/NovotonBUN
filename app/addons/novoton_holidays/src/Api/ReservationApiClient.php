@@ -4,6 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
 class ReservationApiClient extends ApiClientBase
 {
@@ -118,21 +119,11 @@ class ReservationApiClient extends ApiClientBase
 
         $this->lastRequest = $xml;
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')',
-                'xml' => $xml
-            ]);
-        }
+        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')', ['xml' => $xml]);
 
         $response = $this->callApi(Constants::API_FUNCTION_RESERVATION, $xml, $bookingData['lang'] ?? 'UK');
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'Novoton hotel_res_RQ Response',
-                'response' => $response
-            ]);
-        }
+        DebugLogger::log('Novoton hotel_res_RQ Response', ['response' => $response]);
 
         return $this->xmlParser->parse($response);
     }

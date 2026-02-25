@@ -10,6 +10,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -199,11 +200,7 @@ function fn_novoton_holidays_get_alternatives($booking_id): array
         return [];
     }
     
-    if (!empty($request['alternatives_data'])) {
-        return json_decode($request['alternatives_data'], true) ?: [];
-    }
-    
-    return [];
+    return JsonDecoder::decode($request['alternatives_data'] ?? '', 'alternatives_data');
 }
 
 /**

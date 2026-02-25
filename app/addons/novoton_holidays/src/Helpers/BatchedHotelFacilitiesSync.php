@@ -27,6 +27,8 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class BatchedHotelFacilitiesSync
 {
+    use OutputWriterTrait;
+
     private string $state_file;
     private int $batch_size = 100;
     private int $max_execution_time = 300; // 5 minutes
@@ -37,8 +39,6 @@ class BatchedHotelFacilitiesSync
 
     /** Delay between API calls in microseconds (100ms) */
     private int $api_delay_us = 100000;
-
-    private $output_callback = null;
 
     public function __construct()
     {
@@ -54,11 +54,6 @@ class BatchedHotelFacilitiesSync
         if (PHP_SAPI === 'cli') {
             $this->unlimited = true;
         }
-    }
-
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->output_callback = $callback;
     }
 
     public function setBatchSize(int $size): void
@@ -483,16 +478,6 @@ class BatchedHotelFacilitiesSync
     {
         if (file_exists($this->state_file)) {
             unlink($this->state_file);
-        }
-    }
-
-    private function output(string $message, bool $newline = true): void
-    {
-        if ($this->output_callback) {
-            call_user_func($this->output_callback, $message . ($newline ? "\n" : ""));
-        } else {
-            echo $message . ($newline ? "\n" : "");
-            flush();
         }
     }
 

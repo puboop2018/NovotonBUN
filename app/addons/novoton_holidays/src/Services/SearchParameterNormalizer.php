@@ -144,10 +144,16 @@ class SearchParameterNormalizer
 
         foreach (['rooms_data', 'room_data'] as $key) {
             if (!empty($params[$key])) {
-                $decoded = json_decode($params[$key], true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    $roomsData = $decoded;
+                if (is_array($params[$key])) {
+                    $roomsData = $params[$key];
                     break;
+                }
+                if (is_string($params[$key])) {
+                    $decoded = json_decode($params[$key], true);
+                    if (is_array($decoded) && !empty($decoded)) {
+                        $roomsData = $decoded;
+                        break;
+                    }
                 }
             }
         }

@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
 class AvailabilityApiClient extends ApiClientBase
 {
@@ -87,11 +88,7 @@ class AvailabilityApiClient extends ApiClientBase
             }
         }
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => "hotel_quota for hotel {$hotelId}: " . json_encode($quotaMap)
-            ]);
-        }
+        DebugLogger::log("hotel_quota for hotel {$hotelId}: " . json_encode($quotaMap));
 
         $this->saveToCache(Constants::API_FUNCTION_HOTEL_QUOTA, $cacheKey, $quotaMap);
         return $quotaMap;
@@ -117,11 +114,7 @@ class AvailabilityApiClient extends ApiClientBase
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => "hotel_quota response for {$hotelId}/{$roomId}: " . substr($response, 0, 500)
-            ]);
-        }
+        DebugLogger::log("hotel_quota response for {$hotelId}/{$roomId}: " . substr($response, 0, 500));
 
         return $this->xmlParser->parse($response);
     }
@@ -173,22 +166,11 @@ class AvailabilityApiClient extends ApiClientBase
             <Currency>EUR</Currency>
         </frmsearch>';
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'Novoton frmsearch Request',
-                'xml' => $xml,
-                'params' => $params
-            ]);
-        }
+        DebugLogger::log('Novoton frmsearch Request', ['xml' => $xml, 'params' => $params]);
 
         $response = $this->callApi(Constants::API_FUNCTION_SEARCH, $xml);
 
-        if (defined('NOVOTON_DEBUG') || ConfigProvider::isDebugLogging()) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'Novoton frmsearch Response',
-                'response' => substr($response ?: '', 0, 2000)
-            ]);
-        }
+        DebugLogger::log('Novoton frmsearch Response', ['response' => substr($response ?: '', 0, 2000)]);
 
         $result = $this->xmlParser->parse($response);
         return $this->parseSearchResults($result, $params);

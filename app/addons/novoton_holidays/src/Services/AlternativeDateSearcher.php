@@ -53,7 +53,12 @@ class AlternativeDateSearcher
         array  $boardTypes
     ): array {
         $searchRange = ($flexDays > 0) ? $flexDays : 10;
+        $nights      = max($nights, 1);
         $baseDate    = strtotime($checkIn);
+
+        if ($baseDate === false) {
+            return ['results' => [], 'check_in' => '', 'check_out' => ''];
+        }
 
         // Build date list: after first, then before
         $altDates = [];

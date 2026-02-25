@@ -289,7 +289,7 @@ function fn_novoton_holidays_upgrade_db()
         ],
         '?:novoton_bookings' => [
             ['num_rooms',                      "INT(11) DEFAULT 1 AFTER `children_ages`"],
-            ['rooms_data',                     "LONGTEXT AFTER `num_rooms`"],
+            ['rooms_data',                     "JSON AFTER `num_rooms`"],
             ['session_id',                     "VARCHAR(64) DEFAULT NULL AFTER `user_id`",   'idx_session'],
             ['holder_name',                    "VARCHAR(255) DEFAULT '' AFTER `guest_name`"],
             ['terms_of_payment_raw',           "LONGTEXT DEFAULT NULL AFTER `api_response`"],
@@ -375,7 +375,7 @@ function fn_novoton_holidays_upgrade_db()
     }
 
     // ── Data migration: copy facility_name → facility_name_en ──
-    $has_old = db_get_field("SHOW COLUMNS FROM `?:novoton_facilities` LIKE 'facility_name'");
+    $has_old = db_get_field("SHOW COLUMNS FROM ?:novoton_facilities LIKE 'facility_name'");
     if (!empty($has_old)) {
         db_query("UPDATE ?:novoton_facilities SET facility_name_en = facility_name WHERE facility_name_en = '' AND facility_name != ''");
     }
@@ -429,6 +429,22 @@ function fn_novoton_holidays_upgrade_db()
             'ref_column'  => 'facility_id',
             'on_delete'   => 'CASCADE',
         ],
+        [
+            'table'       => '?:novoton_bookings',
+            'constraint'  => 'fk_nb_hotel_id',
+            'column'      => 'hotel_id',
+            'ref_table'   => '?:novoton_hotels',
+            'ref_column'  => 'hotel_id',
+            'on_delete'   => 'RESTRICT',
+        ],
+        [
+            'table'       => '?:novoton_alternative_requests',
+            'constraint'  => 'fk_nar_hotel_id',
+            'column'      => 'hotel_id',
+            'ref_table'   => '?:novoton_hotels',
+            'ref_column'  => 'hotel_id',
+            'on_delete'   => 'RESTRICT',
+        ],
     ];
 
     foreach ($foreign_keys as $fk) {
@@ -445,6 +461,38 @@ function fn_novoton_holidays_upgrade_db()
                  FOREIGN KEY (`{$fk['column']}`) REFERENCES {$fk['ref_table']}(`{$fk['ref_column']}`)
                  ON DELETE {$fk['on_delete']} ON UPDATE CASCADE"
             );
+        }
+    }
+
+    // ── LONGTEXT → JSON column type migration (MySQL 5.7+ / MariaDB 10.2+) ──
+    // MariaDB treats JSON as a LONGTEXT alias with CHECK(JSON_VALID(…) OR col IS NULL).
+    // MySQL stores JSON in an optimized binary format.
+    // Both accept ALTER TABLE … MODIFY … JSON.
+    $json_columns = [
+        ['?:novoton_hotels',                'hotel_data',       "JSON COMMENT 'JSON: full hotelinfo API response'"],
+        ['?:novoton_hotel_packages',        'priceinfo_data',   "JSON COMMENT 'JSON: full priceinfo API response'"],
+        ['?:novoton_bookings',              'rooms_data',       "JSON COMMENT 'JSON: rooms configuration'"],
+        ['?:novoton_bookings',              'guests_data',      "JSON COMMENT 'JSON: all guests details'"],
+        ['?:novoton_bookings',              'api_request',      "JSON COMMENT 'JSON: API request sent'"],
+        ['?:novoton_bookings',              'api_response',     "JSON COMMENT 'JSON: API response received'"],
+        ['?:novoton_bookings',              'alternatives_data', "JSON COMMENT 'JSON: alternative hotels'"],
+        ['?:novoton_alternative_requests',  'alternatives_data', "JSON COMMENT 'JSON: found alternatives'"],
+    ];
+
+    foreach ($json_columns as [$table, $column, $definition]) {
+        $resolved_table = $resolve($table);
+        $col_type = db_get_field(
+            "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s AND COLUMN_NAME = ?s",
+            $resolved_table, $column
+        );
+        // Only convert if currently longtext (skip if already json or column missing)
+        if ($col_type && strtolower($col_type) === 'longtext') {
+            // Sanitize: empty strings and invalid JSON → NULL
+            // (MariaDB adds CHECK(JSON_VALID(…) OR col IS NULL); MySQL validates on ALTER)
+            @db_query("UPDATE {$table} SET `{$column}` = NULL WHERE `{$column}` = ''");
+            @db_query("UPDATE {$table} SET `{$column}` = NULL WHERE `{$column}` IS NOT NULL AND JSON_VALID(`{$column}`) = 0");
+            @db_query("ALTER TABLE {$table} MODIFY COLUMN `{$column}` {$definition}");
         }
     }
 }

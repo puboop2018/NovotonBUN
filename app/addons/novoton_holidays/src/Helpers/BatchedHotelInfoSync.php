@@ -32,6 +32,8 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedHotelInfoSync
 {
+    use OutputWriterTrait;
+
     /**
      * State file path
      */
@@ -63,11 +65,6 @@ class BatchedHotelInfoSync
     private ?NovotonApi $api = null;
 
     /**
-     * Output callback for logging
-     */
-    private $output_callback = null;
-
-    /**
      * Constructor
      */
     public function __construct()
@@ -85,14 +82,6 @@ class BatchedHotelInfoSync
         if (PHP_SAPI === 'cli') {
             $this->unlimited = true;
         }
-    }
-
-    /**
-     * Set output callback for logging
-     */
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->output_callback = $callback;
     }
 
     /**
@@ -913,19 +902,6 @@ class BatchedHotelInfoSync
     {
         if (file_exists($this->state_file)) {
             unlink($this->state_file);
-        }
-    }
-
-    /**
-     * Output helper that handles newlines
-     */
-    private function output(string $message, bool $newline = true): void
-    {
-        if ($this->output_callback) {
-            call_user_func($this->output_callback, $message . ($newline ? "\n" : ""));
-        } else {
-            echo $message . ($newline ? "\n" : "");
-            flush();
         }
     }
 
