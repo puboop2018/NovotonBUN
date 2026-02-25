@@ -86,13 +86,16 @@
 @novoton-radius:            @borderRadiusSmall;     // theme's small border-radius
 @novoton-radius-sm:         4px;                    // no exact theme match
 
-// Typography — inherit font family from theme; keep sizes addon-specific
-// (theme presets store @body_font_size as a bare number without a unit,
-//  so we avoid referencing it to prevent invalid CSS output)
+// Typography — inherit from theme's font system
+// @body_font_size is based on 14px with derivatives:
+//   @fontSizeLarge = round(@body_font_size * 1.25)  →  ~18px
+//   @fontSizeSmall = round(@body_font_size * 0.85)  →  ~12px
+//   @fontSizeMini  = round(@body_font_size * 0.75)  →  ~11px
+// unit() ensures a px suffix even when the preset stores bare numbers.
 @novoton-font-family:       @body_font;
-@novoton-font-size-base:    14px;
-@novoton-font-size-small:   12px;
-@novoton-font-size-large:   16px;
+@novoton-font-size-base:    unit(@body_font_size, px);
+@novoton-font-size-small:   unit(@fontSizeMini, px);
+@novoton-font-size-large:   unit(@fontSizeLarge, px);
 
 // ---------------------------------------------------------------------------
 // 3. ADDON-SPECIFIC  (spacing & shadows — no theme equivalents)
