@@ -168,16 +168,24 @@ class StateManager implements StateManagerInterface
     }
 
     /**
-     * Clear state file
+     * Clear state file and all auxiliary files (.bak, .lock, .tmp).
      *
      * @return bool Success
      */
     public function clear(): bool
     {
-        if (file_exists($this->stateFile)) {
-            return @unlink($this->stateFile);
+        $ok = true;
+
+        foreach (['', '.bak', '.lock', '.tmp'] as $suffix) {
+            $file = $this->stateFile . $suffix;
+            if (file_exists($file)) {
+                if (!@unlink($file)) {
+                    $ok = false;
+                }
+            }
         }
-        return true;
+
+        return $ok;
     }
 
     /**
@@ -406,12 +414,43 @@ class StateManager implements StateManagerInterface
     }
 
     /**
-     * Check if sync should be resumed
+     * Check if the current in-progress state is stale (abandoned).
+     *
+     * A state is stale when last_run_at is older than the given threshold,
+     * meaning the process that was running the sync has likely died.
+     *
+     * @param int $maxAgeHours Maximum age in hours before state is considered stale
+     * @return bool True if state exists, is in_progress, and is stale
+     */
+    public function isStale(int $maxAgeHours = 6): bool
+    {
+        $state = $this->load();
+
+        if ($state['status'] !== 'in_progress') {
+            return false;
+        }
+
+        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
+        if ($lastRun === null) {
+            return true; // No timestamp at all — definitely stale
+        }
+
+        $ageHours = (time() - strtotime($lastRun)) / 3600;
+        return $ageHours > $maxAgeHours;
+    }
+
+    /**
+     * Check if sync should be resumed.
+     * Returns false for stale states (older than 6 hours with no activity).
      *
      * @return bool
      */
     public function shouldResume(): bool
     {
+        if ($this->isStale()) {
+            return false;
+        }
+
         $state = $this->load();
 
         if ($state['status'] !== 'in_progress') {

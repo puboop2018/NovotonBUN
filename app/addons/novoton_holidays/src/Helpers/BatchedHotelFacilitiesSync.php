@@ -91,10 +91,19 @@ class BatchedHotelFacilitiesSync
         $state = $this->loadState();
 
         if (!empty($state) && $state['status'] === 'in_progress') {
-            $this->output("Resuming hotel facilities sync...");
-            $this->output("Progress: {$state['processed']}/{$state['total']} (" .
-                round($state['processed'] / max(1, $state['total']) * 100, 1) . "%)");
-            return $this->resumeSync($state, $start_time);
+            // Detect stale state: if no activity for 6+ hours, the previous
+            // process likely died. Clear and start fresh.
+            if ($this->isStateStale($state)) {
+                $age = $this->stateAgeDescription($state);
+                $this->output("Stale state detected ({$age} since last activity). Clearing and starting fresh.");
+                $this->clearState();
+                $state = [];
+            } else {
+                $this->output("Resuming hotel facilities sync...");
+                $this->output("Progress: {$state['processed']}/{$state['total']} (" .
+                    round($state['processed'] / max(1, $state['total']) * 100, 1) . "%)");
+                return $this->resumeSync($state, $start_time);
+            }
         }
 
         // Determine sync type
@@ -474,11 +483,42 @@ class BatchedHotelFacilitiesSync
         file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 
+    /**
+     * Clear state file and auxiliary files (.bak, .lock, .tmp)
+     */
     private function clearState(): void
     {
-        if (file_exists($this->state_file)) {
-            unlink($this->state_file);
+        foreach (['', '.bak', '.lock', '.tmp'] as $suffix) {
+            $file = $this->state_file . $suffix;
+            if (file_exists($file)) {
+                @unlink($file);
+            }
         }
+    }
+
+    /**
+     * Check if an in-progress state is stale (no activity for 6+ hours).
+     */
+    private function isStateStale(array $state, int $maxAgeHours = 6): bool
+    {
+        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
+        if ($lastRun === null) {
+            return true;
+        }
+        return (time() - strtotime($lastRun)) > ($maxAgeHours * 3600);
+    }
+
+    /**
+     * Human-readable description of state age.
+     */
+    private function stateAgeDescription(array $state): string
+    {
+        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
+        if ($lastRun === null) {
+            return 'unknown age';
+        }
+        $hours = round((time() - strtotime($lastRun)) / 3600, 1);
+        return "{$hours}h";
     }
 
     private function isMemoryLimitReached(): bool

@@ -260,6 +260,13 @@ abstract class AbstractBatchedSync implements SyncInterface
             return ['status' => 'reset'];
         }
 
+        // Check for stale state (abandoned sync) and clear it
+        if ($this->state->isStale()) {
+            $status = $this->state->getStatus();
+            $this->logger->output("Stale state detected (no activity since {$status['last_run_at']}). Clearing and starting fresh.");
+            $this->state->clear();
+        }
+
         // Check for active job to resume
         if ($this->state->shouldResume()) {
             $status = $this->state->getStatus();

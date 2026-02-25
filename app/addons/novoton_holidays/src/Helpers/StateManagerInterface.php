@@ -105,6 +105,17 @@ interface StateManagerInterface
     public function shouldResume(): bool;
 
     /**
+     * Check if the current in-progress state is stale (abandoned).
+     *
+     * A state is stale when last_run_at is older than the given threshold,
+     * meaning the process that was running the sync has likely died.
+     *
+     * @param int $maxAgeHours Maximum age in hours before state is considered stale
+     * @return bool True if state exists, is in_progress, and is stale
+     */
+    public function isStale(int $maxAgeHours = 6): bool;
+
+    /**
      * Acquire an exclusive lock.
      *
      * @param int $timeout Seconds to wait for lock
