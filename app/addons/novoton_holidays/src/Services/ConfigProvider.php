@@ -153,7 +153,19 @@ class ConfigProvider
 
     public static function getVersion(): string
     {
-        return (string)(self::settings()['version'] ?? 'unknown');
+        // Settings may contain version (some CS-Cart builds include it)
+        $version = self::settings()['version'] ?? '';
+        if (!empty($version)) {
+            return (string) $version;
+        }
+
+        // Primary source: addon metadata in the addons table
+        $version = db_get_field(
+            "SELECT version FROM ?:addons WHERE addon = ?s",
+            self::ADDON_ID
+        );
+
+        return !empty($version) ? (string) $version : 'unknown';
     }
 
     // ── Array Settings ──
