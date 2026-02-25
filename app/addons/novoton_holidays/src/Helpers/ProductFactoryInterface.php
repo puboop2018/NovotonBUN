@@ -34,4 +34,23 @@ interface ProductFactoryInterface
      * @return int Number of images attached
      */
     public function attachHotelImages(int $productId, string $hotelId, NovotonApiInterface $api): int;
+
+    /**
+     * Build hotel title for SEO.
+     *
+     * @param string $hotelName
+     * @param string $city
+     * @param string $country
+     * @param string $year
+     * @return string
+     */
+    public static function buildHotelTitle(string $hotelName, string $city, string $country, string $year): string;
+
+    /**
+     * Get or create category by path.
+     *
+     * @param string $categoryPath
+     * @return int Category ID
+     */
+    public static function getOrCreateCategory(string $categoryPath): int;
 }

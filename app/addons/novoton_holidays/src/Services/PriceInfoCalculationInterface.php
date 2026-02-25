@@ -69,4 +69,12 @@ interface PriceInfoCalculationInterface
      * @return PriceInfoParser
      */
     public function getParser(): PriceInfoParser;
+
+    /**
+     * Log debug message.
+     *
+     * @param string     $message Log message
+     * @param mixed|null $data    Additional data
+     */
+    public function log(string $message, $data = null): void;
 }
