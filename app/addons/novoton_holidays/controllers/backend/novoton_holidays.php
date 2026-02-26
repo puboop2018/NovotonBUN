@@ -88,22 +88,21 @@ if (!$_routed && in_array($mode, $tools_modes)) {
     $_routed = true;
 }
 
-// If routed to a sub-controller, stop here and let CS-Cart render the template.
-// Do NOT return [CONTROLLER_STATUS_OK] — that's for redirects with a URL.
-// Falling through without returning tells CS-Cart to render the template.
-if ($_routed) {
-    return;
-}
-
 // ============================================================================
 // MODES HANDLED IN THIS FILE
+// ============================================================================
+// NOTE: When $_routed is true a sub-controller has already assigned the Smarty
+// variables for the current mode. We must NOT return early — CS-Cart's dispatch
+// requires include() to return 1 (file fell through) to render the template.
+// Returning null (via bare "return;") causes a 404 in CS-Cart.
+// The guards below are skipped harmlessly because $mode won't match.
 // ============================================================================
 
 // ============================================================================
 // POST HANDLERS
 // ============================================================================
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (!$_routed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save excluded resorts
     if ($mode == 'save_excluded_resorts') {
         $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];

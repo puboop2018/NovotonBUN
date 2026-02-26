@@ -324,7 +324,7 @@ if ($mode == 'sync_facilities') {
         fn_set_notification('E', __('error'), $result['error'] ?? 'Sync failed');
     }
     
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
@@ -351,7 +351,7 @@ if ($mode == 'sync_hotel_facilities') {
 
     fn_set_notification('N', __('notice'), "Hotel facilities synced for {$synced} hotels. Failed: {$failed}.");
 
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
@@ -381,7 +381,7 @@ if ($mode == 'save_facility_types') {
 
     fn_set_notification('N', __('notice'), "Facility types saved ({$updated} updated).");
 
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
