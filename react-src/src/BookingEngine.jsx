@@ -339,18 +339,11 @@ export default function BookingEngine({ config }) {
         window.location.href = url + '&_t=' + Date.now();
     }, [checkIn, checkOut, rooms, mode, buildSearchUrl, performAjaxSearch]);
 
-    // Button click handler: "Change search" opens calendar, others navigate
+    // Button click handler: always perform search regardless of state
     const handleButtonClick = useCallback(() => {
         if (isSearching) return;
-        if (hasSearched && !paramsChanged) {
-            // "Change search" state – open calendar for editing
-            setShowCalendar(true);
-            setShowGuests(false);
-            return;
-        }
-        // "Search" or "Apply changes" – perform search
         handleSearch();
-    }, [hasSearched, paramsChanged, handleSearch, isSearching]);
+    }, [handleSearch, isSearching]);
 
     // -----------------------------------------------------------------------
     // Render helpers
