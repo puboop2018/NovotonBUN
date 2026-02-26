@@ -513,6 +513,12 @@ class BookingRepository implements BookingRepositoryInterface
             return [];
         }
 
+        // Safety: if no ownership context is provided, return nothing rather than
+        // leaking all users' bookings. Callers must provide session_id and/or user_id.
+        if ($user_id <= 0 && empty($session_id)) {
+            return [];
+        }
+
         $select = "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
                     board_id, check_in, check_out, nights, adults, children, children_ages,
                     num_rooms, rooms_data, total_price, currency, status, guests_data,
@@ -531,16 +537,11 @@ class BookingRepository implements BookingRepositoryInterface
                 $select . " AND user_id = ?i ORDER BY booking_id DESC",
                 $product_ids, $statuses, $user_id
             );
-        } elseif (!empty($session_id)) {
-            return db_get_array(
-                $select . " AND session_id = ?s ORDER BY booking_id DESC",
-                $product_ids, $statuses, $session_id
-            );
         }
 
         return db_get_array(
-            $select . " ORDER BY booking_id DESC",
-            $product_ids, $statuses
+            $select . " AND session_id = ?s ORDER BY booking_id DESC",
+            $product_ids, $statuses, $session_id
         );
     }
 
