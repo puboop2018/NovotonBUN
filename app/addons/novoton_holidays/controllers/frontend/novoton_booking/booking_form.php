@@ -11,7 +11,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
     $bookingData = $_REQUEST;
     
@@ -295,7 +295,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    $novoton_display_currency = CurrencyService::getDisplayCurrency();
     $currencies = \Tygh\Registry::get('currencies');
     $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
     $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;

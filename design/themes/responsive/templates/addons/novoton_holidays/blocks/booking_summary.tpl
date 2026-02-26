@@ -29,13 +29,8 @@
     
     {* Board type *}
     <div style="margin-bottom: 4px; font-size: 13px;">
-        <strong style="color: #003580;"></strong> 
-        {if $product.extra.board_id == 'AI' || $product.extra.board_id == 'ALL INCL'}All Inclusive
-        {elseif $product.extra.board_id == 'FB'}Full Board
-        {elseif $product.extra.board_id == 'HB'}Half Board
-        {elseif $product.extra.board_id == 'BB'}Bed & Breakfast
-        {elseif $product.extra.board_id == 'RO'}Room Only
-        {else}{$product.extra.board_name|default:$product.extra.board_id|default:'All Inclusive'|escape:html}{/if}
+        <strong style="color: #003580;"></strong>
+        {$product.extra.board_id|default:$product.extra.board_name|novoton_format_board}
     </div>
     
     {* Guests *}

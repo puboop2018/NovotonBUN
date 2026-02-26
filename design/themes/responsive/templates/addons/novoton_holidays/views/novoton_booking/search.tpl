@@ -316,23 +316,7 @@
                                         {$room_display = $result.room_name|default:$result.room_id}
                                     {/if}
                                     
-                                    {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
-                                        {$board_display = "{__('novoton_holidays.all_inclusive')|default:'All Inclusive'}"}
-                                    {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
-                                        {$board_display = "{__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}"}
-                                    {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
-                                        {$board_display = "{__('novoton_holidays.full_board')|default:'Full Board'}"}
-                                    {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
-                                        {$board_display = "{__('novoton_holidays.half_board')|default:'Half Board'}"}
-                                    {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
-                                        {$board_display = "{__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}"}
-                                    {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
-                                        {$board_display = "{__('novoton_holidays.room_only')|default:'Room Only'}"}
-                                    {elseif $result.board_id == 'SC'}
-                                        {$board_display = "{__('novoton_holidays.self_catering')|default:'Self Catering'}"}
-                                    {else}
-                                        {$board_display = $result.board_name|default:$result.board_id}
-                                    {/if}
+                                    {$board_display = $result.board_id|novoton_format_board}
                                     
                                     <label class="room-option" style="display: flex; align-items: flex-start; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: #fff; gap: 12px;">
                                         <input type="radio" 
@@ -1012,7 +996,7 @@
                     </div>
                     
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.special_requests")}</label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.notes")|default:"Notes"}</label>
                         <textarea name="notes" rows="2" placeholder="{__('novoton_holidays.alternatives_notes_placeholder')|default:'Any specific requirements or preferences...'}"
                                   style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
                     </div>

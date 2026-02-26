@@ -59,8 +59,8 @@ class BookingRepository implements BookingRepositoryInterface
         $booking = self::hydrateJsonFields($booking);
 
         // Prevent unbounded cache growth in long-running processes (cron)
-        if (count(self::$hydratedCache) > 500) {
-            self::$hydratedCache = array_slice(self::$hydratedCache, -250, null, true);
+        if (count(self::$hydratedCache) > Constants::HYDRATED_CACHE_MAX) {
+            self::$hydratedCache = array_slice(self::$hydratedCache, -Constants::HYDRATED_CACHE_TRIM, null, true);
         }
         self::$hydratedCache[$booking_id] = $booking;
 

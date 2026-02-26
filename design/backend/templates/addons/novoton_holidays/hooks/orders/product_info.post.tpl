@@ -42,19 +42,7 @@
             {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
             {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
             {else}{$room_display = $room_raw}{/if}
-            {* Format board name *}
-            {$board_raw = $room.board_display|default:$room.board_name|default:$room.board_id}
-            {$board_up = $board_raw|upper}
-            {if $board_up == 'AI' || $board_up == 'ALL INCL' || $board_up == 'ALL INCLUSIVE' || $board_up == 'ALLINC'}{$board_disp = 'All Inclusive'}
-            {elseif $board_up == 'UAI' || $board_up == 'ULTRA ALL INCL' || $board_up == 'ULTRA ALL INCLUSIVE'}{$board_disp = 'Ultra All Inclusive'}
-            {elseif $board_up == 'FB' || $board_up == 'FULL BOARD'}{$board_disp = 'Full Board'}
-            {elseif $board_up == 'FB+' || $board_up == 'FULL BOARD PLUS'}{$board_disp = 'Full Board Plus'}
-            {elseif $board_up == 'HB' || $board_up == 'HALF BOARD'}{$board_disp = 'Half Board'}
-            {elseif $board_up == 'HB+' || $board_up == 'HALF BOARD PLUS'}{$board_disp = 'Half Board Plus'}
-            {elseif $board_up == 'BB' || $board_up == 'B&B' || $board_up == 'BED AND BREAKFAST' || $board_up == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
-            {elseif $board_up == 'RO' || $board_up == 'ROOM ONLY'}{$board_disp = 'Room Only'}
-            {elseif $board_up == 'SC' || $board_up == 'SELF CATERING'}{$board_disp = 'Self Catering'}
-            {else}{$board_disp = $board_raw}{/if}
+            {$board_disp = $room.board_display|default:$room.board_name|default:$room.board_id|novoton_format_board}
             &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
         {/foreach}
     {else}
@@ -72,19 +60,7 @@
         {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
         {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
         {else}{$room_display = $room_raw}{/if}
-        {* Format board name *}
-        {$board_raw = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id}
-        {$board_up = $board_raw|upper}
-        {if $board_up == 'AI' || $board_up == 'ALL INCL' || $board_up == 'ALL INCLUSIVE' || $board_up == 'ALLINC'}{$board_disp = 'All Inclusive'}
-        {elseif $board_up == 'UAI' || $board_up == 'ULTRA ALL INCL' || $board_up == 'ULTRA ALL INCLUSIVE'}{$board_disp = 'Ultra All Inclusive'}
-        {elseif $board_up == 'FB' || $board_up == 'FULL BOARD'}{$board_disp = 'Full Board'}
-        {elseif $board_up == 'FB+' || $board_up == 'FULL BOARD PLUS'}{$board_disp = 'Full Board Plus'}
-        {elseif $board_up == 'HB' || $board_up == 'HALF BOARD'}{$board_disp = 'Half Board'}
-        {elseif $board_up == 'HB+' || $board_up == 'HALF BOARD PLUS'}{$board_disp = 'Half Board Plus'}
-        {elseif $board_up == 'BB' || $board_up == 'B&B' || $board_up == 'BED AND BREAKFAST' || $board_up == 'BED BREAKFAST'}{$board_disp = 'Bed & Breakfast'}
-        {elseif $board_up == 'RO' || $board_up == 'ROOM ONLY'}{$board_disp = 'Room Only'}
-        {elseif $board_up == 'SC' || $board_up == 'SELF CATERING'}{$board_disp = 'Self Catering'}
-        {else}{$board_disp = $board_raw}{/if}
+        {$board_disp = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id|novoton_format_board}
         <strong>Room:</strong> {$room_display}<br>
         <strong>Board:</strong> {$board_disp}<br>
         <strong>Guests:</strong> {$oi.extra.adults} adults{if $oi.extra.children}, {$oi.extra.children} children{/if}<br>
@@ -126,10 +102,6 @@
 
     {if $_cancel_display}
     <strong>Cancellation Policy:</strong> {$_cancel_display|escape:'html'|nl2br nofilter}<br>
-    {/if}
-    
-    {if $oi.extra.special_requests}
-    <strong>Special Requests:</strong> {$oi.extra.special_requests|escape:'html'}<br>
     {/if}
     
     {if $oi.extra.novoton_reservation_id}

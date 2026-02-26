@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -73,8 +73,6 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000));
-    
     // Parse guests (no full DOB validation needed at add_to_cart, that happens in update_booking)
     $parsed_guests = _nvt_parse_and_validate_guests($guests, '', 0, '');
     $guests_data = $parsed_guests['guests_data'] ?? [];
@@ -409,10 +407,8 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'currency' => RoomPriceService::getApiCurrency(),
+            'currency' => CurrencyService::getApiCurrency(),
             'status' => 'pending',
-            'special_requests' => $special_requests,
-            'notes' => $special_requests,
             'api_request' => json_encode([
                 'guests' => $guests_data,
                 'contact' => $contact,
@@ -455,7 +451,6 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'contact_email' => $contact['email'] ?? '',
             'contact_phone' => $contact['phone'] ?? '',
-            'special_requests' => $special_requests,
             'terms_of_payment' => fn_novoton_holidays_format_payment_terms($terms_of_payment),
             'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($terms_of_cancellation, $bookingData['check_in']),
             'terms_of_payment_raw' => $terms_of_payment,
@@ -463,7 +458,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,
-            'currency' => RoomPriceService::getApiCurrency(),
+            'currency' => CurrencyService::getApiCurrency(),
         ]
     ];
     

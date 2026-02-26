@@ -9,7 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
     // This replaces the old blanket error_reporting(0) — real errors are still
@@ -353,7 +353,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
         $price_difference = $new_price - $original_price;
 
         // Format price for display using the active display currency
-        $display_currency_code = RoomPriceService::getDisplayCurrency();
+        $display_currency_code = CurrencyService::getDisplayCurrency();
         $currency = Registry::get('currencies.' . $display_currency_code);
         $formatted_price = fn_format_price($new_price, $currency);
 

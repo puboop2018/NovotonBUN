@@ -109,8 +109,6 @@ class BookingService implements BookingServiceInterface
             'total_price' => (float) ($bookingData['total_price'] ?? 0),
             'currency' => ConfigProvider::getApiCurrency(),
             'status' => Constants::STATUS_PENDING,
-            'special_requests' => $bookingData['special_requests'] ?? '',
-            'notes' => $bookingData['special_requests'] ?? '',
         ];
         
         // Check for duplicate booking
@@ -277,7 +275,6 @@ class BookingService implements BookingServiceInterface
             'guest_name' => $booking['guest_name'],
             'guests_data' => $booking['guests_data'],
             'total_price' => $booking['total_price'],
-            'special_requests' => $booking['special_requests'],
             'terms_of_payment' => $bookingData['terms_of_payment'] ?? '',
             'terms_of_cancellation' => $bookingData['terms_of_cancellation'] ?? '',
             'terms_of_payment_raw' => $bookingData['terms_of_payment_raw'] ?? '',
@@ -620,7 +617,6 @@ class BookingService implements BookingServiceInterface
                 'guests_data' => json_encode($guestsData),
                 'contact_email' => $bookingData['contact']['email'] ?? '',
                 'contact_phone' => $bookingData['contact']['phone'] ?? '',
-                'special_requests' => strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000)),
                 'terms_of_payment' => fn_novoton_holidays_format_payment_terms($priceResult['terms_of_payment']),
                 'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
                 'terms_of_payment_raw' => $priceResult['terms_of_payment'],

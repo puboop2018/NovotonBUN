@@ -1124,18 +1124,6 @@ msgctxt "Languages::novoton_holidays.phone"
 msgid "Phone"
 msgstr "Phone"
 
-msgctxt "Languages::novoton_holidays.special_requests"
-msgid "Special Requests"
-msgstr "Special Requests"
-
-msgctxt "Languages::novoton_holidays.special_requests_placeholder"
-msgid "Any special requests or notes for the hotel..."
-msgstr "Any special requests or notes for the hotel..."
-
-msgctxt "Languages::novoton_holidays.special_requests_note"
-msgid "Special requests are subject to availability and cannot be guaranteed."
-msgstr "Special requests are subject to availability and cannot be guaranteed."
-
 msgctxt "Languages::novoton_holidays.accept_terms_text"
 msgid "I have read and accept the"
 msgstr "I have read and accept the"
@@ -1667,6 +1655,118 @@ msgstr "United Kingdom"
 msgctxt "SettingsSections::novoton_holidays::tools_cron"
 msgid "Tools & Cron"
 msgstr "Tools & Cron"
+
+msgctxt "SettingsSections::novoton_holidays::advanced"
+msgid "Advanced"
+msgstr "Advanced"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_header"
+msgid "Cache TTL (Time to Live)"
+msgstr "Cache TTL (Time to Live)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_room_price"
+msgid "Room price cache (seconds)"
+msgstr "Room price cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_room_price"
+msgid "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+msgstr "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_availability"
+msgid "Availability cache (seconds)"
+msgstr "Availability cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_availability"
+msgid "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+msgstr "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_search"
+msgid "Search results cache (seconds)"
+msgstr "Search results cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_search"
+msgid "How long search results are cached. Default: 300 (5 minutes)"
+msgstr "How long search results are cached. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_intervals_header"
+msgid "Sync Intervals"
+msgstr "Sync Intervals"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_days"
+msgid "Hotel info full sync interval (days)"
+msgstr "Hotel info full sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
+msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+msgstr "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
+msgid "Price info full sync interval (days)"
+msgstr "Price info full sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_days"
+msgid "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+msgstr "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_facilities_days"
+msgid "Facilities sync interval (days)"
+msgstr "Facilities sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_facilities_days"
+msgid "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+msgstr "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_header"
+msgid "Cron Batch Processing"
+msgstr "Cron Batch Processing"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_size"
+msgid "Batch size (items per run)"
+msgstr "Batch size (items per run)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_batch_size"
+msgid "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+msgstr "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_max_execution_time"
+msgid "Max execution time (seconds)"
+msgstr "Max execution time (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_max_execution_time"
+msgid "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+msgstr "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::slow_item_warning_ms"
+msgid "Slow item warning threshold (ms)"
+msgstr "Slow item warning threshold (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::slow_item_warning_ms"
+msgid "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+msgstr "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limiting_header"
+msgid "Rate Limiting"
+msgstr "Rate Limiting"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_requests_per_min"
+msgid "Max API requests per minute"
+msgstr "Max API requests per minute"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_requests_per_min"
+msgid "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+msgstr "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Max booking attempts per hour"
+msgstr "Max booking attempts per hour"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+msgstr "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
+msgid "Booking Limits"
+msgstr "Booking Limits"
 
 msgctxt "Languages::novoton_holidays.api_price"
 msgid "API Price"
@@ -2220,6 +2320,14 @@ msgstr "Delete products on uninstall"
 msgctxt "SettingsTooltips::novoton_holidays::delete_products_on_uninstall"
 msgid "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
 msgstr "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
+
+msgctxt "SettingsOptions::novoton_holidays::country_category_map"
+msgid "Country → Category mapping"
+msgstr "Country → Category mapping"
+
+msgctxt "SettingsTooltips::novoton_holidays::country_category_map"
+msgid "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+msgstr "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
 
 msgctxt "SettingsOptions::novoton_holidays::excluded_resorts"
 msgid "Excluded Resorts (JSON)"

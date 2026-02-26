@@ -107,8 +107,11 @@ class OffersUpdateCommand extends AbstractCronCommand
                 continue;
             }
 
-            $category_path = "{$country}///Litoral {$country}";
-            $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+            $category_id = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getCategoryForCountry($country);
+            if (!$category_id) {
+                $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
+                $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+            }
             $page_title = fn_novoton_holidays_build_hotel_title(
                 $existing['hotel_name'] ?? $hotel_name,
                 $existing['city'] ?? '',

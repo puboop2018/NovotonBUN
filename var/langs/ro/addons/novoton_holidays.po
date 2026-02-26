@@ -20,6 +20,118 @@ msgctxt "SettingsSections::novoton_holidays::tools_cron"
 msgid "Tools & Cron"
 msgstr "Instrumente & Cron"
 
+msgctxt "SettingsSections::novoton_holidays::advanced"
+msgid "Advanced"
+msgstr "Avansat"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_header"
+msgid "Cache TTL (Time to Live)"
+msgstr "Cache TTL (Durată de Viață)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_room_price"
+msgid "Room price cache (seconds)"
+msgstr "Cache preț cameră (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_room_price"
+msgid "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+msgstr "Cât timp sunt stocate în cache prețurile camerelor înainte de a fi reinterogate de la API. Valori mai mici = prețuri mai actuale dar mai multe apeluri API. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_availability"
+msgid "Availability cache (seconds)"
+msgstr "Cache disponibilitate (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_availability"
+msgid "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+msgstr "Cât timp sunt stocate în cache datele de disponibilitate. Disponibilitatea se schimbă frecvent, păstrați această valoare mică. Implicit: 180 (3 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_search"
+msgid "Search results cache (seconds)"
+msgstr "Cache rezultate căutare (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_search"
+msgid "How long search results are cached. Default: 300 (5 minutes)"
+msgstr "Cât timp sunt stocate în cache rezultatele căutării. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_intervals_header"
+msgid "Sync Intervals"
+msgstr "Intervale Sincronizare"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_days"
+msgid "Hotel info full sync interval (days)"
+msgstr "Interval sincronizare completă informații hotel (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
+msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+msgstr "Cât de des se efectuează o re-sincronizare completă a informațiilor hoteliere de la API. Între sincronizări complete, doar hotelurile noi/modificate sunt actualizate. Implicit: 180 (6 luni)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
+msgid "Price info full sync interval (days)"
+msgstr "Interval sincronizare completă prețuri (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_days"
+msgid "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+msgstr "Cât de des se efectuează o re-sincronizare completă a prețurilor sezoniere. Între sincronizări complete, doar pachetele expirate sunt actualizate. Implicit: 7 (săptămânal)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_facilities_days"
+msgid "Facilities sync interval (days)"
+msgstr "Interval sincronizare facilități (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_facilities_days"
+msgid "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+msgstr "Cât de des se re-sincronizează facilitățile hoteliere. Facilitățile se schimbă rar. Implicit: 30 (lunar)"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_header"
+msgid "Cron Batch Processing"
+msgstr "Procesare Cron pe Loturi"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_size"
+msgid "Batch size (items per run)"
+msgstr "Dimensiune lot (elemente per rulare)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_batch_size"
+msgid "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+msgstr "Numărul de hoteluri/pachete procesate per lot cron. Valori mai mari = sincronizare mai rapidă dar consum mai mare de memorie și posibile depășiri de timeout. Interval: 10-500. Implicit: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_max_execution_time"
+msgid "Max execution time (seconds)"
+msgstr "Timp maxim de execuție (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_max_execution_time"
+msgid "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+msgstr "Timpul maxim de execuție pentru o singură rulare cron înainte de pauză. Sincronizarea continuă la următoarea rulare. Ignorat în modul CLI. Interval: 60-3600. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::slow_item_warning_ms"
+msgid "Slow item warning threshold (ms)"
+msgstr "Prag avertizare element lent (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::slow_item_warning_ms"
+msgid "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+msgstr "În timpul sincronizării, înregistrează un avertisment când procesarea unui hotel durează mai mult decât această valoare. Implicit: 30000 (30 secunde)"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limiting_header"
+msgid "Rate Limiting"
+msgstr "Limitare Rată"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_requests_per_min"
+msgid "Max API requests per minute"
+msgstr "Cereri API maxime pe minut"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_requests_per_min"
+msgid "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+msgstr "Numărul maxim de cereri API permise per adresă IP pe minut. Previne abuzul. Implicit: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Max booking attempts per hour"
+msgstr "Încercări maxime de rezervare pe oră"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+msgstr "Numărul maxim de încercări de rezervare permise per utilizator/sesiune pe oră. Previne spam-ul de rezervări. Implicit: 20"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
+msgid "Booking Limits"
+msgstr "Limite Rezervări"
+
 msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "URL API"
@@ -547,14 +659,6 @@ msgstr "Data Nașterii"
 msgctxt "Languages::novoton_holidays.nationality"
 msgid "Nationality"
 msgstr "Naționalitate"
-
-msgctxt "Languages::novoton_holidays.special_requests"
-msgid "Special Requests"
-msgstr "Cereri Speciale"
-
-msgctxt "Languages::novoton_holidays.special_requests_placeholder"
-msgid "Any special requests? (e.g., high floor, quiet room)"
-msgstr "Cereri speciale? (ex: etaj înalt, cameră liniștită)"
 
 msgctxt "Languages::novoton_holidays.continue_to_payment"
 msgid "Continue to Payment"
@@ -1601,6 +1705,14 @@ msgctxt "SettingsTooltips::novoton_holidays::delete_products_on_uninstall"
 msgid "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
 msgstr "Dacă este activat, toate produsele create de acest addon vor fi șterse la dezinstalare. Doar produsele înregistrate în baza de date a addon-ului vor fi șterse - produsele create manual nu sunt afectate."
 
+msgctxt "SettingsOptions::novoton_holidays::country_category_map"
+msgid "Country → Category mapping"
+msgstr "Mapare Țară → Categorie"
+
+msgctxt "SettingsTooltips::novoton_holidays::country_category_map"
+msgid "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+msgstr "Asociază fiecare țară cu un ID de categorie CS-Cart existent. Câte una pe linie: TARA:id_categorie (ex. BULGARIA:123). Țările fără mapare folosesc categorii create automat."
+
 msgctxt "SettingsOptions::novoton_holidays::excluded_resorts"
 msgid "Excluded Resorts (JSON)"
 msgstr "Stațiuni Excluse"
@@ -2340,10 +2452,6 @@ msgstr "Email"
 msgctxt "Languages::novoton_holidays.phone"
 msgid "Phone"
 msgstr "Telefon"
-
-msgctxt "Languages::novoton_holidays.special_requests_note"
-msgid "Special requests are subject to availability and cannot be guaranteed."
-msgstr "Cererile speciale sunt supuse disponibilității și nu pot fi garantate."
 
 msgctxt "Languages::novoton_holidays.terms_and_conditions"
 msgid "Terms and Conditions"

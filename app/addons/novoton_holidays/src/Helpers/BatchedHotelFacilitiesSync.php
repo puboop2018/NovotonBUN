@@ -31,12 +31,10 @@ class BatchedHotelFacilitiesSync
     use SyncStateTrait;
 
     private string $state_file;
-    private int $batch_size = 100;
-    private int $max_execution_time = 300; // 5 minutes
+    private int $batch_size;
+    private int $max_execution_time;
     private bool $unlimited = false;
-
-    /** Full sync interval — 30 days (facilities change infrequently) */
-    private int $full_sync_interval = 30 * 24 * 3600;
+    private int $full_sync_interval;
 
     /** Delay between API calls in microseconds (100ms) */
     private int $api_delay_us = 100000;
@@ -50,6 +48,11 @@ class BatchedHotelFacilitiesSync
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
+
+        // Load configurable values from addon settings
+        $this->batch_size = ConfigProvider::getCronBatchSize();
+        $this->max_execution_time = ConfigProvider::getCronMaxExecutionTime();
+        $this->full_sync_interval = ConfigProvider::getSyncIntervalFacilities();
 
         // CLI has no execution time limit — skip artificial batching
         if (PHP_SAPI === 'cli') {

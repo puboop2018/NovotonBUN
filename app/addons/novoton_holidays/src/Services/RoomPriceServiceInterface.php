@@ -3,7 +3,8 @@ declare(strict_types=1);
 /**
  * Room Price Service Interface
  *
- * Contract for room price calculations, commission application, and currency formatting.
+ * Contract for real-time room price calculations, commission application, and formatting.
+ * Currency operations have been moved to CurrencyService.
  *
  * @package NovotonHolidays
  * @since 3.3.0
@@ -13,46 +14,6 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 interface RoomPriceServiceInterface
 {
-    /**
-     * Get the current display currency code.
-     * Returns CART_SECONDARY_CURRENCY (user's selected) or CART_PRIMARY_CURRENCY.
-     *
-     * @return string Currency code (e.g. 'USD', 'EUR', 'RON')
-     */
-    public static function getDisplayCurrency(): string;
-
-    /**
-     * Get the source currency that the Novoton API returns prices in.
-     * Reads from addon settings ("API prices currency"), defaults to EUR.
-     *
-     * @return string Currency code (e.g. 'EUR', 'USD')
-     */
-    public static function getApiCurrency(): string;
-
-    /**
-     * Convert a price from the API currency to the CS-Cart display currency.
-     *
-     * Uses CS-Cart's currency coefficients from the currencies table.
-     * In CS-Cart, coefficient converts from primary currency to that currency:
-     *   amount_in_currency = amount_in_primary * coefficient
-     *
-     * To convert from source to target:
-     *   target_price = source_price * (target_coefficient / source_coefficient)
-     *
-     * @param float $api_price Price from Novoton API (in api_currency)
-     * @param string|null $target_currency Target currency code (null = display currency)
-     * @return float Converted price
-     */
-    public static function convertFromApiCurrency(float $api_price, ?string $target_currency = null): float;
-
-    /**
-     * Convert all price fields in a search results array from API currency to display currency.
-     *
-     * @param array $results Search results array
-     * @return array Results with converted prices
-     */
-    public static function convertResultsCurrency(array $results): array;
-
     /**
      * Apply commission to base price
      *

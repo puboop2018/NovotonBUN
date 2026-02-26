@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
@@ -95,14 +95,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     unset($guest);
     
-    // Get special_requests from cart or database
-    $special_requests = '';
-    if ($cart_item && !empty($cart_item['extra']['special_requests'])) {
-        $special_requests = $cart_item['extra']['special_requests'];
-    } elseif (!empty($booking_record['special_requests'])) {
-        $special_requests = $booking_record['special_requests'];
-    }
-    
     $booking = [
         'hotel_id' => $booking_record['hotel_id'],
         'room_id' => $booking_record['room_id'],
@@ -118,7 +110,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'num_rooms' => $booking_record['num_rooms'] ?: 1,
         'rooms_data' => $rooms_data,
         'guests_data' => $guests_data,
-        'special_requests' => $special_requests
     ];
     
     // Ensure rooms_data is not empty for single room bookings
@@ -188,7 +179,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    $novoton_display_currency = CurrencyService::getDisplayCurrency();
     $currencies = \Tygh\Registry::get('currencies');
     $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
     $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;

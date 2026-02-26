@@ -498,16 +498,15 @@ function fn_novoton_holidays_upgrade_db()
 }
 
 /**
- * Create Theme Editor preset files.
+ * Create Theme Editor preset files and register the preset in manifest.json.
  *
  * CS-Cart's Theme Editor reads preset data from a hardcoded path:
  *   design/themes/{theme}/styles/data/{preset_name}/styles.less
  *
- * These files MUST live outside addons/novoton_holidays/ — the Theme Editor
- * won't find them otherwise. We auto-generate them here so the addon repo
- * stays clean (the generated files are .gitignored).
+ * The preset is registered by MERGING into the existing manifest.json
+ * (never overwriting it) so core presets are preserved.
  *
- * Idempotent — skips files that already exist.
+ * Idempotent — skips files/entries that already exist.
  *
  * @return void
  */
@@ -559,23 +558,48 @@ function fn_novoton_holidays_create_theme_presets(): void
 LESS;
 
     foreach ($themes as $theme) {
+        // 1. Create the styles.less preset file
         $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
         $file = "{$dir}/styles.less";
 
-        if (file_exists($file)) {
-            continue;
+        if (!file_exists($file)) {
+            if (!is_dir($dir)) {
+                fn_mkdir($dir);
+            }
+            file_put_contents($file, $content . "\n");
         }
 
-        if (!is_dir($dir)) {
-            fn_mkdir($dir);
+        // 2. Merge the preset into the existing manifest.json (preserve core presets)
+        $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
+        if (file_exists($manifest_path)) {
+            $manifest = @json_decode(file_get_contents($manifest_path), true);
+            if (!is_array($manifest)) {
+                continue;
+            }
+        } else {
+            $manifest = ['default_style' => '', 'names' => [], 'default' => []];
         }
 
-        file_put_contents($file, $content . "\n");
+        $changed = false;
+
+        if (!isset($manifest['names']['novoton_default'])) {
+            $manifest['names']['novoton_default'] = 'Novoton Default';
+            $changed = true;
+        }
+
+        if (!in_array('novoton_default', $manifest['default'] ?? [], true)) {
+            $manifest['default'][] = 'novoton_default';
+            $changed = true;
+        }
+
+        if ($changed) {
+            file_put_contents($manifest_path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        }
     }
 }
 
 /**
- * Remove Theme Editor preset files on uninstall.
+ * Remove Theme Editor preset files and unregister from manifest.json on uninstall.
  *
  * @return void
  */
@@ -585,6 +609,7 @@ function fn_novoton_holidays_remove_theme_presets(): void
     $themes = ['nova_theme', 'responsive'];
 
     foreach ($themes as $theme) {
+        // 1. Remove the styles.less preset file
         $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
         $file = "{$dir}/styles.less";
 
@@ -595,6 +620,43 @@ function fn_novoton_holidays_remove_theme_presets(): void
         // Remove directory if empty
         if (is_dir($dir) && count(scandir($dir)) === 2) {
             @rmdir($dir);
+        }
+
+        // 2. Remove the preset from manifest.json (restore core state)
+        $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
+        if (!file_exists($manifest_path)) {
+            continue;
+        }
+
+        $manifest = @json_decode(file_get_contents($manifest_path), true);
+        if (!is_array($manifest)) {
+            continue;
+        }
+
+        $changed = false;
+
+        if (isset($manifest['names']['novoton_default'])) {
+            unset($manifest['names']['novoton_default']);
+            $changed = true;
+        }
+
+        if (isset($manifest['default']) && is_array($manifest['default'])) {
+            $key = array_search('novoton_default', $manifest['default'], true);
+            if ($key !== false) {
+                array_splice($manifest['default'], $key, 1);
+                $changed = true;
+            }
+        }
+
+        // If default_style was novoton_default, revert to first available preset
+        if (($manifest['default_style'] ?? '') === 'novoton_default') {
+            $remaining = array_keys($manifest['names'] ?? []);
+            $manifest['default_style'] = $remaining[0] ?? '';
+            $changed = true;
+        }
+
+        if ($changed) {
+            file_put_contents($manifest_path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
         }
     }
 }

@@ -27,12 +27,7 @@
 
     {* Board type *}
     <div style="margin-bottom: 4px; font-size: 13px;">
-        {if $product.extra.board_id == 'AI' || $product.extra.board_id == 'ALL INCL'}{__("novoton_holidays.all_inclusive")}
-        {elseif $product.extra.board_id == 'FB'}{__("novoton_holidays.full_board")}
-        {elseif $product.extra.board_id == 'HB'}{__("novoton_holidays.half_board")}
-        {elseif $product.extra.board_id == 'BB'}{__("novoton_holidays.bed_breakfast")}
-        {elseif $product.extra.board_id == 'RO'}{__("novoton_holidays.room_only")}
-        {else}{$product.extra.board_name|default:$product.extra.board_id|default:'All Inclusive'|escape:html}{/if}
+        {$product.extra.board_id|default:$product.extra.board_name|novoton_format_board}
     </div>
 
     {* Guests *}

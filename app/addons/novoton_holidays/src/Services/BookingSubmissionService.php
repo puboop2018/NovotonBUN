@@ -57,6 +57,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $commission    = ConfigProvider::getCommission();
         $disableApi    = ConfigProvider::isApiDisabled();
         $debugLogging  = ConfigProvider::isDebugLogging();
+        $orderComment  = trim((string) ($cart['notes'] ?? ''));
 
         foreach ($cart['products'] as $cartId => $product) {
             if (empty($product['extra']['novoton_booking'])) {
@@ -114,7 +115,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                         $this->buildGroupGuestsAndRooms($group, $guestsData, $bookingData, $commission);
 
                     $apiData = $this->buildApiBookingRequest(
-                        $group, $allGuests, $apiRooms, $bookingData, $orderId, $groupNum, count($roomGroups)
+                        $group, $allGuests, $apiRooms, $bookingData, $orderId, $groupNum, count($roomGroups), $orderComment
                     );
 
                     // 5. Persist booking record (upsert)
@@ -205,7 +206,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'total_price', 'base_price', 'hotel_id', 'hotel_name', 'package_name',
             'room_id', 'room_type', 'board_id', 'check_in', 'check_out', 'nights',
             'adults', 'children', 'children_ages', 'num_rooms',
-            'holder_name', 'guest_name', 'special_requests',
+            'holder_name', 'guest_name',
             'terms_of_payment_raw', 'terms_of_cancellation_raw',
             'terms_of_payment_formatted', 'terms_of_cancellation_formatted',
         ];
@@ -528,13 +529,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Construct the Novoton reservation API request payload.
      */
     private function buildApiBookingRequest(
-        array $group,
-        array $allGuests,
-        array $apiRooms,
-        array $bookingData,
-        int   $orderId,
-        int   $groupNum,
-        int   $totalGroups
+        array  $group,
+        array  $allGuests,
+        array  $apiRooms,
+        array  $bookingData,
+        int    $orderId,
+        int    $groupNum,
+        int    $totalGroups,
+        string $orderComment = ''
     ): array {
         $suffix = $totalGroups > 1 ? "-G{$groupNum}" : '';
 
@@ -547,8 +549,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'guests'       => $allGuests,
             'rooms'        => $apiRooms,
             'order_num'    => $orderId . $suffix,
-            'remark'       => $bookingData['special_requests'] ?? '',
-            'comment'      => $bookingData['special_requests'] ?? '',
+            'remark'       => '',
+            'comment'      => $orderComment,
         ];
 
         // Single-room shortcut
@@ -627,7 +629,6 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'total_price'      => $totalGroupPrice,
             'currency'         => ConfigProvider::getApiCurrency(),
             'status'           => Constants::STATUS_PENDING,
-            'special_requests' => $bookingData['special_requests'] ?? '',
             'api_request'      => json_encode($apiData),
             'notes'                          => $disableApi ? 'API submission disabled - test mode' : '',
             'user_id'                        => $orderUserId,

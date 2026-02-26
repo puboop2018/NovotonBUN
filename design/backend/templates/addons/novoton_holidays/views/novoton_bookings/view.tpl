@@ -150,14 +150,6 @@
     {/if}
     {/if}
 
-    {* Special Requests *}
-    {if $booking.special_requests || $booking.notes}
-    <div class="special-requests">
-        <h4>Special Requests</h4>
-        <p>{$booking.special_requests|default:$booking.notes}</p>
-    </div>
-    {/if}
-
     {* Manual Novoton ID Entry *}
     <div class="novoton-id-section">
         <h4>Novoton Reservation Link</h4>

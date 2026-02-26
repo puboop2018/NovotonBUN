@@ -171,21 +171,8 @@
                 {$maxADT = $capacity.maxADT|default:2}
                 {$maxCHD = $capacity.maxCHD|default:2}
                 {$minPAX = $capacity.minPAX|default:1}
-                {$board_display = $room_data.board_id}
+                {$board_display = $room_data.board_id|novoton_format_board}
                 {$is_sgl = strpos($room_id|default:'', 'SGL') !== false}
-                
-                {* Board name formatting *}
-                {if $board_display == 'AI' || $board_display == 'ALL INCL'}
-                    {$board_display = "{__('novoton_holidays.all_inclusive')}"}
-                {elseif $board_display == 'FB'}
-                    {$board_display = "{__('novoton_holidays.full_board')}"}
-                {elseif $board_display == 'HB'}
-                    {$board_display = "{__('novoton_holidays.half_board')}"}
-                {elseif $board_display == 'BB'}
-                    {$board_display = "{__('novoton_holidays.bed_breakfast')}"}
-                {elseif $board_display == 'RO'}
-                    {$board_display = "{__('novoton_holidays.room_only')}"}
-                {/if}
                 
                 <div class="room-section-card expanded" data-room="{$room_id}">
                     <div class="room-header-card">

@@ -52,10 +52,6 @@
         <strong>{__("novoton_holidays.holder")}:</strong> {$product.extra.holder_name}<br>
     {/if}
 
-    {if $product.extra.special_requests}
-    <strong>{__("novoton_holidays.special_requests")}:</strong> {$product.extra.special_requests|escape}<br>
-    {/if}
-
     {* Payment and Cancellation Terms Link *}
     {$payment_terms_raw = $product.extra.terms_of_payment_raw|default:$product.extra.terms_of_payment|default:''}
     {$cancel_terms_raw = $product.extra.terms_of_cancellation_raw|default:$product.extra.terms_of_cancellation|default:''}
