@@ -126,39 +126,6 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
 }
 
 /**
- * Hook: get_product_tabs_post - Add custom tab in admin product edit for hotel products.
- *
- * CS-Cart calls this after retrieving product tabs. Currently a no-op stub
- * to satisfy the fn_register_hooks() registration in init.php.
- *
- * @param array  $tabs      Product tabs (passed by reference)
- * @param array  $params    Query parameters
- * @param string $lang_code Language code
- */
-function fn_novoton_holidays_get_product_tabs_post(&$tabs, $params, $lang_code = CART_LANGUAGE): void
-{
-    // No-op: hook is registered to prevent "not callable" errors.
-    // Future: add a "Hotel Info" tab for hotel products in admin.
-}
-
-/**
- * Hook: update_product_pre - Before updating a product.
- *
- * CS-Cart calls this before saving product data. Currently a no-op stub
- * to satisfy the fn_register_hooks() registration in init.php.
- *
- * @param array  $product_data Product data (passed by reference)
- * @param int    $product_id   Product ID
- * @param string $lang_code    Language code
- * @param bool   $can_update   Whether the update is allowed (passed by reference)
- */
-function fn_novoton_holidays_update_product_pre(&$product_data, $product_id, $lang_code, &$can_update): void
-{
-    // No-op: hook is registered to prevent "not callable" errors.
-    // Future: validate or transform hotel-specific product fields before save.
-}
-
-/**
  * Hook: after deleting product
  */
 function fn_novoton_holidays_delete_product_post($product_id, $product_deleted): void
@@ -206,13 +173,23 @@ function _nvt_is_hotel_product(array $product, array $addon_settings): bool
 }
 
 /**
- * Extract numeric hotel ID from product code.
+ * Extract hotel ID from product code by stripping known prefixes.
  *
  * @param string $product_code e.g. "NVT12345"
  * @return string|null Hotel ID or null
  */
 function _nvt_extract_hotel_id(string $product_code): ?string
 {
+    foreach (\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getProductCodePrefixes() as $prefix) {
+        if (!empty($prefix) && strpos($product_code, $prefix) === 0) {
+            $remainder = substr($product_code, strlen($prefix));
+            // Strip optional separator (e.g. "NVT-12345" legacy format)
+            $remainder = ltrim($remainder, '-');
+            return $remainder !== '' ? $remainder : null;
+        }
+    }
+
+    // Fallback: extract first digit sequence
     preg_match('/\d+/', $product_code, $matches);
     return $matches[0] ?? null;
 }

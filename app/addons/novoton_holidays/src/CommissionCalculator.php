@@ -11,11 +11,8 @@ namespace Tygh\Addons\NovotonHolidays;
 
 class CommissionCalculator implements CommissionCalculatorInterface
 {
-    /** @var float Commission percentage */
-    private $commission;
-
-    /** @var string Round prices ('Y'/'N') */
-    private $roundPrices;
+    private float $commission;
+    private string $roundPrices;
 
     public function __construct(float $commission, string $roundPrices = 'Y')
     {

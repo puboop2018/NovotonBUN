@@ -24,7 +24,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @var array<int, array>
      */
-    private static $hydratedCache = [];
+    private static array $hydratedCache = [];
 
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
@@ -57,6 +57,11 @@ class BookingRepository implements BookingRepositoryInterface
         }
 
         $booking = self::hydrateJsonFields($booking);
+
+        // Prevent unbounded cache growth in long-running processes (cron)
+        if (count(self::$hydratedCache) > 500) {
+            self::$hydratedCache = array_slice(self::$hydratedCache, -250, null, true);
+        }
         self::$hydratedCache[$booking_id] = $booking;
 
         return $booking;
@@ -502,21 +507,41 @@ class BookingRepository implements BookingRepositoryInterface
      * @param array  $statuses    Optional status filter (default: pending + confirmed)
      * @return array Booking rows
      */
-    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED]): array
+    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
     {
         if (empty($product_ids)) {
             return [];
         }
-        return db_get_array(
-            "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
+
+        // Safety: if no ownership context is provided, return nothing rather than
+        // leaking all users' bookings. Callers must provide session_id and/or user_id.
+        if ($user_id <= 0 && empty($session_id)) {
+            return [];
+        }
+
+        $select = "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
                     board_id, check_in, check_out, nights, adults, children, children_ages,
                     num_rooms, rooms_data, total_price, currency, status, guests_data,
-                    package_name, session_id
+                    package_name, session_id, holder_name, guest_name
              FROM ?:novoton_bookings
-             WHERE product_id IN (?n) AND status IN (?a)
-             ORDER BY booking_id DESC",
-            $product_ids,
-            $statuses
+             WHERE product_id IN (?n) AND status IN (?a)";
+
+        // Scope to current user/session to prevent cross-user booking leakage
+        if ($user_id > 0 && !empty($session_id)) {
+            return db_get_array(
+                $select . " AND (session_id = ?s OR user_id = ?i) ORDER BY booking_id DESC",
+                $product_ids, $statuses, $session_id, $user_id
+            );
+        } elseif ($user_id > 0) {
+            return db_get_array(
+                $select . " AND user_id = ?i ORDER BY booking_id DESC",
+                $product_ids, $statuses, $user_id
+            );
+        }
+
+        return db_get_array(
+            $select . " AND session_id = ?s ORDER BY booking_id DESC",
+            $product_ids, $statuses, $session_id
         );
     }
 

@@ -222,9 +222,10 @@
                     }
 
                     var ageOfChildLabel = (t.ageOfChild || 'Age of child') + ' ' + i + ':';
+                    var $label = $('<label></label>').text(ageOfChildLabel);
                     var $wrapper = $('<div></div>')
                         .addClass('child-age-selector')
-                        .html('<label>' + ageOfChildLabel + '</label>')
+                        .append($label)
                         .append($ageSelect);
 
                     $childrenAgesContainer.append($wrapper);

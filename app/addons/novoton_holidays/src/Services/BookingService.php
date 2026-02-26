@@ -30,6 +30,9 @@ class BookingService implements BookingServiceInterface
     /** @var RoomPriceServiceInterface */
     private $priceService;
 
+    /** @var BookingRepositoryInterface */
+    private $bookingRepo;
+
     /** @var bool */
     private $debug = false;
 
@@ -44,6 +47,7 @@ class BookingService implements BookingServiceInterface
         $this->api = fn_novoton_holidays_get_api();
         $this->guestService = $guestService ?? new GuestDataService();
         $this->priceService = $priceService ?? new RoomPriceService();
+        $this->bookingRepo = $bookingRepo ?? new BookingRepository();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -161,9 +165,7 @@ class BookingService implements BookingServiceInterface
      */
     public function getBooking(int $booking_id): ?array
     {
-        // Use hydrated repository to decode JSON once and cache per-request
-        $repo = new BookingRepository();
-        return $repo->findByIdHydrated($booking_id);
+        return $this->bookingRepo->findByIdHydrated($booking_id);
     }
     
     /**

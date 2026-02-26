@@ -52,7 +52,10 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
     }
 
     $repo = Container::getInstance()->bookingRepository();
-    $all_bookings = $repo->findByProductIds($product_ids);
+    $auth_user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
+    $current_session_id = session_id() ?: '';
+    $default_statuses = [\Tygh\Addons\NovotonHolidays\Constants::STATUS_PENDING, \Tygh\Addons\NovotonHolidays\Constants::STATUS_CONFIRMED];
+    $all_bookings = $repo->findByProductIds($product_ids, $default_statuses, $current_session_id, $auth_user_id);
 
     if (empty($all_bookings)) {
         return;

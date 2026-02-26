@@ -163,8 +163,9 @@ function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hote
 {
     static $cache = [];
 
-    if (!$force && isset($cache[$product_id])) {
-        return $cache[$product_id];
+    $cache_key = $product_id . '_' . ($hotel_id ?? '');
+    if (!$force && isset($cache[$cache_key])) {
+        return $cache[$cache_key];
     }
 
     // Try product_id lookup first
@@ -267,7 +268,7 @@ function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hote
         $result[] = $entry;
     }
 
-    $cache[$product_id] = $result;
+    $cache[$cache_key] = $result;
     return $result;
 }
 

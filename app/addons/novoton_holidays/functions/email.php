@@ -250,7 +250,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         ];
 
         foreach ($hotels as $hotel) {
-            $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : 'NVT-' . $hotel['hotel_id'];
+            $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
             $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 
             // V3: Get boards via fn_novoton_holidays_get_hotel_data() (hotel_data is audit/cache only)
@@ -363,7 +363,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code'])
                 ? $hotel['product_code']
-                : 'NVT-' . $hotel['hotel_id'];
+                : \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
 
             $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
 

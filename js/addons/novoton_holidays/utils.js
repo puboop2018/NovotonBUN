@@ -245,7 +245,11 @@ window.NovotonUtils = (function() {
 
         if (loading) {
             element.dataset.originalText = element.textContent;
-            element.innerHTML = '<i class="icon-refresh"></i> ' + text;
+            element.textContent = '';
+            var icon = document.createElement('i');
+            icon.className = 'icon-refresh';
+            element.appendChild(icon);
+            element.appendChild(document.createTextNode(' ' + text));
             element.disabled = true;
         } else {
             element.textContent = element.dataset.originalText || element.textContent;

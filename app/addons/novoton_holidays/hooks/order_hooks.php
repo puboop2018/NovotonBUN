@@ -98,7 +98,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
     $debugMode = ConfigProvider::isDebugLogging();
 
-    if ($debugMode) {
+    if ($debugMode && defined('AREA') && AREA === 'A') {
         fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
     }
 
@@ -123,7 +123,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     foreach ($order['products'] as &$product) {
-        if ($debugMode) {
+        if ($debugMode && defined('AREA') && AREA === 'A') {
             fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', array_keys($product['extra'] ?? [])));
         }
 
@@ -166,7 +166,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [5] Guests data formatting
         _nvt_format_order_guests($product);
 
-        if ($debugMode) {
+        if ($debugMode && defined('AREA') && AREA === 'A') {
             $payment_set    = !empty($product['extra']['terms_of_payment_formatted'])      ? 'YES' : 'NO';
             $payment_amounts = !empty($product['extra']['terms_of_payment_with_amounts'])   ? 'YES' : 'NO';
             $cancel_set     = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
