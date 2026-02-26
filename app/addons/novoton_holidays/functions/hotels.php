@@ -416,6 +416,7 @@ function fn_novoton_holidays_get_or_create_category($path): int
         } else {
             // Create category
             $category_data = [
+                'category' => $part,
                 'parent_id' => $parent_id,
                 'status' => 'A'
             ];

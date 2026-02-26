@@ -59,6 +59,14 @@ class AddProductsCommand extends AbstractCronCommand
 
             $category_path = "{$country}///Litoral {$country}";
             $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+
+            if (!$category_id) {
+                $this->output("ERROR: Failed to get/create category '{$category_path}'. Skipping {$country}.");
+                $this->output("");
+                $grand_total += count($hotels);
+                continue;
+            }
+
             $added = 0;
 
             foreach ($hotels as $hotel) {
@@ -128,7 +136,7 @@ class AddProductsCommand extends AbstractCronCommand
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
-                    $this->output("FAILED");
+                    $this->output("FAILED (category_id={$category_id}, company_id=" . (Registry::get('runtime.company_id') ?: 1) . ")");
                 }
 
                 usleep(100000);
