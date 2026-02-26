@@ -549,7 +549,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'guests'       => $allGuests,
             'rooms'        => $apiRooms,
             'order_num'    => $orderId . $suffix,
-            'remark'       => $orderComment,
+            'remark'       => '',
             'comment'      => $orderComment,
         ];
 
