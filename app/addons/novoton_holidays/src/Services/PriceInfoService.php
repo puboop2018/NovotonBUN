@@ -294,15 +294,12 @@ class PriceInfoService implements PriceInfoServiceInterface
      * the cheapest suitable room across ALL packages. Prices include
      * commission and are converted to the target currency.
      *
-     * For each package the method groups season_price rows by room,
-     * then for each room calculates what the guests would pay:
-     *  - RoomPrice=Yes → per-room price (used once)
-     *  - RoomPrice=No  → per-person price × number of adults
-     * The cheapest room total per season becomes that package's price.
-     * Across packages, the minimum per date wins ("from €X/night").
+     * Reads precomputed raw EUR prices from novoton_hotels.calendar_prices_raw
+     * (populated by sync cron via precomputeCalendarPrices()), then applies
+     * commission and currency conversion per date.
      *
-     * Dates that fall outside any season will not appear in the map —
-     * the Calendar UI should treat missing dates as "no price" (grey/dash).
+     * If the column is empty (cron hasn't run yet), returns an empty price map.
+     * The Calendar UI should treat missing dates as "no price" (grey/dash).
      *
      * @param string      $hotelId        Hotel ID
      * @param string|null $targetCurrency  Target currency code (null = display currency)
@@ -320,11 +317,6 @@ class PriceInfoService implements PriceInfoServiceInterface
         );
 
         $rawPrices = !empty($rawJson) ? json_decode($rawJson, true) : null;
-
-        // 2. Fallback: compute live from all packages (first visit or column missing)
-        if (empty($rawPrices)) {
-            $rawPrices = self::computeRawCalendarPrices($hotelId);
-        }
 
         if (empty($rawPrices)) {
             return ['prices' => [], 'currency' => $currency];
@@ -348,7 +340,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             $dateMap[$date] = $price;
         }
 
-        $this->log('Calendar prices from precomputed', [
+        $this->log('Calendar prices loaded', [
             'hotel_id' => $hotelId,
             'currency' => $currency,
             'dates_count' => count($dateMap)
