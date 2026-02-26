@@ -250,35 +250,6 @@ if ($mode == 'check_prices') {
                     $matches = [];
                     preg_match_all('/<IdHotel>\s*(\d+)\s*<\/IdHotel>/i', $raw_response, $matches);
 
-                    // Retry with normalized name if resort contains special chars and no results.
-                    // Some API backends do literal string matching without XML-decoding,
-                    // so "ST.CONSTANTINE & ELENA" may need to be sent as "ST. CONSTANTINE AND ELENA".
-                    if (empty($matches[1]) && preg_match('/[&.]/', $resort_name)) {
-                        $alt_name = str_replace('&', 'AND', $resort_name);
-                        $alt_name = str_replace('.', '. ', $alt_name);
-                        $alt_name = preg_replace('/\s+/', ' ', trim($alt_name));
-
-                        if ($alt_name !== $resort_name) {
-                            echo "<span class='skip'>  Retrying as \"" . htmlspecialchars($alt_name) . "\"...</span><br>\n";
-                            flush();
-
-                            $alt_response = $api->getRoomPriceByResortRaw([
-                                'resort'    => $alt_name,
-                                'check_in'  => $check_in,
-                                'check_out' => $check_out,
-                                'adults'    => 2,
-                            ]);
-
-                            if (!empty($alt_response)) {
-                                $matches = [];
-                                preg_match_all('/<IdHotel>\s*(\d+)\s*<\/IdHotel>/i', $alt_response, $matches);
-                                if (!empty($matches[1])) {
-                                    $raw_response = $alt_response;
-                                }
-                            }
-                        }
-                    }
-
                     if (!empty($matches[1])) {
                         $resort_hotel_ids = array_unique($matches[1]);
                         $count = count($resort_hotel_ids);
