@@ -1124,18 +1124,6 @@ msgctxt "Languages::novoton_holidays.phone"
 msgid "Phone"
 msgstr "Phone"
 
-msgctxt "Languages::novoton_holidays.special_requests"
-msgid "Special Requests"
-msgstr "Special Requests"
-
-msgctxt "Languages::novoton_holidays.special_requests_placeholder"
-msgid "Any special requests or notes for the hotel..."
-msgstr "Any special requests or notes for the hotel..."
-
-msgctxt "Languages::novoton_holidays.special_requests_note"
-msgid "Special requests are subject to availability and cannot be guaranteed."
-msgstr "Special requests are subject to availability and cannot be guaranteed."
-
 msgctxt "Languages::novoton_holidays.accept_terms_text"
 msgid "I have read and accept the"
 msgstr "I have read and accept the"
@@ -1779,14 +1767,6 @@ msgstr "Maximum number of booking attempts allowed per user/session per hour. Pr
 msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
 msgid "Booking Limits"
 msgstr "Booking Limits"
-
-msgctxt "SettingsOptions::novoton_holidays::special_requests_max_length"
-msgid "Special requests max length (chars)"
-msgstr "Special requests max length (chars)"
-
-msgctxt "SettingsTooltips::novoton_holidays::special_requests_max_length"
-msgid "Maximum number of characters allowed in the special requests field when adding a booking to cart. Default: 2000"
-msgstr "Maximum number of characters allowed in the special requests field when adding a booking to cart. Default: 2000"
 
 msgctxt "Languages::novoton_holidays.api_price"
 msgid "API Price"

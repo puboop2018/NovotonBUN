@@ -302,11 +302,6 @@ class ConfigProvider
         return max(1, (int)(self::settings()['rate_limit_bookings_per_hour'] ?? 20));
     }
 
-    public static function getSpecialRequestsMaxLength(): int
-    {
-        return max(100, (int)(self::settings()['special_requests_max_length'] ?? 2000));
-    }
-
     // ── Raw Access ──
 
     public static function all(): array

@@ -95,14 +95,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     unset($guest);
     
-    // Get special_requests from cart or database
-    $special_requests = '';
-    if ($cart_item && !empty($cart_item['extra']['special_requests'])) {
-        $special_requests = $cart_item['extra']['special_requests'];
-    } elseif (!empty($booking_record['special_requests'])) {
-        $special_requests = $booking_record['special_requests'];
-    }
-    
     $booking = [
         'hotel_id' => $booking_record['hotel_id'],
         'room_id' => $booking_record['room_id'],
@@ -118,7 +110,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'num_rooms' => $booking_record['num_rooms'] ?: 1,
         'rooms_data' => $rooms_data,
         'guests_data' => $guests_data,
-        'special_requests' => $special_requests
     ];
     
     // Ensure rooms_data is not empty for single room bookings

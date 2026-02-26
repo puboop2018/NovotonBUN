@@ -358,11 +358,6 @@
                         <type>header</type>
                         <variants/>
                     </item>
-                    <item id="special_requests_max_length">
-                        <type>input</type>
-                        <default_value>2000</default_value>
-                        <variants/>
-                    </item>
                 </items>
             </section>
 
@@ -507,7 +502,6 @@
                 `alternatives_requested` tinyint(1) DEFAULT 0 COMMENT 'Whether alternatives were requested',
                 `last_status_check` timestamp NULL DEFAULT NULL COMMENT 'Last time status was polled',
                 `notes` text,
-                `special_requests` text,
                 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`booking_id`),

@@ -996,7 +996,7 @@
                     </div>
                     
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.special_requests")}</label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.notes")|default:"Notes"}</label>
                         <textarea name="notes" rows="2" placeholder="{__('novoton_holidays.alternatives_notes_placeholder')|default:'Any specific requirements or preferences...'}"
                                   style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
                     </div>

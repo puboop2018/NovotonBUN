@@ -42,8 +42,6 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000));
-
     // Get check-in date for age validation
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
     $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
@@ -94,8 +92,8 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
         'holder' => $holder_name,
         'guests' => $api_guests,
         'order_num' => $existing_booking['order_id'] ?: '',
-        'remark' => $special_requests,
-        'comment' => $special_requests
+        'remark' => '',
+        'comment' => ''
     ];
     
     // If multi-room, parse rooms_data and add rooms to api_request
@@ -124,10 +122,10 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
     db_query(
         "UPDATE ?:novoton_bookings SET 
          guest_name = ?s, holder_name = ?s, guest_email = ?s, guest_phone = ?s,
-         guests_data = ?s, special_requests = ?s, notes = ?s, api_request = ?s
+         guests_data = ?s, api_request = ?s
          WHERE booking_id = ?i",
         $guest_list, $holder_name, $contact['email'] ?? '', $contact['phone'] ?? '',
-        GuestDataNormalizer::toJson($guests_data), $special_requests, $special_requests, json_encode($api_request), $booking_id
+        GuestDataNormalizer::toJson($guests_data), json_encode($api_request), $booking_id
     );
 
     // Update cart item if cart_id provided
@@ -139,8 +137,6 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
             $cart['products'][$cart_id]['extra']['guests_data'] = GuestDataNormalizer::toJson($guests_data);
             $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
             $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
-            $cart['products'][$cart_id]['extra']['special_requests'] = $special_requests;
-            
             // Recalculate and save cart
             $auth = &Tygh::$app['session']['auth'];
             fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);

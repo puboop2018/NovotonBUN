@@ -132,14 +132,6 @@ msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
 msgid "Booking Limits"
 msgstr "Limite Rezervări"
 
-msgctxt "SettingsOptions::novoton_holidays::special_requests_max_length"
-msgid "Special requests max length (chars)"
-msgstr "Lungime maximă cereri speciale (caractere)"
-
-msgctxt "SettingsTooltips::novoton_holidays::special_requests_max_length"
-msgid "Maximum number of characters allowed in the special requests field when adding a booking to cart. Default: 2000"
-msgstr "Numărul maxim de caractere permise în câmpul de cereri speciale la adăugarea unei rezervări în coș. Implicit: 2000"
-
 msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "URL API"
@@ -667,14 +659,6 @@ msgstr "Data Nașterii"
 msgctxt "Languages::novoton_holidays.nationality"
 msgid "Nationality"
 msgstr "Naționalitate"
-
-msgctxt "Languages::novoton_holidays.special_requests"
-msgid "Special Requests"
-msgstr "Cereri Speciale"
-
-msgctxt "Languages::novoton_holidays.special_requests_placeholder"
-msgid "Any special requests? (e.g., high floor, quiet room)"
-msgstr "Cereri speciale? (ex: etaj înalt, cameră liniștită)"
 
 msgctxt "Languages::novoton_holidays.continue_to_payment"
 msgid "Continue to Payment"
@@ -2468,10 +2452,6 @@ msgstr "Email"
 msgctxt "Languages::novoton_holidays.phone"
 msgid "Phone"
 msgstr "Telefon"
-
-msgctxt "Languages::novoton_holidays.special_requests_note"
-msgid "Special requests are subject to availability and cannot be guaranteed."
-msgstr "Cererile speciale sunt supuse disponibilității și nu pot fi garantate."
 
 msgctxt "Languages::novoton_holidays.terms_and_conditions"
 msgid "Terms and Conditions"

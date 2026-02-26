@@ -104,10 +104,6 @@
     <strong>Cancellation Policy:</strong> {$_cancel_display|escape:'html'|nl2br nofilter}<br>
     {/if}
     
-    {if $oi.extra.special_requests}
-    <strong>Special Requests:</strong> {$oi.extra.special_requests|escape:'html'}<br>
-    {/if}
-    
     {if $oi.extra.novoton_reservation_id}
     <strong>Novoton Reservation:</strong> NT {$oi.extra.novoton_reservation_id}{if $oi.extra.novoton_reservation_status} ({$oi.extra.novoton_reservation_status}){/if}<br>
     {/if}
