@@ -19,8 +19,8 @@ export function injectStyles() {
 .nvt-booking-engine {
     /* React-only variables (no LESS equivalent) */
     --nvt-z-popup: 1000;
-    --nvt-btn-height: 84px;
-    --nvt-btn-font: 26px;
+    --nvt-btn-height: 52px;
+    --nvt-btn-font: 16px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--nvt-text, #1a1a1a);
     position: relative;
@@ -112,9 +112,9 @@ button.nvt-field-input:active {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     cursor: pointer;
-    min-height: 48px;
+    min-height: 44px;
     background: transparent;
     border: none;
     width: 100%;
@@ -173,7 +173,7 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 21px 42px;
+    padding: 12px 28px;
     background: #006ce4;
     color: #fff;
     border: none;
@@ -463,19 +463,19 @@ button.nvt-field-input:active {
     align-items: center;
     gap: 4px;
     font-size: 12px;
-    font-weight: 600;
-    color: #b71c1c;
+    font-weight: 400;
+    color: var(--nvt-text-light, #6b6b6b);
     cursor: pointer;
-    background: #ffebee;
-    border: 1px solid #ef9a9a;
+    background: transparent;
+    border: none;
     border-radius: 4px;
-    padding: 4px 10px;
-    transition: background 0.15s, border-color 0.15s;
+    padding: 4px 6px;
+    transition: color 0.15s;
 }
 .nvt-remove-room:hover {
-    background: #ffebee !important;
-    border-color: #ef9a9a !important;
-    color: #b71c1c !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--nvt-danger, #d32f2f) !important;
 }
 
 .nvt-guest-row {
@@ -614,20 +614,6 @@ button.nvt-field-input:active {
     background: transparent !important;
 }
 
-/* ----- Child age hint below guest picker ----- */
-
-.nvt-child-age-hint {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    font-size: 11px;
-    color: var(--nvt-danger, #d32f2f);
-    padding: 2px 14px;
-    white-space: nowrap;
-    z-index: 1;
-}
-
 /* ----- Done button inside guest popup ----- */
 
 .nvt-guest-popup .nvt-done-btn {
@@ -728,9 +714,9 @@ button.nvt-field-input:active {
         max-width: calc(100vw - 24px);
     }
     .nvt-btn-search {
-        font-size: 20px;
-        padding: 16px 28px;
-        min-height: 64px;
+        font-size: 15px;
+        padding: 10px 24px;
+        min-height: 48px;
     }
 }
 
@@ -754,9 +740,9 @@ button.nvt-field-input:active {
         border-left: none;
         border-top: 3px solid var(--nvt-accent, #febb02);
         border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
-        font-size: 18px;
-        padding: 14px 24px;
-        min-height: 56px;
+        font-size: 15px;
+        padding: 10px 20px;
+        min-height: 44px;
     }
     .nvt-calendar-popup {
         min-width: 100%;
