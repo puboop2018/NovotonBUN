@@ -509,6 +509,24 @@
         <item for="install">CALL `?:novoton_add_missing_indexes`()</item>
         <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_missing_indexes`</item>
 
+        <!-- Migration: Add calendar_prices_raw column to novoton_hotels -->
+        <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_calendar_prices_col`</item>
+        <item for="install">
+            CREATE PROCEDURE `?:novoton_add_calendar_prices_col`()
+            BEGIN
+                DECLARE col_exists INT DEFAULT 0;
+                SELECT COUNT(*) INTO col_exists FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_hotels' AND COLUMN_NAME = 'calendar_prices_raw';
+                IF col_exists = 0 THEN
+                    SET @tbl = (SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%novoton_hotels' LIMIT 1);
+                    SET @sql = CONCAT('ALTER TABLE `', @tbl, '` ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL COMMENT ''Precomputed raw EUR date-price map for calendar'' AFTER `packages_count`');
+                    PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+                END IF;
+            END
+        </item>
+        <item for="install">CALL `?:novoton_add_calendar_prices_col`()</item>
+        <item for="install">DROP PROCEDURE IF EXISTS `?:novoton_add_calendar_prices_col`</item>
+
         <!-- API Response Cache table -->
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_cache` (

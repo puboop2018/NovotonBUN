@@ -218,6 +218,8 @@ class PriceInfoSync
                     $hotelId
                 );
 
+                \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotelId);
+
                 $stats['updated'][] = $product['product_code'] . ' - ' . $product['product'];
                 $this->clearHotelCache($hotelId);
 

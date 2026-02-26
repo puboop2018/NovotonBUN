@@ -435,6 +435,11 @@ class HotelSync
             $hotelId
         );
 
+        // Precompute calendar prices for this hotel
+        if ($synced > 0) {
+            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotelId);
+        }
+
         return $synced;
     }
 
@@ -610,6 +615,12 @@ class HotelSync
             }
 
             usleep(200000);
+        }
+
+        // Precompute calendar prices for all hotels that had packages updated
+        $updatedHotelIds = array_unique(array_column($packages, 'hotel_id'));
+        foreach ($updatedHotelIds as $updatedHotelId) {
+            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($updatedHotelId);
         }
 
         $this->stats['duration'] = time() - $startTime;

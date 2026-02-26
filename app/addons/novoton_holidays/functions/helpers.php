@@ -274,6 +274,10 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         ];
         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $hotel_id);
 
+        if ($packagesUpdated > 0) {
+            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hotel_id);
+        }
+
         // Update product price if we have min price
         if ($minPrice !== null && $minPrice > 0) {
             $price_with_commission = $api->applyCommission($minPrice);

@@ -483,6 +483,9 @@ class BatchedPriceInfoSync
             $package_id
         );
 
+        // Precompute calendar prices after each package update
+        \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotel_id);
+
         return $seasons_count;
     }
 
