@@ -705,6 +705,8 @@
         </item>
 
         <!-- Uninstall queries -->
+        <item for="uninstall">UPDATE ?:bm_layouts SET style_id = '' WHERE style_id = 'novoton_default'</item>
+        <item for="uninstall">DELETE FROM ?:logos WHERE style_id = 'novoton_default'</item>
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_booking_engine'</item>
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type = 'novoton_homepage_booking'</item>
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'</item>

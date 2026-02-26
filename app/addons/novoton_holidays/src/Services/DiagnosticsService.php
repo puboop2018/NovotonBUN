@@ -70,7 +70,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                     'error' => $api->getLastError(),
                     'last_request' => $api->getLastRequestFormatted(),
                     'last_http_code' => $api->lastHttpCode,
-                    'raw_response_preview' => substr($api->lastResponseRaw ?? '', 0, 500),
+                    'raw_response_preview' => substr((string) ($api->lastResponseRaw ?? ''), 0, 500),
                 ];
             }
 

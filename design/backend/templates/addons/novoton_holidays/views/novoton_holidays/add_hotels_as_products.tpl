@@ -36,6 +36,7 @@
     {/if}
 
     <form action="{"novoton_holidays.add_hotels_as_products"|fn_url}" method="post">
+        <input type="hidden" name="security_hash" value="{$security_hash}">
         <input type="hidden" name="run" value="1">
         <input type="hidden" name="country" value="{$country}">
 

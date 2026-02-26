@@ -39,6 +39,7 @@
         {* Actions *}
         <div style="padding: 10px 15px; background: #f5f5f5; border-bottom: 1px solid #ddd;">
             <form action="{"novoton_bookings.resinfo"|fn_url}" method="post" style="display: inline;">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
                 <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
                 <input type="hidden" name="return_url" value="{$config.current_url}" />
                 <button type="submit" class="btn btn-sm btn-default">
@@ -48,6 +49,7 @@
             
             {if $booking.novoton_status == 'ST' || $booking.novoton_status == 'RQ'}
             <form action="{"novoton_bookings.request_alternatives"|fn_url}" method="post" style="display: inline; margin-left: 10px;">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
                 <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
                 <input type="hidden" name="return_url" value="{$config.current_url}" />
                 <button type="submit" class="btn btn-sm btn-primary">

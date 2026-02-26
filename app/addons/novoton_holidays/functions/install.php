@@ -32,6 +32,12 @@ function fn_novoton_holidays_uninstall(): bool
     // Remove auto-generated Theme Editor preset files
     fn_novoton_holidays_remove_theme_presets();
 
+    // Clean up layout style references and logos tied to novoton_default
+    // Reset any layout that uses novoton_default style back to empty (CS-Cart default)
+    db_query("UPDATE ?:bm_layouts SET style_id = '' WHERE style_id = 'novoton_default'");
+    // Remove logos created for the novoton_default style
+    db_query("DELETE FROM ?:logos WHERE style_id = 'novoton_default'");
+
     // Remove product tabs
     $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");
     if (!empty($tab_ids)) {

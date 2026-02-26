@@ -44,7 +44,11 @@ class BookingService implements BookingServiceInterface
         ?RoomPriceServiceInterface $priceService = null,
         ?BookingRepositoryInterface $bookingRepo = null
     ) {
-        $this->api = fn_novoton_holidays_get_api();
+        $api = fn_novoton_holidays_get_api();
+        if ($api === null) {
+            throw new \RuntimeException('Novoton API is not available. Check addon settings.');
+        }
+        $this->api = $api;
         $this->guestService = $guestService ?? new GuestDataService();
         $this->priceService = $priceService ?? new RoomPriceService();
         $this->bookingRepo = $bookingRepo ?? new BookingRepository();

@@ -58,6 +58,7 @@
 
     {* Check All ASK Status Button - POST form *}
     <form action="{"novoton_bookings.check_all_status"|fn_url}" method="post" class="form-inline" style="display: inline-block; margin-bottom: 20px;">
+        <input type="hidden" name="security_hash" value="{$security_hash}">
         <button type="submit" class="btn btn-default">
             <i class="icon-refresh"></i> {__("novoton_holidays.check_all_status")}
         </button>
@@ -65,6 +66,7 @@
 
     {* Cleanup Orphans Button *}
     <form action="{"novoton_bookings.cleanup_orphans"|fn_url}" method="post" class="form-inline" style="display: inline-block; margin-left: 10px; margin-bottom: 20px;">
+        <input type="hidden" name="security_hash" value="{$security_hash}">
         <button type="submit" class="btn btn-warning" onclick="return confirm('This will delete all bookings without orders that are older than 24 hours. Continue?');">
             <i class="icon-trash"></i> Cleanup Orphan Bookings
         </button>
@@ -207,6 +209,7 @@
                         </a>
                         {if $booking.novoton_status == 'ASK'}
                         <form action="{"novoton_bookings.resinfo"|fn_url}" method="post" style="display: inline;">
+                            <input type="hidden" name="security_hash" value="{$security_hash}">
                             <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
                             <button type="submit" class="btn btn-xs btn-default" title="Check Status">
                                 <i class="icon-refresh"></i>

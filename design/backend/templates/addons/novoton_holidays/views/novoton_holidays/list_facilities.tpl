@@ -23,6 +23,7 @@
 
 {if $facilities}
 <form action="{fn_url('novoton_hotels.save_facility_types')}" method="post">
+<input type="hidden" name="security_hash" value="{$security_hash}">
 <table class="table table-striped table-condensed">
     <thead>
         <tr>

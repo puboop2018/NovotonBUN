@@ -20,10 +20,15 @@ class PriceInfoFormatter
      * Safely extract a scalar string value from a field that may be array/object
      * (SimpleXML json_encode of empty elements produces [])
      */
+    /**
+     * @param mixed $value
+     */
     public static function toScalar($value): string
     {
-        if (is_array($value) || is_object($value)) return '';
-        return trim((string)$value);
+        if (is_array($value) || is_object($value)) {
+            return '';
+        }
+        return trim((string) $value);
     }
 
     /**
