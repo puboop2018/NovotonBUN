@@ -342,17 +342,20 @@ class CacheService implements CacheServiceInterface
     private function clearFileCache(?string $prefix = null): int
     {
         $count = 0;
-        
+
         if (!is_dir($this->cache_dir)) {
             return 0;
         }
-        
-        $files = glob($this->cache_dir . '*.cache') ?: [];
-        
+
+        // Scan sharded subdirectories and flat (legacy) files
+        $files = array_merge(
+            glob($this->cache_dir . '*/*.cache') ?: [],
+            glob($this->cache_dir . '*.cache') ?: []
+        );
+
+        $safe_prefix = ($prefix !== null) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $prefix) : null;
         foreach ($files as $file) {
             $filename = basename($file, '.cache');
-            
-            $safe_prefix = ($prefix !== null) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $prefix) : null;
             if ($safe_prefix === null || strpos($filename, $safe_prefix) === 0) {
                 if (unlink($file)) {
                     $count++;
@@ -373,7 +376,13 @@ class CacheService implements CacheServiceInterface
     {
         // Sanitize key for filename
         $safe_key = preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
-        return $this->cache_dir . $safe_key . '.cache';
+        // Shard into subdirectories using first 2 chars to avoid flat directory degradation
+        $shard = substr($safe_key, 0, 2) ?: '__';
+        $dir = $this->cache_dir . $shard . '/';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        return $dir . $safe_key . '.cache';
     }
     
     // ========== Database Storage Methods ==========
@@ -482,8 +491,11 @@ class CacheService implements CacheServiceInterface
         $count = 0;
         
         if ($this->storage === 'file') {
-            // Clean expired file cache
-            $files = glob($this->cache_dir . '*.cache') ?: [];
+            // Clean expired file cache (sharded subdirectories + legacy flat)
+            $files = array_merge(
+                glob($this->cache_dir . '*/*.cache') ?: [],
+                glob($this->cache_dir . '*.cache') ?: []
+            );
             foreach ($files as $file) {
                 $content = file_get_contents($file);
                 if ($content !== false) {
@@ -520,9 +532,12 @@ class CacheService implements CacheServiceInterface
         ];
         
         if ($this->storage === 'file') {
-            $files = glob($this->cache_dir . '*.cache') ?: [];
+            $files = array_merge(
+                glob($this->cache_dir . '*/*.cache') ?: [],
+                glob($this->cache_dir . '*.cache') ?: []
+            );
             $stats['persistent_items'] = count($files);
-            $stats['total_size'] = array_sum(array_map('filesize', $files));
+            $stats['total_size'] = !empty($files) ? array_sum(array_map('filesize', $files)) : 0;
         } else {
             $stats['persistent_items'] = db_get_field(
                 "SELECT COUNT(*) FROM ?:novoton_cache"

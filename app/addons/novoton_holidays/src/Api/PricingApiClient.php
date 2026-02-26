@@ -53,17 +53,13 @@ class PricingApiClient extends ApiClientBase
         $checkOut = $params['check_out'] ?? '';
         $adultsCount = max(1, (int) ($params['adults'] ?? 2));
 
-        $childrenXml = '';
-        if (!empty($params['children']) && is_array($params['children'])) {
-            foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . (int) $age . '</Age>';
-            }
-        }
+        $childrenXml = !empty($params['children']) && is_array($params['children'])
+            ? $this->buildChildrenAgesXml($params['children'])
+            : '';
 
-        return '<?xml version="1.0" encoding="windows-1251"?>
+        return $this->xmlHeader() . '
         <room_price>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdHotel>' . htmlspecialchars($params['hotel_id'] ?? '') . '</IdHotel>
             <PackageName></PackageName>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
@@ -255,24 +251,14 @@ class PricingApiClient extends ApiClientBase
         $adultsCount = (int) ($params['adults'] ?? 2);
         $boardId = $params['board_id'] ?? '';
 
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
-            $adultsXml .= '<Age>' . $age . '</Age>';
-        }
+        $adultsXml = $this->buildAdultAgesXml($adultsCount, $params['adult_ages'] ?? []);
+        $childrenXml = !empty($params['children']) && is_array($params['children'])
+            ? $this->buildChildrenAgesXml($params['children'])
+            : '';
 
-        $childrenXml = '';
-        if (!empty($params['children']) && is_array($params['children'])) {
-            foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . (int) $age . '</Age>';
-            }
-        }
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <room_price>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
             <Resort><![CDATA[' . $resort . ']]></Resort>
             <IdRoom></IdRoom>
@@ -315,17 +301,13 @@ class PricingApiClient extends ApiClientBase
         }
         $boardId = $params['board_id'] ?? '';
 
-        $childrenXml = '';
-        if (!empty($params['children']) && is_array($params['children'])) {
-            foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . (int) $age . '</Age>';
-            }
-        }
+        $childrenXml = !empty($params['children']) && is_array($params['children'])
+            ? $this->buildChildrenAgesXml($params['children'])
+            : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <room_price>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
             <PackageName></PackageName>
             <Resort><![CDATA[' . $resort . ']]></Resort>
@@ -353,10 +335,9 @@ class PricingApiClient extends ApiClientBase
      */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <priceinfo>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             <PackageName>' . htmlspecialchars($packageName) . '</PackageName>
         </priceinfo>';
@@ -373,10 +354,9 @@ class PricingApiClient extends ApiClientBase
     {
         $packageXml = $packageName ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <spo>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             ' . $packageXml . '
         </spo>';

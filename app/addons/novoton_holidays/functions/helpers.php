@@ -245,23 +245,29 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
                 $packageData['min_price'] = $pkgMinPrice;
             }
 
-            $existingId = db_get_field(
-                "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-                (string) $hotel_id, (string) $packageId
+            // Atomic upsert — avoids SELECT-then-INSERT/UPDATE race condition
+            $priceinfoValue = !empty($priceData) ? json_encode($priceData) : '';
+            $minPriceValue = $pkgMinPrice ?? 0;
+            db_query(
+                "INSERT INTO ?:novoton_hotel_packages
+                 (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
+                 VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, ?s)
+                 ON DUPLICATE KEY UPDATE
+                 package_name = VALUES(package_name),
+                 priceinfo_data = VALUES(priceinfo_data),
+                 seasons_count = VALUES(seasons_count),
+                 has_early_booking = VALUES(has_early_booking),
+                 min_price = VALUES(min_price),
+                 synced_at = VALUES(synced_at)",
+                $packageData['hotel_id'],
+                $packageData['package_id'],
+                $packageData['package_name'],
+                $priceinfoValue,
+                $packageData['seasons_count'],
+                $packageData['has_early_booking'],
+                $minPriceValue,
+                $packageData['synced_at']
             );
-
-            if ($existingId) {
-                // For UPDATE: explicitly set nullable columns to NULL when empty
-                if (empty($priceData)) {
-                    $packageData['priceinfo_data'] = '';
-                }
-                if ($pkgMinPrice === null) {
-                    $packageData['min_price'] = 0;
-                }
-                db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
-            } else {
-                db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);
-            }
 
             $packagesUpdated++;
         }

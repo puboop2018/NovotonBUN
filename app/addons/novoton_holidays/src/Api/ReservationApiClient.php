@@ -25,20 +25,7 @@ class ReservationApiClient extends ApiClientBase
             $comment = 'test reservation, do not proceed';
         }
 
-        // Build guests XML
-        $guestsXml = '';
-        $idGuest = 1;
-        $allGuests = $bookingData['guests'] ?? [];
-        foreach ($allGuests as $guest) {
-            $guestsXml .= '
-    <Guests>
-        <IdGuest>' . $idGuest . '</IdGuest>
-        <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
-        <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-        <Age>' . (int) ($guest['age'] ?? 0) . '</Age>
-    </Guests>';
-            $idGuest++;
-        }
+        $guestsXml = $this->buildGuestsXml($bookingData['guests'] ?? []);
 
         // Check if this is multi-room booking
         $rooms = $bookingData['rooms'] ?? [];
@@ -48,16 +35,8 @@ class ReservationApiClient extends ApiClientBase
             $guestIdCounter = 1;
             foreach ($rooms as $roomIdx => $roomData) {
                 $roomGuests = $roomData['guests'] ?? [];
-
-                $roomAccXml = '';
-                foreach ($roomGuests as $guest) {
-                    $roomAccXml .= '
-            <room_acc>
-                <IdGuest>' . $guestIdCounter . '</IdGuest>
-                <Name>' . htmlspecialchars($guest['name']) . '</Name>
-            </room_acc>';
-                    $guestIdCounter++;
-                }
+                $roomAccXml = $this->buildRoomAccXml($roomGuests, $guestIdCounter);
+                $guestIdCounter += count($roomGuests);
 
                 $hotelAccXml .= '
     <hotel_acc>
@@ -75,16 +54,7 @@ class ReservationApiClient extends ApiClientBase
     </hotel_acc>';
             }
         } else {
-            $roomAccXml = '';
-            $idGuest = 1;
-            foreach ($allGuests as $guest) {
-                $roomAccXml .= '
-            <room_acc>
-                <IdGuest>' . $idGuest . '</IdGuest>
-                <Name>' . htmlspecialchars($guest['name']) . '</Name>
-            </room_acc>';
-                $idGuest++;
-            }
+            $roomAccXml = $this->buildRoomAccXml($bookingData['guests'] ?? []);
 
             $hotelAccXml = '
     <hotel_acc>
@@ -104,10 +74,9 @@ class ReservationApiClient extends ApiClientBase
 
         $discountType = $bookingData['discount_type'] ?? '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
 <hotel_res_RQ>
-    <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-    <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+    ' . $this->xmlCredentials() . '
     <IdHotel>' . htmlspecialchars($bookingData['hotel_id']) . '</IdHotel>
     <CreatedBy>' . htmlspecialchars(Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
     <PackageName>' . htmlspecialchars($bookingData['package_name'] ?? '') . '</PackageName>
@@ -138,10 +107,9 @@ class ReservationApiClient extends ApiClientBase
         $searchXml = $idNum ? '<IdNum>' . htmlspecialchars($idNum) . '</IdNum>' :
                               '<ConfirmAgency>' . htmlspecialchars($confirmAgency) . '</ConfirmAgency>';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <resinfo>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             ' . $searchXml . '
         </resinfo>';
 
@@ -155,53 +123,7 @@ class ReservationApiClient extends ApiClientBase
      */
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false)
     {
-        $guestsXml = '';
-        if (!empty($requestData['guests'])) {
-            foreach ($requestData['guests'] as $guest) {
-                $guestsXml .= '
-<Guests>
-  <IdGuest>' . htmlspecialchars($guest['id'] ?? 1) . '</IdGuest>
-  <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
-  <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-  <Age>' . (int) ($guest['age'] ?? 30) . '</Age>
-</Guests>';
-            }
-        }
-
-        $roomAccXml = '';
-        if (!empty($requestData['room_guests'])) {
-            foreach ($requestData['room_guests'] as $roomGuest) {
-                $roomAccXml .= '
-<room_acc>
-  <IdGuest>' . htmlspecialchars($roomGuest['id'] ?? 1) . '</IdGuest>
-  <Name>' . htmlspecialchars($roomGuest['name'] ?? '') . '</Name>
-</room_acc>';
-            }
-        }
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-<hotel_request>
-  <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-  <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-  <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
-  <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
-  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
-  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
-' . $guestsXml . '
-<hotel_acc>
-  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
-  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
-  <IdRoom>' . htmlspecialchars($requestData['room_id'] ?? '') . '</IdRoom>
-  <IdBoard>' . htmlspecialchars($requestData['board_id'] ?? '') . '</IdBoard>
-  <IdExtBoard>' . htmlspecialchars($requestData['ext_board_id'] ?? '') . '</IdExtBoard>
-  <IdStar>' . htmlspecialchars($requestData['star_rating'] ?? '') . '</IdStar>
-  <Holder>' . htmlspecialchars($requestData['holder'] ?? '') . '</Holder>
-  <Remark>' . htmlspecialchars($requestData['remark'] ?? '') . '</Remark>
-  <Comment>' . htmlspecialchars($requestData['comment'] ?? '') . '</Comment>
-' . $roomAccXml . '
-</hotel_acc>
-</hotel_request>';
+        $xml = $this->buildHotelRequestXml($requestData);
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton hotel_request Request',
@@ -212,11 +134,8 @@ class ReservationApiClient extends ApiClientBase
         $parsed = $this->xmlParser->parse($response);
 
         if ($returnXml) {
-            $xmlMasked = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
-            $xmlMasked = preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xmlMasked);
-
             return [
-                'xml_sent' => $xmlMasked,
+                'xml_sent' => $this->maskCredentials($xml),
                 'xml_response' => $response,
                 'parsed' => $parsed,
                 'id_num' => isset($parsed->IdNum) ? (string)$parsed->IdNum : null
@@ -231,58 +150,7 @@ class ReservationApiClient extends ApiClientBase
      */
     public function generateHotelRequestXml(array $requestData): string
     {
-        $guestsXml = '';
-        if (!empty($requestData['guests'])) {
-            foreach ($requestData['guests'] as $guest) {
-                $guestsXml .= '
-<Guests>
-  <IdGuest>' . htmlspecialchars($guest['id'] ?? 1) . '</IdGuest>
-  <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
-  <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
-  <Age>' . (int) ($guest['age'] ?? 30) . '</Age>
-</Guests>';
-            }
-        }
-
-        $roomAccXml = '';
-        if (!empty($requestData['room_guests'])) {
-            foreach ($requestData['room_guests'] as $roomGuest) {
-                $roomAccXml .= '
-<room_acc>
-  <IdGuest>' . htmlspecialchars($roomGuest['id'] ?? 1) . '</IdGuest>
-  <Name>' . htmlspecialchars($roomGuest['name'] ?? '') . '</Name>
-</room_acc>';
-            }
-        }
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-<hotel_request>
-  <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-  <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-  <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
-  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
-  <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
-  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
-  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
-' . $guestsXml . '
-<hotel_acc>
-  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
-  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
-  <IdRoom>' . htmlspecialchars($requestData['room_id'] ?? '') . '</IdRoom>
-  <IdBoard>' . htmlspecialchars($requestData['board_id'] ?? '') . '</IdBoard>
-  <IdExtBoard>' . htmlspecialchars($requestData['ext_board_id'] ?? '') . '</IdExtBoard>
-  <IdStar>' . htmlspecialchars($requestData['star_rating'] ?? '') . '</IdStar>
-  <Holder>' . htmlspecialchars($requestData['holder'] ?? '') . '</Holder>
-  <Remark>' . htmlspecialchars($requestData['remark'] ?? '') . '</Remark>
-  <Comment>' . htmlspecialchars($requestData['comment'] ?? '') . '</Comment>
-' . $roomAccXml . '
-</hotel_acc>
-</hotel_request>';
-
-        $xmlMasked = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
-        $xmlMasked = preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xmlMasked);
-
-        return $xmlMasked;
+        return $this->maskCredentials($this->buildHotelRequestXml($requestData));
     }
 
     /**
@@ -292,10 +160,9 @@ class ReservationApiClient extends ApiClientBase
      */
     public function getAlternatives(string $idNum, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
 <alternative_RS>
-  <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-  <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+  ' . $this->xmlCredentials() . '
   <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
 </alternative_RS>';
 
@@ -314,10 +181,9 @@ class ReservationApiClient extends ApiClientBase
      */
     public function getInvoiceHtml(string $idNum, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_acc_RQ_html>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
         </hotel_acc_RQ_html>';
 
@@ -331,10 +197,9 @@ class ReservationApiClient extends ApiClientBase
      */
     public function getInvoiceXml(string $idNum, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_acc_RQ>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <IdNum>' . htmlspecialchars($idNum) . '</IdNum>
         </hotel_acc_RQ>';
 
@@ -351,14 +216,99 @@ class ReservationApiClient extends ApiClientBase
         $arrFromXml = $arrFrom ? '<ArrFrom>' . htmlspecialchars($arrFrom) . '</ArrFrom>' : '';
         $arrToXml = $arrTo ? '<ArrTo>' . htmlspecialchars($arrTo) . '</ArrTo>' : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <list_invoices>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             ' . $arrFromXml . '
             ' . $arrToXml . '
         </list_invoices>';
 
         return $this->callApiAndParse(Constants::API_FUNCTION_LIST_INVOICES, $xml, $lang);
+    }
+
+    // ---- Private XML builders ----
+
+    /**
+     * Build <Guests> XML elements from a guest array.
+     */
+    private function buildGuestsXml(array $guests, int $startId = 1, int $defaultAge = 0): string
+    {
+        $xml = '';
+        $id = $startId;
+        foreach ($guests as $guest) {
+            $xml .= '
+    <Guests>
+        <IdGuest>' . ($guest['id'] ?? $id) . '</IdGuest>
+        <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
+        <BirthDay>' . htmlspecialchars($guest['birthday'] ?? '') . '</BirthDay>
+        <Age>' . (int) ($guest['age'] ?? $defaultAge) . '</Age>
+    </Guests>';
+            $id++;
+        }
+        return $xml;
+    }
+
+    /**
+     * Build <room_acc> XML elements from a guest array.
+     */
+    private function buildRoomAccXml(array $guests, int $startId = 1): string
+    {
+        $xml = '';
+        $id = $startId;
+        foreach ($guests as $guest) {
+            $xml .= '
+            <room_acc>
+                <IdGuest>' . ($guest['id'] ?? $id) . '</IdGuest>
+                <Name>' . htmlspecialchars($guest['name'] ?? '') . '</Name>
+            </room_acc>';
+            $id++;
+        }
+        return $xml;
+    }
+
+    /**
+     * Build the full hotel_request XML (shared by createHotelRequest and generateHotelRequestXml).
+     */
+    private function buildHotelRequestXml(array $requestData): string
+    {
+        $guestsXml = $this->buildGuestsXml($requestData['guests'] ?? [], 1, 30);
+
+        $roomAccXml = '';
+        if (!empty($requestData['room_guests'])) {
+            $roomAccXml = $this->buildRoomAccXml($requestData['room_guests']);
+        }
+
+        return $this->xmlHeader() . '
+<hotel_request>
+  ' . $this->xmlCredentials() . '
+  <IdHotel>' . htmlspecialchars($requestData['hotel_id']) . '</IdHotel>
+  <CreatedBy>' . htmlspecialchars($requestData['created_by'] ?? Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
+  <PackageName>' . htmlspecialchars($requestData['package_name'] ?? '') . '</PackageName>
+  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
+  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
+' . $guestsXml . '
+<hotel_acc>
+  <CheckIn>' . htmlspecialchars($requestData['check_in']) . '</CheckIn>
+  <CheckOut>' . htmlspecialchars($requestData['check_out']) . '</CheckOut>
+  <IdRoom>' . htmlspecialchars($requestData['room_id'] ?? '') . '</IdRoom>
+  <IdBoard>' . htmlspecialchars($requestData['board_id'] ?? '') . '</IdBoard>
+  <IdExtBoard>' . htmlspecialchars($requestData['ext_board_id'] ?? '') . '</IdExtBoard>
+  <IdStar>' . htmlspecialchars($requestData['star_rating'] ?? '') . '</IdStar>
+  <Holder>' . htmlspecialchars($requestData['holder'] ?? '') . '</Holder>
+  <Remark>' . htmlspecialchars($requestData['remark'] ?? '') . '</Remark>
+  <Comment>' . htmlspecialchars($requestData['comment'] ?? '') . '</Comment>
+' . $roomAccXml . '
+</hotel_acc>
+</hotel_request>';
+    }
+
+    /**
+     * Mask API credentials in XML for logging/display.
+     */
+    private function maskCredentials(string $xml): string
+    {
+        $xml = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
+        $xml = preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xml);
+        return $xml;
     }
 }

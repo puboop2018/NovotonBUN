@@ -44,13 +44,7 @@ class AvailabilityApiClient extends ApiClientBase
             return $cached;
         }
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
-            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
-            <IdRoom></IdRoom>
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        $xml = $this->buildHotelQuotaXml($hotelId, '', $checkIn, $checkOut);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
         $parsed = $this->xmlParser->parse($response);
@@ -100,16 +94,7 @@ class AvailabilityApiClient extends ApiClientBase
      */
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
-        $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
-            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
-            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
-            ' . $roomTypeXml . '
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut, $roomType);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
 
@@ -125,15 +110,26 @@ class AvailabilityApiClient extends ApiClientBase
      */
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut);
+
+        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_QUOTA_ADD, $xml);
+    }
+
+    /**
+     * Build hotel_quota XML (shared by getHotelQuotaAll, getHotelQuota, getHotelQuotaAdditional).
+     */
+    private function buildHotelQuotaXml(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): string
+    {
+        $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
+
+        return $this->xmlHeader() . '
         <hotel_quota>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
+            ' . $roomTypeXml . '
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
         </hotel_quota>';
-
-        return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_QUOTA_ADD, $xml);
     }
 
     /**
@@ -143,18 +139,11 @@ class AvailabilityApiClient extends ApiClientBase
      */
     private function buildSearchXml(array $params): string
     {
-        $adultsCount = (int) ($params['adults'] ?? 2);
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
-            $adultsXml .= '<Age>' . $age . '</Age>';
-        }
+        $adultsXml = $this->buildAdultAgesXml((int) ($params['adults'] ?? 2), $params['adult_ages'] ?? []);
 
-        return '<?xml version="1.0" encoding="windows-1251"?>
+        return $this->xmlHeader() . '
         <frmsearch>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <Country>' . htmlspecialchars(strtoupper($params['country'] ?? '')) . '</Country>
             <City>' . htmlspecialchars(strtoupper($params['city'] ?? '')) . '</City>
             <Hotel>' . htmlspecialchars(strtoupper($params['hotel'] ?? '')) . '</Hotel>

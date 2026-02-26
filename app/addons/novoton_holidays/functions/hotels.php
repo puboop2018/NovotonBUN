@@ -498,23 +498,18 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
             $result['total']++;
             $api_resort_names[] = $name;
 
-            $exists = db_get_field(
-                "SELECT resort_name FROM ?:novoton_resorts WHERE resort_name = ?s AND country = ?s",
-                $name, $country
+            // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
+            $affected = db_query(
+                "INSERT INTO ?:novoton_resorts (resort_name, country, synced_at)
+                 VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE synced_at = VALUES(synced_at)",
+                $name, $country, $now
             );
-
-            if ($exists) {
-                db_query(
-                    "UPDATE ?:novoton_resorts SET synced_at = ?s WHERE resort_name = ?s AND country = ?s",
-                    $now, $name, $country
-                );
-                $result['updated']++;
-            } else {
-                db_query(
-                    "INSERT INTO ?:novoton_resorts (resort_name, country, synced_at) VALUES (?s, ?s, ?s)",
-                    $name, $country, $now
-                );
+            // affected_rows = 1 for INSERT, 2 for UPDATE (MySQL convention)
+            if ($affected == 1) {
                 $result['added']++;
+            } else {
+                $result['updated']++;
             }
         }
 
@@ -571,21 +566,17 @@ function fn_novoton_holidays_sync_facilities_list(): array
             
             $result['total']++;
             
-            $exists = db_get_field("SELECT facility_id FROM ?:novoton_facilities WHERE facility_id = ?i", $facility_id);
-            
-            if ($exists) {
-                db_query(
-                    "UPDATE ?:novoton_facilities SET facility_name_en = ?s WHERE facility_id = ?i",
-                    $name_en, $facility_id
-                );
-                $result['updated']++;
-            } else {
-                db_query(
-                    "INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro)
-                     VALUES (?i, ?s, ?s)",
-                    $facility_id, $name_en, $name_ro
-                );
+            // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
+            $affected = db_query(
+                "INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro)
+                 VALUES (?i, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE facility_name_en = VALUES(facility_name_en)",
+                $facility_id, $name_en, $name_ro
+            );
+            if ($affected == 1) {
                 $result['added']++;
+            } else {
+                $result['updated']++;
             }
         }
         

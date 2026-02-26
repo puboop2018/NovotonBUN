@@ -24,7 +24,7 @@ class HotelApiClient extends ApiClientBase
         $hotel = empty($hotel) ? '%' : $hotel;
         $hotelType = empty($hotelType) ? '%' : $hotelType;
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_list>
             <hotelinfo>
                 <Country>' . htmlspecialchars($country) . '</Country>
@@ -44,7 +44,7 @@ class HotelApiClient extends ApiClientBase
      */
     public function getHotelInfo(string $hotelId, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotelinfo>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotelinfo>';
@@ -66,7 +66,7 @@ class HotelApiClient extends ApiClientBase
 
         $requests = [];
         foreach ($hotelIds as $hotelId) {
-            $xml = '<?xml version="1.0" encoding="windows-1251"?>
+            $xml = $this->xmlHeader() . '
                 <hotelinfo>
                     <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
                 </hotelinfo>';
@@ -101,7 +101,7 @@ class HotelApiClient extends ApiClientBase
     {
         $packageXml = $includePackage ? '<PackageDescription>Yes</PackageDescription>' : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_description>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             ' . $packageXml . '
@@ -117,7 +117,7 @@ class HotelApiClient extends ApiClientBase
      */
     public function getHotelImages(string $hotelId, string $lang = 'UK')
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_images>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_images>';
@@ -132,7 +132,7 @@ class HotelApiClient extends ApiClientBase
      */
     public function getHotelFacilities(string $hotelId)
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_facilities>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_facilities>';
@@ -147,7 +147,7 @@ class HotelApiClient extends ApiClientBase
      */
     public function listFacilities()
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <list_facilities>
         </list_facilities>';
 

@@ -194,18 +194,27 @@ class PriceInfoSync
                     'synced_at' => date('Y-m-d H:i:s')
                 ];
 
-                // Check if package exists
-                $existingId = db_get_field(
-                    "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-                    $hotelId,
-                    $packageId
+                // Atomic upsert — avoids SELECT-then-INSERT/UPDATE race condition
+                db_query(
+                    "INSERT INTO ?:novoton_hotel_packages
+                     (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
+                     VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, ?s)
+                     ON DUPLICATE KEY UPDATE
+                     package_name = VALUES(package_name),
+                     priceinfo_data = VALUES(priceinfo_data),
+                     seasons_count = VALUES(seasons_count),
+                     has_early_booking = VALUES(has_early_booking),
+                     min_price = VALUES(min_price),
+                     synced_at = VALUES(synced_at)",
+                    $packageData['hotel_id'],
+                    $packageData['package_id'],
+                    $packageData['package_name'],
+                    $packageData['priceinfo_data'],
+                    $packageData['seasons_count'],
+                    $packageData['has_early_booking'],
+                    $packageData['min_price'],
+                    $packageData['synced_at']
                 );
-
-                if ($existingId) {
-                    db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
-                } else {
-                    db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);
-                }
 
                 $packagesUpdated++;
             }
@@ -485,16 +494,23 @@ class PriceInfoSync
             );
         }
 
-        // Clear from file cache if exists (using prefix-matching glob)
+        // Clear from file cache (sharded subdirectories + legacy flat)
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
             foreach ($functions as $fn) {
                 $safeHotelId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $hotelId);
-                $pattern = $cacheDir . 'nvt_api_' . $fn . '_' . $safeHotelId . '_*.cache';
-                $files = glob($pattern) ?: [];
-                foreach ($files as $file) {
-                    if (is_file($file)) {
-                        @unlink($file);
+                $prefix = 'nvt_api_' . $fn . '_' . $safeHotelId . '_';
+                $shard = substr($prefix, 0, 2);
+                // Check sharded path first, then legacy flat path
+                $patterns = [
+                    $cacheDir . $shard . '/' . $prefix . '*.cache',
+                    $cacheDir . $prefix . '*.cache',
+                ];
+                foreach ($patterns as $pattern) {
+                    foreach (glob($pattern) ?: [] as $file) {
+                        if (is_file($file)) {
+                            @unlink($file);
+                        }
                     }
                 }
             }
@@ -516,7 +532,11 @@ class PriceInfoSync
 
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
-            $files = glob($cacheDir . 'nvt_api_*');
+            // Clear sharded subdirectories + legacy flat files
+            $files = array_merge(
+                glob($cacheDir . '*/nvt_api_*.cache') ?: [],
+                glob($cacheDir . 'nvt_api_*') ?: []
+            );
             foreach ($files as $file) {
                 if (is_file($file)) {
                     @unlink($file);
