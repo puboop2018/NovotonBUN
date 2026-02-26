@@ -291,14 +291,15 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Returns a flat map of "YYYY-MM-DD" => price (float) representing
      * the estimated 1-night-stay total for a given number of adults in
-     * the cheapest suitable room. Prices include commission and are
-     * converted to the target currency.
+     * the cheapest suitable room across ALL packages. Prices include
+     * commission and are converted to the target currency.
      *
-     * The method groups season_price rows by room, then for each room
-     * calculates what the guests would pay:
+     * For each package the method groups season_price rows by room,
+     * then for each room calculates what the guests would pay:
      *  - RoomPrice=Yes → per-room price (used once)
      *  - RoomPrice=No  → per-person price × number of adults
-     * The cheapest room total per season becomes the calendar price.
+     * The cheapest room total per season becomes that package's price.
+     * Across packages, the minimum per date wins ("from €X/night").
      *
      * Dates that fall outside any season will not appear in the map —
      * the Calendar UI should treat missing dates as "no price" (grey/dash).
@@ -313,29 +314,74 @@ class PriceInfoService implements PriceInfoServiceInterface
         $currency = $targetCurrency ?? RoomPriceService::getDisplayCurrency();
         $adults = max(1, $adults);
 
-        $priceinfoJson = db_get_field(
+        // Query ALL packages for this hotel (not just one)
+        $allPriceinfoRows = db_get_fields(
             "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL",
             $hotelId
         );
 
-        if (empty($priceinfoJson)) {
+        if (empty($allPriceinfoRows)) {
             return ['prices' => [], 'currency' => $currency];
         }
 
-        $priceinfo = json_decode($priceinfoJson, true);
-        if (empty($priceinfo)) {
-            return ['prices' => [], 'currency' => $currency];
+        $dateMap = [];
+        $roundPrices = ConfigProvider::isRoundPrices();
+        $today = date('Y-m-d');
+        $maxDate = date('Y-m-d', strtotime('+18 months'));
+
+        // Process each package independently, keeping the minimum price per date
+        foreach ($allPriceinfoRows as $priceinfoJson) {
+            if (empty($priceinfoJson)) {
+                continue;
+            }
+
+            $priceinfo = json_decode($priceinfoJson, true);
+            if (empty($priceinfo)) {
+                continue;
+            }
+
+            $packageDateMap = $this->buildDateMapFromPriceinfo($priceinfo, $adults, $currency, $roundPrices, $today, $maxDate);
+
+            // Merge: keep the minimum price per date across all packages
+            foreach ($packageDateMap as $date => $price) {
+                if (!isset($dateMap[$date]) || $price < $dateMap[$date]) {
+                    $dateMap[$date] = $price;
+                }
+            }
         }
 
+        $this->log('Calendar prices computed', [
+            'hotel_id' => $hotelId,
+            'currency' => $currency,
+            'adults' => $adults,
+            'packages_count' => count($allPriceinfoRows),
+            'dates_count' => count($dateMap)
+        ]);
+
+        return ['prices' => $dateMap, 'currency' => $currency];
+    }
+
+    /**
+     * Build a date → price map from a single package's priceinfo data.
+     *
+     * @param array  $priceinfo   Decoded priceinfo_data JSON
+     * @param int    $adults      Number of adults
+     * @param string $currency    Target currency
+     * @param bool   $roundPrices Whether to round prices
+     * @param string $today       Today's date (Y-m-d)
+     * @param string $maxDate     Max future date (Y-m-d)
+     * @return array [date => price]
+     */
+    private function buildDateMapFromPriceinfo(array $priceinfo, int $adults, string $currency, bool $roundPrices, string $today, string $maxDate): array
+    {
         // 1. Parse seasons
         $seasons = $priceinfo['seasons']['season'] ?? $priceinfo['seasons'] ?? [];
         if (isset($seasons['IdSeason']) || isset($seasons['Season'])) {
             $seasons = [$seasons];
         }
         if (empty($seasons) || !is_array($seasons)) {
-            return ['prices' => [], 'currency' => $currency];
+            return [];
         }
 
         // 2. Parse season_price rows
@@ -344,21 +390,18 @@ class PriceInfoService implements PriceInfoServiceInterface
             $seasonPrices = [$seasonPrices];
         }
         if (empty($seasonPrices)) {
-            return ['prices' => [], 'currency' => $currency];
+            return [];
         }
 
         // 3. For each season, find the cheapest room total for N adults
-        $cheapestByseason = $this->getCheapestRoomTotalBySeason($seasonPrices, $seasons, $adults);
+        $cheapestBySeason = $this->getCheapestRoomTotalBySeason($seasonPrices, $seasons, $adults);
 
         // 4. Expand season ranges into per-date prices
         $dateMap = [];
-        $roundPrices = ConfigProvider::isRoundPrices();
-        $today = date('Y-m-d');
-        $maxDate = date('Y-m-d', strtotime('+18 months'));
 
         foreach ($seasons as $season) {
             $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? 0);
-            if ($seasonNum <= 0 || !isset($cheapestByseason[$seasonNum])) {
+            if ($seasonNum <= 0 || !isset($cheapestBySeason[$seasonNum])) {
                 continue;
             }
 
@@ -368,7 +411,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
 
-            $rawPrice = $cheapestByseason[$seasonNum];
+            $rawPrice = $cheapestBySeason[$seasonNum];
 
             // Apply commission
             $priceWithCommission = $rawPrice * (1 + ($this->commission / 100));
@@ -394,7 +437,10 @@ class PriceInfoService implements PriceInfoServiceInterface
                 $end = new \DateTime($endDate);
 
                 while ($current <= $end) {
-                    $dateMap[$current->format('Y-m-d')] = $converted;
+                    $dateKey = $current->format('Y-m-d');
+                    if (!isset($dateMap[$dateKey]) || $converted < $dateMap[$dateKey]) {
+                        $dateMap[$dateKey] = $converted;
+                    }
                     $current->modify('+1 day');
                 }
             } catch (\Exception $e) {
@@ -402,14 +448,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             }
         }
 
-        $this->log('Calendar prices computed', [
-            'hotel_id' => $hotelId,
-            'currency' => $currency,
-            'adults' => $adults,
-            'dates_count' => count($dateMap)
-        ]);
-
-        return ['prices' => $dateMap, 'currency' => $currency];
+        return $dateMap;
     }
 
     /**
