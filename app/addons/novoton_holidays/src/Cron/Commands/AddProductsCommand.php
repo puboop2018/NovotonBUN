@@ -57,7 +57,7 @@ class AddProductsCommand extends AbstractCronCommand
                 continue;
             }
 
-            $category_path = "{$country}///Litoral {$country}";
+            $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
             $category_id = fn_novoton_holidays_get_or_create_category($category_path);
 
             if (!$category_id) {

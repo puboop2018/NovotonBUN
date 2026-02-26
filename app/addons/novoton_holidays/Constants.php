@@ -264,6 +264,9 @@ final class Constants
 
     public const PRODUCT_CODE_PREFIX = 'NVT';
 
+    /** Category path template for hotel products. {country} is replaced at runtime. */
+    public const PRODUCT_CATEGORY_TEMPLATE = '{country}/Litoral {country}';
+
     // ========== Sync Log ==========
 
     public const SYNC_LOG_RETENTION_DAYS = 30;
