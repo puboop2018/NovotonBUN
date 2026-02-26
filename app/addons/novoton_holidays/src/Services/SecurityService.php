@@ -474,9 +474,8 @@ class SecurityService implements SecurityServiceInterface
      */
     private function sanitizeString(string $string, int $maxLength = 255): string
     {
-        // Remove potential XSS
+        // Remove HTML tags at input time; HTML-encoding is done at output time by escapeHtml() / Smarty
         $string = strip_tags($string);
-        $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
         return mb_substr($string, 0, $maxLength);
     }
     

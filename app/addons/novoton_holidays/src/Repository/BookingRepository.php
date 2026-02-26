@@ -516,7 +516,7 @@ class BookingRepository implements BookingRepositoryInterface
             "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
                     board_id, check_in, check_out, nights, adults, children, children_ages,
                     num_rooms, rooms_data, total_price, currency, status, guests_data,
-                    package_name, session_id
+                    package_name, session_id, holder_name, guest_name
              FROM ?:novoton_bookings
              WHERE product_id IN (?n) AND status IN (?a)
              ORDER BY booking_id DESC",
