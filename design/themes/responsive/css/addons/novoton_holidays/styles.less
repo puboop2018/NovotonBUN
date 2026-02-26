@@ -45,34 +45,31 @@
 @novoton-primary-focus:     fade(@novoton-primary, 10%);
 
 // ---------------------------------------------------------------------------
-// 2. INHERITED FROM THEME  (addon adapts when merchant changes theme)
+// 2. CHROME & STATUS COLORS
 //
-//    Left-hand side  = addon alias used by every component below
-//    Right-hand side = CS-Cart theme variable from the active preset
-//
-//    If the preset doesn't define a theme variable the LESS compiler falls
-//    back to the value in the theme's base files (Blue.less, etc.).
+//    Hardcoded defaults that match CS-Cart's Blue preset.
+//    These are NOT registered in the Theme Editor to avoid empty-value
+//    crashes in lessphp's color functions (mix, darken, lighten, fade).
+//    If you need to match a different preset, override these values here.
 // ---------------------------------------------------------------------------
 
 // Text
-@novoton-text:              @font;                  // theme's primary text color
-@novoton-text-light:        @secondary_text;        // theme's secondary/muted text
-@novoton-text-disabled:     @inputPlaceholder;      // theme's placeholder/disabled text
+@novoton-text:              #333;
+@novoton-text-light:        #808080;
+@novoton-text-disabled:     #999;
 
 // Surfaces
-@novoton-bg:                @content_bg;            // theme's content background
-@novoton-bg-light:          @tableBackgroundAccent; // theme's striped/light background
-@novoton-border:            @inputBorder;           // theme's border color
+@novoton-bg:                #fff;
+@novoton-bg-light:          #f9f9f9;
+@novoton-border:            #ccc;
 
-// Status  — follow the storefront's own green / red / yellow
-@novoton-success:           @in_stock;              // theme's "in stock" green
-@novoton-warning:           @shipping_label;        // theme's "shipping" yellow
-@novoton-danger:            @out_of_stock;          // theme's "out of stock" red
-@novoton-info:              #17a2b8;                // no direct theme equivalent
+// Status
+@novoton-success:           #97c300;
+@novoton-warning:           #f0ad4e;
+@novoton-danger:            #ff5215;
+@novoton-info:              #17a2b8;
 
-// Status derived (LESS functions — per CS-Cart docs, computed values belong
-// here, then bridged to CSS vars below; components must NOT call
-// darken/lighten directly)
+// Status derived
 @novoton-success-dark:      darken(@novoton-success, 10%);
 @novoton-success-light:     lighten(@novoton-success, 40%);
 @novoton-warning-dark:      darken(@novoton-warning, 25%);
@@ -83,19 +80,14 @@
 @novoton-info-light:        lighten(@novoton-info, 40%);
 
 // Layout
-@novoton-radius:            @borderRadiusSmall;     // theme's small border-radius
-@novoton-radius-sm:         4px;                    // no exact theme match
+@novoton-radius:            4px;
+@novoton-radius-sm:         4px;
 
-// Typography — inherit from theme's font system
-// @body_font_size is based on 14px with derivatives:
-//   @fontSizeLarge = round(@body_font_size * 1.25)  →  ~18px
-//   @fontSizeSmall = round(@body_font_size * 0.85)  →  ~12px
-//   @fontSizeMini  = round(@body_font_size * 0.75)  →  ~11px
-// unit() ensures a px suffix even when the preset stores bare numbers.
-@novoton-font-family:       @body_font;
-@novoton-font-size-base:    unit(@body_font_size, px);
-@novoton-font-size-small:   unit(@fontSizeMini, px);
-@novoton-font-size-large:   unit(@fontSizeLarge, px);
+// Typography
+@novoton-font-family:       Arial, Helvetica, sans-serif;
+@novoton-font-size-base:    14px;
+@novoton-font-size-small:   11px;
+@novoton-font-size-large:   18px;
 
 // ---------------------------------------------------------------------------
 // 3. ADDON-SPECIFIC  (spacing & shadows — no theme equivalents)
