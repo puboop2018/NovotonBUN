@@ -457,23 +457,45 @@ class PriceInfoSync
     }
 
     /**
-     * Clear cached data for a specific hotel
+     * Clear cached data for a specific hotel.
+     *
+     * Uses index-friendly prefix matching (no leading wildcards) by leveraging
+     * the cache key format: nvt_api_{function}_{hotelId}_{hash}
      */
     private function clearHotelCache(string $hotelId): void
     {
-        // Clear live API cache from database (use delimiters to prevent over-matching)
-        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l OR cache_key LIKE ?l",
-            '%_' . $hotelId . '_%',
-            '%_' . $hotelId
-        );
+        // Hotel-related API functions whose cache should be invalidated
+        $functions = [
+            Constants::API_FUNCTION_ROOM_PRICE,      // room_price
+            Constants::API_FUNCTION_HOTEL_QUOTA,      // hotel_quota
+            Constants::API_FUNCTION_HOTEL_QUOTA_ADD,  // hotel_quota_add
+            Constants::API_FUNCTION_HOTEL_INFO,       // hotelinfo
+            Constants::API_FUNCTION_HOTEL_DESCRIPTION,// hotel_description
+            Constants::API_FUNCTION_HOTEL_IMAGES,     // hotel_images
+            Constants::API_FUNCTION_PRICE_INFO,       // priceinfo
+            Constants::API_FUNCTION_SPECIAL_OFFERS,   // spo
+            Constants::API_FUNCTION_HOTEL_FACILITIES, // hotel_facilities
+        ];
 
-        // Clear from file cache if exists
+        // Index-friendly prefix matching: nvt_api_{function}_{hotelId}_%
+        foreach ($functions as $fn) {
+            db_query(
+                "DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l",
+                'nvt_api_' . $fn . '_' . $hotelId . '_%'
+            );
+        }
+
+        // Clear from file cache if exists (using prefix-matching glob)
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
-            $files = glob($cacheDir . '*' . $hotelId . '*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    @unlink($file);
+            foreach ($functions as $fn) {
+                $safeHotelId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $hotelId);
+                $pattern = $cacheDir . 'nvt_api_' . $fn . '_' . $safeHotelId . '_*.cache';
+                $files = glob($pattern) ?: [];
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        @unlink($file);
+                    }
                 }
             }
         }

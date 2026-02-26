@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
-use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 abstract class AbstractCronCommand
 {
@@ -69,7 +69,7 @@ abstract class AbstractCronCommand
 
     protected function logToSyncTable(string $type, int $updated, int $failed = 0): void
     {
-        $syncRepo = new SyncLogRepository();
+        $syncRepo = Container::getInstance()->syncLogRepository();
         $syncRepo->create($type, [
             'updated'  => $updated,
             'failed'   => $failed,

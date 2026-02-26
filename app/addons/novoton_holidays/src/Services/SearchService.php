@@ -184,8 +184,11 @@ class SearchService implements SearchServiceInterface
     }
     
     /**
-     * Search with flexible dates
-     * 
+     * Search with flexible dates.
+     *
+     * Phase 1: checks cache for all dates (fast, in-process).
+     * Phase 2: sends uncached dates as a single batch via curl_multi.
+     *
      * @param array $params Base search parameters
      * @param int $flex_days Number of days flexibility (+/-)
      * @return array Results grouped by date
@@ -194,19 +197,45 @@ class SearchService implements SearchServiceInterface
     {
         $base_date = strtotime($params['check_in']);
         $all_results = [];
-        
-        // Search each date in range
+        $uncached_api_params = [];
+        $uncached_search_params = [];
+
+        // Phase 1: check cache for every date offset
         for ($offset = -$flex_days; $offset <= $flex_days; $offset++) {
             $search_date = date('Y-m-d', strtotime("{$offset} days", $base_date));
-            $params['check_in'] = $search_date;
-            
-            $results = $this->searchAvailability($params);
-            
-            if (!empty($results)) {
-                $all_results[$search_date] = $results;
+            $date_params = array_merge($params, ['check_in' => $search_date]);
+
+            $cache_key = $this->buildCacheKey('availability', $date_params);
+            $cached = $this->cache ? $this->cache->get($cache_key) : null;
+
+            if ($cached !== null) {
+                if (!empty($cached)) {
+                    $all_results[$search_date] = $cached;
+                }
+            } else {
+                $uncached_api_params[$search_date] = $this->buildApiParams($date_params);
+                $uncached_search_params[$search_date] = $date_params;
             }
         }
-        
+
+        // Phase 2: batch-fetch all uncached dates in parallel via curl_multi
+        if (!empty($uncached_api_params)) {
+            $batch_results = $this->api->searchAvailabilityBatch($uncached_api_params);
+
+            foreach ($batch_results as $search_date => $results) {
+                // Cache results (5 minutes)
+                $date_params = $uncached_search_params[$search_date] ?? $params;
+                $cache_key = $this->buildCacheKey('availability', $date_params);
+                if ($this->cache) {
+                    $this->cache->set($cache_key, $results, 300);
+                }
+
+                if (!empty($results)) {
+                    $all_results[$search_date] = $results;
+                }
+            }
+        }
+
         return $all_results;
     }
     
@@ -658,7 +687,7 @@ class SearchService implements SearchServiceInterface
     {
         $discounts = [];
 
-        $packageRepo = new HotelPackageRepository();
+        $packageRepo = Container::getInstance()->hotelPackageRepository();
         $eb_package = $packageRepo->findEarlyBookingPackage($hotelId);
 
         if (empty($eb_package['priceinfo_data'])) {

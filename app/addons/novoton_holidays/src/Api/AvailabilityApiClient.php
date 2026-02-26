@@ -137,11 +137,11 @@ class AvailabilityApiClient extends ApiClientBase
     }
 
     /**
-     * Search availability using frmsearch API endpoint
+     * Build the frmsearch XML request body.
      *
-     * @return array Search results
+     * Extracted for reuse by searchAvailabilityBatch().
      */
-    public function searchAvailability(array $params): array
+    private function buildSearchXml(array $params): string
     {
         $adultsCount = (int) ($params['adults'] ?? 2);
         $adultAges = $params['adult_ages'] ?? [];
@@ -151,7 +151,7 @@ class AvailabilityApiClient extends ApiClientBase
             $adultsXml .= '<Age>' . $age . '</Age>';
         }
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        return '<?xml version="1.0" encoding="windows-1251"?>
         <frmsearch>
             <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
@@ -164,6 +164,16 @@ class AvailabilityApiClient extends ApiClientBase
             <Adt>' . $adultsXml . '</Adt>
             <Currency>EUR</Currency>
         </frmsearch>';
+    }
+
+    /**
+     * Search availability using frmsearch API endpoint
+     *
+     * @return array Search results
+     */
+    public function searchAvailability(array $params): array
+    {
+        $xml = $this->buildSearchXml($params);
 
         DebugLogger::log('Novoton frmsearch Request', ['xml' => $xml, 'params' => $params]);
 
@@ -173,6 +183,51 @@ class AvailabilityApiClient extends ApiClientBase
 
         $result = $this->xmlParser->parse($response);
         return $this->parseSearchResults($result, $params);
+    }
+
+    /**
+     * Batch availability search using curl_multi.
+     *
+     * Sends multiple frmsearch requests in parallel and returns parsed results.
+     *
+     * @param array<string, array> $paramsList Keyed array: key => search params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array> key => parsed search results array
+     */
+    public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
+    {
+        if (empty($paramsList)) {
+            return [];
+        }
+
+        $requests = [];
+        foreach ($paramsList as $key => $params) {
+            $requests[$key] = [
+                'function' => Constants::API_FUNCTION_SEARCH,
+                'xml' => $this->buildSearchXml($params),
+                'lang' => $params['lang'] ?? 'UK',
+            ];
+        }
+
+        $rawResponses = $this->httpClient->sendBatchRequests($requests, $concurrency);
+        $results = [];
+
+        foreach ($rawResponses as $key => $raw) {
+            if ($raw === false) {
+                $results[$key] = [];
+                continue;
+            }
+
+            try {
+                $cleaned = $this->xmlParser->clean($raw);
+                $parsed = $this->xmlParser->parse($cleaned);
+                $results[$key] = $this->parseSearchResults($parsed, $paramsList[$key]);
+            } catch (\Exception $e) {
+                $results[$key] = [];
+            }
+        }
+
+        return $results;
     }
 
     private function parseSearchResults($result, $params): array

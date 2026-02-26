@@ -3,8 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
-use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class CleanupCommand extends AbstractCronCommand
 {
@@ -25,7 +24,7 @@ class CleanupCommand extends AbstractCronCommand
 
         // 1. Clean orphan bookings (no order_id, older than 48h)
         $this->output("1. Cleaning orphan bookings...");
-        $bookingRepo = new BookingRepository();
+        $bookingRepo = Container::getInstance()->bookingRepository();
         $orphan_count = $bookingRepo->countOrphans(48);
         $bookingRepo->deleteOrphans(48);
         $this->output("   Orphan bookings deleted: {$orphan_count}");
@@ -33,7 +32,7 @@ class CleanupCommand extends AbstractCronCommand
 
         // 2. Clean old sync logs (keep last 100)
         $this->output("2. Cleaning old sync logs...");
-        $syncRepo = new SyncLogRepository();
+        $syncRepo = Container::getInstance()->syncLogRepository();
         $total_logs = $syncRepo->count();
         $logs_to_keep = 100;
         $logs_deleted = $syncRepo->trimToLatest($logs_to_keep);

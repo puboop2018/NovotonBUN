@@ -94,6 +94,10 @@ abstract class ApiClientBase
 
     protected function buildCacheKey(string $function, array $params): string
     {
-        return 'nvt_api_' . $function . '_' . md5(json_encode($params));
+        // Include hotel_id before the hash so cache invalidation per hotel
+        // can use index-friendly prefix matching (no leading wildcards).
+        $hotelId = $params['hotel_id'] ?? '';
+        $hotelPart = $hotelId !== '' ? $hotelId . '_' : '';
+        return 'nvt_api_' . $function . '_' . $hotelPart . md5(json_encode($params));
     }
 }

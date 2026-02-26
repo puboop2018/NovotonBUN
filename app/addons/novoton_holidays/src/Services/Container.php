@@ -27,6 +27,8 @@ use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelperInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
@@ -119,6 +121,11 @@ class Container
     public function alternativeRequestRepository(): AlternativeRequestRepositoryInterface
     {
         return $this->resolve('alternativeRequestRepository', fn() => new AlternativeRequestRepository());
+    }
+
+    public function hotelPackageRepository(): HotelPackageRepositoryInterface
+    {
+        return $this->resolve('hotelPackageRepository', fn() => new HotelPackageRepository());
     }
 
     // ═══════════════════════════════════════════════════════════════════

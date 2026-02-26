@@ -158,9 +158,11 @@ class HotelAvailabilitySearcher
         array  $rooms
     ): array {
         $this->log("=== MULTI-ROOM SEARCH MODE ===");
-        $this->log("Making " . count($roomsData) . " separate API calls, one per room occupancy");
+        $this->log("Sending " . count($roomsData) . " room requests in parallel via curl_multi");
 
-        $allRoomResults = [];
+        // Build all room requests upfront for batch execution
+        $batchRequests = [];
+        $roomMeta      = []; // roomKey => occupancy metadata
 
         foreach ($roomsData as $roomIdx => $roomOccupancy) {
             $roomNum       = $roomIdx + 1;
@@ -173,7 +175,8 @@ class HotelAvailabilitySearcher
                 $this->log("Children ages: " . implode(', ', $roomChildrenAges));
             }
 
-            $priceParams = [
+            $roomKey = "room_{$roomNum}";
+            $batchRequests[$roomKey] = [
                 'hotel_id'    => $hotelId,
                 'room_id'     => '',
                 'board_id'    => '',
@@ -183,27 +186,46 @@ class HotelAvailabilitySearcher
                 'adults'      => $roomAdults,
                 'children'    => $roomChildrenAges,
             ];
+            $roomMeta[$roomKey] = [
+                'roomNum' => $roomNum,
+                'occupancy' => "{$roomAdults} adults"
+                    . ($roomChildrenCount > 0 ? ", {$roomChildrenCount} children" : ''),
+            ];
+        }
 
-            $priceData = $api->getRoomPrice($priceParams);
+        // Execute ALL room requests in parallel via curl_multi
+        $batchResponses = $api->getRoomPriceBatch($batchRequests, count($batchRequests));
 
+        // Process batch results
+        $allRoomResults = [];
+        foreach ($batchResponses as $roomKey => $response) {
+            $meta       = $roomMeta[$roomKey] ?? null;
+            if (!$meta) {
+                continue;
+            }
+            $roomNum      = $meta['roomNum'];
+            $occupancyStr = $meta['occupancy'];
             $roomResults  = [];
-            $occupancyStr = "{$roomAdults} adults"
-                . ($roomChildrenCount > 0 ? ", {$roomChildrenCount} children" : '');
 
-            if ($priceData) {
-                $rawXml = $api->getLastResponse();
-                $this->log("  API Response received (parsing...)");
+            $priceData = $response['data'] ?? false;
+            $rawXml    = $response['rawXml'] ?? '';
+
+            if ($priceData && !empty($rawXml)) {
+                $this->log("  Room #{$roomNum}: API response received (parsing...)");
                 $roomResults = $this->searchService->parseRoomPriceResponse(
                     $rawXml, $nights, $checkIn, $checkOut,
                     $mealPlan, [], $roomTypeMap, $roomNum, $occupancyStr
                 );
             } else {
-                $this->logApiError($api, "  ");
+                $this->log("  Room #{$roomNum}: No response or empty data");
             }
 
             $allRoomResults[$roomNum] = $roomResults;
             $this->log("  Found " . count($roomResults) . " options for Room #{$roomNum}");
         }
+
+        // Ensure all room numbers are present (in order)
+        ksort($allRoomResults);
 
         // ── Aggregate results ────────────────────────────────────────
         $totalOptions = 0;

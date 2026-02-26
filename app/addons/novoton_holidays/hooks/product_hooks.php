@@ -85,7 +85,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $calendar_prices_currency = '';
     if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
         $display_currency = CurrencyService::getDisplayCurrency();
-        $priceInfoService = new PriceInfoService();
+        $priceInfoService = Container::getInstance()->priceInfoService();
         $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
         if (!empty($calendarData['prices'])) {
             $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);

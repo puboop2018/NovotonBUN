@@ -38,6 +38,139 @@ class PricingApiClient extends ApiClientBase
     }
 
     /**
+     * Build the room_price XML request body.
+     *
+     * Extracted from getRoomPrice() so it can be reused by getRoomPriceBatch().
+     *
+     * @param array $params Same parameters as getRoomPrice()
+     * @return string XML request body
+     */
+    public function buildRoomPriceXml(array $params): string
+    {
+        $roomId = $params['room_id'] ?? '';
+        $boardId = $params['board_id'] ?? '';
+        $checkIn = $params['check_in'] ?? '';
+        $checkOut = $params['check_out'] ?? '';
+        $adultsCount = max(1, (int) ($params['adults'] ?? 2));
+
+        $childrenXml = '';
+        if (!empty($params['children']) && is_array($params['children'])) {
+            foreach ($params['children'] as $age) {
+                $childrenXml .= '<Age>' . (int) $age . '</Age>';
+            }
+        }
+
+        return '<?xml version="1.0" encoding="windows-1251"?>
+        <room_price>
+            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
+            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            <IdHotel>' . htmlspecialchars($params['hotel_id'] ?? '') . '</IdHotel>
+            <PackageName></PackageName>
+            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
+            <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
+            <IdExtBoard></IdExtBoard>
+            <IdStar></IdStar>
+            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
+            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
+            <Currency>EUR</Currency>
+            <Adt>' . $adultsCount . '</Adt>
+            <Chd>' . $childrenXml . '</Chd>
+            <Remark>Yes</Remark>
+            <Important>Yes</Important>
+        </room_price>';
+    }
+
+    /**
+     * Batch room_price requests using curl_multi.
+     *
+     * Checks cache for each request first, then sends uncached requests in parallel.
+     * Returns both the parsed SimpleXMLElement and the raw cleaned XML for each key.
+     *
+     * @param array<string, array> $requestParams Keyed array: key => room_price params
+     * @param int $concurrency Max simultaneous requests (default 5)
+     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}> key => result
+     */
+    public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
+    {
+        if (empty($requestParams)) {
+            return [];
+        }
+
+        $requests = [];
+        $results = [];
+
+        foreach ($requestParams as $key => $params) {
+            $cacheParams = [
+                'hotel_id' => $params['hotel_id'] ?? '',
+                'room_id' => $params['room_id'] ?? '',
+                'board_id' => $params['board_id'] ?? '',
+                'check_in' => $params['check_in'] ?? '',
+                'check_out' => $params['check_out'] ?? '',
+                'adults' => $params['adults'] ?? 2,
+                'children' => $params['children'] ?? [],
+            ];
+            $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
+
+            $cachedXml = $this->getFromCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey);
+            if ($cachedXml !== null && is_string($cachedXml)) {
+                try {
+                    $results[$key] = [
+                        'data' => $this->xmlParser->parse($cachedXml),
+                        'rawXml' => $cachedXml,
+                    ];
+                    continue;
+                } catch (XmlParsingException $e) {
+                    // Cached data corrupted, fall through to API call
+                }
+            }
+
+            $requests[$key] = [
+                'function' => Constants::API_FUNCTION_ROOM_PRICE,
+                'xml' => $this->buildRoomPriceXml($params),
+                'lang' => $params['lang'] ?? 'UK',
+            ];
+        }
+
+        if (!empty($requests)) {
+            $rawResponses = $this->httpClient->sendBatchRequests($requests, $concurrency);
+
+            foreach ($rawResponses as $key => $raw) {
+                if ($raw === false) {
+                    $results[$key] = ['data' => false, 'rawXml' => ''];
+                    continue;
+                }
+
+                try {
+                    $cleaned = $this->xmlParser->clean($raw);
+                    $parsed = $this->xmlParser->parse($cleaned);
+                    $results[$key] = ['data' => $parsed, 'rawXml' => $cleaned];
+
+                    // Cache responses that contain prices
+                    $prices = $parsed->xpath('//Price');
+                    if (!empty($prices)) {
+                        $params = $requestParams[$key];
+                        $cacheParams = [
+                            'hotel_id' => $params['hotel_id'] ?? '',
+                            'room_id' => $params['room_id'] ?? '',
+                            'board_id' => $params['board_id'] ?? '',
+                            'check_in' => $params['check_in'] ?? '',
+                            'check_out' => $params['check_out'] ?? '',
+                            'adults' => $params['adults'] ?? 2,
+                            'children' => $params['children'] ?? [],
+                        ];
+                        $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
+                        $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $cleaned);
+                    }
+                } catch (\Exception $e) {
+                    $results[$key] = ['data' => false, 'rawXml' => ''];
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
      *
      * @return \SimpleXMLElement|false
@@ -89,32 +222,7 @@ class PricingApiClient extends ApiClientBase
             }
         }
 
-        $childrenXml = '';
-        if (!empty($params['children']) && is_array($params['children'])) {
-            foreach ($params['children'] as $age) {
-                $childrenXml .= '<Age>' . (int) $age . '</Age>';
-            }
-        }
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <room_price>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
-            <IdHotel>' . htmlspecialchars($params['hotel_id'] ?? '') . '</IdHotel>
-            <PackageName></PackageName>
-            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
-            <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
-            <IdExtBoard></IdExtBoard>
-            <IdStar></IdStar>
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-            <Currency>EUR</Currency>
-            <Adt>' . $adultsCount . '</Adt>
-            <Chd>' . $childrenXml . '</Chd>
-            <Remark>Yes</Remark>
-            <Important>Yes</Important>
-        </room_price>';
-
+        $xml = $this->buildRoomPriceXml($params);
         $this->lastRequest = $xml;
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');

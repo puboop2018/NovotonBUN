@@ -155,6 +155,20 @@ class NovotonApi implements NovotonApiInterface
         return $result;
     }
 
+    /**
+     * Batch room_price requests using curl_multi.
+     *
+     * @param array<string, array> $requestParams Keyed array: key => room_price params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}>
+     */
+    public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
+    {
+        $result = $this->pricingApi->getRoomPriceBatch($requestParams, $concurrency);
+        $this->syncFrom($this->pricingApi);
+        return $result;
+    }
+
     public function getRoomPriceByResort(array $params)
     {
         $result = $this->pricingApi->getRoomPriceByResort($params);
@@ -209,6 +223,20 @@ class NovotonApi implements NovotonApiInterface
     public function searchAvailability(array $params): array
     {
         $result = $this->availabilityApi->searchAvailability($params);
+        $this->syncFrom($this->availabilityApi);
+        return $result;
+    }
+
+    /**
+     * Batch availability search using curl_multi.
+     *
+     * @param array<string, array> $paramsList Keyed array: key => search params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array> key => parsed search results
+     */
+    public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
+    {
+        $result = $this->availabilityApi->searchAvailabilityBatch($paramsList, $concurrency);
         $this->syncFrom($this->availabilityApi);
         return $result;
     }
