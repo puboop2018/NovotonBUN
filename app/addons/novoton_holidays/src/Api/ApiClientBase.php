@@ -5,6 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 abstract class ApiClientBase
@@ -87,7 +88,7 @@ abstract class ApiClientBase
         if (!$this->enableCache || !$this->cache || $data === null) {
             return;
         }
-        $ttl = $this->cacheTtl[$function] ?? 300;
+        $ttl = $this->cacheTtl[$function] ?? ConfigProvider::getCacheTtlSearch();
         $this->cache->set($cacheKey, $data, $ttl);
     }
 

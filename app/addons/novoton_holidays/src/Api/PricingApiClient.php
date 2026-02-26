@@ -7,15 +7,12 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class PricingApiClient extends ApiClientBase
 {
     private CommissionCalculator $commissionCalculator;
-
-    protected array $cacheTtl = [
-        Constants::API_FUNCTION_ROOM_PRICE => 300,
-    ];
 
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_PRICE_INFO,
@@ -30,6 +27,9 @@ class PricingApiClient extends ApiClientBase
     ) {
         parent::__construct($httpClient, $xmlParser, $cache, $enableCache);
         $this->commissionCalculator = $commissionCalculator;
+        $this->cacheTtl = [
+            Constants::API_FUNCTION_ROOM_PRICE => ConfigProvider::getCacheTtlRoomPrice(),
+        ];
     }
 
     public function applyCommission(float $price): float

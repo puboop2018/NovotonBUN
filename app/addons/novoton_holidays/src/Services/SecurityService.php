@@ -14,17 +14,12 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class SecurityService implements SecurityServiceInterface
 {
     /** @var int Rate limit window in seconds */
     private const RATE_LIMIT_WINDOW = 60;
-    
-    /** @var int Max requests per window (per IP for API calls) */
-    private const RATE_LIMIT_MAX = 100;
-    
-    /** @var int Max booking attempts per hour (very high - essentially disabled) */
-    private const BOOKING_LIMIT_HOUR = 500;
     
     /**
      * Validate booking data
@@ -292,7 +287,7 @@ class SecurityService implements SecurityServiceInterface
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
-        $maxRequests = $maxRequests ?? self::RATE_LIMIT_MAX;
+        $maxRequests = $maxRequests ?? ConfigProvider::getRateLimitRequestsPerMin();
         $window = $window ?? self::RATE_LIMIT_WINDOW;
         
         $cacheKey = 'nvt_rate_' . md5($key);
@@ -335,7 +330,7 @@ class SecurityService implements SecurityServiceInterface
     {
         $result = $this->checkRateLimit(
             'booking_' . $identifier,
-            self::BOOKING_LIMIT_HOUR,
+            ConfigProvider::getRateLimitBookingsPerHour(),
             3600
         );
         

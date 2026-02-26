@@ -73,7 +73,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, 2000));
+    $special_requests = strip_tags(mb_substr(trim($bookingData['special_requests'] ?? ''), 0, ConfigProvider::getSpecialRequestsMaxLength()));
     
     // Parse guests (no full DOB validation needed at add_to_cart, that happens in update_booking)
     $parsed_guests = _nvt_parse_and_validate_guests($guests, '', 0, '');

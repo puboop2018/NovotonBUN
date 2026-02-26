@@ -14,11 +14,6 @@ class AvailabilityApiClient extends ApiClientBase
 {
     private CommissionCalculator $commissionCalculator;
 
-    protected array $cacheTtl = [
-        Constants::API_FUNCTION_HOTEL_QUOTA => 180,
-        'search' => 300,
-    ];
-
     public function __construct(
         NovotonHttpClient $httpClient,
         NovotonXmlParser $xmlParser,
@@ -28,6 +23,10 @@ class AvailabilityApiClient extends ApiClientBase
     ) {
         parent::__construct($httpClient, $xmlParser, $cache, $enableCache);
         $this->commissionCalculator = $commissionCalculator;
+        $this->cacheTtl = [
+            Constants::API_FUNCTION_HOTEL_QUOTA => ConfigProvider::getCacheTtlAvailability(),
+            'search' => ConfigProvider::getCacheTtlSearch(),
+        ];
     }
 
     /**

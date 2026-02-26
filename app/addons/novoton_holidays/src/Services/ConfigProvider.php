@@ -22,9 +22,7 @@ class ConfigProvider
     // API rate limiting
     public const API_DELAY_MS = 100;
 
-    // Batch processing defaults
-    public const DEFAULT_BATCH_SIZE = 100;
-    public const DEFAULT_MAX_EXECUTION_TIME = 300;
+    // Batch processing bounds (for clamping admin input)
     public const MIN_BATCH_SIZE = 10;
     public const MAX_BATCH_SIZE = 500;
     public const MIN_EXECUTION_TIME = 60;
@@ -37,9 +35,7 @@ class ConfigProvider
     // Product code prefix
     public const PRODUCT_CODE_PREFIX = 'NVT';
 
-    // Sync intervals
-    public const FULL_SYNC_INTERVAL_DAYS = 180;
-    public const PRICE_SYNC_INTERVAL_DAYS = 7;
+    // Stale threshold for incremental sync (hours)
     public const STALE_HOURS = 24;
 
     /** @var array|null Cached settings array, loaded once per request. */
@@ -239,6 +235,76 @@ class ConfigProvider
     {
         $val = self::settings()['excluded_resorts'] ?? '';
         return $val !== '' ? array_map('trim', explode(',', $val)) : [];
+    }
+
+    // ── Advanced Settings (Cache, Sync, Rate Limits) ──
+
+    public static function getCacheTtlRoomPrice(): int
+    {
+        return max(0, (int)(self::settings()['cache_ttl_room_price'] ?? 300));
+    }
+
+    public static function getCacheTtlAvailability(): int
+    {
+        return max(0, (int)(self::settings()['cache_ttl_availability'] ?? 180));
+    }
+
+    public static function getCacheTtlSearch(): int
+    {
+        return max(0, (int)(self::settings()['cache_ttl_search'] ?? 300));
+    }
+
+    /** Returns the hotel info full sync interval in seconds. */
+    public static function getSyncIntervalHotelInfo(): int
+    {
+        $days = max(1, (int)(self::settings()['sync_interval_hotel_info_days'] ?? 180));
+        return $days * 86400;
+    }
+
+    /** Returns the price info full sync interval in seconds. */
+    public static function getSyncIntervalPriceInfo(): int
+    {
+        $days = max(1, (int)(self::settings()['sync_interval_price_info_days'] ?? 7));
+        return $days * 86400;
+    }
+
+    /** Returns the facilities sync interval in seconds. */
+    public static function getSyncIntervalFacilities(): int
+    {
+        $days = max(1, (int)(self::settings()['sync_interval_facilities_days'] ?? 30));
+        return $days * 86400;
+    }
+
+    public static function getCronBatchSize(): int
+    {
+        $val = (int)(self::settings()['cron_batch_size'] ?? 100);
+        return max(self::MIN_BATCH_SIZE, min(self::MAX_BATCH_SIZE, $val));
+    }
+
+    public static function getCronMaxExecutionTime(): int
+    {
+        $val = (int)(self::settings()['cron_max_execution_time'] ?? 300);
+        return max(self::MIN_EXECUTION_TIME, min(self::MAX_EXECUTION_TIME, $val));
+    }
+
+    public static function getSlowItemWarningMs(): int
+    {
+        return max(1000, (int)(self::settings()['slow_item_warning_ms'] ?? 30000));
+    }
+
+    public static function getRateLimitRequestsPerMin(): int
+    {
+        return max(1, (int)(self::settings()['rate_limit_requests_per_min'] ?? 100));
+    }
+
+    public static function getRateLimitBookingsPerHour(): int
+    {
+        return max(1, (int)(self::settings()['rate_limit_bookings_per_hour'] ?? 20));
+    }
+
+    public static function getSpecialRequestsMaxLength(): int
+    {
+        return max(100, (int)(self::settings()['special_requests_max_length'] ?? 2000));
     }
 
     // ── Raw Access ──

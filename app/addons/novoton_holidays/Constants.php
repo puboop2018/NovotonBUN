@@ -271,6 +271,13 @@ final class Constants
 
     public const SYNC_LOG_RETENTION_DAYS = 30;
 
+    // ========== Internal Cache Limits ==========
+
+    /** Max entries in BookingRepository in-memory hydrated cache before trimming */
+    public const HYDRATED_CACHE_MAX = 500;
+    /** Trim to this many entries when HYDRATED_CACHE_MAX is exceeded */
+    public const HYDRATED_CACHE_TRIM = 250;
+
     // ========== File Paths ==========
 
     public const CACHE_DIR = 'var/cache/novoton/';

@@ -39,39 +39,13 @@ class BatchedPriceInfoSync
      */
     private string $state_file;
 
-    /**
-     * Number of packages to process per batch
-     */
-    private int $batch_size = 50;
-
-    /**
-     * Maximum execution time per run (seconds)
-     */
-    private int $max_execution_time = 300; // 5 minutes
-
-    /**
-     * Unlimited mode - no time limit (for CLI usage)
-     */
+    private int $batch_size;
+    private int $max_execution_time;
     private bool $unlimited = false;
-
-    /**
-     * Stale threshold - packages older than this need re-sync (hours)
-     */
     private int $stale_hours = 24;
-
-    /**
-     * Full sync interval (seconds) - 7 days
-     */
-    private int $full_sync_interval = 7 * 24 * 3600;
-
-    /**
-     * API instance
-     */
+    private int $full_sync_interval;
     private ?NovotonApi $api = null;
 
-    /**
-     * Constructor
-     */
     public function __construct()
     {
         $cache_dir = Registry::get('config.dir.cache_misc') ?? (DIR_ROOT . '/var/cache/');
@@ -82,6 +56,11 @@ class BatchedPriceInfoSync
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
+
+        // Load configurable values from addon settings
+        $this->batch_size = ConfigProvider::getCronBatchSize();
+        $this->max_execution_time = ConfigProvider::getCronMaxExecutionTime();
+        $this->full_sync_interval = ConfigProvider::getSyncIntervalPriceInfo();
 
         // CLI has no execution time limit — skip artificial batching
         if (PHP_SAPI === 'cli') {
