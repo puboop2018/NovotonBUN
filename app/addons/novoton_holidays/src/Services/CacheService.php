@@ -16,20 +16,11 @@ use Tygh\Registry;
 
 class CacheService implements CacheServiceInterface
 {
-    /** @var string Cache storage type: 'file' or 'database' */
-    private $storage = 'file';
-    
-    /** @var string Cache directory for file storage */
-    private $cache_dir;
-    
-    /** @var int Default TTL in seconds (5 minutes) */
-    private $default_ttl = 300;
-    
-    /** @var array In-memory cache for current request */
-    private static $memory_cache = [];
-    
-    /** @var bool Debug mode */
-    private $debug = false;
+    private string $storage = 'file';
+    private string $cache_dir;
+    private int $default_ttl = 300;
+    private static array $memory_cache = [];
+    private bool $debug = false;
     
     /**
      * Constructor
@@ -44,7 +35,7 @@ class CacheService implements CacheServiceInterface
         
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {
-            if (!mkdir($this->cache_dir, 0777, true) && !is_dir($this->cache_dir)) {
+            if (!mkdir($this->cache_dir, 0755, true) && !is_dir($this->cache_dir)) {
                 fn_log_event('general', 'warning', ['message' => 'Novoton CacheService: Failed to create cache directory', 'dir' => $this->cache_dir]);
             }
         }

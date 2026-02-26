@@ -422,15 +422,15 @@ if ($mode == 'test_facilities') {
 if ($mode == 'test_hotel_request') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
-    // Pass all form values back to template so they persist after submission
-    Tygh::$app['view']->assign('hotel_id', $hotel_id);
-    Tygh::$app['view']->assign('package_name', $_REQUEST['package_name'] ?? '');
-    Tygh::$app['view']->assign('check_in', $_REQUEST['check_in'] ?? '');
-    Tygh::$app['view']->assign('check_out', $_REQUEST['check_out'] ?? '');
-    Tygh::$app['view']->assign('adults', $_REQUEST['adults'] ?? '2');
-    Tygh::$app['view']->assign('room_id', $_REQUEST['room_id'] ?? '');
-    Tygh::$app['view']->assign('board_id', $_REQUEST['board_id'] ?? '');
-    Tygh::$app['view']->assign('holder', $_REQUEST['holder'] ?? '');
+    // Pass all form values back to template so they persist after submission (sanitized for XSS)
+    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('package_name', htmlspecialchars($_REQUEST['package_name'] ?? '', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('check_in', htmlspecialchars($_REQUEST['check_in'] ?? '', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('check_out', htmlspecialchars($_REQUEST['check_out'] ?? '', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('adults', htmlspecialchars($_REQUEST['adults'] ?? '2', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('room_id', htmlspecialchars($_REQUEST['room_id'] ?? '', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('board_id', htmlspecialchars($_REQUEST['board_id'] ?? '', ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('holder', htmlspecialchars($_REQUEST['holder'] ?? '', ENT_QUOTES, 'UTF-8'));
 
     if (!empty($hotel_id)) {
         try {

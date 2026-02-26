@@ -177,8 +177,8 @@ if ($mode === 'manage') {
     $page = isset($_REQUEST['page']) ? (int)($_REQUEST['page']) : 1;
     
     // Filters
-    $status_filter = $_REQUEST['status'] ?? '';
-    $search_email = $_REQUEST['email'] ?? '';
+    $status_filter = htmlspecialchars($_REQUEST['status'] ?? '', ENT_QUOTES, 'UTF-8');
+    $search_email = htmlspecialchars($_REQUEST['email'] ?? '', ENT_QUOTES, 'UTF-8');
     
     $where = [];
     $params = [];

@@ -305,9 +305,7 @@ function fn_novoton_holidays_update_exchange_rates($return_details = false): arr
 
     // Step 3: Get commission setting (0-5% range)
     $commission = ConfigProvider::getCurrencyRiskCommission();
-    if ($commission > 5) {
-        $commission = 5; // Maximum 5%
-    }
+    $commission = max(0.0, min(5.0, $commission)); // Clamp to 0-5% range
     $result['commission'] = $commission;
 
     // Step 4: Calculate coefficients (EUR is primary)

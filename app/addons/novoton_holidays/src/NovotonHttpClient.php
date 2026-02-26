@@ -13,28 +13,28 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class NovotonHttpClient implements HttpClientInterface
 {
-    private $apiUrl;
-    private $apiKey;
-    private $apiId;
-    private $apiUser;
-    private $apiPassword;
+    private string $apiUrl;
+    private string $apiKey;
+    private string $apiId;
+    private string $apiUser;
+    private string $apiPassword;
 
     // Retry configuration
-    private $maxRetries;
-    private $retryDelayMs;
-    private $retryMultiplier;
+    private int $maxRetries;
+    private int $retryDelayMs;
+    private int $retryMultiplier;
 
     // Circuit breaker configuration
-    private $circuitBreakerThreshold;
-    private $circuitBreakerTimeout;
-    private static $failureCount = 0;
-    private static $lastFailureTime = 0;
-    private static $circuitOpen = false;
+    private int $circuitBreakerThreshold;
+    private int $circuitBreakerTimeout;
+    private static int $failureCount = 0;
+    private static int $lastFailureTime = 0;
+    private static bool $circuitOpen = false;
 
     // Debug properties
-    public $lastHttpCode = 0;
-    public $lastError = '';
-    public $lastResponseRaw = '';
+    public int $lastHttpCode = 0;
+    public string $lastError = '';
+    public string $lastResponseRaw = '';
 
     public function __construct(array $settings)
     {

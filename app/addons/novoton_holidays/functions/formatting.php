@@ -279,7 +279,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 ];
                 
                 // Mark as FREE if value is 0
-                if ($value == 0) {
+                if ($value === 0 || $value === 0.0) {
                     $term['value'] = 'FREE';
                     $term['is_penalty'] = false;
                 }

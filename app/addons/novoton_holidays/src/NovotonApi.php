@@ -39,12 +39,12 @@ class NovotonApi implements NovotonApiInterface
     private DestinationApiClient $destinationApi;
 
     // Debug properties (backward compat — synced from active domain client after each call)
-    public $lastRequest = '';
-    public $lastResponse = '';
-    public $lastResponseRaw = '';
-    public $lastRequestFormatted = [];
-    public $lastError = '';
-    public $lastHttpCode = 0;
+    public string $lastRequest = '';
+    public string $lastResponse = '';
+    public string $lastResponseRaw = '';
+    public array $lastRequestFormatted = [];
+    public string $lastError = '';
+    public int $lastHttpCode = 0;
 
     public function __construct()
     {

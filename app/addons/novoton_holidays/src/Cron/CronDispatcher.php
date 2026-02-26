@@ -16,8 +16,8 @@ namespace Tygh\Addons\NovotonHolidays\Cron;
 class CronDispatcher
 {
     /** @var array<string, class-string<AbstractCronCommand>> mode => command class */
-    private static $commandMap = [];
-    private static $registered = false;
+    private static array $commandMap = [];
+    private static bool $registered = false;
     private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
     private ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
 

@@ -588,6 +588,9 @@
     /**
      * Observe for dynamically added guest fields
      */
+    var observeRetries = 0;
+    var MAX_OBSERVE_RETRIES = 10;
+
     function observeGuestChanges() {
         var containers = document.querySelectorAll(
             '.novoton-guests-container, .guest-details-container, #guest-details, ' +
@@ -595,8 +598,10 @@
         );
 
         if (containers.length === 0) {
-            // Try again later if not found yet
-            setTimeout(observeGuestChanges, 2000);
+            // Try again later if not found yet, with a retry limit
+            if (observeRetries++ < MAX_OBSERVE_RETRIES) {
+                setTimeout(observeGuestChanges, 2000);
+            }
             return;
         }
 

@@ -105,7 +105,8 @@
     function selectAllVisible() {
         document.querySelectorAll('.resort-item').forEach(function (item) {
             if (item.style.display !== 'none') {
-                item.querySelector('input[type="checkbox"]').checked = true;
+                var cb = item.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = true;
             }
         });
         updateExcludedCount();
@@ -114,24 +115,29 @@
     function deselectAllVisible() {
         document.querySelectorAll('.resort-item').forEach(function (item) {
             if (item.style.display !== 'none') {
-                item.querySelector('input[type="checkbox"]').checked = false;
+                var cb = item.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = false;
             }
         });
         updateExcludedCount();
     }
 
     function selectCountry(country) {
-        document.querySelectorAll('.resort-item[data-country="' + country + '"]').forEach(function (item) {
-            if (item.style.display !== 'none') {
-                item.querySelector('input[type="checkbox"]').checked = true;
+        document.querySelectorAll('.resort-item').forEach(function (item) {
+            if (item.getAttribute('data-country') === country && item.style.display !== 'none') {
+                var cb = item.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = true;
             }
         });
         updateExcludedCount();
     }
 
     function deselectCountry(country) {
-        document.querySelectorAll('.resort-item[data-country="' + country + '"]').forEach(function (item) {
-            item.querySelector('input[type="checkbox"]').checked = false;
+        document.querySelectorAll('.resort-item').forEach(function (item) {
+            if (item.getAttribute('data-country') === country) {
+                var cb = item.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = false;
+            }
         });
         updateExcludedCount();
     }

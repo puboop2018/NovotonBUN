@@ -24,7 +24,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @var array<int, array>
      */
-    private static $hydratedCache = [];
+    private static array $hydratedCache = [];
 
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
@@ -57,6 +57,11 @@ class BookingRepository implements BookingRepositoryInterface
         }
 
         $booking = self::hydrateJsonFields($booking);
+
+        // Prevent unbounded cache growth in long-running processes (cron)
+        if (count(self::$hydratedCache) > 500) {
+            self::$hydratedCache = array_slice(self::$hydratedCache, -250, null, true);
+        }
         self::$hydratedCache[$booking_id] = $booking;
 
         return $booking;

@@ -136,7 +136,8 @@ if ($mode === 'manage') {
     $bookingRepo = Container::getInstance()->bookingRepository();
 
     // List all bookings from novoton_bookings (single source of truth)
-    $params = $_REQUEST;
+    $allowed_params = ['page', 'sort_by', 'sort_order', 'status', 'order_id', 'hotel_id', 'novoton_status', 'check_in_from', 'check_in_to', 'show_orphans'];
+    $params = array_intersect_key($_REQUEST, array_flip($allowed_params));
     $params['items_per_page'] = Registry::get('settings.Appearance.admin_elements_per_page');
 
     // Sorting toggle for template (whitelist allowed sort columns)
