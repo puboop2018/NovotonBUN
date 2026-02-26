@@ -5721,19 +5721,3 @@ button.nvt-field-input:focus {
     color: #6b6b6b !important;
 }
 
-/* ===== "Please select the age of each child" hint positioning ===== */
-.nvt-child-age-hint {
-    position: absolute !important;
-    top: calc(100% + 6px) !important;
-    left: auto !important;
-    right: 0 !important;
-    font-size: 12px !important;
-    color: #d32f2f !important;
-    padding: 4px 12px !important;
-    white-space: nowrap !important;
-    background: #fff5f5 !important;
-    border: 1px solid #ffcdd2 !important;
-    border-radius: 4px !important;
-    font-weight: 500 !important;
-    z-index: 1 !important;
-}

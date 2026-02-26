@@ -133,12 +133,6 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    // Check if any child is missing an age selection
-    const hasChildrenMissingAge = rooms.some(room =>
-        room.children > 0 &&
-        (room.childrenAges || []).some(age => age === null || age === undefined || age === '')
-    );
-
     // Build guest summary text (always lowercase)
     const guestSummary = (() => {
         const parts = [];
@@ -482,12 +476,6 @@ export default function BookingEngine({ config }) {
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>
                     </button>
-
-                    {hasChildrenMissingAge && (
-                        <div className="nvt-child-age-hint">
-                            {t('pleaseSelectChildAge', 'Please select the age of each child')}
-                        </div>
-                    )}
 
                     {showGuests && (
                         <GuestPicker
