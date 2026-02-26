@@ -308,7 +308,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array
     {
-        $currency = $targetCurrency ?? RoomPriceService::getDisplayCurrency();
+        $currency = $targetCurrency ?? CurrencyService::getDisplayCurrency();
 
         // 1. Try precomputed raw prices (written by sync cron)
         $rawJson = db_get_field(
@@ -333,7 +333,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
             $price = $rawPrice * (1 + $commission / 100);
-            $price = RoomPriceService::convertFromApiCurrency((float) $price, $currency);
+            $price = CurrencyService::convertFromApiCurrency((float) $price, $currency);
             if ($roundPrices) {
                 $price = round($price);
             }

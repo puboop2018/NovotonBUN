@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -409,7 +409,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'currency' => RoomPriceService::getApiCurrency(),
+            'currency' => CurrencyService::getApiCurrency(),
             'status' => 'pending',
             'special_requests' => $special_requests,
             'notes' => $special_requests,
@@ -463,7 +463,7 @@ use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,
-            'currency' => RoomPriceService::getApiCurrency(),
+            'currency' => CurrencyService::getApiCurrency(),
         ]
     ];
     

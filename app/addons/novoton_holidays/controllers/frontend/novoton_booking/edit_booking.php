@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
@@ -188,7 +188,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     
     // Assign to view
     Tygh::$app['view']->assign('booking_data', $booking);
-    $novoton_display_currency = RoomPriceService::getDisplayCurrency();
+    $novoton_display_currency = CurrencyService::getDisplayCurrency();
     $currencies = \Tygh\Registry::get('currencies');
     $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
     $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;

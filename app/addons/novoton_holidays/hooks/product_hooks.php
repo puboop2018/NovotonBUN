@@ -17,7 +17,7 @@ declare(strict_types=1);
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -84,7 +84,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $calendar_prices_json = '{}';
     $calendar_prices_currency = '';
     if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
-        $display_currency = RoomPriceService::getDisplayCurrency();
+        $display_currency = CurrencyService::getDisplayCurrency();
         $priceInfoService = new PriceInfoService();
         $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
         if (!empty($calendarData['prices'])) {
