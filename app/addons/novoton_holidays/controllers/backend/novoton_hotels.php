@@ -228,7 +228,7 @@ if ($mode == 'add_hotels_as_products') {
                 // Create product
                 $product_data = [
                     'product' => $title,
-                    'product_code' => 'NVT-' . $hotel_id,
+                    'product_code' => ConfigProvider::PRODUCT_CODE_PREFIX . $hotel_id,
                     'price' => 0,
                     'status' => 'A',
                     'company_id' => Registry::get('runtime.company_id') ?: 1,

@@ -21,12 +21,6 @@ if (!defined('NOVOTON_VERSION')) {
     unset($__nv);
 }
 
-// Load addon constants
-$config_file = __DIR__ . '/config.php';
-if (file_exists($config_file)) {
-    require_once $config_file;
-}
-
 // Register PSR-4 autoloader for ALL addon namespaces.
 // All classes live under src/ — single PSR-4 root.
 spl_autoload_register(function ($class) {
@@ -137,12 +131,10 @@ fn_novoton_holidays_register_smarty_modifiers();
 fn_register_hooks(
     'get_product_data_post',                  // Add hotel data to products
     'gather_additional_product_data_post',    // Pass data to templates (for tabs)
-    'update_product_pre',                      // Before updating products
     'delete_product_post',                     // Cleanup after product deletion
     'place_order_post',                        // Create bookings on order (post — needs order_id)
     'get_orders_post',                         // Add booking info to orders
     'get_order_info',                          // Format terms on order detail page
-    'get_product_tabs_post',                   // Add tab in ADMIN product edit
     'dispatch_before_display',                 // Ensure meta variables are set
     'get_cart_product_data_post',              // Add booking info to cart items
     'calculate_cart_items',                    // After cart calculation
