@@ -206,6 +206,34 @@ class ConfigProvider
         return self::getProductCodePrefixes()[0] ?? 'NVT';
     }
 
+    /**
+     * Get the configured category ID for a country.
+     *
+     * Reads the country_category_map setting (one "COUNTRY:id" per line).
+     * Returns the mapped category_id, or 0 if no mapping exists.
+     */
+    public static function getCategoryForCountry(string $country): int
+    {
+        $raw = trim((string)(self::settings()['country_category_map'] ?? ''));
+        if ($raw === '') {
+            return 0;
+        }
+
+        foreach (explode("\n", $raw) as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, ':') === false) {
+                continue;
+            }
+            [$key, $value] = explode(':', $line, 2);
+            if (strtoupper(trim($key)) === strtoupper($country)) {
+                $id = (int) trim($value);
+                return $id > 0 ? $id : 0;
+            }
+        }
+
+        return 0;
+    }
+
     /** @return string[] */
     public static function getExcludedResorts(): array
     {

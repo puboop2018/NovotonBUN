@@ -182,7 +182,10 @@ class AdminCronService
                 continue;
             }
 
-            $category_id = fn_novoton_holidays_get_or_create_category(str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE));
+            $category_id = ConfigProvider::getCategoryForCountry($country);
+            if (!$category_id) {
+                $category_id = fn_novoton_holidays_get_or_create_category(str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE));
+            }
             $added = 0;
 
             foreach ($hotels as $hotel) {

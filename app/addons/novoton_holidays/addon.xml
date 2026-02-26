@@ -188,6 +188,11 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <item id="country_category_map">
+                        <type>textarea</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
                     <item id="excluded_resorts">
                         <type>hidden</type>
                         <default_value>[]</default_value>

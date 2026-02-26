@@ -2221,6 +2221,14 @@ msgctxt "SettingsTooltips::novoton_holidays::delete_products_on_uninstall"
 msgid "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
 msgstr "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
 
+msgctxt "SettingsOptions::novoton_holidays::country_category_map"
+msgid "Country → Category mapping"
+msgstr "Country → Category mapping"
+
+msgctxt "SettingsTooltips::novoton_holidays::country_category_map"
+msgid "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+msgstr "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+
 msgctxt "SettingsOptions::novoton_holidays::excluded_resorts"
 msgid "Excluded Resorts (JSON)"
 msgstr "Excluded Resorts"

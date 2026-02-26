@@ -57,11 +57,14 @@ class AddProductsCommand extends AbstractCronCommand
                 continue;
             }
 
-            $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
-            $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+            $category_id = ConfigProvider::getCategoryForCountry($country);
+            if (!$category_id) {
+                $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
+                $category_id = fn_novoton_holidays_get_or_create_category($category_path);
+            }
 
             if (!$category_id) {
-                $this->output("ERROR: Failed to get/create category '{$category_path}'. Skipping {$country}.");
+                $this->output("ERROR: No category mapping for '{$country}' and auto-creation failed. Skipping.");
                 $this->output("");
                 $grand_total += count($hotels);
                 continue;
