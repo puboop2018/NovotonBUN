@@ -166,7 +166,7 @@ class PricingApiClient extends ApiClientBase
             <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
             <IdHotel></IdHotel>
-            <Resort>' . htmlspecialchars($resort) . '</Resort>
+            <Resort><![CDATA[' . $resort . ']]></Resort>
             <IdRoom></IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
@@ -220,7 +220,7 @@ class PricingApiClient extends ApiClientBase
             <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
             <IdHotel></IdHotel>
             <PackageName></PackageName>
-            <Resort>' . htmlspecialchars($resort) . '</Resort>
+            <Resort><![CDATA[' . $resort . ']]></Resort>
             <IdRoom></IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
