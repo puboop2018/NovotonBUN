@@ -246,12 +246,77 @@ if ($mode == 'check_prices') {
                         continue;
                     }
 
-                    // Step 3: Regex to extract all <IdHotel> values from raw XML
+                    // Extract hotel IDs from the API response.
+                    // Primary: regex on raw XML for <IdHotel> elements.
+                    // Fallback: parse XML and use xpath for robustness.
+                    $resort_hotel_ids = [];
+
                     $matches = [];
                     preg_match_all('/<IdHotel>\s*(\d+)\s*<\/IdHotel>/i', $raw_response, $matches);
-
                     if (!empty($matches[1])) {
                         $resort_hotel_ids = array_unique($matches[1]);
+                    }
+
+                    // Fallback: parse XML and use xpath if regex found nothing
+                    if (empty($resort_hotel_ids)) {
+                        $prevLibxml = libxml_use_internal_errors(true);
+                        $xml = simplexml_load_string($raw_response, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+                        libxml_clear_errors();
+                        libxml_use_internal_errors($prevLibxml);
+
+                        if ($xml !== false) {
+                            // Try various xpath patterns the API may use for hotel IDs
+                            $xpathPatterns = ['//IdHotel', '//HotelId', '//hotel_id', '//idhotel'];
+                            foreach ($xpathPatterns as $xp) {
+                                $nodes = $xml->xpath($xp);
+                                if (!empty($nodes)) {
+                                    foreach ($nodes as $node) {
+                                        $val = trim((string)$node);
+                                        if ($val !== '' && ctype_digit($val)) {
+                                            $resort_hotel_ids[] = $val;
+                                        }
+                                    }
+                                    $resort_hotel_ids = array_unique($resort_hotel_ids);
+                                    break;
+                                }
+                            }
+
+                            // Last resort: if response has prices but no IdHotel,
+                            // extract hotel IDs from child element structure
+                            if (empty($resort_hotel_ids)) {
+                                $priceNodes = $xml->xpath('//Price');
+                                $hasResults = !empty($priceNodes);
+
+                                // Check for error responses
+                                $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
+                                if (!empty($errorNode)) {
+                                    $errorMsg = trim((string)$errorNode[0]);
+                                    if ($resort_idx < 3) {
+                                        echo "<span class='error'>  API error: " . htmlspecialchars($errorMsg) . "</span><br>\n";
+                                    }
+                                } elseif ($hasResults) {
+                                    // API returned prices but no hotel IDs — try to extract
+                                    // from Hotel wrapper elements if present
+                                    $hotelNodes = $xml->xpath('//Hotel');
+                                    if (!empty($hotelNodes)) {
+                                        foreach ($hotelNodes as $hn) {
+                                            // Try IdHotel child, then id attribute
+                                            $hid = (string)($hn->IdHotel ?? $hn->HotelId ?? '');
+                                            if (empty($hid)) {
+                                                $hid = (string)($hn['id'] ?? $hn['Id'] ?? $hn['IdHotel'] ?? '');
+                                            }
+                                            if (!empty($hid) && ctype_digit(trim($hid))) {
+                                                $resort_hotel_ids[] = trim($hid);
+                                            }
+                                        }
+                                        $resort_hotel_ids = array_unique($resort_hotel_ids);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!empty($resort_hotel_ids)) {
                         $count = count($resort_hotel_ids);
 
                         foreach ($resort_hotel_ids as $hid) {
@@ -261,10 +326,17 @@ if ($mode == 'check_prices') {
                         $response_kb = round(strlen($raw_response) / 1024, 1);
                         echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                     } else {
-                        echo "<span class='skip'>  No hotels with prices</span><br>\n";
+                        // Diagnostic: show response size and first 300 chars on first empty resort
+                        $response_kb = round(strlen($raw_response) / 1024, 1);
+                        $snippet = htmlspecialchars(substr($raw_response, 0, 300));
+                        echo "<span class='skip'>  No hotels with prices ({$response_kb} KB)</span>";
+                        if ($resort_idx < 3) {
+                            echo "<br><span class='skip' style='font-size:10px;color:#999;'>  Response preview: {$snippet}...</span>";
+                        }
+                        echo "<br>\n";
                     }
 
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     echo "<span class='error'>  Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
                     $resort_errors++;
                 }
