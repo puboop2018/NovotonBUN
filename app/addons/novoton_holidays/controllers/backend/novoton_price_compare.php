@@ -291,7 +291,14 @@ if ($mode == 'compare') {
         echo '</table>';
     }
 
-    echo '<div class="formula">Base Price = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' EUR</div>';
+    $basePriceVal = $breakdown['base_price'] ?? 0;
+    echo '<div class="formula">Base Price = ' . number_format($basePriceVal, 2) . ' EUR</div>';
+    if ($basePriceVal == 0) {
+        echo '<div style="background:#fff3cd;color:#856404;padding:10px;border-radius:4px;margin-top:8px;">';
+        echo '<strong>Base Price is 0.</strong> This usually means no matching season_price rows were found for the selected room/board/occupancy combination. ';
+        echo 'Use the <strong>Verify Season-Price Mapping</strong> button to check which price columns map to which dates, or enable <strong>Debug</strong> to see detailed matching info.';
+        echo '</div>';
+    }
     echo '</div>';
 
     // =========================================================================

@@ -182,7 +182,7 @@
                                     - {$room_info.board_id}
                                 {/if}
                                 {if $room_info.price}
-                                    ({math equation="round(x * y)" x=$room_info.price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY})
+                                    ({fn_novoton_holidays_format_price($room_info.price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter})
                                 {/if}
                             </span>
                         {/foreach}
@@ -224,8 +224,7 @@
                 <div class="booking-price-box">
                     <div id="price-error-message" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
-                    <div class="price-total" id="novoton-total-price">{math equation="round(x * y * 100) / 100" x=$booking_data.total_price|default:0 y=$novoton_display_coefficient|default:1 format="%.2f"}</div>
-                    <div class="price-currency">{$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                    <div class="price-total" id="novoton-total-price">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                     <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
                         ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
                     </span>
@@ -258,7 +257,7 @@
                         <span style="font-size: 16px;"> {__("novoton_holidays.room_number")} {$room_num}</span>
                         <span style="float: right; font-weight: normal; font-size: 14px;">
                             {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
-                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{math equation="round(x * y)" x=$room.price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</span>
+                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{fn_novoton_holidays_format_price($room.price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
                         </span>
                     </div>
                     {/if}

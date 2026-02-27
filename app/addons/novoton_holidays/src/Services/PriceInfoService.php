@@ -325,6 +325,23 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         $rawPrices = !empty($rawJson) ? json_decode($rawJson, true) : null;
 
+        // Fallback: if column is empty, compute on-the-fly from priceinfo_data
+        if (empty($rawPrices)) {
+            $rawPrices = self::computeRawCalendarPrices($hotelId);
+            // Store for next request (best-effort, ignore failures)
+            if (!empty($rawPrices)) {
+                try {
+                    @db_query(
+                        "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
+                        json_encode($rawPrices, JSON_UNESCAPED_UNICODE),
+                        $hotelId
+                    );
+                } catch (\Throwable $e) {
+                    // Column may not exist — ignore
+                }
+            }
+        }
+
         if (empty($rawPrices)) {
             return ['prices' => [], 'currency' => $currency];
         }

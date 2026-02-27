@@ -264,8 +264,27 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
                     }
                 }
             }
+
+            // Fallback: extract board types from priceinfo season_price data
+            if (empty($board_names) && !empty($hotel_full['packages'])) {
+                foreach ($hotel_full['packages'] as $pkg) {
+                    $pi = $pkg['priceinfo_data'] ?? null;
+                    if (is_string($pi)) {
+                        $pi = json_decode($pi, true);
+                    }
+                    if (!empty($pi['season_price'])) {
+                        $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
+                        foreach ($sp_list as $sp) {
+                            $bid = $sp['IdBoard'] ?? '';
+                            if (!empty($bid)) {
+                                $board_names[] = fn_novoton_holidays_format_board_name($bid);
+                            }
+                        }
+                    }
+                }
+            }
             $boards_str = implode(',', array_unique($board_names));
-            
+
             // Romanian row
             $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';
             $csv_lines[] = implode(';', [
@@ -375,6 +394,25 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                     $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string) $b;
                     if (!empty($code)) {
                         $board_names[] = fn_novoton_holidays_format_board_name($code);
+                    }
+                }
+            }
+
+            // Fallback: extract board types from priceinfo season_price data
+            if (empty($board_names) && !empty($hotel_full['packages'])) {
+                foreach ($hotel_full['packages'] as $pkg) {
+                    $pi = $pkg['priceinfo_data'] ?? null;
+                    if (is_string($pi)) {
+                        $pi = json_decode($pi, true);
+                    }
+                    if (!empty($pi['season_price'])) {
+                        $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
+                        foreach ($sp_list as $sp) {
+                            $bid = $sp['IdBoard'] ?? '';
+                            if (!empty($bid)) {
+                                $board_names[] = fn_novoton_holidays_format_board_name($bid);
+                            }
+                        }
                     }
                 }
             }

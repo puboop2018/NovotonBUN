@@ -47,9 +47,13 @@ class PriceInfoFormatter
     public static function matchRoom(string $rowRoom, string $roomId): bool
     {
         if (empty($roomId)) return true;
-        return $rowRoom === $roomId ||
-               rawurldecode($rowRoom) === $roomId ||
-               $rowRoom === rawurlencode($roomId);
+        if (strcasecmp($rowRoom, $roomId) === 0) return true;
+        if (strcasecmp(rawurldecode($rowRoom), $roomId) === 0) return true;
+        if (strcasecmp($rowRoom, rawurlencode($roomId)) === 0) return true;
+        // Normalize spaces/plus signs for occupancy patterns like "DBL 2+1"
+        $normRow = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($rowRoom));
+        $normId  = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($roomId));
+        return strcasecmp(trim($normRow), trim($normId)) === 0;
     }
 
     /**

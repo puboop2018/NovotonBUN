@@ -266,7 +266,7 @@ function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hote
     // V3: Get first package with priceinfo_data (active package)
     $package = db_get_row(
         "SELECT * FROM ?:novoton_hotel_packages
-         WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+         WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL AND priceinfo_data != ''
          ORDER BY synced_at DESC LIMIT 1",
         $hotel_id
     );

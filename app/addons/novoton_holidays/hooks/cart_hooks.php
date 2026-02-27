@@ -91,7 +91,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
             }
 
             $used_booking_ids[] = $booking['booking_id'];
-            _nvt_inject_booking_into_cart_product($product, $booking, $cart, $cart_id);
+            _nvt_inject_booking_into_cart_product($product, $booking, $cart, (string) $cart_id);
             fn_novoton_holidays_add_booking_display_data($product, $cart);
             break;
         }
