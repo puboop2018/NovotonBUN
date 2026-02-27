@@ -48,7 +48,7 @@ if (empty($mode)) {
 }
 
 // Sanitize mode to prevent XSS when echoed
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode)) ?? 'full';
+$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
 
 echo "[" . date('Y-m-d H:i:s') . "] Novoton Cron Started - Mode: {$mode}\n";
 
@@ -99,7 +99,7 @@ try {
 
     $companyData = fn_get_company_data(0);
     $adminEmail = $companyData['company_users_department'] ?? '';
-    if (!empty($adminEmail) && function_exists('fn_novoton_holidays_send_import_report_email')) {
+    if (!empty($adminEmail)) {
         fn_novoton_holidays_send_import_report_email([], 'cron_error', [
             'error' => $e->getMessage(),
             'time' => date('Y-m-d H:i:s'),

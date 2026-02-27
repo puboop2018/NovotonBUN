@@ -64,7 +64,7 @@ class BatchedSyncCommand extends AbstractCronCommand
 
         $this->configureBatchSync($sync);
 
-        if (!empty($_REQUEST['stale_hours']) && method_exists($sync, 'setStaleHours')) {
+        if (!empty($_REQUEST['stale_hours'])) {
             $sync->setStaleHours((int)$_REQUEST['stale_hours']);
         }
 

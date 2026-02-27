@@ -98,7 +98,7 @@ class ValidationHelper
     public static function isValidPhone(string $phone): bool
     {
         // Remove common formatting characters
-        $cleaned = preg_replace('/[\s\-\(\)\.]/', '', $phone) ?? $phone;
+        $cleaned = preg_replace('/[\s\-\(\)\.]/', '', $phone);
 
         // Must be 7-15 digits, optionally starting with +
         return preg_match('/^\+?\d{7,15}$/', $cleaned) === 1;
@@ -262,7 +262,7 @@ class ValidationHelper
     public static function sanitizeName(string $name): string
     {
         // Remove anything that's not a letter, space, hyphen, or apostrophe
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name) ?? $name;
+        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
         return mb_substr(trim($name), 0, 100);
     }
     
@@ -286,7 +286,7 @@ class ValidationHelper
     public static function sanitizePhone(string $phone): string
     {
         // Keep only digits and + sign
-        return preg_replace('/[^\d+]/', '', $phone) ?? $phone;
+        return preg_replace('/[^\d+]/', '', $phone);
     }
     
     /**

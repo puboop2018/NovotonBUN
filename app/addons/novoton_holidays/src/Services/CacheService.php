@@ -347,11 +347,7 @@ class CacheService implements CacheServiceInterface
             return 0;
         }
 
-        // Scan sharded subdirectories and flat (legacy) files
-        $files = array_merge(
-            glob($this->cache_dir . '*/*.cache') ?: [],
-            glob($this->cache_dir . '*.cache') ?: []
-        );
+        $files = glob($this->cache_dir . '*/*.cache') ?: [];
 
         $safe_prefix = ($prefix !== null) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $prefix) : null;
         foreach ($files as $file) {
@@ -491,11 +487,7 @@ class CacheService implements CacheServiceInterface
         $count = 0;
         
         if ($this->storage === 'file') {
-            // Clean expired file cache (sharded subdirectories + legacy flat)
-            $files = array_merge(
-                glob($this->cache_dir . '*/*.cache') ?: [],
-                glob($this->cache_dir . '*.cache') ?: []
-            );
+            $files = glob($this->cache_dir . '*/*.cache') ?: [];
             foreach ($files as $file) {
                 $content = file_get_contents($file);
                 if ($content !== false) {
@@ -532,10 +524,7 @@ class CacheService implements CacheServiceInterface
         ];
         
         if ($this->storage === 'file') {
-            $files = array_merge(
-                glob($this->cache_dir . '*/*.cache') ?: [],
-                glob($this->cache_dir . '*.cache') ?: []
-            );
+            $files = glob($this->cache_dir . '*/*.cache') ?: [];
             $stats['persistent_items'] = count($files);
             $stats['total_size'] = !empty($files) ? array_sum(array_map('filesize', $files)) : 0;
         } else {

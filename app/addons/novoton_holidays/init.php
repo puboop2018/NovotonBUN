@@ -45,10 +45,7 @@ spl_autoload_register(function ($class) {
 });
 
 // Force load hooks.php
-$hooks_file = __DIR__ . '/hooks.php';
-if (file_exists($hooks_file)) {
-    require_once($hooks_file);
-}
+require_once __DIR__ . '/hooks.php';
 
 // Define Smarty modifier functions first (before registration)
 /**
@@ -93,33 +90,17 @@ function fn_novoton_holidays_smarty_format_board($board_id)
 function fn_novoton_holidays_register_smarty_modifiers()
 {
     static $registered = false;
-    
+
     if ($registered) {
         return;
     }
-    
-    try {
-        if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
-            $smarty = \Tygh\Tygh::$app['view'];
-            if ($smarty && method_exists($smarty, 'registerPlugin')) {
-                // Check if already registered to avoid errors
-                $plugins = $smarty->registered_plugins ?? [];
-                if (!isset($plugins['modifier']['novoton_format_room_type'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_holidays_smarty_format_room_type');
-                }
-                if (!isset($plugins['modifier']['novoton_format_board'])) {
-                    $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_holidays_smarty_format_board');
-                }
-                $registered = true;
-            }
-        }
-    } catch (\Exception $e) {
-        // Modifiers won't be available but templates should still work
-        if (function_exists('fn_log_event')) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'novoton_holidays: Smarty modifier registration failed',
-                'error' => $e->getMessage(),
-            ]);
+
+    if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
+        $smarty = \Tygh\Tygh::$app['view'];
+        if ($smarty) {
+            $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_holidays_smarty_format_room_type');
+            $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_holidays_smarty_format_board');
+            $registered = true;
         }
     }
 }
@@ -129,8 +110,9 @@ fn_novoton_holidays_register_smarty_modifiers();
 
 // Register addon hooks
 fn_register_hooks(
-    'get_product_data_post',                  // Add hotel data to products
-    'gather_additional_product_data_post',    // Pass data to templates (for tabs)
+    'get_products_post',                       // Batch prefetch hotel data for product listings
+    'get_product_data_post',                   // Add hotel data to products
+    'gather_additional_product_data_post',     // Pass data to templates (for tabs)
     'delete_product_post',                     // Cleanup after product deletion
     'place_order_post',                        // Create bookings on order (post — needs order_id)
     'get_orders_post',                         // Add booking info to orders

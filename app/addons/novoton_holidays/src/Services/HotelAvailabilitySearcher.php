@@ -502,7 +502,7 @@ class HotelAvailabilitySearcher
             return;
         }
         $api = fn_novoton_holidays_get_api();
-        if ($api && method_exists($api, 'getCircuitStatus')) {
+        if ($api) {
             $cs = $api->getCircuitStatus();
             $this->log("=== API CIRCUIT BREAKER STATUS ===");
             $this->log("Circuit Open: " . ($cs['is_open'] ? 'YES (BLOCKING REQUESTS!)' : 'NO'));
@@ -547,11 +547,9 @@ class HotelAvailabilitySearcher
             if ($lastError) {
                 $this->log($prefix . "API Error: " . $lastError);
             }
-            if (method_exists($api, 'getCircuitStatus')) {
-                $cs = $api->getCircuitStatus();
-                if ($cs['is_open']) {
-                    $this->log($prefix . "CIRCUIT BREAKER IS OPEN!");
-                }
+            $cs = $api->getCircuitStatus();
+            if ($cs['is_open']) {
+                $this->log($prefix . "CIRCUIT BREAKER IS OPEN!");
             }
         }
     }

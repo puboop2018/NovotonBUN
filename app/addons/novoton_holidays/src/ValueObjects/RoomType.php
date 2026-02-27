@@ -182,7 +182,7 @@ final class RoomType
         $roomCode = str_replace(['%2b', '%2B'], '+', $roomCode);
         $roomCode = rawurldecode($roomCode);
         $roomCode = trim($roomCode);
-        $roomCode = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomCode) ?? $roomCode;
+        $roomCode = preg_replace('/(\d)\s+(\d)/', '$1+$2', $roomCode);
         return $roomCode;
     }
 

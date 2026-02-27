@@ -37,44 +37,6 @@ class RoomPriceService implements RoomPriceServiceInterface
     }
     
     /**
-     * @deprecated Use CurrencyService::getDisplayCurrency() directly.
-     */
-    public static function getDisplayCurrency(): string
-    {
-        return CurrencyService::getDisplayCurrency();
-    }
-
-    /**
-     * @deprecated Use CurrencyService::getApiCurrency() directly.
-     */
-    public static function getApiCurrency(): string
-    {
-        return CurrencyService::getApiCurrency();
-    }
-
-    /**
-     * @deprecated Use CurrencyService::convertFromApiCurrency() directly.
-     */
-    public static function convertFromApiCurrency(float $api_price, ?string $target_currency = null): float
-    {
-        return CurrencyService::convertFromApiCurrency($api_price, $target_currency);
-    }
-
-    /**
-     * Convert all price fields in a search results array from API currency to display currency.
-     *
-     * @param array $results Search results array
-     * @return array Results with converted prices
-     */
-    /**
-     * @deprecated Use CurrencyService::convertResultsCurrency() directly.
-     */
-    public static function convertResultsCurrency(array $results): array
-    {
-        return CurrencyService::convertResultsCurrency($results);
-    }
-
-    /**
      * Apply commission to base price
      *
      * @param float $base_price Base price from API

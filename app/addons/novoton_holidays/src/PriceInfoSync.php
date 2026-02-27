@@ -324,15 +324,13 @@ class PriceInfoSync
         );
 
         // Send email report
-        if (function_exists('fn_novoton_holidays_send_import_report_email')) {
-            fn_novoton_holidays_send_import_report_email([], 'room_price', [
-                'added'    => 0,
-                'updated'  => count($stats['updated']),
-                'skipped'  => count($stats['no_data']),
-                'errors'   => count($stats['failed']),
-                'duration' => $stats['duration'] ?? 'N/A',
-            ], $this->defaultCountry);
-        }
+        fn_novoton_holidays_send_import_report_email([], 'room_price', [
+            'added'    => 0,
+            'updated'  => count($stats['updated']),
+            'skipped'  => count($stats['no_data']),
+            'errors'   => count($stats['failed']),
+            'duration' => $stats['duration'] ?? 'N/A',
+        ], $this->defaultCountry);
 
         return $stats;
     }
@@ -494,30 +492,23 @@ class PriceInfoSync
             );
         }
 
-        // Clear from file cache (sharded subdirectories + legacy flat)
+        // Clear from sharded file cache
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
             foreach ($functions as $fn) {
                 $safeHotelId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $hotelId);
                 $prefix = 'nvt_api_' . $fn . '_' . $safeHotelId . '_';
                 $shard = substr($prefix, 0, 2);
-                // Check sharded path first, then legacy flat path
-                $patterns = [
-                    $cacheDir . $shard . '/' . $prefix . '*.cache',
-                    $cacheDir . $prefix . '*.cache',
-                ];
-                foreach ($patterns as $pattern) {
-                    foreach (glob($pattern) ?: [] as $file) {
-                        if (is_file($file)) {
-                            @unlink($file);
-                        }
+                foreach (glob($cacheDir . $shard . '/' . $prefix . '*.cache') ?: [] as $file) {
+                    if (is_file($file)) {
+                        @unlink($file);
                     }
                 }
             }
         }
 
         // Clear live API cache via NovotonApi
-        if ($this->api && method_exists($this->api, 'clearCache')) {
+        if ($this->api) {
             $this->api->clearCache('room_price');
             $this->api->clearCache('hotel_quota');
         }
@@ -532,12 +523,7 @@ class PriceInfoSync
 
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
-            // Clear sharded subdirectories + legacy flat files
-            $files = array_merge(
-                glob($cacheDir . '*/nvt_api_*.cache') ?: [],
-                glob($cacheDir . 'nvt_api_*') ?: []
-            );
-            foreach ($files as $file) {
+            foreach (glob($cacheDir . '*/nvt_api_*.cache') ?: [] as $file) {
                 if (is_file($file)) {
                     @unlink($file);
                 }

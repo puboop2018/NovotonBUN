@@ -532,19 +532,6 @@ function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
 {
     $country = (string) ($country ?? 'BULGARIA');
 
-    // Ensure table exists (handles upgrades from versions that removed it)
-    db_query(
-        "CREATE TABLE IF NOT EXISTS `?:novoton_resorts` (
-            `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `resort_name` varchar(255) NOT NULL,
-            `country` varchar(100) NOT NULL,
-            `synced_at` datetime DEFAULT NULL,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `idx_resort_country` (`resort_name`(191), `country`),
-            KEY `idx_country` (`country`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort names synced from Novoton API'"
-    );
-
     $api = fn_novoton_holidays_get_api();
     if (!$api) {
         return ['success' => false, 'error' => 'API not available'];
