@@ -53,45 +53,65 @@ spl_autoload_register(function ($class) {
 // Force load hooks.php
 require_once __DIR__ . '/hooks.php';
 
-// Define Smarty modifier functions first (before registration)
+// ── Smarty modifier functions ──────────────────────────────────────────
+// Named using Smarty's auto-discovery convention: smarty_modifier_{name}
+// Smarty finds these by function name WITHOUT needing registerPlugin().
+// This eliminates the timing issue where registerPlugin() fails because
+// $app['view'] isn't ready yet during init.php loading.
+//
+// CRITICAL: each function is wrapped in try/catch. If a modifier throws
+// inside a {capture} block, Smarty's output buffer breaks and the ENTIRE
+// page crashes with "unexpected {/capture}". These modifiers are cosmetic
+// (format a code to a display name) — they must NEVER crash the page.
+
 /**
- * Smarty modifier to format room type code to full name
- * Usage in templates: {$room_id|novoton_format_room_type}
- *
- * Delegates to RoomType value object (single source of truth).
+ * Smarty modifier: {$room_id|novoton_format_room_type}
  */
+function smarty_modifier_novoton_format_room_type($room_id)
+{
+    try {
+        if (empty($room_id) || !is_string($room_id)) {
+            return is_string($room_id) ? $room_id : '';
+        }
+        if (preg_match('/[ăîâșț]/iu', $room_id)) {
+            return $room_id;
+        }
+        return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($room_id);
+    } catch (\Throwable $e) {
+        return is_string($room_id) ? $room_id : '';
+    }
+}
+
+/**
+ * Smarty modifier: {$board_id|novoton_format_board}
+ */
+function smarty_modifier_novoton_format_board($board_id)
+{
+    try {
+        if (empty($board_id) || !is_string($board_id)) {
+            return is_string($board_id) ? $board_id : '';
+        }
+        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+    } catch (\Throwable $e) {
+        return is_string($board_id) ? $board_id : '';
+    }
+}
+
+// Legacy aliases — keep for any code that references the old names
 function fn_novoton_holidays_smarty_format_room_type($room_id)
 {
-    if (empty($room_id)) {
-        return '';
-    }
-
-    // If already a full name (contains Romanian characters), return as-is
-    if (preg_match('/[ăîâșț]/iu', $room_id)) {
-        return $room_id;
-    }
-
-    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($room_id);
+    return smarty_modifier_novoton_format_room_type($room_id);
 }
 
-/**
- * Smarty modifier to format board code to full name
- * Usage in templates: {$board_id|novoton_format_board}
- *
- * Delegates to BoardType value object (single source of truth).
- */
 function fn_novoton_holidays_smarty_format_board($board_id)
 {
-    if (empty($board_id)) {
-        return '';
-    }
-
-    return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+    return smarty_modifier_novoton_format_board($board_id);
 }
 
 /**
- * Register Smarty modifiers
- * Called at the right time when Smarty is ready
+ * Register Smarty modifiers explicitly as backup.
+ * The smarty_modifier_{name} naming convention handles auto-discovery,
+ * but explicit registration ensures CS-Cart's Smarty also knows about them.
  */
 function fn_novoton_holidays_register_smarty_modifiers()
 {
@@ -101,17 +121,21 @@ function fn_novoton_holidays_register_smarty_modifiers()
         return;
     }
 
-    if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
-        $smarty = \Tygh\Tygh::$app['view'];
-        if ($smarty) {
-            $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'fn_novoton_holidays_smarty_format_room_type');
-            $smarty->registerPlugin('modifier', 'novoton_format_board', 'fn_novoton_holidays_smarty_format_board');
-            $registered = true;
+    try {
+        if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
+            $smarty = \Tygh\Tygh::$app['view'];
+            if ($smarty) {
+                $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
+                $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
+                $registered = true;
+            }
         }
+    } catch (\Throwable $e) {
+        // Registration failed — auto-discovery will still work
     }
 }
 
-// Try to register immediately if possible
+// Try to register immediately if possible (may fail early in bootstrap — that's OK)
 fn_novoton_holidays_register_smarty_modifiers();
 
 // Register addon hooks

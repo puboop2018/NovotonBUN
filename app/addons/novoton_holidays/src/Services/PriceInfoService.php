@@ -310,12 +310,18 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $currency = $targetCurrency ?? CurrencyService::getDisplayCurrency();
 
-        // 1. Read precomputed raw prices (written by sync cron)
-        // Column is guaranteed by init.php schema migration.
-        $rawJson = db_get_field(
-            "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotelId
-        );
+        // 1. Read precomputed raw prices (written by sync cron).
+        // The calendar_prices_raw column is added by setup_db() on addon install/upgrade.
+        // Use @-suppressed query — if the column doesn't exist yet, db_get_field triggers
+        // a PHP warning or throws. Either way we fall back to an empty price map.
+        try {
+            $rawJson = @db_get_field(
+                "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
+                $hotelId
+            );
+        } catch (\Throwable $e) {
+            $rawJson = null;
+        }
 
         $rawPrices = !empty($rawJson) ? json_decode($rawJson, true) : null;
 
@@ -368,12 +374,17 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $rawPrices = self::computeRawCalendarPrices($hotelId);
 
-        // Column is guaranteed by init.php schema migration.
-        db_query(
-            "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-            !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
-            $hotelId
-        );
+        // Column is added by setup_db() on addon install/upgrade.
+        // Suppress errors if column doesn't exist yet.
+        try {
+            @db_query(
+                "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
+                !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
+                $hotelId
+            );
+        } catch (\Throwable $e) {
+            // Column doesn't exist yet — skip silently
+        }
     }
 
     /**
