@@ -42,7 +42,7 @@
             {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
             {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
             {else}{$room_display = $room_raw}{/if}
-            {$board_disp = $room.board_display|default:$room.board_name|default:$room.board_id|novoton_format_board}
+            {$board_disp = $room.board_display|default:$room.board_name|default:$room.board_id}
             &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room_display} | {$board_disp} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
         {/foreach}
     {else}
@@ -60,7 +60,7 @@
         {elseif $room_raw|strpos:'STU' !== false}{$room_display = $room_raw|replace:'STU':$_rt_stu}
         {elseif $room_raw|strpos:'SUITE' !== false || $room_raw|strpos:'SUI' !== false}{$room_display = $room_raw|replace:'SUITE':$_rt_sui|replace:'SUI':$_rt_sui}
         {else}{$room_display = $room_raw}{/if}
-        {$board_disp = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id|novoton_format_board}
+        {$board_disp = $oi.extra.board_display|default:$oi.extra.board_name|default:$oi.extra.board_id}
         <strong>Room:</strong> {$room_display}<br>
         <strong>Board:</strong> {$board_disp}<br>
         <strong>Guests:</strong> {$oi.extra.adults} adults{if $oi.extra.children}, {$oi.extra.children} children{/if}<br>

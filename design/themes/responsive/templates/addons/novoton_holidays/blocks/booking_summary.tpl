@@ -30,7 +30,7 @@
     {* Board type *}
     <div style="margin-bottom: 4px; font-size: 13px;">
         <strong style="color: #003580;"></strong>
-        {$product.extra.board_id|default:$product.extra.board_name|novoton_format_board}
+        {$product.extra.board_id|default:$product.extra.board_name}
     </div>
     
     {* Guests *}
