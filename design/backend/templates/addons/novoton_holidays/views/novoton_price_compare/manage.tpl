@@ -87,10 +87,9 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label>
-                <input type="checkbox" name="debug" value="1"> Show debug information
-            </label>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" name="debug" value="1" id="debug_checkbox" style="width: auto; margin: 0;">
+            <label for="debug_checkbox" style="margin: 0; font-weight: normal;">Show debug information</label>
         </div>
 
         <div class="form-group form-actions">

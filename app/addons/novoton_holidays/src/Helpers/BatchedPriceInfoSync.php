@@ -312,7 +312,7 @@ class BatchedPriceInfoSync
             // Precompute calendar prices once per hotel (deferred from per-package)
             if (!empty($hotelsToRecompute)) {
                 foreach (array_keys($hotelsToRecompute) as $hid) {
-                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hid);
+                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
                 }
                 $hotelsToRecompute = [];
             }
@@ -363,7 +363,7 @@ class BatchedPriceInfoSync
                 }
                 // Precompute calendar prices for recovered hotels
                 foreach (array_keys($hotelsToRecompute) as $hid) {
-                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hid);
+                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
                 }
                 $hotelsToRecompute = [];
                 $state['retry_done'] = true;
