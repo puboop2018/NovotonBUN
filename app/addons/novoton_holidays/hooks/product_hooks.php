@@ -115,12 +115,20 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $calendar_prices_json = '{}';
     $calendar_prices_currency = '';
     if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
-        $display_currency = CurrencyService::getDisplayCurrency();
-        $priceInfoService = Container::getInstance()->priceInfoService();
-        $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
-        if (!empty($calendarData['prices'])) {
-            $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
-            $calendar_prices_currency = $calendarData['currency'];
+        try {
+            $display_currency = CurrencyService::getDisplayCurrency();
+            $priceInfoService = Container::getInstance()->priceInfoService();
+            $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
+            if (!empty($calendarData['prices'])) {
+                $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
+                $calendar_prices_currency = $calendarData['currency'];
+            }
+        } catch (\Exception $e) {
+            // Graceful degradation: calendar prices are optional UI enhancement.
+            // Log but don't break the product page rendering.
+            fn_log_event('general', 'runtime', [
+                'message' => 'Calendar prices failed for hotel ' . $hotel_id . ': ' . $e->getMessage()
+            ]);
         }
     }
     \Tygh\Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
