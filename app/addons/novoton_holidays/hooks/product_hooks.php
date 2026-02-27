@@ -72,6 +72,52 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         return;
     }
 
+    // ── Safety wrapper ──────────────────────────────────────────────────
+    // This hook runs during template rendering (inside index.tpl's {capture}
+    // block). An uncaught exception here breaks Smarty's {capture}/{/capture}
+    // matching, crashing the entire page with a useless error message.
+    // Hotel data is an enhancement — the product page MUST render without it.
+    try {
+        _nvt_populate_hotel_product_data($product, $addon_settings);
+    } catch (\Throwable $e) {
+        $error_detail = sprintf(
+            'Novoton: product hook failed for product #%d: [%s] %s in %s:%d',
+            $product['product_id'],
+            get_class($e),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        );
+
+        // Log to CS-Cart's log file
+        fn_log_event('general', 'runtime', ['message' => $error_detail]);
+
+        // ── TEMPORARY DEBUG: dump the real error to screen ──
+        // TODO: Remove this block after diagnosing the crash
+        fn_print_r('=== NOVOTON DEBUG: Product hook caught error ===');
+        fn_print_r($error_detail);
+        fn_print_r('Stack trace: ' . $e->getTraceAsString());
+        // ── END TEMPORARY DEBUG ──
+
+        // Assign safe defaults so templates don't crash on missing variables
+        $view = \Tygh\Tygh::$app['view'];
+        $view->assign('is_hotel_product', false);
+        $view->assign('show_novoton_booking_form', false);
+        $view->assign('prices', []);
+        $view->assign('calendar_prices_json', '{}');
+        $view->assign('calendar_prices_currency', '');
+        $view->assign('show_calendar_prices', 'N');
+    }
+}
+
+/**
+ * Internal: populate all hotel product data and assign to Smarty.
+ *
+ * Extracted so the caller can wrap in try/catch without deeply nesting
+ * the entire function body. Any \Throwable is caught by the caller.
+ */
+function _nvt_populate_hotel_product_data(array &$product, array $addon_settings): void
+{
     $product['is_hotel_product'] = true;
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
@@ -110,25 +156,16 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     \Tygh\Tygh::$app['view']->assign('show_novoton_booking_form', $show_booking_form);
     \Tygh\Tygh::$app['view']->assign('novoton_booking_form_position', $booking_form_position);
 
-    // Calendar prices: per-date approximate totals for the cheapest room
-    // Computed for the product page calendar (before user selects a room)
+    // Calendar prices
     $calendar_prices_json = '{}';
     $calendar_prices_currency = '';
     if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
-        try {
-            $display_currency = CurrencyService::getDisplayCurrency();
-            $priceInfoService = Container::getInstance()->priceInfoService();
-            $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
-            if (!empty($calendarData['prices'])) {
-                $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
-                $calendar_prices_currency = $calendarData['currency'];
-            }
-        } catch (\Exception $e) {
-            // Graceful degradation: calendar prices are optional UI enhancement.
-            // Log but don't break the product page rendering.
-            fn_log_event('general', 'runtime', [
-                'message' => 'Calendar prices failed for hotel ' . $hotel_id . ': ' . $e->getMessage()
-            ]);
+        $display_currency = CurrencyService::getDisplayCurrency();
+        $priceInfoService = Container::getInstance()->priceInfoService();
+        $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
+        if (!empty($calendarData['prices'])) {
+            $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
+            $calendar_prices_currency = $calendarData['currency'];
         }
     }
     \Tygh\Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
