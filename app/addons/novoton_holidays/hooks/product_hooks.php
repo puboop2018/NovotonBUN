@@ -32,28 +32,44 @@ function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_c
         return;
     }
 
-    $addon_settings = ConfigProvider::all();
-    if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
-        return;
-    }
+    try {
+        $addon_settings = ConfigProvider::all();
+        if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
+            return;
+        }
 
-    $hotel_ids = [];
-    foreach ($products as $product) {
-        if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
-            $hotel_id = _nvt_extract_hotel_id($product['product_code']);
-            if (!empty($hotel_id)) {
-                $hotel_ids[] = $hotel_id;
+        $hotel_ids = [];
+        foreach ($products as $product) {
+            if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
+                $hotel_id = _nvt_extract_hotel_id($product['product_code']);
+                if (!empty($hotel_id)) {
+                    $hotel_ids[] = $hotel_id;
+                }
             }
         }
-    }
 
-    if (!empty($hotel_ids)) {
-        fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+        if (!empty($hotel_ids)) {
+            fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+        }
+    } catch (\Throwable $e) {
+        // Prefetch is optional — don't crash
     }
 }
 
 /**
  * Hook: gather additional product data - pass prices to templates
+ *
+ * CRITICAL: This hook runs during template rendering — inside CS-Cart's
+ * {capture name="mainbox"} block in index.tpl. ANY uncaught exception
+ * or PHP error here corrupts Smarty's output buffer and crashes the page
+ * with "Not matching {capture}{/capture}".
+ *
+ * Defence layers:
+ * 1. Custom error handler converts trigger_error() to ErrorException
+ *    (CS-Cart's DB layer uses trigger_error for SQL errors — not catchable
+ *    by try/catch alone)
+ * 2. try/catch(\Throwable) catches all exceptions
+ * 3. Safe Smarty defaults assigned in catch block
  */
 function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
@@ -72,11 +88,16 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         return;
     }
 
-    // ── Safety wrapper ──────────────────────────────────────────────────
-    // This hook runs during template rendering (inside index.tpl's {capture}
-    // block). An uncaught exception here breaks Smarty's {capture}/{/capture}
-    // matching, crashing the entire page with a useless error message.
-    // Hotel data is an enhancement — the product page MUST render without it.
+    // Convert PHP errors (including trigger_error from CS-Cart DB layer)
+    // into exceptions so our try/catch can handle them.
+    $previousHandler = set_error_handler(function ($severity, $message, $file, $line) {
+        // Only convert errors, not notices/deprecations
+        if ($severity & (E_ERROR | E_USER_ERROR | E_WARNING | E_USER_WARNING | E_RECOVERABLE_ERROR)) {
+            throw new \ErrorException($message, 0, $severity, $file, $line);
+        }
+        return false; // Let PHP's default handler deal with notices
+    });
+
     try {
         _nvt_populate_hotel_product_data($product, $addon_settings);
     } catch (\Throwable $e) {
@@ -89,8 +110,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             $e->getLine()
         );
 
-        // Log the REAL error to CS-Cart logs + a dedicated file
-        fn_log_event('general', 'runtime', ['message' => $error_detail]);
+        // Log the REAL error to a dedicated file
         $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
         if ($logDir) {
             @file_put_contents(
@@ -108,6 +128,8 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         $view->assign('calendar_prices_json', '{}');
         $view->assign('calendar_prices_currency', '');
         $view->assign('show_calendar_prices', 'N');
+    } finally {
+        restore_error_handler();
     }
 }
 
@@ -176,6 +198,10 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
 
 /**
  * Hook: after getting product data
+ *
+ * Wrapped in try/catch — this fires during controller phase, but any crash
+ * prevents product data from loading correctly, which cascades to template
+ * failures inside the {capture} block.
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
@@ -183,23 +209,35 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
         return;
     }
 
-    $addon_settings = ConfigProvider::all();
-    if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
-        return;
+    try {
+        $addon_settings = ConfigProvider::all();
+        if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
+            return;
+        }
+
+        if (!_nvt_is_hotel_product($product_data, $addon_settings)) {
+            return;
+        }
+
+        $hotel_id = _nvt_extract_hotel_id($product_data['product_code']);
+
+        if (!empty($hotel_id)) {
+            $product_data['hotel_id']       = $hotel_id;
+            $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_data['product_id'], false, $hotel_id);
+        }
+
+        $product_data['is_hotel_product'] = true;
+    } catch (\Throwable $e) {
+        // Log but don't crash — product page will work without hotel data
+        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
+        if ($logDir) {
+            @file_put_contents(
+                $logDir . 'novoton_errors.log',
+                date('Y-m-d H:i:s') . ' get_product_data_post: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n",
+                FILE_APPEND
+            );
+        }
     }
-
-    if (!_nvt_is_hotel_product($product_data, $addon_settings)) {
-        return;
-    }
-
-    $hotel_id = _nvt_extract_hotel_id($product_data['product_code']);
-
-    if (!empty($hotel_id)) {
-        $product_data['hotel_id']       = $hotel_id;
-        $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_data['product_id'], false, $hotel_id);
-    }
-
-    $product_data['is_hotel_product'] = true;
 }
 
 /**
