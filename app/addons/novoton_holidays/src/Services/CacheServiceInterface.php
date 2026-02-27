@@ -16,9 +16,9 @@ interface CacheServiceInterface
     /**
      * @return mixed|null Cached value or null if not found/expired
      */
-    public function get(string $key);
+    public function get(string $key): mixed;
 
-    public function set(string $key, $value, ?int $ttl = null): bool;
+    public function set(string $key, mixed $value, ?int $ttl = null): bool;
     public function delete(string $key): bool;
 
     /**
@@ -31,7 +31,7 @@ interface CacheServiceInterface
      *
      * @return mixed
      */
-    public function remember(string $key, callable $callback, ?int $ttl = null);
+    public function remember(string $key, callable $callback, ?int $ttl = null): mixed;
 
     /**
      * @return int Number of expired entries removed

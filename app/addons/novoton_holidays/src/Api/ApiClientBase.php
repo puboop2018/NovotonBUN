@@ -5,6 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
@@ -69,7 +70,7 @@ abstract class ApiClientBase
         $this->lastHttpCode = $this->httpClient->lastHttpCode;
     }
 
-    protected function getFromCache(string $function, string $cacheKey)
+    protected function getFromCache(string $function, string $cacheKey): mixed
     {
         if (in_array($function, $this->noCacheFunctions)) {
             return null;
@@ -92,8 +93,54 @@ abstract class ApiClientBase
         $this->cache->set($cacheKey, $data, $ttl);
     }
 
+    /**
+     * Build XML header with encoding declaration.
+     */
+    protected function xmlHeader(): string
+    {
+        return '<?xml version="1.0" encoding="windows-1251"?>';
+    }
+
+    /**
+     * Build <usr> and <psw> credential elements.
+     */
+    protected function xmlCredentials(): string
+    {
+        return '<usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>'
+             . '<psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>';
+    }
+
+    /**
+     * Build children ages XML (<Age> elements).
+     */
+    protected function buildChildrenAgesXml(array $children): string
+    {
+        $xml = '';
+        foreach ($children as $age) {
+            $xml .= '<Age>' . (int) $age . '</Age>';
+        }
+        return $xml;
+    }
+
+    /**
+     * Build adult ages XML (<Age> elements).
+     */
+    protected function buildAdultAgesXml(int $count, array $adultAges = []): string
+    {
+        $xml = '';
+        for ($i = 0; $i < $count; $i++) {
+            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
+            $xml .= '<Age>' . $age . '</Age>';
+        }
+        return $xml;
+    }
+
     protected function buildCacheKey(string $function, array $params): string
     {
-        return 'nvt_api_' . $function . '_' . md5(json_encode($params));
+        // Include hotel_id before the hash so cache invalidation per hotel
+        // can use index-friendly prefix matching (no leading wildcards).
+        $hotelId = $params['hotel_id'] ?? '';
+        $hotelPart = $hotelId !== '' ? $hotelId . '_' : '';
+        return 'nvt_api_' . $function . '_' . $hotelPart . md5(json_encode($params));
     }
 }

@@ -194,18 +194,27 @@ class PriceInfoSync
                     'synced_at' => date('Y-m-d H:i:s')
                 ];
 
-                // Check if package exists
-                $existingId = db_get_field(
-                    "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-                    $hotelId,
-                    $packageId
+                // Atomic upsert — avoids SELECT-then-INSERT/UPDATE race condition
+                db_query(
+                    "INSERT INTO ?:novoton_hotel_packages
+                     (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
+                     VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, ?s)
+                     ON DUPLICATE KEY UPDATE
+                     package_name = VALUES(package_name),
+                     priceinfo_data = VALUES(priceinfo_data),
+                     seasons_count = VALUES(seasons_count),
+                     has_early_booking = VALUES(has_early_booking),
+                     min_price = VALUES(min_price),
+                     synced_at = VALUES(synced_at)",
+                    $packageData['hotel_id'],
+                    $packageData['package_id'],
+                    $packageData['package_name'],
+                    $packageData['priceinfo_data'],
+                    $packageData['seasons_count'],
+                    $packageData['has_early_booking'],
+                    $packageData['min_price'],
+                    $packageData['synced_at']
                 );
-
-                if ($existingId) {
-                    db_query("UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i", $packageData, $existingId);
-                } else {
-                    db_query("INSERT INTO ?:novoton_hotel_packages ?e", $packageData);
-                }
 
                 $packagesUpdated++;
             }
@@ -315,15 +324,13 @@ class PriceInfoSync
         );
 
         // Send email report
-        if (function_exists('fn_novoton_holidays_send_import_report_email')) {
-            fn_novoton_holidays_send_import_report_email([], 'room_price', [
-                'added'    => 0,
-                'updated'  => count($stats['updated']),
-                'skipped'  => count($stats['no_data']),
-                'errors'   => count($stats['failed']),
-                'duration' => $stats['duration'] ?? 'N/A',
-            ], $this->defaultCountry);
-        }
+        fn_novoton_holidays_send_import_report_email([], 'room_price', [
+            'added'    => 0,
+            'updated'  => count($stats['updated']),
+            'skipped'  => count($stats['no_data']),
+            'errors'   => count($stats['failed']),
+            'duration' => $stats['duration'] ?? 'N/A',
+        ], $this->defaultCountry);
 
         return $stats;
     }
@@ -457,29 +464,51 @@ class PriceInfoSync
     }
 
     /**
-     * Clear cached data for a specific hotel
+     * Clear cached data for a specific hotel.
+     *
+     * Uses index-friendly prefix matching (no leading wildcards) by leveraging
+     * the cache key format: nvt_api_{function}_{hotelId}_{hash}
      */
     private function clearHotelCache(string $hotelId): void
     {
-        // Clear live API cache from database (use delimiters to prevent over-matching)
-        db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l OR cache_key LIKE ?l",
-            '%_' . $hotelId . '_%',
-            '%_' . $hotelId
-        );
+        // Hotel-related API functions whose cache should be invalidated
+        $functions = [
+            Constants::API_FUNCTION_ROOM_PRICE,      // room_price
+            Constants::API_FUNCTION_HOTEL_QUOTA,      // hotel_quota
+            Constants::API_FUNCTION_HOTEL_QUOTA_ADD,  // hotel_quota_add
+            Constants::API_FUNCTION_HOTEL_INFO,       // hotelinfo
+            Constants::API_FUNCTION_HOTEL_DESCRIPTION,// hotel_description
+            Constants::API_FUNCTION_HOTEL_IMAGES,     // hotel_images
+            Constants::API_FUNCTION_PRICE_INFO,       // priceinfo
+            Constants::API_FUNCTION_SPECIAL_OFFERS,   // spo
+            Constants::API_FUNCTION_HOTEL_FACILITIES, // hotel_facilities
+        ];
 
-        // Clear from file cache if exists
+        // Index-friendly prefix matching: nvt_api_{function}_{hotelId}_%
+        foreach ($functions as $fn) {
+            db_query(
+                "DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l",
+                'nvt_api_' . $fn . '_' . $hotelId . '_%'
+            );
+        }
+
+        // Clear from sharded file cache
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
-            $files = glob($cacheDir . '*' . $hotelId . '*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    @unlink($file);
+            foreach ($functions as $fn) {
+                $safeHotelId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $hotelId);
+                $prefix = 'nvt_api_' . $fn . '_' . $safeHotelId . '_';
+                $shard = substr($prefix, 0, 2);
+                foreach (glob($cacheDir . $shard . '/' . $prefix . '*.cache') ?: [] as $file) {
+                    if (is_file($file)) {
+                        @unlink($file);
+                    }
                 }
             }
         }
 
         // Clear live API cache via NovotonApi
-        if ($this->api && method_exists($this->api, 'clearCache')) {
+        if ($this->api) {
             $this->api->clearCache('room_price');
             $this->api->clearCache('hotel_quota');
         }
@@ -494,8 +523,7 @@ class PriceInfoSync
 
         $cacheDir = DIR_ROOT . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
-            $files = glob($cacheDir . 'nvt_api_*');
-            foreach ($files as $file) {
+            foreach (glob($cacheDir . '*/nvt_api_*.cache') ?: [] as $file) {
                 if (is_file($file)) {
                     @unlink($file);
                 }

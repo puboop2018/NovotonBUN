@@ -107,7 +107,7 @@ interface SyncLoggerInterface
      * @param array       $extra  Additional data
      * @return int|false Log ID or false on failure
      */
-    public function logToDatabase(?string $status = 'completed', array $extra = []);
+    public function logToDatabase(?string $status = 'completed', array $extra = []): int|false;
 
     /**
      * Send email report.

@@ -30,46 +30,46 @@ interface NovotonApiInterface
 
     // ── Hotels ──
 
-    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%');
-    public function getHotelInfo(string $hotelId, string $lang = 'UK');
+    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement;
+    public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement;
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array;
-    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false);
-    public function getHotelImages(string $hotelId, string $lang = 'UK');
-    public function getHotelFacilities(string $hotelId);
-    public function listFacilities();
+    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement;
+    public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement;
+    public function getHotelFacilities(string $hotelId): \SimpleXMLElement;
+    public function listFacilities(): \SimpleXMLElement;
 
     // ── Pricing ──
 
     public function applyCommission(float $price): float;
-    public function getRoomPrice(array $params);
-    public function getRoomPriceByResort(array $params);
-    public function getRoomPriceByResortRaw(array $params);
-    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK');
-    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK');
+    public function getRoomPrice(array $params): \SimpleXMLElement|false;
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement;
+    public function getRoomPriceByResortRaw(array $params): string;
+    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement;
+    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement;
 
     // ── Availability ──
 
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array;
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement;
-    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut);
+    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement;
     public function searchAvailability(array $params): array;
 
     // ── Reservations ──
 
-    public function createReservation(array $bookingData);
-    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false);
+    public function createReservation(array $bookingData): \SimpleXMLElement;
+    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array;
     public function generateHotelRequestXml(array $requestData): string;
-    public function getAlternatives(string $idNum, string $lang = 'UK');
-    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK');
-    public function getInvoiceHtml(string $idNum, string $lang = 'UK');
-    public function getInvoiceXml(string $idNum, string $lang = 'UK');
-    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK');
+    public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement;
+    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement;
+    public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string;
+    public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement;
+    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement;
 
     // ── Destinations ──
 
-    public function getResortList(string $country = '', string $lang = 'UK');
-    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = '');
-    public function getKickbackInfo(string $lang = 'UK');
+    public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement;
+    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement;
+    public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement;
 
     // ── Debug ──
 

@@ -43,31 +43,31 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
 
         // Apply configuration from request params
-        if (!empty($_REQUEST['batch_size'])) {
-            $sync->setBatchSize((int)$_REQUEST['batch_size']);
+        if (!empty($this->params['batch_size'])) {
+            $sync->setBatchSize((int)$this->params['batch_size']);
         }
-        if (!empty($_REQUEST['max_time'])) {
-            $sync->setMaxExecutionTime((int)$_REQUEST['max_time']);
+        if (!empty($this->params['max_time'])) {
+            $sync->setMaxExecutionTime((int)$this->params['max_time']);
         }
-        if (!empty($_REQUEST['unlimited'])) {
+        if (!empty($this->params['unlimited'])) {
             $sync->setUnlimited(true);
             $this->output("Mode: UNLIMITED (no time limit)");
             $this->output("");
         }
 
         // Status check only
-        if (!empty($_REQUEST['status'])) {
+        if (!empty($this->params['status'])) {
             return $this->printStatus($sync);
         }
 
         // Build options
         $options = [];
-        if (!empty($_REQUEST['force_full'])) {
+        if (!empty($this->params['force_full'])) {
             $options['force_full'] = true;
             $this->output("Mode: FORCED FULL SYNC");
             $this->output("");
         }
-        if (!empty($_REQUEST['reset'])) {
+        if (!empty($this->params['reset'])) {
             $options['reset'] = true;
         }
 

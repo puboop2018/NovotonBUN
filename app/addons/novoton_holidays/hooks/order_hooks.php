@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
@@ -107,7 +108,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     $date_format   = Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
-    $currency_code = $order['secondary_currency'] ?? 'EUR';
+    $currency_code = $order['secondary_currency'] ?? Constants::CURRENCY_EUR;
 
     // Pre-fetch hotel locations in single query (avoid N+1)
     $hotel_ids = [];

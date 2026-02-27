@@ -8,7 +8,6 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
-use Tygh\Addons\NovotonHolidays\Services\Container;
 
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }

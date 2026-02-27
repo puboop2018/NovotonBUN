@@ -14,6 +14,9 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 class AlternativeDateSearcher
 {
+    /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
+    private const MAX_API_CALLS = 50;
+
     /** @var bool */
     private bool $debug;
 
@@ -27,6 +30,9 @@ class AlternativeDateSearcher
 
     /**
      * Search alternative dates for a hotel.
+     *
+     * Uses batch API requests (curl_multi) per date to parallelize room×board
+     * combinations. Enforces a hard cap of MAX_API_CALLS to prevent runaway loops.
      *
      * @param string $hotelId   Hotel identifier
      * @param string $checkIn   Original check-in date
@@ -83,27 +89,36 @@ class AlternativeDateSearcher
             return ['results' => [], 'check_in' => '', 'check_out' => ''];
         }
 
-        $altResults  = [];
-        $altCheckIn  = '';
-        $altCheckOut = '';
+        // Pre-extract room IDs/names for the batch
+        $roomData = [];
+        foreach ($rooms as $room) {
+            if (!is_object($room) && !is_array($room)) {
+                continue;
+            }
+            $roomId   = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
+            $roomName = is_object($room) ? (string) $room->Room   : ($room['Room'] ?? '');
+            if (!empty($roomId)) {
+                $roomData[] = ['id' => $roomId, 'name' => $roomName, 'original' => $room];
+            }
+        }
+
+        $altResults   = [];
+        $altCheckIn   = '';
+        $altCheckOut  = '';
+        $apiCallCount = 0;
 
         foreach ($altDates as $tryCheckIn) {
             $tryCheckOut = date('Y-m-d', strtotime($tryCheckIn . ' +' . $nights . ' days'));
 
-            foreach ($rooms as $room) {
-                if (!is_object($room) && !is_array($room)) {
-                    continue;
-                }
-                $roomId   = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
-                $roomName = is_object($room) ? (string) $room->Room   : ($room['Room'] ?? '');
-                if (empty($roomId)) {
-                    continue;
-                }
-
-                foreach ($boardTypes as $tryBoard) {
-                    $priceParams = [
+            // Build all room×board requests for this date as a batch
+            $batchRequests = [];
+            $requestMeta   = []; // Maps batch key → room/board metadata
+            foreach ($roomData as $ri => $rd) {
+                foreach ($boardTypes as $bi => $tryBoard) {
+                    $batchKey = "r{$ri}_b{$bi}";
+                    $batchRequests[$batchKey] = [
                         'hotel_id'    => $hotelId,
-                        'room_id'     => $roomId,
+                        'room_id'     => $rd['id'],
                         'board_id'    => $tryBoard,
                         'star_rating' => '',
                         'check_in'    => $tryCheckIn,
@@ -111,38 +126,77 @@ class AlternativeDateSearcher
                         'adults'      => $adults,
                         'children'    => $children,
                     ];
+                    $requestMeta[$batchKey] = [
+                        'roomIdx' => $ri,
+                        'boardId' => $tryBoard,
+                    ];
+                }
+            }
 
-                    $priceData = $api->getRoomPrice($priceParams);
+            // Enforce API call cap
+            $remaining = self::MAX_API_CALLS - $apiCallCount;
+            if ($remaining <= 0) {
+                $this->log("API call cap reached ({$apiCallCount}/" . self::MAX_API_CALLS . "). Stopping.");
+                break;
+            }
+            if (count($batchRequests) > $remaining) {
+                $batchRequests = array_slice($batchRequests, 0, $remaining, true);
+                $this->log("Trimmed batch to {$remaining} requests (cap).");
+            }
 
-                    if ($priceData && isset($priceData->Price)) {
-                        $rawPrice = (float) ((string) $priceData->Price);
-                        if ($rawPrice > 0) {
-                            $altCheckIn  = $tryCheckIn;
-                            $altCheckOut = $tryCheckOut;
+            $apiCallCount += count($batchRequests);
 
-                            $altPrice     = $api->applyCommission($rawPrice);
-                            $altResults[] = [
-                                'room'            => $room,
-                                'room_id'         => $roomId,
-                                'room_name'       => $roomName ?: str_replace(['%2b', '%2B'], '+', $roomId),
-                                'board_id'        => $tryBoard,
-                                'board_name'      => fn_novoton_holidays_format_board_name($tryBoard),
-                                'price_data'      => $priceData,
-                                'nights'          => $nights,
-                                'total_price'     => $altPrice,
-                                'price_per_night' => round($altPrice / $nights, 2),
-                                'check_in'        => $tryCheckIn,
-                                'check_out'       => $tryCheckOut,
-                            ];
-                            break; // Found for this room, move to next room
-                        }
+            // Send all room×board requests for this date in parallel
+            $batchResponses = $api->getRoomPriceBatch($batchRequests);
+
+            // Process responses: find first valid board per room
+            $foundRoomIds = [];
+            foreach ($batchResponses as $batchKey => $response) {
+                if (!isset($requestMeta[$batchKey])) {
+                    continue;
+                }
+                $meta = $requestMeta[$batchKey];
+                $ri   = $meta['roomIdx'];
+
+                // Skip if we already found a result for this room
+                if (isset($foundRoomIds[$ri])) {
+                    continue;
+                }
+
+                $priceData = $response['data'] ?? false;
+                if ($priceData && isset($priceData->Price)) {
+                    $rawPrice = (float) ((string) $priceData->Price);
+                    if ($rawPrice > 0) {
+                        $rd = $roomData[$ri];
+                        $foundRoomIds[$ri] = true;
+                        $altCheckIn  = $tryCheckIn;
+                        $altCheckOut = $tryCheckOut;
+                        $altPrice     = $api->applyCommission($rawPrice);
+                        $altResults[] = [
+                            'room'            => $rd['original'],
+                            'room_id'         => $rd['id'],
+                            'room_name'       => $rd['name'] ?: str_replace(['%2b', '%2B'], '+', $rd['id']),
+                            'board_id'        => $meta['boardId'],
+                            'board_name'      => fn_novoton_holidays_format_board_name($meta['boardId']),
+                            'price_data'      => $priceData,
+                            'nights'          => $nights,
+                            'total_price'     => $altPrice,
+                            'price_per_night' => round($altPrice / $nights, 2),
+                            'check_in'        => $tryCheckIn,
+                            'check_out'       => $tryCheckOut,
+                        ];
                     }
                 }
             }
 
             if (!empty($altResults)) {
+                $this->log("Found " . count($altResults) . " alternative(s) for {$tryCheckIn}.");
                 break; // Found results, stop searching dates
             }
+        }
+
+        if (empty($altResults)) {
+            $this->log("No alternatives found after {$apiCallCount} API calls.");
         }
 
         return [

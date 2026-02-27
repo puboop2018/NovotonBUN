@@ -44,13 +44,7 @@ class AvailabilityApiClient extends ApiClientBase
             return $cached;
         }
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
-            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
-            <IdRoom></IdRoom>
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        $xml = $this->buildHotelQuotaXml($hotelId, '', $checkIn, $checkOut);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
         $parsed = $this->xmlParser->parse($response);
@@ -100,16 +94,7 @@ class AvailabilityApiClient extends ApiClientBase
      */
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
-        $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
-
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
-            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
-            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
-            ' . $roomTypeXml . '
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut, $roomType);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_QUOTA, $xml);
 
@@ -123,38 +108,42 @@ class AvailabilityApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
+    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
-        <hotel_quota>
-            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
-            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
-            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
-            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
-        </hotel_quota>';
+        $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut);
 
         return $this->callApiAndParse(Constants::API_FUNCTION_HOTEL_QUOTA_ADD, $xml);
     }
 
     /**
-     * Search availability using frmsearch API endpoint
-     *
-     * @return array Search results
+     * Build hotel_quota XML (shared by getHotelQuotaAll, getHotelQuota, getHotelQuotaAdditional).
      */
-    public function searchAvailability(array $params): array
+    private function buildHotelQuotaXml(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): string
     {
-        $adultsCount = (int) ($params['adults'] ?? 2);
-        $adultAges = $params['adult_ages'] ?? [];
-        $adultsXml = '';
-        for ($i = 0; $i < $adultsCount; $i++) {
-            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
-            $adultsXml .= '<Age>' . $age . '</Age>';
-        }
+        $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        return $this->xmlHeader() . '
+        <hotel_quota>
+            <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
+            <IdRoom>' . htmlspecialchars($roomId) . '</IdRoom>
+            ' . $roomTypeXml . '
+            <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
+            <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
+        </hotel_quota>';
+    }
+
+    /**
+     * Build the frmsearch XML request body.
+     *
+     * Extracted for reuse by searchAvailabilityBatch().
+     */
+    private function buildSearchXml(array $params): string
+    {
+        $adultsXml = $this->buildAdultAgesXml((int) ($params['adults'] ?? 2), $params['adult_ages'] ?? []);
+
+        return $this->xmlHeader() . '
         <frmsearch>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <Country>' . htmlspecialchars(strtoupper($params['country'] ?? '')) . '</Country>
             <City>' . htmlspecialchars(strtoupper($params['city'] ?? '')) . '</City>
             <Hotel>' . htmlspecialchars(strtoupper($params['hotel'] ?? '')) . '</Hotel>
@@ -164,6 +153,16 @@ class AvailabilityApiClient extends ApiClientBase
             <Adt>' . $adultsXml . '</Adt>
             <Currency>EUR</Currency>
         </frmsearch>';
+    }
+
+    /**
+     * Search availability using frmsearch API endpoint
+     *
+     * @return array Search results
+     */
+    public function searchAvailability(array $params): array
+    {
+        $xml = $this->buildSearchXml($params);
 
         DebugLogger::log('Novoton frmsearch Request', ['xml' => $xml, 'params' => $params]);
 
@@ -173,6 +172,51 @@ class AvailabilityApiClient extends ApiClientBase
 
         $result = $this->xmlParser->parse($response);
         return $this->parseSearchResults($result, $params);
+    }
+
+    /**
+     * Batch availability search using curl_multi.
+     *
+     * Sends multiple frmsearch requests in parallel and returns parsed results.
+     *
+     * @param array<string, array> $paramsList Keyed array: key => search params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array> key => parsed search results array
+     */
+    public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
+    {
+        if (empty($paramsList)) {
+            return [];
+        }
+
+        $requests = [];
+        foreach ($paramsList as $key => $params) {
+            $requests[$key] = [
+                'function' => Constants::API_FUNCTION_SEARCH,
+                'xml' => $this->buildSearchXml($params),
+                'lang' => $params['lang'] ?? 'UK',
+            ];
+        }
+
+        $rawResponses = $this->httpClient->sendBatchRequests($requests, $concurrency);
+        $results = [];
+
+        foreach ($rawResponses as $key => $raw) {
+            if ($raw === false) {
+                $results[$key] = [];
+                continue;
+            }
+
+            try {
+                $cleaned = $this->xmlParser->clean($raw);
+                $parsed = $this->xmlParser->parse($cleaned);
+                $results[$key] = $this->parseSearchResults($parsed, $paramsList[$key]);
+            } catch (\Exception $e) {
+                $results[$key] = [];
+            }
+        }
+
+        return $results;
     }
 
     private function parseSearchResults($result, $params): array

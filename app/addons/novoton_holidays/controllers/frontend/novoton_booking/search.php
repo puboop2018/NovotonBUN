@@ -23,13 +23,14 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 try {
 
-    $formatter = new SearchResultFormatter();
+    $container  = Container::getInstance();
+    $formatter  = $container->searchResultFormatter();
 
     // ── 1. Validate & normalize input ────────────────────────────────
     $security     = _nvt_get_security_service();
     $searchParams = $security->validateSearchParams($_REQUEST);
 
-    $normalizer = new SearchParameterNormalizer();
+    $normalizer = $container->searchParameterNormalizer();
     $params     = $normalizer->normalize($searchParams);
 
     // ── 2. Early return: no check-in date ────────────────────────────
@@ -44,7 +45,6 @@ try {
     // ── 4. Hotel-specific search ─────────────────────────────────────
     if (!empty($params['hotel_id'])) {
 
-        $container    = Container::getInstance();
         $searchSvc    = $container->searchService();
         $searcher     = new HotelAvailabilitySearcher($searchSvc, $debug);
         $searchResult = $searcher->search($params);
@@ -111,7 +111,7 @@ try {
         )
     );
 
-    $formatter = new SearchResultFormatter();
+    $formatter = Container::getInstance()->searchResultFormatter();
     $formatter->assignDefaults();
 
     if (DebugLogger::isEnabled()) {

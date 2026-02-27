@@ -587,7 +587,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $checkInDate  = new \DateTime($group['check_in']);
             $checkOutDate = new \DateTime($group['check_out']);
             $nights       = $checkInDate->diff($checkOutDate)->days;
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             fn_log_event('general', 'error', [
                 'message'   => 'Novoton - Invalid date in booking group',
                 'check_in'  => $group['check_in'] ?? '',

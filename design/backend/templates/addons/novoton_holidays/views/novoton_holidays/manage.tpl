@@ -263,6 +263,7 @@
 
         {if $resorts_by_country}
         <form action="{"novoton_holidays.save_excluded_resorts"|fn_url}" method="post" id="excluded-resorts-form">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
 
             {* Search and Filter Controls *}
             <div class="novoton-resorts-toolbar">

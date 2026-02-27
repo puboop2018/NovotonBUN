@@ -691,14 +691,14 @@
                                     {if $result.terms_of_payment}
                                         {$payment_terms_mobile = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
                                         {if $payment_terms_mobile}
-                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_mobile|nl2br nofilter}</div>
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_mobile|escape:'html'|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
                                     {* Cancellation Terms - displayed second *}
                                     {if $result.terms_of_cancellation}
                                         {$cancel_terms_mobile = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
                                         {if $cancel_terms_mobile}
-                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_mobile|nl2br nofilter}</div>
+                                            <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_mobile|escape:'html'|nl2br nofilter}</div>
                                         {/if}
                                     {/if}
                                     {* Remark/Note field - uses translation key, collapses blank lines *}
@@ -817,14 +817,14 @@
                                 {if $result.terms_of_payment}
                                     {$payment_terms_desktop = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
                                     {if $payment_terms_desktop}
-                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_desktop|nl2br nofilter}</div>
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$payment_terms_desktop|escape:'html'|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
                                 {* Cancellation Terms - displayed second *}
                                 {if $result.terms_of_cancellation}
                                     {$cancel_terms_desktop = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
                                     {if $cancel_terms_desktop}
-                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_desktop|nl2br nofilter}</div>
+                                        <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$cancel_terms_desktop|escape:'html'|nl2br nofilter}</div>
                                     {/if}
                                 {/if}
                                 {* Remark/Note field - uses translation key, collapses blank lines *}
@@ -891,7 +891,7 @@
                     {/foreach}
                     </ul>
                 {elseif $terms_of_payment}
-                    <div style="font-size: 13px; color: #555; line-height: 1.6;">{$terms_of_payment|nl2br nofilter}</div>
+                    <div style="font-size: 13px; color: #555; line-height: 1.6;">{$terms_of_payment|escape:'html'|nl2br nofilter}</div>
                 {else}
                     <div style="font-size: 13px; color: #888;">Condiții de plată disponibile</div>
                 {/if}
@@ -904,7 +904,7 @@
                     📋 {__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}
                 </h4>
                 {if $terms_of_cancellation}
-                    <div style="font-size: 14px; color: #555; line-height: 1.8;">{$terms_of_cancellation|nl2br nofilter}</div>
+                    <div style="font-size: 14px; color: #555; line-height: 1.8;">{$terms_of_cancellation|escape:'html'|nl2br nofilter}</div>
                 {else}
                     <div style="font-size: 13px; color: #888;">{__("novoton_holidays.cancellation_terms_available")|default:"Condiții de anulare disponibile"}</div>
                 {/if}
@@ -973,6 +973,7 @@
                 </p>
                 
                 <form id="request-alternatives-form" method="post" action="{fn_url('novoton_booking.request_alternatives')}">
+                    <input type="hidden" name="security_hash" value="{$security_hash}">
                     <input type="hidden" name="hotel_id" value="{$novoton_params.hotel_id}">
                     <input type="hidden" name="hotel_name" value="{$hotel_name|escape:'html'}">
                     <input type="hidden" name="check_in" value="{$novoton_params.check_in}">

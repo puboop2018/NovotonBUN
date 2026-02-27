@@ -154,6 +154,7 @@
     <div class="novoton-id-section">
         <h4>Novoton Reservation Link</h4>
         <form action="{"novoton_bookings.update_novoton_id"|fn_url}" method="post" class="form-inline">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
             <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
             <div class="control-group" style="margin-bottom: 0;">
                 <label class="control-label">Novoton ID (IdNum/ConfirmAgency):</label>
@@ -254,6 +255,7 @@
 {if $booking}
     {if $booking.novoton_status == 'ASK' || $booking.novoton_invoice_id}
         <form action="{"novoton_bookings.resinfo"|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
             <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
             <button type="submit" class="btn btn-primary">Check Status</button>
         </form>

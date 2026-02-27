@@ -11,9 +11,9 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getResortList(string $country = '', string $lang = 'UK')
+    public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <resort_list>
             <Country>' . htmlspecialchars($country) . '</Country>
         </resort_list>';
@@ -26,12 +26,11 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = '')
+    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <offers_update>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
             <DateTime>' . htmlspecialchars($dateTime) . '</DateTime>
             <Country>' . htmlspecialchars($country) . '</Country>
             <Resort>' . htmlspecialchars($resort) . '</Resort>
@@ -46,12 +45,11 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getKickbackInfo(string $lang = 'UK')
+    public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <kickback_RS>
-            <usr>' . htmlspecialchars($this->httpClient->getApiUser()) . '</usr>
-            <psw>' . htmlspecialchars($this->httpClient->getApiPassword()) . '</psw>
+            ' . $this->xmlCredentials() . '
         </kickback_RS>';
 
         return $this->callApiAndParse(Constants::API_FUNCTION_KICKBACK, $xml, $lang);

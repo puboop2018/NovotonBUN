@@ -287,14 +287,14 @@ if ($mode == 'test_room_price') {
         ]);
 
         echo '<h3>Request Parameters:</h3>';
-        echo '<pre>' . print_r($result['params'], true) . '</pre>';
+        echo '<pre>' . htmlspecialchars(print_r($result['params'], true)) . '</pre>';
 
         echo '<h3>Response:</h3>';
         if ($result['success']) {
             echo '<pre>' . htmlspecialchars(print_r($result['result'], true)) . '</pre>';
 
             if ($result['price'] > 0) {
-                echo "<p><strong>Price: &euro;{$result['price']} (with commission: &euro;{$result['price_with_commission']})</strong></p>";
+                echo '<p><strong>Price: &euro;' . htmlspecialchars((string)$result['price']) . ' (with commission: &euro;' . htmlspecialchars((string)$result['price_with_commission']) . ')</strong></p>';
             }
         } else {
             echo '<p style="color:red">' . htmlspecialchars($result['error'] ?: 'No result') . '</p>';
@@ -405,7 +405,7 @@ if ($mode == 'test_facilities') {
     echo '<tr><th>ID</th><th>Name (EN)</th><th>Name (RO)</th></tr>';
     foreach ($result['facilities'] as $f) {
         echo '<tr>';
-        echo '<td>' . $f['facility_id'] . '</td>';
+        echo '<td>' . htmlspecialchars((string)$f['facility_id']) . '</td>';
         echo '<td>' . htmlspecialchars($f['facility_name_en']) . '</td>';
         echo '<td>' . htmlspecialchars($f['facility_name_ro']) . '</td>';
         echo '</tr>';
@@ -463,10 +463,10 @@ if ($mode == 'test_alternative_rs') {
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
     $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
 
-    Tygh::$app['view']->assign('hotel_id', $hotel_id);
-    Tygh::$app['view']->assign('id_num', $id_num);
-    Tygh::$app['view']->assign('check_in', $check_in);
-    Tygh::$app['view']->assign('check_out', $check_out);
+    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
+    Tygh::$app['view']->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
 
     if (!empty($_REQUEST['search']) && !empty($hotel_id)) {
         try {

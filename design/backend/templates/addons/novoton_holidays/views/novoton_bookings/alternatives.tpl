@@ -43,6 +43,7 @@
     {* Request Alternatives Button *}
     <div style="margin-bottom: 20px;">
         <form action="{"novoton_bookings.request_alternatives"|fn_url}" method="post" style="display: inline;">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
             <input type="hidden" name="booking_id" value="{$booking.booking_id}" />
             <input type="hidden" name="return_url" value="{$config.current_url}" />
             <button type="submit" class="btn btn-primary">

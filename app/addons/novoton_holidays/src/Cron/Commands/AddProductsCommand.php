@@ -5,7 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -40,7 +40,7 @@ class AddProductsCommand extends AbstractCronCommand
         }
         $this->output("");
 
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getInstance()->hotelRepository();
         $current_year = date('Y');
         $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
         $grand_total = 0;

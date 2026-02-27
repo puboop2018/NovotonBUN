@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
@@ -58,7 +59,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
         try {
             $api = $this->getApi();
-            $result = $api->getHotelList('BULGARIA', '%', '%', '%');
+            $result = $api->getHotelList(Constants::DEFAULT_COUNTRY, '%', '%', '%');
 
             if (empty($result)) {
                 return [
@@ -70,7 +71,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                     'error' => $api->getLastError(),
                     'last_request' => $api->getLastRequestFormatted(),
                     'last_http_code' => $api->lastHttpCode,
-                    'raw_response_preview' => substr($api->lastResponseRaw ?? '', 0, 500),
+                    'raw_response_preview' => substr((string) ($api->lastResponseRaw ?? ''), 0, 500),
                 ];
             }
 
@@ -132,7 +133,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * @param int $limit Max hotels to return
      * @return array{success: bool, total: int, hotels: array, error: string}
      */
-    public function testHotelList(string $country = 'BULGARIA', int $limit = 10): array
+    public function testHotelList(string $country = Constants::DEFAULT_COUNTRY, int $limit = 10): array
     {
         try {
             $api = $this->getApi();
@@ -447,7 +448,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      */
     private function resolveCountriesDisplay(): string
     {
-        $countries = $this->settings['selected_countries'] ?? 'BULGARIA';
+        $countries = $this->settings['selected_countries'] ?? Constants::DEFAULT_COUNTRY;
 
         if (is_array($countries)) {
             $names = [];
@@ -458,7 +459,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                     $names[] = $value;
                 }
             }
-            return !empty($names) ? implode(', ', $names) : 'BULGARIA';
+            return !empty($names) ? implode(', ', $names) : Constants::DEFAULT_COUNTRY;
         }
 
         return (string)$countries;

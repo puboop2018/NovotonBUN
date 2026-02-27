@@ -6,8 +6,9 @@ declare(strict_types=1);
  * Calculates prices from priceinfo data to match room_price API response.
  *
  * Formula:
- * Price = BasePrice - EB* + extras_single + (extras_daily - EB|reduction**) + (extras_rooms - EB|reduction**)
- *         + (extras_board - EB|reduction**) - reduction* - reduction_perc_additional + company_fee
+ * Price = BasePrice - EB* - reduction_period + extras_single + (extras_daily - EB|reduction**)
+ *         + (extras_rooms - EB|reduction**) + (extras_board - EB|reduction**)
+ *         - reduction* - reduction_perc_marketing - reduction_perc_additional + company_fee
  *
  * Priority Rules:
  * * If Priority='Yes', EB and reduction are NOT combinable
@@ -170,18 +171,43 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $reduction = $this->calculator->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice, $fees);
         $this->log('Reduction', $reduction);
 
+        // Step 7b: Get Reduction Period (MaxDays cap)
+        $reductionPeriod = $this->calculator->calculateReductionPeriod($checkIn, $nights, $basePrice);
+        $this->log('Reduction Period', $reductionPeriod);
+
         // Step 8: Apply Priority rules and pick best scenario
-        $finalPrice = $this->calculator->applyPriorityRules($basePrice, $fees, $ebDiscount, $reduction);
+        $finalPrice = $this->calculator->applyPriorityRules($basePrice, $fees, $ebDiscount, $reduction, $reductionPeriod);
         $this->log('Final price calculation', $finalPrice);
 
+        // Step 8b: Apply reduction_perc_marketing (booking/travel date restricted)
+        $percMarketing = $this->calculator->calculateReductionPercMarketing(
+            $bookingDate, $checkIn, $nights, $roomId, $finalPrice['total']
+        );
+        $this->log('Reduction Perc Marketing', $percMarketing);
+
+        // Step 8c: Apply reduction_perc_additional (flat promo discount)
+        $subtotalAfterMarketing = $finalPrice['total'] - ($percMarketing['applicable'] ? $percMarketing['discount'] : 0);
+        $percAdditional = $this->calculator->calculateReductionPercAdditional(max(0, $subtotalAfterMarketing));
+        $this->log('Reduction Perc Additional', $percAdditional);
+
+        // Step 8d: Compute final total after all percentage discounts
+        $totalAfterPercDiscounts = $finalPrice['total'];
+        if ($percMarketing['applicable']) {
+            $totalAfterPercDiscounts -= $percMarketing['discount'];
+        }
+        if ($percAdditional['applicable']) {
+            $totalAfterPercDiscounts -= $percAdditional['discount'];
+        }
+        $totalAfterPercDiscounts = max(0, $totalAfterPercDiscounts);
+
         // Step 9: Apply commission
-        $priceWithCommission = $this->calculator->applyCommission($finalPrice['total']);
+        $priceWithCommission = $this->calculator->applyCommission($totalAfterPercDiscounts);
 
         $priceinfo = $this->parser->getPriceinfo();
         $result = [
             'success' => true,
             'price' => round($priceWithCommission, 2),
-            'price_without_commission' => round($finalPrice['total'], 2),
+            'price_without_commission' => round($totalAfterPercDiscounts, 2),
             'commission' => $this->commission,
             'breakdown' => [
                 'base_price' => round($basePrice['total'], 2),
@@ -199,7 +225,10 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                 'fees_detail' => $fees,
                 'discounts' => [
                     'early_booking' => $ebDiscount,
-                    'reduction' => $reduction
+                    'reduction' => $reduction,
+                    'reduction_period' => $reductionPeriod,
+                    'reduction_perc_additional' => $percAdditional,
+                    'reduction_perc_marketing' => $percMarketing
                 ],
                 'priority_rules' => [
                     'priority' => $priceinfo['Priority'] ?? 'No',
@@ -208,7 +237,12 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                     'scenarios' => $finalPrice['scenarios'] ?? []
                 ],
                 'applied_discount' => $finalPrice['applied_discount'],
-                'discount_amount' => round($finalPrice['discount_amount'] ?? 0, 2)
+                'discount_amount' => round(
+                    ($finalPrice['discount_amount'] ?? 0) +
+                    ($percMarketing['applicable'] ? $percMarketing['discount'] : 0) +
+                    ($percAdditional['applicable'] ? $percAdditional['discount'] : 0),
+                    2
+                )
             ],
             'room_capacity' => $roomCapacity,
             'child_age_bands' => $this->parser->getChildAgeBands(),

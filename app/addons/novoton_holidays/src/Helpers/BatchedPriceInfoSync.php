@@ -211,6 +211,7 @@ class BatchedPriceInfoSync
         $errors_this_run = 0;
         $offset = $state['processed'];
         $now = date('Y-m-d H:i:s');
+        $hotelsToRecompute = []; // Deferred calendar precompute — once per hotel, not per package
 
         while ($offset < $state['total']) {
             // Check time and memory limits (skip if unlimited mode)
@@ -290,6 +291,7 @@ class BatchedPriceInfoSync
                         $seasons_count = $this->processPriceInfo($hotel_id, $package_id, $priceinfo, $now);
                         $state['synced']++;
                         $synced_this_run++;
+                        $hotelsToRecompute[$hotel_id] = true;
                         $this->output("OK ({$seasons_count} seasons)");
                     }
                 } catch (ApiException $e) {
@@ -304,6 +306,14 @@ class BatchedPriceInfoSync
 
                 // Small delay to avoid API rate limits
                 usleep(100000); // 100ms
+            }
+
+            // Precompute calendar prices once per hotel (deferred from per-package)
+            if (!empty($hotelsToRecompute)) {
+                foreach (array_keys($hotelsToRecompute) as $hid) {
+                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hid);
+                }
+                $hotelsToRecompute = [];
             }
 
             // Update state after each batch
@@ -343,12 +353,18 @@ class BatchedPriceInfoSync
                             $recovered++;
                             $state['synced']++;
                             $state['errors']--;
+                            $hotelsToRecompute[$r_hotel_id] = true;
                             $this->output("  [{$retry_key}] retry OK");
                         }
                     } catch (ApiException $e) {
                         $this->output("  [{$retry_key}] retry failed: " . $e->getMessage());
                     }
                 }
+                // Precompute calendar prices for recovered hotels
+                foreach (array_keys($hotelsToRecompute) as $hid) {
+                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hid);
+                }
+                $hotelsToRecompute = [];
                 $state['retry_done'] = true;
                 $this->saveState($state);
                 if ($recovered > 0) {
@@ -461,9 +477,6 @@ class BatchedPriceInfoSync
             $hotel_id,
             $package_id
         );
-
-        // Precompute calendar prices after each package update
-        \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotel_id);
 
         return $seasons_count;
     }

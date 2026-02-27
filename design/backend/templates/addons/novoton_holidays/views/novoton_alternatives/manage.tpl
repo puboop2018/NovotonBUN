@@ -22,6 +22,7 @@
         </div>
         <div class="pull-right">
             <form method="post" action="{fn_url('')}" class="form-inline">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
                 <input type="hidden" name="dispatch" value="novoton_alternatives.check_all_pending">
                 <button type="submit" class="btn btn-primary">
                     <i class="icon-refresh"></i> Check All Pending
@@ -91,6 +92,7 @@
                         
                         {if $request.novoton_request_id && $request.status == 'pending'}
                         <form method="post" action="{fn_url('')}" style="display: inline;">
+                            <input type="hidden" name="security_hash" value="{$security_hash}">
                             <input type="hidden" name="dispatch" value="novoton_alternatives.check_alternatives">
                             <input type="hidden" name="request_id" value="{$request.request_id}">
                             <button type="submit" class="btn btn-small" title="Check Alternatives">
@@ -101,6 +103,7 @@
                         
                         {if $request.status == 'alternatives_found'}
                         <form method="post" action="{fn_url('')}" style="display: inline;">
+                            <input type="hidden" name="security_hash" value="{$security_hash}">
                             <input type="hidden" name="dispatch" value="novoton_alternatives.notify_customer">
                             <input type="hidden" name="request_id" value="{$request.request_id}">
                             <button type="submit" class="btn btn-small btn-primary" title="Notify Customer">
@@ -110,6 +113,7 @@
                         {/if}
                         
                         <form method="post" action="{fn_url('')}" style="display: inline;" onsubmit="return confirm('Delete this request?');">
+                            <input type="hidden" name="security_hash" value="{$security_hash}">
                             <input type="hidden" name="dispatch" value="novoton_alternatives.delete">
                             <input type="hidden" name="request_id" value="{$request.request_id}">
                             <button type="submit" class="btn btn-small btn-danger" title="Delete">

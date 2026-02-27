@@ -80,7 +80,7 @@
                             <div style="margin-bottom: 20px;">
                                 <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong>
                                 <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #0071c2;">
-                                    {$_payment_formatted|nl2br nofilter}
+                                    {$_payment_formatted|escape:'html'|nl2br nofilter}
                                 </div>
                             </div>
                         {/if}
@@ -94,7 +94,7 @@
                             <div>
                                 <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong>
                                 <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #28a745;">
-                                    {$_cancel_formatted|nl2br nofilter}
+                                    {$_cancel_formatted|escape:'html'|nl2br nofilter}
                                 </div>
                             </div>
                         {/if}

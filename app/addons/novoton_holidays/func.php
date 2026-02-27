@@ -80,8 +80,7 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 //   fn_novoton_holidays_uninstall()
 //   fn_novoton_holidays_fix_tab_name()
 //   fn_novoton_holidays_post_install()
-//   fn_novoton_holidays_install_email_templates()
-//   fn_novoton_holidays_upgrade_db()
+//   fn_novoton_holidays_setup_db()
 //
 // FORMATTING (functions/formatting.php):
 //   fn_novoton_holidays_format_date()

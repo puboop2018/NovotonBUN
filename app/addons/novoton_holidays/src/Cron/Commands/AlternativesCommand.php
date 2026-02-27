@@ -3,8 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
-use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class AlternativesCommand extends AbstractCronCommand
 {
@@ -41,7 +40,7 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Checking alternative_RS for pending requests...");
         $this->output("");
 
-        $altRepo = new AlternativeRequestRepository();
+        $altRepo = Container::getInstance()->alternativeRequestRepository();
         $pending = $altRepo->findPendingOlderThan(24);
         $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
 
@@ -122,7 +121,7 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Checking alternatives for RQ status bookings...");
         $this->output("");
 
-        $bookingRepo = new BookingRepository();
+        $bookingRepo = Container::getInstance()->bookingRepository();
         $bookings = $bookingRepo->findRqWithoutAlternatives();
 
         if (empty($bookings)) {
@@ -154,7 +153,7 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output("Sending notifications for found alternatives...");
         $this->output("");
 
-        $altRepo = new AlternativeRequestRepository();
+        $altRepo = Container::getInstance()->alternativeRequestRepository();
         $requests = $altRepo->findUnnotified();
         $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
@@ -196,7 +195,7 @@ class AlternativesCommand extends AbstractCronCommand
         $days = (int)$this->getParam('days', 30);
         $this->output("Expiring requests older than {$days} days...");
 
-        $altRepo = new AlternativeRequestRepository();
+        $altRepo = Container::getInstance()->alternativeRequestRepository();
         $result = $altRepo->expireOlderThan($days);
 
         $this->output("Expired {$result} requests.");

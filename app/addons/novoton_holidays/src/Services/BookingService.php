@@ -44,7 +44,11 @@ class BookingService implements BookingServiceInterface
         ?RoomPriceServiceInterface $priceService = null,
         ?BookingRepositoryInterface $bookingRepo = null
     ) {
-        $this->api = fn_novoton_holidays_get_api();
+        $api = fn_novoton_holidays_get_api();
+        if ($api === null) {
+            throw new \RuntimeException('Novoton API is not available. Check addon settings.');
+        }
+        $this->api = $api;
         $this->guestService = $guestService ?? new GuestDataService();
         $this->priceService = $priceService ?? new RoomPriceService();
         $this->bookingRepo = $bookingRepo ?? new BookingRepository();
@@ -256,7 +260,7 @@ class BookingService implements BookingServiceInterface
             'hotel_id' => $booking['hotel_id'],
             'hotel_name' => $booking['hotel_name'],
             'hotel_city' => $bookingData['hotel_city'] ?? '',
-            'hotel_country' => $bookingData['hotel_country'] ?? 'BULGARIA',
+            'hotel_country' => $bookingData['hotel_country'] ?? Constants::DEFAULT_COUNTRY,
             'package_name' => $booking['package_name'],
             'room_id' => $booking['room_id'],
             'room_name' => str_replace(['%2b', '%2B'], '+', $booking['room_id']),
@@ -597,7 +601,7 @@ class BookingService implements BookingServiceInterface
                 'hotel_name' => $hotelInfo['hotel_name'] ?? '',
                 'hotel_city' => $hotelInfo['city'] ?? '',
                 'hotel_region' => $hotelInfo['region'] ?? '',
-                'hotel_country' => $hotelInfo['country'] ?? 'BULGARIA',
+                'hotel_country' => $hotelInfo['country'] ?? Constants::DEFAULT_COUNTRY,
                 'package_name' => $bookingData['package_name'] ?? '',
                 'room_id' => $bookingData['room_id'],
                 'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),

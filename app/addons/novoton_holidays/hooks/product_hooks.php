@@ -4,10 +4,9 @@ declare(strict_types=1);
  * Novoton Holidays - Product Hook Functions
  *
  * Responsible for:
+ *   - get_products_post: Batch prefetch hotel data for product listings
  *   - gather_additional_product_data_post: Enrich product page with hotel data
  *   - get_product_data_post: Attach hotel_id and packages to product data
- *   - get_product_tabs_post: Add custom tab in admin product edit
- *   - update_product_pre: Before updating product data
  *   - delete_product_post: Clean up bookings when product is deleted
  *
  * @package NovotonHolidays
@@ -16,10 +15,42 @@ declare(strict_types=1);
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+/**
+ * Hook: after product list is fetched.
+ *
+ * Batch pre-fetches hotel data for all hotel products on the page so that
+ * subsequent per-product gather_additional_product_data_post calls hit the
+ * in-memory cache instead of issuing 2 DB queries each (N+1 fix).
+ */
+function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_code = ''): void
+{
+    if (empty($products)) {
+        return;
+    }
+
+    $addon_settings = ConfigProvider::all();
+    if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
+        return;
+    }
+
+    $hotel_ids = [];
+    foreach ($products as $product) {
+        if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
+            $hotel_id = _nvt_extract_hotel_id($product['product_code']);
+            if (!empty($hotel_id)) {
+                $hotel_ids[] = $hotel_id;
+            }
+        }
+    }
+
+    if (!empty($hotel_ids)) {
+        fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+    }
+}
 
 /**
  * Hook: gather additional product data - pass prices to templates
@@ -85,7 +116,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     $calendar_prices_currency = '';
     if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
         $display_currency = CurrencyService::getDisplayCurrency();
-        $priceInfoService = new PriceInfoService();
+        $priceInfoService = Container::getInstance()->priceInfoService();
         $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
         if (!empty($calendarData['prices'])) {
             $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);

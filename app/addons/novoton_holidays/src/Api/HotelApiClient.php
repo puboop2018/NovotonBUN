@@ -17,14 +17,14 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%')
+    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
     {
         $country = empty($country) ? '%' : $country;
         $city = empty($city) ? '%' : $city;
         $hotel = empty($hotel) ? '%' : $hotel;
         $hotelType = empty($hotelType) ? '%' : $hotelType;
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_list>
             <hotelinfo>
                 <Country>' . htmlspecialchars($country) . '</Country>
@@ -42,9 +42,9 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelInfo(string $hotelId, string $lang = 'UK')
+    public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotelinfo>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotelinfo>';
@@ -66,7 +66,7 @@ class HotelApiClient extends ApiClientBase
 
         $requests = [];
         foreach ($hotelIds as $hotelId) {
-            $xml = '<?xml version="1.0" encoding="windows-1251"?>
+            $xml = $this->xmlHeader() . '
                 <hotelinfo>
                     <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
                 </hotelinfo>';
@@ -97,11 +97,11 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false)
+    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
     {
         $packageXml = $includePackage ? '<PackageDescription>Yes</PackageDescription>' : '';
 
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_description>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
             ' . $packageXml . '
@@ -115,9 +115,9 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelImages(string $hotelId, string $lang = 'UK')
+    public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_images>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_images>';
@@ -130,9 +130,9 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelFacilities(string $hotelId)
+    public function getHotelFacilities(string $hotelId): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <hotel_facilities>
             <IdHotel>' . htmlspecialchars($hotelId) . '</IdHotel>
         </hotel_facilities>';
@@ -145,9 +145,9 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function listFacilities()
+    public function listFacilities(): \SimpleXMLElement
     {
-        $xml = '<?xml version="1.0" encoding="windows-1251"?>
+        $xml = $this->xmlHeader() . '
         <list_facilities>
         </list_facilities>';
 

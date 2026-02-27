@@ -725,14 +725,24 @@ class PriceInfoCalculator
             $checkInTo = $red['CheckInTo'] ?? '';
             $freeNights = (int) ($red['FreeNights'] ?? 0);
             $type = $red['Type'] ?? 'End';
+            $validFor = PriceInfoFormatter::toScalar($red['ValidFor'] ?? '');
 
             if ($nights < $fromNights || $nights > $toNights) {
                 continue;
             }
 
             if (!empty($checkInFrom) && !empty($checkInTo)) {
-                if ($checkIn < $checkInFrom || $checkIn > $checkInTo) {
-                    continue;
+                if (strcasecmp($validFor, 'Stay') === 0) {
+                    // 'Stay': the stay period must overlap with the CheckIn range
+                    $checkOutDate = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+                    if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate, $checkInFrom, $checkInTo)) {
+                        continue;
+                    }
+                } else {
+                    // 'Arrival' (default): check-in date must fall within range
+                    if ($checkIn < $checkInFrom || $checkIn > $checkInTo) {
+                        continue;
+                    }
                 }
             }
 
@@ -801,9 +811,267 @@ class PriceInfoCalculator
     }
 
     /**
+     * Calculate reduction_period (MaxDays cap)
+     *
+     * If the stay length falls between FromDays and ToDays, and overlaps the
+     * FromDate-ToDate range, the guest only pays for MaxDays nights instead
+     * of the actual nights. The discount is the value of the excess nights.
+     */
+    public function calculateReductionPeriod(string $checkIn, int $nights, array $basePrice): array
+    {
+        $priceinfo = $this->parser->getPriceinfo();
+        $entries = $priceinfo['reduction_period'] ?? [];
+        if (empty($entries)) {
+            return ['applicable' => false, 'discount' => 0, 'max_days' => 0, 'capped_nights' => 0];
+        }
+
+        if (isset($entries['FromDays'])) {
+            $entries = [$entries];
+        }
+
+        $checkOut = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+
+        foreach ($entries as $entry) {
+            $fromDays = (int) ($entry['FromDays'] ?? 0);
+            $toDays = (int) ($entry['ToDays'] ?? 999);
+            $maxDays = (int) ($entry['MaxDays'] ?? 0);
+            $fromDate = PriceInfoFormatter::toScalar($entry['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($entry['ToDate'] ?? '');
+
+            if ($maxDays <= 0 || $maxDays >= $nights) {
+                continue;
+            }
+
+            if ($nights < $fromDays || $nights > $toDays) {
+                continue;
+            }
+
+            if (!empty($fromDate) && !empty($toDate)) {
+                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOut, $fromDate, $toDate)) {
+                    continue;
+                }
+            }
+
+            // Calculate discount: sum of nights beyond MaxDays
+            $discount = 0;
+            if (!empty($basePrice['by_night'])) {
+                // Remove the most expensive excess nights (from the end by default)
+                $excessCount = $nights - $maxDays;
+                for ($i = $nights - $excessCount; $i < $nights; $i++) {
+                    if (isset($basePrice['by_night'][$i])) {
+                        $discount += $basePrice['by_night'][$i]['price'] ?? 0;
+                    }
+                }
+            } else {
+                $avgNightPrice = $nights > 0 ? $basePrice['total'] / $nights : 0;
+                $discount = $avgNightPrice * ($nights - $maxDays);
+            }
+
+            $this->log('reduction_period', [
+                'from_days' => $fromDays,
+                'to_days' => $toDays,
+                'max_days' => $maxDays,
+                'nights' => $nights,
+                'discount' => $discount
+            ]);
+
+            return [
+                'applicable' => true,
+                'discount' => $discount,
+                'max_days' => $maxDays,
+                'capped_nights' => $nights - $maxDays
+            ];
+        }
+
+        return ['applicable' => false, 'discount' => 0, 'max_days' => 0, 'capped_nights' => 0];
+    }
+
+    /**
+     * Calculate reduction_perc_additional (percentage promo discount)
+     *
+     * Applied as a flat percentage off the subtotal (base + fees - EB/reduction).
+     * Per the API spec: reduction_perc_additional has Perc and Name fields.
+     */
+    public function calculateReductionPercAdditional(float $subtotal): array
+    {
+        $priceinfo = $this->parser->getPriceinfo();
+        $entries = $priceinfo['reduction_perc_additional'] ?? [];
+        if (empty($entries)) {
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => ''];
+        }
+
+        if (isset($entries['Perc'])) {
+            $entries = [$entries];
+        }
+
+        $totalPercent = 0;
+        $names = [];
+
+        foreach ($entries as $entry) {
+            $perc = (float) ($entry['Perc'] ?? 0);
+            $name = PriceInfoFormatter::toScalar($entry['Name'] ?? '');
+
+            if ($perc <= 0) {
+                continue;
+            }
+
+            $totalPercent += $perc;
+            if (!empty($name)) {
+                $names[] = $name;
+            }
+        }
+
+        if ($totalPercent <= 0) {
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => ''];
+        }
+
+        $discount = $subtotal * ($totalPercent / 100);
+
+        $this->log('reduction_perc_additional', [
+            'percent' => $totalPercent,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'names' => $names
+        ]);
+
+        return [
+            'applicable' => true,
+            'discount' => $discount,
+            'percent' => $totalPercent,
+            'name' => implode(', ', $names)
+        ];
+    }
+
+    /**
+     * Calculate reduction_perc_marketing (marketing percentage discount)
+     *
+     * More complex than reduction_perc_additional: supports date restrictions
+     * (BookingFrom/To, TravelTimeFrom/To), room type filtering, minimum stay,
+     * and Type (Stay/Arrival).
+     */
+    public function calculateReductionPercMarketing(
+        string $bookingDate,
+        string $checkIn,
+        int $nights,
+        string $roomId,
+        float $subtotal
+    ): array {
+        $priceinfo = $this->parser->getPriceinfo();
+        $entries = $priceinfo['reduction_perc_marketing'] ?? [];
+        if (empty($entries)) {
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => '', 'details' => []];
+        }
+
+        if (isset($entries['Perc'])) {
+            $entries = [$entries];
+        }
+
+        $bestPercent = 0;
+        $bestName = '';
+        $applicable = false;
+        $details = [];
+
+        foreach ($entries as $entry) {
+            $perc = (float) ($entry['Perc'] ?? 0);
+            $name = PriceInfoFormatter::toScalar($entry['Name'] ?? '');
+            $bookFrom = PriceInfoFormatter::toScalar($entry['BookingFrom'] ?? '');
+            $bookTo = PriceInfoFormatter::toScalar($entry['BookingTo'] ?? '');
+            $travelFrom = PriceInfoFormatter::toScalar($entry['TravelTimeFrom'] ?? '');
+            $travelTo = PriceInfoFormatter::toScalar($entry['TravelTimeTo'] ?? '');
+            $roomTypes = PriceInfoFormatter::toScalar($entry['RoomTypes'] ?? '');
+            $minStay = (int) ($entry['MinimumStay'] ?? 0);
+            $type = PriceInfoFormatter::toScalar($entry['Type'] ?? '');
+
+            if ($perc <= 0) {
+                continue;
+            }
+
+            // Check booking date range
+            if (!empty($bookFrom) && $bookingDate < $bookFrom) {
+                continue;
+            }
+            if (!empty($bookTo) && $bookingDate > $bookTo) {
+                continue;
+            }
+
+            // Check travel time range (check-in must fall within)
+            if (!empty($travelFrom) && $checkIn < $travelFrom) {
+                continue;
+            }
+            if (!empty($travelTo) && $checkIn > $travelTo) {
+                continue;
+            }
+
+            // Check room type restriction
+            if (!empty($roomTypes) && !empty($roomId)) {
+                $allowedRooms = array_map('trim', explode(',', $roomTypes));
+                $roomMatch = false;
+                foreach ($allowedRooms as $allowed) {
+                    if (PriceInfoFormatter::matchRoom($allowed, $roomId)) {
+                        $roomMatch = true;
+                        break;
+                    }
+                }
+                if (!$roomMatch) {
+                    continue;
+                }
+            }
+
+            // Check minimum stay
+            if ($minStay > 0 && $nights < $minStay) {
+                continue;
+            }
+
+            // Type handling: 'Arrival' means discount only if check-in falls in travel period
+            // 'Stay' means the entire stay must overlap (already handled by travelFrom/To above)
+            // Both are effectively handled by the date checks above
+
+            $applicable = true;
+
+            if ($perc > $bestPercent) {
+                $bestPercent = $perc;
+                $bestName = $name;
+            }
+
+            $details[] = [
+                'name' => $name,
+                'percent' => $perc,
+                'booking_range' => $bookFrom . ' - ' . $bookTo,
+                'travel_range' => $travelFrom . ' - ' . $travelTo,
+                'room_types' => $roomTypes,
+                'min_stay' => $minStay,
+                'type' => $type,
+                'matched' => true
+            ];
+        }
+
+        if (!$applicable) {
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => '', 'details' => $details];
+        }
+
+        $discount = $subtotal * ($bestPercent / 100);
+
+        $this->log('reduction_perc_marketing', [
+            'best_percent' => $bestPercent,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'name' => $bestName,
+            'details' => $details
+        ]);
+
+        return [
+            'applicable' => $applicable,
+            'discount' => $discount,
+            'percent' => $bestPercent,
+            'name' => $bestName,
+            'details' => $details
+        ];
+    }
+
+    /**
      * Apply priority rules to select best discount scenario
      */
-    public function applyPriorityRules(array $basePrice, array $fees, array $ebDiscount, array $reduction): array
+    public function applyPriorityRules(array $basePrice, array $fees, array $ebDiscount, array $reduction, array $reductionPeriod = []): array
     {
         $priceinfo = $this->parser->getPriceinfo();
         $priority = $priceinfo['Priority'] ?? 'No';
@@ -811,6 +1079,10 @@ class PriceInfoCalculator
         $priorityEXT = $priceinfo['PriorityEXT'] ?? 'No';
 
         $basePlusFees = $basePrice['total'] + $fees['total'];
+
+        // Apply reduction_period (MaxDays cap) to the base if applicable
+        $reductionPeriodDiscount = ($reductionPeriod['applicable'] ?? false) ? ($reductionPeriod['discount'] ?? 0) : 0;
+        $basePlusFees -= $reductionPeriodDiscount;
 
         $totalNone = $basePlusFees;
         $totalEB = $ebDiscount['applicable'] ? ($basePlusFees - $ebDiscount['discount']) : $basePlusFees;
@@ -821,31 +1093,31 @@ class PriceInfoCalculator
         if ($reduction['applicable']) $totalCombined -= $reduction['discount'];
 
         $appliedDiscount = 'none';
-        $discountAmount = 0;
+        $discountAmount = $reductionPeriodDiscount;
         $finalTotal = $totalNone;
 
         if ($priority === 'Yes') {
             if ($priorityEB === 'Yes' && $ebDiscount['applicable']) {
                 $finalTotal = $totalEB;
                 $appliedDiscount = 'early_booking';
-                $discountAmount = $ebDiscount['discount'];
+                $discountAmount += $ebDiscount['discount'];
             } else {
                 if ($totalEB <= $totalReduction && $ebDiscount['applicable']) {
                     $finalTotal = $totalEB;
                     $appliedDiscount = 'early_booking';
-                    $discountAmount = $ebDiscount['discount'];
+                    $discountAmount += $ebDiscount['discount'];
                 } elseif ($reduction['applicable']) {
                     $finalTotal = $totalReduction;
                     $appliedDiscount = 'reduction';
-                    $discountAmount = $reduction['discount'];
+                    $discountAmount += $reduction['discount'];
                 }
             }
         } else {
             if ($ebDiscount['applicable'] || $reduction['applicable']) {
                 $finalTotal = $totalCombined;
                 $appliedDiscount = 'combined';
-                $discountAmount = ($ebDiscount['applicable'] ? $ebDiscount['discount'] : 0) +
-                                  ($reduction['applicable'] ? $reduction['discount'] : 0);
+                $discountAmount += ($ebDiscount['applicable'] ? $ebDiscount['discount'] : 0) +
+                                   ($reduction['applicable'] ? $reduction['discount'] : 0);
             }
         }
 
@@ -857,7 +1129,8 @@ class PriceInfoCalculator
                 'none' => $totalNone,
                 'early_booking' => $totalEB,
                 'reduction' => $totalReduction,
-                'combined' => $totalCombined
+                'combined' => $totalCombined,
+                'reduction_period_discount' => $reductionPeriodDiscount
             ]
         ];
     }

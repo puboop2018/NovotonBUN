@@ -18,14 +18,14 @@
         <div class="span6">
             <h4>Contact Info</h4>
             <table class="table table-condensed">
-                <tr><td width="35%"><strong>Email:</strong></td><td><a href="mailto:{$request.contact_email}">{$request.contact_email}</a></td></tr>
-                <tr><td><strong>Phone:</strong></td><td>{$request.contact_phone|default:'-'}</td></tr>
-                <tr><td><strong>Notes:</strong></td><td>{$request.notes|default:'-'}</td></tr>
+                <tr><td width="35%"><strong>Email:</strong></td><td><a href="mailto:{$request.contact_email|escape:'url'}">{$request.contact_email|escape:'html'}</a></td></tr>
+                <tr><td><strong>Phone:</strong></td><td>{$request.contact_phone|default:'-'|escape:'html'}</td></tr>
+                <tr><td><strong>Notes:</strong></td><td>{$request.notes|default:'-'|escape:'html'}</td></tr>
                 <tr><td><strong>Status:</strong></td><td>
                     {if $request.status == 'pending'}<span class="label label-warning">Pending</span>
                     {elseif $request.status == 'alternatives_found'}<span class="label label-success">Alternatives Found</span>
                     {elseif $request.status == 'notified'}<span class="label label-info">Notified</span>
-                    {else}<span class="label">{$request.status}</span>{/if}
+                    {else}<span class="label">{$request.status|escape:'html'}</span>{/if}
                 </td></tr>
                 <tr><td><strong>Created:</strong></td><td>{$request.created_at}</td></tr>
                 {if $request.notified_at}<tr><td><strong>Notified:</strong></td><td>{$request.notified_at}</td></tr>{/if}
@@ -56,6 +56,7 @@
         <div class="span6">
             {if $request.novoton_request_id && $request.status == 'pending'}
             <form method="post" action="{fn_url('')}" style="display: inline;">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
                 <input type="hidden" name="dispatch" value="novoton_alternatives.check_alternatives">
                 <input type="hidden" name="request_id" value="{$request.request_id}">
                 <button type="submit" class="btn btn-primary">
@@ -119,6 +120,7 @@
     
     {if $request.status == 'alternatives_found'}
     <form method="post" action="{fn_url('')}" style="margin-top: 15px;">
+        <input type="hidden" name="security_hash" value="{$security_hash}">
         <input type="hidden" name="dispatch" value="novoton_alternatives.notify_customer">
         <input type="hidden" name="request_id" value="{$request.request_id}">
         <button type="submit" class="btn btn-success">

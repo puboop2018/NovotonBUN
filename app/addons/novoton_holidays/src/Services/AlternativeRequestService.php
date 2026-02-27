@@ -42,7 +42,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     private function getSecurity(): SecurityServiceInterface
     {
         if ($this->security === null) {
-            $this->security = new SecurityService();
+            $this->security = Container::getInstance()->securityService();
         }
         return $this->security;
     }

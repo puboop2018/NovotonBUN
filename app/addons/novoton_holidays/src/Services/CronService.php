@@ -56,7 +56,7 @@ class CronService implements CronServiceInterface
             $results['processed']++;
 
             try {
-                $idNum = $booking['novoton_invoice_id'] ?: $booking['novoton_confirm_id'];
+                $idNum = ($booking['novoton_invoice_id'] ?? '') ?: ($booking['novoton_confirm_id'] ?? '');
                 if (empty($idNum)) {
                     $results['errors']++;
                     continue;

@@ -15,8 +15,6 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
-use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 
 class SearchResultFormatter
 {
@@ -164,7 +162,7 @@ class SearchResultFormatter
         $hotelCountry = '';
 
         if (!empty($hotelId)) {
-            $hotelRepo = new HotelRepository();
+            $hotelRepo = Container::getInstance()->hotelRepository();
             $hotelInfo = $hotelRepo->findBasicById($hotelId);
 
             if ($hotelInfo) {
@@ -174,7 +172,7 @@ class SearchResultFormatter
                 $hotelCountry = $hotelInfo['country'] ?? '';
 
                 // Fetch packages once, reuse across sub-methods
-                $packageRepo = new HotelPackageRepository();
+                $packageRepo = Container::getInstance()->hotelPackageRepository();
                 $packages    = $packageRepo->findByHotelId($hotelId);
 
                 $this->assignPackages($view, $packages);
@@ -340,7 +338,7 @@ class SearchResultFormatter
         // Early-booking tooltip details
         $ebDetails = '';
         if (!empty($hotelId)) {
-            $packageRepo = new HotelPackageRepository();
+            $packageRepo = Container::getInstance()->hotelPackageRepository();
             $ebPackage   = $packageRepo->findEarlyBookingPackage($hotelId);
 
             if (!empty($ebPackage['priceinfo_data'])) {

@@ -92,14 +92,14 @@ class NovotonApi implements NovotonApiInterface
 
     // -- Hotels --
 
-    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%')
+    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
     {
         $result = $this->hotelApi->getHotelList($country, $city, $hotel, $hotelType);
         $this->syncFrom($this->hotelApi);
         return $result;
     }
 
-    public function getHotelInfo(string $hotelId, string $lang = 'UK')
+    public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->hotelApi->getHotelInfo($hotelId, $lang);
         $this->syncFrom($this->hotelApi);
@@ -113,28 +113,28 @@ class NovotonApi implements NovotonApiInterface
         return $result;
     }
 
-    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false)
+    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
     {
         $result = $this->hotelApi->getHotelDescription($hotelId, $lang, $includePackage);
         $this->syncFrom($this->hotelApi);
         return $result;
     }
 
-    public function getHotelImages(string $hotelId, string $lang = 'UK')
+    public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->hotelApi->getHotelImages($hotelId, $lang);
         $this->syncFrom($this->hotelApi);
         return $result;
     }
 
-    public function getHotelFacilities(string $hotelId)
+    public function getHotelFacilities(string $hotelId): \SimpleXMLElement
     {
         $result = $this->hotelApi->getHotelFacilities($hotelId);
         $this->syncFrom($this->hotelApi);
         return $result;
     }
 
-    public function listFacilities()
+    public function listFacilities(): \SimpleXMLElement
     {
         $result = $this->hotelApi->listFacilities();
         $this->syncFrom($this->hotelApi);
@@ -148,35 +148,49 @@ class NovotonApi implements NovotonApiInterface
         return $this->commissionCalculator->apply($price);
     }
 
-    public function getRoomPrice(array $params)
+    public function getRoomPrice(array $params): \SimpleXMLElement|false
     {
         $result = $this->pricingApi->getRoomPrice($params);
         $this->syncFrom($this->pricingApi);
         return $result;
     }
 
-    public function getRoomPriceByResort(array $params)
+    /**
+     * Batch room_price requests using curl_multi.
+     *
+     * @param array<string, array> $requestParams Keyed array: key => room_price params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}>
+     */
+    public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
+    {
+        $result = $this->pricingApi->getRoomPriceBatch($requestParams, $concurrency);
+        $this->syncFrom($this->pricingApi);
+        return $result;
+    }
+
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement
     {
         $result = $this->pricingApi->getRoomPriceByResort($params);
         $this->syncFrom($this->pricingApi);
         return $result;
     }
 
-    public function getRoomPriceByResortRaw(array $params)
+    public function getRoomPriceByResortRaw(array $params): string
     {
         $result = $this->pricingApi->getRoomPriceByResortRaw($params);
         $this->syncFrom($this->pricingApi);
         return $result;
     }
 
-    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK')
+    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->pricingApi->getPriceInfo($hotelId, $packageName, $lang);
         $this->syncFrom($this->pricingApi);
         return $result;
     }
 
-    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK')
+    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->pricingApi->getSpecialOffers($hotelId, $packageName, $lang);
         $this->syncFrom($this->pricingApi);
@@ -199,7 +213,7 @@ class NovotonApi implements NovotonApiInterface
         return $result;
     }
 
-    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
+    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
     {
         $result = $this->availabilityApi->getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut);
         $this->syncFrom($this->availabilityApi);
@@ -213,16 +227,30 @@ class NovotonApi implements NovotonApiInterface
         return $result;
     }
 
+    /**
+     * Batch availability search using curl_multi.
+     *
+     * @param array<string, array> $paramsList Keyed array: key => search params
+     * @param int $concurrency Max simultaneous requests
+     * @return array<string, array> key => parsed search results
+     */
+    public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
+    {
+        $result = $this->availabilityApi->searchAvailabilityBatch($paramsList, $concurrency);
+        $this->syncFrom($this->availabilityApi);
+        return $result;
+    }
+
     // -- Reservations --
 
-    public function createReservation(array $bookingData)
+    public function createReservation(array $bookingData): \SimpleXMLElement
     {
         $result = $this->reservationApi->createReservation($bookingData);
         $this->syncFrom($this->reservationApi);
         return $result;
     }
 
-    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false)
+    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
     {
         $result = $this->reservationApi->createHotelRequest($requestData, $lang, $returnXml);
         $this->syncFrom($this->reservationApi);
@@ -234,35 +262,35 @@ class NovotonApi implements NovotonApiInterface
         return $this->reservationApi->generateHotelRequestXml($requestData);
     }
 
-    public function getAlternatives(string $idNum, string $lang = 'UK')
+    public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->reservationApi->getAlternatives($idNum, $lang);
         $this->syncFrom($this->reservationApi);
         return $result;
     }
 
-    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK')
+    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->reservationApi->getReservationInfo($idNum, $confirmAgency, $lang);
         $this->syncFrom($this->reservationApi);
         return $result;
     }
 
-    public function getInvoiceHtml(string $idNum, string $lang = 'UK')
+    public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
     {
         $result = $this->reservationApi->getInvoiceHtml($idNum, $lang);
         $this->syncFrom($this->reservationApi);
         return $result;
     }
 
-    public function getInvoiceXml(string $idNum, string $lang = 'UK')
+    public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->reservationApi->getInvoiceXml($idNum, $lang);
         $this->syncFrom($this->reservationApi);
         return $result;
     }
 
-    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK')
+    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->reservationApi->listInvoices($arrFrom, $arrTo, $lang);
         $this->syncFrom($this->reservationApi);
@@ -271,21 +299,21 @@ class NovotonApi implements NovotonApiInterface
 
     // -- Destinations --
 
-    public function getResortList(string $country = '', string $lang = 'UK')
+    public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->destinationApi->getResortList($country, $lang);
         $this->syncFrom($this->destinationApi);
         return $result;
     }
 
-    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = '')
+    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
     {
         $result = $this->destinationApi->getOffersUpdate($dateTime, $country, $resort, $hotel);
         $this->syncFrom($this->destinationApi);
         return $result;
     }
 
-    public function getKickbackInfo(string $lang = 'UK')
+    public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
     {
         $result = $this->destinationApi->getKickbackInfo($lang);
         $this->syncFrom($this->destinationApi);

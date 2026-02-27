@@ -4,7 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class ResInfoCommand extends AbstractCronCommand
 {
@@ -23,7 +23,7 @@ class ResInfoCommand extends AbstractCronCommand
         $this->output("Checking ASK bookings status...");
         $this->output("");
 
-        $repo = new BookingRepository();
+        $repo = Container::getInstance()->bookingRepository();
         $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [Constants::STATUS_PENDING, Constants::STATUS_ASK]);
 
         $checked = count($ask_bookings);

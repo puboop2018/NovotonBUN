@@ -296,7 +296,7 @@ class SyncLogger implements SyncLoggerInterface
      * @param array $extra Extra data to store in notes
      * @return int|false Log ID or false on failure
      */
-    public function logToDatabase(?string $status = 'completed', array $extra = [])
+    public function logToDatabase(?string $status = 'completed', array $extra = []): int|false
     {
         $duration = round($this->getElapsedTime(), 1);
         $stats = $this->stats;
@@ -336,9 +336,6 @@ class SyncLogger implements SyncLoggerInterface
             'duration' => $this->getFormattedDuration(),
         ]);
 
-        if (!function_exists('fn_novoton_holidays_send_import_report_email')) {
-            return false;
-        }
         return fn_novoton_holidays_send_import_report_email($results, $this->syncType, $summary, $country);
     }
 
