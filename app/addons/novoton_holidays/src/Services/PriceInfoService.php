@@ -310,20 +310,12 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $currency = $targetCurrency ?? CurrencyService::getDisplayCurrency();
 
-        // 1. Try precomputed raw prices (written by sync cron)
-        try {
-            $rawJson = db_get_field(
-                "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                $hotelId
-            );
-        } catch (\Exception $e) {
-            // Column may not exist yet — attempt self-healing migration
-            if (strpos($e->getMessage(), 'calendar_prices_raw') !== false) {
-                self::ensureCalendarPricesColumn();
-                return ['prices' => [], 'currency' => $currency];
-            }
-            throw $e;
-        }
+        // 1. Read precomputed raw prices (written by sync cron)
+        // Column is guaranteed by init.php schema migration.
+        $rawJson = db_get_field(
+            "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotelId
+        );
 
         $rawPrices = !empty($rawJson) ? json_decode($rawJson, true) : null;
 
@@ -376,56 +368,12 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $rawPrices = self::computeRawCalendarPrices($hotelId);
 
-        try {
-            db_query(
-                "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-                !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
-                $hotelId
-            );
-        } catch (\Exception $e) {
-            // Column may not exist yet — attempt self-healing migration, then retry
-            if (strpos($e->getMessage(), 'calendar_prices_raw') !== false) {
-                self::ensureCalendarPricesColumn();
-                db_query(
-                    "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-                    !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
-                    $hotelId
-                );
-                return;
-            }
-            throw $e;
-        }
-    }
-
-    /**
-     * Ensure the calendar_prices_raw column exists on novoton_hotels.
-     *
-     * Self-healing migration: adds the column if missing. Called automatically
-     * when a query fails due to the missing column. Idempotent.
-     */
-    private static function ensureCalendarPricesColumn(): void
-    {
-        static $attempted = false;
-        if ($attempted) {
-            return;
-        }
-        $attempted = true;
-
-        $table_prefix = \Tygh\Registry::get('config.table_prefix');
-        $table_name = $table_prefix . 'novoton_hotels';
-
-        $exists = db_get_field(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-             AND TABLE_NAME = ?s AND COLUMN_NAME = 'calendar_prices_raw'",
-            $table_name
+        // Column is guaranteed by init.php schema migration.
+        db_query(
+            "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
+            !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
+            $hotelId
         );
-
-        if (!$exists) {
-            @db_query(
-                "ALTER TABLE ?:novoton_hotels ADD COLUMN `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display' AFTER `last_price_check`"
-            );
-        }
     }
 
     /**
