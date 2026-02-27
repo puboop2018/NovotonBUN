@@ -155,6 +155,31 @@ if ($mode == 'fix_tab') {
 }
 
 /**
+ * Mode: recompute_calendar_prices
+ * Bulk-fill calendar_prices_raw for all hotels with priceinfo_data
+ */
+if ($mode == 'recompute_calendar_prices') {
+    $hotel_ids = db_get_fields(
+        "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
+         INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+         WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
+    );
+
+    $count = 0;
+    foreach ($hotel_ids as $hid) {
+        try {
+            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
+            $count++;
+        } catch (\Throwable $e) {
+            // Skip hotels that fail
+        }
+    }
+
+    fn_set_notification('N', __('notice'), "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels.");
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+}
+
+/**
  * Mode: manage (default)
  * Dashboard with statistics and quick actions
  */
