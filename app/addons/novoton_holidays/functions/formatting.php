@@ -627,6 +627,7 @@ function fn_novoton_holidays_xml_to_array($xml): array
  * Format a price for display with consistent thousands separator and optional decimal superscript
  *
  * Converts raw price (EUR) to display currency using coefficient, then formats:
+ * - When round_prices is enabled: always "2.853" (integer, dot as thousands separator)
  * - Whole numbers: "2.853" (dot as thousands separator, no decimals)
  * - Prices with decimals: "7.419<sup class="price-decimal">99</sup>" (decimal part in superscript)
  *
@@ -639,19 +640,26 @@ function fn_novoton_holidays_format_price($amount, $coefficient = 1.0, string $s
 {
     $display_price = (float)$amount * (float)$coefficient;
 
-    // Check if price has meaningful decimals (more than 0.005 away from nearest integer)
-    $rounded = round($display_price);
-    $has_decimals = abs($display_price - $rounded) >= 0.005;
+    // When round_prices is enabled, always display as integer (no decimals)
+    $shouldRound = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isRoundPrices();
 
-    if ($has_decimals) {
-        // Split into integer and decimal parts
-        $integer_part = (int)floor($display_price);
-        $decimal_part = (int)round(($display_price - $integer_part) * 100);
-        $formatted_integer = number_format($integer_part, 0, '', '.');
-        $formatted = $formatted_integer . '<sup class="price-decimal">' . str_pad((string)$decimal_part, 2, '0', STR_PAD_LEFT) . '</sup>';
+    if ($shouldRound) {
+        $formatted = number_format(round($display_price), 0, '', '.');
     } else {
-        // Format as integer with thousands separator
-        $formatted = number_format($rounded, 0, '', '.');
+        // Check if price has meaningful decimals (more than 0.005 away from nearest integer)
+        $rounded = round($display_price);
+        $has_decimals = abs($display_price - $rounded) >= 0.005;
+
+        if ($has_decimals) {
+            // Split into integer and decimal parts
+            $integer_part = (int)floor($display_price);
+            $decimal_part = (int)round(($display_price - $integer_part) * 100);
+            $formatted_integer = number_format($integer_part, 0, '', '.');
+            $formatted = $formatted_integer . '<sup class="price-decimal">' . str_pad((string)$decimal_part, 2, '0', STR_PAD_LEFT) . '</sup>';
+        } else {
+            // Format as integer with thousands separator
+            $formatted = number_format($rounded, 0, '', '.');
+        }
     }
 
     if (!empty($symbol)) {

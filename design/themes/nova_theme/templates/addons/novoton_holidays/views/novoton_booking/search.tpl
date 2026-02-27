@@ -425,11 +425,15 @@
 
                 var novotonCurrency = '{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
                 var novotonCoeff = {$novoton_display_coefficient|default:1};
+                var novotonRoundPrices = {if $novoton_round_prices}true{else}false{/if};
                 var numRooms = {$novoton_params.num_rooms|default:1};
 
                 function novotonFormatPrice(amount) {
                     var display = amount * novotonCoeff;
                     var rounded = Math.round(display);
+                    if (novotonRoundPrices) {
+                        return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + novotonCurrency;
+                    }
                     var hasDec = Math.abs(display - rounded) >= 0.005;
                     if (hasDec) {
                         var intPart = Math.floor(display);

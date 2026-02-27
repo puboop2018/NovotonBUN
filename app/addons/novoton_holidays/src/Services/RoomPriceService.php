@@ -37,7 +37,11 @@ class RoomPriceService implements RoomPriceServiceInterface
     }
     
     /**
-     * Apply commission to base price
+     * Apply commission to base price.
+     *
+     * Respects the round_prices addon setting: when enabled, rounds to
+     * nearest integer (same as CommissionCalculator::apply). Otherwise
+     * rounds to 2 decimal places.
      *
      * @param float $base_price Base price from API
      * @return float Price with commission
@@ -47,8 +51,10 @@ class RoomPriceService implements RoomPriceServiceInterface
         if ($this->commission <= 0) {
             return $base_price;
         }
-        
-        return round($base_price * (1 + ($this->commission / 100)), 2);
+
+        $price = $base_price * (1 + ($this->commission / 100));
+
+        return ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
     }
     
     /**

@@ -152,6 +152,7 @@ class SearchResultFormatter
         $view->assign('novoton_display_currency', $currency);
         $view->assign('novoton_display_coefficient', $coefficient);
         $view->assign('novoton_display_symbol', $symbol);
+        $view->assign('novoton_round_prices', ConfigProvider::isRoundPrices());
     }
 
     private function assignHotelDisplay($view, string $hotelId, int $productId): void
