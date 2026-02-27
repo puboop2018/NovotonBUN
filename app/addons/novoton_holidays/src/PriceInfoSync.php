@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
@@ -289,7 +290,7 @@ class PriceInfoSync
             $this->syncProductPrices($product['product_id'], $stats);
 
             // Small delay to avoid overwhelming the API
-            usleep(500000); // 0.5 seconds
+            usleep(Constants::API_DELAY_BACKOFF);
         }
 
         // Check for missing products (in API but not in CS-Cart)

@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\ValueObjects\Occupancy;
 
 abstract class ApiClientBase
 {
@@ -112,27 +113,24 @@ abstract class ApiClientBase
 
     /**
      * Build children ages XML (<Age> elements).
+     * Delegates to Occupancy::buildAgeXml() — single source of truth.
      */
     protected function buildChildrenAgesXml(array $children): string
     {
-        $xml = '';
-        foreach ($children as $age) {
-            $xml .= '<Age>' . (int) $age . '</Age>';
-        }
-        return $xml;
+        return Occupancy::buildAgeXml($children);
     }
 
     /**
      * Build adult ages XML (<Age> elements).
+     * Uses default adult age from Constants for missing entries.
      */
     protected function buildAdultAgesXml(int $count, array $adultAges = []): string
     {
-        $xml = '';
+        $ages = [];
         for ($i = 0; $i < $count; $i++) {
-            $age = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
-            $xml .= '<Age>' . $age . '</Age>';
+            $ages[] = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
         }
-        return $xml;
+        return Occupancy::buildAgeXml($ages);
     }
 
     protected function buildCacheKey(string $function, array $params): string

@@ -109,9 +109,22 @@ final class Occupancy
      */
     public function toChildrenXml(): string
     {
+        return self::buildAgeXml($this->childrenAges);
+    }
+
+    /**
+     * Build <Age> XML elements from a raw ages array.
+     *
+     * Single source of truth for the age XML format used across
+     * value objects and API clients.
+     *
+     * @param int[] $ages
+     */
+    public static function buildAgeXml(array $ages): string
+    {
         $xml = '';
-        foreach ($this->childrenAges as $age) {
-            $xml .= '<Age>' . $age . '</Age>';
+        foreach ($ages as $age) {
+            $xml .= '<Age>' . (int) $age . '</Age>';
         }
         return $xml;
     }

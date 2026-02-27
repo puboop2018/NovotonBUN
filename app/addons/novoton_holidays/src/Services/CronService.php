@@ -108,7 +108,7 @@ class CronService implements CronServiceInterface
                 ]);
             }
 
-            usleep(200000); // 200ms delay
+            usleep(Constants::API_DELAY_MODERATE);
         }
 
         return $results;
@@ -185,7 +185,7 @@ class CronService implements CronServiceInterface
                 ]);
             }
 
-            usleep(300000); // 300ms delay
+            usleep(Constants::API_DELAY_HEAVY);
         }
 
         return $results;

@@ -94,6 +94,7 @@ final class Constants
     // ========== External URLs ==========
 
     public const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
+    public const BNR_RATES_URL  = 'https://curs.bnr.ro/nbrfxrates.xml';
 
     // ========== Limits ==========
     
@@ -255,6 +256,21 @@ final class Constants
     public const CRON_BATCH_SIZE = 100;
     public const CRON_CHECK_INTERVAL = 86400;         // 24 hours
 
+    // ========== API Rate Limiting Delays (microseconds) ==========
+    // Used between consecutive API calls to avoid overwhelming the Novoton API.
+    // All values in microseconds (1 second = 1_000_000).
+
+    /** Light delay between fast operations (product creation, price checks) */
+    public const API_DELAY_LIGHT   =  50_000;   //  50ms
+    /** Standard delay between API polling calls */
+    public const API_DELAY_NORMAL  = 100_000;   // 100ms
+    /** Moderate delay for heavier API operations (alternatives, status checks) */
+    public const API_DELAY_MODERATE = 200_000;  // 200ms
+    /** Heavy delay for expensive API calls (hotel info sync) */
+    public const API_DELAY_HEAVY   = 300_000;   // 300ms
+    /** Backoff delay for retry after transient failures */
+    public const API_DELAY_BACKOFF = 500_000;   // 500ms
+
     // ========== Booking Limits (per-room) ==========
 
     public const MAX_ADULTS_PER_ROOM = 4;
@@ -277,6 +293,21 @@ final class Constants
     public const HYDRATED_CACHE_MAX = 500;
     /** Trim to this many entries when HYDRATED_CACHE_MAX is exceeded */
     public const HYDRATED_CACHE_TRIM = 250;
+
+    // ========== Diagnostics ==========
+
+    /** Hours since last sync before health is considered degraded */
+    public const SYNC_HEALTH_THRESHOLD_HOURS = 48;
+
+    // ========== Price Check Defaults ==========
+
+    /** Default check-in offset for automatic price checks (days from today) */
+    public const PRICE_CHECK_OFFSET_DAYS = 30;
+
+    // ========== Date Formats ==========
+
+    public const DATETIME_FORMAT = 'Y-m-d H:i:s';
+    public const DATE_FORMAT     = 'Y-m-d';
 
     // ========== File Paths ==========
 

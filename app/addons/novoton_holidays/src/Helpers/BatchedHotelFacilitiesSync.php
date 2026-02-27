@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class BatchedHotelFacilitiesSync
@@ -259,7 +260,7 @@ class BatchedHotelFacilitiesSync
                     if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                         break;
                     }
-                    usleep(500000); // 500ms backoff for retries
+                    usleep(Constants::API_DELAY_BACKOFF);
                     try {
                         if (fn_novoton_holidays_sync_hotel_facilities($retry_id)) {
                             $recovered++;

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
@@ -62,7 +63,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             if (!$response || !isset($response->alternative)) {
                 $this->output("no response");
-                usleep(200000);
+                usleep(Constants::API_DELAY_MODERATE);
                 continue;
             }
 
@@ -83,7 +84,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             if (empty($alternatives)) {
                 $this->output("no alternatives yet");
-                usleep(200000);
+                usleep(Constants::API_DELAY_MODERATE);
                 continue;
             }
 
@@ -105,7 +106,7 @@ class AlternativesCommand extends AbstractCronCommand
                 $this->output("");
             }
 
-            usleep(200000);
+            usleep(Constants::API_DELAY_MODERATE);
         }
 
         $this->output("");
@@ -142,7 +143,7 @@ class AlternativesCommand extends AbstractCronCommand
             } else {
                 $this->output("no reservation ID");
             }
-            usleep(200000);
+            usleep(Constants::API_DELAY_MODERATE);
         }
 
         return ['success' => true, 'stats' => ['checked' => count($bookings)]];

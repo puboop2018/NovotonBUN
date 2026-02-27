@@ -120,7 +120,7 @@ if ($mode == 'cron_update') {
         }
         
         // Small delay
-        usleep(100000);
+        usleep(\Tygh\Addons\NovotonHolidays\Constants::API_DELAY_NORMAL);
     }
     
     echo "\n========================================\n";

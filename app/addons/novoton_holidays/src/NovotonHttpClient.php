@@ -266,7 +266,7 @@ class NovotonHttpClient implements HttpClientInterface
                 curl_close($ch);
             }
 
-            usleep(50000); // 50ms between chunks
+            usleep(Constants::API_DELAY_LIGHT);
         }
 
         curl_multi_close($mh);
