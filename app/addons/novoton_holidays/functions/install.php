@@ -194,6 +194,27 @@ function fn_novoton_holidays_setup_db(): void
         }
     }
 
+    // ── Schema migrations (idempotent — only adds columns if missing) ──
+    $migrations = [
+        [
+            'table'   => '?:novoton_hotels',
+            'column'  => 'calendar_prices_raw',
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display' AFTER `last_price_check`",
+        ],
+    ];
+
+    foreach ($migrations as $migration) {
+        $col_exists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?s AND COLUMN_NAME = ?s",
+            $resolve($migration['table']), $migration['column']
+        );
+        if (!$col_exists) {
+            @db_query($migration['sql']);
+        }
+    }
+
     // ── Foreign key constraints (idempotent — only adds if missing) ──
     $foreign_keys = [
         [

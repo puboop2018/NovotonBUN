@@ -418,6 +418,7 @@
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last room_price_check result',
+                `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`hotel_id`),
