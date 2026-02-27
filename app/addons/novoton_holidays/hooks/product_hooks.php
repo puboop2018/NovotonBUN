@@ -89,15 +89,16 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             $e->getLine()
         );
 
-        // Log to CS-Cart's log file
+        // Log the REAL error to CS-Cart logs + a dedicated file
         fn_log_event('general', 'runtime', ['message' => $error_detail]);
-
-        // ── TEMPORARY DEBUG: dump the real error to screen ──
-        // TODO: Remove this block after diagnosing the crash
-        fn_print_r('=== NOVOTON DEBUG: Product hook caught error ===');
-        fn_print_r($error_detail);
-        fn_print_r('Stack trace: ' . $e->getTraceAsString());
-        // ── END TEMPORARY DEBUG ──
+        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
+        if ($logDir) {
+            @file_put_contents(
+                $logDir . 'novoton_errors.log',
+                date('Y-m-d H:i:s') . ' ' . $error_detail . "\n" . $e->getTraceAsString() . "\n\n",
+                FILE_APPEND
+            );
+        }
 
         // Assign safe defaults so templates don't crash on missing variables
         $view = \Tygh\Tygh::$app['view'];

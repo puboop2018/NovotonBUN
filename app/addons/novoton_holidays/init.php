@@ -44,38 +44,11 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// ── One-time schema migrations (runs once per addon version) ──
-// Uses a file marker so the INFORMATION_SCHEMA check only happens once per deployment,
-// not on every request. The marker is version-stamped so it re-runs after upgrades.
-(function () {
-    $markerDir = Registry::get('config.dir.cache_misc') ?: (Registry::get('config.dir.root') . '/var/cache/misc/');
-    $marker = $markerDir . 'novoton_schema_' . Constants::VERSION . '.ok';
-
-    if (file_exists($marker)) {
-        return;
-    }
-
-    $table_prefix = Registry::get('config.table_prefix');
-    $table_name = $table_prefix . 'novoton_hotels';
-
-    $col_exists = db_get_field(
-        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = ?s AND COLUMN_NAME = 'calendar_prices_raw'",
-        $table_name
-    );
-
-    if (!$col_exists) {
-        @db_query(
-            "ALTER TABLE ?:novoton_hotels ADD COLUMN `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display' AFTER `last_price_check`"
-        );
-    }
-
-    // Write marker — suppress errors if cache dir is read-only
-    if (is_dir($markerDir) || @fn_mkdir($markerDir)) {
-        @file_put_contents($marker, date('c'));
-    }
-})();
+// ── Schema migrations ──
+// Column additions are handled ONLY by setup_db() during addon install/upgrade.
+// Runtime migrations in init.php are dangerous — if they crash, the entire
+// addon (hooks, modifiers, registration) is killed. Never run DB schema
+// changes in init.php.
 
 // Force load hooks.php
 require_once __DIR__ . '/hooks.php';
