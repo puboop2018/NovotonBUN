@@ -10,7 +10,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
@@ -28,19 +27,13 @@ if (!CronHelper::validateAccessKey($provided_access_key)) {
     }
 }
 
-$mode = $_REQUEST['mode'] ?? 'resinfo';
+$mode = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['mode'] ?? 'resinfo');
 
 header('Content-Type: text/plain; charset=utf-8');
 
 // Initialize logger
 $logger = new SyncLogger($mode);
 $logger->outputHeader($mode);
-
-// Load API
-$src_dir = PathResolver::getPath('src');
-if (file_exists($src_dir . 'NovotonApi.php')) {
-    require_once($src_dir . 'NovotonApi.php');
-}
 
 try {
     $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
@@ -55,17 +48,12 @@ try {
         }
     } else {
         $result = $dispatcher->dispatch($mode, $_REQUEST);
-
-        if (method_exists($logger, 'complete')) {
-            $logger->complete($result['success'] ?? true);
-        }
+        $logger->complete($result['success'] ?? true);
     }
 
 } catch (\Exception $e) {
     $logger->output("ERROR: " . $e->getMessage());
-    if (method_exists($logger, 'logEvent')) {
-        $logger->logEvent('cron_error', ['error' => $e->getMessage()]);
-    }
+    $logger->logEvent('cron_error', ['error' => $e->getMessage()]);
 }
 
 $logger->outputFooter();

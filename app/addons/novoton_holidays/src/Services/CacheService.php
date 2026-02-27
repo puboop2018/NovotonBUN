@@ -47,7 +47,7 @@ class CacheService implements CacheServiceInterface
      * @param string $key Cache key
      * @return mixed|null Cached value or null if not found/expired
      */
-    public function get(string $key)
+    public function get(string $key): mixed
     {
         // Check memory cache first (fastest)
         if (isset(self::$memory_cache[$key])) {
@@ -74,7 +74,7 @@ class CacheService implements CacheServiceInterface
      * @param int|null $ttl Time to live in seconds
      * @return bool Success
      */
-    public function set(string $key, $value, ?int $ttl = null): bool
+    public function set(string $key, mixed $value, ?int $ttl = null): bool
     {
         $ttl = $ttl ?? $this->default_ttl;
         $expires = time() + $ttl;
@@ -151,7 +151,7 @@ class CacheService implements CacheServiceInterface
      * @param int|null $ttl Time to live in seconds
      * @return mixed Cached or generated value
      */
-    public function remember(string $key, callable $callback, ?int $ttl = null)
+    public function remember(string $key, callable $callback, ?int $ttl = null): mixed
     {
         $value = $this->get($key);
         
@@ -173,7 +173,7 @@ class CacheService implements CacheServiceInterface
      * @param string $key Cache key
      * @return mixed|null
      */
-    private function getFromFile(string $key)
+    private function getFromFile(string $key): mixed
     {
         $file = $this->getCacheFilePath($key);
         

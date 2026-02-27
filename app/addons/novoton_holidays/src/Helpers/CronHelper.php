@@ -20,7 +20,6 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 
 class CronHelper
 {
@@ -93,19 +92,15 @@ class CronHelper
     /**
      * Initialize cron environment
      *
+     * @param array $params Request parameters (defaults to $_REQUEST)
      * @return array ['api' => NovotonApi, 'logger' => SyncLogger, 'mode' => string]
      */
-    public static function initialize(): array
+    public static function initialize(array $params = []): array
     {
-        $mode = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['mode'] ?? 'resinfo');
+        $rawMode = $params['mode'] ?? $_REQUEST['mode'] ?? 'resinfo';
+        $mode = preg_replace('/[^a-zA-Z0-9_]/', '', $rawMode);
 
         header('Content-Type: text/plain; charset=utf-8');
-
-        // Load API
-        $srcDir = PathResolver::getPath('src');
-        if (file_exists($srcDir . 'NovotonApi.php')) {
-            require_once($srcDir . 'NovotonApi.php');
-        }
 
         $api = new NovotonApi();
         $logger = new SyncLogger($mode);
@@ -122,14 +117,15 @@ class CronHelper
      *
      * @return array
      */
-    public static function getExcludedResorts(): array
+    public static function getExcludedResorts(array $params = []): array
     {
-        // Check request first
-        if (!empty($_REQUEST['exclude_resorts'])) {
-            if (is_array($_REQUEST['exclude_resorts'])) {
-                return array_filter($_REQUEST['exclude_resorts']);
+        $excludeResorts = $params['exclude_resorts'] ?? $_REQUEST['exclude_resorts'] ?? null;
+
+        if (!empty($excludeResorts)) {
+            if (is_array($excludeResorts)) {
+                return array_filter($excludeResorts);
             }
-            return array_filter(array_map('trim', explode(',', $_REQUEST['exclude_resorts'])));
+            return array_filter(array_map('trim', explode(',', $excludeResorts)));
         }
 
         // Fall back to settings

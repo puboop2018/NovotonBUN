@@ -70,7 +70,7 @@ abstract class ApiClientBase
         $this->lastHttpCode = $this->httpClient->lastHttpCode;
     }
 
-    protected function getFromCache(string $function, string $cacheKey)
+    protected function getFromCache(string $function, string $cacheKey): mixed
     {
         if (in_array($function, $this->noCacheFunctions)) {
             return null;

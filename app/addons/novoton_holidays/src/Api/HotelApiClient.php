@@ -17,7 +17,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%')
+    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
     {
         $country = empty($country) ? '%' : $country;
         $city = empty($city) ? '%' : $city;
@@ -42,7 +42,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelInfo(string $hotelId, string $lang = 'UK')
+    public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <hotelinfo>
@@ -97,7 +97,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false)
+    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
     {
         $packageXml = $includePackage ? '<PackageDescription>Yes</PackageDescription>' : '';
 
@@ -115,7 +115,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelImages(string $hotelId, string $lang = 'UK')
+    public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <hotel_images>
@@ -130,7 +130,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelFacilities(string $hotelId)
+    public function getHotelFacilities(string $hotelId): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <hotel_facilities>
@@ -145,7 +145,7 @@ class HotelApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function listFacilities()
+    public function listFacilities(): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <list_facilities>

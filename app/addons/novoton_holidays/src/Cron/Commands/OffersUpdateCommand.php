@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
@@ -23,7 +24,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output("Checking for new/updated offers (offers_update API)...");
         $this->output("");
 
-        $country = strtoupper($this->getParam('country', 'BULGARIA'));
+        $country = strtoupper($this->getParam('country', Constants::DEFAULT_COUNTRY));
 
         $syncRepo = Container::getInstance()->syncLogRepository();
         $last_import = $syncRepo->getLastSyncDate('product_import');

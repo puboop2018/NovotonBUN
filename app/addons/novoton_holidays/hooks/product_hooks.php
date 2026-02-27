@@ -4,10 +4,9 @@ declare(strict_types=1);
  * Novoton Holidays - Product Hook Functions
  *
  * Responsible for:
+ *   - get_products_post: Batch prefetch hotel data for product listings
  *   - gather_additional_product_data_post: Enrich product page with hotel data
  *   - get_product_data_post: Attach hotel_id and packages to product data
- *   - get_product_tabs_post: Add custom tab in admin product edit
- *   - update_product_pre: Before updating product data
  *   - delete_product_post: Clean up bookings when product is deleted
  *
  * @package NovotonHolidays
@@ -16,7 +15,6 @@ declare(strict_types=1);
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }

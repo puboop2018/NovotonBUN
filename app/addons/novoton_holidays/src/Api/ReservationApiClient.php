@@ -13,7 +13,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function createReservation(array $bookingData)
+    public function createReservation(array $bookingData): \SimpleXMLElement
     {
         $isTestMode = ConfigProvider::isTestBooking();
 
@@ -102,7 +102,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK')
+    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $searchXml = $idNum ? '<IdNum>' . htmlspecialchars($idNum) . '</IdNum>' :
                               '<ConfirmAgency>' . htmlspecialchars($confirmAgency) . '</ConfirmAgency>';
@@ -121,7 +121,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|array|false
      */
-    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false)
+    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
     {
         $xml = $this->buildHotelRequestXml($requestData);
 
@@ -158,7 +158,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getAlternatives(string $idNum, string $lang = 'UK')
+    public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
 <alternative_RS>
@@ -179,7 +179,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return string|false
      */
-    public function getInvoiceHtml(string $idNum, string $lang = 'UK')
+    public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
     {
         $xml = $this->xmlHeader() . '
         <hotel_acc_RQ_html>
@@ -195,7 +195,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getInvoiceXml(string $idNum, string $lang = 'UK')
+    public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <hotel_acc_RQ>
@@ -211,7 +211,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK')
+    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $arrFromXml = $arrFrom ? '<ArrFrom>' . htmlspecialchars($arrFrom) . '</ArrFrom>' : '';
         $arrToXml = $arrTo ? '<ArrTo>' . htmlspecialchars($arrTo) . '</ArrTo>' : '';

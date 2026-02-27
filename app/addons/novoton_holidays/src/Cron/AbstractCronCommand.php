@@ -47,7 +47,7 @@ abstract class AbstractCronCommand
         ]);
     }
 
-    protected function getParam(string $key, $default = null)
+    protected function getParam(string $key, $default = null): mixed
     {
         return $this->params[$key] ?? $default;
     }

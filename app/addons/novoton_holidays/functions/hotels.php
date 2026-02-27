@@ -528,9 +528,9 @@ function fn_novoton_holidays_get_or_create_category($path): int
  * @param string $country Country name (default: BULGARIA)
  * @return array Result with counts
  */
-function fn_novoton_holidays_sync_resorts_list($country = 'BULGARIA'): array
+function fn_novoton_holidays_sync_resorts_list($country = \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY): array
 {
-    $country = (string) ($country ?? 'BULGARIA');
+    $country = (string) ($country ?? \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY);
 
     $api = fn_novoton_holidays_get_api();
     if (!$api) {

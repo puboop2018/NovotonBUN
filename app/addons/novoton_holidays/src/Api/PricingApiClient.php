@@ -171,7 +171,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getRoomPrice(array $params)
+    public function getRoomPrice(array $params): \SimpleXMLElement|false
     {
         $bypassCache = !empty($params['nocache']);
 
@@ -243,7 +243,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getRoomPriceByResort(array $params)
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement
     {
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
@@ -290,7 +290,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return string|false Raw XML response
      */
-    public function getRoomPriceByResortRaw(array $params)
+    public function getRoomPriceByResortRaw(array $params): string
     {
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
@@ -333,7 +333,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK')
+    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <priceinfo>
@@ -350,7 +350,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK')
+    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $packageXml = $packageName ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';
 

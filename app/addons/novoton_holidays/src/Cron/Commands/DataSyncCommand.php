@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
@@ -37,7 +38,7 @@ class DataSyncCommand extends AbstractCronCommand
     {
         $countries = ConfigProvider::getSelectedCountries();
         if (empty($countries)) {
-            $countries = ['BULGARIA'];
+            $countries = [Constants::DEFAULT_COUNTRY];
         }
 
         $this->output("Syncing resort list from Novoton API...");

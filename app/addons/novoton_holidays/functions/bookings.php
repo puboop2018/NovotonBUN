@@ -10,6 +10,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -95,7 +96,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
     } else {
         $bookings = $bookingRepo->findWithReservationId();
         // Filter to only pending
-        $bookings = array_filter($bookings, fn($b) => $b['status'] === 'pending');
+        $bookings = array_filter($bookings, fn($b) => $b['status'] === Constants::STATUS_PENDING);
     }
 
     $result = [
@@ -158,8 +159,8 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
 
     // Check if request already exists
     $existing = db_get_field(
-        "SELECT request_id FROM ?:novoton_alternative_requests WHERE booking_id = ?i AND status = 'pending'",
-        $booking_id
+        "SELECT request_id FROM ?:novoton_alternative_requests WHERE booking_id = ?i AND status = ?s",
+        $booking_id, Constants::STATUS_PENDING
     );
 
     if ($existing) {
@@ -170,7 +171,7 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
     $request_data = [
         'booking_id' => $booking_id,
         'order_id' => $booking['order_id'],
-        'status' => 'pending',
+        'status' => Constants::STATUS_PENDING,
         'notes' => 'Requested by customer'
     ];
 

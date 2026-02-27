@@ -18,11 +18,8 @@ declare(strict_types=1);
  *                                                                          *
  *   PRODUCT (product_hooks.php):                                           *
  *     fn_novoton_holidays_get_products_post()                              *
- *     fn_novoton_holidays_get_product_tabs_post()                          *
  *     fn_novoton_holidays_gather_additional_product_data_post()            *
- *     fn_novoton_holidays_products_view_after()                            *
  *     fn_novoton_holidays_get_product_data_post()                          *
- *     fn_novoton_holidays_update_product_pre()                             *
  *     fn_novoton_holidays_delete_product_post()                            *
  *                                                                          *
  *   ORDER (order_hooks.php):                                               *

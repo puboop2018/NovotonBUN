@@ -11,7 +11,7 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getResortList(string $country = '', string $lang = 'UK')
+    public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <resort_list>
@@ -26,7 +26,7 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = '')
+    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <offers_update>
@@ -45,7 +45,7 @@ class DestinationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getKickbackInfo(string $lang = 'UK')
+    public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
         <kickback_RS>

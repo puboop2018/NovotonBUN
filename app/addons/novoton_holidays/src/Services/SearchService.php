@@ -14,7 +14,6 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 
 class SearchService implements SearchServiceInterface
 {

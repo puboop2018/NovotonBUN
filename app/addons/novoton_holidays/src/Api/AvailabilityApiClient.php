@@ -108,7 +108,7 @@ class AvailabilityApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut)
+    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
     {
         $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut);
 

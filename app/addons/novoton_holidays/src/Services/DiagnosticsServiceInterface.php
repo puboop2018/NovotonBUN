@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 interface DiagnosticsServiceInterface
 {
     /**
@@ -27,7 +29,7 @@ interface DiagnosticsServiceInterface
      * @param int $limit Max hotels to return
      * @return array{success: bool, total: int, hotels: array, error: string}
      */
-    public function testHotelList(string $country = 'BULGARIA', int $limit = 10): array;
+    public function testHotelList(string $country = Constants::DEFAULT_COUNTRY, int $limit = 10): array;
 
     /**
      * Test room price API call.
