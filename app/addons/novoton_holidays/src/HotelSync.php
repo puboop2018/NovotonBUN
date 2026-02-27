@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -150,7 +151,7 @@ class HotelSync
             }
 
             // Small delay between countries
-            usleep(500000);
+            usleep(Constants::API_DELAY_BACKOFF);
         }
 
         return $this->stats;
@@ -306,7 +307,7 @@ class HotelSync
             }
 
             // Delay between API calls
-            usleep(300000);
+            usleep(Constants::API_DELAY_HEAVY);
         }
 
         return $this->stats;
@@ -424,7 +425,7 @@ class HotelSync
             }
 
             // Small delay between priceinfo calls
-            usleep(200000);
+            usleep(Constants::API_DELAY_MODERATE);
         }
 
         // Update hotel has_prices flag
@@ -614,7 +615,7 @@ class HotelSync
                 $this->stats['packages_failed']++;
             }
 
-            usleep(200000);
+            usleep(Constants::API_DELAY_MODERATE);
         }
 
         // Precompute calendar prices for all hotels that had packages updated

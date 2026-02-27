@@ -97,16 +97,16 @@ class AdminCronService
         $with_prices = 0;
 
         foreach ($hotels as $hotel) {
-            $check_in  = date('Y-m-d', strtotime('+30 days'));
-            $check_out = date('Y-m-d', strtotime('+37 days'));
+            $check_in  = date(Constants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
+            $check_out = date(Constants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + Constants::DEFAULT_NIGHTS) . ' days'));
 
             $response = $this->api->getRoomPrice([
                 'hotel_id'  => $hotel['hotel_id'],
                 'check_in'  => $check_in,
                 'check_out' => $check_out,
-                'adults'    => 2,
-                'children'  => 0,
-                'rooms'     => 1,
+                'adults'    => Constants::DEFAULT_ADULTS,
+                'children'  => Constants::DEFAULT_CHILDREN,
+                'rooms'     => Constants::DEFAULT_ROOMS,
             ]);
             $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
 
@@ -121,7 +121,7 @@ class AdminCronService
             }
 
             $this->output("[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices === 'Y' ? 'HAS PRICES' : 'no prices'));
-            usleep(100000);
+            usleep(Constants::API_DELAY_NORMAL);
         }
 
         return ['success' => true, 'message' => "Checked: {$checked}, With prices: {$with_prices}"];
@@ -222,7 +222,7 @@ class AdminCronService
                     $this->output("FAILED");
                 }
 
-                usleep(50000);
+                usleep(Constants::API_DELAY_LIGHT);
             }
 
             $this->output("{$country}: Added {$added} of " . count($hotels) . "\n");

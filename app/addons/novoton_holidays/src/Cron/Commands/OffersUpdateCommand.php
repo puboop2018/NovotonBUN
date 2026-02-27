@@ -152,7 +152,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                 $this->output("FAILED");
             }
 
-            usleep(100000);
+            usleep(Constants::API_DELAY_NORMAL);
         }
 
         $this->output("");

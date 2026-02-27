@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                 }
                 
-                usleep(200000); // 200ms delay between requests
+                usleep(\Tygh\Addons\NovotonHolidays\Constants::API_DELAY_MODERATE);
             }
             
             fn_set_notification('N', __('notice'), __('novoton_holidays.bulk_check_complete', ['[checked]' => count($pending), '[found]' => $found]));

@@ -522,7 +522,7 @@ if ($mode == 'check_packages') {
                     flush();
                 }
 
-                usleep(100000); // 100ms delay between API calls
+                usleep(\Tygh\Addons\NovotonHolidays\Constants::API_DELAY_NORMAL);
             }
         }
 

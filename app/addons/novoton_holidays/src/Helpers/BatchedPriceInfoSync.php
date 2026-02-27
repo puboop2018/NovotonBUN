@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -305,7 +306,7 @@ class BatchedPriceInfoSync
                 $processed_this_run++;
 
                 // Small delay to avoid API rate limits
-                usleep(100000); // 100ms
+                usleep(Constants::API_DELAY_NORMAL);
             }
 
             // Precompute calendar prices once per hotel (deferred from per-package)
@@ -336,7 +337,7 @@ class BatchedPriceInfoSync
                     if (!$this->unlimited && (time() - $start_time) > $this->max_execution_time) {
                         break;
                     }
-                    usleep(500000); // 500ms backoff
+                    usleep(Constants::API_DELAY_BACKOFF);
                     $parts = explode('/', $retry_key, 2);
                     if (count($parts) !== 2) continue;
                     [$r_hotel_id, $r_package_id] = $parts;

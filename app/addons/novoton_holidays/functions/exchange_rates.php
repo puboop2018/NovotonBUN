@@ -22,7 +22,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_novoton_holidays_fetch_bnr_rates(): string|false
 {
-    $url = 'https://curs.bnr.ro/nbrfxrates.xml';
+    $url = \Tygh\Addons\NovotonHolidays\Constants::BNR_RATES_URL;
 
     // Use cURL with TLS 1.2 as required by BNR
     $ch = curl_init();

@@ -310,7 +310,8 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $currency = $targetCurrency ?? CurrencyService::getDisplayCurrency();
 
-        // 1. Try precomputed raw prices (written by sync cron)
+        // 1. Read precomputed raw prices (written by sync cron)
+        // Column is guaranteed by init.php schema migration.
         $rawJson = db_get_field(
             "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotelId
@@ -367,6 +368,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         $rawPrices = self::computeRawCalendarPrices($hotelId);
 
+        // Column is guaranteed by init.php schema migration.
         db_query(
             "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
             !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,

@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -142,7 +143,7 @@ class AddProductsCommand extends AbstractCronCommand
                     $this->output("FAILED (category_id={$category_id}, company_id=" . (Registry::get('runtime.company_id') ?: 1) . ")");
                 }
 
-                usleep(100000);
+                usleep(Constants::API_DELAY_NORMAL);
             }
 
             $this->output("{$country}: Added {$added} of " . count($hotels));
