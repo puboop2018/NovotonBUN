@@ -171,7 +171,7 @@
                 {$maxADT = $capacity.maxADT|default:2}
                 {$maxCHD = $capacity.maxCHD|default:2}
                 {$minPAX = $capacity.minPAX|default:1}
-                {$board_display = $room_data.board_id|novoton_format_board}
+                {$board_display = $room_data.board_id}
                 {$is_sgl = strpos($room_id|default:'', 'SGL') !== false}
                 
                 <div class="room-section-card expanded" data-room="{$room_id}">

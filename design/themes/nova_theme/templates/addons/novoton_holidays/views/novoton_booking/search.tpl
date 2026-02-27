@@ -316,7 +316,7 @@
                                         {$room_display = $result.room_name|default:$result.room_id}
                                     {/if}
                                     
-                                    {$board_display = $result.board_id|novoton_format_board}
+                                    {$board_display = $result.board_id}
                                     
                                     <label class="room-option" style="display: flex; align-items: flex-start; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: #fff; gap: 12px;">
                                         <input type="radio" 

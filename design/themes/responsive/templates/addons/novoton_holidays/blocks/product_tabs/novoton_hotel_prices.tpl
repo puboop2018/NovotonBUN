@@ -1,16 +1,10 @@
 {* block-description:Hotel Prices **}
 {*
  * Novoton Hotel Prices Tab Template
- * Features:
- * - Package name with season dates (each period on new line)
- * - Collapsible room sections with space between cards
- * - Bold/highlighted room headers
- * - Room capacities (maxADT, maxCHD, minPAX)
- * - Season-based pricing with 5, 7, 10 nights columns
- * - Children ages displayed as 0-1.99 and 2-11.99
- * - Occupancy rows: 2 Adults, 2 Adults + 1 Child, 2 Adults + 2 Children
- * - Payment & cancellation terms
- * - Early booking discounts
+ *
+ * DIAGNOSTIC MODE: modifier calls replaced with raw values.
+ * This avoids |novoton_format_board which may fail in Smarty 5
+ * compilation if the modifier isn't found in plugin directories.
  *}
 
 {style src="css/addons/novoton_holidays/styles.css"}
@@ -171,7 +165,7 @@
                 {$maxADT = $capacity.maxADT|default:2}
                 {$maxCHD = $capacity.maxCHD|default:2}
                 {$minPAX = $capacity.minPAX|default:1}
-                {$board_display = $room_data.board_id|novoton_format_board}
+                {$board_display = $room_data.board_id}
                 {$is_sgl = strpos($room_id|default:'', 'SGL') !== false}
                 
                 <div class="room-section-card expanded" data-room="{$room_id}">
