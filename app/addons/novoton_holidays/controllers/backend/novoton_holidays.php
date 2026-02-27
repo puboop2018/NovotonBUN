@@ -174,7 +174,7 @@ if ($mode == 'manage' || empty($mode)) {
     $stats = [
         'hotels' => [
             'total' => $hotelRepo->count(),
-            'with_prices' => $hotelRepo->count(['has_prices' => 'Y']),
+            'with_prices' => $hotelRepo->count(['has_room_prices' => true]),
             'with_products' => $hotelRepo->count(['has_product' => true]),
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
@@ -187,7 +187,7 @@ if ($mode == 'manage' || empty($mode)) {
     foreach ($countries as $country) {
         $stats['by_country'][$country] = [
             'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+            'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_prices' => true]),
             'with_packages' => $hotelRepo->count(['country' => $country, 'has_packages' => true]),
             'with_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         ];

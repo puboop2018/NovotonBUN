@@ -83,7 +83,7 @@ class SecurityService implements SecurityServiceInterface
                 : explode(',', $data['children_ages']);
             
             foreach ($ages as $age) {
-                $age = (int) $age;
+                $age = (float) $age;
                 if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
                     $errors[] = 'Child age must be between ' . Constants::MIN_CHILD_AGE . ' and ' . Constants::MAX_CHILD_AGE;
                     break;
@@ -164,10 +164,10 @@ class SecurityService implements SecurityServiceInterface
             $sanitized['product_id'] = (int) $params['product_id'];
         }
 
-        // Pass through children_ages (comma-separated integers)
+        // Pass through children_ages (comma-separated numbers, may include decimals like 1.5)
         if (!empty($params['children_ages']) && is_string($params['children_ages'])) {
-            // Only allow digits and commas
-            $sanitized['children_ages'] = preg_replace('/[^0-9,]/', '', $params['children_ages']);
+            // Only allow digits, dots (decimals), and commas
+            $sanitized['children_ages'] = preg_replace('/[^0-9.,]/', '', $params['children_ages']);
         }
 
         // Pass through rooms_data (JSON string - will be decoded by controller)

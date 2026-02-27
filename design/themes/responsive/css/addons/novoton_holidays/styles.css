@@ -4,6 +4,17 @@
  */
 
 /* ===========================
+   Price Decimal Superscript
+   =========================== */
+
+sup.price-decimal {
+    font-size: 0.55em;
+    vertical-align: super;
+    line-height: 0;
+    margin-left: 1px;
+}
+
+/* ===========================
    Booking Engine Styles
    =========================== */
 
@@ -11,22 +22,22 @@
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 25px;
-    margin: 20px 0;
+    padding: 15px 20px;
+    margin: 10px 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .booking-title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 2px solid #3498db;
 }
 
 .booking-form-wrapper .control-group {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .booking-form-wrapper .control-label {
@@ -71,8 +82,8 @@
 
 .btn-primary.btn-large {
     width: 100%;
-    padding: 14px 20px;
-    font-size: 16px;
+    padding: 10px 20px;
+    font-size: 15px;
     font-weight: 600;
     border-radius: 6px;
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);

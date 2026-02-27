@@ -1,16 +1,10 @@
 {* block-description:Hotel Prices **}
 {*
  * Novoton Hotel Prices Tab Template
- * Features:
- * - Package name with season dates (each period on new line)
- * - Collapsible room sections with space between cards
- * - Bold/highlighted room headers
- * - Room capacities (maxADT, maxCHD, minPAX)
- * - Season-based pricing with 5, 7, 10 nights columns
- * - Children ages displayed as 0-1.99 and 2-11.99
- * - Occupancy rows: 2 Adults, 2 Adults + 1 Child, 2 Adults + 2 Children
- * - Payment & cancellation terms
- * - Early booking discounts
+ *
+ * DIAGNOSTIC MODE: modifier calls replaced with raw values.
+ * This avoids |novoton_format_board which may fail in Smarty 5
+ * compilation if the modifier isn't found in plugin directories.
  *}
 
 {style src="css/addons/novoton_holidays/styles.css"}
@@ -384,7 +378,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
 
                                                 {if $total > 0}
-                                                    <span class="price">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+                                                    <span class="price">{fn_novoton_holidays_format_price($total, 1, $smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}
@@ -463,7 +457,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
 
                                                 {if $total > 0}
-                                                    <span class="price price-highlight">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+                                                    <span class="price price-highlight">{fn_novoton_holidays_format_price($total, 1, $smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}
@@ -544,7 +538,7 @@
                                                 {$total = $base * (1 + $commission / 100)}
                                                 
                                                 {if $total > 0}
-                                                    <span class="price">{$total|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+                                                    <span class="price">{fn_novoton_holidays_format_price($total, 1, $smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
                                                 {else}
                                                     <span class="na">-</span>
                                                 {/if}

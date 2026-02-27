@@ -94,9 +94,14 @@
 
         <div class="form-group form-actions">
             <button type="submit" class="btn-compare">Compare Prices</button>
-            <button type="button" class="btn-compare btn-compare-verify" id="btn-verify-seasons">
+            <button type="button" class="btn-compare btn-compare-verify" id="btn-verify-seasons"
+                    title="Shows which season period (Price1, Price2, ...) applies to each night of the stay. Useful for diagnosing Base Price = 0 issues.">
                 Verify Season-Price Mapping
             </button>
+            <small style="display: block; color: #666; margin-top: 6px;">
+                <strong>Compare Prices</strong> — calculates total price from priceinfo and compares with room_price API.<br>
+                <strong>Verify Season-Price Mapping</strong> — maps each night to its season period (Price1-20) to diagnose which price columns are used.
+            </small>
         </div>
     </form>
 </div>

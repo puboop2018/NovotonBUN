@@ -368,9 +368,9 @@
                                             <div style="text-align: right; flex-shrink: 0;">
                                                 {if $result.early_booking_discount > 0}
                                                     {math equation="price / (1 - discount / 100)" price=$result.total_price discount=$result.early_booking_discount assign="original_price"}
-                                                    <div style="font-size: 12px; color: #999; text-decoration: line-through;">{math equation="round(x * y)" x=$original_price y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                                                    <div style="font-size: 12px; color: #999; text-decoration: line-through;">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                                 {/if}
-                                                <div style="font-size: 18px; font-weight: 700; color: #003580;">{math equation="round(x * y)" x=$result.total_price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                                                <div style="font-size: 18px; font-weight: 700; color: #003580;">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                             </div>
                                         </div>
                                     </label>
@@ -426,6 +426,18 @@
                 var novotonCurrency = '{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
                 var novotonCoeff = {$novoton_display_coefficient|default:1};
                 var numRooms = {$novoton_params.num_rooms|default:1};
+
+                function novotonFormatPrice(amount) {
+                    var display = amount * novotonCoeff;
+                    var rounded = Math.round(display);
+                    var hasDec = Math.abs(display - rounded) >= 0.005;
+                    if (hasDec) {
+                        var intPart = Math.floor(display);
+                        var decPart = Math.round((display - intPart) * 100);
+                        return intPart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '<sup class="price-decimal">' + (decPart < 10 ? '0' : '') + decPart + '</sup> ' + novotonCurrency;
+                    }
+                    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + novotonCurrency;
+                }
                 var selectedRooms = {ldelim}{rdelim};
                 var roomOccupancy = JSON.parse('{$novoton_params.rooms_data_json|default:"[]"|escape:"javascript"}');
                 
@@ -454,7 +466,7 @@
                     
                     var priceEl = document.getElementById('room-' + roomNum + '-price');
                     if (priceEl) {
-                        priceEl.textContent = Math.round(price * novotonCoeff) + ' ' + novotonCurrency;
+                        priceEl.innerHTML = novotonFormatPrice(price);
                         priceEl.style.color = '#ffc107';
                     }
                     
@@ -487,7 +499,7 @@
                     var bookBtn = document.getElementById('book-multi-room-btn');
                     
                     if (totalEl) {
-                        totalEl.textContent = totalPrice > 0 ? Math.round(totalPrice * novotonCoeff) + ' ' + novotonCurrency : '-- ' + novotonCurrency;
+                        totalEl.innerHTML = totalPrice > 0 ? novotonFormatPrice(totalPrice) : '-- ' + novotonCurrency;
                     }
                     
                     if (bookBtn) {
@@ -620,9 +632,9 @@
                             <div style="text-align: right; flex-shrink: 0;">
                                 {if $result.early_booking_discount > 0}
                                     {math equation="price / (1 - discount / 100)" price=$result.total_price discount=$result.early_booking_discount assign="original_price"}
-                                    <div style="font-size: 13px; color: #999; text-decoration: line-through;">{math equation="round(x * y)" x=$original_price y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                                    <div style="font-size: 13px; color: #999; text-decoration: line-through;">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                 {/if}
-                                <div style="font-size: 22px; font-weight: 700; color: #1a1a1a;">{math equation="round(x * y)" x=$result.total_price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                                <div style="font-size: 22px; font-weight: 700; color: #1a1a1a;">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                             </div>
                         </div>
 
@@ -841,9 +853,9 @@
                     <div style="padding: 20px; border-right: 1px solid #e0e0e0; text-align: right;">
                         {if $result.early_booking_discount > 0}
                             {math equation="price / (1 - discount / 100)" price=$result.total_price discount=$result.early_booking_discount assign="original_price"}
-                            <div style="font-size: 14px; color: #999; text-decoration: line-through;">{math equation="round(x * y)" x=$original_price y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                            <div style="font-size: 14px; color: #999; text-decoration: line-through;">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                         {/if}
-                        <div style="font-size: 22px; font-weight: 700; color: #1a1a1a;">{math equation="round(x * y)" x=$result.total_price|default:0 y=$novoton_display_coefficient|default:1} {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
+                        <div style="font-size: 22px; font-weight: 700; color: #1a1a1a;">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                         <div style="font-size: 12px; color: #666;">{__("novoton_holidays.includes_taxes")}</div>
                         {if $result.early_booking_discount > 0}
                             <div style="display: inline-block; background: #ff6b35; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 5px;">
