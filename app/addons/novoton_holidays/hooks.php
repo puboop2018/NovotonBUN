@@ -17,6 +17,7 @@ declare(strict_types=1);
  *   Hook functions:                                                        *
  *                                                                          *
  *   PRODUCT (product_hooks.php):                                           *
+ *     fn_novoton_holidays_get_products_post()                              *
  *     fn_novoton_holidays_get_product_tabs_post()                          *
  *     fn_novoton_holidays_gather_additional_product_data_post()            *
  *     fn_novoton_holidays_products_view_after()                            *

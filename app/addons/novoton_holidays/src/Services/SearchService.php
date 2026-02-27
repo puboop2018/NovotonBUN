@@ -283,13 +283,25 @@ class SearchService implements SearchServiceInterface
     public function processSearchResults($response, array $params): array
     {
         $results = [];
-        
+
         // Handle different response formats
         if (isset($response->Hotels->Hotel)) {
-            $hotels = is_array($response->Hotels->Hotel) 
-                ? $response->Hotels->Hotel 
+            $hotels = is_array($response->Hotels->Hotel)
+                ? $response->Hotels->Hotel
                 : [$response->Hotels->Hotel];
-                
+
+            // Batch pre-fetch hotel data (2 queries instead of N×2)
+            $hotel_ids = [];
+            foreach ($hotels as $hotel) {
+                $id = (string)($hotel->IdHotel ?? $hotel->HotelId ?? '');
+                if ($id !== '') {
+                    $hotel_ids[] = $id;
+                }
+            }
+            if (!empty($hotel_ids)) {
+                fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+            }
+
             foreach ($hotels as $hotel) {
                 $processed = $this->processHotelResult($hotel, $params);
                 if ($processed) {
@@ -303,7 +315,7 @@ class SearchService implements SearchServiceInterface
                 $results[] = $processed;
             }
         }
-        
+
         return $results;
     }
     

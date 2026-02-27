@@ -68,6 +68,129 @@ function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details 
 }
 
 /**
+ * Shared cache accessor for hotel data.
+ *
+ * All functions that read/write the hotel data cache MUST use this
+ * to guarantee a single shared store within each PHP request.
+ *
+ * @return array& Reference to the shared cache array
+ */
+function &_novoton_hotel_data_cache(): array
+{
+    static $cache = [];
+    return $cache;
+}
+
+/**
+ * Enrich a raw novoton_hotels DB row: decode hotel_data JSON, extract
+ * rooms/boards/ages, attach packages.
+ *
+ * @param array      $hotel    Raw row from novoton_hotels
+ * @param array|null $packages Pre-fetched package rows (already normalized), or null to query
+ * @return array Enriched hotel array
+ */
+function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
+{
+    // Decode hotel_data JSON (stores hotelinfo API response)
+    $hotelInfoJson = $hotel['hotel_data'] ?? '';
+    if (!empty($hotelInfoJson)) {
+        $hotelInfo = json_decode($hotelInfoJson, true);
+        if ($hotelInfo) {
+            if (isset($hotelInfo['rooms'])) {
+                $hotel['rooms'] = $hotelInfo['rooms'];
+                if (isset($hotel['rooms']['IdRoom'])) {
+                    $hotel['rooms'] = [$hotel['rooms']];
+                }
+            }
+            if (isset($hotelInfo['boards'])) {
+                $hotel['boards'] = $hotelInfo['boards'];
+                if (isset($hotel['boards']['IdBoard'])) {
+                    $hotel['boards'] = [$hotel['boards']];
+                }
+            }
+            if (isset($hotelInfo['ages'])) {
+                $hotel['ages'] = $hotelInfo['ages'];
+            }
+            $hotel['full_data'] = $hotelInfo;
+        }
+    }
+
+    // Attach packages — use pre-fetched if provided, otherwise query
+    if ($packages !== null) {
+        $hotel['packages'] = $packages;
+    } else {
+        $rows = db_get_array(
+            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotel['hotel_id']
+        );
+        if (!empty($rows)) {
+            $hotel['packages'] = [];
+            foreach ($rows as $pkg) {
+                $hotel['packages'][] = fn_novoton_holidays_normalize_package($pkg, false);
+            }
+        }
+    }
+
+    return $hotel;
+}
+
+/**
+ * Batch pre-fetch hotel data for multiple hotel IDs into the shared cache.
+ *
+ * Reduces N×2 queries (1 hotel + 1 packages per hotel) to exactly 2 queries
+ * for any number of hotels. Subsequent calls to fn_novoton_holidays_get_hotel_data()
+ * for these IDs will be O(1) cache hits.
+ *
+ * @param array $hotel_ids List of Novoton hotel IDs to prefetch
+ */
+function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
+{
+    $cache = &_novoton_hotel_data_cache();
+
+    // Filter to IDs not already cached
+    $missing = [];
+    foreach ($hotel_ids as $id) {
+        $id = (string) $id;
+        if ($id !== '' && !isset($cache[$id])) {
+            $missing[] = $id;
+        }
+    }
+    if (empty($missing)) {
+        return;
+    }
+
+    // Batch query 1: all hotel rows
+    $hotels = db_get_hash_array(
+        "SELECT * FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+        'hotel_id',
+        $missing
+    );
+
+    // Batch query 2: all package rows for these hotels
+    $all_packages = db_get_array(
+        "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id IN (?a) ORDER BY hotel_id, package_name",
+        $missing
+    );
+
+    // Group & normalize packages by hotel_id
+    $pkgs_by_hotel = [];
+    foreach ($all_packages as $pkg) {
+        $pkgs_by_hotel[$pkg['hotel_id']][] = fn_novoton_holidays_normalize_package($pkg, false);
+    }
+
+    // Enrich and cache each hotel
+    foreach ($missing as $hotel_id) {
+        if (!isset($hotels[$hotel_id])) {
+            continue;
+        }
+        $cache[$hotel_id] = _novoton_enrich_hotel_row(
+            $hotels[$hotel_id],
+            $pkgs_by_hotel[$hotel_id] ?? []
+        );
+    }
+}
+
+/**
  * Get hotel data by hotel_id
  * V3 Architecture: Reads from hotelinfo_data JSON + packages from novoton_hotel_packages
  *
@@ -82,7 +205,7 @@ function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details 
  */
 function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
 {
-    static $cache = [];
+    $cache = &_novoton_hotel_data_cache();
 
     // PHP 8.1+: prevent null from reaching real_escape_string via db_quote ?s
     if ($hotel_id === null || $hotel_id === '') {
@@ -100,55 +223,10 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
     );
 
     if ($hotel) {
-        // V3: Decode hotel_data JSON (stores hotelinfo API response)
-        $hotelInfoJson = $hotel['hotel_data'] ?? '';
-        if (!empty($hotelInfoJson)) {
-            $hotelInfo = json_decode($hotelInfoJson, true);
-            if ($hotelInfo) {
-                // Extract rooms from hotelinfo
-                if (isset($hotelInfo['rooms'])) {
-                    $hotel['rooms'] = $hotelInfo['rooms'];
-                    // Normalize single room to array
-                    if (isset($hotel['rooms']['IdRoom'])) {
-                        $hotel['rooms'] = [$hotel['rooms']];
-                    }
-                }
-
-                // Extract boards from hotelinfo
-                if (isset($hotelInfo['boards'])) {
-                    $hotel['boards'] = $hotelInfo['boards'];
-                    if (isset($hotel['boards']['IdBoard'])) {
-                        $hotel['boards'] = [$hotel['boards']];
-                    }
-                }
-
-                // Extract ages from hotelinfo
-                if (isset($hotelInfo['ages'])) {
-                    $hotel['ages'] = $hotelInfo['ages'];
-                }
-
-                // Store full hotelinfo for access
-                $hotel['full_data'] = $hotelInfo;
-            }
-        }
-
-        // V3: Get packages from novoton_hotel_packages table
-        $packages = db_get_array(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotel_id
-        );
-
-        if (!empty($packages)) {
-            $hotel['packages'] = [];
-            foreach ($packages as $pkg) {
-                $hotel['packages'][] = fn_novoton_holidays_normalize_package($pkg, false);
-            }
-        }
-
-        $cache[$hotel_id] = $hotel;
+        $cache[$hotel_id] = _novoton_enrich_hotel_row($hotel);
     }
 
-    return $hotel ?: null;
+    return $cache[$hotel_id] ?? null;
 }
 
 /**

@@ -22,6 +22,39 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
+ * Hook: after product list is fetched.
+ *
+ * Batch pre-fetches hotel data for all hotel products on the page so that
+ * subsequent per-product gather_additional_product_data_post calls hit the
+ * in-memory cache instead of issuing 2 DB queries each (N+1 fix).
+ */
+function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_code = ''): void
+{
+    if (empty($products)) {
+        return;
+    }
+
+    $addon_settings = ConfigProvider::all();
+    if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
+        return;
+    }
+
+    $hotel_ids = [];
+    foreach ($products as $product) {
+        if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
+            $hotel_id = _nvt_extract_hotel_id($product['product_code']);
+            if (!empty($hotel_id)) {
+                $hotel_ids[] = $hotel_id;
+            }
+        }
+    }
+
+    if (!empty($hotel_ids)) {
+        fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+    }
+}
+
+/**
  * Hook: gather additional product data - pass prices to templates
  */
 function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
