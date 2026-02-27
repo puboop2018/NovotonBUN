@@ -443,6 +443,7 @@
                 `has_early_booking` enum('Y','N') DEFAULT 'N' COMMENT 'Has EB discounts',
                 `min_price` decimal(10,2) DEFAULT NULL COMMENT 'Lowest adult price for quick filtering',
                 `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+                `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron',
                 `synced_at` datetime DEFAULT NULL COMMENT 'Last priceinfo sync date',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -451,7 +452,8 @@
                 KEY `idx_hotel_id` (`hotel_id`),
                 KEY `idx_package_name` (`package_name`(100)),
                 KEY `idx_min_price` (`min_price`),
-                KEY `idx_synced_at` (`synced_at`)
+                KEY `idx_synced_at` (`synced_at`),
+                KEY `idx_needs_price_compute` (`needs_price_compute`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel packages from hotelinfo API with priceinfo'
         </item>
 

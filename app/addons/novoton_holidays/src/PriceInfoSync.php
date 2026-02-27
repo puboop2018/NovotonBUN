@@ -149,72 +149,29 @@ class PriceInfoSync
                     continue;
                 }
 
-                // Convert to array
+                // Convert to array for JSON storage
                 $priceData = json_decode(json_encode($priceInfo), true);
 
-                // Calculate metadata
-                $hasEarlyBooking = !empty($priceData['early_booking']) ? 'Y' : 'N';
-                $seasonsCount = 0;
-                $minPrice = null;
-
-                // Count seasons
-                if (isset($priceData['seasons']['season'])) {
-                    $seasons = $priceData['seasons']['season'];
-                    $seasonsCount = isset($seasons['IdSeason']) ? 1 : count($seasons);
-                }
-
-                // Find minimum price
-                if (isset($priceData['season_price'])) {
-                    $seasonPrices = $priceData['season_price'];
-                    if (isset($seasonPrices['Code'])) {
-                        $seasonPrices = [$seasonPrices];
-                    }
-
-                    foreach ($seasonPrices as $sp) {
-                        for ($i = 1; $i <= 20; $i++) {
-                            $priceKey = 'Price' . $i;
-                            if (isset($sp[$priceKey]) && (float) $sp[$priceKey] > 0) {
-                                $price = (float) $sp[$priceKey];
-                                if ($minPrice === null || $price < $minPrice) {
-                                    $minPrice = $price;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // V3: Save to novoton_hotel_packages table
-                $packageData = [
-                    'hotel_id' => $hotelId,
-                    'package_id' => $packageId,
-                    'package_name' => $packageName,
-                    'priceinfo_data' => json_encode($priceData),
-                    'seasons_count' => $seasonsCount,
-                    'has_early_booking' => $hasEarlyBooking,
-                    'min_price' => $minPrice,
-                    'synced_at' => date('Y-m-d H:i:s')
-                ];
+                // V3: Save raw data to novoton_hotel_packages table
+                // Flag for recomputation by compute_prices cron
+                $priceinfoJson = json_encode($priceData);
+                $now = date('Y-m-d H:i:s');
 
                 // Atomic upsert — avoids SELECT-then-INSERT/UPDATE race condition
                 db_query(
                     "INSERT INTO ?:novoton_hotel_packages
-                     (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
-                     VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, ?s)
+                     (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
+                     VALUES (?s, ?s, ?s, ?s, 'Y', ?s)
                      ON DUPLICATE KEY UPDATE
                      package_name = VALUES(package_name),
                      priceinfo_data = VALUES(priceinfo_data),
-                     seasons_count = VALUES(seasons_count),
-                     has_early_booking = VALUES(has_early_booking),
-                     min_price = VALUES(min_price),
+                     needs_price_compute = 'Y',
                      synced_at = VALUES(synced_at)",
-                    $packageData['hotel_id'],
-                    $packageData['package_id'],
-                    $packageData['package_name'],
-                    $packageData['priceinfo_data'],
-                    $packageData['seasons_count'],
-                    $packageData['has_early_booking'],
-                    $packageData['min_price'],
-                    $packageData['synced_at']
+                    $hotelId,
+                    $packageId,
+                    $packageName,
+                    $priceinfoJson,
+                    $now
                 );
 
                 $packagesUpdated++;
@@ -227,8 +184,6 @@ class PriceInfoSync
                     $packagesUpdated,
                     $hotelId
                 );
-
-                \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotelId);
 
                 $stats['updated'][] = $product['product_code'] . ' - ' . $product['product'];
                 $this->clearHotelCache($hotelId);

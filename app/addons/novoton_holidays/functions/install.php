@@ -201,6 +201,12 @@ function fn_novoton_holidays_setup_db(): void
             'column'  => 'calendar_prices_raw',
             'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display' AFTER `last_price_check`",
         ],
+        [
+            'table'   => '?:novoton_hotel_packages',
+            'column'  => 'needs_price_compute',
+            'sql'     => "ALTER TABLE ?:novoton_hotel_packages ADD COLUMN `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron' AFTER `currency`",
+            'post_sql' => "ALTER TABLE ?:novoton_hotel_packages ADD KEY `idx_needs_price_compute` (`needs_price_compute`)",
+        ],
     ];
 
     foreach ($migrations as $migration) {
@@ -212,6 +218,9 @@ function fn_novoton_holidays_setup_db(): void
         );
         if (!$col_exists) {
             @db_query($migration['sql']);
+            if (!empty($migration['post_sql'])) {
+                @db_query($migration['post_sql']);
+            }
         }
     }
 

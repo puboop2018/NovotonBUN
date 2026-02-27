@@ -178,9 +178,10 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         }
 
         $packagesUpdated = 0;
-        $minPrice = null;
 
         // V3: Store each package in novoton_hotel_packages table
+        // Price metadata (min_price, seasons_count, has_early_booking) is computed
+        // by the compute_prices cron — sync only stores raw data and sets the flag.
         foreach ($packages as $pkg) {
             $packageId = $pkg['IdCont'] ?? '';
             $packageName = $pkg['PackageName'] ?? '';
@@ -193,80 +194,24 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             $priceInfo = $api->getPriceInfo($hotel_id, $packageName);
             $priceData = !empty($priceInfo) ? json_decode(json_encode($priceInfo), true) : [];
 
-            // Calculate metadata
-            $hasEarlyBooking = !empty($priceData['early_booking']) ? 'Y' : 'N';
-            $seasonsCount = 0;
-            $pkgMinPrice = null;
-
-            // Count seasons and find min price
-            if (isset($priceData['seasons']['season'])) {
-                $seasons = $priceData['seasons']['season'];
-                $seasonsCount = isset($seasons['IdSeason']) ? 1 : count($seasons);
-            }
-
-            if (isset($priceData['season_price'])) {
-                $seasonPrices = $priceData['season_price'];
-                if (isset($seasonPrices['Code'])) {
-                    $seasonPrices = [$seasonPrices];
-                }
-                foreach ($seasonPrices as $sp) {
-                    for ($i = 1; $i <= 20; $i++) {
-                        $priceKey = 'Price' . $i;
-                        if (isset($sp[$priceKey]) && (float)($sp[$priceKey]) > 0) {
-                            $price = (float)($sp[$priceKey]);
-                            if ($pkgMinPrice === null || $price < $pkgMinPrice) {
-                                $pkgMinPrice = $price;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Track overall min price
-            if ($pkgMinPrice !== null && ($minPrice === null || $pkgMinPrice < $minPrice)) {
-                $minPrice = $pkgMinPrice;
-            }
-
-            // Save to novoton_hotel_packages
-            $packageData = [
-                'hotel_id' => (string) $hotel_id,
-                'package_id' => (string) $packageId,
-                'package_name' => (string) $packageName,
-                'seasons_count' => $seasonsCount,
-                'has_early_booking' => $hasEarlyBooking,
-                'synced_at' => date('Y-m-d H:i:s')
-            ];
-            // Only include nullable fields when they have values
-            // (avoids passing null to real_escape_string on PHP 8.1+)
-            if (!empty($priceData)) {
-                $packageData['priceinfo_data'] = json_encode($priceData);
-            }
-            if ($pkgMinPrice !== null) {
-                $packageData['min_price'] = $pkgMinPrice;
-            }
-
-            // Atomic upsert — avoids SELECT-then-INSERT/UPDATE race condition
             $priceinfoValue = !empty($priceData) ? json_encode($priceData) : '';
-            $minPriceValue = $pkgMinPrice ?? 0;
+            $now = date('Y-m-d H:i:s');
+
+            // Atomic upsert — flag for recomputation by compute_prices cron
             db_query(
                 "INSERT INTO ?:novoton_hotel_packages
-                 (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
-                 VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, ?s)
+                 (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
+                 VALUES (?s, ?s, ?s, ?s, 'Y', ?s)
                  ON DUPLICATE KEY UPDATE
                  package_name = VALUES(package_name),
                  priceinfo_data = VALUES(priceinfo_data),
-                 seasons_count = VALUES(seasons_count),
-                 has_early_booking = VALUES(has_early_booking),
-                 min_price = VALUES(min_price),
+                 needs_price_compute = 'Y',
                  synced_at = VALUES(synced_at)",
-                $packageData['hotel_id'],
-                $packageData['package_id'],
-                $packageData['package_name'],
+                (string) $hotel_id,
+                (string) $packageId,
+                (string) $packageName,
                 $priceinfoValue,
-                $packageData['seasons_count'],
-                $packageData['has_early_booking'],
-                $minPriceValue,
-                $packageData['synced_at']
+                $now
             );
 
             $packagesUpdated++;
@@ -279,19 +224,6 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             'last_price_check' => date('Y-m-d H:i:s')
         ];
         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $hotel_id);
-
-        if ($packagesUpdated > 0) {
-            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hotel_id);
-        }
-
-        // Update product price if we have min price
-        if ($minPrice !== null && $minPrice > 0) {
-            $price_with_commission = $api->applyCommission($minPrice);
-            db_query(
-                "UPDATE ?:products SET price = ?d WHERE product_id = ?i",
-                $price_with_commission, $product_id
-            );
-        }
 
         return $packagesUpdated > 0 ? true : 'no_data';
 
