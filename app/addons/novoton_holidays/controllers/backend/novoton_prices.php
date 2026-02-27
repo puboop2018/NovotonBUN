@@ -108,11 +108,8 @@ if ($mode == 'update_prices') {
  * Mode: check_prices
  * Check which hotels have active prices using resort-based bulk queries.
  *
- * Instead of calling room_price per hotel (N API calls), this queries
- * room_price per resort (M API calls where M << N). Uses regex on the
- * raw XML response to extract <IdHotel> values - if a hotel ID appears
- * in the response, it has prices. Much faster and catches ALL hotels
- * the API knows about, not just those in our database.
+ * Queries room_price per resort (M API calls where M << N individual hotel
+ * calls). Extracts <IdHotel> values via xpath on the parsed XML response.
  */
 if ($mode == 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -234,9 +231,6 @@ if ($mode == 'check_prices') {
                 flush();
 
                 try {
-                    // Use parsed method — sends proper <Adt><Age>30</Age>...</Adt>
-                    // format that the API requires (raw method sent <Adt>2</Adt>
-                    // which some API versions reject).
                     $xml = $api->getRoomPriceByResort([
                         'resort'    => $resort_name,
                         'check_in'  => $check_in,
@@ -244,105 +238,38 @@ if ($mode == 'check_prices') {
                         'adults'    => 2,
                     ]);
 
-                    $raw_response = $api->getLastResponse();
-                    $response_kb = round(strlen($raw_response ?: '') / 1024, 1);
+                    $response_kb = round(strlen($api->getLastResponse() ?: '') / 1024, 1);
 
-                    // Extract hotel IDs from parsed XML via xpath
+                    // Extract hotel IDs via xpath on parsed XML
                     $resort_hotel_ids = [];
-
-                    // Strategy 1: xpath on parsed XML for various ID element names
-                    foreach (['//IdHotel', '//HotelId', '//hotel_id', '//idhotel'] as $xp) {
-                        $nodes = $xml->xpath($xp);
-                        if (!empty($nodes)) {
-                            foreach ($nodes as $node) {
-                                $val = trim((string)$node);
-                                if ($val !== '' && ctype_digit($val)) {
-                                    $resort_hotel_ids[] = $val;
-                                }
-                            }
-                            break;
-                        }
-                    }
-
-                    // Strategy 2: Hotel wrapper elements with child or attribute IDs
-                    if (empty($resort_hotel_ids)) {
-                        $hotelNodes = $xml->xpath('//Hotel');
-                        if (!empty($hotelNodes)) {
-                            foreach ($hotelNodes as $hn) {
-                                $hid = (string)($hn->IdHotel ?? $hn->HotelId ?? '');
-                                if (empty($hid)) {
-                                    $hid = (string)($hn['id'] ?? $hn['Id'] ?? $hn['IdHotel'] ?? '');
-                                }
-                                if (!empty($hid) && ctype_digit(trim($hid))) {
-                                    $resort_hotel_ids[] = trim($hid);
-                                }
+                    $nodes = $xml->xpath('//IdHotel');
+                    if (!empty($nodes)) {
+                        foreach ($nodes as $node) {
+                            $val = trim((string)$node);
+                            if ($val !== '' && ctype_digit($val)) {
+                                $resort_hotel_ids[] = $val;
                             }
                         }
                     }
-
-                    // Strategy 3: regex on raw response (handles CDATA-wrapped values)
-                    if (empty($resort_hotel_ids) && !empty($raw_response)) {
-                        $matches = [];
-                        // Match <IdHotel>123</IdHotel> or <IdHotel><![CDATA[123]]></IdHotel>
-                        preg_match_all('/<IdHotel>\s*(?:<!\[CDATA\[)?\s*(\d+)\s*(?:\]\]>)?\s*<\/IdHotel>/i', $raw_response, $matches);
-                        if (!empty($matches[1])) {
-                            $resort_hotel_ids = $matches[1];
-                        }
-                        // Also try attribute format: IdHotel="123"
-                        if (empty($resort_hotel_ids)) {
-                            preg_match_all('/IdHotel\s*=\s*["\'](\d+)["\']/i', $raw_response, $matches);
-                            if (!empty($matches[1])) {
-                                $resort_hotel_ids = $matches[1];
-                            }
-                        }
-                    }
-
                     $resort_hotel_ids = array_unique($resort_hotel_ids);
-
-                    // Diagnostic: for first resorts with data but no hotel IDs
-                    if (empty($resort_hotel_ids) && $resort_idx < 5) {
-                        $priceNodes = $xml->xpath('//Price');
-                        $priceCount = count($priceNodes ?: []);
-
-                        $rootName = $xml->getName();
-                        $childNames = [];
-                        foreach ($xml->children() as $child) {
-                            $cn = $child->getName();
-                            if (!in_array($cn, $childNames)) {
-                                $childNames[] = $cn;
-                            }
-                        }
-
-                        // Check for API errors
-                        $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
-                        if (!empty($errorNode)) {
-                            echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
-                        }
-
-                        echo "<span class='skip' style='font-size:11px;color:#666;'>";
-                        echo "  DIAG: root=&lt;{$rootName}&gt; children=[" . htmlspecialchars(implode(', ', array_slice($childNames, 0, 20))) . "]";
-                        echo " Prices:{$priceCount} Size:{$response_kb}KB";
-                        if ($priceCount > 0) {
-                            echo " <strong style='color:red;'>Has prices but no hotel IDs!</strong>";
-                        }
-                        echo "</span><br>\n";
-
-                        if (!empty($raw_response)) {
-                            $snippet = htmlspecialchars(substr($raw_response, 0, 600));
-                            echo "<span class='skip' style='font-size:10px;color:#999;word-break:break-all;'>  {$snippet}</span><br>\n";
-                        }
-                    }
 
                     if (!empty($resort_hotel_ids)) {
                         $count = count($resort_hotel_ids);
-
                         foreach ($resort_hotel_ids as $hid) {
                             $hotels_with_prices[$hid] = $resort_name;
                         }
-
                         echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                     } else {
-                        echo "<span class='skip'>  No hotels with prices ({$response_kb} KB)</span><br>\n";
+                        // Check if response has prices but no hotel IDs (format mismatch)
+                        $priceCount = count($xml->xpath('//Price') ?: []);
+                        $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
+                        if (!empty($errorNode)) {
+                            echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
+                        } elseif ($priceCount > 0) {
+                            echo "<span class='skip'>  0 hotel IDs but {$priceCount} prices in response ({$response_kb} KB) — unexpected format</span><br>\n";
+                        } else {
+                            echo "<span class='skip'>  No prices ({$response_kb} KB)</span><br>\n";
+                        }
                     }
 
                 } catch (\Throwable $e) {
@@ -611,7 +538,7 @@ if ($mode == 'check_prices_hotel') {
                     }
                 }
 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $errors++;
                 echo "<span class='error'>✗ [{$hotel_num}] {$hotel_name}: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
             }
@@ -693,7 +620,7 @@ if ($mode == 'room_price') {
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
             Tygh::$app['view']->assign('last_response', $api->getLastResponse());
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Tygh::$app['view']->assign('error', $e->getMessage());
         }
     }
@@ -792,24 +719,24 @@ if ($mode == 'cron_offers_update') {
                     // Just update the price check timestamp
                     $hotelRepo->update((string) $hotel['hotel_id'], ['last_price_check' => date('Y-m-d H:i:s')]);
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $errors++;
                 echo "✗ {$hotel['hotel_name']}: " . $e->getMessage() . "\n";
             }
         }
-        
+
         $duration = time() - $start_time;
-        
+
         // Log sync
         $syncLogRepo->logSync('offers_update', count($hotels), $updated, $errors, $duration);
-        
+
         echo "\n=== SUMMARY ===\n";
         echo "Updated: {$updated}\n";
         echo "Errors: {$errors}\n";
         echo "Duration: {$duration}s\n";
         echo "Completed: " . date('Y-m-d H:i:s') . "\n";
-        
-    } catch (Exception $e) {
+
+    } catch (\Throwable $e) {
         echo "ERROR: " . $e->getMessage() . "\n";
     }
     

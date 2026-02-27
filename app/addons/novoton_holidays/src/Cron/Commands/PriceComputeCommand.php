@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 
 /**
@@ -144,6 +145,20 @@ class PriceComputeCommand extends AbstractCronCommand
             if ($calErrors > 0) {
                 $this->output("  Calendar errors: {$calErrors}");
             }
+
+            // Update CS-Cart product prices from computed min_price
+            $this->output("Updating product catalog prices...");
+            $priceUpdated = 0;
+            foreach (array_keys($dirtyHotels) as $hotelId) {
+                try {
+                    $priceUpdated += self::updateProductPrice((string) $hotelId) ? 1 : 0;
+                } catch (\Throwable $e) {
+                    $this->output("  Product price ERROR [{$hotelId}]: " . $e->getMessage());
+                }
+            }
+            if ($priceUpdated > 0) {
+                $this->output("  {$priceUpdated} product prices updated");
+            }
         }
 
         $duration = round(microtime(true) - $this->startTime, 1);
@@ -226,6 +241,11 @@ class PriceComputeCommand extends AbstractCronCommand
             $this->output("Calendar ERROR: " . $e->getMessage());
         }
 
+        // Update CS-Cart product price
+        if (self::updateProductPrice($hotelId)) {
+            $this->output("Product catalog price updated.");
+        }
+
         $this->output("OK: {$processed} packages computed, {$errors} errors");
 
         return [
@@ -236,6 +256,36 @@ class PriceComputeCommand extends AbstractCronCommand
                 'errors' => $errors,
             ],
         ];
+    }
+
+    /**
+     * Update CS-Cart product price from the hotel's lowest min_price (with commission).
+     *
+     * @param string $hotelId Hotel ID
+     * @return bool True if product price was updated
+     */
+    public static function updateProductPrice(string $hotelId): bool
+    {
+        $row = db_get_row(
+            "SELECT h.product_id, MIN(p.min_price) AS lowest_price
+             FROM ?:novoton_hotels h
+             JOIN ?:novoton_hotel_packages p ON p.hotel_id = h.hotel_id
+             WHERE h.hotel_id = ?s AND p.min_price > 0 AND h.product_id > 0
+             GROUP BY h.product_id",
+            $hotelId
+        );
+
+        if (empty($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
+            return false;
+        }
+
+        $commission = ConfigProvider::getCommission();
+        $price = (float) $row['lowest_price'] * (1 + ($commission / 100));
+        $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
+
+        db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $price, (int) $row['product_id']);
+
+        return true;
     }
 
     /**

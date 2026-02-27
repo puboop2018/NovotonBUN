@@ -179,9 +179,10 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
         $packagesUpdated = 0;
 
-        // V3: Store each package in novoton_hotel_packages table
-        // Price metadata (min_price, seasons_count, has_early_booking) is computed
-        // by the compute_prices cron — sync only stores raw data and sets the flag.
+        // Store each package in novoton_hotel_packages, flag for cron recomputation,
+        // and compute min_price inline for immediate product price update.
+        $lowestPrice = null;
+
         foreach ($packages as $pkg) {
             $packageId = $pkg['IdCont'] ?? '';
             $packageName = $pkg['PackageName'] ?? '';
@@ -214,6 +215,14 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
                 $now
             );
 
+            // Compute min_price using canonical method for immediate product price update
+            if (!empty($priceData)) {
+                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice($priceData);
+                if ($mp !== null && ($lowestPrice === null || $mp < $lowestPrice)) {
+                    $lowestPrice = $mp;
+                }
+            }
+
             $packagesUpdated++;
         }
 
@@ -224,6 +233,14 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             'last_price_check' => date('Y-m-d H:i:s')
         ];
         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $hotel_id);
+
+        // Update CS-Cart product price immediately (don't wait for compute_prices cron)
+        if ($lowestPrice !== null && $lowestPrice > 0) {
+            $commission = ConfigProvider::getCommission();
+            $withComm = $lowestPrice * (1 + ($commission / 100));
+            $withComm = ConfigProvider::isRoundPrices() ? round($withComm) : round($withComm, 2);
+            db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $withComm, $product_id);
+        }
 
         return $packagesUpdated > 0 ? true : 'no_data';
 
