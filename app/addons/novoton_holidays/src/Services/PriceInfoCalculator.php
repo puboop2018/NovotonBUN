@@ -959,7 +959,7 @@ class PriceInfoCalculator
         $priceinfo = $this->parser->getPriceinfo();
         $entries = $priceinfo['reduction_perc_marketing'] ?? [];
         if (empty($entries)) {
-            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => '', 'details' => []];
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'is_surcharge' => false, 'name' => '', 'details' => []];
         }
 
         if (isset($entries['Perc'])) {
@@ -982,7 +982,8 @@ class PriceInfoCalculator
             $minStay = (int) ($entry['MinimumStay'] ?? 0);
             $type = PriceInfoFormatter::toScalar($entry['Type'] ?? '');
 
-            if ($perc <= 0) {
+            // Skip zero values; negative values are treated as surcharges
+            if ($perc == 0) {
                 continue;
             }
 
@@ -1028,7 +1029,18 @@ class PriceInfoCalculator
 
             $applicable = true;
 
-            if ($perc > $bestPercent) {
+            // For discounts (positive): pick highest percentage
+            // For surcharges (negative): pick most negative (largest surcharge)
+            // Discounts take priority over surcharges
+            $isBestDiscount = ($bestPercent > 0);
+            $isCurrentDiscount = ($perc > 0);
+
+            if ($isCurrentDiscount && (!$isBestDiscount || $perc > $bestPercent)) {
+                // Current is a discount and either best was a surcharge or current is better
+                $bestPercent = $perc;
+                $bestName = $name;
+            } elseif (!$isCurrentDiscount && !$isBestDiscount && $perc < $bestPercent) {
+                // Both are surcharges: pick the most negative (largest surcharge)
                 $bestPercent = $perc;
                 $bestName = $name;
             }
@@ -1046,15 +1058,17 @@ class PriceInfoCalculator
         }
 
         if (!$applicable) {
-            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'name' => '', 'details' => $details];
+            return ['applicable' => false, 'discount' => 0, 'percent' => 0, 'is_surcharge' => false, 'name' => '', 'details' => $details];
         }
 
         $discount = $subtotal * ($bestPercent / 100);
+        $isSurcharge = $bestPercent < 0;
 
         $this->log('reduction_perc_marketing', [
             'best_percent' => $bestPercent,
             'subtotal' => $subtotal,
             'discount' => $discount,
+            'is_surcharge' => $isSurcharge,
             'name' => $bestName,
             'details' => $details
         ]);
@@ -1063,6 +1077,7 @@ class PriceInfoCalculator
             'applicable' => $applicable,
             'discount' => $discount,
             'percent' => $bestPercent,
+            'is_surcharge' => $isSurcharge,
             'name' => $bestName,
             'details' => $details
         ];
