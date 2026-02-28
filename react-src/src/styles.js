@@ -19,7 +19,7 @@ export function injectStyles() {
 .nvt-booking-engine {
     /* React-only variables (no LESS equivalent) */
     --nvt-z-popup: 1000;
-    --nvt-btn-height: 46px;
+    --nvt-btn-height: 52px;
     --nvt-btn-font: 15px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--nvt-text, #1a1a1a);
@@ -49,7 +49,7 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 0;
-    border: 2px solid var(--nvt-accent, #febb02);
+    border: 2px solid var(--nvt-accent, #FFB703);
     border-radius: var(--nvt-radius, 8px);
     background: var(--nvt-bg, #ffffff);
     overflow: visible;
@@ -114,9 +114,9 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 6px 12px;
+    padding: 6px 16px;
     cursor: pointer;
-    min-height: 40px;
+    min-height: 52px;
     background: transparent;
     border: none;
     width: 100%;
@@ -148,7 +148,7 @@ button.nvt-field-input:active {
 }
 .nvt-field-input-text .nvt-value {
     display: block;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--nvt-text, #1a1a1a);
     white-space: nowrap;
@@ -176,10 +176,11 @@ button.nvt-field-input:active {
     justify-content: center;
     gap: 8px;
     padding: 10px 28px;
-    background: #006ce4;
+    background: #0071E3;
     color: #fff;
     border: none;
-    border-left: 2px solid var(--nvt-accent, #febb02);
+    border-left: 2px solid var(--nvt-accent, #FFB703);
+    border-radius: 0 6px 6px 0;
     font-size: var(--nvt-btn-font);
     font-weight: 600;
     cursor: pointer;
@@ -188,7 +189,7 @@ button.nvt-field-input:active {
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
-    background: #006ce4;
+    background: #0071E3;
 }
 
 /* ---------- Validation message ---------- */
@@ -754,7 +755,7 @@ button.nvt-field-input:active {
     .nvt-btn-search {
         width: 100%;
         border-left: none;
-        border-top: 2px solid var(--nvt-accent, #febb02);
+        border-top: 2px solid var(--nvt-accent, #FFB703);
         border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
         font-size: 15px;
         padding: 10px 20px;
