@@ -237,14 +237,14 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         );
     }
 
-    // Footer text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
+    // Footer text – e.g. "Mon. 14 Feb. → Mon. 21 Feb. — 7 nights"
     const footerText = (() => {
         if (tempCheckIn && tempCheckOut) {
             const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
-            return `${formatDateShort(tempCheckIn)} - ${formatDateShort(tempCheckOut)} — ${nights} ${nightLabel}`;
+            return `${formatDateShort(tempCheckIn)} \u2192 ${formatDateShort(tempCheckOut)} \u2014 ${nights} ${nightLabel}`;
         }
         if (tempCheckIn) {
-            return `${formatDateShort(tempCheckIn)} - ${t('selectCheckOut', 'Select check-out date')}`;
+            return `${formatDateShort(tempCheckIn)} \u2192 ${t('selectCheckOut', 'Select check-out date')}`;
         }
         return t('selectCheckIn', 'Select check-in date');
     })();
