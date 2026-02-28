@@ -168,10 +168,6 @@ msgctxt "SettingsTooltips::novoton_holidays::api_currency"
 msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 msgstr "Moneda în care API-ul Novoton returnează prețurile. Prețurile vor fi convertite din această monedă în moneda selectată de client."
 
-msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
-msgid "Exchange Rates"
-msgstr "Cursuri Valutare"
-
 msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
 msgid "Currency risk commission %"
 msgstr "Comision risc valutar %"
@@ -179,10 +175,6 @@ msgstr "Comision risc valutar %"
 msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
 msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
 msgstr "Procentaj adăugat la cursul de schimb (0-5%, implicit 1.8%). Protejează împotriva fluctuațiilor valutare."
-
-msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
-msgid "Last exchange rate update"
-msgstr "Ultima actualizare curs valutar"
 
 msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
 msgid "API Resilience"
@@ -2188,10 +2180,6 @@ msgstr "Cron / Automatizare"
 msgctxt "SettingsOptions::novoton_holidays::display_header"
 msgid "Display Settings"
 msgstr "Setări Afișare"
-
-msgctxt "SettingsOptions::novoton_holidays::last_sync_date"
-msgid "Last Synchronization"
-msgstr "Ultima Sincronizare"
 
 msgctxt "SettingsOptions::novoton_holidays::other_header"
 msgid "Other Settings"

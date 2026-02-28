@@ -320,25 +320,19 @@ function fn_novoton_holidays_update_exchange_rates($return_details = false): arr
     $updates = fn_novoton_holidays_update_cscart_currencies($coefficients);
     $result['updates'] = $updates;
 
-    // Step 6: Update last sync timestamp in addon settings
+    // Step 6: Log exchange rate sync to sync log
     $timestamp = date('Y-m-d H:i:s');
 
-    // Use CS-Cart's Settings class if available, otherwise direct query
-    if (class_exists('\\Tygh\\Settings')) {
-        \Tygh\Settings::instance()->updateValue('last_exchange_rate_update', $timestamp, 'novoton_holidays');
-    } else {
-        // Fallback: direct query with JOIN for reliability
-        db_query(
-            "UPDATE ?:settings_objects o "
-            . "INNER JOIN ?:settings_sections s ON o.section_id = s.section_id "
-            . "SET o.value = ?s "
-            . "WHERE o.name = 'last_exchange_rate_update' AND s.name = 'novoton_holidays'",
-            $timestamp
-        );
-    }
-
-    // Also update in Registry for immediate display
-    Registry::set('addons.novoton_holidays.last_exchange_rate_update', $timestamp);
+    db_query(
+        "INSERT INTO ?:novoton_sync_log SET sync_date = ?s, sync_type = 'exchange_rates', status = 'completed', "
+        . "notes = ?s",
+        $timestamp,
+        json_encode([
+            'coefficients' => $coefficients,
+            'commission' => $commission,
+            'publishing_date' => $result['publishing_date'],
+        ])
+    );
 
     $result['success'] = true;
     $result['message'] = 'Exchange rates updated successfully';

@@ -272,13 +272,6 @@ class PriceInfoSync
             $logId
         );
 
-        // Update last sync date in settings
-        db_query(
-            "UPDATE ?:settings_vendor_values SET value = ?s
-             WHERE object_id = 0 AND name = 'last_sync_date' AND object_type = 'A'",
-            date('Y-m-d H:i:s')
-        );
-
         // Send email report
         fn_novoton_holidays_send_import_report_email([], 'room_price', [
             'added'    => 0,

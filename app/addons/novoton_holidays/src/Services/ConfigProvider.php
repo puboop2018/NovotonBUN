@@ -148,7 +148,9 @@ class ConfigProvider
 
     public static function getLastExchangeRateUpdate(): string
     {
-        return (string)(self::settings()['last_exchange_rate_update'] ?? '');
+        return (string) (db_get_field(
+            "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'"
+        ) ?: '');
     }
 
     public static function getVersion(): string

@@ -84,10 +84,6 @@ msgctxt "SettingsTooltips::novoton_holidays::api_currency"
 msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 msgstr "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 
-msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
-msgid "Exchange Rates"
-msgstr "Exchange Rates"
-
 msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
 msgid "Currency risk commission %"
 msgstr "Currency risk commission %"
@@ -95,10 +91,6 @@ msgstr "Currency risk commission %"
 msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
 msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
 msgstr "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
-
-msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
-msgid "Last exchange rate update"
-msgstr "Last exchange rate update"
 
 msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
 msgid "API Resilience"
@@ -363,10 +355,6 @@ msgstr "After Description"
 msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
 msgid "Before Tabs"
 msgstr "Before Tabs"
-
-msgctxt "SettingsOptions::novoton_holidays::last_sync_date"
-msgid "Last Synchronization"
-msgstr "Last Synchronization"
 
 msgctxt "Languages::product_tabs.novoton_hotel_prices"
 msgid "Hotel Prices"

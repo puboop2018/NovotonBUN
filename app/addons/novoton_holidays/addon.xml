@@ -113,17 +113,6 @@
                         <variants/>
                     </item>
 
-                    <!-- Exchange Rates Header -->
-                    <item id="exchange_rates_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="last_exchange_rate_update">
-                        <type>info</type>
-                        <default_value></default_value>
-                        <variants/>
-                    </item>
-
                     <!-- Products Header -->
                     <item id="products_header">
                         <type>header</type>
@@ -211,11 +200,6 @@
                     <!-- Other Header -->
                     <item id="other_header">
                         <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="last_sync_date">
-                        <type>input</type>
-                        <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="test_booking">
