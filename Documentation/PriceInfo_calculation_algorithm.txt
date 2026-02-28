@@ -2,8 +2,8 @@
                     PRICEINFO CALCULATION ALGORITHM
 ================================================================================
 
-Document Version: 1.1
-Last Updated: 2026-02-12
+Document Version: 1.2
+Last Updated: 2026-02-28
 Repository: NovotonAddonRepoA
 
 ================================================================================
@@ -17,12 +17,14 @@ TABLE OF CONTENTS
 5. BASE PRICE CALCULATION
 6. SUPPLEMENTS/FEES CALCULATION
 7. DISCOUNT CALCULATION (Early Booking & Reduction)
-8. PRIORITY RULES
-9. COMMISSION APPLICATION
-10. EXTRAS DAILY TYPE HANDLING
-11. PERSON MATCHING ALGORITHM
-12. RESULT STRUCTURE
-13. FORMULA SUMMARY
+8. REDUCTION PERIOD (MaxDays Cap)
+9. PERCENTAGE DISCOUNTS (Marketing & Additional)
+10. PRIORITY RULES
+11. COMMISSION APPLICATION
+12. EXTRAS DAILY TYPE HANDLING
+13. PERSON MATCHING ALGORITHM
+14. RESULT STRUCTURE
+15. FORMULA SUMMARY
 
 ================================================================================
 1. OVERVIEW
@@ -96,7 +98,19 @@ PRICEINFO JSON STRUCTURE:
     "handling_fee": [...],
     "company_fee": [...],
     "early_booking": [...],
-    "reduction": [...]
+    "reduction": [...],
+    "reduction_period": [...],
+    "reduction_perc_marketing": [...],
+    "reduction_perc_additional": [...],
+    "Priority": "Yes|No",
+    "PriorityEB": "Yes|No",
+    "PriorityEXT": "Yes|No",
+    "EBToDaily": "Yes|No",
+    "EBToRooms": "Yes|No",
+    "EBToBoard": "Yes|No",
+    "EXTToDaily": "Yes|No",
+    "EXTToRooms": "Yes|No",
+    "EXTToBoard": "Yes|No"
 }
 
 OCCUPANCY STRUCTURE:
@@ -191,6 +205,15 @@ Method: calculateReduction()
   - If EXTToRooms='Yes', reduce extras_rooms proportionally
   - If EXTToBoard='Yes', reduce extras_board proportionally
 
+STEP 7b: CALCULATE REDUCTION PERIOD (MaxDays Cap)
+--------------------------------------------------
+NOTE: Currently not in use by any hotel packages.
+
+Method: calculateReductionPeriod()
+- Caps the number of paid nights to MaxDays
+- When stay length falls within FromDays-ToDays and overlaps date range
+- Discount = value of the capped-off (excess) nights
+
 STEP 8: APPLY PRIORITY RULES
 ----------------------------
 Method: applyPriorityRules()
@@ -201,6 +224,29 @@ Method: applyPriorityRules()
   - Scenario 4: Combined (if allowed)
 - Apply Priority rules to select best scenario
 - Result: Best final price, applied discount type, discount amount
+
+STEP 8b: APPLY REDUCTION_PERC_MARKETING
+---------------------------------------
+Method: calculateReductionPercMarketing()
+- Percentage discount applied to the total price (excluding handling fee)
+- Supports date restrictions (BookingFrom/To, TravelTimeFrom/To)
+- Supports room type filtering, minimum stay, and Type (Stay/Arrival)
+- When multiple entries match, picks the best (highest) discount percentage
+- If the value is a NEGATIVE number, it is applied as a supplement (surcharge)
+  that INCREASES the total price
+- Discounts (positive) take priority over surcharges (negative) when both match
+- Example: ALBA **** 2026
+
+STEP 8c: APPLY REDUCTION_PERC_ADDITIONAL
+-----------------------------------------
+NOTE: Currently not in use by any hotel packages.
+
+Method: calculateReductionPercAdditional()
+- Flat promotional percentage discount on subtotal
+- Applied after reduction_perc_marketing
+- Combinable with other percentage discounts
+- Has Perc (percentage) and Name fields
+- No date restrictions
 
 STEP 9: APPLY COMMISSION
 ------------------------
@@ -371,7 +417,120 @@ reduction_board = extras_board * ratio [if EXTToBoard='Yes']
 total_reduction = reduction_base + reduction_daily + reduction_rooms + reduction_board
 
 ================================================================================
-8. PRIORITY RULES
+8. REDUCTION PERIOD (MaxDays Cap)
+================================================================================
+
+NOTE: Currently not in use by any hotel packages. The code is implemented
+but no active packages provide reduction_period data.
+
+Method: calculateReductionPeriod()
+
+PURPOSE:
+--------
+Caps the number of paid nights to a maximum (MaxDays). If the guest stays
+longer than MaxDays, the excess nights are discounted (effectively free).
+
+PRICEINFO STRUCTURE:
+--------------------
+"reduction_period": {
+    "MaxDays": "7",
+    "FromDays": "5",
+    "ToDays": "14",
+    "FromDate": "2026-06-01",
+    "ToDate": "2026-09-30"
+}
+
+ELIGIBILITY:
+------------
+1. Stay length must be within FromDays-ToDays range
+2. Stay dates must overlap with FromDate-ToDate range
+3. Actual stay must exceed MaxDays
+
+CALCULATION:
+------------
+- Count nights beyond MaxDays
+- Discount = sum of base prices for those excess nights
+
+================================================================================
+9. PERCENTAGE DISCOUNTS (Marketing & Additional)
+================================================================================
+
+REDUCTION_PERC_MARKETING:
+-------------------------
+Method: calculateReductionPercMarketing()
+
+An additional percentage discount (or surcharge) applied to the total price
+(excluding handling fee). Applied AFTER priority rules resolve EB/Reduction.
+
+PRICEINFO STRUCTURE:
+--------------------
+"reduction_perc_marketing": [
+    {
+        "Perc": "10",
+        "Name": "Summer Special",
+        "BookingFrom": "2026-01-01",
+        "BookingTo": "2026-03-31",
+        "TravelTimeFrom": "2026-06-01",
+        "TravelTimeTo": "2026-09-30",
+        "RoomTypes": "DBL,SGL",
+        "MinimumStay": "3",
+        "Type": "Arrival"
+    }
+]
+
+ELIGIBILITY:
+------------
+1. Booking date must be within BookingFrom-BookingTo range
+2. Check-in date must be within TravelTimeFrom-TravelTimeTo range
+3. Room must match RoomTypes filter (if specified)
+4. Stay length must meet MinimumStay (if specified)
+5. Type: 'Arrival' = check-in within travel period; 'Stay' = entire stay overlaps
+
+SELECTION:
+----------
+When multiple entries match:
+- Positive values (discounts): picks the highest percentage
+- Negative values (surcharges): picks the most negative (largest surcharge)
+- Discounts take priority over surcharges when both match
+
+NEGATIVE VALUES (SURCHARGES):
+-----------------------------
+If Perc is a negative number (e.g., "-5"), it is applied as a supplement
+(surcharge) that INCREASES the total price instead of reducing it.
+Example: ALBA **** 2026.
+
+Formula (discount):   amount = subtotal * (Perc / 100)  -> subtracted from total
+Formula (surcharge):  amount = subtotal * (Perc / 100)  -> added to total
+                      (negative discount is subtracted, which adds to total)
+
+--------------------------------------------------------------------------------
+
+REDUCTION_PERC_ADDITIONAL:
+--------------------------
+NOTE: Currently not in use by any hotel packages. The code is implemented
+but no active packages provide reduction_perc_additional data.
+
+Method: calculateReductionPercAdditional()
+
+A flat promotional percentage discount applied after reduction_perc_marketing.
+
+PRICEINFO STRUCTURE:
+--------------------
+"reduction_perc_additional": {
+    "Perc": "5",
+    "Name": "Loyalty Bonus"
+}
+
+CALCULATION:
+------------
+- Applied to the subtotal AFTER reduction_perc_marketing has been applied
+- Combinable with other percentage discounts (not mutually exclusive)
+- No date restrictions, no room restrictions
+
+Formula: discount = subtotal_after_marketing * (Perc / 100)
+
+================================================================================
+10. PRIORITY RULES
 ================================================================================
 
 The Priority field determines if discounts can be combined:
@@ -402,7 +561,7 @@ Scenario 4: Combined           -> price = base + fees - EB - reduction
 Select scenario with lowest final price (respecting priority rules).
 
 ================================================================================
-9. COMMISSION APPLICATION
+11. COMMISSION APPLICATION
 ================================================================================
 
 Commission is applied as final step:
@@ -416,7 +575,7 @@ Commission: 15%
 Final price: 1000.00 * 1.15 = 1150.00
 
 ================================================================================
-10. EXTRAS DAILY TYPE HANDLING
+12. EXTRAS DAILY TYPE HANDLING
 ================================================================================
 
 The Type field in extras_daily determines charge behavior:
@@ -440,7 +599,7 @@ TYPE = 'Day' or 'Night' (default):
 Formula: price * count * overlapping_nights
 
 ================================================================================
-11. PERSON MATCHING ALGORITHM
+13. PERSON MATCHING ALGORITHM
 ================================================================================
 
 The countMatchingPersons() method supports complex IdAge patterns:
@@ -490,7 +649,7 @@ When a child's age band has NO pricing rows for the selected room/board:
 - Priced using adult extra bed rates instead
 
 ================================================================================
-12. RESULT STRUCTURE
+14. RESULT STRUCTURE
 ================================================================================
 
 The calculate() method returns:
@@ -538,6 +697,24 @@ The calculate() method returns:
                     "rooms": 4.29,
                     "board": 2.86
                 }
+            },
+            "reduction_period": {
+                "applicable": false,
+                "discount": 0
+            },
+            "reduction_perc_marketing": {
+                "applicable": true,
+                "discount": 50.00,       // negative when surcharge
+                "percent": 5,            // negative when surcharge
+                "is_surcharge": false,
+                "name": "Summer Special",
+                "details": [...]
+            },
+            "reduction_perc_additional": {
+                "applicable": false,
+                "discount": 0,
+                "percent": 0,
+                "name": ""
             }
         },
         "applied_discount": "reduction",
@@ -549,20 +726,21 @@ The calculate() method returns:
 }
 
 ================================================================================
-13. FORMULA SUMMARY
+15. FORMULA SUMMARY
 ================================================================================
 
 MASTER FORMULA:
 ---------------
 
-Price = (BasePrice
-         + extras_single
-         + extras_daily
-         + extras_rooms
-         + extras_board
-         + handling_fee
-         + company_fee
-        ) - Applied_Discounts
+Subtotal = (BasePrice
+            + extras_single
+            + extras_daily
+            + extras_rooms
+            + extras_board
+            + handling_fee
+            + company_fee
+           ) - Applied_Discounts
+            - reduction_period_discount
 
 Where Applied_Discounts depends on Priority Rules:
 
@@ -576,9 +754,18 @@ If Priority='Yes' (not combinable):
         Applied_Discounts = whichever of EB or Reduction gives lower price
         (EB preferred when equal)
 
+Then apply percentage discounts (on Subtotal excluding handling_fee):
+
+Price = Subtotal
+      - reduction_perc_marketing_amount
+      - reduction_perc_additional_amount
+
+Note: reduction_perc_marketing_amount can be NEGATIVE (surcharge),
+which effectively ADDS to the price.
+
 FINAL PRICE:
 ------------
-Final_Price = Price * (1 + commission / 100)
+Final_Price = max(0, Price) * (1 + commission / 100)
 
 --------------------------------------------------------------------------------
 
@@ -600,6 +787,37 @@ Reduction = base_price_of_free_nights
           + (extras_rooms * ratio)  [if EXTToRooms='Yes']
           + (extras_board * ratio)  [if EXTToBoard='Yes']
 
+Note: When calculating free nights (reduction), you must verify if they are
+combinable with Early Booking discounts (via Priority rules) and whether they
+should be applied to supplements (via EXTToDaily/EXTToRooms/EXTToBoard flags).
+Example: RIVERSIDE BOUTIQUE **** 2026.
+
+--------------------------------------------------------------------------------
+
+REDUCTION PERIOD FORMULA (not currently in use):
+------------------------------------------------
+If stay_nights > MaxDays:
+    excess_nights = stay_nights - MaxDays
+    reduction_period_discount = sum of base prices for excess nights
+
+--------------------------------------------------------------------------------
+
+REDUCTION_PERC_MARKETING FORMULA:
+---------------------------------
+If Perc > 0 (discount):
+    marketing_discount = subtotal * (Perc / 100)
+
+If Perc < 0 (surcharge):
+    marketing_surcharge = subtotal * (|Perc| / 100)  [added to price]
+
+Note: subtotal here excludes handling_fee.
+
+--------------------------------------------------------------------------------
+
+REDUCTION_PERC_ADDITIONAL FORMULA (not currently in use):
+---------------------------------------------------------
+additional_discount = subtotal_after_marketing * (Perc / 100)
+
 ================================================================================
 KEY METHODS REFERENCE
 ================================================================================
@@ -617,6 +835,9 @@ KEY METHODS REFERENCE
 | calculateCompanyFee()         | Per-room flat fee                         |
 | calculateEarlyBookingDiscount()| EB discount with supplement flags        |
 | calculateReduction()          | Free nights with proportional reduction   |
+| calculateReductionPeriod()    | MaxDays cap (not currently in use)        |
+| calculateReductionPercMarketing()| Marketing % discount/surcharge          |
+| calculateReductionPercAdditional()| Flat promo % discount (not in use)     |
 | applyPriorityRules()          | Selects best discount scenario            |
 | buildOccupancyStructure()     | Maps guests to bed types + reclassifies   |
 | parseChildAgeBands()          | Extracts hotel-specific age bands         |
