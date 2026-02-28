@@ -174,7 +174,17 @@ export default function BookingEngine({ config }) {
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
-        setAgeErrors([]);
+        // Recalculate age errors: keep red border on children still missing an age
+        setAgeErrors(prev => {
+            if (prev.length === 0) return prev;
+            const remaining = prev.filter(err => {
+                const room = newRooms[err.room];
+                if (!room || err.child >= room.children) return false;
+                const age = (room.childrenAges || [])[err.child];
+                return age === null || age === undefined || age === '';
+            });
+            return remaining.length === prev.length ? prev : remaining;
+        });
         if (hasSearched) setParamsChanged(true);
     }, [hasSearched]);
 
