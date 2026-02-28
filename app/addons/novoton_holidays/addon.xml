@@ -107,51 +107,20 @@
                         <default_value>EUR</default_value>
                         <variants_function>fn_settings_variants_addons_novoton_holidays_api_currency</variants_function>
                     </item>
+                    <item id="currency_risk_commission">
+                        <type>input</type>
+                        <default_value>1.8</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Exchange Rates Header -->
                     <item id="exchange_rates_header">
                         <type>header</type>
                         <variants/>
                     </item>
-                    <item id="currency_risk_commission">
-                        <type>input</type>
-                        <default_value>1.8</default_value>
-                        <variants/>
-                    </item>
                     <item id="last_exchange_rate_update">
                         <type>info</type>
                         <default_value></default_value>
-                        <variants/>
-                    </item>
-
-                    <!-- API Resilience Header -->
-                    <item id="api_resilience_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="api_max_retries">
-                        <type>input</type>
-                        <default_value>3</default_value>
-                        <variants/>
-                    </item>
-                    <item id="api_retry_delay_ms">
-                        <type>input</type>
-                        <default_value>1000</default_value>
-                        <variants/>
-                    </item>
-                    <item id="api_retry_multiplier">
-                        <type>input</type>
-                        <default_value>2</default_value>
-                        <variants/>
-                    </item>
-                    <item id="circuit_breaker_threshold">
-                        <type>input</type>
-                        <default_value>5</default_value>
-                        <variants/>
-                    </item>
-                    <item id="circuit_breaker_timeout">
-                        <type>input</type>
-                        <default_value>60</default_value>
                         <variants/>
                     </item>
 
@@ -272,8 +241,49 @@
                 </items>
             </section>
             
+            <section id="tools_cron">
+                <items>
+                    <item id="cron_links_info">
+                        <type>template</type>
+                        <default_value>cron_info.tpl</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+
             <section id="advanced">
                 <items>
+                    <!-- API Resilience Header -->
+                    <item id="api_resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_delay_ms">
+                        <type>input</type>
+                        <default_value>1000</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_multiplier">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Cache TTL Header -->
                     <item id="cache_ttl_header">
                         <type>header</type>
@@ -356,16 +366,6 @@
                     <!-- Booking Limits Header -->
                     <item id="booking_limits_header">
                         <type>header</type>
-                        <variants/>
-                    </item>
-                </items>
-            </section>
-
-            <section id="tools_cron">
-                <items>
-                    <item id="cron_links_info">
-                        <type>template</type>
-                        <default_value>cron_info.tpl</default_value>
                         <variants/>
                     </item>
                 </items>
