@@ -105,6 +105,10 @@ if (!$_routed && in_array($mode, $tools_modes)) {
 if (!$_routed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save excluded resorts
     if ($mode == 'save_excluded_resorts') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+
         $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];
         
         // Clean and validate
@@ -159,6 +163,10 @@ if ($mode == 'fix_tab') {
  * Bulk-fill calendar_prices_raw for all hotels with priceinfo_data
  */
 if ($mode == 'recompute_calendar_prices') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
     $hotel_ids = db_get_fields(
         "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
          INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id

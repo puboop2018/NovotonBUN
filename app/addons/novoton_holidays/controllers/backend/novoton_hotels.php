@@ -212,8 +212,8 @@ if ($mode == 'add_hotels_as_products') {
         
         foreach ($hotels as $hotel) {
             $hotel_id = $hotel['hotel_id'];
-            $hotel_name = $hotel['hotel_name'];
-            
+            $hotel_name = htmlspecialchars($hotel['hotel_name']);
+
             // Skip if already has product and mode is new_only
             if ($import_mode == 'new_only' && !empty($hotel['product_id'])) {
                 echo "<span class='skip'>↷ Skipped (has product): {$hotel_name}</span><br>\n";

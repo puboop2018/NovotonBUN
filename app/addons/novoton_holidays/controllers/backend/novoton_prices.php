@@ -79,13 +79,13 @@ if ($mode == 'update_prices') {
         $result = fn_novoton_holidays_update_product_prices($hotel['product_id']);
         
         if ($result === true) {
-            echo "<span class='success'>✓ {$hotel['hotel_name']}</span><br>\n";
+            echo "<span class='success'>✓ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
             $updated++;
         } elseif ($result === 'no_data') {
-            echo "<span class='warning'>⚠ {$hotel['hotel_name']} - No data</span><br>\n";
+            echo "<span class='warning'>⚠ " . htmlspecialchars($hotel['hotel_name']) . " - No data</span><br>\n";
             $no_data++;
         } else {
-            echo "<span class='error'>✗ {$hotel['hotel_name']}</span><br>\n";
+            echo "<span class='error'>✗ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
             $failed++;
         }
         
@@ -184,7 +184,7 @@ if ($mode == 'check_prices') {
 
     // Process each selected country
     foreach ($selected_countries as $country) {
-        echo "<div class='country-header'>Country: {$country}</div>\n";
+        echo "<div class='country-header'>Country: " . htmlspecialchars($country) . "</div>\n";
         flush();
 
         // Step 1: Get resort names from resort_list API (the authoritative source).
@@ -208,7 +208,7 @@ if ($mode == 'check_prices') {
         }
 
         if (empty($resorts)) {
-            echo "<span class='error'>resort_list API returned no resorts for {$country}. Skipping.</span><br>\n";
+            echo "<span class='error'>resort_list API returned no resorts for " . htmlspecialchars($country) . ". Skipping.</span><br>\n";
             continue;
         }
 
@@ -227,7 +227,7 @@ if ($mode == 'check_prices') {
             // Step 2: Query each resort in bulk
             foreach ($resorts as $resort_idx => $resort_name) {
                 $resort_num = $resort_idx + 1;
-                echo "<div class='resort-header'>[{$resort_num}/{$total_resorts}] {$resort_name}</div>\n";
+                echo "<div class='resort-header'>[{$resort_num}/{$total_resorts}] " . htmlspecialchars($resort_name) . "</div>\n";
                 flush();
 
                 try {
@@ -321,7 +321,7 @@ if ($mode == 'check_prices') {
             if (!empty($unknown_hotels)) {
                 echo "<span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
                 foreach ($unknown_hotels as $hid => $resort_name) {
-                    echo "<span class='error'>  Hotel ID {$hid} (resort: {$resort_name}) - not synced</span><br>\n";
+                    echo "<span class='error'>  Hotel ID " . htmlspecialchars((string)$hid) . " (resort: " . htmlspecialchars((string)$resort_name) . ") - not synced</span><br>\n";
                 }
             }
 
@@ -444,7 +444,7 @@ if ($mode == 'check_prices_hotel') {
     $start_time = microtime(true);
 
     foreach ($selected_countries as $country) {
-        echo "<div class='country-header'>Country: {$country}</div>\n";
+        echo "<div class='country-header'>Country: " . htmlspecialchars($country) . "</div>\n";
         flush();
 
         // Get all hotels for this country
@@ -476,8 +476,8 @@ if ($mode == 'check_prices_hotel') {
         foreach ($all_hotels as $idx => $hotel) {
             $hotel_num = $idx + 1;
             $hotel_id = $hotel['hotel_id'];
-            $hotel_name = $hotel['hotel_name'];
-            $city = $hotel['city'] ?: '<no city>';
+            $hotel_name = htmlspecialchars($hotel['hotel_name']);
+            $city = htmlspecialchars($hotel['city'] ?: '(no city)');
 
             // Progress indicator every 50 hotels
             if ($hotel_num % 50 == 0 || $hotel_num == 1) {

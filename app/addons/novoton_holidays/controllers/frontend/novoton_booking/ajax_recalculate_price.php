@@ -219,14 +219,14 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
                 foreach ($rooms as $room) {
                     $roomId = rawurldecode((string)($room->IdRoom ?? ''));
-                    if (!empty($room_id) && $roomId !== $room_id_decoded && stripos($roomId, $room_id_decoded) === false) {
+                    if (!empty($room_id) && strcasecmp($roomId, $room_id_decoded) !== 0) {
                         continue;
                     }
 
                     $boardsList = isset($room->board->IdBoard) ? [$room->board] : ($room->board ?? []);
                     foreach ($boardsList as $board) {
                         $boardIdVal = (string)($board->IdBoard ?? '');
-                        if (!empty($board_id) && $boardIdVal !== $board_id && stripos($boardIdVal, $board_id) === false) {
+                        if (!empty($board_id) && strcasecmp($boardIdVal, $board_id) !== 0) {
                             continue;
                         }
 
@@ -270,15 +270,13 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
                         'board' => $resultBoard
                     ]);
 
+                    // Use exact case-insensitive match to avoid false positives
+                    // (e.g. "AI" matching "AIR", "DBL" matching "ADBL")
                     $roomMatches = empty($room_id_decoded) ||
-                                   $resultRoom === $room_id_decoded ||
-                                   stripos($resultRoom, $room_id_decoded) !== false ||
-                                   stripos($room_id_decoded, $resultRoom) !== false;
+                                   strcasecmp($resultRoom, $room_id_decoded) === 0;
 
                     $boardMatches = empty($board_id) ||
-                                    $resultBoard === $board_id ||
-                                    stripos($resultBoard, $board_id) !== false ||
-                                    stripos($board_id, $resultBoard) !== false;
+                                    strcasecmp($resultBoard, $board_id) === 0;
 
                     if ($roomMatches && $boardMatches && $resultPrice > 0) {
                         $new_price = $resultPrice;

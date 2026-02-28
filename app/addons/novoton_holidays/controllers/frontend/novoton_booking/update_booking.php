@@ -41,7 +41,11 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
-    $contact = $bookingData['contact'] ?? [];
+    $raw_contact = $bookingData['contact'] ?? [];
+    $contact = [
+        'email' => filter_var(trim($raw_contact['email'] ?? ''), FILTER_SANITIZE_EMAIL),
+        'phone' => preg_replace('/[^\d\s\+\-\(\)]/', '', trim($raw_contact['phone'] ?? '')),
+    ];
     // Get check-in date for age validation
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
     $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
