@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Form Preview — Before vs After</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f2f5;
+    padding: 40px 20px;
+    color: #1a1a1a;
+  }
+  h1 { text-align: center; margin-bottom: 40px; font-size: 22px; color: #333; }
+  .section { max-width: 900px; margin: 0 auto 50px; }
+  .section h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; }
+  .section .dims { font-size: 12px; color: #999; margin-bottom: 8px; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+  /* ---- Shared form styles ---- */
+  .nvt-availability-header { margin-bottom: 12px; }
+  .nvt-availability-title { font-size: 18px; font-weight: 700; color: #003580; margin: 0 0 4px; }
+  .nvt-availability-subtitle { font-size: 13px; color: #d32f2f; margin: 0; }
+
+  .nvt-form-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-radius: 8px;
+    background: #fff;
+    overflow: visible;
+    position: relative;
+  }
+  .nvt-field {
+    position: relative;
+    flex: 1;
+    border-right: 1px solid #e0e0e0;
+  }
+  .nvt-field:last-child { border-right: none; }
+  .nvt-field--date { flex: 1.8; }
+  .nvt-field--guests { flex: 1.2; }
+  .nvt-field--btn { flex: 1; min-width: 160px; border-right: none; }
+
+  .nvt-field-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+  }
+  .nvt-field-input-icon { flex: 0 0 20px; color: #6b6b6b; display: flex; align-items: center; }
+  .nvt-field-input-text { flex: 1; min-width: 0; }
+  .nvt-field-input-text .nvt-label {
+    display: block; font-size: 11px; font-weight: 600; color: #6b6b6b;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
+  }
+  .nvt-field-input-text .nvt-value {
+    display: block; font-size: 14px; font-weight: 500; color: #1a1a1a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .nvt-field-input-arrow { flex: 0 0 16px; color: #6b6b6b; display: flex; align-items: center; }
+
+  .nvt-btn-search {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; background: #006ce4; color: #fff; border: none;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s; width: 100%; height: 100%;
+  }
+
+  /* SVG icons inline */
+  svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  /* ---- BEFORE styles ---- */
+  .before .nvt-form-row {
+    border: 3px solid #febb02;
+  }
+  .before .nvt-field-input {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  .before .nvt-btn-search {
+    border-left: 3px solid #febb02;
+    font-size: 16px;
+    min-height: 52px;
+    padding: 12px 28px;
+  }
+
+  /* ---- AFTER styles ---- */
+  .after .nvt-form-row {
+    border: 2px solid #febb02;
+  }
+  .after .nvt-field-input {
+    padding: 6px 12px;
+    min-height: 40px;
+  }
+  .after .nvt-btn-search {
+    border-left: 2px solid #febb02;
+    font-size: 15px;
+    min-height: 46px;
+    padding: 10px 28px;
+  }
+
+  /* ---- Measurement overlay ---- */
+  .measure {
+    position: relative;
+  }
+  .measure::after {
+    content: attr(data-h);
+    position: absolute;
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #999;
+    background: #f0f2f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .comparison {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+    font-size: 13px;
+    color: #666;
+  }
+  .comparison .box {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .comparison .box.old { background: #ffcdd2; }
+  .comparison .box.new { background: #c8e6c9; }
+</style>
+</head>
+<body>
+
+<h1>Booking Form Height — Before vs After</h1>
+
+<!-- BEFORE -->
+<div class="section">
+  <h2>Before (current production)</h2>
+  <p class="dims">border: 3px &middot; padding: 10px 12px &middot; min-height: 44px &middot; btn: 52px &middot; font: 16px</p>
+  <div class="card before">
+    <div class="nvt-availability-header">
+      <h2 class="nvt-availability-title">Availability</h2>
+      <p class="nvt-availability-subtitle">Select dates to see this property's availability and prices</p>
+    </div>
+    <div class="nvt-form-row measure" data-h="~70px tall">
+      <div class="nvt-field nvt-field--date">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">Check-in &#8594; Check-out</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--guests">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">2 adults &middot; 0 children &middot; 1 room</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--btn">
+        <button class="nvt-btn-search">Search</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AFTER -->
+<div class="section">
+  <h2>After (this commit)</h2>
+  <p class="dims">border: 2px &middot; padding: 6px 12px &middot; min-height: 40px &middot; btn: 46px &middot; font: 15px</p>
+  <div class="card after">
+    <div class="nvt-availability-header">
+      <h2 class="nvt-availability-title">Availability</h2>
+      <p class="nvt-availability-subtitle">Select dates to see this property's availability and prices</p>
+    </div>
+    <div class="nvt-form-row measure" data-h="~54px tall">
+      <div class="nvt-field nvt-field--date">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">Check-in &#8594; Check-out</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--guests">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">2 adults &middot; 0 children &middot; 1 room</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--btn">
+        <button class="nvt-btn-search">Search</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- With dates filled in -->
+<div class="section">
+  <h2>After — with dates selected</h2>
+  <div class="card after">
+    <div class="nvt-availability-header">
+      <h2 class="nvt-availability-title">Availability</h2>
+    </div>
+    <div class="nvt-form-row">
+      <div class="nvt-field nvt-field--date">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">Mon. 14 Mar. &#8594; Mon. 21 Mar. (7 nights)</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--guests">
+        <div class="nvt-field-input">
+          <span class="nvt-field-input-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="nvt-field-input-text">
+            <span class="nvt-value">2 adults &middot; 1 child &middot; 1 room</span>
+          </span>
+          <span class="nvt-field-input-arrow">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="nvt-field nvt-field--btn">
+        <button class="nvt-btn-search">Search</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="comparison">
+  <span><span class="box old"></span> Before (~70px)</span>
+  <span>&rarr;</span>
+  <span><span class="box new"></span> After (~54px) &mdash; 23% shorter</span>
+</div>
+
+</body>
+</html>
