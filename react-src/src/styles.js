@@ -19,8 +19,8 @@ export function injectStyles() {
 .nvt-booking-engine {
     /* React-only variables (no LESS equivalent) */
     --nvt-z-popup: 1000;
-    --nvt-btn-height: 52px;
-    --nvt-btn-font: 16px;
+    --nvt-btn-height: 46px;
+    --nvt-btn-font: 15px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--nvt-text, #1a1a1a);
     position: relative;
@@ -49,7 +49,7 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 0;
-    border: 3px solid var(--nvt-accent, #febb02);
+    border: 2px solid var(--nvt-accent, #febb02);
     border-radius: var(--nvt-radius, 8px);
     background: var(--nvt-bg, #ffffff);
     overflow: visible;
@@ -113,9 +113,9 @@ button.nvt-field-input:active {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 6px 12px;
     cursor: pointer;
-    min-height: 44px;
+    min-height: 40px;
     background: transparent;
     border: none;
     width: 100%;
@@ -174,11 +174,11 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 28px;
+    padding: 10px 28px;
     background: #006ce4;
     color: #fff;
     border: none;
-    border-left: 3px solid var(--nvt-accent, #febb02);
+    border-left: 2px solid var(--nvt-accent, #febb02);
     font-size: var(--nvt-btn-font);
     font-weight: 600;
     cursor: pointer;
@@ -753,7 +753,7 @@ button.nvt-field-input:active {
     .nvt-btn-search {
         width: 100%;
         border-left: none;
-        border-top: 3px solid var(--nvt-accent, #febb02);
+        border-top: 2px solid var(--nvt-accent, #febb02);
         border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
         font-size: 15px;
         padding: 10px 20px;
