@@ -167,9 +167,26 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             $rawPrice = (float)((string)$priceData->Price);
             $base_price = $rawPrice;
             $api_price = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
+
             // ALWAYS use API price when children are involved (ages affect pricing)
-            // Also use if we don't have one, or if it's different
-            if (!empty($all_child_ages) || $total_price <= 0 || abs($total_price - $api_price) > 0.01) {
+            if (!empty($all_child_ages)) {
+                $total_price = $api_price;
+            }
+
+            // Price floor: final price must NEVER be lower than real-time room_price API
+            // Protects against stale priceinfo data, calculation bugs, or cache issues
+            if ($total_price <= 0 || $total_price < $api_price) {
+                if ($total_price > 0 && $total_price < $api_price) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
+                        'hotel_id' => $bookingData['hotel_id'],
+                        'room_id' => $bookingData['room_id'],
+                        'form_price' => $total_price,
+                        'api_price' => $api_price,
+                        'api_price_raw' => $rawPrice,
+                        'difference' => round($api_price - $total_price, 2),
+                    ]);
+                }
                 $total_price = $api_price;
             }
         }
