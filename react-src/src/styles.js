@@ -112,6 +112,7 @@ button.nvt-field-input:active {
 .nvt-field-input {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 6px 12px;
     cursor: pointer;
@@ -119,7 +120,7 @@ button.nvt-field-input:active {
     background: transparent;
     border: none;
     width: 100%;
-    text-align: left;
+    text-align: center;
     font: inherit;
     color: inherit;
     -webkit-user-select: text;
