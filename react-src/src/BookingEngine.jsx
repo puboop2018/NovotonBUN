@@ -149,11 +149,11 @@ export default function BookingEngine({ config }) {
         return parts.join(' \u00b7 ');
     })();
 
-    // Date display text – e.g. "Mon. 14 Feb. → Mon. 21 Feb. — 7 nights"
+    // Date display text – e.g. "Mon. 14 Feb. → Mon. 21 Feb. (7 nights)"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
             const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
-            return `${formatDateShort(checkIn)} \u2192 ${formatDateShort(checkOut)} \u2014 ${nights} ${nightLabel}`;
+            return `${formatDateShort(checkIn)} \u2192 ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
         }
         if (checkIn) {
             return `${formatDateShort(checkIn)} \u2192 ...`;
