@@ -442,7 +442,7 @@ export default function BookingEngine({ config }) {
                                 <span className="nvt-value">{dateDisplayText}</span>
                             ) : (
                                 <span className="nvt-value nvt-value--placeholder">
-                                    {`${t('checkIn', 'Check-in')} — ${t('checkOut', 'Check-out')}`}
+                                    {`${t('checkIn', 'Check-in')} \u2192 ${t('checkOut', 'Check-out')}`}
                                 </span>
                             )}
                         </span>
