@@ -1904,6 +1904,14 @@ msgctxt "Languages::novoton_holidays.select_missing_ages"
 msgid "Select age ([count] missing)"
 msgstr "Select age ([count] missing)"
 
+msgctxt "Languages::novoton_holidays.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Select age for 1 child (Room [rooms])."
+
+msgctxt "Languages::novoton_holidays.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Select age for [count] children (Room [rooms])."
+
 msgctxt "Languages::novoton_holidays.flexible_dates"
 msgid "Flexible dates"
 msgstr "Flexible dates"

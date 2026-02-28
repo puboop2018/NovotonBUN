@@ -1208,6 +1208,14 @@ msgctxt "Languages::novoton_holidays.select_missing_ages"
 msgid "Select age ([count] missing)"
 msgstr "Selectează vârsta ([count] lipsă)"
 
+msgctxt "Languages::novoton_holidays.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Selectează vârsta pentru 1 copil (Cameră [rooms])."
+
+msgctxt "Languages::novoton_holidays.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Selectează vârsta pentru [count] copii (Cameră [rooms])."
+
 msgctxt "Languages::novoton_holidays.day"
 msgid "Day"
 msgstr "Zi"

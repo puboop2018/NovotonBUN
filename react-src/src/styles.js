@@ -572,13 +572,13 @@ button.nvt-field-input:active {
     background: #fff5f5;
 }
 
-/* ----- Missing ages alert ----- */
+/* ----- Smart age anchor (top of guest picker) ----- */
 
-.nvt-missing-ages-alert {
+.nvt-smart-age-anchor {
     display: block;
     width: 100%;
     padding: 10px 14px;
-    margin-top: 12px;
+    margin-bottom: 12px;
     background: #fff3cd;
     border: 1px solid #ffc107;
     border-radius: var(--nvt-radius, 8px);
@@ -586,10 +586,25 @@ button.nvt-field-input:active {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    text-align: center;
+    text-align: left;
     transition: background 0.15s;
 }
-.nvt-missing-ages-alert:hover {
+.nvt-smart-age-anchor:hover {
+    background: #fff3cd !important;
+    text-decoration: underline;
+}
+
+/* ----- Highlight animation on target age select ----- */
+
+@keyframes nvt-age-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    40%  { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0.4); }
+    70%  { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+.nvt-age-highlight {
+    animation: nvt-age-pulse 0.8s ease-out 2;
+    border-color: #ffc107 !important;
     background: #fff3cd !important;
 }
 

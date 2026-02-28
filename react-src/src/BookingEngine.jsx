@@ -321,7 +321,6 @@ export default function BookingEngine({ config }) {
 
         if (errors.length > 0) {
             setAgeErrors(errors);
-            setValidationError(t('selectAge', 'Please select the age of each child'));
             setShowGuests(true);
             return;
         }
