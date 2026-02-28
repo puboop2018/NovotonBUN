@@ -1,244 +1,232 @@
 /**
- * Novoton Multi-Room Booking JavaScript
- * Handles room selection, price calculation, and form submission
+ * Novoton Multi-Room Booking
+ *
+ * Handles room selection, price formatting, total calculation,
+ * button enable/disable, and form submission for multi-room searches.
+ *
+ * All configuration is read from data attributes on #multi-room-selection:
+ *   data-num-rooms      Number of rooms in the search
+ *   data-rooms-data     JSON array of room occupancy objects
+ *   data-currency       Display currency symbol (e.g. "RON", "€")
+ *   data-coefficient    Price display coefficient (default 1)
+ *   data-round-prices   "true" to round prices to integers
+ *
+ * Uses document-level event delegation so it works with AJAX-replaced content
+ * without re-initialization.
  */
-
 (function() {
     'use strict';
-    
-    // Storage for room selections
-    var roomSelections = {};
-    var numRooms = 0;
-    var roomsData = [];
-    
-    // Initialize when DOM is ready
-    function init() {
-        // Get configuration from data attributes on the container
+
+    // -----------------------------------------------------------------------
+    // State — scoped to the current container instance
+    // -----------------------------------------------------------------------
+
+    var selectedRooms = {};
+    var lastContainer = null;
+
+    // -----------------------------------------------------------------------
+    // Config — read fresh from the DOM on each interaction
+    // -----------------------------------------------------------------------
+
+    function getConfig() {
         var container = document.getElementById('multi-room-selection');
-        if (!container) {
-            if (window.NovotonConfig && window.NovotonConfig.debug) {
-                console.log('[Novoton] Multi-room container not found');
-            }
-            return;
+        if (!container) return null;
+
+        // Reset selections when the container element changes (AJAX reload)
+        if (container !== lastContainer) {
+            selectedRooms = {};
+            lastContainer = container;
         }
 
-        numRooms = parseInt(container.dataset.numRooms || '0', 10);
+        var roomsData;
         try {
             roomsData = JSON.parse(container.dataset.roomsData || '[]');
-        } catch(e) {
+        } catch (e) {
             roomsData = [];
         }
 
-        if (window.NovotonConfig && window.NovotonConfig.debug) {
-            console.log('[Novoton] Multi-room JS initialized. Rooms:', numRooms);
-        }
-        
-        // Attach event listeners to all radio buttons
-        var radios = container.querySelectorAll('input[type="radio"]');
-        radios.forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                var roomNum = parseInt(this.name.replace('room_', '').replace('_selection', ''), 10);
-                handleRoomSelection(roomNum, this);
-            });
-        });
-    }
-    
-    // Handle room selection
-    function handleRoomSelection(roomNum, input) {
-        var price = parseFloat(input.dataset.price) || 0;
-        var roomId = input.dataset.roomId;
-        var boardId = input.dataset.boardId;
-        var roomName = input.dataset.roomName;
-        var boardName = input.dataset.boardName;
-        var packageName = input.dataset.packageName || '';
-        var isOnRequest = input.dataset.isOnRequest === '1';
-        
-        // Store selection
-        roomSelections[roomNum] = {
-            room_id: roomId,
-            board_id: boardId,
-            price: price,
-            room_name: roomName,
-            board_name: boardName,
-            package_name: packageName,
-            is_on_request: isOnRequest
+        return {
+            container:   container,
+            numRooms:    parseInt(container.dataset.numRooms, 10) || 0,
+            roomsData:   roomsData,
+            currency:    container.dataset.currency || '',
+            coefficient: parseFloat(container.dataset.coefficient) || 1,
+            roundPrices: container.dataset.roundPrices === 'true'
         };
-        
-        // Update room price display
+    }
+
+    // -----------------------------------------------------------------------
+    // Price formatting — mirrors fn_novoton_holidays_format_price
+    // -----------------------------------------------------------------------
+
+    function formatPrice(amount, cfg) {
+        var display = amount * cfg.coefficient;
+        var rounded = Math.round(display);
+
+        if (cfg.roundPrices) {
+            return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + cfg.currency;
+        }
+
+        var hasDec = Math.abs(display - rounded) >= 0.005;
+        if (hasDec) {
+            var intPart  = Math.floor(display);
+            var decPart  = Math.round((display - intPart) * 100);
+            return intPart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                + '<sup class="price-decimal">'
+                + (decPart < 10 ? '0' : '') + decPart
+                + '</sup> ' + cfg.currency;
+        }
+
+        return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + cfg.currency;
+    }
+
+    // -----------------------------------------------------------------------
+    // Room selection handler
+    // -----------------------------------------------------------------------
+
+    function handleRoomSelection(radio) {
+        var cfg = getConfig();
+        if (!cfg) return;
+
+        var roomNum     = parseInt(radio.getAttribute('data-room-num'), 10);
+        var price       = parseFloat(radio.getAttribute('data-price')) || 0;
+        var roomId      = radio.getAttribute('data-room-id');
+        var boardId     = radio.getAttribute('data-board-id');
+        var roomDisplay = radio.getAttribute('data-room-display');
+        var boardName   = radio.getAttribute('data-board-name');
+        var packageName = radio.getAttribute('data-package-name') || '';
+
+        var occupancy = cfg.roomsData[roomNum - 1] || { adults: 2, children: 0, childrenAges: [] };
+
+        selectedRooms[roomNum] = {
+            room_id:      roomId,
+            board_id:     boardId,
+            price:        price,
+            room_display: roomDisplay,
+            board_name:   boardName,
+            package_name: packageName,
+            adults:       occupancy.adults || 2,
+            children:     occupancy.children || 0,
+            childrenAges: occupancy.childrenAges || []
+        };
+
+        // Update per-room price header
         var priceEl = document.getElementById('room-' + roomNum + '-price');
         if (priceEl) {
-            priceEl.textContent = price.toLocaleString() + ' €';
+            priceEl.innerHTML = formatPrice(price, cfg);
+            priceEl.style.color = '#ffc107';
         }
-        
-        // Highlight selected option
-        var container = input.closest('.room-options');
-        if (container) {
-            container.querySelectorAll('.room-option').forEach(function(opt) {
-                var radio = opt.querySelector('input');
-                if (radio && radio.checked) {
-                    opt.style.borderColor = '#003580';
-                    opt.style.background = '#e8f4fc';
-                } else {
-                    opt.style.borderColor = '#e0e0e0';
-                    opt.style.background = '#fff';
-                }
+
+        // Highlight selected option, reset siblings
+        var roomContainer = radio.closest('[data-room]');
+        if (roomContainer) {
+            roomContainer.querySelectorAll('.room-option').forEach(function(opt) {
+                opt.style.borderColor = '#e0e0e0';
+                opt.style.background  = '#fff';
             });
-        }
-        
-        updateTotalPrice();
-    }
-    
-    // Update total price and form
-    function updateTotalPrice() {
-        var total = 0;
-        var selectedCount = 0;
-        var hasOnRequest = false;
-        var summaryParts = [];
-        var firstRoomId = '';
-        var firstBoardId = '';
-        
-        for (var i = 1; i <= numRooms; i++) {
-            if (roomSelections[i]) {
-                total += roomSelections[i].price;
-                selectedCount++;
-                if (roomSelections[i].is_on_request) {
-                    hasOnRequest = true;
-                }
-                summaryParts.push('R' + i + ': ' + roomSelections[i].room_name);
-                
-                // Store first room's room_id and board_id for form
-                if (!firstRoomId) {
-                    firstRoomId = roomSelections[i].room_id;
-                    firstBoardId = roomSelections[i].board_id;
-                }
+            var selected = radio.closest('.room-option');
+            if (selected) {
+                selected.style.borderColor = '#003580';
+                selected.style.background  = '#e8f4fd';
             }
         }
-        
-        // Update total display
+
+        updateTotalPrice(cfg);
+    }
+
+    // -----------------------------------------------------------------------
+    // Total price + button state + hidden form fields
+    // -----------------------------------------------------------------------
+
+    function updateTotalPrice(cfg) {
+        if (!cfg) cfg = getConfig();
+        if (!cfg) return;
+
+        var totalPrice    = 0;
+        var selectedCount = 0;
+
+        for (var i = 1; i <= cfg.numRooms; i++) {
+            if (selectedRooms[i] && selectedRooms[i].price) {
+                totalPrice += selectedRooms[i].price;
+                selectedCount++;
+            }
+        }
+
+        // Total display
         var totalEl = document.getElementById('total-combined-price');
         if (totalEl) {
-            totalEl.textContent = total.toLocaleString() + ' €';
+            totalEl.innerHTML = totalPrice > 0
+                ? formatPrice(totalPrice, cfg)
+                : '-- ' + cfg.currency;
         }
-        
-        // Update summary
-        var summaryEl = document.getElementById('rooms-selected-summary');
-        if (summaryEl) {
-            var t = window.NovotonTranslations || {};
-            if (selectedCount === numRooms) {
-                summaryEl.textContent = summaryParts.join(' | ');
-                if (hasOnRequest) {
-                    summaryEl.textContent += ' ' + (t.includesOnRequest || '(includes on-request)');
-                }
-            } else {
-                var roomsLabel = numRooms === 1 ? (t.room || 'room') : (t.rooms || 'rooms');
-                summaryEl.textContent = selectedCount + ' ' + (t.of || 'of') + ' ' + numRooms + ' ' + roomsLabel + ' ' + (t.selected || 'selected');
-            }
-        }
-        
-        // Enable/disable book button with improved styling
-        var bookBtn = document.getElementById('btn-book-multi-room');
+
+        // Book button
+        var bookBtn = document.getElementById('book-multi-room-btn');
         if (bookBtn) {
-            if (selectedCount === numRooms) {
+            if (selectedCount === cfg.numRooms) {
                 bookBtn.disabled = false;
                 bookBtn.style.opacity = '1';
-                bookBtn.style.cursor = 'pointer';
-                bookBtn.style.transform = 'scale(1)';
-                bookBtn.onmouseover = function() { this.style.transform = 'scale(1.05)'; this.style.boxShadow = '0 6px 20px rgba(40,167,69,0.5)'; };
-                bookBtn.onmouseout = function() { this.style.transform = 'scale(1)'; this.style.boxShadow = '0 4px 15px rgba(40,167,69,0.4)'; };
             } else {
                 bookBtn.disabled = true;
                 bookBtn.style.opacity = '0.5';
-                bookBtn.style.cursor = 'not-allowed';
-                bookBtn.style.transform = 'scale(1)';
-                bookBtn.onmouseover = null;
-                bookBtn.onmouseout = null;
             }
         }
-        
-        // Update hidden fields
-        var hiddenTotal = document.getElementById('hidden_total_price');
-        if (hiddenTotal) {
-            hiddenTotal.value = total;
-        }
-        
-        // Set room_id and board_id from first selection (required by controller)
-        var hiddenRoomId = document.getElementById('hidden_room_id');
-        if (hiddenRoomId) {
-            hiddenRoomId.value = firstRoomId;
-        }
-        
-        var hiddenBoardId = document.getElementById('hidden_board_id');
-        if (hiddenBoardId) {
-            hiddenBoardId.value = firstBoardId;
-        }
-        
-        // Build rooms_data with selections
-        var updatedRoomsData = [];
-        var allPackageNames = [];
-        for (var i = 0; i < roomsData.length; i++) {
-            var roomData = Object.assign({}, roomsData[i]);
-            var sel = roomSelections[i + 1];
-            if (sel) {
-                roomData.room_id = sel.room_id;
-                roomData.board_id = sel.board_id;
-                roomData.room_name = sel.room_name;
-                roomData.board_name = sel.board_name;
-                roomData.package_name = sel.package_name;
-                roomData.price = sel.price;
-                roomData.is_on_request = sel.is_on_request;
-                if (sel.package_name && allPackageNames.indexOf(sel.package_name) === -1) {
-                    allPackageNames.push(sel.package_name);
-                }
+    }
+
+    // -----------------------------------------------------------------------
+    // Form submission
+    // -----------------------------------------------------------------------
+
+    function submitBooking() {
+        var cfg = getConfig();
+        if (!cfg) return;
+
+        var roomsData = [];
+        var total = 0;
+
+        for (var i = 1; i <= cfg.numRooms; i++) {
+            if (selectedRooms[i]) {
+                roomsData.push({
+                    room_num:     i,
+                    room_id:      selectedRooms[i].room_id,
+                    board_id:     selectedRooms[i].board_id,
+                    price:        selectedRooms[i].price,
+                    room_display: selectedRooms[i].room_display,
+                    board_name:   selectedRooms[i].board_name,
+                    package_name: selectedRooms[i].package_name,
+                    adults:       selectedRooms[i].adults,
+                    children:     selectedRooms[i].children,
+                    childrenAges: selectedRooms[i].childrenAges
+                });
+                total += selectedRooms[i].price;
             }
-            updatedRoomsData.push(roomData);
         }
-        
-        // Update package_name hidden field with first package (or all unique if different)
-        var hiddenPackageName = document.getElementById('hidden_package_name');
-        if (hiddenPackageName && allPackageNames.length > 0) {
-            hiddenPackageName.value = allPackageNames[0]; // Use first package for API
-        }
-        
+
         var hiddenRoomsData = document.getElementById('hidden_rooms_data');
-        if (hiddenRoomsData) {
-            hiddenRoomsData.value = JSON.stringify(updatedRoomsData);
-        }
-        
-        var hiddenSelections = document.getElementById('hidden_room_selections');
-        if (hiddenSelections) {
-            hiddenSelections.value = JSON.stringify(roomSelections);
-        }
-    }
-    
-    // Submit booking form
-    function submitMultiRoomBooking() {
-        if (Object.keys(roomSelections).length < numRooms) {
-            var t = window.NovotonTranslations || {};
-            alert(t.pleaseSelectAllRooms || 'Please select a room type for each room');
-            return;
-        }
+        if (hiddenRoomsData) hiddenRoomsData.value = JSON.stringify(roomsData);
+
+        var hiddenTotal = document.getElementById('hidden_total_price');
+        if (hiddenTotal) hiddenTotal.value = total;
+
         var form = document.getElementById('multi-room-booking-form');
-        if (form) {
-            form.submit();
-        }
+        if (form) form.submit();
     }
-    
-    // Expose functions globally for inline handlers (backup)
-    window.updateRoomSelection = handleRoomSelection;
-    window.updateTotalPrice = updateTotalPrice;
-    window.submitMultiRoomBooking = submitMultiRoomBooking;
-    
-    // Initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-    
-    // Also try on window load as backup
-    window.addEventListener('load', function() {
-        if (numRooms === 0) {
-            init();
+
+    // -----------------------------------------------------------------------
+    // Event delegation — works with AJAX-replaced content
+    // -----------------------------------------------------------------------
+
+    document.addEventListener('change', function(e) {
+        var target = e.target;
+        if (target.type === 'radio' && target.name && /^room_\d+_selection$/.test(target.name)) {
+            handleRoomSelection(target);
         }
     });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'book-multi-room-btn' && !e.target.disabled) {
+            submitBooking();
+        }
+    });
+
 })();

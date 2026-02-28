@@ -270,9 +270,12 @@
             
             {else}
             {* All rooms have options - show selection grid *}
-            <div class="multi-room-selection" id="multi-room-selection" 
-                 data-num-rooms="{$novoton_params.num_rooms}" 
+            <div class="multi-room-selection" id="multi-room-selection"
+                 data-num-rooms="{$novoton_params.num_rooms}"
                  data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
+                 data-currency="{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"html"}"
+                 data-coefficient="{$novoton_display_coefficient|default:1}"
+                 data-round-prices="{if $novoton_round_prices}true{else}false{/if}"
                  style="background: #fff; border: 1px solid #e0e0e0; border-radius: 0 0 8px 8px; overflow: hidden;">
                 
                 <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #e0e0e0;">
@@ -434,142 +437,7 @@
                 </form>
             </div>
             
-            {* Multi-room JavaScript *}
-            <script>
-            (function() {
-                'use strict';
-
-                var novotonCurrency = '{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
-                var novotonCoeff = {$novoton_display_coefficient|default:1};
-                var novotonRoundPrices = {if $novoton_round_prices}true{else}false{/if};
-                var numRooms = {$novoton_params.num_rooms|default:1};
-
-                function novotonFormatPrice(amount) {
-                    var display = amount * novotonCoeff;
-                    var rounded = Math.round(display);
-                    if (novotonRoundPrices) {
-                        return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + novotonCurrency;
-                    }
-                    var hasDec = Math.abs(display - rounded) >= 0.005;
-                    if (hasDec) {
-                        var intPart = Math.floor(display);
-                        var decPart = Math.round((display - intPart) * 100);
-                        return intPart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '<sup class="price-decimal">' + (decPart < 10 ? '0' : '') + decPart + '</sup> ' + novotonCurrency;
-                    }
-                    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + novotonCurrency;
-                }
-                var selectedRooms = {ldelim}{rdelim};
-                var roomOccupancy = JSON.parse('{$novoton_params.rooms_data_json|default:"[]"|escape:"javascript"}');
-                
-                function updateRoomSelection(radio) {
-                    var roomNum = parseInt(radio.getAttribute('data-room-num'));
-                    var price = parseFloat(radio.getAttribute('data-price')) || 0;
-                    var roomId = radio.getAttribute('data-room-id');
-                    var boardId = radio.getAttribute('data-board-id');
-                    var roomDisplay = radio.getAttribute('data-room-display');
-                    var boardName = radio.getAttribute('data-board-name');
-                    var packageName = radio.getAttribute('data-package-name') || '';
-                    
-                    var occupancy = roomOccupancy[roomNum - 1] || {ldelim}adults: 2, children: 0, childrenAges: []{rdelim};
-                    
-                    selectedRooms[roomNum] = {ldelim}
-                        room_id: roomId,
-                        board_id: boardId,
-                        price: price,
-                        room_display: roomDisplay,
-                        board_name: boardName,
-                        package_name: packageName,
-                        adults: occupancy.adults || 2,
-                        children: occupancy.children || 0,
-                        childrenAges: occupancy.childrenAges || []
-                    {rdelim};
-                    
-                    var priceEl = document.getElementById('room-' + roomNum + '-price');
-                    if (priceEl) {
-                        priceEl.innerHTML = novotonFormatPrice(price);
-                        priceEl.style.color = '#ffc107';
-                    }
-                    
-                    // Highlight selected
-                    var container = radio.closest('[data-room]');
-                    if (container) {
-                        container.querySelectorAll('.room-option').forEach(function(opt) {
-                            opt.style.borderColor = '#e0e0e0';
-                            opt.style.background = '#fff';
-                        });
-                        radio.closest('.room-option').style.borderColor = '#003580';
-                        radio.closest('.room-option').style.background = '#e8f4fd';
-                    }
-                    
-                    updateTotalPrice();
-                }
-                
-                function updateTotalPrice() {
-                    var totalPrice = 0;
-                    var selectedCount = 0;
-                    
-                    for (var i = 1; i <= numRooms; i++) {
-                        if (selectedRooms[i] && selectedRooms[i].price) {
-                            totalPrice += selectedRooms[i].price;
-                            selectedCount++;
-                        }
-                    }
-                    
-                    var totalEl = document.getElementById('total-combined-price');
-                    var bookBtn = document.getElementById('book-multi-room-btn');
-                    
-                    if (totalEl) {
-                        totalEl.innerHTML = totalPrice > 0 ? novotonFormatPrice(totalPrice) : '-- ' + novotonCurrency;
-                    }
-                    
-                    if (bookBtn) {
-                        if (selectedCount === numRooms) {
-                            bookBtn.disabled = false;
-                            bookBtn.style.opacity = '1';
-                        } else {
-                            bookBtn.disabled = true;
-                            bookBtn.style.opacity = '0.5';
-                        }
-                    }
-                }
-                
-                document.addEventListener('change', function(e) {
-                    var target = e.target;
-                    if (target.type === 'radio' && target.name && /^room_\d+_selection$/.test(target.name)) {
-                        updateRoomSelection(target);
-                    }
-                });
-                
-                document.addEventListener('click', function(e) {
-                    if (e.target.id === 'book-multi-room-btn' && !e.target.disabled) {
-                        var roomsData = [];
-                        var total = 0;
-                        
-                        for (var i = 1; i <= numRooms; i++) {
-                            if (selectedRooms[i]) {
-                                roomsData.push({ldelim}
-                                    room_num: i,
-                                    room_id: selectedRooms[i].room_id,
-                                    board_id: selectedRooms[i].board_id,
-                                    price: selectedRooms[i].price,
-                                    room_display: selectedRooms[i].room_display,
-                                    board_name: selectedRooms[i].board_name,
-                                    package_name: selectedRooms[i].package_name,
-                                    adults: selectedRooms[i].adults,
-                                    children: selectedRooms[i].children,
-                                    childrenAges: selectedRooms[i].childrenAges
-                                {rdelim});
-                                total += selectedRooms[i].price;
-                            }
-                        }
-                        
-                        document.getElementById('hidden_rooms_data').value = JSON.stringify(roomsData);
-                        document.getElementById('hidden_total_price').value = total;
-                        document.getElementById('multi-room-booking-form').submit();
-                    }
-                });
-            })();
-            </script>
+            {* Multi-room JS is loaded externally via multiroom-booking.js *}
             
             {/if}{* End of all_rooms_have_options else block *}
         

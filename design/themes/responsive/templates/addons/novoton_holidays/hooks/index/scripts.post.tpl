@@ -18,6 +18,9 @@ window.NovotonConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true
 {script src="js/addons/novoton_holidays/utils.js"}
 {script src="js/addons/novoton_holidays/booking_engine.js"}
 
+{* Multi-room booking *}
+{script src="js/addons/novoton_holidays/multiroom-booking.js"}
+
 {* Form validation scripts *}
 {script src="js/addons/novoton_holidays/dob-validation.js"}
 {script src="js/addons/novoton_holidays/booking-form-validation.js"}
