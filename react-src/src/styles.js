@@ -192,28 +192,13 @@ button.nvt-field-input:active {
 /* ---------- Validation message ---------- */
 
 .nvt-validation-message {
-    display: flex;
-    align-items: center;
-    gap: 6px;
     margin-top: 8px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 13px;
-    color: var(--nvt-danger, #d32f2f);
-    background: #fef2f2;
-    border-radius: var(--nvt-radius, 8px);
-}
-.nvt-warning-icon {
-    flex: 0 0 20px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--nvt-danger, #d32f2f);
+    font-weight: 500;
     color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
+    background: var(--nvt-danger, #d32f2f);
+    border-radius: var(--nvt-radius, 8px);
 }
 
 /* ======================================================================
@@ -700,6 +685,19 @@ button.nvt-field-input:active {
     color: var(--nvt-danger, #d32f2f);
     background: #fef2f2;
     border-radius: var(--nvt-radius, 8px);
+}
+.nvt-warning-icon {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--nvt-danger, #d32f2f);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 /* ---------- Error boundary fallback ---------- */

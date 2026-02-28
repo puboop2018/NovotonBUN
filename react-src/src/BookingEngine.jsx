@@ -500,7 +500,6 @@ export default function BookingEngine({ config }) {
             {/* Validation message */}
             {validationError && (
                 <div className="nvt-validation-message">
-                    <span className="nvt-warning-icon">!</span>
                     {validationError}
                 </div>
             )}
