@@ -119,6 +119,24 @@ export default function GuestPicker({
         return { totalMissing, roomNumbers };
     }, [rooms]);
 
+    // Limit visible area to first 3 rooms when 4+ rooms exist
+    useEffect(() => {
+        const container = popupRef.current?.querySelector('.nvt-guest-rooms-container');
+        if (!container) return;
+        if (rooms.length >= 4) {
+            const sections = container.querySelectorAll('.nvt-room-section');
+            let height = 0;
+            for (let i = 0; i < 3 && i < sections.length; i++) {
+                height += sections[i].offsetHeight;
+                const style = window.getComputedStyle(sections[i]);
+                height += parseFloat(style.marginBottom) || 0;
+            }
+            container.style.maxHeight = height + 'px';
+        } else {
+            container.style.maxHeight = '';
+        }
+    }, [rooms]);
+
     // Scroll to first empty age select and highlight it
     const scrollToMissingAge = useCallback(() => {
         if (!popupRef.current) return;
