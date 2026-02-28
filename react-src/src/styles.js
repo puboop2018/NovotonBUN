@@ -98,13 +98,14 @@ button.nvt-field-input:active {
     border-right: none;
 }
 .nvt-field--date {
-    flex: 2;
+    flex: 1.8;
 }
 .nvt-field--guests {
-    flex: 1.5;
+    flex: 1.2;
 }
 .nvt-field--btn {
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 160px;
     border-right: none;
 }
 
@@ -747,6 +748,7 @@ button.nvt-field-input:active {
     }
     .nvt-field--btn {
         flex: 0 0 auto;
+        min-width: 0;
     }
     .nvt-btn-search {
         width: 100%;
