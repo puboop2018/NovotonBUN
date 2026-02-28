@@ -2965,6 +2965,10 @@ msgctxt "SettingsTooltips::novoton_holidays::disable_api_submission"
 msgid "When enabled, bookings are saved to database but NOT sent to Novoton API. Use for testing booking flow without making real reservations."
 msgstr "Când este activat, rezervările sunt salvate în baza de date dar NU sunt trimise la API-ul Novoton. Folosiți pentru testarea fluxului de rezervare fără a face rezervări reale."
 
+msgctxt "Languages::novoton_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Condiții de Anulare și Plată"
+
 msgctxt "Languages::novoton_holidays.use_booking_engine_to_search"
 msgid "Please use the booking engine to search for availability."
 msgstr "Vă rugăm utilizați motorul de rezervare pentru a căuta disponibilitate."

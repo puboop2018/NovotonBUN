@@ -2968,3 +2968,7 @@ msgstr "Tue"
 msgctxt "Languages::novoton_holidays.wed"
 msgid "Wed"
 msgstr "Wed"
+
+msgctxt "Languages::novoton_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"

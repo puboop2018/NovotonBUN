@@ -390,6 +390,26 @@
                                                     <div style="font-size: 12px; color: #999; text-decoration: line-through;">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                                 {/if}
                                                 <div style="font-size: 18px; font-weight: 700; color: #003580;">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
+                                                {if $result.terms_of_payment || $result.terms_of_cancellation || $result.remark || $result.more_info || $result.important}
+                                                    <a href="#" onclick="openInfoModal('mr-{$room_num}-{$result@index}'); return false;" style="display: inline-block; font-size: 11px; color: #0071c2; text-decoration: none; border-bottom: 1px dashed #0071c2; margin-top: 4px;">{__("novoton_holidays.cancellation_and_payment_terms")}</a>
+                                                    <div id="modal-content-mr-{$room_num}-{$result@index}" style="display: none;">
+                                                        {if $result.terms_of_payment}
+                                                            {$mr_payment_terms = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
+                                                            {if $mr_payment_terms}
+                                                                <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$mr_payment_terms|escape:'html'|nl2br nofilter}</div>
+                                                            {/if}
+                                                        {/if}
+                                                        {if $result.terms_of_cancellation}
+                                                            {$mr_cancel_terms = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
+                                                            {if $mr_cancel_terms}
+                                                                <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$mr_cancel_terms|escape:'html'|nl2br nofilter}</div>
+                                                            {/if}
+                                                        {/if}
+                                                        {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
+                                                        {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                                        {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                                    </div>
+                                                {/if}
                                             </div>
                                         </div>
                                     </label>
