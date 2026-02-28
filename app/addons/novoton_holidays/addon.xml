@@ -766,7 +766,72 @@
 {{ snippet("footer") }}]]></default_template>
                 <addon><![CDATA[novoton_holidays]]></addon>
             </item>
-            
+
+            <!-- Price Discrepancy Alert Email (form price < API room_price) -->
+            <item>
+                <code><![CDATA[novoton_holidays_price_alert]]></code>
+                <area><![CDATA[A]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[[Novoton] ⚠ Price Alert - {{ hotel_name }} - Form price below API price]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+<h2 style="color: #c00;">⚠ Price Discrepancy Alert</h2>
+<p>The booking form price was <strong>lower</strong> than the real-time room_price API price. The API price was used instead.</p>
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; width: 160px;"><strong>Hotel:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ hotel_name }} (ID: {{ hotel_id }})</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Room:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ room_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Board:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ board_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-in:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_in }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-out:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Guests:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ adults }} adults{% if children > 0 %}, {{ children }} children (ages: {{ children_ages }}){% endif %}</td>
+    </tr>
+</table>
+
+<h3 style="color: #c00;">Price Details</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: #f8d7da;">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 160px;"><strong>Form Price:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ form_price }}</td>
+    </tr>
+    <tr style="background: #d4edda;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (with commission):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (raw):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price_raw }}</td>
+    </tr>
+    <tr style="background: #fff3cd;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Difference:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ difference }}</td>
+    </tr>
+</table>
+
+<p><strong>Action taken:</strong> The API price (EUR {{ api_price }}) was used for the booking.</p>
+<p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+
             <!-- Alternatives Available Notification -->
             <item>
                 <code><![CDATA[novoton_holidays_alternatives_available]]></code>

@@ -177,6 +177,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             // Protects against stale priceinfo data, calculation bugs, or cache issues
             if ($total_price <= 0 || $total_price < $api_price) {
                 if ($total_price > 0 && $total_price < $api_price) {
+                    $price_diff = round($api_price - $total_price, 2);
                     fn_log_event('general', 'runtime', [
                         'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
                         'hotel_id' => $bookingData['hotel_id'],
@@ -184,7 +185,24 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
                         'form_price' => $total_price,
                         'api_price' => $api_price,
                         'api_price_raw' => $rawPrice,
-                        'difference' => round($api_price - $total_price, 2),
+                        'difference' => $price_diff,
+                    ]);
+
+                    // Send email alert to admin with price discrepancy details
+                    fn_novoton_holidays_send_price_alert_email([
+                        'hotel_id'      => $bookingData['hotel_id'],
+                        'hotel_name'    => $hotel_info['hotel_name'] ?? '',
+                        'room_id'       => $bookingData['room_id'],
+                        'board_id'      => $bookingData['board_id'] ?? '',
+                        'check_in'      => $bookingData['check_in'],
+                        'check_out'     => $bookingData['check_out'],
+                        'adults'        => (int)($bookingData['adults'] ?? 2),
+                        'children'      => (int)($bookingData['children'] ?? 0),
+                        'children_ages' => $children_ages,
+                        'form_price'    => $total_price,
+                        'api_price'     => $api_price,
+                        'api_price_raw' => $rawPrice,
+                        'difference'    => $price_diff,
                     ]);
                 }
                 $total_price = $api_price;
