@@ -104,7 +104,7 @@ button.nvt-field-input:active {
     flex: 1.2;
 }
 .nvt-field--btn {
-    flex: 0 0 auto;
+    flex: 1;
     min-width: 160px;
     border-right: none;
     padding: 5px;
@@ -117,9 +117,9 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 6px 12px;
     cursor: pointer;
-    min-height: 44px;
+    min-height: 40px;
     background: transparent;
     border: none;
     width: 100%;
@@ -182,12 +182,12 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 28px;
+    padding: 10px 28px;
     background: #0071E3;
     color: #fff;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: var(--nvt-btn-font, 15px);
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
