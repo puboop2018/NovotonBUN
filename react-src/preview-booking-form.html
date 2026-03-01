@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Booking Form Preview — Before vs After</title>
+<title>Booking Search Form — Before vs After Preview</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -12,11 +12,20 @@
     padding: 40px 20px;
     color: #1a1a1a;
   }
-  h1 { text-align: center; margin-bottom: 40px; font-size: 22px; color: #333; }
+  h1 { text-align: center; margin-bottom: 10px; font-size: 22px; color: #333; }
+  .subtitle { text-align: center; margin-bottom: 40px; font-size: 13px; color: #888; }
   .section { max-width: 900px; margin: 0 auto 50px; }
-  .section h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; }
-  .section .dims { font-size: 12px; color: #999; margin-bottom: 8px; }
-  .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .section-label {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: #888; margin-bottom: 8px; font-weight: 600;
+  }
+  .section-label.before-label { color: #c62828; }
+  .section-label.after-label { color: #2e7d32; }
+  .dims { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
 
   /* ---- Shared form styles ---- */
   .nvt-availability-header { margin-bottom: 12px; }
@@ -27,7 +36,6 @@
     display: flex;
     align-items: stretch;
     gap: 0;
-    border-radius: 8px;
     background: #fff;
     overflow: visible;
     position: relative;
@@ -45,55 +53,70 @@
   .nvt-field-input {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     cursor: pointer;
     background: transparent;
     border: none;
     width: 100%;
-    text-align: left;
+    text-align: center;
     font: inherit;
     color: inherit;
   }
   .nvt-field-input-icon { flex: 0 0 20px; color: #6b6b6b; display: flex; align-items: center; }
-  .nvt-field-input-text { flex: 1; min-width: 0; }
-  .nvt-field-input-text .nvt-label {
-    display: block; font-size: 11px; font-weight: 600; color: #6b6b6b;
-    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
-  }
+  .nvt-field-input-text { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
   .nvt-field-input-text .nvt-value {
     display: block; font-size: 14px; font-weight: 500; color: #1a1a1a;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .nvt-field-input-text .nvt-value--placeholder { color: #1a1a1a; }
   .nvt-field-input-arrow { flex: 0 0 16px; color: #6b6b6b; display: flex; align-items: center; }
 
   .nvt-btn-search {
     display: flex; align-items: center; justify-content: center;
-    gap: 8px; background: #006ce4; color: #fff; border: none;
+    gap: 8px; background: #0071E3; color: #fff; border: none;
     font-weight: 600; cursor: pointer; white-space: nowrap;
-    transition: background 0.15s; width: 100%; height: 100%;
+    transition: background 0.15s; width: 100%;
   }
+  .nvt-btn-search:hover { background: #005bb5; }
 
   /* SVG icons inline */
   svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-  /* ---- BEFORE styles ---- */
+  /* ================================================================
+     BEFORE (current production)
+     ================================================================ */
   .before .nvt-form-row {
-    border: 3px solid #febb02;
+    border: 3px solid #FFB703;
+    border-radius: 8px;
   }
   .before .nvt-field-input {
-    padding: 10px 12px;
-    min-height: 44px;
+    padding: 6px 12px;
+    min-height: 40px;
+  }
+  .before .nvt-field--btn {
+    padding: 5px;
+    display: flex;
+    align-items: stretch;
   }
   .before .nvt-btn-search {
-    border-left: 3px solid #febb02;
-    font-size: 16px;
-    min-height: 52px;
-    padding: 12px 28px;
+    font-size: 15px;
+    padding: 10px 28px;
+    border-radius: 8px;
   }
 
-  /* ---- AFTER styles ---- */
+  /* ================================================================
+     AFTER (new design)
+     - border: 2px solid #FFB703 on parent container
+     - Button has rounded corners on ALL sides
+     - 5px internal gap (padding) between button and golden border
+     - Button fills 100% height within padding
+     - Gray divider between guests and button
+     - Button floats inside the golden frame
+     ================================================================ */
   .after .nvt-form-row {
-    border: 3px solid #febb02;
+    border: 2px solid #FFB703;
+    border-radius: 8px;
   }
   .after .nvt-field-input {
     padding: 6px 12px;
@@ -101,74 +124,124 @@
   }
   .after .nvt-field--btn {
     padding: 5px;
+    display: flex;
+    align-items: stretch;
   }
   .after .nvt-btn-search {
     font-size: 15px;
-    min-height: 46px;
     padding: 10px 28px;
-    border-radius: 8px;
+    border-radius: 6px;
+    height: auto;
   }
 
-  /* ---- Measurement overlay ---- */
-  .measure {
-    position: relative;
+  /* ---- Annotations ---- */
+  .annotation {
+    display: flex;
+    gap: 24px;
+    margin-top: 14px;
+    flex-wrap: wrap;
   }
-  .measure::after {
-    content: attr(data-h);
-    position: absolute;
-    right: -60px;
-    top: 50%;
-    transform: translateY(-50%);
+  .annotation .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 11px;
-    color: #999;
-    background: #f0f2f5;
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
+    color: #666;
+    background: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 20px;
   }
+  .annotation .tag .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .annotation .tag .dot.gold { background: #FFB703; }
+  .annotation .tag .dot.gray { background: #e0e0e0; }
+  .annotation .tag .dot.blue { background: #0071E3; }
+  .annotation .tag .dot.green { background: #4caf50; }
 
+  /* ---- Comparison legend ---- */
   .comparison {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     align-items: center;
     justify-content: center;
-    margin-top: 30px;
+    margin-top: 40px;
     font-size: 13px;
     color: #666;
   }
   .comparison .box {
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 14px; height: 14px;
     border-radius: 3px;
     vertical-align: middle;
     margin-right: 4px;
   }
   .comparison .box.old { background: #ffcdd2; }
   .comparison .box.new { background: #c8e6c9; }
+
+  /* ---- Changes checklist ---- */
+  .changes-list {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .changes-list h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #2e7d32;
+    margin-bottom: 12px;
+  }
+  .changes-list ul {
+    list-style: none;
+    padding: 0;
+  }
+  .changes-list li {
+    font-size: 13px;
+    color: #444;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .changes-list li:last-child { border-bottom: none; }
+  .changes-list li::before {
+    content: "✓";
+    color: #2e7d32;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .changes-list .highlight { font-weight: 600; color: #1a1a1a; }
 </style>
 </head>
 <body>
 
-<h1>Booking Form Height — Before vs After</h1>
+<h1>Booking Search Form — Before vs After</h1>
+<p class="subtitle">Open this file in a browser to preview the design changes</p>
 
-<!-- BEFORE -->
+<!-- ============================================================
+     BEFORE (current production)
+     ============================================================ -->
 <div class="section">
-  <h2>Before (current production)</h2>
-  <p class="dims">border: 3px &middot; padding: 10px 12px &middot; min-height: 44px &middot; btn: 52px &middot; font: 16px</p>
+  <p class="section-label before-label">&#10005; Before (current production)</p>
+  <p class="dims">border: <strong>3px</strong> solid #FFB703 &middot; border-radius: 8px &middot; btn border-radius: 8px</p>
   <div class="card before">
     <div class="nvt-availability-header">
       <h2 class="nvt-availability-title">Availability</h2>
       <p class="nvt-availability-subtitle">Select dates to see this property's availability and prices</p>
     </div>
-    <div class="nvt-form-row measure" data-h="~70px tall">
+    <div class="nvt-form-row">
       <div class="nvt-field nvt-field--date">
         <div class="nvt-field-input">
           <span class="nvt-field-input-icon">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </span>
           <span class="nvt-field-input-text">
-            <span class="nvt-value">Check-in &#8594; Check-out</span>
+            <span class="nvt-value nvt-value--placeholder">Check-in &#8594; Check-out</span>
           </span>
           <span class="nvt-field-input-arrow">
             <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
@@ -195,23 +268,25 @@
   </div>
 </div>
 
-<!-- AFTER -->
+<!-- ============================================================
+     AFTER (new design)
+     ============================================================ -->
 <div class="section">
-  <h2>After (this commit)</h2>
-  <p class="dims">border: 2px &middot; padding: 6px 12px &middot; min-height: 40px &middot; btn: 46px &middot; font: 15px</p>
+  <p class="section-label after-label">&#10003; After (new design)</p>
+  <p class="dims">border: <strong>2px</strong> solid #FFB703 &middot; border-radius: 8px &middot; btn border-radius: 6px &middot; btn padding: 5px inside frame</p>
   <div class="card after">
     <div class="nvt-availability-header">
       <h2 class="nvt-availability-title">Availability</h2>
       <p class="nvt-availability-subtitle">Select dates to see this property's availability and prices</p>
     </div>
-    <div class="nvt-form-row measure" data-h="~54px tall">
+    <div class="nvt-form-row">
       <div class="nvt-field nvt-field--date">
         <div class="nvt-field-input">
           <span class="nvt-field-input-icon">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </span>
           <span class="nvt-field-input-text">
-            <span class="nvt-value">Check-in &#8594; Check-out</span>
+            <span class="nvt-value nvt-value--placeholder">Check-in &#8594; Check-out</span>
           </span>
           <span class="nvt-field-input-arrow">
             <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"/></svg>
@@ -234,13 +309,19 @@
       <div class="nvt-field nvt-field--btn">
         <button class="nvt-btn-search">Search</button>
       </div>
+    </div>
+    <div class="annotation">
+      <span class="tag"><span class="dot gold"></span> 2px golden border wraps entire group</span>
+      <span class="tag"><span class="dot gray"></span> Gray divider between guests &amp; button</span>
+      <span class="tag"><span class="dot blue"></span> Button rounded on all sides (6px)</span>
+      <span class="tag"><span class="dot green"></span> 5px internal gap — button floats inside frame</span>
     </div>
   </div>
 </div>
 
 <!-- With dates filled in -->
 <div class="section">
-  <h2>After — with dates selected</h2>
+  <p class="section-label after-label">&#10003; After — with dates selected</p>
   <div class="card after">
     <div class="nvt-availability-header">
       <h2 class="nvt-availability-title">Availability</h2>
@@ -279,10 +360,24 @@
   </div>
 </div>
 
+<!-- Changes summary -->
+<div class="changes-list">
+  <h3>Changes Applied in "After"</h3>
+  <ul>
+    <li><span class="highlight">Golden border: 2px</span> (was 3px) — <code>border: 2px solid #FFB703</code> on parent container</li>
+    <li><span class="highlight">Golden border wraps entire group</span> — dates + guests + button all inside one frame</li>
+    <li><span class="highlight">Button rounded corners on ALL sides</span> — <code>border-radius: 6px</code></li>
+    <li><span class="highlight">5px internal gap</span> — button floats inside golden frame, not glued to edges</li>
+    <li><span class="highlight">Button height 100%</span> — fills from top golden border to bottom (within padding)</li>
+    <li><span class="highlight">Gray divider</span> — thin 1px #e0e0e0 line between guest input and button area</li>
+    <li><span class="highlight">Button centered vertically</span> — perfectly centered within the golden bar</li>
+  </ul>
+</div>
+
 <div class="comparison">
-  <span><span class="box old"></span> Before (~70px)</span>
+  <span><span class="box old"></span> Before (3px border)</span>
   <span>&rarr;</span>
-  <span><span class="box new"></span> After (~54px) &mdash; 23% shorter</span>
+  <span><span class="box new"></span> After (2px border, button floats inside frame)</span>
 </div>
 
 </body>
