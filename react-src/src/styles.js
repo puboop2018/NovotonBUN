@@ -49,7 +49,7 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 0;
-    border: 2px solid var(--nvt-accent, #FFB703);
+    border: 3px solid var(--nvt-accent, #FFB703);
     border-radius: var(--nvt-radius, 8px);
     background: var(--nvt-bg, #ffffff);
     overflow: visible;
@@ -104,9 +104,12 @@ button.nvt-field-input:active {
     flex: 1.2;
 }
 .nvt-field--btn {
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 160px;
     border-right: none;
+    padding: 5px;
+    display: flex;
+    align-items: stretch;
 }
 
 .nvt-field-input {
@@ -114,9 +117,9 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 6px 16px;
+    padding: 10px 12px;
     cursor: pointer;
-    min-height: 52px;
+    min-height: 44px;
     background: transparent;
     border: none;
     width: 100%;
@@ -136,6 +139,9 @@ button.nvt-field-input:active {
 .nvt-field-input-text {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .nvt-field-input-text .nvt-label {
     display: block;
@@ -148,12 +154,13 @@ button.nvt-field-input:active {
 }
 .nvt-field-input-text .nvt-value {
     display: block;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--nvt-text, #1a1a1a);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.4;
     -webkit-user-select: text;
     user-select: text;
     cursor: text;
@@ -175,17 +182,16 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 28px;
+    padding: 12px 28px;
     background: #0071E3;
     color: #fff;
     border: none;
-    border-left: 2px solid var(--nvt-accent, #FFB703);
-    border-radius: 0 6px 6px 0;
-    font-size: var(--nvt-btn-font);
+    border-radius: 8px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    min-height: var(--nvt-btn-height);
+    width: 100%;
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
@@ -732,7 +738,6 @@ button.nvt-field-input:active {
     .nvt-btn-search {
         font-size: 15px;
         padding: 10px 24px;
-        min-height: 48px;
     }
 }
 
@@ -751,15 +756,13 @@ button.nvt-field-input:active {
     .nvt-field--btn {
         flex: 0 0 auto;
         min-width: 0;
+        padding: 5px;
     }
     .nvt-btn-search {
         width: 100%;
-        border-left: none;
-        border-top: 2px solid var(--nvt-accent, #FFB703);
-        border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
+        border-radius: 8px;
         font-size: 15px;
         padding: 10px 20px;
-        min-height: 44px;
     }
     .nvt-calendar-popup {
         min-width: 100%;
