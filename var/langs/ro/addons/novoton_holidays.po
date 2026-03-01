@@ -2960,3 +2960,27 @@ msgstr "Condiții de Anulare și Plată"
 msgctxt "Languages::novoton_holidays.use_booking_engine_to_search"
 msgid "Please use the booking engine to search for availability."
 msgstr "Vă rugăm utilizați motorul de rezervare pentru a căuta disponibilitate."
+
+msgctxt "SettingsOptions::novoton_holidays::price_check_header"
+msgid "Price Discrepancy Check"
+msgstr "Verificare Discrepanță Preț"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_preorder_price_check"
+msgid "Enable pre-order price verification"
+msgstr "Activare verificare preț înainte de comandă"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_preorder_price_check"
+msgid "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+msgstr "Când este activat, sistemul verifică prețul curent din API chiar înainte de plasarea comenzii. Dacă prețul din formular este mai mic decât prețul API, comanda este blocată. Aceasta este cea mai importantă plasă de siguranță împotriva prețurilor învechite."
+
+msgctxt "SettingsOptions::novoton_holidays::price_higher_threshold"
+msgid "Price higher alert threshold (%)"
+msgstr "Prag alertă preț mai mare (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_higher_threshold"
+msgid "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+msgstr "Dacă prețul din formular depășește prețul API cu mai mult decât acest procent, comanda este permisă dar se trimite o notificare email către admin. Implicit: 55%."
+
+msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
+msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+msgstr "Prețul s-a modificat de când ați adăugat acest articol în coș. Vă rugăm reveniți și reîmprospătați prețul înainte de a plasa comanda."

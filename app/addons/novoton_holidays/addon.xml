@@ -113,6 +113,22 @@
                         <variants/>
                     </item>
 
+                    <!-- Price Discrepancy Check Header -->
+                    <item id="price_check_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="enable_preorder_price_check">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="price_higher_threshold">
+                        <type>input</type>
+                        <default_value>55</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Products Header -->
                     <item id="products_header">
                         <type>header</type>
@@ -827,6 +843,82 @@
 
 <p><strong>Action taken:</strong> The API price (EUR {{ api_price }}) was used for the booking.</p>
 <p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+
+            <!-- Pre-Order Price Discrepancy Email (pre_place_order hook) -->
+            <item>
+                <code><![CDATA[novoton_holidays_price_discrepancy]]></code>
+                <area><![CDATA[A]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[[Novoton] {{ subject_prefix }} - {{ hotel_name }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+{% if is_blocked %}
+<h2 style="color: #c00;">&#x26D4; ORDER BLOCKED - Price Below API</h2>
+<p>An order was <strong>blocked</strong> because the form price was lower than the real-time API price at checkout.</p>
+{% else %}
+<h2 style="color: #e67e00;">&#x26A0; PRICE ALERT - Form Price Above API</h2>
+<p>An order was <strong>allowed</strong> but the form price was significantly higher than the API price (above the {{ percent }}% threshold). Please investigate.</p>
+{% endif %}
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Hotel:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ hotel_name }} (ID: {{ hotel_id }})</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Room:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ room_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Board:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ board_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-in:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_in }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-out:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Guests:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ adults }} adults{% if children > 0 %}, {{ children }} children (ages: {{ children_ages }}){% endif %}</td>
+    </tr>
+</table>
+
+<h3 style="color: {% if is_blocked %}#c00{% else %}#e67e00{% endif %};">Price Comparison</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: {% if is_blocked %}#f8d7da{% else %}#fff3cd{% endif %};">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Form Price (customer pays):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ form_price }}</td>
+    </tr>
+    <tr style="background: #d4edda;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (with commission):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (raw / net):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price_raw }}</td>
+    </tr>
+    <tr style="background: {% if is_blocked %}#f8d7da{% else %}#fff3cd{% endif %};">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Difference:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ difference }} ({{ percent }}%)</td>
+    </tr>
+</table>
+
+{% if is_blocked %}
+<p><strong>Action taken:</strong> The order was <span style="color: #c00;">BLOCKED</span>. The customer was asked to refresh the price.</p>
+{% else %}
+<p><strong>Action taken:</strong> The order was <span style="color: #28a745;">ALLOWED</span> at the higher form price. An admin notification was sent. Please review whether manual price correction is needed.</p>
+{% endif %}
+
+<p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>
+<p style="color: #666; font-size: 12px;">This alert was generated by the pre-order price verification system (pre_place_order hook).</p>
 
 {{ snippet("footer") }}]]></default_template>
                 <addon><![CDATA[novoton_holidays]]></addon>

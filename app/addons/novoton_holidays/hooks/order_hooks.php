@@ -4,7 +4,8 @@ declare(strict_types=1);
  * Novoton Holidays - Order Hook Functions
  *
  * Responsible for:
- *   - place_order: Delegates to BookingSubmissionService
+ *   - pre_place_order: Real-time API price verification before order is placed
+ *   - place_order_post: Delegates to BookingSubmissionService
  *   - get_orders_post: Attach booking data to order listings
  *   - get_order_info: Enrich order products with terms, locations, formatted data
  *
@@ -19,6 +20,49 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+// ============================================================================
+// HOOK: pre_place_order
+// ============================================================================
+
+/**
+ * Hook: pre_place_order - Real-time price verification before order is placed.
+ *
+ * This is the MOST IMPORTANT safety net: just before the user's order is
+ * created, we call the room_price API to verify that the price the customer
+ * is paying is still valid.
+ *
+ * CS-Cart signature: fn_set_hook('pre_place_order', $cart, $allow, $product_groups)
+ *
+ * Scenarios:
+ *   - Form price < API price → BLOCK order ($allow = false), send admin notification + email
+ *   - Form price > API price by > threshold% → ALLOW order, send admin notification + email
+ *   - Prices match → ALLOW order silently
+ *
+ * The existing add_to_cart price floor check is kept as the first safety net.
+ * This hook provides a second layer of defense at the moment of purchase.
+ */
+function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
+{
+    $verifier = Container::getInstance()->preOrderPriceVerifier();
+    $result = $verifier->verify($cart);
+
+    // Send email notifications for any price discrepancies
+    if (!empty($result['notifications'])) {
+        foreach ($result['notifications'] as $notification) {
+            fn_novoton_holidays_send_price_discrepancy_email($notification);
+        }
+    }
+
+    // Block order if form price is lower than API price
+    if (!$result['allow']) {
+        $allow = false;
+
+        fn_set_notification('E', __('error'), __('novoton_holidays.price_changed_please_refresh', [
+            '[default]' => 'The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order.'
+        ]));
+    }
+}
 
 // ============================================================================
 // HOOK: place_order_post

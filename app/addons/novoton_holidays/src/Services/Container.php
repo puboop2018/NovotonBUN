@@ -218,6 +218,11 @@ class Container
         ));
     }
 
+    public function preOrderPriceVerifier(): PreOrderPriceVerifier
+    {
+        return $this->resolve('preOrderPriceVerifier', fn() => new PreOrderPriceVerifier());
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HELPERS
     // ═══════════════════════════════════════════════════════════════════

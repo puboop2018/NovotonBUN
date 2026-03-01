@@ -96,6 +96,24 @@ class ConfigProvider
         return (self::settings()['show_calendar_prices'] ?? 'Y') === 'Y';
     }
 
+    public static function isPreorderPriceCheckEnabled(): bool
+    {
+        return (self::settings()['enable_preorder_price_check'] ?? 'Y') === 'Y';
+    }
+
+    // ── Price Discrepancy Settings ──
+
+    /**
+     * Threshold percentage for "form price higher than API price" alerts.
+     * If the form price exceeds the API price by more than this %, the order
+     * is still allowed but an admin email notification is sent.
+     * Default: 55%.
+     */
+    public static function getPriceHigherThreshold(): float
+    {
+        return max(0.0, (float) (self::settings()['price_higher_threshold'] ?? 55));
+    }
+
     // ── Float Settings ──
 
     public static function getCommission(): float
