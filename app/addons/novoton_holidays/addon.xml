@@ -128,6 +128,11 @@
                         <default_value>55</default_value>
                         <variants/>
                     </item>
+                    <item id="preorder_cache_ttl">
+                        <type>input</type>
+                        <default_value>180</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Products Header -->
                     <item id="products_header">

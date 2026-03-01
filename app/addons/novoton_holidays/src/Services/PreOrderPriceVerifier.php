@@ -8,6 +8,11 @@ declare(strict_types=1);
  * price discrepancies between what the customer is paying and the
  * current API price.
  *
+ * "Silent Sync" optimisation: the add_to_cart controller caches the
+ * verified API price + timestamp in the user session. If the cached
+ * entry is younger than the configurable TTL (default 180 s), we
+ * trust it and skip the API round-trip, making checkout feel instant.
+ *
  * Scenarios:
  *   1. Form price < API price → BLOCK order, notify admin
  *   2. Form price > API price by > threshold% → ALLOW order, notify admin
@@ -19,8 +24,13 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Tygh;
+
 class PreOrderPriceVerifier
 {
+    /** Default session-cache TTL in seconds */
+    private const DEFAULT_CACHE_TTL = 180;
+
     /**
      * Verify all Novoton booking products in the cart against live API prices.
      *
@@ -43,65 +53,85 @@ class PreOrderPriceVerifier
             return $result;
         }
 
-        $api = fn_novoton_holidays_get_api();
-        if (!$api) {
-            // If API is unavailable, don't block the order — log and continue
-            fn_log_event('general', 'runtime', [
-                'message' => 'PreOrderPriceVerifier: API unavailable, skipping price check',
-            ]);
-            return $result;
-        }
-
         $threshold = ConfigProvider::getPriceHigherThreshold();
-        $debug = ConfigProvider::isDebugLogging();
+        $cacheTtl  = ConfigProvider::getPreorderCacheTtl();
+        $debug     = ConfigProvider::isDebugLogging();
+
+        // Lazy-load the API only when actually needed (cache miss)
+        $api = null;
 
         foreach ($cart['products'] as $cartId => $product) {
             if (empty($product['extra']['novoton_booking'])) {
                 continue;
             }
 
-            $extra = $product['extra'];
+            $extra     = $product['extra'];
             $formPrice = (float) ($extra['total_price'] ?? $product['price'] ?? 0);
 
             if ($formPrice <= 0) {
                 continue;
             }
 
-            // Build API params from cart product data
             $childrenAges = $this->parseChildrenAges($extra);
 
-            $priceParams = [
-                'hotel_id'    => $extra['hotel_id'] ?? '',
-                'room_id'     => $extra['room_id'] ?? '',
-                'board_id'    => $extra['board_id'] ?? '',
-                'star_rating' => '',
-                'check_in'    => $extra['check_in'] ?? '',
-                'check_out'   => $extra['check_out'] ?? '',
-                'adults'      => (int) ($extra['adults'] ?? 2),
-                'children'    => $childrenAges,
-            ];
+            // ── Silent Sync: try session cache first ──
+            $cached = $this->getCachedPrice($extra, $childrenAges, $cacheTtl);
 
-            // Skip if missing required fields
-            if (empty($priceParams['hotel_id']) || empty($priceParams['check_in'])) {
-                continue;
-            }
+            if ($cached !== null) {
+                $apiPriceWithCommission = (float) $cached['api_price'];
+                $rawApiPrice            = (float) $cached['api_price_raw'];
 
-            $priceData = $api->getRoomPrice($priceParams);
-
-            if (!$priceData || !isset($priceData->Price)) {
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
-                        'message'  => 'PreOrderPriceVerifier: API returned no price, allowing order',
-                        'hotel_id' => $priceParams['hotel_id'],
-                        'room_id'  => $priceParams['room_id'],
+                        'message'  => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
+                        'hotel_id' => $extra['hotel_id'] ?? '',
+                        'age_sec'  => time() - (int) $cached['timestamp'],
+                        'api_price' => $apiPriceWithCommission,
                     ]);
                 }
-                // API returned no price — don't block the order
-                continue;
-            }
+            } else {
+                // Cache miss / stale — call the API
+                if ($api === null) {
+                    $api = fn_novoton_holidays_get_api();
+                    if (!$api) {
+                        fn_log_event('general', 'runtime', [
+                            'message' => 'PreOrderPriceVerifier: API unavailable, skipping price check',
+                        ]);
+                        return $result;
+                    }
+                }
 
-            $rawApiPrice = (float) (string) $priceData->Price;
-            $apiPriceWithCommission = $api->applyCommission($rawApiPrice);
+                $priceParams = [
+                    'hotel_id'    => $extra['hotel_id'] ?? '',
+                    'room_id'     => $extra['room_id'] ?? '',
+                    'board_id'    => $extra['board_id'] ?? '',
+                    'star_rating' => '',
+                    'check_in'    => $extra['check_in'] ?? '',
+                    'check_out'   => $extra['check_out'] ?? '',
+                    'adults'      => (int) ($extra['adults'] ?? 2),
+                    'children'    => $childrenAges,
+                ];
+
+                if (empty($priceParams['hotel_id']) || empty($priceParams['check_in'])) {
+                    continue;
+                }
+
+                $priceData = $api->getRoomPrice($priceParams);
+
+                if (!$priceData || !isset($priceData->Price)) {
+                    if ($debug) {
+                        fn_log_event('general', 'runtime', [
+                            'message'  => 'PreOrderPriceVerifier: API returned no price, allowing order',
+                            'hotel_id' => $priceParams['hotel_id'],
+                            'room_id'  => $priceParams['room_id'],
+                        ]);
+                    }
+                    continue;
+                }
+
+                $rawApiPrice            = (float) (string) $priceData->Price;
+                $apiPriceWithCommission = $api->applyCommission($rawApiPrice);
+            }
 
             $checkResult = $this->comparePrice(
                 $formPrice,
@@ -123,6 +153,47 @@ class PreOrderPriceVerifier
         }
 
         return $result;
+    }
+
+    /**
+     * Look up the session price cache written by add_to_cart.
+     *
+     * @param array $extra   Cart product extra data
+     * @param int[] $childrenAges Parsed children ages
+     * @param int   $ttl     Max age in seconds
+     * @return array|null    Cached entry or null if miss/stale
+     */
+    private function getCachedPrice(array $extra, array $childrenAges, int $ttl): ?array
+    {
+        $sessionCache = Tygh::$app['session']['novoton_price_cache'] ?? [];
+        if (empty($sessionCache)) {
+            return null;
+        }
+
+        $agesStr = implode(',', $childrenAges);
+
+        $cacheKey = md5(implode('|', [
+            $extra['hotel_id'] ?? '',
+            $extra['room_id'] ?? '',
+            $extra['board_id'] ?? '',
+            $extra['check_in'] ?? '',
+            $extra['check_out'] ?? '',
+            (int) ($extra['adults'] ?? 2),
+            $agesStr,
+        ]));
+
+        if (!isset($sessionCache[$cacheKey])) {
+            return null;
+        }
+
+        $entry = $sessionCache[$cacheKey];
+        $age   = time() - (int) ($entry['timestamp'] ?? 0);
+
+        if ($age > $ttl) {
+            return null; // stale
+        }
+
+        return $entry;
     }
 
     /**

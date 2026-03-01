@@ -526,7 +526,28 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
     // Recalculate cart
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
     fn_save_cart_content($cart, $auth['user_id'] ?? 0);
-    
+
+    // Cache verified API price in session for pre_place_order "Silent Sync".
+    // If the cached price is fresh enough (< TTL), the pre-order check can
+    // skip the API call and make checkout feel instant.
+    if (isset($api_price) && $api_price > 0) {
+        $cache_key = md5(implode('|', [
+            $bookingData['hotel_id'],
+            $bookingData['room_id'],
+            $bookingData['board_id'] ?? '',
+            $bookingData['check_in'],
+            $bookingData['check_out'],
+            (int)($bookingData['adults'] ?? 2),
+            $children_ages,
+        ]));
+        Tygh::$app['session']['novoton_price_cache'][$cache_key] = [
+            'api_price'     => $api_price,
+            'api_price_raw' => $base_price,
+            'form_price'    => $total_price,
+            'timestamp'     => time(),
+        ];
+    }
+
     fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
     
     return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];

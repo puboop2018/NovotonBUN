@@ -2981,6 +2981,14 @@ msgctxt "SettingsTooltips::novoton_holidays::price_higher_threshold"
 msgid "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
 msgstr "Dacă prețul din formular depășește prețul API cu mai mult decât acest procent, comanda este permisă dar se trimite o notificare email către admin. Implicit: 55%."
 
+msgctxt "SettingsOptions::novoton_holidays::preorder_cache_ttl"
+msgid "Price check cache TTL (seconds)"
+msgstr "TTL cache verificare preț (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::preorder_cache_ttl"
+msgid "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+msgstr "Cât timp (în secunde) să se folosească prețul verificat la adăugare în coș înainte de a apela API-ul din nou la finalizare. Setați 0 pentru a apela mereu API-ul. Implicit: 180 (3 minute)."
+
 msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
 msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
 msgstr "Prețul s-a modificat de când ați adăugat acest articol în coș. Vă rugăm reveniți și reîmprospătați prețul înainte de a plasa comanda."
