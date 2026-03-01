@@ -364,7 +364,19 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             'new_room' => $matched_room ?: ''
         ]);
 
-        // Return success response with room change info
+        // Analyse price change for "No Surprises" UX (tolerance-aware)
+        $price_change = null;
+        if ($original_price > 0) {
+            $detector = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->priceChangeDetector();
+            $price_change = $detector->analyse(
+                $original_price,
+                $new_price,
+                \Tygh\Addons\NovotonHolidays\Services\CurrencyService::getApiCurrency(),
+                'recalculate'
+            );
+        }
+
+        // Return success response with room change info and price change analysis
         $sendJson([
             'success' => true,
             'new_price' => $new_price,
@@ -377,7 +389,8 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             'room_changed' => $room_changed,
             'original_room' => $original_room,
             'new_room' => $matched_room ?: $original_room,
-            'new_board' => $matched_board ?: $board_id
+            'new_board' => $matched_board ?: $board_id,
+            'price_change' => $price_change
         ]);
 
     } catch (\Exception $e) {

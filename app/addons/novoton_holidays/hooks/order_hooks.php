@@ -57,6 +57,9 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
 
             $newPrice = (float) $correction['api_price'];
 
+            // Store the old price for "Old vs New" display before overwriting
+            $cart['products'][$cartId]['extra']['price_before_correction'] = $cart['products'][$cartId]['price'];
+
             $cart['products'][$cartId]['price']          = $newPrice;
             $cart['products'][$cartId]['base_price']     = $newPrice;
             $cart['products'][$cartId]['original_price'] = $newPrice;

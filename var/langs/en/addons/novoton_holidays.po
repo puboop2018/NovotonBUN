@@ -2992,3 +2992,43 @@ msgstr "How long (in seconds) to trust the price verified at add-to-cart before 
 msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
 msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
 msgstr "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+
+msgctxt "Languages::novoton_holidays.price_updated_from_to"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_dropped_to"
+msgid "Good news! The price has dropped to [new_price]."
+msgstr "Good news! The price has dropped to [new_price]."
+
+msgctxt "Languages::novoton_holidays.price_updated_at_checkout"
+msgid "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+msgstr "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+
+msgctxt "Languages::novoton_holidays.price_updated_badge"
+msgid "Price Updated"
+msgstr "Price Updated"
+
+msgctxt "Languages::novoton_holidays.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_updated_explanation"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped_explanation"
+msgid "Good news! The price has decreased to [new_price]."
+msgstr "Good news! The price has decreased to [new_price]."
+
+msgctxt "SettingsOptions::novoton_holidays::price_change_tolerance_percent"
+msgid "Price change tolerance (%)"
+msgstr "Price change tolerance (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
+msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+msgstr "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."

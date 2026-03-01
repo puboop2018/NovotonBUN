@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
 class PreOrderPriceVerifier
 {
@@ -237,6 +239,20 @@ class PreOrderPriceVerifier
             'cart_id'       => $cartId,
         ];
 
+        // Use PriceChangeDetector for consistent "No Surprises" UX
+        $detector = Container::getInstance()->priceChangeDetector();
+        $changeInfo = $detector->analyse(
+            $formPrice,
+            $apiPrice,
+            CurrencyService::getApiCurrency(),
+            'checkout',
+            [
+                'hotel_name' => $hotelName,
+                'hotel_id'   => $hotelId,
+                'room_id'    => $roomId,
+            ]
+        );
+
         // Case 1: Form price is LOWER than API price → CORRECT (never block)
         // Same behaviour as the add_to_cart price floor: silently upgrade to
         // the API price so the customer can complete their order.
@@ -265,6 +281,17 @@ class PreOrderPriceVerifier
                 . 'Difference: ' . number_format($difference, 2) . ' EUR (' . $percentLower . '% lower). '
                 . 'Cart was updated to the API price.'
             );
+
+            // User-facing price change alert (orange badge for increase)
+            if ($changeInfo['significant']) {
+                $detector->storeAlert($changeInfo, $cartId);
+                fn_set_notification('W', __('novoton_holidays.price_change'),
+                    __('novoton_holidays.price_updated_at_checkout', [
+                        '[old_price]' => fn_format_price($formPrice),
+                        '[new_price]' => fn_format_price($apiPrice),
+                    ])
+                );
+            }
 
             return [
                 'allow'        => true,
@@ -311,6 +338,16 @@ class PreOrderPriceVerifier
                     'correction'   => null,
                     'notification' => $notificationData,
                 ];
+            }
+
+            // Price decrease detected — show green "Price Dropped!" if significant
+            if ($changeInfo['significant'] && $changeInfo['direction'] === 'decrease') {
+                $detector->storeAlert($changeInfo, $cartId);
+                fn_set_notification('N', __('novoton_holidays.price_dropped'),
+                    __('novoton_holidays.price_dropped_to', [
+                        '[new_price]' => fn_format_price($apiPrice),
+                    ])
+                );
             }
         }
 

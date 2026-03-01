@@ -11,6 +11,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -168,6 +169,9 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             $base_price = $rawPrice;
             $api_price = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
 
+            // Remember the price the customer saw on the form before any correction
+            $customer_visible_price = $total_price;
+
             // ALWAYS use API price when children are involved (ages affect pricing)
             if (!empty($all_child_ages)) {
                 $total_price = $api_price;
@@ -206,6 +210,45 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
                     ]);
                 }
                 $total_price = $api_price;
+            }
+
+            // "No Surprises" policy: detect and communicate price changes to the user.
+            // Uses Price Tolerance: changes < threshold (default 1%) are silent.
+            if ($customer_visible_price > 0) {
+                $detector = Container::getInstance()->priceChangeDetector();
+                $changeInfo = $detector->analyse(
+                    $customer_visible_price,
+                    $total_price,
+                    CurrencyService::getApiCurrency(),
+                    'add_to_cart',
+                    [
+                        'hotel_name' => $hotel_info['hotel_name'] ?? '',
+                        'hotel_id'   => $bookingData['hotel_id'],
+                        'room_id'    => $bookingData['room_id'],
+                    ]
+                );
+
+                if ($changeInfo['significant']) {
+                    // Store alert in session — template will render it on the cart page
+                    $detector->storeAlert($changeInfo);
+
+                    // User-facing notification via CS-Cart toast
+                    if ($changeInfo['direction'] === 'increase') {
+                        fn_set_notification('W', __('novoton_holidays.price_change'),
+                            __('novoton_holidays.price_updated_from_to', [
+                                '[old_price]' => fn_format_price($customer_visible_price),
+                                '[new_price]' => fn_format_price($total_price),
+                            ])
+                        );
+                    } else {
+                        // Price decrease — a "win" for the customer
+                        fn_set_notification('N', __('novoton_holidays.price_dropped'),
+                            __('novoton_holidays.price_dropped_to', [
+                                '[new_price]' => fn_format_price($total_price),
+                            ])
+                        );
+                    }
+                }
             }
         }
 

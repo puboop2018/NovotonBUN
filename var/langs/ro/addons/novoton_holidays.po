@@ -2992,3 +2992,43 @@ msgstr "Cât timp (în secunde) să se folosească prețul verificat la adăugar
 msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
 msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
 msgstr "Prețul s-a modificat de când ați adăugat acest articol în coș. Vă rugăm reveniți și reîmprospătați prețul înainte de a plasa comanda."
+
+msgctxt "Languages::novoton_holidays.price_updated_from_to"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "Tariful curent a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real."
+
+msgctxt "Languages::novoton_holidays.price_dropped"
+msgid "Price Dropped!"
+msgstr "Preț redus!"
+
+msgctxt "Languages::novoton_holidays.price_dropped_to"
+msgid "Good news! The price has dropped to [new_price]."
+msgstr "Vești bune! Prețul a scăzut la [new_price]."
+
+msgctxt "Languages::novoton_holidays.price_updated_at_checkout"
+msgid "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+msgstr "Prețul a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real. Vă rugăm să verificați și să plasați din nou comanda."
+
+msgctxt "Languages::novoton_holidays.price_updated_badge"
+msgid "Price Updated"
+msgstr "Preț actualizat"
+
+msgctxt "Languages::novoton_holidays.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Preț redus!"
+
+msgctxt "Languages::novoton_holidays.price_updated_explanation"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "Tariful curent a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real."
+
+msgctxt "Languages::novoton_holidays.price_dropped_explanation"
+msgid "Good news! The price has decreased to [new_price]."
+msgstr "Vești bune! Prețul a scăzut la [new_price]."
+
+msgctxt "SettingsOptions::novoton_holidays::price_change_tolerance_percent"
+msgid "Price change tolerance (%)"
+msgstr "Toleranță modificare preț (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
+msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+msgstr "Modificările de preț sub acest prag procentual sunt aplicate silențios fără a notifica clientul. Modificările peste acest prag afișează o comparație vizibilă 'Vechi vs Nou'. Implicit: 1%."
