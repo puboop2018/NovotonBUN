@@ -130,6 +130,8 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 //   fn_novoton_holidays_csv_escape()
 //   fn_novoton_holidays_generate_import_csv_report()
 //   fn_novoton_holidays_send_import_report_email()
+//   fn_novoton_holidays_send_price_alert_email()
+//   fn_novoton_holidays_send_price_discrepancy_email()
 //   fn_novoton_holidays_cleanup_old_reports()
 //   fn_novoton_holidays_generate_hotel_features_csv()
 //   fn_novoton_holidays_generate_hotel_features_xml()

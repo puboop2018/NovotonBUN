@@ -62,6 +62,18 @@ if (!class_exists(\Tygh\Registry::class)) {
     ');
 }
 
+// ── Tygh stub (session container) ─────────────────────────────────────────
+// PriceChangeDetector stores alerts in Tygh::$app['session'].
+if (!class_exists(\Tygh\Tygh::class)) {
+    eval('
+    namespace Tygh;
+    class Tygh {
+        /** @var array */
+        public static $app = ["session" => []];
+    }
+    ');
+}
+
 // ── ConfigProvider stub ─────────────────────────────────────────────────────
 // SecurityService::getEncryptionKey() calls ConfigProvider::getApiKey().
 // Provide a minimal stub if the real class isn't autoloaded.

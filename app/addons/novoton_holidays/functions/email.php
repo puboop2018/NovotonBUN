@@ -185,8 +185,124 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
 }
 
 /**
+ * Send a price discrepancy alert email when the form price is lower than the
+ * real-time room_price API price.
+ *
+ * @param array $data Associative array with keys:
+ *   hotel_id, hotel_name, room_id, board_id, check_in, check_out,
+ *   adults, children, children_ages, form_price, api_price, api_price_raw, difference
+ * @return bool
+ */
+function fn_novoton_holidays_send_price_alert_email(array $data): bool
+{
+    $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
+
+    if (empty($admin_email)) {
+        fn_log_event('novoton', 'error', 'Cannot send price alert email: no admin email found');
+        return false;
+    }
+
+    $email_data = [
+        'hotel_id'       => $data['hotel_id'] ?? '',
+        'hotel_name'     => $data['hotel_name'] ?? '',
+        'room_id'        => $data['room_id'] ?? '',
+        'board_id'       => $data['board_id'] ?? '',
+        'check_in'       => $data['check_in'] ?? '',
+        'check_out'      => $data['check_out'] ?? '',
+        'adults'         => $data['adults'] ?? 2,
+        'children'       => $data['children'] ?? 0,
+        'children_ages'  => $data['children_ages'] ?? '',
+        'form_price'     => number_format((float)($data['form_price'] ?? 0), 2),
+        'api_price'      => number_format((float)($data['api_price'] ?? 0), 2),
+        'api_price_raw'  => number_format((float)($data['api_price_raw'] ?? 0), 2),
+        'difference'     => number_format((float)($data['difference'] ?? 0), 2),
+        'date'           => date('d.m.Y H:i:s'),
+    ];
+
+    try {
+        /** @var \Tygh\Mailer\Mailer $mailer */
+        $mailer = Tygh::$app['mailer'];
+
+        return $mailer->send([
+            'to'            => $admin_email,
+            'from'          => 'default_company_orders_department',
+            'data'          => $email_data,
+            'template_code' => 'novoton_holidays_price_alert',
+        ], 'A', CART_LANGUAGE);
+    } catch (\Exception $e) {
+        fn_log_event('novoton', 'error', 'Failed to send price alert email: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Send a price discrepancy notification email to admin.
+ *
+ * Used by the pre_place_order hook when the form price diverges from the
+ * live API price. Handles both "lower" (blocked) and "higher" (allowed) cases.
+ *
+ * @param array $data Associative array with keys:
+ *   type (price_lower|price_higher), hotel_id, hotel_name, room_id, board_id,
+ *   check_in, check_out, adults, children, children_ages, form_price,
+ *   api_price, api_price_raw, difference, percent
+ * @return bool
+ */
+function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
+{
+    $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
+
+    if (empty($admin_email)) {
+        fn_log_event('novoton', 'error', 'Cannot send price discrepancy email: no admin email found');
+        return false;
+    }
+
+    $type = $data['type'] ?? 'price_lower';
+    $isPriceLower = ($type === 'price_lower');
+
+    $subject_prefix = $isPriceLower
+        ? 'PRICE CORRECTED - Cart Updated to API Price'
+        : 'PRICE ALERT - Form Price Above API';
+
+    $email_data = [
+        'type'           => $type,
+        'is_price_lower' => $isPriceLower,
+        'subject_prefix' => $subject_prefix,
+        'hotel_id'       => $data['hotel_id'] ?? '',
+        'hotel_name'     => $data['hotel_name'] ?? '',
+        'room_id'        => $data['room_id'] ?? '',
+        'board_id'       => $data['board_id'] ?? '',
+        'check_in'       => $data['check_in'] ?? '',
+        'check_out'      => $data['check_out'] ?? '',
+        'adults'         => $data['adults'] ?? 2,
+        'children'       => $data['children'] ?? 0,
+        'children_ages'  => $data['children_ages'] ?? '',
+        'form_price'     => number_format((float)($data['form_price'] ?? 0), 2),
+        'api_price'      => number_format((float)($data['api_price'] ?? 0), 2),
+        'api_price_raw'  => number_format((float)($data['api_price_raw'] ?? 0), 2),
+        'difference'     => number_format((float)($data['difference'] ?? 0), 2),
+        'percent'        => $data['percent'] ?? 0,
+        'date'           => date('d.m.Y H:i:s'),
+    ];
+
+    try {
+        /** @var \Tygh\Mailer\Mailer $mailer */
+        $mailer = Tygh::$app['mailer'];
+
+        return $mailer->send([
+            'to'            => $admin_email,
+            'from'          => 'default_company_orders_department',
+            'data'          => $email_data,
+            'template_code' => 'novoton_holidays_price_discrepancy',
+        ], 'A', CART_LANGUAGE);
+    } catch (\Exception $e) {
+        fn_log_event('novoton', 'error', 'Failed to send price discrepancy email: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Clean up old report files
- * 
+ *
  * @param string $dir Directory path
  * @param int $days Keep files newer than this many days
  */

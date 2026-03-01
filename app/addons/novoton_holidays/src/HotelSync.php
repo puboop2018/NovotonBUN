@@ -351,59 +351,28 @@ class HotelSync
                 $priceInfo = $this->api->getPriceInfo($hotelId, $packageName);
 
                 $priceInfoJson = null;
-                $seasonsCount = 0;
-                $hasEarlyBooking = 'N';
-                $minPrice = null;
 
                 if ($priceInfo) {
                     $priceInfoJson = json_encode($priceInfo);
                     if ($priceInfoJson === false) {
                         $priceInfoJson = null;
                     }
-
-                    // Count seasons
-                    if (isset($priceInfo->seasons->season)) {
-                        $seasons = $priceInfo->seasons->season;
-                        if (isset($seasons->IdSeason)) {
-                            $seasonsCount = 1;
-                        } else {
-                            $seasonsCount = count($seasons);
-                        }
-                    }
-
-                    // Check for early booking
-                    if (isset($priceInfo->early_booking) && !empty($priceInfo->early_booking)) {
-                        $hasEarlyBooking = 'Y';
-                    }
-
-                    // Calculate min price from season_price
-                    $minPrice = $this->calculateMinPrice($priceInfo);
                 }
 
-                // Upsert package record
+                // Upsert package record — flag for price recomputation by compute_prices cron
                 db_query(
                     "INSERT INTO ?:novoton_hotel_packages
-                     (hotel_id, package_id, package_name, priceinfo_data, seasons_count, has_early_booking, min_price, synced_at)
-                     VALUES (?s, ?s, ?s, ?s, ?i, ?s, ?d, NOW())
+                     (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
+                     VALUES (?s, ?s, ?s, ?s, 'Y', NOW())
                      ON DUPLICATE KEY UPDATE
-                     package_name = ?s,
-                     priceinfo_data = ?s,
-                     seasons_count = ?i,
-                     has_early_booking = ?s,
-                     min_price = ?d,
+                     package_name = VALUES(package_name),
+                     priceinfo_data = VALUES(priceinfo_data),
+                     needs_price_compute = 'Y',
                      synced_at = NOW()",
                     $hotelId,
                     $packageId,
                     $packageName,
-                    $priceInfoJson,
-                    $seasonsCount,
-                    $hasEarlyBooking,
-                    $minPrice,
-                    $packageName,
-                    $priceInfoJson,
-                    $seasonsCount,
-                    $hasEarlyBooking,
-                    $minPrice
+                    $priceInfoJson
                 );
 
                 $this->stats['packages_updated']++;
@@ -436,55 +405,7 @@ class HotelSync
             $hotelId
         );
 
-        // Precompute calendar prices for this hotel
-        if ($synced > 0) {
-            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($hotelId);
-        }
-
         return $synced;
-    }
-
-    /**
-     * Calculate minimum adult price from priceinfo
-     *
-     * @param \SimpleXMLElement $priceInfo Price info from API
-     * @return float|null Minimum price or null
-     */
-    private function calculateMinPrice($priceInfo): ?float
-    {
-        $minPrice = null;
-
-        if (!isset($priceInfo->season_price)) {
-            return null;
-        }
-
-        $seasonPrices = $priceInfo->season_price;
-
-        // Handle single vs multiple
-        if (isset($seasonPrices->IdRoom)) {
-            $seasonPrices = [$seasonPrices];
-        }
-
-        foreach ($seasonPrices as $sp) {
-            // Only look at adult prices
-            $idAge = (string)($sp->IdAge ?? '');
-            if ($idAge !== 'ADULT') {
-                continue;
-            }
-
-            // Check Price1 through Price20
-            for ($i = 1; $i <= 20; $i++) {
-                $priceKey = "Price{$i}";
-                if (isset($sp->$priceKey)) {
-                    $price = (float)$sp->$priceKey;
-                    if ($price > 0 && ($minPrice === null || $price < $minPrice)) {
-                        $minPrice = $price;
-                    }
-                }
-            }
-        }
-
-        return $minPrice;
     }
 
     /**
@@ -561,39 +482,14 @@ class HotelSync
                     $priceInfoJson = null;
                 }
 
-                // Count seasons
-                $seasonsCount = 0;
-                if (isset($priceInfo->seasons->season)) {
-                    $seasons = $priceInfo->seasons->season;
-                    if (isset($seasons->IdSeason)) {
-                        $seasonsCount = 1;
-                    } else {
-                        $seasonsCount = count($seasons);
-                    }
-                }
-
-                // Check for early booking
-                $hasEarlyBooking = 'N';
-                if (isset($priceInfo->early_booking) && !empty($priceInfo->early_booking)) {
-                    $hasEarlyBooking = 'Y';
-                }
-
-                // Calculate min price
-                $minPrice = $this->calculateMinPrice($priceInfo);
-
-                // Update package
+                // Store raw data and flag for recomputation by compute_prices cron
                 db_query(
                     "UPDATE ?:novoton_hotel_packages SET
                      priceinfo_data = ?s,
-                     seasons_count = ?i,
-                     has_early_booking = ?s,
-                     min_price = ?d,
+                     needs_price_compute = 'Y',
                      synced_at = NOW()
                      WHERE hotel_id = ?s AND package_id = ?s",
                     $priceInfoJson,
-                    $seasonsCount,
-                    $hasEarlyBooking,
-                    $minPrice,
                     $pkg['hotel_id'],
                     $pkg['package_id']
                 );
@@ -616,12 +512,6 @@ class HotelSync
             }
 
             usleep(Constants::API_DELAY_MODERATE);
-        }
-
-        // Precompute calendar prices for all hotels that had packages updated
-        $updatedHotelIds = array_unique(array_column($packages, 'hotel_id'));
-        foreach ($updatedHotelIds as $updatedHotelId) {
-            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices($updatedHotelId);
         }
 
         $this->stats['duration'] = time() - $startTime;

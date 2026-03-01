@@ -141,7 +141,7 @@ function fn_novoton_holidays_post_install(): bool
         }
     }
     
-    // Create Theme Editor preset files (must live at design/themes/{theme}/styles/data/)
+    // Verify Theme Editor preset files exist (shipped with addon package)
     fn_novoton_holidays_create_theme_presets();
 
     // Setup database constraints and language variables
@@ -201,6 +201,12 @@ function fn_novoton_holidays_setup_db(): void
             'column'  => 'calendar_prices_raw',
             'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display' AFTER `last_price_check`",
         ],
+        [
+            'table'   => '?:novoton_hotel_packages',
+            'column'  => 'needs_price_compute',
+            'sql'     => "ALTER TABLE ?:novoton_hotel_packages ADD COLUMN `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron' AFTER `currency`",
+            'post_sql' => "ALTER TABLE ?:novoton_hotel_packages ADD KEY `idx_needs_price_compute` (`needs_price_compute`)",
+        ],
     ];
 
     foreach ($migrations as $migration) {
@@ -212,6 +218,9 @@ function fn_novoton_holidays_setup_db(): void
         );
         if (!$col_exists) {
             @db_query($migration['sql']);
+            if (!empty($migration['post_sql'])) {
+                @db_query($migration['post_sql']);
+            }
         }
     }
 
@@ -278,108 +287,35 @@ function fn_novoton_holidays_setup_db(): void
 }
 
 /**
- * Create Theme Editor preset files and register the preset in manifest.json.
+ * Create Theme Editor preset LESS files.
  *
- * CS-Cart's Theme Editor reads preset data from a hardcoded path:
- *   design/themes/{theme}/styles/data/{preset_name}/styles.less
+ * Ships a `novoton_default.less` file into each theme's `styles/data/`
+ * directory.  This file provides the default LESS variable values that
+ * the addon's `css/addons/novoton_holidays/styles.less` consumes.
  *
- * The preset is registered by MERGING into the existing manifest.json
- * (never overwriting it) so core presets are preserved.
+ * IMPORTANT: We intentionally do NOT modify `manifest.json` because that
+ * is a core CS-Cart file.  Modifying it triggers the File Changes Detector
+ * and can cause conflicts during CS-Cart upgrades.  The addon's LESS
+ * variables already have defaults in `styles.less`, and the Theme Editor
+ * fields registered via `schema.post.php` work with any active preset.
  *
- * Idempotent — skips files/entries that already exist.
+ * Idempotent — skips files that already exist.
  *
  * @return void
  */
 function fn_novoton_holidays_create_theme_presets(): void
 {
-    $root = rtrim(Registry::get('config.dir.root'), '/');
-    $themes = ['nova_theme', 'responsive'];
-
-    $content = <<<'LESS'
-/**
- * Novoton Default Style — Theme Editor Preset
- *
- * These LESS variables are managed by the CS-Cart Theme Editor.
- * When an admin changes a color via Design > Themes > Theme Editor,
- * CS-Cart updates this file and recompiles the CSS.
- *
- * Per CS-Cart docs, LESS functions (darken, lighten, fade) belong HERE
- * in the preset file. The computed values are bridged to CSS custom
- * properties in css/addons/novoton_holidays/styles.less.
- *
- * Variable names must match the field names in schema.json.
- */
-
-// Colors — Brand (Theme Editor fields)
-@novoton-primary:           #003580;
-@novoton-accent:            #febb02;
-@novoton-search-btn-bg:     #006ce4;
-@novoton-search-btn-hover:  #0057b8;
-
-// Colors — UI (Theme Editor fields)
-@novoton-text:              #333333;
-@novoton-bg:                #ffffff;
-@novoton-border:            #e0e0e0;
-@novoton-success:           #28a745;
-@novoton-danger:            #dc3545;
-
-// Fonts (Theme Editor fields)
-@novoton-font-family:       Arial, Helvetica, sans-serif;
-@novoton-font-size-base-value: 14px;
-@novoton-font-weight:       normal;
-
-// Backgrounds (Theme Editor fields)
-@novoton-bg-pattern:        none;
-@novoton-bg-repeat:         no-repeat;
-@novoton-bg-transparent:    false;
-
-// General
-@full_width:                false;
-LESS;
-
-    foreach ($themes as $theme) {
-        // 1. Create the styles.less preset file
-        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
-        $file = "{$dir}/styles.less";
-
-        if (!file_exists($file)) {
-            if (!is_dir($dir)) {
-                fn_mkdir($dir);
-            }
-            file_put_contents($file, $content . "\n");
-        }
-
-        // 2. Merge the preset into the existing manifest.json (preserve core presets)
-        $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
-        if (file_exists($manifest_path)) {
-            $manifest = @json_decode(file_get_contents($manifest_path), true);
-            if (!is_array($manifest)) {
-                continue;
-            }
-        } else {
-            $manifest = ['default_style' => '', 'names' => [], 'default' => []];
-        }
-
-        $changed = false;
-
-        if (!isset($manifest['names']['novoton_default'])) {
-            $manifest['names']['novoton_default'] = 'Novoton Default';
-            $changed = true;
-        }
-
-        if (!in_array('novoton_default', $manifest['default'] ?? [], true)) {
-            $manifest['default'][] = 'novoton_default';
-            $changed = true;
-        }
-
-        if ($changed) {
-            file_put_contents($manifest_path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
-        }
-    }
+    // Preset LESS files are shipped with the addon package in
+    // design/themes/{theme}/styles/data/novoton_default.less
+    // and deployed by CS-Cart's addon file-copy during installation.
+    // No dynamic file creation or manifest.json modification needed.
 }
 
 /**
- * Remove Theme Editor preset files and unregister from manifest.json on uninstall.
+ * Remove Theme Editor preset files on uninstall.
+ *
+ * Also cleans up any leftover `novoton_default` entries in manifest.json
+ * that may have been created by older addon versions (< 3.3.0).
  *
  * @return void
  */
@@ -389,20 +325,24 @@ function fn_novoton_holidays_remove_theme_presets(): void
     $themes = ['nova_theme', 'responsive'];
 
     foreach ($themes as $theme) {
-        // 1. Remove the styles.less preset file
-        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
-        $file = "{$dir}/styles.less";
-
-        if (file_exists($file)) {
-            @unlink($file);
+        // 1. Remove flat preset file (current format: novoton_default.less)
+        $flat_file = "{$root}/design/themes/{$theme}/styles/data/novoton_default.less";
+        if (file_exists($flat_file)) {
+            @unlink($flat_file);
         }
 
-        // Remove directory if empty
+        // 2. Remove old directory-based preset (legacy format: novoton_default/styles.less)
+        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
+        $dir_file = "{$dir}/styles.less";
+
+        if (file_exists($dir_file)) {
+            @unlink($dir_file);
+        }
         if (is_dir($dir) && count(scandir($dir)) === 2) {
             @rmdir($dir);
         }
 
-        // 2. Remove the preset from manifest.json (restore core state)
+        // 3. Clean up any leftover manifest.json entries from older versions
         $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
         if (!file_exists($manifest_path)) {
             continue;
@@ -428,7 +368,6 @@ function fn_novoton_holidays_remove_theme_presets(): void
             }
         }
 
-        // If default_style was novoton_default, revert to first available preset
         if (($manifest['default_style'] ?? '') === 'novoton_default') {
             $remaining = array_keys($manifest['names'] ?? []);
             $manifest['default_style'] = $remaining[0] ?? '';

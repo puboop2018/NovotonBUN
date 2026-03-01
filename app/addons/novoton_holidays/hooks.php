@@ -23,6 +23,7 @@ declare(strict_types=1);
  *     fn_novoton_holidays_delete_product_post()                            *
  *                                                                          *
  *   ORDER (order_hooks.php):                                               *
+ *     fn_novoton_holidays_pre_place_order()                                *
  *     fn_novoton_holidays_place_order_post()                               *
  *     fn_novoton_holidays_get_orders_post()                                *
  *     fn_novoton_holidays_get_order_info()                                 *
@@ -49,7 +50,7 @@ $hooks_dir = __DIR__ . '/hooks/';
 
 $hook_files = [
     'product_hooks.php',    // Product data enrichment, tabs, deletion
-    'order_hooks.php',      // place_order, get_orders_post, get_order_info
+    'order_hooks.php',      // pre_place_order, place_order, get_orders_post, get_order_info
     'cart_hooks.php',       // Cart calculation, checkout display, meta, CSS
     'auth_hooks.php',       // user_login_post, create_user_post
 ];

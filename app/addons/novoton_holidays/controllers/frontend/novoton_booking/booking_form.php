@@ -112,20 +112,10 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
         'rooms_data' => []
     ];
     
-    // Parse rooms_data if provided
-    if (!empty($bookingData['rooms_data'])) {
-        $rooms_data = is_string($bookingData['rooms_data']) ? json_decode($bookingData['rooms_data'], true) : $bookingData['rooms_data'];
-        if (is_array($rooms_data)) {
-            // Fix room_id in each room (+ converted to space by URL decoding)
-            foreach ($rooms_data as &$rm) {
-                if (!empty($rm['room_id'])) {
-                    $rm['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $rm['room_id']);
-                }
-            }
-            unset($rm);
-            $booking['rooms_data'] = $rooms_data;
-            $booking['num_rooms'] = count($rooms_data);
-        }
+    // Reuse rooms_data already parsed and room_id-fixed at top of controller
+    if (!empty($rooms_data)) {
+        $booking['rooms_data'] = $rooms_data;
+        $booking['num_rooms'] = count($rooms_data);
     }
     
     // If no rooms_data, create default based on adults/children

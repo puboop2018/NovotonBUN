@@ -79,13 +79,13 @@ if ($mode == 'update_prices') {
         $result = fn_novoton_holidays_update_product_prices($hotel['product_id']);
         
         if ($result === true) {
-            echo "<span class='success'>✓ {$hotel['hotel_name']}</span><br>\n";
+            echo "<span class='success'>✓ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
             $updated++;
         } elseif ($result === 'no_data') {
-            echo "<span class='warning'>⚠ {$hotel['hotel_name']} - No data</span><br>\n";
+            echo "<span class='warning'>⚠ " . htmlspecialchars($hotel['hotel_name']) . " - No data</span><br>\n";
             $no_data++;
         } else {
-            echo "<span class='error'>✗ {$hotel['hotel_name']}</span><br>\n";
+            echo "<span class='error'>✗ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
             $failed++;
         }
         
@@ -108,11 +108,8 @@ if ($mode == 'update_prices') {
  * Mode: check_prices
  * Check which hotels have active prices using resort-based bulk queries.
  *
- * Instead of calling room_price per hotel (N API calls), this queries
- * room_price per resort (M API calls where M << N). Uses regex on the
- * raw XML response to extract <IdHotel> values - if a hotel ID appears
- * in the response, it has prices. Much faster and catches ALL hotels
- * the API knows about, not just those in our database.
+ * Queries room_price per resort (M API calls where M << N individual hotel
+ * calls). Extracts <IdHotel> values via xpath on the parsed XML response.
  */
 if ($mode == 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -187,7 +184,7 @@ if ($mode == 'check_prices') {
 
     // Process each selected country
     foreach ($selected_countries as $country) {
-        echo "<div class='country-header'>Country: {$country}</div>\n";
+        echo "<div class='country-header'>Country: " . htmlspecialchars($country) . "</div>\n";
         flush();
 
         // Step 1: Get resort names from resort_list API (the authoritative source).
@@ -211,7 +208,7 @@ if ($mode == 'check_prices') {
         }
 
         if (empty($resorts)) {
-            echo "<span class='error'>resort_list API returned no resorts for {$country}. Skipping.</span><br>\n";
+            echo "<span class='error'>resort_list API returned no resorts for " . htmlspecialchars($country) . ". Skipping.</span><br>\n";
             continue;
         }
 
@@ -230,41 +227,52 @@ if ($mode == 'check_prices') {
             // Step 2: Query each resort in bulk
             foreach ($resorts as $resort_idx => $resort_name) {
                 $resort_num = $resort_idx + 1;
-                echo "<div class='resort-header'>[{$resort_num}/{$total_resorts}] {$resort_name}</div>\n";
+                echo "<div class='resort-header'>[{$resort_num}/{$total_resorts}] " . htmlspecialchars($resort_name) . "</div>\n";
                 flush();
 
                 try {
-                    $raw_response = $api->getRoomPriceByResortRaw([
+                    $xml = $api->getRoomPriceByResort([
                         'resort'    => $resort_name,
                         'check_in'  => $check_in,
                         'check_out' => $check_out,
                         'adults'    => 2,
                     ]);
 
-                    if (empty($raw_response)) {
-                        echo "<span class='skip'>  Empty response</span><br>\n";
-                        continue;
+                    $response_kb = round(strlen($api->getLastResponse() ?: '') / 1024, 1);
+
+                    // Extract hotel IDs via xpath on parsed XML
+                    $resort_hotel_ids = [];
+                    $nodes = $xml->xpath('//IdHotel');
+                    if (!empty($nodes)) {
+                        foreach ($nodes as $node) {
+                            $val = trim((string)$node);
+                            if ($val !== '' && ctype_digit($val)) {
+                                $resort_hotel_ids[] = $val;
+                            }
+                        }
                     }
+                    $resort_hotel_ids = array_unique($resort_hotel_ids);
 
-                    // Step 3: Regex to extract all <IdHotel> values from raw XML
-                    $matches = [];
-                    preg_match_all('/<IdHotel>\s*(\d+)\s*<\/IdHotel>/i', $raw_response, $matches);
-
-                    if (!empty($matches[1])) {
-                        $resort_hotel_ids = array_unique($matches[1]);
+                    if (!empty($resort_hotel_ids)) {
                         $count = count($resort_hotel_ids);
-
                         foreach ($resort_hotel_ids as $hid) {
                             $hotels_with_prices[$hid] = $resort_name;
                         }
-
-                        $response_kb = round(strlen($raw_response) / 1024, 1);
                         echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                     } else {
-                        echo "<span class='skip'>  No hotels with prices</span><br>\n";
+                        // Check if response has prices but no hotel IDs (format mismatch)
+                        $priceCount = count($xml->xpath('//Price') ?: []);
+                        $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
+                        if (!empty($errorNode)) {
+                            echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
+                        } elseif ($priceCount > 0) {
+                            echo "<span class='skip'>  0 hotel IDs but {$priceCount} prices in response ({$response_kb} KB) — unexpected format</span><br>\n";
+                        } else {
+                            echo "<span class='skip'>  No prices ({$response_kb} KB)</span><br>\n";
+                        }
                     }
 
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     echo "<span class='error'>  Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
                     $resort_errors++;
                 }
@@ -313,13 +321,13 @@ if ($mode == 'check_prices') {
             if (!empty($unknown_hotels)) {
                 echo "<span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
                 foreach ($unknown_hotels as $hid => $resort_name) {
-                    echo "<span class='error'>  Hotel ID {$hid} (resort: {$resort_name}) - not synced</span><br>\n";
+                    echo "<span class='error'>  Hotel ID " . htmlspecialchars((string)$hid) . " (resort: " . htmlspecialchars((string)$resort_name) . ") - not synced</span><br>\n";
                 }
             }
 
             echo "<br>\n";
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             echo "<span class='error'>Error: " . htmlspecialchars($e->getMessage()) . "</span><br>";
         }
     }
@@ -436,7 +444,7 @@ if ($mode == 'check_prices_hotel') {
     $start_time = microtime(true);
 
     foreach ($selected_countries as $country) {
-        echo "<div class='country-header'>Country: {$country}</div>\n";
+        echo "<div class='country-header'>Country: " . htmlspecialchars($country) . "</div>\n";
         flush();
 
         // Get all hotels for this country
@@ -468,8 +476,8 @@ if ($mode == 'check_prices_hotel') {
         foreach ($all_hotels as $idx => $hotel) {
             $hotel_num = $idx + 1;
             $hotel_id = $hotel['hotel_id'];
-            $hotel_name = $hotel['hotel_name'];
-            $city = $hotel['city'] ?: '<no city>';
+            $hotel_name = htmlspecialchars($hotel['hotel_name']);
+            $city = htmlspecialchars($hotel['city'] ?: '(no city)');
 
             // Progress indicator every 50 hotels
             if ($hotel_num % 50 == 0 || $hotel_num == 1) {
@@ -530,7 +538,7 @@ if ($mode == 'check_prices_hotel') {
                     }
                 }
 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $errors++;
                 echo "<span class='error'>✗ [{$hotel_num}] {$hotel_name}: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
             }
@@ -612,7 +620,7 @@ if ($mode == 'room_price') {
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
             Tygh::$app['view']->assign('last_response', $api->getLastResponse());
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Tygh::$app['view']->assign('error', $e->getMessage());
         }
     }
@@ -711,24 +719,24 @@ if ($mode == 'cron_offers_update') {
                     // Just update the price check timestamp
                     $hotelRepo->update((string) $hotel['hotel_id'], ['last_price_check' => date('Y-m-d H:i:s')]);
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $errors++;
                 echo "✗ {$hotel['hotel_name']}: " . $e->getMessage() . "\n";
             }
         }
-        
+
         $duration = time() - $start_time;
-        
+
         // Log sync
         $syncLogRepo->logSync('offers_update', count($hotels), $updated, $errors, $duration);
-        
+
         echo "\n=== SUMMARY ===\n";
         echo "Updated: {$updated}\n";
         echo "Errors: {$errors}\n";
         echo "Duration: {$duration}s\n";
         echo "Completed: " . date('Y-m-d H:i:s') . "\n";
-        
-    } catch (Exception $e) {
+
+    } catch (\Throwable $e) {
         echo "ERROR: " . $e->getMessage() . "\n";
     }
     

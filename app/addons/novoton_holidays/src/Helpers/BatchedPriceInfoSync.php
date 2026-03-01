@@ -212,7 +212,6 @@ class BatchedPriceInfoSync
         $errors_this_run = 0;
         $offset = $state['processed'];
         $now = date('Y-m-d H:i:s');
-        $hotelsToRecompute = []; // Deferred calendar precompute — once per hotel, not per package
 
         while ($offset < $state['total']) {
             // Check time and memory limits (skip if unlimited mode)
@@ -292,7 +291,6 @@ class BatchedPriceInfoSync
                         $seasons_count = $this->processPriceInfo($hotel_id, $package_id, $priceinfo, $now);
                         $state['synced']++;
                         $synced_this_run++;
-                        $hotelsToRecompute[$hotel_id] = true;
                         $this->output("OK ({$seasons_count} seasons)");
                     }
                 } catch (ApiException $e) {
@@ -307,14 +305,6 @@ class BatchedPriceInfoSync
 
                 // Small delay to avoid API rate limits
                 usleep(Constants::API_DELAY_NORMAL);
-            }
-
-            // Precompute calendar prices once per hotel (deferred from per-package)
-            if (!empty($hotelsToRecompute)) {
-                foreach (array_keys($hotelsToRecompute) as $hid) {
-                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
-                }
-                $hotelsToRecompute = [];
             }
 
             // Update state after each batch
@@ -354,18 +344,12 @@ class BatchedPriceInfoSync
                             $recovered++;
                             $state['synced']++;
                             $state['errors']--;
-                            $hotelsToRecompute[$r_hotel_id] = true;
                             $this->output("  [{$retry_key}] retry OK");
                         }
                     } catch (ApiException $e) {
                         $this->output("  [{$retry_key}] retry failed: " . $e->getMessage());
                     }
                 }
-                // Precompute calendar prices for recovered hotels
-                foreach (array_keys($hotelsToRecompute) as $hid) {
-                    \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
-                }
-                $hotelsToRecompute = [];
                 $state['retry_done'] = true;
                 $this->saveState($state);
                 if ($recovered > 0) {
@@ -406,53 +390,23 @@ class BatchedPriceInfoSync
     }
 
     /**
-     * Process price info from API response
+     * Process price info from API response.
+     *
+     * Stores raw priceinfo JSON and flags the package for recomputation
+     * by the compute_prices cron. Does NOT compute min_price, seasons_count
+     * or has_early_booking inline — that's the cron's job.
      */
     private function processPriceInfo(string $hotel_id, string $package_id, $priceinfo, string $now): int
     {
+        // Count seasons for the return value (lightweight, used for output only)
         $seasons_count = 0;
-        $min_price = null;
-        $has_early_booking = 'N';
-
-        // Extract seasons - handle multiple <seasons> siblings
-        // XML structure: <priceinfo><seasons>...</seasons><seasons>...</seasons></priceinfo>
         if (isset($priceinfo->seasons)) {
             foreach ($priceinfo->seasons as $season) {
                 $seasons_count++;
-
-                // Check for early booking
-                if (!empty($season->EarlyBooking) || !empty($season->early_booking)) {
-                    $has_early_booking = 'Y';
-                }
             }
         }
 
-        // Extract season_price for minimum price calculation
-        // XML structure: <priceinfo><season_price>...</season_price><season_price>...</season_price></priceinfo>
-        if (isset($priceinfo->season_price)) {
-            foreach ($priceinfo->season_price as $sp) {
-                // Only consider ADULT prices for minimum (not percentages like "80%")
-                $id_age = (string)($sp->IdAge ?? '');
-                if (stripos($id_age, 'ADULT') !== false && stripos($id_age, '3 RD') === false) {
-                    // Check Price1 through Price20 for numeric values
-                    for ($i = 1; $i <= 20; $i++) {
-                        $price_key = "Price{$i}";
-                        if (isset($sp->$price_key)) {
-                            $price_val = (string)$sp->$price_key;
-                            // Skip percentages
-                            if (strpos($price_val, '%') === false) {
-                                $price = (float)($price_val);
-                                if ($price > 0 && ($min_price === null || $price < $min_price)) {
-                                    $min_price = $price;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Update package record - convert SimpleXML to array for reliable JSON encoding.
+        // Convert SimpleXML to array for reliable JSON encoding.
         // json_encode(SimpleXMLElement) can lose attributes and mishandle repeated siblings.
         $priceinfo_array = self::simpleXmlToArray($priceinfo);
         $priceinfo_json = json_encode($priceinfo_array);
@@ -465,15 +419,10 @@ class BatchedPriceInfoSync
         db_query(
             "UPDATE ?:novoton_hotel_packages SET
              priceinfo_data = ?s,
-             seasons_count = ?i,
-             min_price = ?d,
-             has_early_booking = ?s,
+             needs_price_compute = 'Y',
              synced_at = ?s
              WHERE hotel_id = ?s AND package_id = ?s",
             $priceinfo_json,
-            $seasons_count,
-            $min_price,
-            $has_early_booking,
             $now,
             $hotel_id,
             $package_id

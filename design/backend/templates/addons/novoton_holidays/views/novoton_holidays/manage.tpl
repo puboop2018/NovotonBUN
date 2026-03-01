@@ -83,6 +83,7 @@
             <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
             <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
             <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[C] Price Comparison Tool</a>
+            <a href="{"novoton_holidays.recompute_calendar_prices"|fn_url}" class="novoton-btn novoton-btn-warning">[Cal] Recompute Calendar Prices</a>
         </div>
     </div>
 

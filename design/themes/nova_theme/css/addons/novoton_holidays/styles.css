@@ -5732,3 +5732,187 @@ button.nvt-field-input:focus {
     color: #6b6b6b !important;
 }
 
+/* ===========================
+   Price Change Alert Banner
+   "No Surprises" policy — displayed at checkout when a price changes
+   =========================== */
+
+.nvt-price-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    animation: nvt-price-alert-slide-in 0.3s ease-out;
+}
+
+@keyframes nvt-price-alert-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Orange theme for price increases — implies "the market changed", not user error */
+.nvt-price-alert--warning {
+    background: #fff8f0;
+    border: 1px solid #f0a830;
+    border-left: 4px solid #f0a830;
+}
+
+.nvt-price-alert--warning .nvt-price-alert__icon {
+    color: #e8960c;
+}
+
+/* Green theme for price decreases — feels like a "win" */
+.nvt-price-alert--success {
+    background: #f0faf0;
+    border: 1px solid #4caf50;
+    border-left: 4px solid #4caf50;
+}
+
+.nvt-price-alert--success .nvt-price-alert__icon {
+    color: #388e3c;
+}
+
+.nvt-price-alert__icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.nvt-price-alert__content {
+    flex: 1;
+}
+
+.nvt-price-alert__badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+.nvt-price-alert__badge--warning {
+    background: #f0a830;
+    color: #fff;
+}
+
+.nvt-price-alert__badge--success {
+    background: #4caf50;
+    color: #fff;
+}
+
+.nvt-price-alert__message {
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.nvt-price-alert__comparison {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.nvt-price-alert__old-price {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.nvt-price-alert__arrow {
+    color: #888;
+    font-size: 14px;
+}
+
+.nvt-price-alert__new-price {
+    color: #d35400;
+}
+
+.nvt-price-alert__new-price--success {
+    color: #2e7d32;
+}
+
+.nvt-price-alert__dismiss {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.nvt-price-alert__dismiss:hover {
+    color: #666;
+}
+
+/* ===========================
+   Line-Item Price Change (Cart Summary)
+   Shows crossed-out old price with new price in the cart line item
+   =========================== */
+
+.nvt-line-item-price-change {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #fafafa;
+    border: 1px dashed #ddd;
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.nvt-line-item-price-change__old {
+    text-decoration: line-through;
+    color: #999;
+    font-weight: 500;
+}
+
+.nvt-line-item-price-change__arrow {
+    color: #888;
+    font-size: 12px;
+}
+
+.nvt-line-item-price-change__new {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.nvt-line-item-price-change__badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+}
+
+.nvt-line-item-price-change__badge--warning {
+    background: #f0a830;
+    color: #fff;
+}
+
+.nvt-line-item-price-change__badge--success {
+    background: #4caf50;
+    color: #fff;
+}
+

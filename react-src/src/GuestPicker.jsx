@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { t } from './utils';
+import { t, getLocale } from './utils';
 import { TrashIcon } from './icons';
 
 export default function GuestPicker({
@@ -98,42 +98,99 @@ export default function GuestPicker({
         return ageErrors.some(e => e.room === roomIdx && e.child === childIdx);
     }
 
-    // Count missing child ages across all rooms
-    const missingAgeCount = useMemo(() => {
-        let count = 0;
-        rooms.forEach(room => {
+    // Compute missing ages: total count + which rooms (1-indexed) have missing ages
+    const missingAgeInfo = useMemo(() => {
+        let totalMissing = 0;
+        const roomNumbers = [];
+        rooms.forEach((room, idx) => {
             if (room.children > 0) {
+                let roomHasMissing = false;
                 (room.childrenAges || []).forEach(age => {
-                    if (age === null || age === undefined || age === '') count++;
+                    if (age === null || age === undefined || age === '') {
+                        totalMissing++;
+                        roomHasMissing = true;
+                    }
                 });
+                if (roomHasMissing) {
+                    roomNumbers.push(idx + 1);
+                }
             }
         });
-        return count;
+        return { totalMissing, roomNumbers };
     }, [rooms]);
 
-    // Scroll to first room with missing age
+    // Limit visible area to first 3 rooms when 4+ rooms exist
+    useEffect(() => {
+        const container = popupRef.current?.querySelector('.nvt-guest-rooms-container');
+        if (!container) return;
+        if (rooms.length >= 4) {
+            const sections = container.querySelectorAll('.nvt-room-section');
+            let height = 0;
+            for (let i = 0; i < 3 && i < sections.length; i++) {
+                height += sections[i].offsetHeight;
+                const style = window.getComputedStyle(sections[i]);
+                height += parseFloat(style.marginBottom) || 0;
+            }
+            container.style.maxHeight = height + 'px';
+        } else {
+            container.style.maxHeight = '';
+        }
+    }, [rooms]);
+
+    // Scroll to first empty age select and highlight it
     const scrollToMissingAge = useCallback(() => {
         if (!popupRef.current) return;
         const container = popupRef.current.querySelector('.nvt-guest-rooms-container');
         if (!container) return;
 
-        // Find first empty age select
-        const emptySelect = container.querySelector('.nvt-child-age-select');
-        if (!emptySelect) return;
-
-        // Find the one with empty value
         const allSelects = container.querySelectorAll('.nvt-child-age-select');
         for (const sel of allSelects) {
             if (sel.value === '') {
                 sel.closest('.nvt-room-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 sel.focus();
+                sel.classList.add('nvt-age-highlight');
+                sel.addEventListener('animationend', () => {
+                    sel.classList.remove('nvt-age-highlight');
+                }, { once: true });
                 break;
             }
         }
     }, []);
 
+    // Build smart anchor text for missing ages
+    const smartAnchorText = useMemo(() => {
+        const { totalMissing, roomNumbers } = missingAgeInfo;
+        if (totalMissing === 0) return '';
+
+        const roomLabel = t('room', 'Room');
+        const roomList = roomNumbers.join(', ');
+        const locale = getLocale();
+
+        if (totalMissing === 1) {
+            const childWord = locale === 'ro' ? 'copil' : 'child';
+            return t('selectAgeForOneChild', `Select age for 1 ${childWord} (${roomLabel} [rooms]).`)
+                .replace('[rooms]', roomList);
+        }
+
+        const childWord = locale === 'ro' ? 'copii' : 'children';
+        return t('selectAgeForChildren', `Select age for [count] ${childWord} (${roomLabel} [rooms]).`)
+            .replace('[count]', totalMissing)
+            .replace('[rooms]', roomList);
+    }, [missingAgeInfo]);
+
     return (
         <div className="nvt-guest-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('guestsAndRooms', 'Guests and rooms')}>
+            {/* Smart Anchor: clickable alert for missing child ages */}
+            {missingAgeInfo.totalMissing > 0 && (
+                <button
+                    type="button"
+                    className="nvt-smart-age-anchor"
+                    onClick={scrollToMissingAge}
+                >
+                    {smartAnchorText}
+                </button>
+            )}
+
             <div className="nvt-guest-rooms-container">
                 {rooms.map((room, roomIdx) => (
                     <div key={roomIdx} className="nvt-room-section" data-room-idx={roomIdx}>
@@ -260,17 +317,6 @@ export default function GuestPicker({
                     </div>
                 ))}
             </div>
-
-            {/* Missing ages alert */}
-            {missingAgeCount > 0 && (
-                <button
-                    type="button"
-                    className="nvt-missing-ages-alert"
-                    onClick={scrollToMissingAge}
-                >
-                    {t('selectMissingAges', 'Select age ([count] missing)').replace('[count]', missingAgeCount)}
-                </button>
-            )}
 
             {rooms.length < maxRooms && (
                 <button

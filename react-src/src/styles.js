@@ -20,7 +20,7 @@ export function injectStyles() {
     /* React-only variables (no LESS equivalent) */
     --nvt-z-popup: 1000;
     --nvt-btn-height: 52px;
-    --nvt-btn-font: 16px;
+    --nvt-btn-font: 15px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--nvt-text, #1a1a1a);
     position: relative;
@@ -49,7 +49,7 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 0;
-    border: 3px solid var(--nvt-accent, #febb02);
+    border: 2px solid var(--nvt-accent, #FFB703);
     border-radius: var(--nvt-radius, 8px);
     background: var(--nvt-bg, #ffffff);
     overflow: visible;
@@ -98,27 +98,29 @@ button.nvt-field-input:active {
     border-right: none;
 }
 .nvt-field--date {
-    flex: 2;
+    flex: 1.8;
 }
 .nvt-field--guests {
-    flex: 1.5;
+    flex: 1.2;
 }
 .nvt-field--btn {
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 160px;
     border-right: none;
 }
 
 .nvt-field-input {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 6px 16px;
     cursor: pointer;
-    min-height: 44px;
+    min-height: 52px;
     background: transparent;
     border: none;
     width: 100%;
-    text-align: left;
+    text-align: center;
     font: inherit;
     color: inherit;
     -webkit-user-select: text;
@@ -146,7 +148,7 @@ button.nvt-field-input:active {
 }
 .nvt-field-input-text .nvt-value {
     display: block;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--nvt-text, #1a1a1a);
     white-space: nowrap;
@@ -173,11 +175,12 @@ button.nvt-field-input:active {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 28px;
-    background: #006ce4;
+    padding: 10px 28px;
+    background: #0071E3;
     color: #fff;
     border: none;
-    border-left: 3px solid var(--nvt-accent, #febb02);
+    border-left: 2px solid var(--nvt-accent, #FFB703);
+    border-radius: 0 6px 6px 0;
     font-size: var(--nvt-btn-font);
     font-weight: 600;
     cursor: pointer;
@@ -186,34 +189,19 @@ button.nvt-field-input:active {
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
-    background: #006ce4;
+    background: #0071E3;
 }
 
 /* ---------- Validation message ---------- */
 
 .nvt-validation-message {
-    display: flex;
-    align-items: center;
-    gap: 6px;
     margin-top: 8px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 13px;
-    color: var(--nvt-danger, #d32f2f);
-    background: #fef2f2;
-    border-radius: var(--nvt-radius, 8px);
-}
-.nvt-warning-icon {
-    flex: 0 0 20px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--nvt-danger, #d32f2f);
+    font-weight: 500;
     color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
+    background: var(--nvt-danger, #d32f2f);
+    border-radius: var(--nvt-radius, 8px);
 }
 
 /* ======================================================================
@@ -572,13 +560,13 @@ button.nvt-field-input:active {
     background: #fff5f5;
 }
 
-/* ----- Missing ages alert ----- */
+/* ----- Smart age anchor (top of guest picker) ----- */
 
-.nvt-missing-ages-alert {
+.nvt-smart-age-anchor {
     display: block;
     width: 100%;
     padding: 10px 14px;
-    margin-top: 12px;
+    margin-bottom: 12px;
     background: #fff3cd;
     border: 1px solid #ffc107;
     border-radius: var(--nvt-radius, 8px);
@@ -586,10 +574,25 @@ button.nvt-field-input:active {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    text-align: center;
+    text-align: left;
     transition: background 0.15s;
 }
-.nvt-missing-ages-alert:hover {
+.nvt-smart-age-anchor:hover {
+    background: #fff3cd !important;
+    text-decoration: underline;
+}
+
+/* ----- Highlight animation on target age select ----- */
+
+@keyframes nvt-age-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    40%  { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0.4); }
+    70%  { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+.nvt-age-highlight {
+    animation: nvt-age-pulse 0.8s ease-out 2;
+    border-color: #ffc107 !important;
     background: #fff3cd !important;
 }
 
@@ -686,6 +689,19 @@ button.nvt-field-input:active {
     background: #fef2f2;
     border-radius: var(--nvt-radius, 8px);
 }
+.nvt-warning-icon {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--nvt-danger, #d32f2f);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
 
 /* ---------- Error boundary fallback ---------- */
 
@@ -734,11 +750,12 @@ button.nvt-field-input:active {
     }
     .nvt-field--btn {
         flex: 0 0 auto;
+        min-width: 0;
     }
     .nvt-btn-search {
         width: 100%;
         border-left: none;
-        border-top: 3px solid var(--nvt-accent, #febb02);
+        border-top: 2px solid var(--nvt-accent, #FFB703);
         border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px);
         font-size: 15px;
         padding: 10px 20px;

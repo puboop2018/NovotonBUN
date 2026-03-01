@@ -11,6 +11,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -167,10 +168,87 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             $rawPrice = (float)((string)$priceData->Price);
             $base_price = $rawPrice;
             $api_price = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
+
+            // Remember the price the customer saw on the form before any correction
+            $customer_visible_price = $total_price;
+
             // ALWAYS use API price when children are involved (ages affect pricing)
-            // Also use if we don't have one, or if it's different
-            if (!empty($all_child_ages) || $total_price <= 0 || abs($total_price - $api_price) > 0.01) {
+            if (!empty($all_child_ages)) {
                 $total_price = $api_price;
+            }
+
+            // Price floor: final price must NEVER be lower than real-time room_price API
+            // Protects against stale priceinfo data, calculation bugs, or cache issues
+            if ($total_price <= 0 || $total_price < $api_price) {
+                if ($total_price > 0 && $total_price < $api_price) {
+                    $price_diff = round($api_price - $total_price, 2);
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
+                        'hotel_id' => $bookingData['hotel_id'],
+                        'room_id' => $bookingData['room_id'],
+                        'form_price' => $total_price,
+                        'api_price' => $api_price,
+                        'api_price_raw' => $rawPrice,
+                        'difference' => $price_diff,
+                    ]);
+
+                    // Send email alert to admin with price discrepancy details
+                    fn_novoton_holidays_send_price_alert_email([
+                        'hotel_id'      => $bookingData['hotel_id'],
+                        'hotel_name'    => $hotel_info['hotel_name'] ?? '',
+                        'room_id'       => $bookingData['room_id'],
+                        'board_id'      => $bookingData['board_id'] ?? '',
+                        'check_in'      => $bookingData['check_in'],
+                        'check_out'     => $bookingData['check_out'],
+                        'adults'        => (int)($bookingData['adults'] ?? 2),
+                        'children'      => (int)($bookingData['children'] ?? 0),
+                        'children_ages' => $children_ages,
+                        'form_price'    => $total_price,
+                        'api_price'     => $api_price,
+                        'api_price_raw' => $rawPrice,
+                        'difference'    => $price_diff,
+                    ]);
+                }
+                $total_price = $api_price;
+            }
+
+            // "No Surprises" policy: detect and communicate price changes to the user.
+            // Uses Price Tolerance: changes < threshold (default 1%) are silent.
+            if ($customer_visible_price > 0) {
+                $detector = Container::getInstance()->priceChangeDetector();
+                $changeInfo = $detector->analyse(
+                    $customer_visible_price,
+                    $total_price,
+                    CurrencyService::getApiCurrency(),
+                    'add_to_cart',
+                    [
+                        'hotel_name' => $hotel_info['hotel_name'] ?? '',
+                        'hotel_id'   => $bookingData['hotel_id'],
+                        'room_id'    => $bookingData['room_id'],
+                    ]
+                );
+
+                if ($changeInfo['significant']) {
+                    // Store alert in session — template will render it on the cart page
+                    $detector->storeAlert($changeInfo);
+
+                    // User-facing notification via CS-Cart toast
+                    if ($changeInfo['direction'] === 'increase') {
+                        fn_set_notification('W', __('novoton_holidays.price_change'),
+                            __('novoton_holidays.price_updated_from_to', [
+                                '[old_price]' => fn_format_price($customer_visible_price),
+                                '[new_price]' => fn_format_price($total_price),
+                            ])
+                        );
+                    } else {
+                        // Price decrease — a "win" for the customer
+                        fn_set_notification('N', __('novoton_holidays.price_dropped'),
+                            __('novoton_holidays.price_dropped_to', [
+                                '[new_price]' => fn_format_price($total_price),
+                            ])
+                        );
+                    }
+                }
             }
         }
 
@@ -491,7 +569,28 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
     // Recalculate cart
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
     fn_save_cart_content($cart, $auth['user_id'] ?? 0);
-    
+
+    // Cache verified API price in session for pre_place_order "Silent Sync".
+    // If the cached price is fresh enough (< TTL), the pre-order check can
+    // skip the API call and make checkout feel instant.
+    if (isset($api_price) && $api_price > 0) {
+        $cache_key = md5(implode('|', [
+            $bookingData['hotel_id'],
+            $bookingData['room_id'],
+            $bookingData['board_id'] ?? '',
+            $bookingData['check_in'],
+            $bookingData['check_out'],
+            (int)($bookingData['adults'] ?? 2),
+            $children_ages,
+        ]));
+        Tygh::$app['session']['novoton_price_cache'][$cache_key] = [
+            'api_price'     => $api_price,
+            'api_price_raw' => $base_price,
+            'form_price'    => $total_price,
+            'timestamp'     => time(),
+        ];
+    }
+
     fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
     
     return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];

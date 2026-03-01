@@ -96,6 +96,35 @@ class ConfigProvider
         return (self::settings()['show_calendar_prices'] ?? 'Y') === 'Y';
     }
 
+    public static function isPreorderPriceCheckEnabled(): bool
+    {
+        return (self::settings()['enable_preorder_price_check'] ?? 'Y') === 'Y';
+    }
+
+    // ── Price Discrepancy Settings ──
+
+    /**
+     * Threshold percentage for "form price higher than API price" alerts.
+     * If the form price exceeds the API price by more than this %, the order
+     * is still allowed but an admin email notification is sent.
+     * Default: 55%.
+     */
+    public static function getPriceHigherThreshold(): float
+    {
+        return max(0.0, (float) (self::settings()['price_higher_threshold'] ?? 55));
+    }
+
+    /**
+     * TTL (seconds) for the session-cached API price ("Silent Sync").
+     * If the add_to_cart price verification is younger than this, the
+     * pre_place_order hook trusts the cache and skips the API call.
+     * Default: 180 seconds (3 minutes).
+     */
+    public static function getPreorderCacheTtl(): int
+    {
+        return max(0, (int) (self::settings()['preorder_cache_ttl'] ?? 180));
+    }
+
     // ── Float Settings ──
 
     public static function getCommission(): float
@@ -148,7 +177,9 @@ class ConfigProvider
 
     public static function getLastExchangeRateUpdate(): string
     {
-        return (string)(self::settings()['last_exchange_rate_update'] ?? '');
+        return (string) (db_get_field(
+            "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'"
+        ) ?: '');
     }
 
     public static function getVersion(): string

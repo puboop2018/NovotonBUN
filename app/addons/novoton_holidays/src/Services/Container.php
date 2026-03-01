@@ -218,6 +218,16 @@ class Container
         ));
     }
 
+    public function preOrderPriceVerifier(): PreOrderPriceVerifier
+    {
+        return $this->resolve('preOrderPriceVerifier', fn() => new PreOrderPriceVerifier());
+    }
+
+    public function priceChangeDetector(): PriceChangeDetector
+    {
+        return $this->resolve('priceChangeDetector', fn() => new PriceChangeDetector());
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HELPERS
     // ═══════════════════════════════════════════════════════════════════

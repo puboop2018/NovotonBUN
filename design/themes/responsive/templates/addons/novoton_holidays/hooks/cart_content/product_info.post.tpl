@@ -50,6 +50,20 @@
         <div style="margin-top:6px;border-top:1px dashed #ddd;padding-top:6px;"><strong></strong> {$product.extra.holder_name|escape:html}</div>
     {/if}
     
+    {* Line-item price change display: cross out old price, show new *}
+    {if !empty($product.extra.price_before_correction) && $product.extra.price_before_correction != $product.extra.total_price}
+        <div class="nvt-line-item-price-change">
+            <span class="nvt-line-item-price-change__old">{$product.extra.price_before_correction|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+            <span class="nvt-line-item-price-change__arrow">&rarr;</span>
+            <span class="nvt-line-item-price-change__new">{$product.extra.total_price|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+            {if $product.extra.total_price > $product.extra.price_before_correction}
+                <span class="nvt-line-item-price-change__badge nvt-line-item-price-change__badge--warning">{__("novoton_holidays.price_updated_badge")|default:"Price Updated"}</span>
+            {else}
+                <span class="nvt-line-item-price-change__badge nvt-line-item-price-change__badge--success">{__("novoton_holidays.price_dropped_badge")|default:"Price Dropped!"}</span>
+            {/if}
+        </div>
+    {/if}
+
     {if $product.extra.novoton_booking_id}<div style="margin-top:10px;"><a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}" style="color:#003580;font-size:12px;"> Edit Guest Details</a></div>{/if}
 </div>
 {/if}

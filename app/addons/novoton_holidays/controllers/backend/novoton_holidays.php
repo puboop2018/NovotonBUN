@@ -105,6 +105,10 @@ if (!$_routed && in_array($mode, $tools_modes)) {
 if (!$_routed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save excluded resorts
     if ($mode == 'save_excluded_resorts') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+
         $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];
         
         // Clean and validate
@@ -152,6 +156,35 @@ if ($mode == 'fix_tab') {
     }
     
     return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=novoton_holidays'];
+}
+
+/**
+ * Mode: recompute_calendar_prices
+ * Bulk-fill calendar_prices_raw for all hotels with priceinfo_data
+ */
+if ($mode == 'recompute_calendar_prices') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+
+    $hotel_ids = db_get_fields(
+        "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
+         INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+         WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
+    );
+
+    $count = 0;
+    foreach ($hotel_ids as $hid) {
+        try {
+            \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
+            $count++;
+        } catch (\Throwable $e) {
+            // Skip hotels that fail
+        }
+    }
+
+    fn_set_notification('N', __('notice'), "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels.");
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
 }
 
 /**

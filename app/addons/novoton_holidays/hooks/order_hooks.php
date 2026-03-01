@@ -4,7 +4,8 @@ declare(strict_types=1);
  * Novoton Holidays - Order Hook Functions
  *
  * Responsible for:
- *   - place_order: Delegates to BookingSubmissionService
+ *   - pre_place_order: Real-time API price verification + correction before order
+ *   - place_order_post: Delegates to BookingSubmissionService
  *   - get_orders_post: Attach booking data to order listings
  *   - get_order_info: Enrich order products with terms, locations, formatted data
  *
@@ -19,6 +20,63 @@ use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+// ============================================================================
+// HOOK: pre_place_order
+// ============================================================================
+
+/**
+ * Hook: pre_place_order - Real-time price verification before order is placed.
+ *
+ * This is the MOST IMPORTANT safety net: just before the user's order is
+ * created, we call the room_price API to verify that the price the customer
+ * is paying is still valid.
+ *
+ * CS-Cart signature: fn_set_hook('pre_place_order', $cart, $allow, $product_groups)
+ *
+ * Scenarios:
+ *   - Form price < API price → CORRECT cart price to API price, send admin notification + email
+ *   - Form price > API price by > threshold% → ALLOW order, send admin notification + email
+ *   - Prices match → ALLOW order silently
+ *
+ * We never block the order. If the price has increased, we silently update
+ * the cart to the correct API price (same as the add_to_cart price floor).
+ * The customer's order proceeds without interruption; admin is notified.
+ */
+function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
+{
+    $verifier = Container::getInstance()->preOrderPriceVerifier();
+    $result = $verifier->verify($cart);
+
+    // Apply price corrections: bump cart prices to the current API price
+    if (!empty($result['corrections'])) {
+        foreach ($result['corrections'] as $cartId => $correction) {
+            if (!isset($cart['products'][$cartId])) {
+                continue;
+            }
+
+            $newPrice = (float) $correction['api_price'];
+
+            // Store the old price for "Old vs New" display before overwriting
+            $cart['products'][$cartId]['extra']['price_before_correction'] = $cart['products'][$cartId]['price'];
+
+            $cart['products'][$cartId]['price']          = $newPrice;
+            $cart['products'][$cartId]['base_price']     = $newPrice;
+            $cart['products'][$cartId]['original_price'] = $newPrice;
+
+            // Also update the extra fields so BookingSubmissionService sees
+            // the corrected price when it reads the cart after order creation.
+            $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
+        }
+    }
+
+    // Send email notifications for any price discrepancies (lower OR higher)
+    if (!empty($result['notifications'])) {
+        foreach ($result['notifications'] as $notification) {
+            fn_novoton_holidays_send_price_discrepancy_email($notification);
+        }
+    }
+}
 
 // ============================================================================
 // HOOK: place_order_post

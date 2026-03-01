@@ -270,9 +270,12 @@
             
             {else}
             {* All rooms have options - show selection grid *}
-            <div class="multi-room-selection" id="multi-room-selection" 
-                 data-num-rooms="{$novoton_params.num_rooms}" 
+            <div class="multi-room-selection" id="multi-room-selection"
+                 data-num-rooms="{$novoton_params.num_rooms}"
                  data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
+                 data-currency="{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"html"}"
+                 data-coefficient="{$novoton_display_coefficient|default:1}"
+                 data-round-prices="{if $novoton_round_prices}true{else}false{/if}"
                  style="background: #fff; border: 1px solid #e0e0e0; border-radius: 0 0 8px 8px; overflow: hidden;">
                 
                 <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #e0e0e0;">
@@ -316,11 +319,27 @@
                                         {$room_display = $result.room_name|default:$result.room_id}
                                     {/if}
                                     
-                                    {$board_display = $result.board_id}
-                                    
+                                    {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
+                                        {$board_display = "{__('novoton_holidays.all_inclusive')|default:'All Inclusive'}"}
+                                    {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
+                                        {$board_display = "{__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}"}
+                                    {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
+                                        {$board_display = "{__('novoton_holidays.full_board')|default:'Full Board'}"}
+                                    {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
+                                        {$board_display = "{__('novoton_holidays.half_board')|default:'Half Board'}"}
+                                    {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
+                                        {$board_display = "{__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}"}
+                                    {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
+                                        {$board_display = "{__('novoton_holidays.room_only')|default:'Room Only'}"}
+                                    {elseif $result.board_id == 'SC'}
+                                        {$board_display = "{__('novoton_holidays.self_catering')|default:'Self Catering'}"}
+                                    {else}
+                                        {$board_display = $result.board_name|default:$result.board_id}
+                                    {/if}
+
                                     <label class="room-option" style="display: flex; align-items: flex-start; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: #fff; gap: 12px;">
-                                        <input type="radio" 
-                                               name="room_{$room_num}_selection" 
+                                        <input type="radio"
+                                               name="room_{$room_num}_selection"
                                                value="{$result.room_id}|{$result.board_id}|{$result.total_price}"
                                                data-room-num="{$room_num}"
                                                data-room-id="{$result.room_id}"
@@ -371,6 +390,26 @@
                                                     <div style="font-size: 12px; color: #999; text-decoration: line-through;">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                                 {/if}
                                                 <div style="font-size: 18px; font-weight: 700; color: #003580;">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
+                                                {if $result.terms_of_payment || $result.terms_of_cancellation || $result.remark || $result.more_info || $result.important}
+                                                    <a href="#" onclick="openInfoModal('mr-{$room_num}-{$result@index}'); return false;" style="display: inline-block; font-size: 11px; color: #0071c2; text-decoration: none; border-bottom: 1px dashed #0071c2; margin-top: 4px;">{__("novoton_holidays.cancellation_and_payment_terms")}</a>
+                                                    <div id="modal-content-mr-{$room_num}-{$result@index}" style="display: none;">
+                                                        {if $result.terms_of_payment}
+                                                            {$mr_payment_terms = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
+                                                            {if $mr_payment_terms}
+                                                                <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$mr_payment_terms|escape:'html'|nl2br nofilter}</div>
+                                                            {/if}
+                                                        {/if}
+                                                        {if $result.terms_of_cancellation}
+                                                            {$mr_cancel_terms = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
+                                                            {if $mr_cancel_terms}
+                                                                <div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$mr_cancel_terms|escape:'html'|nl2br nofilter}</div>
+                                                            {/if}
+                                                        {/if}
+                                                        {if $result.remark}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
+                                                        {if $result.more_info}<div style="margin-bottom: 12px;"><strong style="color: #333;">{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                                        {if $result.important}<div style="color: #c00; background: #fff5f5; padding: 10px; border-radius: 4px;"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                                    </div>
+                                                {/if}
                                             </div>
                                         </div>
                                     </label>
@@ -418,138 +457,7 @@
                 </form>
             </div>
             
-            {* Multi-room JavaScript *}
-            <script>
-            (function() {
-                'use strict';
-
-                var novotonCurrency = '{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
-                var novotonCoeff = {$novoton_display_coefficient|default:1};
-                var numRooms = {$novoton_params.num_rooms|default:1};
-
-                function novotonFormatPrice(amount) {
-                    var display = amount * novotonCoeff;
-                    var rounded = Math.round(display);
-                    var hasDec = Math.abs(display - rounded) >= 0.005;
-                    if (hasDec) {
-                        var intPart = Math.floor(display);
-                        var decPart = Math.round((display - intPart) * 100);
-                        return intPart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '<sup class="price-decimal">' + (decPart < 10 ? '0' : '') + decPart + '</sup> ' + novotonCurrency;
-                    }
-                    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + novotonCurrency;
-                }
-                var selectedRooms = {ldelim}{rdelim};
-                var roomOccupancy = JSON.parse('{$novoton_params.rooms_data_json|default:"[]"|escape:"javascript"}');
-                
-                function updateRoomSelection(radio) {
-                    var roomNum = parseInt(radio.getAttribute('data-room-num'));
-                    var price = parseFloat(radio.getAttribute('data-price')) || 0;
-                    var roomId = radio.getAttribute('data-room-id');
-                    var boardId = radio.getAttribute('data-board-id');
-                    var roomDisplay = radio.getAttribute('data-room-display');
-                    var boardName = radio.getAttribute('data-board-name');
-                    var packageName = radio.getAttribute('data-package-name') || '';
-                    
-                    var occupancy = roomOccupancy[roomNum - 1] || {ldelim}adults: 2, children: 0, childrenAges: []{rdelim};
-                    
-                    selectedRooms[roomNum] = {ldelim}
-                        room_id: roomId,
-                        board_id: boardId,
-                        price: price,
-                        room_display: roomDisplay,
-                        board_name: boardName,
-                        package_name: packageName,
-                        adults: occupancy.adults || 2,
-                        children: occupancy.children || 0,
-                        childrenAges: occupancy.childrenAges || []
-                    {rdelim};
-                    
-                    var priceEl = document.getElementById('room-' + roomNum + '-price');
-                    if (priceEl) {
-                        priceEl.innerHTML = novotonFormatPrice(price);
-                        priceEl.style.color = '#ffc107';
-                    }
-                    
-                    // Highlight selected
-                    var container = radio.closest('[data-room]');
-                    if (container) {
-                        container.querySelectorAll('.room-option').forEach(function(opt) {
-                            opt.style.borderColor = '#e0e0e0';
-                            opt.style.background = '#fff';
-                        });
-                        radio.closest('.room-option').style.borderColor = '#003580';
-                        radio.closest('.room-option').style.background = '#e8f4fd';
-                    }
-                    
-                    updateTotalPrice();
-                }
-                
-                function updateTotalPrice() {
-                    var totalPrice = 0;
-                    var selectedCount = 0;
-                    
-                    for (var i = 1; i <= numRooms; i++) {
-                        if (selectedRooms[i] && selectedRooms[i].price) {
-                            totalPrice += selectedRooms[i].price;
-                            selectedCount++;
-                        }
-                    }
-                    
-                    var totalEl = document.getElementById('total-combined-price');
-                    var bookBtn = document.getElementById('book-multi-room-btn');
-                    
-                    if (totalEl) {
-                        totalEl.innerHTML = totalPrice > 0 ? novotonFormatPrice(totalPrice) : '-- ' + novotonCurrency;
-                    }
-                    
-                    if (bookBtn) {
-                        if (selectedCount === numRooms) {
-                            bookBtn.disabled = false;
-                            bookBtn.style.opacity = '1';
-                        } else {
-                            bookBtn.disabled = true;
-                            bookBtn.style.opacity = '0.5';
-                        }
-                    }
-                }
-                
-                document.addEventListener('change', function(e) {
-                    var target = e.target;
-                    if (target.type === 'radio' && target.name && /^room_\d+_selection$/.test(target.name)) {
-                        updateRoomSelection(target);
-                    }
-                });
-                
-                document.addEventListener('click', function(e) {
-                    if (e.target.id === 'book-multi-room-btn' && !e.target.disabled) {
-                        var roomsData = [];
-                        var total = 0;
-                        
-                        for (var i = 1; i <= numRooms; i++) {
-                            if (selectedRooms[i]) {
-                                roomsData.push({ldelim}
-                                    room_num: i,
-                                    room_id: selectedRooms[i].room_id,
-                                    board_id: selectedRooms[i].board_id,
-                                    price: selectedRooms[i].price,
-                                    room_display: selectedRooms[i].room_display,
-                                    board_name: selectedRooms[i].board_name,
-                                    package_name: selectedRooms[i].package_name,
-                                    adults: selectedRooms[i].adults,
-                                    children: selectedRooms[i].children,
-                                    childrenAges: selectedRooms[i].childrenAges
-                                {rdelim});
-                                total += selectedRooms[i].price;
-                            }
-                        }
-                        
-                        document.getElementById('hidden_rooms_data').value = JSON.stringify(roomsData);
-                        document.getElementById('hidden_total_price').value = total;
-                        document.getElementById('multi-room-booking-form').submit();
-                    }
-                });
-            })();
-            </script>
+            {* Multi-room JS is loaded externally via multiroom-booking.js *}
             
             {/if}{* End of all_rooms_have_options else block *}
         
@@ -1136,7 +1044,9 @@ window.NovotonTranslations = {
     pleaseEnterDates: "{__('novoton_holidays.please_enter_dates')|default:'Please select check-in and check-out dates'}",
     selectDatesMessage: "{__('novoton_holidays.select_dates_message')|default:"Select dates to see this property's availability and prices"}",
     selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}",
-    selectMissingAges: "{__('novoton_holidays.select_missing_ages')|default:'Select age ([count] missing)'}"
+    selectMissingAges: "{__('novoton_holidays.select_missing_ages')|default:'Select age ([count] missing)'}",
+    selectAgeForOneChild: "{__('novoton_holidays.select_age_for_one_child')|default:'Select age for 1 child (Room [rooms]).'}",
+    selectAgeForChildren: "{__('novoton_holidays.select_age_for_children')|default:'Select age for [count] children (Room [rooms]).'}"
 };
 </script>
 <script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>

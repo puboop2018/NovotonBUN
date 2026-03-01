@@ -84,10 +84,6 @@ msgctxt "SettingsTooltips::novoton_holidays::api_currency"
 msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 msgstr "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 
-msgctxt "SettingsSections::novoton_holidays::exchange_rates_header"
-msgid "Exchange Rates"
-msgstr "Exchange Rates"
-
 msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
 msgid "Currency risk commission %"
 msgstr "Currency risk commission %"
@@ -95,10 +91,6 @@ msgstr "Currency risk commission %"
 msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
 msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
 msgstr "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
-
-msgctxt "SettingsOptions::novoton_holidays::last_exchange_rate_update"
-msgid "Last exchange rate update"
-msgstr "Last exchange rate update"
 
 msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
 msgid "API Resilience"
@@ -363,10 +355,6 @@ msgstr "After Description"
 msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
 msgid "Before Tabs"
 msgstr "Before Tabs"
-
-msgctxt "SettingsOptions::novoton_holidays::last_sync_date"
-msgid "Last Synchronization"
-msgstr "Last Synchronization"
 
 msgctxt "Languages::product_tabs.novoton_hotel_prices"
 msgid "Hotel Prices"
@@ -1904,6 +1892,14 @@ msgctxt "Languages::novoton_holidays.select_missing_ages"
 msgid "Select age ([count] missing)"
 msgstr "Select age ([count] missing)"
 
+msgctxt "Languages::novoton_holidays.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Select age for 1 child (Room [rooms])."
+
+msgctxt "Languages::novoton_holidays.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Select age for [count] children (Room [rooms])."
+
 msgctxt "Languages::novoton_holidays.flexible_dates"
 msgid "Flexible dates"
 msgstr "Flexible dates"
@@ -2960,3 +2956,79 @@ msgstr "Tue"
 msgctxt "Languages::novoton_holidays.wed"
 msgid "Wed"
 msgstr "Wed"
+
+msgctxt "Languages::novoton_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
+msgctxt "SettingsOptions::novoton_holidays::price_check_header"
+msgid "Price Discrepancy Check"
+msgstr "Price Discrepancy Check"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_preorder_price_check"
+msgid "Enable pre-order price verification"
+msgstr "Enable pre-order price verification"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_preorder_price_check"
+msgid "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+msgstr "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+
+msgctxt "SettingsOptions::novoton_holidays::price_higher_threshold"
+msgid "Price higher alert threshold (%)"
+msgstr "Price higher alert threshold (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_higher_threshold"
+msgid "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+msgstr "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+
+msgctxt "SettingsOptions::novoton_holidays::preorder_cache_ttl"
+msgid "Price check cache TTL (seconds)"
+msgstr "Price check cache TTL (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::preorder_cache_ttl"
+msgid "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+msgstr "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+
+msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
+msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+msgstr "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+
+msgctxt "Languages::novoton_holidays.price_updated_from_to"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_dropped_to"
+msgid "Good news! The price has dropped to [new_price]."
+msgstr "Good news! The price has dropped to [new_price]."
+
+msgctxt "Languages::novoton_holidays.price_updated_at_checkout"
+msgid "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+msgstr "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+
+msgctxt "Languages::novoton_holidays.price_updated_badge"
+msgid "Price Updated"
+msgstr "Price Updated"
+
+msgctxt "Languages::novoton_holidays.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_updated_explanation"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped_explanation"
+msgid "Good news! The price has decreased to [new_price]."
+msgstr "Good news! The price has decreased to [new_price]."
+
+msgctxt "SettingsOptions::novoton_holidays::price_change_tolerance_percent"
+msgid "Price change tolerance (%)"
+msgstr "Price change tolerance (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
+msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+msgstr "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."

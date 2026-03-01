@@ -107,51 +107,30 @@
                         <default_value>EUR</default_value>
                         <variants_function>fn_settings_variants_addons_novoton_holidays_api_currency</variants_function>
                     </item>
-
-                    <!-- Exchange Rates Header -->
-                    <item id="exchange_rates_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
                     <item id="currency_risk_commission">
                         <type>input</type>
                         <default_value>1.8</default_value>
                         <variants/>
                     </item>
-                    <item id="last_exchange_rate_update">
-                        <type>info</type>
-                        <default_value></default_value>
-                        <variants/>
-                    </item>
 
-                    <!-- API Resilience Header -->
-                    <item id="api_resilience_header">
+                    <!-- Price Discrepancy Check Header -->
+                    <item id="price_check_header">
                         <type>header</type>
                         <variants/>
                     </item>
-                    <item id="api_max_retries">
-                        <type>input</type>
-                        <default_value>3</default_value>
+                    <item id="enable_preorder_price_check">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
                         <variants/>
                     </item>
-                    <item id="api_retry_delay_ms">
+                    <item id="price_higher_threshold">
                         <type>input</type>
-                        <default_value>1000</default_value>
+                        <default_value>55</default_value>
                         <variants/>
                     </item>
-                    <item id="api_retry_multiplier">
+                    <item id="preorder_cache_ttl">
                         <type>input</type>
-                        <default_value>2</default_value>
-                        <variants/>
-                    </item>
-                    <item id="circuit_breaker_threshold">
-                        <type>input</type>
-                        <default_value>5</default_value>
-                        <variants/>
-                    </item>
-                    <item id="circuit_breaker_timeout">
-                        <type>input</type>
-                        <default_value>60</default_value>
+                        <default_value>180</default_value>
                         <variants/>
                     </item>
 
@@ -244,11 +223,6 @@
                         <type>header</type>
                         <variants/>
                     </item>
-                    <item id="last_sync_date">
-                        <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
-                    </item>
                     <item id="test_booking">
                         <type>checkbox</type>
                         <default_value>Y</default_value>
@@ -272,8 +246,49 @@
                 </items>
             </section>
             
+            <section id="tools_cron">
+                <items>
+                    <item id="cron_links_info">
+                        <type>template</type>
+                        <default_value>cron_info.tpl</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+
             <section id="advanced">
                 <items>
+                    <!-- API Resilience Header -->
+                    <item id="api_resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_delay_ms">
+                        <type>input</type>
+                        <default_value>1000</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_multiplier">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Cache TTL Header -->
                     <item id="cache_ttl_header">
                         <type>header</type>
@@ -360,16 +375,6 @@
                     </item>
                 </items>
             </section>
-
-            <section id="tools_cron">
-                <items>
-                    <item id="cron_links_info">
-                        <type>template</type>
-                        <default_value>cron_info.tpl</default_value>
-                        <variants/>
-                    </item>
-                </items>
-            </section>
         </sections>
     </settings>
 
@@ -443,6 +448,7 @@
                 `has_early_booking` enum('Y','N') DEFAULT 'N' COMMENT 'Has EB discounts',
                 `min_price` decimal(10,2) DEFAULT NULL COMMENT 'Lowest adult price for quick filtering',
                 `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+                `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron',
                 `synced_at` datetime DEFAULT NULL COMMENT 'Last priceinfo sync date',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -451,7 +457,8 @@
                 KEY `idx_hotel_id` (`hotel_id`),
                 KEY `idx_package_name` (`package_name`(100)),
                 KEY `idx_min_price` (`min_price`),
-                KEY `idx_synced_at` (`synced_at`)
+                KEY `idx_synced_at` (`synced_at`),
+                KEY `idx_needs_price_compute` (`needs_price_compute`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotel packages from hotelinfo API with priceinfo'
         </item>
 
@@ -780,7 +787,148 @@
 {{ snippet("footer") }}]]></default_template>
                 <addon><![CDATA[novoton_holidays]]></addon>
             </item>
-            
+
+            <!-- Price Discrepancy Alert Email (form price < API room_price) -->
+            <item>
+                <code><![CDATA[novoton_holidays_price_alert]]></code>
+                <area><![CDATA[A]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[[Novoton] ⚠ Price Alert - {{ hotel_name }} - Form price below API price]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+<h2 style="color: #c00;">⚠ Price Discrepancy Alert</h2>
+<p>The booking form price was <strong>lower</strong> than the real-time room_price API price. The API price was used instead.</p>
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; width: 160px;"><strong>Hotel:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ hotel_name }} (ID: {{ hotel_id }})</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Room:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ room_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Board:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ board_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-in:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_in }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-out:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Guests:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ adults }} adults{% if children > 0 %}, {{ children }} children (ages: {{ children_ages }}){% endif %}</td>
+    </tr>
+</table>
+
+<h3 style="color: #c00;">Price Details</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: #f8d7da;">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 160px;"><strong>Form Price:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ form_price }}</td>
+    </tr>
+    <tr style="background: #d4edda;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (with commission):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (raw):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price_raw }}</td>
+    </tr>
+    <tr style="background: #fff3cd;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Difference:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ difference }}</td>
+    </tr>
+</table>
+
+<p><strong>Action taken:</strong> The API price (EUR {{ api_price }}) was used for the booking.</p>
+<p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+
+            <!-- Pre-Order Price Discrepancy Email (pre_place_order hook) -->
+            <item>
+                <code><![CDATA[novoton_holidays_price_discrepancy]]></code>
+                <area><![CDATA[A]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[[Novoton] {{ subject_prefix }} - {{ hotel_name }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header") }}
+
+{% if is_price_lower %}
+<h2 style="color: #e67e00;">&#x26A0; PRICE CORRECTED - Cart Updated to API Price</h2>
+<p>The form price was <strong>lower</strong> than the real-time API price at checkout. The cart was <strong>automatically corrected</strong> to the API price and the order proceeded.</p>
+{% else %}
+<h2 style="color: #e67e00;">&#x26A0; PRICE ALERT - Form Price Above API</h2>
+<p>An order was <strong>allowed</strong> but the form price was significantly higher than the API price (above the {{ percent }}% threshold). Please investigate.</p>
+{% endif %}
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Hotel:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ hotel_name }} (ID: {{ hotel_id }})</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Room:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ room_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Board:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ board_id }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-in:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_in }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Check-out:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Guests:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ adults }} adults{% if children > 0 %}, {{ children }} children (ages: {{ children_ages }}){% endif %}</td>
+    </tr>
+</table>
+
+<h3 style="color: #e67e00;">Price Comparison</h3>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <tr style="background: {% if is_price_lower %}#fff3cd{% else %}#fff3cd{% endif %};">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Original Form Price:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ form_price }}</td>
+    </tr>
+    <tr style="background: #d4edda;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (with commission):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (raw / net):</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price_raw }}</td>
+    </tr>
+    <tr style="background: #fff3cd;">
+        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Difference:</strong></td>
+        <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ difference }} ({{ percent }}%)</td>
+    </tr>
+</table>
+
+{% if is_price_lower %}
+<p><strong>Action taken:</strong> Cart price was <span style="color: #e67e00;">automatically corrected</span> to the API price (EUR {{ api_price }}). The order proceeded at the correct price. No customer action was required.</p>
+{% else %}
+<p><strong>Action taken:</strong> The order was <span style="color: #28a745;">ALLOWED</span> at the higher form price. Please review whether manual price correction is needed.</p>
+{% endif %}
+
+<p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>
+<p style="color: #666; font-size: 12px;">This alert was generated by the pre-order price verification system (pre_place_order hook).</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[novoton_holidays]]></addon>
+            </item>
+
             <!-- Alternatives Available Notification -->
             <item>
                 <code><![CDATA[novoton_holidays_alternatives_available]]></code>

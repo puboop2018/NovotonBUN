@@ -149,14 +149,14 @@ export default function BookingEngine({ config }) {
         return parts.join(' \u00b7 ');
     })();
 
-    // Date display text – e.g. "Mon. 14 Feb. - Mon. 21 Feb. — 7 nights"
+    // Date display text – e.g. "Mon. 14 Feb. → Mon. 21 Feb. (7 nights)"
     const dateDisplayText = (() => {
         if (checkIn && checkOut) {
             const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
-            return `${formatDateShort(checkIn)} - ${formatDateShort(checkOut)} — ${nights} ${nightLabel}`;
+            return `${formatDateShort(checkIn)} \u2192 ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
         }
         if (checkIn) {
-            return `${formatDateShort(checkIn)} - ...`;
+            return `${formatDateShort(checkIn)} \u2192 ...`;
         }
         return '';
     })();
@@ -174,7 +174,17 @@ export default function BookingEngine({ config }) {
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
-        setAgeErrors([]);
+        // Recalculate age errors: keep red border on children still missing an age
+        setAgeErrors(prev => {
+            if (prev.length === 0) return prev;
+            const remaining = prev.filter(err => {
+                const room = newRooms[err.room];
+                if (!room || err.child >= room.children) return false;
+                const age = (room.childrenAges || [])[err.child];
+                return age === null || age === undefined || age === '';
+            });
+            return remaining.length === prev.length ? prev : remaining;
+        });
         if (hasSearched) setParamsChanged(true);
     }, [hasSearched]);
 
@@ -321,7 +331,6 @@ export default function BookingEngine({ config }) {
 
         if (errors.length > 0) {
             setAgeErrors(errors);
-            setValidationError(t('selectAge', 'Please select the age of each child'));
             setShowGuests(true);
             return;
         }
@@ -433,7 +442,7 @@ export default function BookingEngine({ config }) {
                                 <span className="nvt-value">{dateDisplayText}</span>
                             ) : (
                                 <span className="nvt-value nvt-value--placeholder">
-                                    {`${t('checkIn', 'Check-in')} — ${t('checkOut', 'Check-out')}`}
+                                    {`${t('checkIn', 'Check-in')} \u2192 ${t('checkOut', 'Check-out')}`}
                                 </span>
                             )}
                         </span>
@@ -501,7 +510,6 @@ export default function BookingEngine({ config }) {
             {/* Validation message */}
             {validationError && (
                 <div className="nvt-validation-message">
-                    <span className="nvt-warning-icon">!</span>
                     {validationError}
                 </div>
             )}
