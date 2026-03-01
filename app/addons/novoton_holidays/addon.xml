@@ -861,9 +861,9 @@
                 <default_subject><![CDATA[[Novoton] {{ subject_prefix }} - {{ hotel_name }}]]></default_subject>
                 <default_template><![CDATA[{{ snippet("header") }}
 
-{% if is_blocked %}
-<h2 style="color: #c00;">&#x26D4; ORDER BLOCKED - Price Below API</h2>
-<p>An order was <strong>blocked</strong> because the form price was lower than the real-time API price at checkout.</p>
+{% if is_price_lower %}
+<h2 style="color: #e67e00;">&#x26A0; PRICE CORRECTED - Cart Updated to API Price</h2>
+<p>The form price was <strong>lower</strong> than the real-time API price at checkout. The cart was <strong>automatically corrected</strong> to the API price and the order proceeded.</p>
 {% else %}
 <h2 style="color: #e67e00;">&#x26A0; PRICE ALERT - Form Price Above API</h2>
 <p>An order was <strong>allowed</strong> but the form price was significantly higher than the API price (above the {{ percent }}% threshold). Please investigate.</p>
@@ -896,10 +896,10 @@
     </tr>
 </table>
 
-<h3 style="color: {% if is_blocked %}#c00{% else %}#e67e00{% endif %};">Price Comparison</h3>
+<h3 style="color: #e67e00;">Price Comparison</h3>
 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-    <tr style="background: {% if is_blocked %}#f8d7da{% else %}#fff3cd{% endif %};">
-        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Form Price (customer pays):</strong></td>
+    <tr style="background: {% if is_price_lower %}#fff3cd{% else %}#fff3cd{% endif %};">
+        <td style="padding: 8px; border: 1px solid #ddd; width: 180px;"><strong>Original Form Price:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ form_price }}</td>
     </tr>
     <tr style="background: #d4edda;">
@@ -910,16 +910,16 @@
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>API Price (raw / net):</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ api_price_raw }}</td>
     </tr>
-    <tr style="background: {% if is_blocked %}#f8d7da{% else %}#fff3cd{% endif %};">
+    <tr style="background: #fff3cd;">
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>Difference:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">EUR {{ difference }} ({{ percent }}%)</td>
     </tr>
 </table>
 
-{% if is_blocked %}
-<p><strong>Action taken:</strong> The order was <span style="color: #c00;">BLOCKED</span>. The customer was asked to refresh the price.</p>
+{% if is_price_lower %}
+<p><strong>Action taken:</strong> Cart price was <span style="color: #e67e00;">automatically corrected</span> to the API price (EUR {{ api_price }}). The order proceeded at the correct price. No customer action was required.</p>
 {% else %}
-<p><strong>Action taken:</strong> The order was <span style="color: #28a745;">ALLOWED</span> at the higher form price. An admin notification was sent. Please review whether manual price correction is needed.</p>
+<p><strong>Action taken:</strong> The order was <span style="color: #28a745;">ALLOWED</span> at the higher form price. Please review whether manual price correction is needed.</p>
 {% endif %}
 
 <p style="color: #666; font-size: 12px;">Timestamp: {{ date }}</p>

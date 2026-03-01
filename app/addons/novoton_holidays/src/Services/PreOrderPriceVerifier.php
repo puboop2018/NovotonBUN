@@ -14,7 +14,7 @@ declare(strict_types=1);
  * trust it and skip the API round-trip, making checkout feel instant.
  *
  * Scenarios:
- *   1. Form price < API price → BLOCK order, notify admin
+ *   1. Form price < API price → CORRECT cart price to API price, notify admin
  *   2. Form price > API price by > threshold% → ALLOW order, notify admin
  *   3. Prices match (within threshold) → ALLOW order silently
  *
@@ -35,13 +35,16 @@ class PreOrderPriceVerifier
      * Verify all Novoton booking products in the cart against live API prices.
      *
      * @param array $cart CS-Cart cart array
-     * @return array{allow: bool, blocked_products: array, notifications: array}
+     * @return array{allow: bool, corrections: array, notifications: array}
+     *   - allow: always true (we correct, never block)
+     *   - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
+     *   - notifications: list of discrepancy data for admin emails
      */
     public function verify(array $cart): array
     {
         $result = [
             'allow' => true,
-            'blocked_products' => [],
+            'corrections' => [],
             'notifications' => [],
         ];
 
@@ -142,9 +145,8 @@ class PreOrderPriceVerifier
                 $cartId
             );
 
-            if (!$checkResult['allow']) {
-                $result['allow'] = false;
-                $result['blocked_products'][$cartId] = $checkResult;
+            if (!empty($checkResult['correction'])) {
+                $result['corrections'][$cartId] = $checkResult['correction'];
             }
 
             if (!empty($checkResult['notification'])) {
@@ -199,7 +201,7 @@ class PreOrderPriceVerifier
     /**
      * Compare form price to API price and determine action.
      *
-     * @return array{allow: bool, notification: array|null, type: string}
+     * @return array{allow: bool, correction: array|null, notification: array|null, type: string}
      */
     private function comparePrice(
         float  $formPrice,
@@ -235,13 +237,15 @@ class PreOrderPriceVerifier
             'cart_id'       => $cartId,
         ];
 
-        // Case 1: Form price is LOWER than API price → BLOCK
+        // Case 1: Form price is LOWER than API price → CORRECT (never block)
+        // Same behaviour as the add_to_cart price floor: silently upgrade to
+        // the API price so the customer can complete their order.
         if ($formPrice < $apiPrice) {
             $difference = round($apiPrice - $formPrice, 2);
             $percentLower = $apiPrice > 0 ? round(($difference / $apiPrice) * 100, 1) : 0;
 
             fn_log_event('general', 'runtime', [
-                'message'       => 'PreOrderPriceVerifier: BLOCKED — form price below API price',
+                'message'       => 'PreOrderPriceVerifier: CORRECTED — form price below API price, upgrading cart',
                 'hotel_id'      => $hotelId,
                 'room_id'       => $roomId,
                 'form_price'    => $formPrice,
@@ -254,16 +258,21 @@ class PreOrderPriceVerifier
             $notificationData['percent'] = $percentLower;
             $notificationData['type'] = 'price_lower';
 
-            // Admin notification
+            // Admin notification (visible in CS-Cart backend)
             fn_set_notification('W', 'Price Discrepancy',
-                'Order blocked: form price (' . number_format($formPrice, 2) . ' EUR) is lower than API price ('
+                'Price corrected at checkout: form price (' . number_format($formPrice, 2) . ' EUR) was lower than API price ('
                 . number_format($apiPrice, 2) . ' EUR) for hotel ' . $hotelName . ' [' . $hotelId . ']. '
-                . 'Difference: ' . number_format($difference, 2) . ' EUR (' . $percentLower . '% lower).'
+                . 'Difference: ' . number_format($difference, 2) . ' EUR (' . $percentLower . '% lower). '
+                . 'Cart was updated to the API price.'
             );
 
             return [
-                'allow'        => false,
+                'allow'        => true,
                 'type'         => 'price_lower',
+                'correction'   => [
+                    'api_price'     => $apiPrice,
+                    'api_price_raw' => $rawApiPrice,
+                ],
                 'notification' => $notificationData,
             ];
         }
@@ -299,6 +308,7 @@ class PreOrderPriceVerifier
                 return [
                     'allow'        => true,
                     'type'         => 'price_higher',
+                    'correction'   => null,
                     'notification' => $notificationData,
                 ];
             }
@@ -308,6 +318,7 @@ class PreOrderPriceVerifier
         return [
             'allow'        => true,
             'type'         => 'ok',
+            'correction'   => null,
             'notification' => null,
         ];
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
  * Novoton Holidays - Order Hook Functions
  *
  * Responsible for:
- *   - pre_place_order: Real-time API price verification before order is placed
+ *   - pre_place_order: Real-time API price verification + correction before order
  *   - place_order_post: Delegates to BookingSubmissionService
  *   - get_orders_post: Attach booking data to order listings
  *   - get_order_info: Enrich order products with terms, locations, formatted data
@@ -35,32 +35,43 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * CS-Cart signature: fn_set_hook('pre_place_order', $cart, $allow, $product_groups)
  *
  * Scenarios:
- *   - Form price < API price → BLOCK order ($allow = false), send admin notification + email
+ *   - Form price < API price → CORRECT cart price to API price, send admin notification + email
  *   - Form price > API price by > threshold% → ALLOW order, send admin notification + email
  *   - Prices match → ALLOW order silently
  *
- * The existing add_to_cart price floor check is kept as the first safety net.
- * This hook provides a second layer of defense at the moment of purchase.
+ * We never block the order. If the price has increased, we silently update
+ * the cart to the correct API price (same as the add_to_cart price floor).
+ * The customer's order proceeds without interruption; admin is notified.
  */
 function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
 {
     $verifier = Container::getInstance()->preOrderPriceVerifier();
     $result = $verifier->verify($cart);
 
-    // Send email notifications for any price discrepancies
+    // Apply price corrections: bump cart prices to the current API price
+    if (!empty($result['corrections'])) {
+        foreach ($result['corrections'] as $cartId => $correction) {
+            if (!isset($cart['products'][$cartId])) {
+                continue;
+            }
+
+            $newPrice = (float) $correction['api_price'];
+
+            $cart['products'][$cartId]['price']          = $newPrice;
+            $cart['products'][$cartId]['base_price']     = $newPrice;
+            $cart['products'][$cartId]['original_price'] = $newPrice;
+
+            // Also update the extra fields so BookingSubmissionService sees
+            // the corrected price when it reads the cart after order creation.
+            $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
+        }
+    }
+
+    // Send email notifications for any price discrepancies (lower OR higher)
     if (!empty($result['notifications'])) {
         foreach ($result['notifications'] as $notification) {
             fn_novoton_holidays_send_price_discrepancy_email($notification);
         }
-    }
-
-    // Block order if form price is lower than API price
-    if (!$result['allow']) {
-        $allow = false;
-
-        fn_set_notification('E', __('error'), __('novoton_holidays.price_changed_please_refresh', [
-            '[default]' => 'The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order.'
-        ]));
     }
 }
 

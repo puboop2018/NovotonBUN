@@ -257,15 +257,15 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
     }
 
     $type = $data['type'] ?? 'price_lower';
-    $isBlocked = ($type === 'price_lower');
+    $isPriceLower = ($type === 'price_lower');
 
-    $subject_prefix = $isBlocked
-        ? 'BLOCKED ORDER - Price Below API'
+    $subject_prefix = $isPriceLower
+        ? 'PRICE CORRECTED - Cart Updated to API Price'
         : 'PRICE ALERT - Form Price Above API';
 
     $email_data = [
         'type'           => $type,
-        'is_blocked'     => $isBlocked,
+        'is_price_lower' => $isPriceLower,
         'subject_prefix' => $subject_prefix,
         'hotel_id'       => $data['hotel_id'] ?? '',
         'hotel_name'     => $data['hotel_name'] ?? '',
