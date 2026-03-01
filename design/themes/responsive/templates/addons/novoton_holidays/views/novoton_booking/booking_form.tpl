@@ -34,7 +34,7 @@
 .guest-entry-header .holder-tag { background: #003580 !important; color: #fff !important; font-size: 11px !important; padding: 2px 8px !important; border-radius: 10px !important; font-weight: normal !important; }
 .guest-entry-subheader { font-size: 13px !important; color: #666 !important; margin-bottom: 12px !important; }
 /* Field row - Last Name and First Name on same line */
-.field-row { display: flex !important; gap: 15px !important; align-items: flex-end !important; flex-wrap: wrap !important; }
+.field-row { display: flex !important; gap: 15px !important; align-items: center !important; flex-wrap: wrap !important; }
 .field-group { flex: 1 1 200px !important; min-width: 150px !important; }
 .field-group label { display: block !important; font-size: 13px !important; color: #666 !important; margin-bottom: 4px !important; font-weight: 500 !important; }
 .field-group label .required { color: #dc3545 !important; margin-left: 2px !important; }
