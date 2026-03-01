@@ -3,13 +3,30 @@
 /**
  * Standalone test for PriceChangeDetector — the "No Surprises" price change system.
  *
- * Run:  php scripts/test_price_change_detector.php
+ * Works in TWO modes:
+ *
+ *   CLI:     php scripts/test_price_change_detector.php
+ *   Browser: https://yourdomain.com/scripts/test_price_change_detector.php?key=novoton_test_2024
+ *
+ * SECURITY: Change the key below before deploying. Delete this file when done.
  *
  * This script tests the core analyse() logic without needing CS-Cart or a database.
  * It stubs only the minimal dependencies (ConfigProvider, Tygh session).
  */
 
 declare(strict_types=1);
+
+// ── Security: browser access requires a secret key ──
+$isCli = (PHP_SAPI === 'cli');
+if (!$isCli) {
+    $secretKey = 'novoton_test_2024'; // CHANGE THIS before deploying!
+    if (($_GET['key'] ?? '') !== $secretKey) {
+        http_response_code(403);
+        echo 'Forbidden. Append ?key=YOUR_SECRET_KEY to the URL.';
+        exit(1);
+    }
+    header('Content-Type: text/plain; charset=utf-8');
+}
 
 // ── Minimal stubs so PriceChangeDetector can run outside CS-Cart ──
 
@@ -97,7 +114,7 @@ namespace {
     // Customer sees $100, API returns $110 → orange badge, Old vs New
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 1: Significant Price Increase ($100 → $110, +10%)');
+    section('SCENARIO 1: Significant Price Increase ($100 -> $110, +10%)');
     ConfigProvider::setTolerance(1.0);
     $d = new PriceChangeDetector();
     $result = $d->analyse(100.0, 110.0, 'EUR', 'add_to_cart', ['hotel_name' => 'Test Hotel']);
@@ -117,7 +134,7 @@ namespace {
     // Customer sees $500, API returns $450 → green badge, "Price Dropped!"
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 2: Significant Price Decrease ($500 → $450, -10%)');
+    section('SCENARIO 2: Significant Price Decrease ($500 -> $450, -10%)');
     $result = $d->analyse(500.0, 450.0, 'RON', 'checkout');
 
     assert_true('significant = true',               $result['significant']);
@@ -132,7 +149,7 @@ namespace {
     // Customer sees 450 Lei, API returns 452 Lei (+0.44%) → no alert
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 3: Below Tolerance — 450 → 452 Lei (+0.44%, < 1%)');
+    section('SCENARIO 3: Below Tolerance -- 450 -> 452 Lei (+0.44%, < 1%)');
     $result = $d->analyse(450.0, 452.0, 'RON');
 
     assert_false('significant = false',              $result['significant']);
@@ -143,7 +160,7 @@ namespace {
     // SCENARIO 4: Exact same price → no change
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 4: No Change — 300 → 300');
+    section('SCENARIO 4: No Change -- 300 -> 300');
     $result = $d->analyse(300.0, 300.0, 'EUR');
 
     assert_false('significant = false',             $result['significant']);
@@ -156,7 +173,7 @@ namespace {
     // 1000 → 1010 = exactly 1.0% → should BE significant
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 5: Exactly at Tolerance — 1000 → 1010 (1.0%)');
+    section('SCENARIO 5: Exactly at Tolerance -- 1000 -> 1010 (1.0%)');
     $result = $d->analyse(1000.0, 1010.0, 'EUR');
 
     assert_true('significant = true at boundary',   $result['significant']);
@@ -167,7 +184,7 @@ namespace {
     // 1000 → 1009 = 0.9% → NOT significant
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 6: Just Below Tolerance — 1000 → 1009 (0.9%)');
+    section('SCENARIO 6: Just Below Tolerance -- 1000 -> 1009 (0.9%)');
     $result = $d->analyse(1000.0, 1009.0, 'EUR');
 
     assert_false('significant = false below boundary', $result['significant']);
@@ -178,10 +195,10 @@ namespace {
     // ═══════════════════════════════════════════════════════════════
 
     section('SCENARIO 7: isSignificant() helper');
-    assert_true('100→110 is significant',    $d->isSignificant(100.0, 110.0));
-    assert_false('100→100.5 is NOT',         $d->isSignificant(100.0, 100.5));
-    assert_true('100→90 is significant',     $d->isSignificant(100.0, 90.0));
-    assert_false('0→100 (zero old price)',   $d->isSignificant(0.0, 100.0));
+    assert_true('100->110 is significant',    $d->isSignificant(100.0, 110.0));
+    assert_false('100->100.5 is NOT',         $d->isSignificant(100.0, 100.5));
+    assert_true('100->90 is significant',     $d->isSignificant(100.0, 90.0));
+    assert_false('0->100 (zero old price)',   $d->isSignificant(0.0, 100.0));
 
     // ═══════════════════════════════════════════════════════════════
     // SCENARIO 8: Custom tolerance — set to 5%
@@ -236,7 +253,7 @@ namespace {
     // Should show: ~~450 Lei~~ 480 Lei with orange badge
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 10: Real-world — Standard Room 450 → 480 Lei');
+    section('SCENARIO 10: Real-world -- Standard Room 450 -> 480 Lei');
     $result = $d->analyse(450.0, 480.0, 'RON', 'checkout', [
         'hotel_name' => 'Hotel Paradise',
         'hotel_id'   => 'HP001',
@@ -255,10 +272,10 @@ namespace {
     // If price bounces 100→100.30→100.60→100.90, all < 1%, all silent
     // ═══════════════════════════════════════════════════════════════
 
-    section('SCENARIO 11: Price Fatigue — repeated small changes stay silent');
-    assert_false('100→100.30 (0.3%)', $d->isSignificant(100.0, 100.30));
-    assert_false('100.30→100.60',     $d->isSignificant(100.30, 100.60));
-    assert_false('100.60→100.90',     $d->isSignificant(100.60, 100.90));
+    section('SCENARIO 11: Price Fatigue -- repeated small changes stay silent');
+    assert_false('100->100.30 (0.3%)', $d->isSignificant(100.0, 100.30));
+    assert_false('100.30->100.60',     $d->isSignificant(100.30, 100.60));
+    assert_false('100.60->100.90',     $d->isSignificant(100.60, 100.90));
 
     // ═══════════════════════════════════════════════════════════════
     // Print results
@@ -266,13 +283,22 @@ namespace {
 
     echo "\n========================================\n";
     echo " PriceChangeDetector Test Results\n";
+    echo " PHP " . PHP_VERSION . " | " . date('Y-m-d H:i:s') . "\n";
     echo "========================================\n";
     foreach ($tests as $line) {
         echo $line . "\n";
     }
     echo "\n========================================\n";
-    echo " Total: " . ($passed + $failed) . " | Passed: {$passed} | Failed: {$failed}\n";
-    echo "========================================\n\n";
+    if ($failed === 0) {
+        echo " ALL PASSED: {$passed}/{$passed}\n";
+    } else {
+        echo " FAILURES: {$failed} failed, {$passed} passed\n";
+    }
+    echo "========================================\n";
+
+    if (!$isCli) {
+        echo "\nReminder: DELETE this test file from your server when done.\n";
+    }
 
     exit($failed > 0 ? 1 : 0);
 }
