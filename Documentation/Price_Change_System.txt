@@ -1,0 +1,961 @@
+================================================================================
+                     PRICE CHANGE DETECTION SYSTEM
+              "No Surprises" Policy — Complete Documentation
+================================================================================
+
+Document Version: 1.0
+Last Updated: 2026-03-01
+Repository: NovotonAddonRepoA
+Addon: novoton_holidays (since v3.5.0 / v3.6.0)
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1.  OVERVIEW
+2.  DESIGN PHILOSOPHY — "NO SURPRISES" POLICY
+3.  CORE FILES
+4.  ARCHITECTURE DIAGRAM
+5.  PRICE CHANGE DETECTOR SERVICE
+6.  PRICE TOLERANCE SYSTEM
+7.  DETECTION TOUCHPOINTS
+    7a. Booking Form — AJAX Recalculation
+    7b. Add to Cart — Server-Side Verification
+    7c. Checkout — Pre-Order Price Verifier
+8.  PRICE FLOOR RULE
+9.  SILENT SYNC (Session Cache)
+10. USER-FACING NOTIFICATIONS
+    10a. Toast Notifications
+    10b. Checkout Price Alert Banners
+    10c. Booking Form Inline Notifications
+11. ADMIN-FACING NOTIFICATIONS
+12. SESSION ALERT LIFECYCLE
+13. CONFIGURATION OPTIONS
+14. CSS STYLING REFERENCE
+15. LANGUAGE KEYS
+16. TESTING
+17. DATA FLOW SUMMARY
+
+================================================================================
+1. OVERVIEW
+================================================================================
+
+The Price Change Detection System ensures customers are transparently informed
+when the price of a hotel booking changes between the time they first see a
+price and the time they complete their order.
+
+Hotel prices are dynamic — they change based on real-time availability, seasonal
+adjustments, and API updates. A customer may see one price on the booking form,
+but by the time they add to cart or reach checkout, the API may return a
+different price.
+
+This system detects those discrepancies, classifies them, and communicates
+them to both the customer and the admin in a clear, non-disruptive way.
+
+KEY GUARANTEE:
+  - The customer NEVER pays more than the current real-time API price without
+    being explicitly informed.
+  - The system NEVER blocks an order due to a price change — it corrects and
+    notifies instead.
+
+================================================================================
+2. DESIGN PHILOSOPHY — "NO SURPRISES" POLICY
+================================================================================
+
+The system follows a strict "No Surprises" UX policy:
+
+RULE 1: TRANSPARENCY
+  Every significant price change is communicated visually — the customer always
+  sees both the old and new price before completing their order.
+
+RULE 2: NEVER BLOCK
+  Price changes never prevent the customer from completing their booking.
+  If a correction is needed (e.g., form price is below API price), the system
+  corrects the cart silently and notifies the customer.
+
+RULE 3: TOLERANCE THRESHOLD
+  Tiny fluctuations (default: below 1% or less than 0.01 currency units) are
+  applied silently without notifying the customer. This prevents "price fatigue"
+  from insignificant rounding differences or minor API fluctuations.
+
+RULE 4: DIRECTION-AWARE UX
+  - Price INCREASE: Orange badge, "Old vs New" comparison (warning tone)
+  - Price DECREASE: Green badge, "Price Dropped!" message (positive tone)
+  - No change / below tolerance: No notification (silent update)
+
+RULE 5: PRICE FLOOR
+  The customer-facing price can NEVER be lower than the real-time API price.
+  If the form price is below the API price, it is silently upgraded to the
+  API price, and the customer is notified of the change.
+
+================================================================================
+3. CORE FILES
+================================================================================
+
+SERVICES (Backend PHP):
+-----------------------
+  src/Services/PriceChangeDetector.php
+    - Core detection engine
+    - analyse(): Compares old vs new price, returns structured change data
+    - isSignificant(): Quick boolean check
+    - storeAlert() / peekAlerts() / consumeAlerts(): Session-based alert storage
+
+  src/Services/PreOrderPriceVerifier.php
+    - Final price verification at checkout (pre_place_order hook)
+    - Silent Sync optimisation (session cache)
+    - Compares form price vs live API price
+    - Corrects cart if form price < API price
+
+  src/Services/ConfigProvider.php
+    - price_change_tolerance_percent (default: 1.0%)
+    - enable_preorder_price_check (default: Y)
+    - price_higher_threshold (default: 55%)
+    - preorder_cache_ttl (default: 180 seconds)
+
+  src/Services/Container.php
+    - priceChangeDetector(): Singleton factory
+    - preOrderPriceVerifier(): Singleton factory
+
+  src/Services/ErrorHandler.php
+    - ERROR_PRICE_CHANGED (E004) error code mapping
+
+  Constants.php
+    - ERROR_PRICE_CHANGED = 'E004'
+    - CACHE_TTL_ROOM_PRICE = 300 (5 minutes)
+
+CONTROLLERS:
+------------
+  controllers/frontend/novoton_booking/ajax_recalculate_price.php
+    - AJAX endpoint for real-time price recalculation on the booking form
+    - Returns price_change analysis in JSON response
+
+  controllers/frontend/novoton_booking/add_to_cart.php
+    - Server-side price verification when adding a booking to cart
+    - Applies Price Floor rule
+    - Stores price change alerts in session
+    - Caches verified price for Silent Sync
+
+HOOKS:
+------
+  hooks/cart_hooks.php
+    - fn_novoton_holidays_checkout_pre_dispatch(): Passes pending price
+      change alerts to the checkout template via Smarty variables
+
+TEMPLATES (Smarty):
+-------------------
+  hooks/checkout/products_list.post.tpl
+    - Renders price alert banners above the checkout order summary
+    - Orange banner (warning) for increases
+    - Green banner (success) for decreases
+
+JAVASCRIPT:
+-----------
+  js/addons/novoton_holidays/booking-form-validation.js
+    - showPriceChangeModal(): Renders room-change + price-change modal
+    - Inline price-change notification bar (.novoton-price-change-notif)
+
+  js/addons/novoton_holidays/dob-validation.js
+    - recalculatePrice(): Triggers AJAX price recalculation on DOB change
+    - showPriceChangeNotification(): Inline price update indicator
+
+CSS:
+----
+  design/themes/nova_theme/css/addons/novoton_holidays/styles.less
+    - .novoton-price-change-box, .novoton-price-change-label,
+      .novoton-price-change-values
+    - .novoton-price-change-notif
+    - .nvt-price-alert, .nvt-price-alert--warning, .nvt-price-alert--success
+
+LANGUAGE FILES:
+---------------
+  var/langs/en/addons/novoton_holidays.po
+  var/langs/ro/addons/novoton_holidays.po
+
+TESTING:
+--------
+  tests/Unit/PriceChangeDetectorTest.php   — PHPUnit unit tests (18 test cases)
+  scripts/test_price_change_detector.php   — Standalone CLI/browser test script
+
+================================================================================
+4. ARCHITECTURE DIAGRAM
+================================================================================
+
+  BOOKING FORM          ADD TO CART          CHECKOUT
+  (Browser JS)         (Server PHP)        (Server PHP)
+       |                    |                    |
+       v                    v                    v
+  [AJAX Recalc]     [API Price Check]    [PreOrderPriceVerifier]
+       |                    |                    |
+       v                    v                    v
+  [Compare old       [Compare form        [Compare cart
+   vs new price]      vs API price]        vs API price]
+       |                    |                    |
+       +--------+-----------+--------------------+
+                |
+                v
+       [PriceChangeDetector.analyse()]
+                |
+       +--------+--------+
+       |        |        |
+       v        v        v
+    increase  decrease  none/
+    (warning) (success) insignificant
+       |        |        |
+       v        v        v
+    Orange    Green     Silent
+    Badge     Badge     Update
+       |        |
+       v        v
+  [storeAlert() → Session → Template Rendering]
+
+================================================================================
+5. PRICE CHANGE DETECTOR SERVICE
+================================================================================
+
+File: src/Services/PriceChangeDetector.php
+Class: Tygh\Addons\NovotonHolidays\Services\PriceChangeDetector
+
+This is the central service. All price change detection in the system goes
+through this class for consistent behaviour.
+
+METHOD: analyse()
+-----------------
+Signature:
+  public function analyse(
+      float  $oldPrice,
+      float  $newPrice,
+      string $currency,
+      string $context = 'add_to_cart',
+      array  $bookingMeta = []
+  ): array
+
+Parameters:
+  $oldPrice     — The price the customer previously saw
+  $newPrice     — The current verified price (from API)
+  $currency     — Currency code (e.g., 'EUR', 'RON')
+  $context      — Where the change was detected:
+                   'add_to_cart', 'checkout', or 'recalculate'
+  $bookingMeta  — Optional metadata (hotel_name, hotel_id, room_id)
+
+Return value (associative array):
+  significant   — bool:   Is the change above the tolerance threshold?
+  direction     — string: 'increase', 'decrease', or 'none'
+  old_price     — float:  The original price
+  new_price     — float:  The current price
+  difference    — float:  new - old (positive = increase, negative = decrease)
+  percent       — float:  Absolute percentage change (e.g., 10.0 for 10%)
+  currency      — string: Currency code
+  badge_type    — string: 'warning' (orange), 'success' (green), or 'none'
+  context       — string: Detection context
+  booking_meta  — array:  Metadata passed through
+  timestamp     — int:    Unix timestamp of the analysis
+
+Example:
+  $result = $detector->analyse(450.0, 480.0, 'RON', 'checkout', [
+      'hotel_name' => 'Hotel Paradise',
+  ]);
+  // Result:
+  // significant  = true
+  // direction    = 'increase'
+  // difference   = 30.0
+  // percent      = 6.67
+  // badge_type   = 'warning'
+
+METHOD: isSignificant()
+-----------------------
+Signature:
+  public function isSignificant(float $oldPrice, float $newPrice): bool
+
+Quick boolean check without full analysis. Returns false if:
+  - Old price is 0 or negative (avoids division by zero)
+  - Percentage change < tolerance threshold
+  - Absolute difference <= 0.01
+
+METHOD: storeAlert()
+--------------------
+Signature:
+  public function storeAlert(array $alertData, string $cartId = ''): void
+
+Stores a price change alert in the PHP session for later template rendering.
+The $cartId parameter allows linking alerts to specific cart line items.
+If no cart ID is given, an auto-incremented key ('global_0', 'global_1', ...)
+is used.
+
+Session key: novoton_price_change_alerts
+
+METHOD: peekAlerts()
+--------------------
+Signature:
+  public function peekAlerts(): array
+
+Retrieves all pending price change alerts from the session WITHOUT clearing
+them. Used by templates that need to display alerts across multiple page
+renders (e.g., the checkout page).
+
+METHOD: consumeAlerts()
+-----------------------
+Signature:
+  public function consumeAlerts(): array
+
+Retrieves all pending alerts AND clears them from the session. Used when
+alerts should only be shown once (e.g., after order placement).
+
+================================================================================
+6. PRICE TOLERANCE SYSTEM
+================================================================================
+
+PURPOSE:
+--------
+Prevents "price fatigue" — where customers see repeated trivial price changes
+(e.g., 450.00 → 450.30 → 450.60) that are caused by rounding differences,
+currency conversions, or minor API fluctuations.
+
+HOW IT WORKS:
+-------------
+1. Calculate the percentage change:
+   percent = abs(newPrice - oldPrice) / oldPrice * 100
+
+2. A change is significant ONLY when BOTH conditions are met:
+   - percent >= tolerance_threshold (default: 1.0%)
+   - abs(difference) > 0.01 (protects against floating-point noise)
+
+3. Insignificant changes are applied to the cart silently — the customer
+   sees the new price but no "price changed" notification.
+
+CONFIGURATION:
+--------------
+  Admin Setting: price_change_tolerance_percent
+  Default: 1.0 (%)
+  Location: CS-Cart admin → Addons → Novoton Holidays → Settings
+
+EXAMPLES:
+  Old Price    New Price    Change    % Change   Tolerance=1%   Result
+  ----------   ---------    ------    --------   ------------   ------
+  450.00       452.00       +2.00     0.44%      < 1%           SILENT
+  450.00       448.50       -1.50     0.33%      < 1%           SILENT
+  1000.00      1010.00      +10.00    1.00%      = 1%           SIGNIFICANT
+  1000.00      1009.00      +9.00     0.90%      < 1%           SILENT
+  100.00       110.00       +10.00    10.00%     > 1%           SIGNIFICANT
+  500.00       450.00       -50.00    10.00%     > 1%           SIGNIFICANT
+  100.00       100.005      +0.005    0.005%     < 1% & <0.01   SILENT
+
+EDGE CASES:
+  - Old price = 0: Never significant (avoids division by zero)
+  - New price = 0, old > 0: 100% decrease, always significant
+  - Exact same price: direction = 'none', never significant
+  - Custom tolerance = 0%: ANY change > 0.01 triggers notification
+  - Custom tolerance = 5%: Changes under 5% are silent
+
+================================================================================
+7. DETECTION TOUCHPOINTS
+================================================================================
+
+Price changes are detected at three points in the booking flow, each serving
+a different purpose:
+
+7a. BOOKING FORM — AJAX RECALCULATION
+--------------------------------------
+File: controllers/frontend/novoton_booking/ajax_recalculate_price.php
+Trigger: User changes child age (DOB field), room type, or board type
+JS files: dob-validation.js, booking-form-validation.js
+
+FLOW:
+  1. User modifies a booking parameter on the form
+  2. JavaScript sends AJAX POST to mode=ajax_recalculate_price
+  3. Controller calls API with new parameters (room_id, board_id, dates,
+     adults, children_ages)
+  4. API returns new real-time price
+  5. Commission is applied: new_price = api.applyCommission(rawPrice)
+  6. PriceChangeDetector.analyse() compares original_price vs new_price
+  7. JSON response includes full price_change analysis
+  8. JavaScript updates the displayed price and shows inline notification
+
+REQUEST PARAMETERS:
+  hotel_id, room_id, board_id, check_in, nights, adults,
+  children_ages[], package_name, original_price
+
+RESPONSE (JSON):
+  {
+    "success": true,
+    "new_price": 480.00,
+    "original_price": 450.00,
+    "formatted_price": "480.00",
+    "price_difference": 30.00,
+    "room_changed": false,
+    "price_change": {
+      "significant": true,
+      "direction": "increase",
+      "badge_type": "warning",
+      "percent": 6.67,
+      ...
+    }
+  }
+
+INPUT VALIDATION:
+  - nights: 1–365
+  - adults: 1–12
+  - original_price: 0–999999
+  - check_in: YYYY-MM-DD format
+  - children_ages: array of integers 0–17, max 10 children
+
+ROOM CHANGE DETECTION:
+  When the API returns a different room than requested (e.g., the selected
+  room doesn't accept the entered child age), a modal dialog is shown with
+  both the room change and the price change side by side.
+
+7b. ADD TO CART — SERVER-SIDE VERIFICATION
+------------------------------------------
+File: controllers/frontend/novoton_booking/add_to_cart.php
+Trigger: Customer clicks "Add to Cart" / "Book Now"
+
+FLOW:
+  1. Customer submits booking form
+  2. Controller calls API with exact booking parameters
+  3. API returns real-time price ($rawPrice)
+  4. Commission applied: $api_price = applyCommission($rawPrice)
+  5. Compare $customer_visible_price (from form) vs $total_price (verified)
+  6. PRICE FLOOR: if form price < API price → use API price
+  7. PriceChangeDetector.analyse() compares old vs new
+  8. If significant: store alert in session + show CS-Cart toast notification
+  9. Product added to cart with verified price
+  10. Cache verified price in session for Silent Sync
+
+PRICE FLOOR RULE (see Section 8 for details):
+  if ($total_price < $api_price) {
+      log discrepancy
+      send admin email alert
+      $total_price = $api_price;  // upgrade to real-time price
+  }
+
+NOTIFICATION EXAMPLES:
+  Price Increase:
+    Toast: "The current rate has been updated from 450.00 to 480.00
+            based on real-time availability."
+    Type: Warning (W)
+
+  Price Decrease:
+    Toast: "Good news! The price has dropped to 420.00."
+    Type: Notice (N)
+
+7c. CHECKOUT — PRE-ORDER PRICE VERIFIER
+----------------------------------------
+File: src/Services/PreOrderPriceVerifier.php
+Trigger: pre_place_order hook (just before order is created)
+
+PURPOSE:
+  Final safety net — catches price changes that occurred AFTER the product
+  was added to cart but BEFORE the order is placed. Also handles cases where
+  the customer leaves their cart open for hours before checking out.
+
+FLOW:
+  1. Customer clicks "Place Order"
+  2. pre_place_order hook fires → PreOrderPriceVerifier.verify()
+  3. For each Novoton booking product in cart:
+     a. Try Silent Sync first (session cache, see Section 9)
+     b. If cache miss or stale → call API for live price
+     c. Compare form price vs API price
+  4. Scenarios:
+     - CASE 1: form < API → CORRECT cart to API price, notify admin & user
+     - CASE 2: form > API by > threshold → ALLOW order, notify admin only
+     - CASE 3: prices match (within tolerance) → ALLOW silently
+  5. Order proceeds — price changes NEVER block the order
+
+IMPORTANT: The PreOrderPriceVerifier NEVER blocks an order. It always
+returns allow: true. It either corrects the price or flags it for admin
+review.
+
+RETURN STRUCTURE:
+  {
+    "allow": true,                    // Always true
+    "corrections": {
+      "cart_id_123": {
+        "api_price": 480.00,
+        "api_price_raw": 417.39
+      }
+    },
+    "notifications": [...]           // Admin email data
+  }
+
+================================================================================
+8. PRICE FLOOR RULE
+================================================================================
+
+The Price Floor is a safety mechanism that ensures the customer never pays
+LESS than the real-time API price.
+
+RATIONALE:
+  Form prices can become stale due to:
+  - Cached priceinfo data that hasn't been synced yet
+  - Calculation bugs in the PriceInfo calculation engine
+  - Browser caching showing an old price
+  - Time delay between viewing the form and clicking "Book"
+
+RULE:
+  final_price = max(form_price, api_price)
+
+WHEN TRIGGERED:
+  - Logged in CS-Cart runtime log with full details
+  - Admin receives an email alert with hotel, room, board, dates,
+    form price, API price, and difference
+  - Customer sees a "Price Updated" notification if the change is
+    significant (above tolerance)
+
+EXAMPLE:
+  Form price:  420.00 EUR (from cached priceinfo calculation)
+  API price:   450.00 EUR (live real-time price)
+  Difference:  30.00 EUR (7.1% increase)
+  Action:      Use 450.00 EUR, notify customer with orange badge
+
+================================================================================
+9. SILENT SYNC (Session Cache)
+================================================================================
+
+File: PreOrderPriceVerifier.php (getCachedPrice method)
+File: add_to_cart.php (cache writing)
+
+PURPOSE:
+  Optimisation that makes checkout feel instant. When the add_to_cart
+  controller already verified the price against the API, it caches the
+  result in the session. If the pre_place_order check runs within the
+  TTL window, it trusts the cached price and skips the API call.
+
+CACHE KEY:
+  MD5 hash of: hotel_id | room_id | board_id | check_in | check_out |
+               adults | children_ages_string
+
+CACHE ENTRY:
+  {
+    "api_price": 480.00,          // With commission
+    "api_price_raw": 417.39,      // Without commission
+    "form_price": 480.00,         // What the customer was charged
+    "timestamp": 1709312345       // When the cache was written
+  }
+
+SESSION KEY: novoton_price_cache
+
+TTL (Time-to-Live):
+  Default: 180 seconds (3 minutes)
+  Configurable via: preorder_cache_ttl setting
+
+FLOW:
+  1. add_to_cart verifies price → writes to session cache
+  2. Customer proceeds to checkout (within 3 minutes)
+  3. PreOrderPriceVerifier checks session cache first
+  4. Cache hit + fresh → skip API call, use cached price
+  5. Cache miss or stale → call API for fresh price
+
+================================================================================
+10. USER-FACING NOTIFICATIONS
+================================================================================
+
+10a. TOAST NOTIFICATIONS
+------------------------
+CS-Cart's built-in notification system (fn_set_notification).
+
+Price Increase:
+  Type:    Warning (W)
+  Title:   "Price change" (novoton_holidays.price_change)
+  Message: "The current rate has been updated from [old_price] to [new_price]
+            based on real-time availability."
+  Context: add_to_cart
+
+Price Decrease:
+  Type:    Notice (N)
+  Title:   "Price Dropped!" (novoton_holidays.price_dropped)
+  Message: "Good news! The price has dropped to [new_price]."
+  Context: add_to_cart, checkout
+
+Checkout Correction:
+  Type:    Warning (W)
+  Title:   "Price change"
+  Message: "The price has been updated from [old_price] to [new_price] based
+            on real-time availability. Please review and place your order again."
+  Context: checkout (pre_place_order)
+
+10b. CHECKOUT PRICE ALERT BANNERS
+----------------------------------
+File: hooks/checkout/products_list.post.tpl
+
+Rendered above the Order Summary when price change alerts exist in the session.
+
+PRICE INCREASE BANNER:
+  - Orange background with warning icon (triangle with !)
+  - Badge text: "Price Updated"
+  - Message: "The current rate has been updated from [old] to [new]
+              based on real-time availability."
+  - Old price → New price comparison with arrow
+  - Dismissible (X button)
+  - CSS class: .nvt-price-alert--warning
+
+PRICE DECREASE BANNER:
+  - Green background with trend-down icon
+  - Badge text: "Price Dropped!"
+  - Message: "Good news! The price has decreased to [new_price]."
+  - New price displayed prominently
+  - Dismissible (X button)
+  - CSS class: .nvt-price-alert--success
+
+DATA SOURCE:
+  Smarty variable: $novoton_price_change_alerts
+  Set by: fn_novoton_holidays_checkout_pre_dispatch() in cart_hooks.php
+  Read from: PriceChangeDetector.peekAlerts()
+
+10c. BOOKING FORM INLINE NOTIFICATIONS
+---------------------------------------
+File: js/addons/novoton_holidays/booking-form-validation.js
+File: js/addons/novoton_holidays/dob-validation.js
+
+When the price changes during AJAX recalculation on the booking form:
+
+PRICE UPDATE INDICATOR:
+  - Price element briefly flashes red (increase) or green (decrease)
+  - Transition animation: 0.3s colour change
+  - Reverts to normal colour after 2 seconds
+
+NOTIFICATION BAR:
+  - Appears above the guest details section
+  - CSS class: .novoton-price-change-notif
+  - Orange left border (warning style)
+  - Shows the price difference
+
+ROOM CHANGE MODAL:
+  When the room changes (due to age restrictions), a modal shows:
+  - Room change details (old room → new room)
+  - Price change box (.novoton-price-change-box):
+    - Old price (strikethrough) → difference → New price (bold)
+  - "Go Back" and "Continue" buttons
+
+================================================================================
+11. ADMIN-FACING NOTIFICATIONS
+================================================================================
+
+RUNTIME LOGGING:
+  All price discrepancies are logged via fn_log_event('general', 'runtime')
+  and are visible in CS-Cart admin → Logs.
+
+  Log messages include:
+  - 'Novoton PRICE FLOOR: form price below real-time API room_price'
+  - 'PreOrderPriceVerifier: CORRECTED — form price below API price'
+  - 'PreOrderPriceVerifier: ALERT — form price significantly above API price'
+  - Each log includes: hotel_id, room_id, form_price, api_price, difference
+
+CS-CART ADMIN NOTIFICATIONS:
+  When the PreOrderPriceVerifier detects a discrepancy, it creates a
+  CS-Cart notification visible in the admin panel:
+
+  Price Lower (corrected):
+    "Price corrected at checkout: form price (420.00 EUR) was lower than
+     API price (450.00 EUR) for hotel [name] [id]. Difference: 30.00 EUR
+     (7.1% lower). Cart was updated to the API price."
+
+  Price Higher (flagged):
+    "Alert: form price (580.00 EUR) is 28.9% higher than API price
+     (450.00 EUR) for hotel [name] [id]. Order allowed but please investigate."
+
+EMAIL ALERTS:
+  When the Price Floor is triggered at add_to_cart, an email alert is sent
+  to the admin via fn_novoton_holidays_send_price_alert_email() with:
+  - Hotel ID, name, room, board
+  - Check-in/check-out dates
+  - Number of adults and children (with ages)
+  - Form price, API price, raw API price, difference
+
+================================================================================
+12. SESSION ALERT LIFECYCLE
+================================================================================
+
+The session-based alert system ensures price change notifications persist
+across page redirects (e.g., from add_to_cart → cart page → checkout).
+
+LIFECYCLE:
+  1. STORE: PriceChangeDetector.storeAlert() writes alert to session
+     Session key: novoton_price_change_alerts
+     Keyed by cart_id or auto-generated key ('global_0', 'global_1', ...)
+
+  2. PEEK: PriceChangeDetector.peekAlerts() reads WITHOUT clearing
+     Used by: checkout_pre_dispatch hook → Smarty template rendering
+     Purpose: Show alerts on every checkout page render
+
+  3. CONSUME: PriceChangeDetector.consumeAlerts() reads AND clears
+     Used by: After order placement (one-time display)
+     Purpose: Clean up alerts after they've been acted upon
+
+MULTIPLE ALERTS:
+  The system supports multiple simultaneous alerts (one per cart item).
+  Each is keyed by its cart_id, allowing the checkout template to match
+  alerts to specific line items.
+
+EXAMPLE SESSION DATA:
+  $_SESSION['novoton_price_change_alerts'] = [
+      'cart_abc123' => [
+          'significant' => true,
+          'direction' => 'increase',
+          'old_price' => 450.00,
+          'new_price' => 480.00,
+          'difference' => 30.00,
+          'percent' => 6.67,
+          'currency' => 'RON',
+          'badge_type' => 'warning',
+          'context' => 'add_to_cart',
+          'booking_meta' => ['hotel_name' => 'Hotel Paradise'],
+          'timestamp' => 1709312345,
+      ],
+      'cart_def456' => [
+          'significant' => true,
+          'direction' => 'decrease',
+          ...
+      ],
+  ];
+
+================================================================================
+13. CONFIGURATION OPTIONS
+================================================================================
+
+All settings are managed via CS-Cart admin → Addons → Novoton Holidays.
+
++--------------------------------------+----------+-----------------------------+
+| Setting                              | Default  | Description                 |
++--------------------------------------+----------+-----------------------------+
+| price_change_tolerance_percent       | 1.0      | Changes below this % are    |
+|                                      |          | applied silently. Changes   |
+|                                      |          | above trigger visible       |
+|                                      |          | "Old vs New" comparison.    |
++--------------------------------------+----------+-----------------------------+
+| enable_preorder_price_check          | Y        | Enable/disable the pre-     |
+|                                      |          | order price verification    |
+|                                      |          | at checkout.                |
++--------------------------------------+----------+-----------------------------+
+| price_higher_threshold               | 55       | If form price exceeds API   |
+|                                      |          | price by more than this %,  |
+|                                      |          | admin is notified. Order    |
+|                                      |          | still proceeds.             |
++--------------------------------------+----------+-----------------------------+
+| preorder_cache_ttl                   | 180      | Silent Sync cache lifetime  |
+|                                      |          | in seconds. Fresh cache     |
+|                                      |          | entries skip the API call   |
+|                                      |          | at checkout.                |
++--------------------------------------+----------+-----------------------------+
+| debug                                | N        | Enable debug logging to     |
+|                                      |          | CS-Cart runtime log and     |
+|                                      |          | include _debug in AJAX      |
+|                                      |          | responses.                  |
++--------------------------------------+----------+-----------------------------+
+
+================================================================================
+14. CSS STYLING REFERENCE
+================================================================================
+
+All styles are in:
+  design/themes/nova_theme/css/addons/novoton_holidays/styles.less
+
+BOOKING FORM — Price Change Box (in room-change modal):
+  .novoton-price-change-box       — Container: light background, rounded, padded
+  .novoton-price-change-label     — Small text label ("Price change")
+  .novoton-price-change-values    — 20px font, old/new price display
+
+BOOKING FORM — Inline Notification:
+  .novoton-price-change-notif     — Warning bar with orange left border
+                                    Background: warning-light colour
+                                    4px left border in warning colour
+
+CHECKOUT — Alert Banners:
+  .nvt-price-alert                — Flex container for alert banner
+  .nvt-price-alert--warning       — Orange theme (price increase)
+  .nvt-price-alert--success       — Green theme (price decrease)
+  .nvt-price-alert__icon          — SVG icon container
+  .nvt-price-alert__content       — Text content area
+  .nvt-price-alert__badge         — Coloured label ("Price Updated")
+  .nvt-price-alert__badge--warning— Orange badge
+  .nvt-price-alert__badge--success— Green badge
+  .nvt-price-alert__message       — Explanatory text
+  .nvt-price-alert__comparison    — Old → New price display
+  .nvt-price-alert__old-price     — Strikethrough old price
+  .nvt-price-alert__arrow         — → arrow between prices
+  .nvt-price-alert__new-price     — Bold new price
+  .nvt-price-alert__dismiss       — Close button (×)
+
+TOAST:
+  .novoton-toast                  — Animated notification
+  .novoton-toast--price-change    — Price-change-specific variant
+
+================================================================================
+15. LANGUAGE KEYS
+================================================================================
+
+English translations (var/langs/en/addons/novoton_holidays.po):
+
+  novoton_holidays.price_change
+    → "Price change"
+
+  novoton_holidays.price_updated_from_to
+    → "The current rate has been updated from [old_price] to [new_price]
+       based on real-time availability."
+
+  novoton_holidays.price_dropped
+    → "Price Dropped!"
+
+  novoton_holidays.price_dropped_to
+    → "Good news! The price has dropped to [new_price]."
+
+  novoton_holidays.price_updated_at_checkout
+    → "The price has been updated from [old_price] to [new_price] based on
+       real-time availability. Please review and place your order again."
+
+  novoton_holidays.price_updated_badge
+    → "Price Updated"
+
+  novoton_holidays.price_dropped_badge
+    → "Price Dropped!"
+
+  novoton_holidays.price_updated_explanation
+    → "The current rate has been updated from [old_price] to [new_price]
+       based on real-time availability."
+
+  novoton_holidays.price_dropped_explanation
+    → "Good news! The price has decreased to [new_price]."
+
+  novoton_holidays.price_changed_on_submit
+    → "The price has changed. Please review the new price and try again."
+
+  novoton_holidays.price_changed_please_refresh
+    → "The price has changed since you added this item to your cart.
+       Please go back and refresh the price before placing your order."
+
+  novoton_holidays.price_updated
+    → "Price updated based on child age"
+
+  SettingsOptions: price_change_tolerance_percent
+    → "Price change tolerance (%)"
+
+  SettingsTooltips: price_change_tolerance_percent
+    → "Price changes below this percentage threshold are applied silently
+       without notifying the customer. Changes above it trigger a visible
+       'Old vs New' price comparison. Default: 1%."
+
+================================================================================
+16. TESTING
+================================================================================
+
+UNIT TESTS (PHPUnit):
+---------------------
+File: tests/Unit/PriceChangeDetectorTest.php
+Class: PriceChangeDetectorTest (18 test methods)
+
+Run:
+  cd app/addons/novoton_holidays
+  vendor/bin/phpunit tests/Unit/PriceChangeDetectorTest.php
+
+Test cases:
+  - testSignificantIncreaseReturnsWarningBadge
+  - testIncreasePreservesOldAndNewPrice
+  - testIncreasePreservesBookingMeta
+  - testSignificantDecreaseReturnsSuccessBadge
+  - testBelowToleranceIsSilent
+  - testSmallDecreaseIsSilent
+  - testExactSamePriceIsNone
+  - testExactlyAtToleranceBoundaryIsSignificant
+  - testJustBelowToleranceBoundaryIsSilent
+  - testZeroOldPriceIsNotSignificant
+  - testZeroNewPriceWithOldPriceIsSignificant
+  - testIsSignificantHelper
+  - testCustomToleranceSilencesSmallerChanges
+  - testZeroToleranceTriggersOnAnyChange
+  - testContextIsPreservedInResult
+  - testStoreAndPeekAlerts / testPeekDoesNotClearAlerts
+  - testConsumeReturnsAndClearsAlerts / testStoreWithoutCartIdUsesAutoKey
+  - testRepeatedSmallChangesStaySilent
+  - testRealWorldCheckoutPriceIncrease
+  - testRealWorldAddToCartPriceDecrease
+  - testTimestampIsPresent
+
+STANDALONE TEST SCRIPT:
+-----------------------
+File: scripts/test_price_change_detector.php
+
+Run via CLI:
+  php scripts/test_price_change_detector.php
+
+Run via browser:
+  https://yourdomain.com/scripts/test_price_change_detector.php?key=novoton_test_2024
+
+Tests 11 scenarios:
+  1. Significant increase ($100 → $110, +10%)
+  2. Significant decrease ($500 → $450, -10%)
+  3. Below tolerance (450 → 452, +0.44%)
+  4. No change (300 → 300)
+  5. Exactly at 1% boundary (1000 → 1010)
+  6. Just below boundary (1000 → 1009)
+  7. isSignificant() helper method
+  8. Custom 5% tolerance
+  9. Session alert storage (store → peek → consume)
+  10. Real-world scenario (450 → 480 Lei)
+  11. Price fatigue (repeated small changes)
+
+NOTE: The standalone script uses stubs for ConfigProvider and Tygh session,
+so it can run completely outside CS-Cart.
+
+================================================================================
+17. DATA FLOW SUMMARY
+================================================================================
+
+SCENARIO A: Price stays the same
+---------------------------------
+  1. Customer sees 450 EUR on booking form
+  2. Clicks "Book Now"
+  3. add_to_cart calls API → returns 450 EUR
+  4. PriceChangeDetector: direction='none', significant=false
+  5. Product added to cart at 450 EUR — no notification
+  6. Customer completes checkout
+  7. PreOrderPriceVerifier: cache hit, price matches → allow silently
+
+SCENARIO B: Price increases by > tolerance
+-------------------------------------------
+  1. Customer sees 450 EUR on booking form
+  2. Clicks "Book Now"
+  3. add_to_cart calls API → returns 480 EUR
+  4. Price Floor: 450 < 480 → use 480 EUR
+  5. PriceChangeDetector: direction='increase', percent=6.67%, significant=true
+  6. Alert stored in session (badge_type='warning')
+  7. Toast notification: "Rate updated from 450 to 480"
+  8. Product added to cart at 480 EUR
+  9. Cart page: customer sees 480 EUR
+  10. Checkout page: orange alert banner shows "450 → 480"
+  11. Admin email: price discrepancy alert sent
+
+SCENARIO C: Price decreases by > tolerance
+-------------------------------------------
+  1. Customer sees 500 EUR on booking form
+  2. Clicks "Book Now"
+  3. add_to_cart calls API → returns 450 EUR
+  4. PriceChangeDetector: direction='decrease', percent=10%, significant=true
+  5. Alert stored in session (badge_type='success')
+  6. Toast notification: "Price Dropped! Now 450 EUR"
+  7. Product added to cart at 450 EUR (customer benefits from lower price)
+  8. Checkout page: green alert banner shows "Price Dropped! 450 EUR"
+
+SCENARIO D: Tiny change below tolerance
+----------------------------------------
+  1. Customer sees 450.00 EUR on booking form
+  2. Clicks "Book Now"
+  3. add_to_cart calls API → returns 451.50 EUR
+  4. Price Floor: 450 < 451.50 → use 451.50 EUR
+  5. PriceChangeDetector: direction='increase', percent=0.33%, significant=false
+  6. NO alert stored, NO notification shown
+  7. Product added to cart at 451.50 EUR — silent update
+  8. Customer sees 451.50 EUR in cart (no "price changed" messaging)
+
+SCENARIO E: Price changes between cart and checkout
+----------------------------------------------------
+  1. Customer adds booking at 450 EUR (verified at add_to_cart time)
+  2. Cache entry written with timestamp
+  3. Customer leaves cart open for 10 minutes (> 3 min TTL)
+  4. Customer clicks "Place Order"
+  5. PreOrderPriceVerifier: cache is stale (> TTL) → calls API
+  6. API returns 470 EUR
+  7. CASE 1: form (450) < API (470) → CORRECT cart to 470, notify admin+user
+  8. Orange alert: "Price updated from 450 to 470"
+  9. Order proceeds at 470 EUR
+
+================================================================================
+END OF DOCUMENT
+================================================================================
