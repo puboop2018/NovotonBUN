@@ -1111,6 +1111,10 @@ class PriceInfoCalculator
                 $finalTotal = $totalEB;
                 $appliedDiscount = 'early_booking';
                 $discountAmount += $ebDiscount['discount'];
+            } elseif ($priorityEXT === 'Yes' && $reduction['applicable']) {
+                $finalTotal = $totalReduction;
+                $appliedDiscount = 'reduction';
+                $discountAmount += $reduction['discount'];
             } else {
                 if ($totalEB <= $totalReduction && $ebDiscount['applicable']) {
                     $finalTotal = $totalEB;

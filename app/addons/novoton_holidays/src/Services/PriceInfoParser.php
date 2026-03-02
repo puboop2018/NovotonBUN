@@ -507,8 +507,8 @@ class PriceInfoParser
 
             $seasonNum = 1;
             foreach ($seasons as $season) {
-                $from = $season['FromDate'] ?? '';
-                $to = $season['ToDate'] ?? '';
+                $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
+                $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
                 $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
