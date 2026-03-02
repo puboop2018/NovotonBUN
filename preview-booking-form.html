@@ -3,114 +3,171 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Novoton Booking Form - Preview (Before vs After)</title>
+<title>Novoton Booking Form - Style Preview</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: #f0f2f5;
         padding: 40px 20px;
         color: #1a1a1a;
     }
-    .container { max-width: 1100px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    h1 {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+    .page-subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 40px;
+    }
 
     h2 {
-        text-align: center;
         font-size: 13px;
         font-weight: 600;
         color: #666;
         text-transform: uppercase;
         letter-spacing: 1px;
+        margin-bottom: 16px;
+    }
+    .section { margin-bottom: 60px; }
+    .section-label {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         margin-bottom: 12px;
     }
-    .section { margin-bottom: 50px; }
-
-    /* ===== SVG Icons ===== */
-    .icon-calendar, .icon-guests, .icon-chevron {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-    .icon-calendar svg, .icon-guests svg { width: 22px; height: 22px; color: #6b6b6b; }
-    .icon-chevron svg { width: 16px; height: 16px; color: #6b6b6b; }
+    .label-new { background: #e8f5e9; color: #2e7d32; }
+    .label-current { background: #fff3e0; color: #e65100; }
+    .label-homepage { background: #e3f2fd; color: #1565c0; }
 
     /* ============================================================
-       DESIRED VERSION — "How I want form to be"
-       Taller fields, text vertically centered
+       NEW STYLE — Unified Golden Frame
        ============================================================ */
 
-    .form-row-desired {
+    /* 1. THE GOLDEN CONTAINER */
+    .nvt-unified-frame {
         display: flex;
         align-items: stretch;
-        gap: 0;
-        border: 3px solid #FFB703;
+        background-color: #FFB703;
+        border: 4px solid #FFB703;
         border-radius: 8px;
-        background: #fff;
-        overflow: visible;
-    }
-
-    .form-row-desired .field {
-        position: relative;
-        flex: 1;
-        border-right: 1px solid #e0e0e0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .form-row-desired .field:last-child { border-right: none; }
-    .form-row-desired .field--date { flex: 1.8; }
-    .form-row-desired .field--guests { flex: 1.2; }
-    .form-row-desired .field--btn {
-        flex: 0 0 160px;
-        border-right: none;
-        padding: 6px;
-        display: flex;
-        align-items: stretch;
-    }
-
-    .form-row-desired .field-inner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
+        height: 64px;
         width: 100%;
-        padding: 18px 16px;
-        cursor: pointer;
-        min-height: 60px;
+        gap: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    .form-row-desired .field-text {
+    /* 2. INNER ROUNDED BOXES */
+    .nvt-box {
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
         flex: 1;
+        border-radius: 4px;
+        cursor: pointer;
+        min-width: 0;
+        transition: background 0.15s;
+    }
+    .nvt-box:hover {
+        background-color: #fafafa;
+    }
+    .nvt-box--date {
+        flex: 1.8;
+    }
+    .nvt-box--guests {
+        flex: 1.2;
+    }
+    .nvt-box--location {
+        flex: 1.5;
+    }
+
+    /* 3. ICONS & TEXT */
+    .nvt-icon {
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        color: #4a4a4a;
+    }
+    .nvt-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .nvt-label {
         font-size: 15px;
-        font-weight: 500;
         color: #1a1a1a;
+        font-weight: 400;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        display: flex;
-        align-items: center;
+        flex: 1;
+    }
+    .nvt-label--placeholder {
+        color: #999;
     }
 
-    .form-row-desired .btn-search {
+    .nvt-arrow {
+        color: #a0a0a0;
+        margin-left: 8px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .nvt-arrow svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 4. LOCATION INPUT */
+    .nvt-location-input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 15px;
+        font-family: inherit;
+        background: transparent;
+        color: #1a1a1a;
+    }
+    .nvt-location-input::placeholder {
+        color: #999;
+    }
+
+    /* 5. THE SEARCH BUTTON */
+    .nvt-btn {
+        background-color: #0071c2;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        padding: 0 45px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        background: #0071E3;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s;
+        transition: background 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
-    .form-row-desired .btn-search:hover { background: #005bb5; }
+    .nvt-btn:hover {
+        background-color: #005b9c;
+    }
 
     /* ============================================================
-       CURRENT VERSION — "How it is now"
-       Shorter fields, text not vertically centered
+       CURRENT STYLE — Flat Border
        ============================================================ */
 
     .form-row-current {
@@ -128,7 +185,7 @@
         flex: 1;
         border-right: 1px solid #e0e0e0;
         display: flex;
-        align-items: stretch;
+        align-items: center;
     }
     .form-row-current .field:last-child { border-right: none; }
     .form-row-current .field--date { flex: 1.8; }
@@ -144,12 +201,16 @@
     .form-row-current .field-inner {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         width: 100%;
         padding: 6px 12px;
         cursor: pointer;
         min-height: 40px;
     }
+
+    .form-row-current .icon-field svg { width: 20px; height: 20px; color: #6b6b6b; }
+    .form-row-current .chevron-field svg { width: 16px; height: 16px; color: #6b6b6b; }
 
     .form-row-current .field-text {
         flex: 1;
@@ -175,45 +236,46 @@
         cursor: pointer;
     }
 
-    /* ===== Annotations ===== */
+    /* ============================================================
+       Annotations & Info
+       ============================================================ */
     .annotation {
         display: flex;
         align-items: flex-start;
         gap: 10px;
         margin-top: 16px;
-        padding: 12px 16px;
+        padding: 14px 18px;
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         font-size: 13px;
         color: #444;
-        line-height: 1.5;
+        line-height: 1.6;
     }
     .annotation strong { color: #1a1a1a; }
-    .badge-desired {
-        display: inline-block;
-        padding: 2px 8px;
-        background: #e8f5e9;
-        color: #2e7d32;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 11px;
-        flex-shrink: 0;
-        margin-top: 2px;
+
+    .diff-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        font-size: 13px;
     }
-    .badge-current {
-        display: inline-block;
-        padding: 2px 8px;
-        background: #fff3e0;
-        color: #e65100;
-        border-radius: 4px;
+    .diff-table th {
+        text-align: left;
+        padding: 6px 12px;
+        background: #f5f5f5;
         font-weight: 600;
-        font-size: 11px;
-        flex-shrink: 0;
-        margin-top: 2px;
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
     }
-    .diff-list { margin: 6px 0 0 0; padding-left: 18px; }
-    .diff-list li { margin-bottom: 4px; }
+    .diff-table td {
+        padding: 6px 12px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
+    }
+    .diff-table tr:last-child td { border-bottom: none; }
+    .val-old { color: #e65100; }
+    .val-new { color: #2e7d32; font-weight: 600; }
     code {
         background: #f0f0f0;
         padding: 1px 5px;
@@ -221,84 +283,263 @@
         font-size: 12px;
         font-family: 'SF Mono', Monaco, 'Courier New', monospace;
     }
+
+    .modes-grid {
+        display: flex;
+        gap: 20px;
+        margin-top: 16px;
+    }
+    .mode-card {
+        flex: 1;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+    }
+    .mode-card h3 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    .mode-card p {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.5;
+    }
+
+    /* ===== Responsive: stack fields vertically on mobile ===== */
+    @media (max-width: 768px) {
+        .nvt-unified-frame {
+            flex-direction: column;
+            height: auto;
+            gap: 4px;
+        }
+        .nvt-box, .nvt-btn {
+            height: 56px;
+        }
+        .nvt-btn {
+            padding: 0 20px;
+        }
+        .form-row-current {
+            flex-direction: column;
+        }
+        .form-row-current .field {
+            border-right: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .form-row-current .field:last-child { border-bottom: none; }
+        .form-row-current .field--btn {
+            flex: 0 0 auto;
+        }
+        .modes-grid {
+            flex-direction: column;
+        }
+    }
 </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- ===== DESIRED VERSION ===== -->
+    <h1>Booking Form Style Preview</h1>
+    <p class="page-subtitle">Comparing new unified golden frame vs current flat border style</p>
+
+    <!-- ============================================================
+         SECTION 1: NEW STYLE — Product / Search Mode
+         ============================================================ -->
     <div class="section">
-        <h2>How I Want Form To Be</h2>
-        <div class="form-row-desired">
+        <span class="section-label label-new">NEW STYLE</span>
+        <h2>Product / Search Page &mdash; Unified Golden Frame</h2>
+
+        <div class="nvt-unified-frame">
             <!-- Date field -->
-            <div class="field field--date">
-                <div class="field-inner">
-                    <span class="icon-calendar">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                    </span>
-                    <span class="field-text">Mon. 14 Mar. &rarr; Mon. 21 Mar. (7 nights)</span>
-                    <span class="icon-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </span>
-                </div>
+            <div class="nvt-box nvt-box--date">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">Mon. 14 Mar. &rarr; Mon. 21 Mar. (7 nights)</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
             </div>
 
             <!-- Guests field -->
-            <div class="field field--guests">
-                <div class="field-inner">
-                    <span class="icon-guests">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                    </span>
-                    <span class="field-text">2 adults &middot; 1 child &middot; 1 room</span>
-                    <span class="icon-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </span>
-                </div>
+            <div class="nvt-box nvt-box--guests">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">2 adults &middot; 1 child &middot; 1 room</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
             </div>
 
             <!-- Search button -->
-            <div class="field field--btn">
-                <button class="btn-search">Search</button>
-            </div>
-        </div>
-
-        <div class="annotation">
-            <span class="badge-desired">DESIRED</span>
-            <div>
-                <strong>Vertically centered text with taller fields</strong>
-                <ul class="diff-list">
-                    <li>Field inner padding: <code>18px 16px</code> (taller, more breathing room)</li>
-                    <li>Min-height: <code>60px</code> on field inner area</li>
-                    <li>Text, icons, and chevrons all vertically centered via <code>align-items: center</code></li>
-                    <li>Font size: <code>15px</code> for better readability</li>
-                </ul>
-            </div>
+            <button class="nvt-btn">Search</button>
         </div>
     </div>
 
-    <!-- ===== CURRENT VERSION ===== -->
+    <!-- ============================================================
+         SECTION 2: NEW STYLE — Homepage Mode (with location input)
+         ============================================================ -->
     <div class="section">
-        <h2>How It Is Now</h2>
+        <span class="section-label label-homepage">NEW STYLE</span>
+        <h2>Homepage Mode &mdash; With Location Input</h2>
+
+        <div class="nvt-unified-frame">
+            <!-- Location field -->
+            <div class="nvt-box nvt-box--location">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </span>
+                <input class="nvt-location-input" type="text" placeholder="Where are you going?" />
+            </div>
+
+            <!-- Date field -->
+            <div class="nvt-box nvt-box--date">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nvt-label nvt-label--placeholder">Check-in &rarr; Check-out</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+
+            <!-- Guests field -->
+            <div class="nvt-box nvt-box--guests">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">2 adults &middot; 0 children &middot; 1 room</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+
+            <!-- Search button -->
+            <button class="nvt-btn">Search</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         SECTION 3: NEW STYLE — Variations
+         ============================================================ -->
+    <div class="section">
+        <span class="section-label label-new">NEW STYLE</span>
+        <h2>"Change Search" &amp; "Apply Changes" Button States</h2>
+
+        <!-- Change search state -->
+        <div class="nvt-unified-frame" style="margin-bottom: 16px;">
+            <div class="nvt-box nvt-box--date">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">Sat. 1 Mar. &rarr; Sun. 8 Mar. (7 nights)</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+            <div class="nvt-box nvt-box--guests">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">4 adults &middot; 2 children &middot; 2 rooms</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+            <button class="nvt-btn">Change search</button>
+        </div>
+
+        <!-- Apply changes state -->
+        <div class="nvt-unified-frame">
+            <div class="nvt-box nvt-box--date">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">Mon. 10 Mar. &rarr; Fri. 14 Mar. (4 nights)</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+            <div class="nvt-box nvt-box--guests">
+                <span class="nvt-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </span>
+                <span class="nvt-label">3 adults &middot; 0 children &middot; 1 room</span>
+                <span class="nvt-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
+            </div>
+            <button class="nvt-btn">Apply changes</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         SECTION 4: CURRENT STYLE — For Comparison
+         ============================================================ -->
+    <div class="section">
+        <span class="section-label label-current">CURRENT STYLE</span>
+        <h2>Current Flat Border Style &mdash; For Comparison</h2>
+
         <div class="form-row-current">
             <!-- Date field -->
             <div class="field field--date">
                 <div class="field-inner">
-                    <span class="icon-calendar">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <span class="icon-field">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -306,8 +547,8 @@
                         </svg>
                     </span>
                     <span class="field-text">Mon. 14 Mar. &rarr; Mon. 21 Mar. (7 nights)</span>
-                    <span class="icon-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <span class="chevron-field">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </span>
@@ -317,17 +558,15 @@
             <!-- Guests field -->
             <div class="field field--guests">
                 <div class="field-inner">
-                    <span class="icon-guests">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <span class="icon-field">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
                         </svg>
                     </span>
                     <span class="field-text">2 adults &middot; 1 child &middot; 1 room</span>
-                    <span class="icon-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <span class="chevron-field">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </span>
@@ -339,30 +578,120 @@
                 <button class="btn-search">Search</button>
             </div>
         </div>
+    </div>
 
-        <div class="annotation">
-            <span class="badge-current">CURRENT</span>
-            <div>
-                <strong>Compact fields, text not well centered</strong>
-                <ul class="diff-list">
-                    <li>Field inner padding: <code>6px 12px</code> (compact, cramped)</li>
-                    <li>Min-height: <code>40px</code> on field inner area</li>
-                    <li>Text appears lower/smaller within the field area</li>
-                    <li>Font size: <code>14px</code></li>
-                </ul>
+    <!-- ============================================================
+         SECTION 5: CSS CHANGES SUMMARY
+         ============================================================ -->
+    <div class="section">
+        <h2>Style Differences: New vs Current</h2>
+
+        <div class="annotation" style="display: block;">
+            <strong>Key architectural change:</strong> The form container itself becomes the golden element. Instead of a white box with a golden border, the container is gold-colored and each field sits inside as a separate white rounded box. The golden <code>gap: 4px</code> between boxes creates unified golden dividers.
+
+            <table class="diff-table" style="margin-top: 16px;">
+                <tr>
+                    <th>Property</th>
+                    <th>Current</th>
+                    <th>New</th>
+                </tr>
+                <tr>
+                    <td>Container background</td>
+                    <td class="val-old"><code>#ffffff</code> (white)</td>
+                    <td class="val-new"><code>#FFB703</code> (gold)</td>
+                </tr>
+                <tr>
+                    <td>Container border</td>
+                    <td class="val-old"><code>3px solid #FFB703</code></td>
+                    <td class="val-new"><code>4px solid #FFB703</code></td>
+                </tr>
+                <tr>
+                    <td>Container height</td>
+                    <td class="val-old">auto (min-height: 40px inner)</td>
+                    <td class="val-new"><code>64px</code> fixed</td>
+                </tr>
+                <tr>
+                    <td>Field dividers</td>
+                    <td class="val-old"><code>border-right: 1px solid #e0e0e0</code></td>
+                    <td class="val-new"><code>gap: 4px</code> (gold background shows through)</td>
+                </tr>
+                <tr>
+                    <td>Field boxes</td>
+                    <td class="val-old">No individual background</td>
+                    <td class="val-new">White <code>#fff</code> with <code>border-radius: 4px</code></td>
+                </tr>
+                <tr>
+                    <td>Icon color</td>
+                    <td class="val-old"><code>#6b6b6b</code></td>
+                    <td class="val-new"><code>#4a4a4a</code> (slightly darker)</td>
+                </tr>
+                <tr>
+                    <td>Label font</td>
+                    <td class="val-old"><code>14px</code> / 500 weight</td>
+                    <td class="val-new"><code>15px</code> / 400 weight</td>
+                </tr>
+                <tr>
+                    <td>Arrow color</td>
+                    <td class="val-old"><code>#6b6b6b</code></td>
+                    <td class="val-new"><code>#a0a0a0</code> (lighter)</td>
+                </tr>
+                <tr>
+                    <td>Button color</td>
+                    <td class="val-old"><code>#0071E3</code></td>
+                    <td class="val-new"><code>#0071c2</code> (Booking blue)</td>
+                </tr>
+                <tr>
+                    <td>Button font</td>
+                    <td class="val-old"><code>15px</code> / 600 weight</td>
+                    <td class="val-new"><code>18px</code> / 700 weight (bolder)</td>
+                </tr>
+                <tr>
+                    <td>Button border-radius</td>
+                    <td class="val-old"><code>8px</code></td>
+                    <td class="val-new"><code>4px</code> (matches field boxes)</td>
+                </tr>
+                <tr>
+                    <td>Box shadow</td>
+                    <td class="val-old">none</td>
+                    <td class="val-new"><code>0 4px 12px rgba(0,0,0,0.08)</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="modes-grid">
+            <div class="mode-card">
+                <h3>Product Mode</h3>
+                <p>Shown on hotel/product pages. Has "Availability" header above the form. Fields: date, guests, Search button.</p>
+            </div>
+            <div class="mode-card">
+                <h3>Search Mode</h3>
+                <p>Shown on search results page. Has "Change search" header with refresh icon. Button text cycles: Search &rarr; Change search &rarr; Apply changes.</p>
+            </div>
+            <div class="mode-card">
+                <h3>Homepage Mode</h3>
+                <p>Includes location text input as the first field. All four fields (location, date, guests, button) in one golden frame.</p>
             </div>
         </div>
     </div>
 
-    <!-- ===== CSS CHANGES SUMMARY ===== -->
-    <div class="annotation" style="background: #f0f4ff; border-color: #c5cae9;">
-        <div>
-            <strong>CSS changes needed in <code>styles.js</code> (React booking engine):</strong>
-            <ul class="diff-list">
-                <li><code>.nvt-field-input</code> &mdash; increase padding from <code>6px 12px</code> to <code>18px 16px</code></li>
-                <li><code>.nvt-field-input</code> &mdash; increase min-height from <code>40px</code> to <code>60px</code></li>
-                <li><code>.nvt-field-input-text .nvt-value</code> &mdash; increase font-size from <code>14px</code> to <code>15px</code></li>
-                <li>All text, icons, and chevrons remain vertically centered via existing <code>align-items: center</code></li>
+    <!-- ============================================================
+         SECTION 6: Features preserved
+         ============================================================ -->
+    <div class="section">
+        <h2>Features Preserved (No Changes)</h2>
+        <div class="annotation" style="display: block;">
+            <strong>All existing functionality remains identical:</strong>
+            <ul style="margin: 8px 0 0 18px; line-height: 2;">
+                <li>Calendar popup (two-month side-by-side, per-date pricing, range highlighting)</li>
+                <li>Guest/Room picker popup (multi-room, adults/children, child age selectors)</li>
+                <li>Smart age anchor (clickable missing-age warnings)</li>
+                <li>SVG icons: CalendarIcon, GuestIcon, ChevronDown, ChevronLeft, ChevronRight, TrashIcon, RefreshIcon</li>
+                <li>Validation messages (dates required, child ages required)</li>
+                <li>AJAX search on results page (no page reload)</li>
+                <li>Button state machine: Search &rarr; Change search &rarr; Apply changes</li>
+                <li>Bilingual support (English &amp; Romanian)</li>
+                <li>Responsive layout (vertical stacking on mobile)</li>
+                <li>CSS variables for theme overrides</li>
             </ul>
         </div>
     </div>
