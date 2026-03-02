@@ -117,7 +117,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $adults = (int)($params['adults'] ?? 2);
         $childrenAges = $params['children_ages'] ?? [];
         $bookingDate = $params['booking_date'] ?? date('Y-m-d');
-        $this->parser->setIdStar($params['id_star'] ?? '');
+
 
         if (!is_array($childrenAges)) {
             $childrenAges = !empty($childrenAges) ? explode(',', $childrenAges) : [];
