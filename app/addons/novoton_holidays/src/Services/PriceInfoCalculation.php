@@ -117,16 +117,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $adults = (int)($params['adults'] ?? 2);
         $childrenAges = $params['children_ages'] ?? [];
         $bookingDate = $params['booking_date'] ?? date('Y-m-d');
-        // Resolve IdStar: use explicit param, or auto-detect from hotel's star_rating
-        if (!empty($params['id_star'])) {
-            $this->parser->setIdStar($params['id_star']);
-        } else {
-            $starRating = (int) db_get_field(
-                "SELECT star_rating FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotelId
-            );
-            $this->parser->setIdStar($starRating > 0 ? $starRating . '*' : '');
-        }
-        $this->log('IdStar resolved', $this->parser->getIdStar());
+        $this->parser->setIdStar($params['id_star'] ?? '');
 
         if (!is_array($childrenAges)) {
             $childrenAges = !empty($childrenAges) ? explode(',', $childrenAges) : [];

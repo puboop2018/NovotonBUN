@@ -26,7 +26,7 @@ class PriceInfoParser
     private $codeIndex = [];
 
     /** @var string IdStar for season_price matching */
-    private $idStar = '4*';
+    private $idStar = '';
 
     /** @var array Hotel-specific child age bands */
     private $childAgeBands = [];
