@@ -169,7 +169,7 @@ class NovotonApi implements NovotonApiInterface
         return $result;
     }
 
-    public function getRoomPriceByResort(array $params): \SimpleXMLElement
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
     {
         $result = $this->pricingApi->getRoomPriceByResort($params);
         $this->syncFrom($this->pricingApi);

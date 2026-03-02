@@ -240,6 +240,12 @@ if ($mode == 'check_prices') {
 
                     $response_kb = round(strlen($api->getLastResponse() ?: '') / 1024, 1);
 
+                    if ($xml === false) {
+                        echo "<span class='skip'>  Empty response ({$response_kb} KB)</span><br>\n";
+                        flush();
+                        continue;
+                    }
+
                     // Extract hotel IDs via xpath on parsed XML
                     $resort_hotel_ids = [];
                     $nodes = $xml->xpath('//IdHotel');

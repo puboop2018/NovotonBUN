@@ -243,7 +243,7 @@ class PricingApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
-    public function getRoomPriceByResort(array $params): \SimpleXMLElement
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
     {
         $resort = $params['resort'] ?? '';
         $checkIn = $params['check_in'] ?? '';
@@ -282,7 +282,14 @@ class PricingApiClient extends ApiClientBase
             'adults' => $adultsCount
         ];
 
-        return $this->callApiAndParse(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
+
+        try {
+            return $this->xmlParser->parse($response);
+        } catch (XmlParsingException $e) {
+            $this->lastError = $e->getMessage();
+            return false;
+        }
     }
 
     /**
