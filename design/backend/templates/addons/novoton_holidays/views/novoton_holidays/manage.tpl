@@ -73,17 +73,17 @@
     <div class="novoton-actions">
         <h3>Actions</h3>
         <div class="novoton-btn-group">
-            <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices</a>
-            <a href="{"novoton_prices.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-secondary">$ Check Prices (Per-Hotel)</a>
-            <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-secondary">[P] Check Packages</a>
-            <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-success">+ Add Hotels as Products</a>
-            <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[L] Manage Bookings</a>
-            <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-warning">[R] Alternative Requests</a>
-            <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-secondary">[CSV] Download Hotel Features</a>
-            <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-warning" target="_blank">[T] Test API</a>
+            <a href="{"novoton_prices.check_prices"|fn_url}" class="novoton-btn novoton-btn-info">$ Check Prices</a>
+            <a href="{"novoton_prices.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-info">$ Check Prices (Per-Hotel)</a>
+            <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-info">[P] Check Packages</a>
+            <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-info">+ Add Hotels as Products</a>
+            <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-info">[L] Manage Bookings</a>
+            <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-info">[R] Alternative Requests</a>
+            <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-info">[CSV] Download Hotel Features</a>
+            <a href="{"novoton_tools.test_api"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[T] Test API</a>
             <a href="{"novoton_diagnostic.health"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[H] Health Check</a>
-            <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-secondary">[C] Price Comparison Tool</a>
-            <a href="{"novoton_holidays.recompute_calendar_prices"|fn_url}" class="novoton-btn novoton-btn-warning">[Cal] Recompute Calendar Prices</a>
+            <a href="{"novoton_price_compare.manage"|fn_url}" class="novoton-btn novoton-btn-info">[C] Price Comparison Tool</a>
+            <a href="{"novoton_holidays.recompute_calendar_prices"|fn_url}" class="novoton-btn novoton-btn-info">[Cal] Recompute Calendar Prices</a>
         </div>
     </div>
 

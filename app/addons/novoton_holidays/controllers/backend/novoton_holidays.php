@@ -174,16 +174,27 @@ if ($mode == 'recompute_calendar_prices') {
     );
 
     $count = 0;
+    $errors = 0;
     foreach ($hotel_ids as $hid) {
         try {
             \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
             $count++;
         } catch (\Throwable $e) {
-            // Skip hotels that fail
+            $errors++;
         }
     }
 
-    fn_set_notification('N', __('notice'), "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels.");
+    // Count how many hotels actually got calendar prices populated
+    $with_prices = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
+    );
+
+    $msg = "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels."
+         . " ({$with_prices} hotels now have calendar prices)";
+    if ($errors > 0) {
+        $msg .= " — {$errors} errors.";
+    }
+    fn_set_notification('N', __('notice'), $msg);
     return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
 }
 
