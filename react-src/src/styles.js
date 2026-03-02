@@ -48,10 +48,10 @@ export function injectStyles() {
 .nvt-form-row {
     display: flex;
     align-items: stretch;
-    gap: 0;
+    gap: 4px;
     border: 3px solid var(--nvt-accent, #FFB703);
     border-radius: var(--nvt-radius, 8px);
-    background: var(--nvt-bg, #ffffff);
+    background: var(--nvt-accent, #FFB703);
     overflow: visible;
     position: relative;
 }
@@ -72,10 +72,6 @@ export function injectStyles() {
     outline: none !important;
     box-shadow: none !important;
 }
-.nvt-field,
-.nvt-field:hover,
-.nvt-field:focus,
-.nvt-field:active,
 .nvt-field-input,
 .nvt-field-input:hover,
 .nvt-field-input:focus,
@@ -92,22 +88,18 @@ button.nvt-field-input:active {
 .nvt-field {
     position: relative;
     flex: 1;
-    border-right: 1px solid var(--nvt-border, #e0e0e0);
-}
-.nvt-field:last-child {
-    border-right: none;
+    background: var(--nvt-bg, #ffffff);
+    border-radius: 4px;
 }
 .nvt-field--date {
-    flex: 1.8;
+    flex: 2;
 }
 .nvt-field--guests {
-    flex: 1.2;
+    flex: 1.5;
 }
 .nvt-field--btn {
-    flex: 1;
-    min-width: 160px;
-    border-right: none;
-    padding: 5px;
+    flex: 0 0 auto;
+    padding: 3px;
     display: flex;
     align-items: stretch;
 }
@@ -115,15 +107,15 @@ button.nvt-field-input:active {
 .nvt-field-input {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     padding: 6px 12px;
     cursor: pointer;
-    min-height: 40px;
+    min-height: 50px;
     background: transparent;
     border: none;
     width: 100%;
-    text-align: center;
+    text-align: left;
     font: inherit;
     color: inherit;
     -webkit-user-select: text;
@@ -141,7 +133,7 @@ button.nvt-field-input:active {
     min-width: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 .nvt-field-input-text .nvt-label {
     display: block;
@@ -186,12 +178,13 @@ button.nvt-field-input:active {
     background: #0071E3;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: var(--nvt-btn-font, 15px);
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
     width: 100%;
+    height: 100%;
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
@@ -746,21 +739,14 @@ button.nvt-field-input:active {
         flex-direction: column;
         border-radius: var(--nvt-radius, 8px);
     }
-    .nvt-field {
-        border-right: none;
-        border-bottom: 1px solid var(--nvt-border, #e0e0e0);
-    }
-    .nvt-field:last-child {
-        border-bottom: none;
-    }
     .nvt-field--btn {
         flex: 0 0 auto;
         min-width: 0;
-        padding: 5px;
+        padding: 0;
     }
     .nvt-btn-search {
         width: 100%;
-        border-radius: 8px;
+        border-radius: 4px;
         font-size: 15px;
         padding: 10px 20px;
     }

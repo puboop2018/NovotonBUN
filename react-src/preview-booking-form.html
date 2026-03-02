@@ -106,32 +106,49 @@
   }
 
   /* ================================================================
-     AFTER (new design)
-     - border: 2px solid #FFB703 on parent container
-     - Button has rounded corners on ALL sides
-     - 5px internal gap (padding) between button and golden border
-     - Button fills 100% height within padding
-     - Gray divider between guests and button
-     - Button floats inside the golden frame
+     AFTER (new design — golden dividers)
+     - background: #FFB703 with gap: 4px creates golden dividers
+     - Fields are white islands with border-radius: 4px
+     - Text left-aligned
+     - Button: border-radius 4px, 3px breathing room
      ================================================================ */
   .after .nvt-form-row {
-    border: 2px solid #FFB703;
+    border: 3px solid #FFB703;
     border-radius: 8px;
+    background: #FFB703;
+    gap: 4px;
+  }
+  .after .nvt-field {
+    background: #fff;
+    border-radius: 4px;
+    border-right: none;
+  }
+  .after .nvt-field--date {
+    flex: 2;
+  }
+  .after .nvt-field--guests {
+    flex: 1.5;
   }
   .after .nvt-field-input {
     padding: 6px 12px;
-    min-height: 40px;
+    min-height: 50px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .after .nvt-field-input-text {
+    justify-content: flex-start;
   }
   .after .nvt-field--btn {
-    padding: 5px;
+    flex: 0 0 auto;
+    padding: 3px;
     display: flex;
     align-items: stretch;
   }
   .after .nvt-btn-search {
     font-size: 15px;
     padding: 10px 28px;
-    border-radius: 6px;
-    height: auto;
+    border-radius: 4px;
+    height: 100%;
   }
 
   /* ---- Annotations ---- */
@@ -272,8 +289,8 @@
      AFTER (new design)
      ============================================================ -->
 <div class="section">
-  <p class="section-label after-label">&#10003; After (new design)</p>
-  <p class="dims">border: <strong>2px</strong> solid #FFB703 &middot; border-radius: 8px &middot; btn border-radius: 6px &middot; btn padding: 5px inside frame</p>
+  <p class="section-label after-label">&#10003; After (golden dividers design)</p>
+  <p class="dims">background: #FFB703 &middot; gap: 4px &middot; white field islands &middot; border-radius: 4px &middot; btn padding: 3px</p>
   <div class="card after">
     <div class="nvt-availability-header">
       <h2 class="nvt-availability-title">Availability</h2>
@@ -311,10 +328,10 @@
       </div>
     </div>
     <div class="annotation">
-      <span class="tag"><span class="dot gold"></span> 2px golden border wraps entire group</span>
-      <span class="tag"><span class="dot gray"></span> Gray divider between guests &amp; button</span>
-      <span class="tag"><span class="dot blue"></span> Button rounded on all sides (6px)</span>
-      <span class="tag"><span class="dot green"></span> 5px internal gap — button floats inside frame</span>
+      <span class="tag"><span class="dot gold"></span> Golden background shows through 4px gaps as dividers</span>
+      <span class="tag"><span class="dot gray"></span> White field islands with 4px border-radius</span>
+      <span class="tag"><span class="dot blue"></span> Button border-radius 4px, 3px breathing room</span>
+      <span class="tag"><span class="dot green"></span> Text left-aligned &middot; fields taller (50px)</span>
     </div>
   </div>
 </div>
@@ -364,20 +381,20 @@
 <div class="changes-list">
   <h3>Changes Applied in "After"</h3>
   <ul>
-    <li><span class="highlight">Golden border: 2px</span> (was 3px) — <code>border: 2px solid #FFB703</code> on parent container</li>
-    <li><span class="highlight">Golden border wraps entire group</span> — dates + guests + button all inside one frame</li>
-    <li><span class="highlight">Button rounded corners on ALL sides</span> — <code>border-radius: 6px</code></li>
-    <li><span class="highlight">5px internal gap</span> — button floats inside golden frame, not glued to edges</li>
-    <li><span class="highlight">Button height 100%</span> — fills from top golden border to bottom (within padding)</li>
-    <li><span class="highlight">Gray divider</span> — thin 1px #e0e0e0 line between guest input and button area</li>
-    <li><span class="highlight">Button centered vertically</span> — perfectly centered within the golden bar</li>
+    <li><span class="highlight">Golden dividers:</span> <code>background: #FFB703</code> + <code>gap: 4px</code> — golden background shows through gaps</li>
+    <li><span class="highlight">White field islands:</span> each field has <code>background: #fff; border-radius: 4px</code></li>
+    <li><span class="highlight">No gray border-right dividers</span> — golden gap replaces them</li>
+    <li><span class="highlight">Left-aligned text</span> — <code>justify-content: flex-start</code> on inputs</li>
+    <li><span class="highlight">Taller fields:</span> <code>min-height: 50px</code> (was 40px)</li>
+    <li><span class="highlight">Field proportions:</span> date <code>flex: 2</code>, guests <code>flex: 1.5</code>, button <code>flex: 0 0 auto</code></li>
+    <li><span class="highlight">Button:</span> <code>border-radius: 4px</code>, <code>height: 100%</code>, 3px breathing room</li>
   </ul>
 </div>
 
 <div class="comparison">
-  <span><span class="box old"></span> Before (3px border)</span>
+  <span><span class="box old"></span> Before (white bg, gray dividers)</span>
   <span>&rarr;</span>
-  <span><span class="box new"></span> After (2px border, button floats inside frame)</span>
+  <span><span class="box new"></span> After (golden dividers, white field islands)</span>
 </div>
 
 </body>
