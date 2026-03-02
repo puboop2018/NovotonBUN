@@ -99,7 +99,7 @@ button.nvt-field-input:active {
 }
 .nvt-field--btn {
     flex: 0 0 auto;
-    padding: 0;
+    padding: 3px;
     display: flex;
     align-items: stretch;
 }
