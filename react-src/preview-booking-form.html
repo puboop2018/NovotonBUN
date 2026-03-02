@@ -139,8 +139,8 @@
     justify-content: flex-start;
   }
   .after .nvt-field--btn {
-    flex: 0 0 auto;
-    padding: 3px;
+    flex: 0.5;
+    padding: 0;
     display: flex;
     align-items: stretch;
   }
@@ -290,7 +290,7 @@
      ============================================================ -->
 <div class="section">
   <p class="section-label after-label">&#10003; After (golden dividers design)</p>
-  <p class="dims">background: #FFB703 &middot; gap: 4px &middot; white field islands &middot; border-radius: 4px &middot; btn padding: 3px</p>
+  <p class="dims">background: #FFB703 &middot; gap: 4px &middot; white field islands &middot; border-radius: 4px &middot; btn flex: 0.5 &middot; no padding</p>
   <div class="card after">
     <div class="nvt-availability-header">
       <h2 class="nvt-availability-title">Availability</h2>
@@ -330,7 +330,7 @@
     <div class="annotation">
       <span class="tag"><span class="dot gold"></span> Golden background shows through 4px gaps as dividers</span>
       <span class="tag"><span class="dot gray"></span> White field islands with 4px border-radius</span>
-      <span class="tag"><span class="dot blue"></span> Button border-radius 4px, 3px breathing room</span>
+      <span class="tag"><span class="dot blue"></span> Button flex: 0.5, border-radius 4px, no padding gap</span>
       <span class="tag"><span class="dot green"></span> Text left-aligned &middot; fields taller (50px)</span>
     </div>
   </div>
@@ -386,8 +386,8 @@
     <li><span class="highlight">No gray border-right dividers</span> — golden gap replaces them</li>
     <li><span class="highlight">Left-aligned text</span> — <code>justify-content: flex-start</code> on inputs</li>
     <li><span class="highlight">Taller fields:</span> <code>min-height: 50px</code> (was 40px)</li>
-    <li><span class="highlight">Field proportions:</span> date <code>flex: 2</code>, guests <code>flex: 1.5</code>, button <code>flex: 0 0 auto</code></li>
-    <li><span class="highlight">Button:</span> <code>border-radius: 4px</code>, <code>height: 100%</code>, 3px breathing room</li>
+    <li><span class="highlight">Field proportions:</span> date <code>flex: 2</code>, guests <code>flex: 1.5</code>, button <code>flex: 0.5</code></li>
+    <li><span class="highlight">Button:</span> <code>border-radius: 4px</code>, <code>height: 100%</code>, no padding — flush with form</li>
   </ul>
 </div>
 

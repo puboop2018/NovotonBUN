@@ -98,8 +98,8 @@ button.nvt-field-input:active {
     flex: 1.5;
 }
 .nvt-field--btn {
-    flex: 0 0 auto;
-    padding: 3px;
+    flex: 0.5;
+    padding: 0;
     display: flex;
     align-items: stretch;
 }
