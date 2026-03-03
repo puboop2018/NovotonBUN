@@ -16,7 +16,7 @@ class NovotonXmlParser implements XmlParserInterface
     /**
      * Clean XML entities
      * Only encode bare ampersands that would break XML parsing.
-     * Does NOT remove ampersands inside CDATA sections (they're valid there).
+     * Skips CDATA sections where bare ampersands are valid literal content.
      *
      * @param string|null|false $string Raw XML/HTML string
      * @return string Cleaned string
@@ -27,19 +27,27 @@ class NovotonXmlParser implements XmlParserInterface
             return (string)$string;
         }
 
-        // For very large responses (>500KB), be more conservative to avoid memory issues
-        $is_large = strlen($string) > 500000;
-
-        // Only replace bare & that are not part of valid entities
-        if ($is_large) {
-            if (strpos($string, '&') !== false && strpos($string, '&amp;') === false) {
-                $string = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#)/', '&amp;', $string, 1000);
-            }
-        } else {
-            $string = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#)/', '&amp;', $string);
+        // Fast path: no ampersands at all
+        if (strpos($string, '&') === false) {
+            return $string;
         }
 
-        return $string;
+        // Split around CDATA sections so we only escape bare & in non-CDATA parts.
+        // Inside CDATA, & is a valid literal character and must NOT be escaped.
+        $parts = preg_split('/(<!\[CDATA\[.*?\]\]>)/s', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        $result = '';
+        foreach ($parts as $part) {
+            if (strpos($part, '<![CDATA[') === 0) {
+                // CDATA section — keep as-is
+                $result .= $part;
+            } else {
+                // Regular XML text — escape bare & that are not valid entity refs
+                $result .= preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;|#)/', '&amp;', $part);
+            }
+        }
+
+        return $result;
     }
 
     /**
