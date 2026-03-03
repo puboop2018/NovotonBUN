@@ -29,13 +29,13 @@
     {if $available_countries|count > 1}
     <div class="country-tabs">
         {foreach from=$available_countries item=c}
-            <a href="{"novoton_holidays.add_hotels_as_products&country=`$c`"|fn_url}"
+            <a href="{"novoton_hotels.add_hotels_as_products&country=`$c`"|fn_url}"
                {if $c == $country}class="active"{/if}>{$c}</a>
         {/foreach}
     </div>
     {/if}
 
-    <form action="{"novoton_holidays.add_hotels_as_products"|fn_url}" method="post">
+    <form action="{"novoton_hotels.add_hotels_as_products"|fn_url}" method="post">
         <input type="hidden" name="security_hash" value="{$security_hash}">
         <input type="hidden" name="run" value="1">
         <input type="hidden" name="country" value="{$country}">

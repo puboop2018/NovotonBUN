@@ -112,21 +112,37 @@ $schema['novoton_admin'] = [
 ];
 
 // novoton_hotels controller
+// Modes previously routed via include() from novoton_holidays are now dispatched
+// directly to this controller for proper CS-Cart template resolution.
 $schema['novoton_hotels'] = [
     'modes' => [
-        'manage'               => ['permissions' => 'manage_catalog'],
-        'view'                 => ['permissions' => 'manage_catalog'],
-        'update'               => ['permissions' => 'manage_catalog'],
-        'save_facility_types'  => ['permissions' => 'manage_catalog'],
-        'sync'                 => ['permissions' => 'novoton_manage_sync'],
+        'manage'                 => ['permissions' => 'manage_catalog'],
+        'view'                   => ['permissions' => 'manage_catalog'],
+        'update'                 => ['permissions' => 'manage_catalog'],
+        'save_facility_types'    => ['permissions' => 'manage_catalog'],
+        'sync'                   => ['permissions' => 'novoton_manage_sync'],
+        'add_hotels_as_products' => ['permissions' => 'manage_catalog'],
+        'view_hotels_to_add'     => ['permissions' => 'manage_catalog'],
+        'list_facilities'        => ['permissions' => 'manage_catalog'],
+        'sync_facilities'        => ['permissions' => 'novoton_manage_sync'],
+        'sync_hotel_facilities'  => ['permissions' => 'novoton_manage_sync'],
+        'check_packages'         => ['permissions' => 'novoton_manage_sync'],
     ],
 ];
 
 // novoton_prices controller
+// Price modes previously routed via include() from novoton_holidays
+// are now dispatched directly.
 $schema['novoton_prices'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'manage_catalog'],
-        'view'    => ['permissions' => 'manage_catalog'],
+        'manage'                   => ['permissions' => 'manage_catalog'],
+        'view'                     => ['permissions' => 'manage_catalog'],
+        'update_prices'            => ['permissions' => 'novoton_manage_sync'],
+        'check_prices'             => ['permissions' => 'novoton_manage_sync'],
+        'check_prices_hotel'       => ['permissions' => 'novoton_manage_sync'],
+        'room_price'               => ['permissions' => 'novoton_manage_sync'],
+        'download_active_prices_csv' => ['permissions' => 'manage_catalog'],
+        'cron_offers_update'       => ['permissions' => 'novoton_manage_sync'],
     ],
 ];
 
@@ -142,9 +158,25 @@ $schema['novoton_price_compare'] = [
 ];
 
 // novoton_tools controller
+// Test and export modes previously routed via include() from novoton_holidays
+// are now dispatched directly for proper CS-Cart template resolution.
 $schema['novoton_tools'] = [
     'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_sync'],
+        'manage'                      => ['permissions' => 'novoton_manage_sync'],
+        'test_api'                    => ['permissions' => 'novoton_manage_sync'],
+        'test_formats'                => ['permissions' => 'novoton_manage_sync'],
+        'test_product'                => ['permissions' => 'novoton_manage_sync'],
+        'test_hotel_list'             => ['permissions' => 'novoton_manage_sync'],
+        'test_room_price'             => ['permissions' => 'novoton_manage_sync'],
+        'test_search'                 => ['permissions' => 'novoton_manage_sync'],
+        'test_hotel_request'          => ['permissions' => 'novoton_manage_sync'],
+        'test_alternative_rs'         => ['permissions' => 'novoton_manage_sync'],
+        'test_facilities'             => ['permissions' => 'novoton_manage_sync'],
+        'export_hotel_features_csv'   => ['permissions' => 'manage_catalog'],
+        'get_hotel_features_csv'      => ['permissions' => 'manage_catalog'],
+        'cron_export_hotel_features'  => ['permissions' => 'novoton_manage_sync'],
+        'export_hotel_features_xml'   => ['permissions' => 'manage_catalog'],
+        'download_hotel_features_xml' => ['permissions' => 'manage_catalog'],
     ],
 ];
 
