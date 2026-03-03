@@ -85,6 +85,16 @@ class PriceInfoFormatter
             return true;
         }
 
+        // Fallback: strip ordinal prefixes ("1 ST ", "2 ND ", "3 RD ", etc.)
+        // and compare the core age type.  This handles IdAge-mapped rows like
+        // "CHD 2-11.99" matching occupancy-generated types like "1 ST CHD 2-11,99".
+        $ordinalPattern = '/^\d+\s*(ST|ND|RD|TH)\s+/i';
+        $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
+        $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
+        if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
+            return true;
+        }
+
         return false;
     }
 
