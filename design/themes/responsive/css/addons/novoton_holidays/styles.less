@@ -4,11 +4,10 @@
  * Design tokens → LESS variables → CSS custom properties.
  * CS-Cart compiles this into a single cached CSS file.
  *
- * The four @novoton-* variables marked "Theme Editor" match the field
- * names in schemas/theme_editor/schema.post.php.  When an admin changes
- * a color in the Visual Editor the preset LESS file overrides these
- * defaults and the :root bridge propagates the value to every
- * var(--nvt-*) consumer (LESS components, React, plain CSS).
+ * Strategy: inherit chrome/status colors from the active theme preset so the
+ * addon automatically adapts when the merchant switches between Blue, Green,
+ * Orange, etc.  Only the four booking-engine brand colors are addon-specific
+ * and customisable via the Theme Editor (schema.post.php).
  *
  * @package NovotonHolidays
  * @since   2.8.0
@@ -36,38 +35,40 @@
 @novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Novoton: Search button"
 @novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Novoton: Search button (hover)"
 
-// Brand derived
-@novoton-primary-light:     #0071c2;
-@novoton-primary-dark:      #00264d;
-@novoton-accent-hover:      #e5a800;
+// Brand derived (computed so they adapt when Theme Editor overrides the base)
+@novoton-primary-light:     lighten(@novoton-primary, 15%);
+@novoton-primary-dark:      darken(@novoton-primary, 15%);
+@novoton-accent-hover:      darken(@novoton-accent, 10%);
 
 // Primary focus ring (10 % opacity of brand)
 @novoton-primary-focus:     fade(@novoton-primary, 10%);
 
 // ---------------------------------------------------------------------------
-// 2. CHROME & STATUS COLORS
+// 2. CHROME & STATUS COLORS  (inherited from the active theme preset)
 //
-//    Hardcoded defaults that match CS-Cart's Blue preset.
-//    These are NOT registered in the Theme Editor to avoid empty-value
-//    crashes in lessphp's color functions (mix, darken, lighten, fade).
-//    If you need to match a different preset, override these values here.
+//    These map directly to CS-Cart theme variables so the addon auto-adapts
+//    when the merchant switches presets (Blue → Orange → Green, etc.).
+//    Variables used here (@font, @base, @content_bg, @in_stock, etc.) are
+//    guaranteed to exist in every CS-Cart theme data file.
+//
+//    DO NOT register these in schema.post.php — they must follow the theme.
 // ---------------------------------------------------------------------------
 
-// Text
-@novoton-text:              #333;
-@novoton-text-light:        #808080;
-@novoton-text-disabled:     #999;
+// Text  (from theme: @font is the main text color)
+@novoton-text:              @font;
+@novoton-text-light:        lighten(@font, 35%);
+@novoton-text-disabled:     lighten(@font, 50%);
 
-// Surfaces
-@novoton-bg:                #fff;
-@novoton-bg-light:          #f9f9f9;
-@novoton-border:            #ccc;
+// Surfaces  (from theme: @content_bg, @general_bg_color, @base)
+@novoton-bg:                @content_bg;
+@novoton-bg-light:          @general_bg_color;
+@novoton-border:            @base;
 
-// Status
-@novoton-success:           #97c300;
-@novoton-warning:           #f0ad4e;
-@novoton-danger:            #ff5215;
-@novoton-info:              #17a2b8;
+// Status  (from theme: @in_stock, @out_of_stock, @links)
+@novoton-success:           @in_stock;
+@novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
+@novoton-danger:            @out_of_stock;
+@novoton-info:              @links;
 
 // Status derived
 @novoton-success-dark:      darken(@novoton-success, 10%);
@@ -79,15 +80,15 @@
 @novoton-info-dark:         darken(@novoton-info, 15%);
 @novoton-info-light:        lighten(@novoton-info, 40%);
 
-// Layout
+// Layout  (respects the "Rounded corners" toggle in Theme Editor)
 @novoton-radius:            4px;
 @novoton-radius-sm:         4px;
 
-// Typography
-@novoton-font-family:       Arial, Helvetica, sans-serif;
-@novoton-font-size-base:    14px;
-@novoton-font-size-small:   11px;
-@novoton-font-size-large:   18px;
+// Typography  (from theme: @body_font, @body_font_size)
+@novoton-font-family:       @body_font;
+@novoton-font-size-base:    unit(@body_font_size, px);
+@novoton-font-size-small:   round(@body_font_size * 0.79);
+@novoton-font-size-large:   round(@body_font_size * 1.29);
 
 // ---------------------------------------------------------------------------
 // 3. ADDON-SPECIFIC  (spacing & shadows — no theme equivalents)
