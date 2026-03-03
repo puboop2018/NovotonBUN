@@ -287,35 +287,34 @@ function fn_novoton_holidays_setup_db(): void
 }
 
 /**
- * Create Theme Editor preset LESS files.
+ * Theme Editor preset stub (no-op).
  *
- * Ships a `novoton_default.less` file into each theme's `styles/data/`
- * directory.  This file provides the default LESS variable values that
- * the addon's `css/addons/novoton_holidays/styles.less` consumes.
+ * The addon no longer ships a custom preset (`novoton_default.less`).
+ * Chrome, status, and typography tokens in `styles.less` now inherit
+ * directly from the active theme's variables (@font, @base, @content_bg,
+ * @in_stock, etc.), so the addon auto-adapts to whichever of the core
+ * presets (Blue, Green, Orange, …) the merchant selects.
  *
- * IMPORTANT: We intentionally do NOT modify `manifest.json` because that
- * is a core CS-Cart file.  Modifying it triggers the File Changes Detector
- * and can cause conflicts during CS-Cart upgrades.  The addon's LESS
- * variables already have defaults in `styles.less`, and the Theme Editor
- * fields registered via `schema.post.php` work with any active preset.
+ * The four addon-specific brand colors are registered via
+ * `schema.post.php` and work with any active preset.
  *
- * Idempotent — skips files that already exist.
+ * Kept as a callable stub for backward compatibility with install hooks.
  *
  * @return void
  */
 function fn_novoton_holidays_create_theme_presets(): void
 {
-    // Preset LESS files are shipped with the addon package in
-    // design/themes/{theme}/styles/data/novoton_default.less
-    // and deployed by CS-Cart's addon file-copy during installation.
-    // No dynamic file creation or manifest.json modification needed.
+    // No-op: addon inherits from the active theme preset.
 }
 
 /**
- * Remove Theme Editor preset files on uninstall.
+ * Remove legacy Theme Editor preset files on uninstall.
  *
- * Also cleans up any leftover `novoton_default` entries in manifest.json
- * that may have been created by older addon versions (< 3.3.0).
+ * The addon no longer ships a custom preset, but older versions did.
+ * This function cleans up leftover `novoton_default.less` files and
+ * any stale `novoton_default` entries in manifest.json to ensure a
+ * clean uninstall regardless of which addon version was originally
+ * installed.
  *
  * @return void
  */
