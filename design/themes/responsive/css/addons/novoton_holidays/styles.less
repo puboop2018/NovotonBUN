@@ -101,6 +101,16 @@
 @novoton-shadow:    0 2px 4px rgba(0, 0, 0, 0.1);
 @novoton-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
 
+// Z-index scale (LESS variables for direct use in components;
+// the :root block below bridges them to CSS custom properties for JS)
+@novoton-z-dropdown:       1000;
+@novoton-z-sticky:         1020;
+@novoton-z-fixed:          1030;
+@novoton-z-modal-backdrop: 1040;
+@novoton-z-modal:          1050;
+@novoton-z-notification:   1060;
+@novoton-z-tooltip:        1070;
+
 // ============================================================================
 // LESS → CSS CUSTOM PROPERTIES BRIDGE
 //
@@ -109,58 +119,63 @@
 // the custom property updates automatically on recompile.
 // ============================================================================
 
+// lessphp (CS-Cart's PHP LESS compiler) does not fully support CSS custom
+// properties.  Bare values inside --custom-prop declarations can trigger
+// "expected color value" errors.  Wrapping every value with ~"@{var}" or
+// ~"literal" forces lessphp to emit the resolved value as an unquoted
+// string, bypassing its broken value-type validation.
 :root {
     // Brand
-    --nvt-primary:          @novoton-primary;
-    --nvt-primary-light:    @novoton-primary-light;
-    --nvt-primary-dark:     @novoton-primary-dark;
-    --nvt-accent:           @novoton-accent;
-    --nvt-accent-hover:     @novoton-accent-hover;
-    --nvt-search-btn-bg:    @novoton-search-btn-bg;
-    --nvt-search-btn-hover: @novoton-search-btn-hover;
+    --nvt-primary:          ~"@{novoton-primary}";
+    --nvt-primary-light:    ~"@{novoton-primary-light}";
+    --nvt-primary-dark:     ~"@{novoton-primary-dark}";
+    --nvt-accent:           ~"@{novoton-accent}";
+    --nvt-accent-hover:     ~"@{novoton-accent-hover}";
+    --nvt-search-btn-bg:    ~"@{novoton-search-btn-bg}";
+    --nvt-search-btn-hover: ~"@{novoton-search-btn-hover}";
 
-    // Status (now inherited from theme)
-    --nvt-success:          @novoton-success;
-    --nvt-success-light:    @novoton-success-light;
-    --nvt-success-dark:     @novoton-success-dark;
-    --nvt-warning:          @novoton-warning;
-    --nvt-warning-light:    @novoton-warning-light;
-    --nvt-warning-dark:     @novoton-warning-dark;
-    --nvt-danger:           @novoton-danger;
-    --nvt-danger-light:     @novoton-danger-light;
-    --nvt-danger-dark:      @novoton-danger-dark;
-    --nvt-info:             @novoton-info;
-    --nvt-info-light:       @novoton-info-light;
-    --nvt-info-dark:        @novoton-info-dark;
+    // Status
+    --nvt-success:          ~"@{novoton-success}";
+    --nvt-success-light:    ~"@{novoton-success-light}";
+    --nvt-success-dark:     ~"@{novoton-success-dark}";
+    --nvt-warning:          ~"@{novoton-warning}";
+    --nvt-warning-light:    ~"@{novoton-warning-light}";
+    --nvt-warning-dark:     ~"@{novoton-warning-dark}";
+    --nvt-danger:           ~"@{novoton-danger}";
+    --nvt-danger-light:     ~"@{novoton-danger-light}";
+    --nvt-danger-dark:      ~"@{novoton-danger-dark}";
+    --nvt-info:             ~"@{novoton-info}";
+    --nvt-info-light:       ~"@{novoton-info-light}";
+    --nvt-info-dark:        ~"@{novoton-info-dark}";
 
     // Focus
-    --nvt-primary-focus:    @novoton-primary-focus;
+    --nvt-primary-focus:    ~"@{novoton-primary-focus}";
 
-    // Text (now inherited from theme)
-    --nvt-text:             @novoton-text;
-    --nvt-text-light:       @novoton-text-light;
-    --nvt-text-disabled:    @novoton-text-disabled;
+    // Text
+    --nvt-text:             ~"@{novoton-text}";
+    --nvt-text-light:       ~"@{novoton-text-light}";
+    --nvt-text-disabled:    ~"@{novoton-text-disabled}";
 
-    // Surfaces (now inherited from theme)
-    --nvt-bg:               @novoton-bg;
-    --nvt-bg-light:         @novoton-bg-light;
-    --nvt-border:           @novoton-border;
+    // Surfaces
+    --nvt-bg:               ~"@{novoton-bg}";
+    --nvt-bg-light:         ~"@{novoton-bg-light}";
+    --nvt-border:           ~"@{novoton-border}";
 
-    // Layout (radius now inherited from theme)
-    --nvt-radius:           @novoton-radius;
-    --nvt-radius-sm:        @novoton-radius-sm;
+    // Layout
+    --nvt-radius:           ~"@{novoton-radius}";
+    --nvt-radius-sm:        ~"@{novoton-radius-sm}";
 
-    // Typography (font-family now inherited from theme)
-    --nvt-font-family:      @novoton-font-family;
+    // Typography
+    --nvt-font-family:      ~"@{novoton-font-family}";
 
     // Z-index scale
-    --nvt-z-dropdown:       1000;
-    --nvt-z-sticky:         1020;
-    --nvt-z-fixed:          1030;
-    --nvt-z-modal-backdrop: 1040;
-    --nvt-z-modal:          1050;
-    --nvt-z-notification:   1060;
-    --nvt-z-tooltip:        1070;
+    --nvt-z-dropdown:       ~"@{novoton-z-dropdown}";
+    --nvt-z-sticky:         ~"@{novoton-z-sticky}";
+    --nvt-z-fixed:          ~"@{novoton-z-fixed}";
+    --nvt-z-modal-backdrop: ~"@{novoton-z-modal-backdrop}";
+    --nvt-z-modal:          ~"@{novoton-z-modal}";
+    --nvt-z-notification:   ~"@{novoton-z-notification}";
+    --nvt-z-tooltip:        ~"@{novoton-z-tooltip}";
 }
 
 // ============================================================================
@@ -385,7 +400,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: var(--nvt-z-modal-backdrop);
+    z-index: @novoton-z-modal-backdrop;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -518,7 +533,7 @@
     padding: @novoton-spacing-md 25px;
     border-radius: @novoton-radius;
     font-weight: 600;
-    z-index: var(--nvt-z-notification);
+    z-index: @novoton-z-notification;
     box-shadow: @novoton-shadow-lg;
     transition: opacity 0.3s;
 
