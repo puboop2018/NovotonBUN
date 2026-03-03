@@ -94,6 +94,17 @@ button.nvt-field-input:active {
 .nvt-field--date {
     flex: 2;
 }
+/* Red border highlight when date validation fails */
+.nvt-field--error {
+    box-shadow: inset 0 0 0 2px var(--nvt-danger, #d32f2f);
+    border-radius: 4px;
+    animation: nvt-field-shake 0.3s ease-out;
+}
+@keyframes nvt-field-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
 .nvt-field--guests {
     flex: 1.5;
 }

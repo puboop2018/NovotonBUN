@@ -310,14 +310,15 @@ export default function BookingEngine({ config }) {
 
     const handleSearch = useCallback(() => {
         setFetchError('');
-        // Validate dates
+        // Validate dates — show error tooltip, don't auto-open calendar
         if (!checkIn || !checkOut) {
             setValidationError(t('pleaseEnterDates', 'Please select check-in and check-out dates'));
-            setShowCalendar(true);
+            setShowCalendar(false);
+            setShowGuests(false);
             return;
         }
 
-        // Validate child ages
+        // Validate child ages — open guest picker so user can fix
         const errors = [];
         rooms.forEach((room, roomIdx) => {
             if (room.children > 0) {
@@ -332,6 +333,7 @@ export default function BookingEngine({ config }) {
         if (errors.length > 0) {
             setAgeErrors(errors);
             setShowGuests(true);
+            setShowCalendar(false);
             return;
         }
 
@@ -427,12 +429,12 @@ export default function BookingEngine({ config }) {
                 )}
 
                 {/* Date field */}
-                <div className="nvt-field nvt-field--date">
+                <div className={`nvt-field nvt-field--date${validationError ? ' nvt-field--error' : ''}`}>
                     <button
                         ref={dateTriggerRef}
                         type="button"
                         className="nvt-field-input"
-                        onClick={() => { setShowCalendar(!showCalendar); setShowGuests(false); }}
+                        onClick={() => { setShowCalendar(!showCalendar); setShowGuests(false); setValidationError(''); }}
                         aria-expanded={showCalendar}
                         aria-haspopup="dialog"
                     >
