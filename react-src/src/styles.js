@@ -94,6 +94,17 @@ button.nvt-field-input:active {
 .nvt-field--date {
     flex: 2;
 }
+/* Red border highlight when date validation fails */
+.nvt-field--error {
+    box-shadow: inset 0 0 0 2px var(--nvt-danger, #d32f2f);
+    border-radius: 4px;
+    animation: nvt-field-shake 0.3s ease-out;
+}
+@keyframes nvt-field-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
 .nvt-field--guests {
     flex: 1.5;
 }
@@ -191,16 +202,35 @@ button.nvt-field-input:active {
     background: #0071E3;
 }
 
-/* ---------- Validation message ---------- */
+/* ---------- Validation message (tooltip under date field) ---------- */
 
 .nvt-validation-message {
-    margin-top: 8px;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: calc(var(--nvt-z-popup) - 1);
     padding: 10px 14px;
     font-size: 13px;
     font-weight: 500;
     color: #fff;
     background: var(--nvt-danger, #d32f2f);
-    border-radius: var(--nvt-radius, 8px);
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    animation: nvt-fade-in 0.2s ease-out;
+}
+.nvt-validation-message::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 20px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--nvt-danger, #d32f2f);
+}
+@keyframes nvt-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ======================================================================
@@ -562,37 +592,54 @@ button.nvt-field-input:active {
 /* ----- Smart age anchor (top of guest picker) ----- */
 
 .nvt-smart-age-anchor {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
     padding: 10px 14px;
     margin-bottom: 12px;
-    background: #fff3cd;
-    border: 1px solid #ffc107;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
     border-radius: var(--nvt-radius, 8px);
-    color: #856404;
+    color: #991b1b;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     text-align: left;
     transition: background 0.15s;
 }
+.nvt-smart-age-anchor::before {
+    content: '!';
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
 .nvt-smart-age-anchor:hover {
-    background: #fff3cd !important;
+    background: #fee2e2 !important;
     text-decoration: underline;
 }
 
 /* ----- Highlight animation on target age select ----- */
 
 @keyframes nvt-age-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
-    40%  { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0.4); }
-    70%  { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    40%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.3); }
+    70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 .nvt-age-highlight {
     animation: nvt-age-pulse 0.8s ease-out 2;
-    border-color: #ffc107 !important;
-    background: #fff3cd !important;
+    border-color: #ef4444 !important;
+    background: #fef2f2 !important;
 }
 
 /* ----- Add room button ----- */
@@ -727,6 +774,9 @@ button.nvt-field-input:active {
     .nvt-calendar-popup {
         min-width: 280px;
         max-width: calc(100vw - 24px);
+    }
+    .nvt-validation-message {
+        white-space: normal;
     }
     .nvt-btn-search {
         font-size: 15px;

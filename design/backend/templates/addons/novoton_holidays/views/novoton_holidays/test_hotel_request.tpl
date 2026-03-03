@@ -8,7 +8,7 @@
 </div>
 
 <form method="get" class="form-horizontal">
-    <input type="hidden" name="dispatch" value="novoton_holidays.test_hotel_request">
+    <input type="hidden" name="dispatch" value="novoton_tools.test_hotel_request">
     
     <div class="control-group">
         <label class="control-label">Hotel ID:</label>
@@ -95,7 +95,7 @@
     <h4><i class="icon-ok"></i> Request Sent Successfully!</h4>
     <p><strong>IdNum received:</strong> <span style="font-size: 18px; font-weight: bold;">{$id_num}</span></p>
     <p>Use this IdNum to check for alternatives (typically available after 24-48 hours):</p>
-    <a href="{fn_url("novoton_holidays.test_alternative_rs?id_num=`$id_num`")}" class="btn btn-success">
+    <a href="{fn_url("novoton_tools.test_alternative_rs?id_num=`$id_num`")}" class="btn btn-success">
         <i class="icon-search"></i> Check Alternatives for IdNum {$id_num}
     </a>
 </div>
@@ -111,7 +111,7 @@
 <hr>
 <div class="well">
     <h4>Related Tools</h4>
-    <a href="{fn_url('novoton_holidays.test_alternative_rs')}" class="btn">
+    <a href="{fn_url('novoton_tools.test_alternative_rs')}" class="btn">
         <i class="icon-search"></i> Test alternative_RS
     </a>
     <a href="{fn_url('novoton_alternatives.manage')}" class="btn">

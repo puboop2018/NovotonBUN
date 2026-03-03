@@ -9,7 +9,7 @@
 
 {* Country Filter *}
 <form method="get" class="form-inline" style="margin-bottom: 20px;">
-    <input type="hidden" name="dispatch" value="novoton_holidays.view_hotels_to_add">
+    <input type="hidden" name="dispatch" value="novoton_hotels.view_hotels_to_add">
     <label>Country:</label>
     <select name="country" onchange="this.form.submit()">
         {foreach from=$countries item=c}
@@ -57,14 +57,14 @@
     </ul>
     
     <div style="margin-top: 15px;">
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&dry_run=1&limit=10")}" class="btn" target="_blank">
+        <a href="{fn_url("novoton_hotels.add_hotels_as_products?country=`$country`&dry_run=1&limit=10")}" class="btn" target="_blank">
             <i class="icon-eye-open"></i> Preview First 10 (Dry Run)
         </a>
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&timeout=15")}" class="btn btn-primary" target="_blank" 
+        <a href="{fn_url("novoton_hotels.add_hotels_as_products?country=`$country`&timeout=15")}" class="btn btn-primary" target="_blank" 
            onclick="return confirm('This will add {$hotels|@count} hotels as products.\n\nThis may take 10-15 minutes.\n\nContinue?');">
             <i class="icon-plus"></i> Add All {$hotels|@count} Hotels
         </a>
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&timeout=5&limit=50")}" class="btn btn-warning" target="_blank">
+        <a href="{fn_url("novoton_hotels.add_hotels_as_products?country=`$country`&timeout=5&limit=50")}" class="btn btn-warning" target="_blank">
             <i class="icon-play"></i> Add First 50 Only
         </a>
     </div>

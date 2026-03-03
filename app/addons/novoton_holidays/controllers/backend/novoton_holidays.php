@@ -44,65 +44,52 @@ $tools_modes = [
     'export_hotel_features_xml', 'download_hotel_features_xml'
 ];
 
-// Route to appropriate sub-controller
-$addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/controllers/backend/';
-$_routed = false;
+// Redirect to standalone sub-controllers.
+//
+// Previously these modes were handled via include() of the sub-controller file.
+// However, CS-Cart's dispatch mechanism resolves the template path from the
+// *original* controller name in the dispatch URL. When novoton_hotels.php was
+// include()'d from novoton_holidays.php, modes that fall through to template
+// rendering (add_hotels_as_products, view_hotels_to_add, list_facilities)
+// failed with 404 because CS-Cart couldn't properly resolve the template path.
+//
+// Streaming modes (which call exit;) worked fine via include() since they never
+// reach CS-Cart's template rendering. But template-rendering modes need a
+// proper dispatch cycle with their own controller name.
+//
+// The fix: redirect to the standalone sub-controller dispatch. This ensures
+// CS-Cart's full dispatch cycle runs with the correct controller name, and
+// templates are resolved at views/{controller}/{mode}.tpl.
+$redirect_map = [
+    ['modes' => $hotels_modes, 'controller' => 'novoton_hotels'],
+    ['modes' => $prices_modes, 'controller' => 'novoton_prices'],
+    ['modes' => $tools_modes,  'controller' => 'novoton_tools'],
+];
 
-if (in_array($mode, $hotels_modes)) {
-    $__file = $addon_dir . 'novoton_hotels.php';
-    if (!file_exists($__file)) {
-        fn_set_notification('E', __('error'), "Controller file not found: novoton_hotels.php");
-        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-    }
-    $__result = include($__file);
-    // Only pass through redirects (2-element arrays); template modes fall through
-    if (is_array($__result) && isset($__result[1])) {
-        return $__result;
-    }
-    $_routed = true;
-}
+foreach ($redirect_map as $entry) {
+    if (in_array($mode, $entry['modes'], true)) {
+        $redirect_url = $entry['controller'] . '.' . $mode;
 
-if (!$_routed && in_array($mode, $prices_modes)) {
-    $__file = $addon_dir . 'novoton_prices.php';
-    if (!file_exists($__file)) {
-        fn_set_notification('E', __('error'), "Controller file not found: novoton_prices.php");
-        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-    }
-    $__result = include($__file);
-    if (is_array($__result) && isset($__result[1])) {
-        return $__result;
-    }
-    $_routed = true;
-}
+        // Preserve query parameters (country, run, limit, etc.)
+        $params = $_REQUEST;
+        unset($params['dispatch']);
+        if (!empty($params)) {
+            $redirect_url .= '&' . http_build_query($params);
+        }
 
-if (!$_routed && in_array($mode, $tools_modes)) {
-    $__file = $addon_dir . 'novoton_tools.php';
-    if (!file_exists($__file)) {
-        fn_set_notification('E', __('error'), "Controller file not found: novoton_tools.php");
-        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
     }
-    $__result = include($__file);
-    if (is_array($__result) && isset($__result[1])) {
-        return $__result;
-    }
-    $_routed = true;
 }
 
 // ============================================================================
 // MODES HANDLED IN THIS FILE
-// ============================================================================
-// NOTE: When $_routed is true a sub-controller has already assigned the Smarty
-// variables for the current mode. We must NOT return early — CS-Cart's dispatch
-// requires include() to return 1 (file fell through) to render the template.
-// Returning null (via bare "return;") causes a 404 in CS-Cart.
-// The guards below are skipped harmlessly because $mode won't match.
 // ============================================================================
 
 // ============================================================================
 // POST HANDLERS
 // ============================================================================
 
-if (!$_routed && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save excluded resorts
     if ($mode == 'save_excluded_resorts') {
         if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -174,16 +161,27 @@ if ($mode == 'recompute_calendar_prices') {
     );
 
     $count = 0;
+    $errors = 0;
     foreach ($hotel_ids as $hid) {
         try {
             \Tygh\Addons\NovotonHolidays\Services\PriceInfoService::precomputeCalendarPrices((string) $hid);
             $count++;
         } catch (\Throwable $e) {
-            // Skip hotels that fail
+            $errors++;
         }
     }
 
-    fn_set_notification('N', __('notice'), "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels.");
+    // Count how many hotels actually got calendar prices populated
+    $with_prices = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
+    );
+
+    $msg = "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels."
+         . " ({$with_prices} hotels now have calendar prices)";
+    if ($errors > 0) {
+        $msg .= " — {$errors} errors.";
+    }
+    fn_set_notification('N', __('notice'), $msg);
     return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
 }
 

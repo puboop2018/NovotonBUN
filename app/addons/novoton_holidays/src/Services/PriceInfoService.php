@@ -377,11 +377,19 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Column is added by setup_db() on addon install/upgrade.
         // Suppress errors if column doesn't exist yet.
         try {
-            @db_query(
-                "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-                !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null,
-                $hotelId
-            );
+            if (!empty($rawPrices)) {
+                @db_query(
+                    "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
+                    json_encode($rawPrices, JSON_UNESCAPED_UNICODE),
+                    $hotelId
+                );
+            } else {
+                // Use explicit SQL NULL for JSON column (CS-Cart ?s converts null to '' which is invalid JSON)
+                @db_query(
+                    "UPDATE ?:novoton_hotels SET calendar_prices_raw = NULL WHERE hotel_id = ?s",
+                    $hotelId
+                );
+            }
         } catch (\Throwable $e) {
             // Column doesn't exist yet — skip silently
         }
@@ -449,9 +457,9 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     private static function buildRawDateMap(array $priceinfo, int $adults, string $today, string $maxDate): array
     {
-        // 1. Parse seasons
+        // 1. Parse seasons (handle both nested 'season' key and flat array formats)
         $seasons = $priceinfo['seasons']['season'] ?? $priceinfo['seasons'] ?? [];
-        if (isset($seasons['IdSeason']) || isset($seasons['Season'])) {
+        if (isset($seasons['IdSeason']) || isset($seasons['Season']) || isset($seasons['SeasonNr'])) {
             $seasons = [$seasons];
         }
         if (empty($seasons) || !is_array($seasons)) {
@@ -477,7 +485,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         $dateMap = [];
 
         foreach ($seasons as $season) {
-            $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? 0);
+            $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? $season['SeasonNr'] ?? 0);
             if ($seasonNum <= 0 || !isset($cheapestBySeason[$seasonNum])) {
                 continue;
             }
@@ -545,9 +553,12 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Get max season number
         $maxSeason = 0;
         foreach ($seasons as $s) {
-            $num = (int) ($s['Season'] ?? $s['IdSeason'] ?? 0);
+            $num = (int) ($s['Season'] ?? $s['IdSeason'] ?? $s['SeasonNr'] ?? 0);
             if ($num > $maxSeason) $maxSeason = $num;
         }
+
+        // Age type mapping — matches PriceInfoCalculator logic
+        static $ageTypeMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
 
         // Group adult regular rows by room
         $roomRows = [];
@@ -556,17 +567,20 @@ class PriceInfoService implements PriceInfoServiceInterface
             $idAge = $this->toScalarSafe($row['IdAge'] ?? '');
             $accType = strtoupper(trim($this->toScalarSafe($row['IdAcc'] ?? '')));
 
-            // Only consider adult entries
-            $isAdult = false;
-            if (stripos($fAge, 'ADULT') !== false) {
-                $isAdult = true;
-            } elseif ($idAge === '1') {
-                $isAdult = true;
+            // Resolve age type — same logic as PriceInfoCalculator
+            $rowAge = '';
+            if (!empty($fAge) && is_string($fAge)) {
+                $rowAge = strtoupper(trim($fAge));
+            } else {
+                $rowAge = strtoupper(trim($ageTypeMap[$idAge] ?? $idAge));
             }
+
+            // Only consider adult entries (ADULT, 1ST ADULT, 2ND ADULT, etc.)
+            $isAdult = stripos($rowAge, 'ADULT') !== false;
             if (!$isAdult) continue;
 
             // Only consider regular bed (not extra bed)
-            if ($accType !== '' && $accType !== 'REGULAR') continue;
+            if ($accType !== '' && $accType !== 'REGULAR' && $accType !== 'RB') continue;
 
             $roomId = $this->toScalarSafe($row['IdRoom'] ?? '');
             if ($roomId === '') $roomId = '_default';

@@ -686,11 +686,11 @@
                         <position>25</position>
                     </item>
                     <item id="add_hotels_as_products">
-                        <href>novoton_holidays.add_hotels_as_products</href>
+                        <href>novoton_hotels.add_hotels_as_products</href>
                         <position>26</position>
                     </item>
                     <item id="list_facilities">
-                        <href>novoton_holidays.list_facilities</href>
+                        <href>novoton_hotels.list_facilities</href>
                         <position>27</position>
                     </item>
                     <item id="exchange_rates">
@@ -702,11 +702,11 @@
                         <position>30</position>
                     </item>
                     <item id="test_hotel_request">
-                        <href>novoton_holidays.test_hotel_request</href>
+                        <href>novoton_tools.test_hotel_request</href>
                         <position>40</position>
                     </item>
                     <item id="test_alternative_rs">
-                        <href>novoton_holidays.test_alternative_rs</href>
+                        <href>novoton_tools.test_alternative_rs</href>
                         <position>45</position>
                     </item>
                 </items>

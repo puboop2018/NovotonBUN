@@ -4,4 +4,4 @@
  * The $is_edit_mode variable distinguishes between new booking and edit
  *}
 
-{include file="views/novoton_booking/booking_form.tpl"}
+{include file="addons/novoton_holidays/views/novoton_booking/booking_form.tpl"}

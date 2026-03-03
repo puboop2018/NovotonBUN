@@ -42,7 +42,7 @@ interface NovotonApiInterface
 
     public function applyCommission(float $price): float;
     public function getRoomPrice(array $params): \SimpleXMLElement|false;
-    public function getRoomPriceByResort(array $params): \SimpleXMLElement;
+    public function getRoomPriceByResort(array $params): \SimpleXMLElement|false;
     public function getRoomPriceByResortRaw(array $params): string;
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement;
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement;

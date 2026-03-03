@@ -164,8 +164,6 @@ class PriceInfoCalculator
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
             $rowAcc = PriceInfoFormatter::toScalar($row['IdAcc'] ?? '');
-            $rowStar = PriceInfoFormatter::toScalar($row['IdStar'] ?? '');
-
             $rowAge = '';
             if (!empty($row['fAge']) && is_string($row['fAge'])) {
                 $rowAge = $row['fAge'];
@@ -189,9 +187,6 @@ class PriceInfoCalculator
             if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
             if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) continue;
             if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) continue;
-
-            $idStar = $this->parser->getIdStar();
-            if ($rowStar !== '' && $idStar !== '' && strcasecmp($rowStar, $idStar) !== 0) continue;
 
             if ($nights < $fromDays || $nights > $toDays) continue;
 
@@ -1116,6 +1111,10 @@ class PriceInfoCalculator
                 $finalTotal = $totalEB;
                 $appliedDiscount = 'early_booking';
                 $discountAmount += $ebDiscount['discount'];
+            } elseif ($priorityEXT === 'Yes' && $reduction['applicable']) {
+                $finalTotal = $totalReduction;
+                $appliedDiscount = 'reduction';
+                $discountAmount += $reduction['discount'];
             } else {
                 if ($totalEB <= $totalReduction && $ebDiscount['applicable']) {
                     $finalTotal = $totalEB;

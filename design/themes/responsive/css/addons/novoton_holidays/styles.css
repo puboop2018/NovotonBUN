@@ -5674,9 +5674,13 @@ div.novoton-desktop-only,
     outline: none !important;
     box-shadow: none !important;
 }
-/* Keep form field backgrounds transparent (the field containers, not popup children) */
+/* Form field containers need white background so accent row color doesn't bleed through */
 .nvt-field,
-.nvt-field:hover,
+.nvt-field:hover {
+    background: var(--nvt-bg, #ffffff) !important;
+    background-color: var(--nvt-bg, #ffffff) !important;
+}
+/* Keep form field INPUTS transparent (buttons inside the white field containers) */
 .nvt-field-input,
 .nvt-field-input:hover,
 .nvt-field-input:focus,

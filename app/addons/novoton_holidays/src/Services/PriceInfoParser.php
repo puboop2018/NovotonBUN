@@ -25,9 +25,6 @@ class PriceInfoParser
     /** @var array Code index for Code/Base resolution */
     private $codeIndex = [];
 
-    /** @var string IdStar for season_price matching */
-    private $idStar = '4*';
-
     /** @var array Hotel-specific child age bands */
     private $childAgeBands = [];
 
@@ -44,10 +41,7 @@ class PriceInfoParser
     public function getPriceinfo(): ?array { return $this->priceinfo; }
     public function getHotelinfo(): ?array { return $this->hotelinfo; }
     public function getCodeIndex(): array { return $this->codeIndex; }
-    public function getIdStar(): string { return $this->idStar; }
     public function getChildAgeBands(): array { return $this->childAgeBands; }
-
-    public function setIdStar(string $idStar): void { $this->idStar = $idStar; }
 
     /**
      * Set priceinfo directly (used by debug tools that bypass loadPriceInfo)
@@ -513,8 +507,8 @@ class PriceInfoParser
 
             $seasonNum = 1;
             foreach ($seasons as $season) {
-                $from = $season['FromDate'] ?? '';
-                $to = $season['ToDate'] ?? '';
+                $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
+                $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
                 $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {

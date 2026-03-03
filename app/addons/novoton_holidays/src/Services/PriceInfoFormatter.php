@@ -241,8 +241,11 @@ class PriceInfoFormatter
         $fromAge = 0;
         $toAge = 17;
 
-        // "2-11", "0-1", "12-17" — extract numeric range
-        if (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
+        // "2-11,99", "0-1.99", "12-17" — extract numeric range with optional decimal
+        if (preg_match('/(\d+)\s*-\s*(\d+)[,.](\d+)/', $type, $m)) {
+            $fromAge = (int) $m[1];
+            $toAge = (int) $m[2] + (int) $m[3] / pow(10, strlen($m[3]));
+        } elseif (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
             $fromAge = (int) $m[1];
             $toAge = (int) $m[2];
         }
@@ -335,8 +338,8 @@ class PriceInfoFormatter
             $matchedSeason = null;
 
             foreach ($parsedSeasons as $season) {
-                $from = $season['FromDate'] ?? '';
-                $to = $season['ToDate'] ?? '';
+                $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
+                $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
                 $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
