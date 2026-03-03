@@ -460,6 +460,13 @@ export default function BookingEngine({ config }) {
                             triggerRef={dateTriggerRef}
                         />
                     )}
+
+                    {/* Date validation message — only visible when calendar is closed */}
+                    {validationError && !showCalendar && (
+                        <div className="nvt-validation-message">
+                            {validationError}
+                        </div>
+                    )}
                 </div>
 
                 {/* Guests field */}
@@ -506,13 +513,6 @@ export default function BookingEngine({ config }) {
                     </button>
                 </div>
             </div>
-
-            {/* Validation message */}
-            {validationError && (
-                <div className="nvt-validation-message">
-                    {validationError}
-                </div>
-            )}
 
             {/* Fetch error message */}
             {fetchError && (
