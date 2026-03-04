@@ -46,6 +46,9 @@
 // Primary focus ring (10 % opacity of brand)
 @novoton-primary-focus:     fade(@novoton-primary, 10%);
 
+// Primary tint  (very light background, e.g. calendar range, add-room)
+@novoton-primary-tint:      fade(@novoton-primary, 8%);
+
 // ---------------------------------------------------------------------------
 // 2. CHROME & STATUS COLORS  (inherited from the active theme preset)
 //
@@ -90,8 +93,11 @@
 @novoton-info-light:        lighten(@novoton-info, 40%);
 
 // Layout  (respects the "Rounded corners" toggle in Theme Editor)
-@novoton-radius:            4px;
-@novoton-radius-sm:         4px;
+// When @rounded_corners is false the theme sets baseBorderRadius to 0;
+// we use a guard mixin so the addon follows the same toggle.
+@novoton-radius:            @baseBorderRadius;
+@novoton-radius-sm:         @borderRadiusSmall;
+@novoton-radius-pill:       20px;
 
 // Typography  (from theme: @body_font, @body_font_size)
 @novoton-font-family:       @body_font;
@@ -158,8 +164,9 @@
     --nvt-info-light:       ~"@{novoton-info-light}";
     --nvt-info-dark:        ~"@{novoton-info-dark}";
 
-    // Focus
+    // Focus & tint
     --nvt-primary-focus:    ~"@{novoton-primary-focus}";
+    --nvt-primary-tint:     ~"@{novoton-primary-tint}";
 
     // Text
     --nvt-text:             ~"@{novoton-text}";
@@ -178,9 +185,24 @@
     // Layout
     --nvt-radius:           ~"@{novoton-radius}";
     --nvt-radius-sm:        ~"@{novoton-radius-sm}";
+    --nvt-radius-pill:      ~"@{novoton-radius-pill}";
 
     // Typography
     --nvt-font-family:      ~"@{novoton-font-family}";
+    --nvt-font-size-base:   ~"@{novoton-font-size-base}";
+    --nvt-font-size-small:  ~"@{novoton-font-size-small}";
+    --nvt-font-size-large:  ~"@{novoton-font-size-large}";
+
+    // Shadows
+    --nvt-shadow:           ~"@{novoton-shadow}";
+    --nvt-shadow-lg:        ~"@{novoton-shadow-lg}";
+
+    // Spacing
+    --nvt-spacing-xs:       ~"@{novoton-spacing-xs}";
+    --nvt-spacing-sm:       ~"@{novoton-spacing-sm}";
+    --nvt-spacing-md:       ~"@{novoton-spacing-md}";
+    --nvt-spacing-lg:       ~"@{novoton-spacing-lg}";
+    --nvt-spacing-xl:       ~"@{novoton-spacing-xl}";
 
     // Z-index scale
     --nvt-z-dropdown:       ~"@{novoton-z-dropdown}";
@@ -337,7 +359,7 @@
 
 .novoton-price {
     font-weight: 700;
-    color: @novoton-primary;
+    color: @novoton-price-color;
 
     .price-amount {
         font-size: 1.5em;
@@ -363,7 +385,7 @@
     padding: 3px 8px;
     font-size: @novoton-font-size-small;
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: @novoton-radius-pill;
 
     &.badge-success {
         background-color: @novoton-success-light;
@@ -422,7 +444,7 @@
 
 .novoton-modal-content {
     background: @novoton-bg;
-    border-radius: 12px;
+    border-radius: @novoton-radius;
     padding: 25px;
     max-width: 450px;
     margin: 20px;
@@ -464,7 +486,7 @@
     border: 2px solid @novoton-primary;
     background: @novoton-bg;
     color: @novoton-primary;
-    border-radius: 6px;
+    border-radius: @novoton-radius-sm;
     cursor: pointer;
     font-weight: 600;
     font-size: @novoton-font-size-base;
@@ -475,7 +497,7 @@
     border: none;
     background: @novoton-primary;
     color: #fff;
-    border-radius: 6px;
+    border-radius: @novoton-radius-sm;
     cursor: pointer;
     font-weight: 600;
     font-size: @novoton-font-size-base;

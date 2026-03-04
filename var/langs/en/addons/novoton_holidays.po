@@ -2681,38 +2681,6 @@ msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Search button (hover)"
 
-msgctxt "Languages::theme_editor.novoton_price_color"
-msgid "Novoton: Price color"
-msgstr "Novoton: Price color"
-
-msgctxt "Languages::theme_editor.novoton_text_color"
-msgid "Novoton: Text color"
-msgstr "Novoton: Text color"
-
-msgctxt "Languages::theme_editor.novoton_bg_color"
-msgid "Novoton: Background color"
-msgstr "Novoton: Background color"
-
-msgctxt "Languages::theme_editor.novoton_border_color"
-msgid "Novoton: Border color"
-msgstr "Novoton: Border color"
-
-msgctxt "Languages::theme_editor.novoton_success_color"
-msgid "Novoton: Success color"
-msgstr "Novoton: Success color"
-
-msgctxt "Languages::theme_editor.novoton_danger_color"
-msgid "Novoton: Danger color"
-msgstr "Novoton: Danger color"
-
-msgctxt "Languages::theme_editor.novoton_base_font"
-msgid "Novoton: Base font"
-msgstr "Novoton: Base font"
-
-msgctxt "Languages::theme_editor.novoton_page_background"
-msgid "Novoton: Page background"
-msgstr "Novoton: Page background"
-
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Available on nearby dates"

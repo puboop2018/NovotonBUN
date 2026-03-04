@@ -118,7 +118,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 9999;
+    z-index: var(--nvt-z-modal, 1050);
     background: var(--nvt-bg, #fff);
     border-radius: var(--nvt-radius, 8px);
     box-shadow: 0 4px 20px rgba(0,0,0,0.25);
@@ -223,7 +223,7 @@
 }
 
 .novoton-booking-react .calendar-day.in-range {
-    background: #e6f2ff;
+    background: var(--nvt-primary-tint, #e6f2ff);
     border-radius: 0;
 }
 
@@ -250,7 +250,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 9999;
+    z-index: var(--nvt-z-modal, 1050);
     background: var(--nvt-bg, #fff);
     border-radius: var(--nvt-radius, 8px);
     box-shadow: 0 4px 20px rgba(0,0,0,0.25);
@@ -376,7 +376,7 @@
 /* Children Ages */
 .novoton-booking-react .children-ages {
     padding: 12px;
-    background: #f0f7ff;
+    background: var(--nvt-primary-tint, #f0f7ff);
     border-top: 1px solid var(--nvt-border, #e0e0e0);
 }
 
@@ -407,7 +407,7 @@
 .novoton-booking-react .add-room-btn {
     width: 100%;
     padding: 12px;
-    background: #e8f4fc;
+    background: var(--nvt-primary-tint, #e8f4fc);
     border: 2px dashed var(--nvt-primary-light, #0071c2);
     color: var(--nvt-primary-light, #0071c2);
     border-radius: var(--nvt-radius, 8px);
@@ -419,7 +419,7 @@
 }
 
 .novoton-booking-react .add-room-btn:hover {
-    background: #e8f4fc;
+    background: var(--nvt-primary-tint, #e8f4fc);
     border-style: dashed;
 }
 
