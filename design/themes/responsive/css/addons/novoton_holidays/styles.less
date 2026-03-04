@@ -37,7 +37,6 @@
 @novoton-accent:            #febb02;   // Theme Editor → "Novoton: Accent color"
 @novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Novoton: Search button"
 @novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Novoton: Search button (hover)"
-@novoton-price-color:       #27ae60;   // Theme Editor → "Novoton: Price color"
 
 // Brand derived (computed so they adapt when Theme Editor overrides the base)
 @novoton-primary-light:     lighten(@novoton-primary, 15%);
@@ -67,6 +66,9 @@
 @novoton-bg:                @content_bg;
 @novoton-bg-light:          @general_bg_color;
 @novoton-border:            @base;
+
+// Price  (from theme: @price — the admin controls this in Theme Editor)
+@novoton-price-color:       @price;
 
 // Status  (from theme: @in_stock, @out_of_stock, @links)
 @novoton-success:           @in_stock;

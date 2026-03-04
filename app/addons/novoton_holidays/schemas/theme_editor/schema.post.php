@@ -39,10 +39,8 @@ $schema['colors']['fields']['novoton-search-btn-hover'] = [
     'variable_name' => 'novoton-search-btn-hover',
 ];
 
-$schema['colors']['fields']['novoton-price-color'] = [
-    'description'   => 'theme_editor.novoton_price_color',
-    'type'          => 'color',
-    'variable_name' => 'novoton-price-color',
-];
+// Price color is NOT registered here — it inherits from the theme's @price
+// variable (already a color picker in Theme Editor).  When the admin changes
+// the "Price" colour, the addon's @novoton-price-color follows automatically.
 
 return $schema;
