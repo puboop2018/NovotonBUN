@@ -2681,6 +2681,10 @@ msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Search button (hover)"
 
+msgctxt "Languages::theme_editor.novoton_price_color"
+msgid "Novoton: Price color"
+msgstr "Novoton: Price color"
+
 msgctxt "Languages::theme_editor.novoton_text_color"
 msgid "Novoton: Text color"
 msgstr "Novoton: Text color"

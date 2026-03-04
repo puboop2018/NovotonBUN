@@ -39,4 +39,10 @@ $schema['colors']['fields']['novoton-search-btn-hover'] = [
     'variable_name' => 'novoton-search-btn-hover',
 ];
 
+$schema['colors']['fields']['novoton-price-color'] = [
+    'description'   => 'theme_editor.novoton_price_color',
+    'type'          => 'color',
+    'variable_name' => 'novoton-price-color',
+];
+
 return $schema;
