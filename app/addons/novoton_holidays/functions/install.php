@@ -287,34 +287,105 @@ function fn_novoton_holidays_setup_db(): void
 }
 
 /**
- * Theme Editor preset stub (no-op).
+ * Inject addon color fields into the Theme Editor.
  *
- * The addon no longer ships a custom preset (`novoton_default.less`).
- * Chrome, status, and typography tokens in `styles.less` now inherit
- * directly from the active theme's variables (@font, @base, @content_bg,
- * @in_stock, etc.), so the addon auto-adapts to whichever of the core
- * presets (Blue, Green, Orange, …) the merchant selects.
+ * CS-Cart's Theme Editor reads its field definitions from schema.json
+ * (in design/themes/THEME/styles/).  Addons cannot use schema.post.php
+ * for this — the only way is to merge fields directly into schema.json.
  *
- * The four addon-specific brand colors are registered via
- * `schema.post.php` and work with any active preset.
+ * This function:
+ *  1. Reads the existing schema.json for each theme
+ *  2. Adds the 4 addon color fields to the colors section (idempotent)
+ *  3. Writes the updated schema.json back
+ *  4. Adds LESS variable defaults to every preset data file
  *
- * Kept as a callable stub for backward compatibility with install hooks.
+ * Called from fn_novoton_holidays_post_install() and safe to call
+ * multiple times (idempotent).
  *
  * @return void
  */
 function fn_novoton_holidays_create_theme_presets(): void
 {
-    // No-op: addon inherits from the active theme preset.
+    $root = rtrim(Registry::get('config.dir.root'), '/');
+    $themes = ['nova_theme', 'responsive'];
+
+    // Addon color fields to inject into schema.json → colors → fields
+    $addon_fields = [
+        'novoton-primary' => [
+            'description' => 'theme_editor.novoton_primary_color',
+        ],
+        'novoton-accent' => [
+            'description' => 'theme_editor.novoton_accent_color',
+        ],
+        'novoton-search-btn-bg' => [
+            'description' => 'theme_editor.novoton_search_btn_color',
+        ],
+        'novoton-search-btn-hover' => [
+            'description' => 'theme_editor.novoton_search_btn_hover_color',
+        ],
+    ];
+
+    // LESS variable defaults to add to preset data files
+    $addon_less_defaults = [
+        '@novoton-primary'          => '#003580',
+        '@novoton-accent'           => '#febb02',
+        '@novoton-search-btn-bg'    => '#006ce4',
+        '@novoton-search-btn-hover' => '#0057b8',
+    ];
+
+    foreach ($themes as $theme) {
+        $styles_dir = "{$root}/design/themes/{$theme}/styles";
+
+        // ── 1. Merge addon fields into schema.json ──
+        $schema_path = "{$styles_dir}/schema.json";
+        if (file_exists($schema_path)) {
+            $schema = @json_decode(file_get_contents($schema_path), true);
+            if (is_array($schema)) {
+                $changed = false;
+                foreach ($addon_fields as $field_name => $field_def) {
+                    if (!isset($schema['colors']['fields'][$field_name])) {
+                        $schema['colors']['fields'][$field_name] = $field_def;
+                        $changed = true;
+                    }
+                }
+                if ($changed) {
+                    file_put_contents(
+                        $schema_path,
+                        json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"
+                    );
+                }
+            }
+        }
+
+        // ── 2. Add addon LESS defaults to every preset data file ──
+        $data_dir = "{$styles_dir}/data";
+        if (!is_dir($data_dir)) {
+            continue;
+        }
+
+        $less_block = "\n// Novoton Holidays addon colors\n";
+        foreach ($addon_less_defaults as $var => $val) {
+            $less_block .= "{$var}: {$val};\n";
+        }
+
+        foreach (glob("{$data_dir}/*.less") as $preset_file) {
+            $content = file_get_contents($preset_file);
+            // Skip if already present (idempotent)
+            if (strpos($content, '@novoton-primary') !== false) {
+                continue;
+            }
+            file_put_contents($preset_file, rtrim($content) . "\n" . $less_block);
+        }
+    }
 }
 
 /**
- * Remove legacy Theme Editor preset files on uninstall.
+ * Remove addon fields from Theme Editor on uninstall.
  *
- * The addon no longer ships a custom preset, but older versions did.
- * This function cleans up leftover `novoton_default.less` files and
- * any stale `novoton_default` entries in manifest.json to ensure a
- * clean uninstall regardless of which addon version was originally
- * installed.
+ * Reverses fn_novoton_holidays_create_theme_presets():
+ *  1. Removes addon color fields from schema.json
+ *  2. Strips addon LESS variables from preset data files
+ *  3. Cleans up legacy novoton_default preset artefacts
  *
  * @return void
  */
@@ -323,26 +394,70 @@ function fn_novoton_holidays_remove_theme_presets(): void
     $root = rtrim(Registry::get('config.dir.root'), '/');
     $themes = ['nova_theme', 'responsive'];
 
+    $addon_field_names = [
+        'novoton-primary',
+        'novoton-accent',
+        'novoton-search-btn-bg',
+        'novoton-search-btn-hover',
+    ];
+
     foreach ($themes as $theme) {
-        // 1. Remove flat preset file (current format: novoton_default.less)
-        $flat_file = "{$root}/design/themes/{$theme}/styles/data/novoton_default.less";
+        $styles_dir = "{$root}/design/themes/{$theme}/styles";
+
+        // ── 1. Remove addon fields from schema.json ──
+        $schema_path = "{$styles_dir}/schema.json";
+        if (file_exists($schema_path)) {
+            $schema = @json_decode(file_get_contents($schema_path), true);
+            if (is_array($schema) && !empty($schema['colors']['fields'])) {
+                $changed = false;
+                foreach ($addon_field_names as $field_name) {
+                    if (isset($schema['colors']['fields'][$field_name])) {
+                        unset($schema['colors']['fields'][$field_name]);
+                        $changed = true;
+                    }
+                }
+                if ($changed) {
+                    file_put_contents(
+                        $schema_path,
+                        json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"
+                    );
+                }
+            }
+        }
+
+        // ── 2. Strip addon LESS variables from preset data files ──
+        $data_dir = "{$styles_dir}/data";
+        if (is_dir($data_dir)) {
+            foreach (glob("{$data_dir}/*.less") as $preset_file) {
+                $content = file_get_contents($preset_file);
+                if (strpos($content, '@novoton-') === false) {
+                    continue;
+                }
+                // Remove addon variable lines and the comment header
+                $content = preg_replace('/\n?\/\/ Novoton Holidays addon colors\n/', "\n", $content);
+                $content = preg_replace('/^@novoton-[a-z-]+:.*;\n?/m', '', $content);
+                file_put_contents($preset_file, rtrim($content) . "\n");
+            }
+        }
+
+        // ── 3. Legacy cleanup: novoton_default preset artefacts ──
+        $flat_file = "{$styles_dir}/data/novoton_default.less";
         if (file_exists($flat_file)) {
             @unlink($flat_file);
         }
 
-        // 2. Remove old directory-based preset (legacy format: novoton_default/styles.less)
-        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
-        $dir_file = "{$dir}/styles.less";
-
-        if (file_exists($dir_file)) {
-            @unlink($dir_file);
+        $dir = "{$styles_dir}/data/novoton_default";
+        if (is_dir($dir)) {
+            $dir_file = "{$dir}/styles.less";
+            if (file_exists($dir_file)) {
+                @unlink($dir_file);
+            }
+            if (count(scandir($dir)) === 2) {
+                @rmdir($dir);
+            }
         }
-        if (is_dir($dir) && count(scandir($dir)) === 2) {
-            @rmdir($dir);
-        }
 
-        // 3. Clean up any leftover manifest.json entries from older versions
-        $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
+        $manifest_path = "{$styles_dir}/manifest.json";
         if (!file_exists($manifest_path)) {
             continue;
         }
@@ -353,12 +468,10 @@ function fn_novoton_holidays_remove_theme_presets(): void
         }
 
         $changed = false;
-
         if (isset($manifest['names']['novoton_default'])) {
             unset($manifest['names']['novoton_default']);
             $changed = true;
         }
-
         if (isset($manifest['default']) && is_array($manifest['default'])) {
             $key = array_search('novoton_default', $manifest['default'], true);
             if ($key !== false) {
@@ -366,13 +479,11 @@ function fn_novoton_holidays_remove_theme_presets(): void
                 $changed = true;
             }
         }
-
         if (($manifest['default_style'] ?? '') === 'novoton_default') {
             $remaining = array_keys($manifest['names'] ?? []);
             $manifest['default_style'] = $remaining[0] ?? '';
             $changed = true;
         }
-
         if ($changed) {
             file_put_contents($manifest_path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
         }
