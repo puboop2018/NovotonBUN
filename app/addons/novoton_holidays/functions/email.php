@@ -352,11 +352,9 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
         // Resolve feature column headers from mapping table (fallback to hardcoded)
         $featureMapper = null;
-        $normalizer = null;
         try {
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
             $featureMapper = $container->featureMapper();
-            $normalizer = $container->novotonNormalizer();
         } catch (\Exception $e) {
             // Fall through to hardcoded labels
         }

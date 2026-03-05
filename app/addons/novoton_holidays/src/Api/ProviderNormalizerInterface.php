@@ -44,7 +44,7 @@ interface ProviderNormalizerInterface
      * @param int|string $facilityId Facility ID or code from API
      * @return string|null String code for mapping table lookup
      */
-    public function normalizeFacilityCode($facilityId): ?string;
+    public function normalizeFacilityCode(int|string $facilityId): ?string;
 
     /**
      * Normalize a resort/city/destination value to a canonical string.

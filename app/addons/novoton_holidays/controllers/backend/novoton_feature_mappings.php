@@ -34,10 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($mappingId > 0 && !empty($_REQUEST['mapping_data'])) {
             $data = $_REQUEST['mapping_data'];
             $allowed = ['display_name_en', 'display_name_ro', 'is_active', 'position', 'cs_cart_feature_id'];
+            $intFields = ['position', 'cs_cart_feature_id'];
             $updateData = ['mapping_id' => $mappingId];
             foreach ($allowed as $field) {
                 if (isset($data[$field])) {
-                    $updateData[$field] = $data[$field];
+                    $updateData[$field] = in_array($field, $intFields, true) ? (int) $data[$field] : $data[$field];
                 }
             }
             $repo->save($updateData);

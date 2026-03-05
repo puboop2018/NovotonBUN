@@ -75,4 +75,9 @@ interface FeatureMappingRepositoryInterface
      * Validate that a feature type string is allowed.
      */
     public function isValidFeatureType(string $type): bool;
+
+    /**
+     * Update the cached cs_cart_feature_type for all mappings of a given type.
+     */
+    public function updateCachedFeatureType(string $featureType, string $csCartFeatureType, string $provider = 'novoton'): void;
 }

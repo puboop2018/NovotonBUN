@@ -203,6 +203,18 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
         if ($existing) {
             $mappingId = (int) $existing;
             unset($data['provider'], $data['feature_type'], $data['provider_code']);
+
+            // Don't overwrite mapping_source if the existing row was manually edited
+            if (isset($data['mapping_source'])) {
+                $currentSource = db_get_field(
+                    "SELECT mapping_source FROM ?:hotel_feature_mappings WHERE mapping_id = ?i",
+                    $mappingId
+                );
+                if ($currentSource === 'manual') {
+                    unset($data['mapping_source']);
+                }
+            }
+
             if (!empty($data)) {
                 db_query("UPDATE ?:hotel_feature_mappings SET ?u WHERE mapping_id = ?i", $data, $mappingId);
             }
@@ -226,6 +238,17 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
     public function isValidFeatureType(string $type): bool
     {
         return in_array($type, Constants::VALID_FEATURE_TYPES, true);
+    }
+
+    public function updateCachedFeatureType(string $featureType, string $csCartFeatureType, string $provider = 'novoton'): void
+    {
+        db_query(
+            "UPDATE ?:hotel_feature_mappings SET cs_cart_feature_type = ?s WHERE feature_type = ?s AND provider = ?s",
+            $csCartFeatureType,
+            $featureType,
+            $provider
+        );
+        $this->clearCache();
     }
 
     /**

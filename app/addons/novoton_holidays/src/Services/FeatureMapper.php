@@ -178,12 +178,7 @@ class FeatureMapper
                     "Cached: '{$cachedType}', Actual: '{$actualType}'. Updating cache.",
             ]);
 
-            db_query(
-                "UPDATE ?:hotel_feature_mappings SET cs_cart_feature_type = ?s WHERE feature_type = ?s AND provider = ?s",
-                $actualType,
-                $featureType,
-                $provider
-            );
+            $this->mappingRepo->updateCachedFeatureType($featureType, $actualType, $provider);
         }
     }
 

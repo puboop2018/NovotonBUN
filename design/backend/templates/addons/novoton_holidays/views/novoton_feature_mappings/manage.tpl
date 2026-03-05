@@ -193,7 +193,7 @@
             <a href="#" class="btn btn-mini btn-warning" onclick="document.bulk_form.action = '{"novoton_feature_mappings.bulk_update.deactivate"|fn_url}'; document.bulk_form.submit(); return false;">
                 <i class="icon-ban-circle"></i> {__("novoton_holidays.fm_deactivate")}
             </a>
-            <a href="#" class="btn btn-mini btn-danger" onclick="if(confirm('{__("novoton_holidays.fm_delete_confirm")}')) { ldelim } document.bulk_form.action = '{"novoton_feature_mappings.bulk_update.delete"|fn_url}'; document.bulk_form.submit(); {rdelim} return false;">
+            <a href="#" class="btn btn-mini btn-danger" onclick="if(confirm('{__("novoton_holidays.fm_delete_confirm")}')) {ldelim} document.bulk_form.action = '{"novoton_feature_mappings.bulk_update.delete"|fn_url}'; document.bulk_form.submit(); {rdelim} return false;">
                 <i class="icon-trash"></i> {__("delete")}
             </a>
         </div>

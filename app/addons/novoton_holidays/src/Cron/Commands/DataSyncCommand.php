@@ -70,7 +70,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("Total: " . ($totalAdded + $totalUpdated) . " resorts synced (new: {$totalAdded}), errors: {$totalErrors}");
 
         // Sync new resorts to feature mapping table
-        $this->syncFeatureMappings('resort_list');
+        $this->syncFeatureMappings();
 
         $this->logToSyncTable('resort_list', $totalAdded + $totalUpdated, $totalErrors);
         $this->sendReport('resort_list', [
@@ -106,7 +106,7 @@ class DataSyncCommand extends AbstractCronCommand
         }
 
         // Sync new facilities to feature mapping table
-        $this->syncFeatureMappings('list_facilities');
+        $this->syncFeatureMappings();
 
         $this->logToSyncTable('facilities', $added + $updated, $errors);
         $this->sendReport('facilities', [
@@ -120,7 +120,7 @@ class DataSyncCommand extends AbstractCronCommand
     /**
      * Run feature mapping seed/sync after reference data changes.
      */
-    private function syncFeatureMappings(string $syncType): void
+    private function syncFeatureMappings(): void
     {
         try {
             $result = fn_novoton_holidays_seed_feature_mappings();

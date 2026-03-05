@@ -51,7 +51,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return BoardType::isValid($canonical) ? $canonical : null;
     }
 
-    public function normalizeFacilityCode($facilityId): ?string
+    public function normalizeFacilityCode(int|string $facilityId): ?string
     {
         $id = (int) $facilityId;
 
