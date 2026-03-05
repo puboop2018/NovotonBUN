@@ -17,11 +17,11 @@ export function injectStyles() {
    ====================================================================== */
 
 .nvt-booking-engine {
-    /* React-only variables (no LESS equivalent) */
+    /* Component-scoped variables */
     --nvt-z-popup: 1000;
     --nvt-btn-height: 52px;
     --nvt-btn-font: 15px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--nvt-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     color: var(--nvt-text, #1a1a1a);
     position: relative;
 }
@@ -332,15 +332,15 @@ button.nvt-field-input:active {
     flex-direction: column;
     aspect-ratio: auto;
     border-radius: 4px;
-    padding: 4px 2px 3px;
-    min-height: 44px;
-    gap: 1px;
+    padding: 3px 2px 2px;
+    min-height: 40px;
+    gap: 0;
 }
-.nvt-calendar-day:hover {
-    background: transparent !important;
+.nvt-calendar-day:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--selected):not(.nvt-calendar-day--empty) {
+    background: var(--nvt-hover-bg, #f0f4f8);
 }
 .nvt-calendar-day--has-prices:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--selected) {
-    background: transparent !important;
+    background: var(--nvt-hover-bg, #f0f4f8);
 }
 .nvt-calendar-day--disabled {
     color: #ccc;
@@ -356,7 +356,7 @@ button.nvt-field-input:active {
     font-weight: 600;
 }
 .nvt-calendar-day--selected .nvt-calendar-day-price {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 .nvt-calendar-day--in-range {
     background: #e8f0fe;
@@ -368,9 +368,9 @@ button.nvt-field-input:active {
 .nvt-calendar-day--empty {
     visibility: hidden;
 }
-/* No-price dates: greyed out with reduced opacity */
+/* No-price dates: subtly muted but still legible */
 .nvt-calendar-day--no-price {
-    opacity: 0.45;
+    opacity: 0.5;
 }
 .nvt-calendar-day--no-price .nvt-calendar-day-price {
     color: #999;
@@ -378,13 +378,13 @@ button.nvt-field-input:active {
 
 /* Day number inside price-enabled cells */
 .nvt-calendar-day-num {
-    line-height: 1.2;
+    line-height: 1.1;
 }
 /* Price label below the day number */
 .nvt-calendar-day-price {
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1;
-    color: var(--nvt-primary, #003580);
+    color: var(--nvt-price-color, #008009);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -402,12 +402,12 @@ button.nvt-field-input:active {
 /* Approximate prices disclaimer footer */
 .nvt-calendar-price-footer {
     text-align: center;
-    font-size: 11px;
-    color: #999;
+    font-size: 13px;
+    font-family: var(--nvt-font-family, inherit);
+    color: var(--nvt-text, #1a1a1a);
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px dashed var(--nvt-border, #e0e0e0);
-    font-style: italic;
 }
 
 .nvt-done-btn {

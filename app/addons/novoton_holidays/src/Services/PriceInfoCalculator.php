@@ -60,8 +60,12 @@ class PriceInfoCalculator
 
                 if ($row) {
                     $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
+                    $isExtraBed = stripos($adult['acc_type'], 'EXTRA') !== false;
 
-                    if ($isRoomPrice) {
+                    // RoomPrice dedup: only skip regular-bed occupants covered by
+                    // the per-room charge.  Extra-bed guests always have their own
+                    // supplement and must never be blocked.
+                    if ($isRoomPrice && !$isExtraBed) {
                         if ($roomPriceCharged) continue;
                         $roomPriceCharged = true;
                     }
@@ -95,8 +99,12 @@ class PriceInfoCalculator
 
                 if ($row) {
                     $childRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
+                    $isExtraBed = stripos($child['acc_type'], 'EXTRA') !== false;
 
-                    if ($childRoomPrice) {
+                    // Same RoomPrice dedup logic: only skip regular-bed children
+                    // (rare — a child occupying a regular bed in the room).
+                    // Extra-bed children always have their own supplement.
+                    if ($childRoomPrice && !$isExtraBed) {
                         if ($roomPriceCharged) continue;
                         $roomPriceCharged = true;
                     }

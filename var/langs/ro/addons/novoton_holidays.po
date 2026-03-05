@@ -2093,34 +2093,6 @@ msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Buton căutare (hover)"
 
-msgctxt "Languages::theme_editor.novoton_text_color"
-msgid "Novoton: Text color"
-msgstr "Novoton: Culoare text"
-
-msgctxt "Languages::theme_editor.novoton_bg_color"
-msgid "Novoton: Background color"
-msgstr "Novoton: Culoare fundal"
-
-msgctxt "Languages::theme_editor.novoton_border_color"
-msgid "Novoton: Border color"
-msgstr "Novoton: Culoare chenar"
-
-msgctxt "Languages::theme_editor.novoton_success_color"
-msgid "Novoton: Success color"
-msgstr "Novoton: Culoare succes"
-
-msgctxt "Languages::theme_editor.novoton_danger_color"
-msgid "Novoton: Danger color"
-msgstr "Novoton: Culoare pericol"
-
-msgctxt "Languages::theme_editor.novoton_base_font"
-msgid "Novoton: Base font"
-msgstr "Novoton: Font de bază"
-
-msgctxt "Languages::theme_editor.novoton_page_background"
-msgid "Novoton: Page background"
-msgstr "Novoton: Fundal pagină"
-
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Disponibil pe date apropiate"

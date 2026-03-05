@@ -287,34 +287,35 @@ function fn_novoton_holidays_setup_db(): void
 }
 
 /**
- * Theme Editor preset stub (no-op).
+ * Verify addon theme assets are in place.
  *
- * The addon no longer ships a custom preset (`novoton_default.less`).
- * Chrome, status, and typography tokens in `styles.less` now inherit
- * directly from the active theme's variables (@font, @base, @content_bg,
- * @in_stock, etc.), so the addon auto-adapts to whichever of the core
- * presets (Blue, Green, Orange, …) the merchant selects.
+ * Addon color fields are registered via schema.post.php (Theme Editor
+ * schema extension) — no core files are modified.  Default LESS variable
+ * values live in the addon's own styles.less.
  *
- * The four addon-specific brand colors are registered via
- * `schema.post.php` and work with any active preset.
+ * This function only performs legacy cleanup (removing old novoton_default
+ * preset artefacts from previous versions).
  *
- * Kept as a callable stub for backward compatibility with install hooks.
+ * Called from fn_novoton_holidays_post_install().
  *
  * @return void
  */
 function fn_novoton_holidays_create_theme_presets(): void
 {
-    // No-op: addon inherits from the active theme preset.
+    // No-op: color fields are registered via schema.post.php,
+    // LESS variable defaults are in styles.less.
+    // Legacy cleanup is handled by fn_novoton_holidays_remove_theme_presets().
 }
 
 /**
- * Remove legacy Theme Editor preset files on uninstall.
+ * Clean up addon theme artefacts on uninstall.
  *
- * The addon no longer ships a custom preset, but older versions did.
- * This function cleans up leftover `novoton_default.less` files and
- * any stale `novoton_default` entries in manifest.json to ensure a
- * clean uninstall regardless of which addon version was originally
- * installed.
+ * Addon color fields are registered via schema.post.php — CS-Cart
+ * automatically stops loading them when the addon is disabled/removed,
+ * so no schema.json cleanup is needed.
+ *
+ * This function only removes legacy novoton_default preset files that
+ * may have been created by older addon versions.
  *
  * @return void
  */
@@ -324,25 +325,26 @@ function fn_novoton_holidays_remove_theme_presets(): void
     $themes = ['nova_theme', 'responsive'];
 
     foreach ($themes as $theme) {
-        // 1. Remove flat preset file (current format: novoton_default.less)
-        $flat_file = "{$root}/design/themes/{$theme}/styles/data/novoton_default.less";
+        $styles_dir = "{$root}/design/themes/{$theme}/styles";
+
+        // Legacy cleanup: novoton_default preset artefacts
+        $flat_file = "{$styles_dir}/data/novoton_default.less";
         if (file_exists($flat_file)) {
             @unlink($flat_file);
         }
 
-        // 2. Remove old directory-based preset (legacy format: novoton_default/styles.less)
-        $dir = "{$root}/design/themes/{$theme}/styles/data/novoton_default";
-        $dir_file = "{$dir}/styles.less";
-
-        if (file_exists($dir_file)) {
-            @unlink($dir_file);
+        $dir = "{$styles_dir}/data/novoton_default";
+        if (is_dir($dir)) {
+            $dir_file = "{$dir}/styles.less";
+            if (file_exists($dir_file)) {
+                @unlink($dir_file);
+            }
+            if (count(scandir($dir)) === 2) {
+                @rmdir($dir);
+            }
         }
-        if (is_dir($dir) && count(scandir($dir)) === 2) {
-            @rmdir($dir);
-        }
 
-        // 3. Clean up any leftover manifest.json entries from older versions
-        $manifest_path = "{$root}/design/themes/{$theme}/styles/manifest.json";
+        $manifest_path = "{$styles_dir}/manifest.json";
         if (!file_exists($manifest_path)) {
             continue;
         }
@@ -353,12 +355,10 @@ function fn_novoton_holidays_remove_theme_presets(): void
         }
 
         $changed = false;
-
         if (isset($manifest['names']['novoton_default'])) {
             unset($manifest['names']['novoton_default']);
             $changed = true;
         }
-
         if (isset($manifest['default']) && is_array($manifest['default'])) {
             $key = array_search('novoton_default', $manifest['default'], true);
             if ($key !== false) {
@@ -366,13 +366,11 @@ function fn_novoton_holidays_remove_theme_presets(): void
                 $changed = true;
             }
         }
-
         if (($manifest['default_style'] ?? '') === 'novoton_default') {
             $remaining = array_keys($manifest['names'] ?? []);
             $manifest['default_style'] = $remaining[0] ?? '';
             $changed = true;
         }
-
         if ($changed) {
             file_put_contents($manifest_path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
         }

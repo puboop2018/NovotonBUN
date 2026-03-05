@@ -249,9 +249,11 @@ class PricingApiClient extends ApiClientBase
         $checkIn = $params['check_in'] ?? '';
         $checkOut = $params['check_out'] ?? '';
         $adultsCount = (int) ($params['adults'] ?? 2);
+        if ($adultsCount < 1) {
+            $adultsCount = 2;
+        }
         $boardId = $params['board_id'] ?? '';
 
-        $adultsXml = $this->buildAdultAgesXml($adultsCount, $params['adult_ages'] ?? []);
         $childrenXml = !empty($params['children']) && is_array($params['children'])
             ? $this->buildChildrenAgesXml($params['children'])
             : '';
@@ -260,6 +262,7 @@ class PricingApiClient extends ApiClientBase
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
+            <PackageName></PackageName>
             <Resort><![CDATA[' . $resort . ']]></Resort>
             <IdRoom></IdRoom>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
@@ -268,7 +271,7 @@ class PricingApiClient extends ApiClientBase
             <CheckIn>' . htmlspecialchars($checkIn) . '</CheckIn>
             <CheckOut>' . htmlspecialchars($checkOut) . '</CheckOut>
             <Currency>EUR</Currency>
-            <Adt>' . $adultsXml . '</Adt>
+            <Adt>' . $adultsCount . '</Adt>
             <Chd>' . $childrenXml . '</Chd>
             <Remark>Yes</Remark>
             <Important>Yes</Important>

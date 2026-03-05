@@ -27,8 +27,11 @@
 
 // ---------------------------------------------------------------------------
 // 1. ADDON-SPECIFIC  (booking engine brand identity)
-//    These have no theme equivalent; customisable via Theme Editor
-//    (schema.post.php → colors).
+//    These have no theme equivalent; customisable via Theme Editor.
+//    Registered as color pickers in schema.post.php (type: color,
+//    variable_name maps to the LESS variable below).  The values here
+//    are defaults — the Theme Editor overrides them when the admin
+//    picks a custom colour.
 // ---------------------------------------------------------------------------
 @novoton-primary:           #003580;   // Theme Editor → "Novoton: Primary color"
 @novoton-accent:            #febb02;   // Theme Editor → "Novoton: Accent color"
@@ -42,6 +45,9 @@
 
 // Primary focus ring (10 % opacity of brand)
 @novoton-primary-focus:     fade(@novoton-primary, 10%);
+
+// Primary tint  (very light background, e.g. calendar range, add-room)
+@novoton-primary-tint:      fade(@novoton-primary, 8%);
 
 // ---------------------------------------------------------------------------
 // 2. CHROME & STATUS COLORS  (inherited from the active theme preset)
@@ -64,11 +70,17 @@
 @novoton-bg-light:          @general_bg_color;
 @novoton-border:            @base;
 
+// Price  (from theme: @price — the admin controls this in Theme Editor)
+@novoton-price-color:       @price;
+
 // Status  (from theme: @in_stock, @out_of_stock, @links)
 @novoton-success:           @in_stock;
 @novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
 @novoton-danger:            @out_of_stock;
 @novoton-info:              @links;
+
+// Subtle hover surface for interactive cells (calendar, lists)
+@novoton-hover-bg:          darken(@novoton-bg, 3%);
 
 // Status derived
 @novoton-success-dark:      darken(@novoton-success, 10%);
@@ -81,8 +93,11 @@
 @novoton-info-light:        lighten(@novoton-info, 40%);
 
 // Layout  (respects the "Rounded corners" toggle in Theme Editor)
-@novoton-radius:            4px;
-@novoton-radius-sm:         4px;
+// When @rounded_corners is false the theme sets baseBorderRadius to 0;
+// the addon follows the same toggle via direct assignment.
+@novoton-radius:            @baseBorderRadius;
+@novoton-radius-sm:         @borderRadiusSmall;
+@novoton-radius-pill:       20px;
 
 // Typography  (from theme: @body_font, @body_font_size)
 @novoton-font-family:       @body_font;
@@ -115,9 +130,9 @@
 // ============================================================================
 // LESS → CSS CUSTOM PROPERTIES BRIDGE
 //
-// React, booking-form-react.css, and inline styles can all read these
-// via var(--nvt-*).  When the Visual Editor overrides a LESS variable
-// the custom property updates automatically on recompile.
+// React (styles.js) and inline styles can all read these via var(--nvt-*).
+// When the Visual Editor overrides a LESS variable the custom property
+// updates automatically on recompile.
 // ============================================================================
 
 // lessphp (CS-Cart's PHP LESS compiler) does not fully support CSS custom
@@ -149,8 +164,9 @@
     --nvt-info-light:       ~"@{novoton-info-light}";
     --nvt-info-dark:        ~"@{novoton-info-dark}";
 
-    // Focus
+    // Focus & tint
     --nvt-primary-focus:    ~"@{novoton-primary-focus}";
+    --nvt-primary-tint:     ~"@{novoton-primary-tint}";
 
     // Text
     --nvt-text:             ~"@{novoton-text}";
@@ -161,13 +177,32 @@
     --nvt-bg:               ~"@{novoton-bg}";
     --nvt-bg-light:         ~"@{novoton-bg-light}";
     --nvt-border:           ~"@{novoton-border}";
+    --nvt-hover-bg:         ~"@{novoton-hover-bg}";
+
+    // Calendar
+    --nvt-price-color:      ~"@{novoton-price-color}";
 
     // Layout
     --nvt-radius:           ~"@{novoton-radius}";
     --nvt-radius-sm:        ~"@{novoton-radius-sm}";
+    --nvt-radius-pill:      ~"@{novoton-radius-pill}";
 
     // Typography
     --nvt-font-family:      ~"@{novoton-font-family}";
+    --nvt-font-size-base:   ~"@{novoton-font-size-base}";
+    --nvt-font-size-small:  ~"@{novoton-font-size-small}";
+    --nvt-font-size-large:  ~"@{novoton-font-size-large}";
+
+    // Shadows
+    --nvt-shadow:           ~"@{novoton-shadow}";
+    --nvt-shadow-lg:        ~"@{novoton-shadow-lg}";
+
+    // Spacing
+    --nvt-spacing-xs:       ~"@{novoton-spacing-xs}";
+    --nvt-spacing-sm:       ~"@{novoton-spacing-sm}";
+    --nvt-spacing-md:       ~"@{novoton-spacing-md}";
+    --nvt-spacing-lg:       ~"@{novoton-spacing-lg}";
+    --nvt-spacing-xl:       ~"@{novoton-spacing-xl}";
 
     // Z-index scale
     --nvt-z-dropdown:       ~"@{novoton-z-dropdown}";
@@ -324,7 +359,7 @@
 
 .novoton-price {
     font-weight: 700;
-    color: @novoton-primary;
+    color: @novoton-price-color;
 
     .price-amount {
         font-size: 1.5em;
@@ -350,7 +385,7 @@
     padding: 3px 8px;
     font-size: @novoton-font-size-small;
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: @novoton-radius-pill;
 
     &.badge-success {
         background-color: @novoton-success-light;
@@ -409,7 +444,7 @@
 
 .novoton-modal-content {
     background: @novoton-bg;
-    border-radius: 12px;
+    border-radius: @novoton-radius;
     padding: 25px;
     max-width: 450px;
     margin: 20px;
@@ -451,7 +486,7 @@
     border: 2px solid @novoton-primary;
     background: @novoton-bg;
     color: @novoton-primary;
-    border-radius: 6px;
+    border-radius: @novoton-radius-sm;
     cursor: pointer;
     font-weight: 600;
     font-size: @novoton-font-size-base;
@@ -462,7 +497,7 @@
     border: none;
     background: @novoton-primary;
     color: #fff;
-    border-radius: 6px;
+    border-radius: @novoton-radius-sm;
     cursor: pointer;
     font-weight: 600;
     font-size: @novoton-font-size-base;
