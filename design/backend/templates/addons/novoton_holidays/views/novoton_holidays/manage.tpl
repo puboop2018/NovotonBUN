@@ -191,8 +191,8 @@
         </div>
         {/if}
 
-        {* Other Cron Jobs Table *}
-        <p><strong>Other Cron Jobs:</strong></p>
+        {* Cron Jobs Table *}
+        <p><strong>Cron Jobs:</strong></p>
         <table class="novoton-table">
             <tr>
                 <th style="width: 180px;">Job</th>
@@ -247,6 +247,18 @@
                 <td><div class="novoton-cron-url">{$cron_urls.exchange_rates}</div></td>
                 <td>Daily</td>
                 <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Compute Prices</strong><br><small class="muted">min_price, seasons, early booking</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.compute_prices}</div></td>
+                <td>Every 5 min</td>
+                <td><a href="{$cron_urls.compute_prices}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Recompute Calendar</strong><br><small class="muted">Rebuild calendar_prices_raw</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.recompute_calendar_prices}</div></td>
+                <td>After sync or daily</td>
+                <td><a href="{$cron_urls.recompute_calendar_prices}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
         </table>
         {else}
