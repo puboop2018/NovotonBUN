@@ -377,7 +377,7 @@
                                                     {/if}
                                                 {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                                                     {if $result.rooms_available > 5}
-                                                        <div style="color: var(--nvt-success, #28a745); font-size: 11px; font-weight: 600; margin-top: 2px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
+                                                        <div style="color: var(--nvt-success, #008009); font-size: 11px; font-weight: 600; margin-top: 2px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
                                                     {elseif $result.rooms_available >= 1}
                                                         <div style="color: var(--nvt-danger, #dc3545); font-size: 11px; font-weight: 600; margin-top: 2px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
                                                     {/if}
@@ -566,11 +566,11 @@
                                     </div>
                                 {/if}
                             {elseif $result.rooms_available !== null && $result.rooms_available !== '' && $result.rooms_available <= 5}
-                                <span style="display: inline-block; background: #f8d7da; color: var(--nvt-danger, #721c24); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                                <span style="display: inline-block; background: #f8d7da; color: var(--nvt-danger, #dc3545); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {$result.rooms_available} {__("novoton_holidays.left")|default:"disponibile"}
                                 </span>
                             {elseif $result.rooms_available > 5}
-                                <span style="display: inline-block; background: #d4edda; color: var(--nvt-success, #155724); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                                <span style="display: inline-block; background: #d4edda; color: var(--nvt-success, #008009); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                     ✓ {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
                                 </span>
                             {/if}
@@ -697,7 +697,7 @@
                             {/if}
                         {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                             {if $result.rooms_available > 5}
-                                <div style="color: var(--nvt-success, #28a745); font-size: 13px; font-weight: 600; margin-top: 8px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
+                                <div style="color: var(--nvt-success, #008009); font-size: 13px; font-weight: 600; margin-top: 8px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
                             {elseif $result.rooms_available >= 1}
                                 <div style="color: var(--nvt-danger, #dc3545); font-size: 13px; font-weight: 600; margin-top: 8px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
                             {/if}
