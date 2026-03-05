@@ -377,9 +377,9 @@
                                                     {/if}
                                                 {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                                                     {if $result.rooms_available > 5}
-                                                        <div style="color: #28a745; font-size: 11px; font-weight: 600; margin-top: 2px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
+                                                        <div style="color: var(--nvt-success, #28a745); font-size: 11px; font-weight: 600; margin-top: 2px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
                                                     {elseif $result.rooms_available >= 1}
-                                                        <div style="color: #dc3545; font-size: 11px; font-weight: 600; margin-top: 2px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
+                                                        <div style="color: var(--nvt-danger, #dc3545); font-size: 11px; font-weight: 600; margin-top: 2px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
                                                     {/if}
                                                 {/if}
                                             </div>
@@ -526,7 +526,7 @@
                                 {/if}
                                 {* MoreInfo from API *}
                                 {if $result.more_info}
-                                    <div style="font-size: 12px; color: #008009; margin-top: 4px;">
+                                    <div style="font-size: 12px; color: var(--nvt-success, #008009); margin-top: 4px;">
                                         ✓ {$result.more_info|replace:'lt;':'<'|replace:'gt;':'>'|replace:'amp;':'&'|strip_tags}
                                     </div>
                                 {/if}
@@ -566,11 +566,11 @@
                                     </div>
                                 {/if}
                             {elseif $result.rooms_available !== null && $result.rooms_available !== '' && $result.rooms_available <= 5}
-                                <span style="display: inline-block; background: #f8d7da; color: #721c24; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                                <span style="display: inline-block; background: #f8d7da; color: var(--nvt-danger, #721c24); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {$result.rooms_available} {__("novoton_holidays.left")|default:"disponibile"}
                                 </span>
                             {elseif $result.rooms_available > 5}
-                                <span style="display: inline-block; background: #d4edda; color: #155724; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                                <span style="display: inline-block; background: #d4edda; color: var(--nvt-success, #155724); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                     ✓ {$result.rooms_available} {__("novoton_holidays.available")|default:"disponibile"}
                                 </span>
                             {/if}
@@ -586,12 +586,12 @@
                     {* Card Body - Options *}
                     <div style="padding: 12px 15px; background: #fafafa;">
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px;">
-                            <span style="display: inline-flex; align-items: center; gap: 4px; color: #008009; font-weight: 600;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--nvt-success, #008009); font-weight: 600;">
                                  {$board_display}
                             </span>
-                            
+
                             {if $result.free_cancellation_date}
-                                <span style="display: inline-flex; align-items: center; gap: 4px; color: #008009;">
+                                <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--nvt-success, #008009);">
                                      {__("novoton_holidays.free_cancel")|default:"Anulare gratuita"} {$result.free_cancellation_date|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
                                 </span>
                             {/if}
@@ -667,7 +667,7 @@
 
                         {* MoreInfo from API - display additional room details *}
                         {if $result.more_info}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 8px;">
+                            <div style="font-size: 13px; color: var(--nvt-success, #008009); margin-bottom: 8px;">
                                 ✓ {$result.more_info|replace:'lt;':'<'|replace:'gt;':'>'|replace:'amp;':'&'|strip_tags}
                             </div>
                         {/if}
@@ -697,9 +697,9 @@
                             {/if}
                         {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                             {if $result.rooms_available > 5}
-                                <div style="color: #28a745; font-size: 13px; font-weight: 600; margin-top: 8px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
+                                <div style="color: var(--nvt-success, #28a745); font-size: 13px; font-weight: 600; margin-top: 8px;">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
                             {elseif $result.rooms_available >= 1}
-                                <div style="color: #dc3545; font-size: 13px; font-weight: 600; margin-top: 8px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
+                                <div style="color: var(--nvt-danger, #dc3545); font-size: 13px; font-weight: 600; margin-top: 8px;">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
                             {/if}
                         {/if}
                     </div>
@@ -707,13 +707,13 @@
                     {* Choices Column *}
                     <div style="padding: 20px; border-right: 1px solid #e0e0e0;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <span style="font-weight: 600; color: #008009;">{$result.board_name|default:$board_display}</span>
+                            <span style="font-weight: 600; color: var(--nvt-success, #008009);">{$result.board_name|default:$board_display}</span>
                         </div>
                         
                         {* Free Cancellation Date *}
                         {if $result.free_cancellation_date}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">
-                                <span style="color: #008009;">✓</span> {__("novoton_holidays.free_cancellation_until")|default:"Anulare gratuită până la"} <strong>{$result.free_cancellation_date|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}</strong>
+                            <div style="font-size: 13px; color: var(--nvt-success, #008009); margin-bottom: 5px;">
+                                <span style="color: var(--nvt-success, #008009);">✓</span> {__("novoton_holidays.free_cancellation_until")|default:"Anulare gratuită până la"} <strong>{$result.free_cancellation_date|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}</strong>
                             </div>
                         {/if}
                         
@@ -721,11 +721,11 @@
                         {$has_cancel_terms = $result.terms_of_cancellation || $terms_of_cancellation}
 
                         {if $has_payment_terms && $has_cancel_terms}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.payment_and_cancellation_terms_apply")}</div>
+                            <div style="font-size: 13px; color: var(--nvt-success, #008009); margin-bottom: 5px;">✓ {__("novoton_holidays.payment_and_cancellation_terms_apply")}</div>
                         {elseif $has_payment_terms}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.payment_terms_apply")}</div>
+                            <div style="font-size: 13px; color: var(--nvt-success, #008009); margin-bottom: 5px;">✓ {__("novoton_holidays.payment_terms_apply")}</div>
                         {elseif $has_cancel_terms}
-                            <div style="font-size: 13px; color: #008009; margin-bottom: 5px;">✓ {__("novoton_holidays.cancellation_terms_apply")}</div>
+                            <div style="font-size: 13px; color: var(--nvt-success, #008009); margin-bottom: 5px;">✓ {__("novoton_holidays.cancellation_terms_apply")}</div>
                         {/if}
                         
                         {if $result.remark || $result.more_info || $result.important || $result.terms_of_payment || $result.terms_of_cancellation}
