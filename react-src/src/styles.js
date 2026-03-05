@@ -17,10 +17,7 @@ export function injectStyles() {
    ====================================================================== */
 
 .nvt-booking-engine {
-    /* Component-scoped variables */
     --nvt-z-popup: 1000;
-    --nvt-btn-height: 52px;
-    --nvt-btn-font: 15px;
     font-family: var(--nvt-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     color: var(--nvt-text, #1a1a1a);
     position: relative;
@@ -49,9 +46,9 @@ export function injectStyles() {
     display: flex;
     align-items: stretch;
     gap: 4px;
-    border: 3px solid var(--nvt-accent, #FFB703);
+    border: 3px solid var(--nvt-accent, #febb02);
     border-radius: var(--nvt-radius, 8px);
-    background: var(--nvt-accent, #FFB703);
+    background: var(--nvt-accent, #febb02);
     overflow: visible;
     position: relative;
 }
@@ -186,11 +183,11 @@ button.nvt-field-input:active {
     justify-content: center;
     gap: 8px;
     padding: 10px 28px;
-    background: #0071E3;
+    background: var(--nvt-search-btn-bg, #006ce4);
     color: #fff;
     border: none;
     border-radius: 4px;
-    font-size: var(--nvt-btn-font, 15px);
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -199,7 +196,7 @@ button.nvt-field-input:active {
     transition: background 0.15s;
 }
 .nvt-btn-search:hover {
-    background: #0071E3;
+    background: var(--nvt-search-btn-hover, #0057b8);
 }
 
 /* ---------- Validation message (tooltip under date field) ---------- */
@@ -403,7 +400,6 @@ button.nvt-field-input:active {
 .nvt-calendar-price-footer {
     text-align: center;
     font-size: 13px;
-    font-family: var(--nvt-font-family, inherit);
     color: var(--nvt-text, #1a1a1a);
     margin-top: 8px;
     padding-top: 8px;
@@ -762,7 +758,7 @@ button.nvt-field-input:active {
    Responsive
    ====================================================================== */
 
-/* Tablet: stack calendar months, scale button text */
+/* Tablet: stack calendar months */
 @media (max-width: 1024px) {
     .nvt-calendar-months {
         flex-direction: column;
@@ -779,7 +775,6 @@ button.nvt-field-input:active {
         white-space: normal;
     }
     .nvt-btn-search {
-        font-size: 15px;
         padding: 10px 24px;
     }
 }
@@ -797,7 +792,6 @@ button.nvt-field-input:active {
     .nvt-btn-search {
         width: 100%;
         border-radius: 4px;
-        font-size: 15px;
         padding: 10px 20px;
     }
     .nvt-calendar-popup {
