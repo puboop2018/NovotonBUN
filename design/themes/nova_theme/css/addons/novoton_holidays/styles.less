@@ -70,8 +70,12 @@
 @novoton-bg-light:          @general_bg_color;
 @novoton-border:            @base;
 
-// Price  (from theme: @price — the admin controls this in Theme Editor)
-@novoton-price-color:       @price;
+// Price  (from theme: @links — matches Links color in Theme Editor)
+@novoton-price-color:       @links;
+
+// Primary action button (from theme: @links — the "Primary button" in Theme Editor)
+@novoton-btn-primary-bg:    @links;
+@novoton-btn-primary-hover: darken(@links, 10%);
 
 // Status  (from theme: @in_stock, @out_of_stock, @links)
 @novoton-success:           @in_stock;
@@ -149,6 +153,10 @@
     --nvt-accent-hover:     ~"@{novoton-accent-hover}";
     --nvt-search-btn-bg:    ~"@{novoton-search-btn-bg}";
     --nvt-search-btn-hover: ~"@{novoton-search-btn-hover}";
+
+    // Primary action button
+    --nvt-btn-primary-bg:   ~"@{novoton-btn-primary-bg}";
+    --nvt-btn-primary-hover:~"@{novoton-btn-primary-hover}";
 
     // Status
     --nvt-success:          ~"@{novoton-success}";

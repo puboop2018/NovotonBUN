@@ -5,53 +5,54 @@
 
 {style src="css/addons/novoton_holidays/styles.css"}
 
-{* Inline critical CSS for booking form - prevents theme override issues *}
+{* Inline critical CSS for booking form — uses CSS custom properties
+   from the :root bridge in styles.less so colors adapt to the active theme. *}
 <style type="text/css">
-/* Novoton Reservation Form - Critical Styles v2.7.0-A30 */
-.novoton-reservation-form { max-width: 900px; margin: 0 auto; padding: 0 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-.novoton-reservation-header { background: linear-gradient(135deg, #003580, #0057b8) !important; color: #fff !important; padding: 25px !important; border-radius: 8px 8px 0 0 !important; position: relative; }
+/* Novoton Reservation Form - Critical Styles v2.9.0 (theme-aware) */
+.novoton-reservation-form { max-width: 900px; margin: 0 auto; padding: 0 15px; font-family: var(--nvt-font-family, inherit); }
+.novoton-reservation-header { background: linear-gradient(135deg, var(--nvt-primary), var(--nvt-primary-light, #0057b8)) !important; color: #fff !important; padding: 25px !important; border-radius: var(--nvt-radius, 8px) var(--nvt-radius, 8px) 0 0 !important; position: relative; }
 .novoton-reservation-header h1 { margin: 0 !important; font-size: 24px !important; font-weight: 600 !important; color: #ffffff !important; padding-right: 150px; }
 .novoton-reservation-header .hotel-location { font-size: 14px !important; color: rgba(255,255,255,0.9) !important; margin-top: 5px !important; }
-.novoton-reservation-header .availability-badge { position: absolute; top: 25px; right: 25px; background: #28a745 !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; color: #fff !important; }
-.novoton-reservation-body { background: #fff !important; border: 1px solid #ddd !important; border-top: none !important; border-radius: 0 0 8px 8px !important; padding: 0 !important; }
-.booking-details-section { display: flex !important; flex-wrap: wrap !important; border-bottom: 1px solid #e0e0e0 !important; padding: 0 !important; }
+.novoton-reservation-header .availability-badge { position: absolute; top: 25px; right: 25px; background: var(--nvt-success) !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; color: #fff !important; }
+.novoton-reservation-body { background: var(--nvt-bg, #fff) !important; border: 1px solid var(--nvt-border, #ddd) !important; border-top: none !important; border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px) !important; padding: 0 !important; }
+.booking-details-section { display: flex !important; flex-wrap: wrap !important; border-bottom: 1px solid var(--nvt-border) !important; padding: 0 !important; }
 .booking-image { flex: 0 0 200px !important; padding: 20px !important; }
-.booking-image img { width: 100% !important; border-radius: 4px !important; }
+.booking-image img { width: 100% !important; border-radius: var(--nvt-radius-sm, 4px) !important; }
 .booking-info { flex: 1 !important; padding: 20px !important; display: grid !important; grid-template-columns: auto 1fr !important; gap: 8px 20px !important; align-items: start !important; }
-.booking-info .info-label { font-weight: 600 !important; color: #003580 !important; font-size: 14px !important; }
-.booking-info .info-value { color: #333 !important; font-size: 14px !important; }
-.booking-info .info-value.highlight { color: #d32f2f !important; font-weight: 600 !important; }
-.booking-price-box { flex: 0 0 180px !important; padding: 20px !important; text-align: right !important; border-left: 1px solid #e0e0e0 !important; display: flex; flex-direction: column; justify-content: center; }
-.booking-price-box .price-total { font-size: 32px !important; font-weight: 700 !important; color: #003580 !important; line-height: 1.2; }
-.booking-price-box .price-label { font-size: 14px !important; color: #666 !important; margin-bottom: 5px; }
-.booking-price-box .price-currency { font-size: 16px !important; color: #666 !important; }
-.guest-names-section { padding: 20px !important; border-bottom: 1px solid #e0e0e0 !important; }
-.guest-names-section h3 { margin: 0 0 20px 0 !important; font-size: 18px !important; color: #333 !important; text-align: center !important; font-weight: 600 !important; }
-.guest-entry { background: #f8f9fa !important; border-radius: 8px !important; padding: 15px 20px !important; margin-bottom: 15px !important; }
-.guest-entry-adult { border-left: 4px solid #003580 !important; }
-.guest-entry-child { border-left: 4px solid #ff9800 !important; }
-.guest-entry-header { font-weight: 600 !important; color: #003580 !important; margin-bottom: 5px !important; font-size: 16px !important; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.guest-entry-header .holder-tag { background: #003580 !important; color: #fff !important; font-size: 11px !important; padding: 2px 8px !important; border-radius: 10px !important; font-weight: normal !important; }
-.guest-entry-subheader { font-size: 13px !important; color: #666 !important; margin-bottom: 12px !important; }
+.booking-info .info-label { font-weight: 600 !important; color: var(--nvt-primary) !important; font-size: 14px !important; }
+.booking-info .info-value { color: var(--nvt-text) !important; font-size: 14px !important; }
+.booking-info .info-value.highlight { color: var(--nvt-danger) !important; font-weight: 600 !important; }
+.booking-price-box { flex: 0 0 180px !important; padding: 20px !important; text-align: right !important; border-left: 1px solid var(--nvt-border) !important; display: flex; flex-direction: column; justify-content: center; }
+.booking-price-box .price-total { font-size: 32px !important; font-weight: 700 !important; color: var(--nvt-price-color, #003580) !important; line-height: 1.2; }
+.booking-price-box .price-label { font-size: 14px !important; color: var(--nvt-text-light) !important; margin-bottom: 5px; }
+.booking-price-box .price-currency { font-size: 16px !important; color: var(--nvt-text-light) !important; }
+.guest-names-section { padding: 20px !important; border-bottom: 1px solid var(--nvt-border) !important; }
+.guest-names-section h3 { margin: 0 0 20px 0 !important; font-size: 18px !important; color: var(--nvt-text) !important; text-align: center !important; font-weight: 600 !important; }
+.guest-entry { background: var(--nvt-bg-light, #f8f9fa) !important; border-radius: var(--nvt-radius, 8px) !important; padding: 15px 20px !important; margin-bottom: 15px !important; }
+.guest-entry-adult { border-left: 4px solid var(--nvt-primary) !important; }
+.guest-entry-child { border-left: 4px solid var(--nvt-warning) !important; }
+.guest-entry-header { font-weight: 600 !important; color: var(--nvt-primary) !important; margin-bottom: 5px !important; font-size: 16px !important; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.guest-entry-header .holder-tag { background: var(--nvt-primary) !important; color: #fff !important; font-size: 11px !important; padding: 2px 8px !important; border-radius: 10px !important; font-weight: normal !important; }
+.guest-entry-subheader { font-size: 13px !important; color: var(--nvt-text-light) !important; margin-bottom: 12px !important; }
 /* Field row - Last Name and First Name on same line */
 .field-row { display: flex !important; gap: 15px !important; align-items: center !important; flex-wrap: wrap !important; }
 .field-group { flex: 1 1 200px !important; min-width: 150px !important; }
-.field-group label { display: block !important; font-size: 13px !important; color: #666 !important; margin-bottom: 4px !important; font-weight: 500 !important; }
-.field-group label .required { color: #dc3545 !important; margin-left: 2px !important; }
-.field-group input, .field-group select { width: 100% !important; padding: 10px 12px !important; border: 1px solid #ddd !important; border-radius: 4px !important; font-size: 14px !important; box-sizing: border-box !important; }
-.field-group input:focus, .field-group select:focus { border-color: #003580 !important; outline: none !important; box-shadow: 0 0 0 2px rgba(0,53,128,0.1) !important; }
+.field-group label { display: block !important; font-size: 13px !important; color: var(--nvt-text-light) !important; margin-bottom: 4px !important; font-weight: 500 !important; }
+.field-group label .required { color: var(--nvt-danger) !important; margin-left: 2px !important; }
+.field-group input, .field-group select { width: 100% !important; padding: 10px 12px !important; border: 1px solid var(--nvt-border, #ddd) !important; border-radius: var(--nvt-radius-sm, 4px) !important; font-size: 14px !important; box-sizing: border-box !important; }
+.field-group input:focus, .field-group select:focus { border-color: var(--nvt-primary) !important; outline: none !important; box-shadow: 0 0 0 2px var(--nvt-primary-focus, rgba(0,53,128,0.1)) !important; }
 /* Form actions - better UX positioning */
-.form-actions { padding: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: #f8f9fa !important; border-radius: 0 0 8px 8px !important; gap: 15px !important; flex-wrap: wrap !important; }
-.btn-back { color: #003580 !important; text-decoration: none !important; font-size: 14px !important; display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 10px 0 !important; order: 1; }
+.form-actions { padding: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: var(--nvt-bg-light, #f8f9fa) !important; border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px) !important; gap: 15px !important; flex-wrap: wrap !important; }
+.btn-back { color: var(--nvt-primary) !important; text-decoration: none !important; font-size: 14px !important; display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 10px 0 !important; order: 1; }
 .btn-back:hover { text-decoration: underline !important; }
-.btn-submit { background: #28a745 !important; color: #fff !important; border: none !important; padding: 14px 36px !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 4px !important; cursor: pointer !important; order: 2; }
-.btn-submit:hover { background: #218838 !important; }
+.btn-submit { background: var(--nvt-btn-primary-bg, #0071c2) !important; color: #fff !important; border: none !important; padding: 14px 36px !important; font-size: 16px !important; font-weight: 600 !important; border-radius: var(--nvt-radius-sm, 4px) !important; cursor: pointer !important; order: 2; }
+.btn-submit:hover { background: var(--nvt-btn-primary-hover, #005fa3) !important; }
 @media (max-width: 768px) {
     .novoton-reservation-header h1 { padding-right: 0 !important; }
     .novoton-reservation-header .availability-badge { position: relative !important; top: auto !important; right: auto !important; display: inline-block !important; margin-top: 10px !important; }
     .booking-details-section { flex-direction: column !important; }
     .booking-image { flex: none !important; }
-    .booking-price-box { flex: none !important; border-left: none !important; border-top: 1px solid #e0e0e0 !important; text-align: center !important; }
+    .booking-price-box { flex: none !important; border-left: none !important; border-top: 1px solid var(--nvt-border) !important; text-align: center !important; }
     .field-row { flex-direction: column !important; }
     .field-group { flex: 1 1 100% !important; min-width: 100% !important; }
     .form-actions { flex-direction: column-reverse !important; text-align: center !important; }

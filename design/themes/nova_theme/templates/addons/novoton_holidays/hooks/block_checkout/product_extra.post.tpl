@@ -175,7 +175,7 @@
     {* Edit link *}
     {if $product.extra.novoton_booking_id}
         <div style="padding: 10px 14px; background: #f8fafc; border-top: 1px solid #e0e7ef; text-align: center;">
-            <a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}" style="color: #0071c2; font-size: 12px; text-decoration: none;">
+            <a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}" style="color: var(--nvt-info, #0071c2); font-size: 12px; text-decoration: none;">
                  {__("novoton_holidays.edit_guest_details")}
             </a>
         </div>

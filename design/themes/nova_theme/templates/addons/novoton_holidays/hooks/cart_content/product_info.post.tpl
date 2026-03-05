@@ -64,6 +64,6 @@
         </div>
     {/if}
 
-    {if $product.extra.novoton_booking_id}<div style="margin-top:10px;"><a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}" style="color:#003580;font-size:12px;"> Edit Guest Details</a></div>{/if}
+    {if $product.extra.novoton_booking_id}<div style="margin-top:10px;"><a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}" style="color:var(--nvt-info, #003580);font-size:12px;"> Edit Guest Details</a></div>{/if}
 </div>
 {/if}

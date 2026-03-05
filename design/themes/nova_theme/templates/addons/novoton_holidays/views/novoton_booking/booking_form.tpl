@@ -23,7 +23,7 @@
 .booking-info .info-value { color: var(--nvt-text) !important; font-size: 14px !important; }
 .booking-info .info-value.highlight { color: var(--nvt-danger) !important; font-weight: 600 !important; }
 .booking-price-box { flex: 0 0 180px !important; padding: 20px !important; text-align: right !important; border-left: 1px solid var(--nvt-border) !important; display: flex; flex-direction: column; justify-content: center; }
-.booking-price-box .price-total { font-size: 32px !important; font-weight: 700 !important; color: var(--nvt-primary) !important; line-height: 1.2; }
+.booking-price-box .price-total { font-size: 32px !important; font-weight: 700 !important; color: var(--nvt-price-color, #003580) !important; line-height: 1.2; }
 .booking-price-box .price-label { font-size: 14px !important; color: var(--nvt-text-light) !important; margin-bottom: 5px; }
 .booking-price-box .price-currency { font-size: 16px !important; color: var(--nvt-text-light) !important; }
 .guest-names-section { padding: 20px !important; border-bottom: 1px solid var(--nvt-border) !important; }
@@ -45,8 +45,8 @@
 .form-actions { padding: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: var(--nvt-bg-light, #f8f9fa) !important; border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px) !important; gap: 15px !important; flex-wrap: wrap !important; }
 .btn-back { color: var(--nvt-primary) !important; text-decoration: none !important; font-size: 14px !important; display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 10px 0 !important; order: 1; }
 .btn-back:hover { text-decoration: underline !important; }
-.btn-submit { background: var(--nvt-success) !important; color: #fff !important; border: none !important; padding: 14px 36px !important; font-size: 16px !important; font-weight: 600 !important; border-radius: var(--nvt-radius-sm, 4px) !important; cursor: pointer !important; order: 2; }
-.btn-submit:hover { background: var(--nvt-success-dark, #218838) !important; }
+.btn-submit { background: var(--nvt-btn-primary-bg, #0071c2) !important; color: #fff !important; border: none !important; padding: 14px 36px !important; font-size: 16px !important; font-weight: 600 !important; border-radius: var(--nvt-radius-sm, 4px) !important; cursor: pointer !important; order: 2; }
+.btn-submit:hover { background: var(--nvt-btn-primary-hover, #005fa3) !important; }
 @media (max-width: 768px) {
     .novoton-reservation-header h1 { padding-right: 0 !important; }
     .novoton-reservation-header .availability-badge { position: relative !important; top: auto !important; right: auto !important; display: inline-block !important; margin-top: 10px !important; }
