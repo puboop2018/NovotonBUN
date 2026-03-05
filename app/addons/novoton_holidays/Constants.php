@@ -167,7 +167,61 @@ final class Constants
     public const TABLE_SYNC_LOG         = 'novoton_sync_log';
     public const TABLE_CACHE            = 'novoton_cache';
     public const TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
+    public const TABLE_FEATURE_MAPPINGS = 'hotel_feature_mappings';   // Provider → CS-Cart feature mapping hub
     
+    // ========== Feature Types (Mapping Hub) ==========
+    // Used as `feature_type` column in hotel_feature_mappings table.
+
+    public const FEATURE_TYPE_STAR_RATING    = 'star_rating';
+    public const FEATURE_TYPE_BOARD          = 'board';
+    public const FEATURE_TYPE_HOTEL_FACILITY = 'hotel_facility';
+    public const FEATURE_TYPE_ROOM_FACILITY  = 'room_facility';
+    public const FEATURE_TYPE_RESORT         = 'resort';
+    public const FEATURE_TYPE_PROPERTY_TYPE  = 'property_type';
+
+    /** All valid feature types for input validation */
+    public const VALID_FEATURE_TYPES = [
+        self::FEATURE_TYPE_STAR_RATING,
+        self::FEATURE_TYPE_BOARD,
+        self::FEATURE_TYPE_HOTEL_FACILITY,
+        self::FEATURE_TYPE_ROOM_FACILITY,
+        self::FEATURE_TYPE_RESORT,
+        self::FEATURE_TYPE_PROPERTY_TYPE,
+    ];
+
+    /** Strict feature types: unknown codes are logged + skipped, never auto-created */
+    public const STRICT_FEATURE_TYPES = [
+        self::FEATURE_TYPE_STAR_RATING,
+        self::FEATURE_TYPE_BOARD,
+        self::FEATURE_TYPE_PROPERTY_TYPE,
+    ];
+
+    /** Dynamic feature types: unknown codes are auto-registered in the mapping table */
+    public const DYNAMIC_FEATURE_TYPES = [
+        self::FEATURE_TYPE_HOTEL_FACILITY,
+        self::FEATURE_TYPE_ROOM_FACILITY,
+        self::FEATURE_TYPE_RESORT,
+    ];
+
+    // ========== Addon Settings Keys (Feature Mapping) ==========
+
+    public const SETTING_FEATURE_ID_STAR_RATING    = 'addons.novoton_holidays.feature_id_star_rating';
+    public const SETTING_FEATURE_ID_BOARD          = 'addons.novoton_holidays.feature_id_board';
+    public const SETTING_FEATURE_ID_HOTEL_FACILITY = 'addons.novoton_holidays.feature_id_hotel_facility';
+    public const SETTING_FEATURE_ID_ROOM_FACILITY  = 'addons.novoton_holidays.feature_id_room_facility';
+    public const SETTING_FEATURE_ID_RESORT         = 'addons.novoton_holidays.feature_id_resort';
+    public const SETTING_FEATURE_ID_PROPERTY_TYPE  = 'addons.novoton_holidays.feature_id_property_type';
+
+    /** Maps feature_type -> addon setting key for the CS-Cart feature_id */
+    public const FEATURE_TYPE_TO_SETTING = [
+        self::FEATURE_TYPE_STAR_RATING    => self::SETTING_FEATURE_ID_STAR_RATING,
+        self::FEATURE_TYPE_BOARD          => self::SETTING_FEATURE_ID_BOARD,
+        self::FEATURE_TYPE_HOTEL_FACILITY => self::SETTING_FEATURE_ID_HOTEL_FACILITY,
+        self::FEATURE_TYPE_ROOM_FACILITY  => self::SETTING_FEATURE_ID_ROOM_FACILITY,
+        self::FEATURE_TYPE_RESORT         => self::SETTING_FEATURE_ID_RESORT,
+        self::FEATURE_TYPE_PROPERTY_TYPE  => self::SETTING_FEATURE_ID_PROPERTY_TYPE,
+    ];
+
     // ========== Countries ==========
     
     public const COUNTRIES = [

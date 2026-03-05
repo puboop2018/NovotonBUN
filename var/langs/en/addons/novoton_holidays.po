@@ -3016,3 +3016,59 @@ msgstr "Price change tolerance (%)"
 msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
 msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
 msgstr "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+
+msgctxt "SettingsSections::novoton_holidays::feature_mapping"
+msgid "Feature Mapping"
+msgstr "Feature Mapping"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_mapping_header"
+msgid "CS-Cart Feature IDs"
+msgstr "CS-Cart Feature IDs"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_star_rating"
+msgid "Star Rating feature ID"
+msgstr "Star Rating feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_star_rating"
+msgid "CS-Cart product feature ID for star rating (Select Box type). Set to 0 to disable. Find the ID in Products > Features."
+msgstr "CS-Cart product feature ID for star rating (Select Box type). Set to 0 to disable. Find the ID in Products > Features."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_board"
+msgid "Board Type feature ID"
+msgstr "Board Type feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_board"
+msgid "CS-Cart product feature ID for meal plan / board type (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for meal plan / board type (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_hotel_facility"
+msgid "Hotel Facilities feature ID"
+msgstr "Hotel Facilities feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_hotel_facility"
+msgid "CS-Cart product feature ID for hotel-level facilities like pool, spa, restaurant (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for hotel-level facilities like pool, spa, restaurant (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_room_facility"
+msgid "Room Facilities feature ID"
+msgstr "Room Facilities feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_room_facility"
+msgid "CS-Cart product feature ID for room-level facilities like WiFi, AC, minibar (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for room-level facilities like WiFi, AC, minibar (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_resort"
+msgid "Resort / City feature ID"
+msgstr "Resort / City feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_resort"
+msgid "CS-Cart product feature ID for resort/city location (Select Box type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for resort/city location (Select Box type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_property_type"
+msgid "Property Type feature ID"
+msgstr "Property Type feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
+msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."

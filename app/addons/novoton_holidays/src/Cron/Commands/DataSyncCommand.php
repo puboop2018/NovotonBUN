@@ -69,6 +69,9 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output("");
         $this->output("Total: " . ($totalAdded + $totalUpdated) . " resorts synced (new: {$totalAdded}), errors: {$totalErrors}");
 
+        // Sync new resorts to feature mapping table
+        $this->syncFeatureMappings('resort_list');
+
         $this->logToSyncTable('resort_list', $totalAdded + $totalUpdated, $totalErrors);
         $this->sendReport('resort_list', [
             'added' => $totalAdded, 'updated' => $totalUpdated,
@@ -102,6 +105,9 @@ class DataSyncCommand extends AbstractCronCommand
             $this->output("Error: " . (is_array($result) ? ($result['error'] ?? 'Unknown error') : 'Sync returned unexpected result'));
         }
 
+        // Sync new facilities to feature mapping table
+        $this->syncFeatureMappings('list_facilities');
+
         $this->logToSyncTable('facilities', $added + $updated, $errors);
         $this->sendReport('facilities', [
             'added' => $added, 'updated' => $updated, 'errors' => $errors,
@@ -109,6 +115,22 @@ class DataSyncCommand extends AbstractCronCommand
         ]);
 
         return ['success' => $errors === 0, 'stats' => ['added' => $added, 'updated' => $updated]];
+    }
+
+    /**
+     * Run feature mapping seed/sync after reference data changes.
+     */
+    private function syncFeatureMappings(string $syncType): void
+    {
+        try {
+            $result = fn_novoton_holidays_seed_feature_mappings();
+            $seeded = $result['seeded'] ?? 0;
+            if ($seeded > 0) {
+                $this->output("Feature mappings synced: {$seeded} rows updated.");
+            }
+        } catch (\Exception $e) {
+            $this->output("Warning: Feature mapping sync failed: " . $e->getMessage());
+        }
     }
 
     private function updateExchangeRates(): array
