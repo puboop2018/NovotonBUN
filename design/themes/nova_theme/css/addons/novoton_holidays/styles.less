@@ -38,6 +38,11 @@
 @novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Novoton: Search button"
 @novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Novoton: Search button (hover)"
 
+// Calendar price colors  (Theme Editor customisable)
+@novoton-cal-cheapest-bg:    #e8f5e9;  // Theme Editor → "Novoton: Calendar cheapest price background"
+@novoton-cal-cheapest-color: #2e7d32;  // Theme Editor → "Novoton: Calendar cheapest price text"
+@novoton-cal-price-color:    #616161;  // Theme Editor → "Novoton: Calendar price text"
+
 // Brand derived (computed so they adapt when Theme Editor overrides the base)
 @novoton-primary-light:     lighten(@novoton-primary, 15%);
 @novoton-primary-dark:      darken(@novoton-primary, 15%);
@@ -188,7 +193,10 @@
     --nvt-hover-bg:         ~"@{novoton-hover-bg}";
 
     // Calendar
-    --nvt-price-color:      ~"@{novoton-price-color}";
+    --nvt-price-color:          ~"@{novoton-price-color}";
+    --nvt-cal-cheapest-bg:      ~"@{novoton-cal-cheapest-bg}";
+    --nvt-cal-cheapest-color:   ~"@{novoton-cal-cheapest-color}";
+    --nvt-cal-price-color:      ~"@{novoton-cal-price-color}";
 
     // Layout
     --nvt-radius:           ~"@{novoton-radius}";
