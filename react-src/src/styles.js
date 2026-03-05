@@ -402,12 +402,12 @@ button.nvt-field-input:active {
 /* Approximate prices disclaimer footer */
 .nvt-calendar-price-footer {
     text-align: center;
-    font-size: 11px;
-    color: #999;
+    font-size: 13px;
+    font-family: var(--nvt-font-family, inherit);
+    color: var(--nvt-text, #1a1a1a);
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px dashed var(--nvt-border, #e0e0e0);
-    font-style: italic;
 }
 
 .nvt-done-btn {
