@@ -218,6 +218,8 @@ if ($mode == 'check_prices') {
 
         echo "Resorts: " . (int)$total_resorts . " | Hotels in DB: " . (int)$total_hotels . "<br>";
         echo "Check-in: " . htmlspecialchars($check_in) . " | Check-out: " . htmlspecialchars($check_out) . "<br>\n";
+        // Debug: show first few resort names to verify they are correct
+        echo "<span class='skip' style='font-size:11px;'>Resort names (first 5): " . htmlspecialchars(implode(' | ', array_slice($resorts, 0, 5))) . "</span><br>\n";
         flush();
 
         try {
@@ -238,18 +240,36 @@ if ($mode == 'check_prices') {
                         'adults'    => 2,
                     ]);
 
-                    $response_kb = round(strlen($api->getLastResponse() ?: '') / 1024, 1);
+                    $rawResponse = $api->getLastResponse() ?: '';
+                    $response_kb = round(strlen($rawResponse) / 1024, 1);
 
                     if ($xml === false) {
-                        echo "<span class='skip'>  Empty response ({$response_kb} KB)</span><br>\n";
+                        echo "<span class='skip'>  Empty/invalid response ({$response_kb} KB)</span><br>\n";
+                        // Show first response for debugging
+                        if ($resort_idx === 0) {
+                            echo "<pre style='font-size:11px;max-height:100px;overflow:auto;background:#f8f8f8;padding:5px;'>"
+                                . htmlspecialchars(substr($rawResponse, 0, 800)) . "</pre>\n";
+                        }
                         flush();
                         continue;
                     }
 
-                    // Extract hotel IDs via xpath on parsed XML
+                    // Extract hotel IDs via multiple xpath strategies
+                    // (API response structure may vary: flat //IdHotel, or nested //Hotel/IdHotel, etc.)
                     $resort_hotel_ids = [];
-                    $nodes = $xml->xpath('//IdHotel');
-                    if (!empty($nodes)) {
+
+                    // Strategy 1: Direct //IdHotel (standard room_price response)
+                    $nodes = $xml->xpath('//IdHotel') ?: [];
+                    foreach ($nodes as $node) {
+                        $val = trim((string)$node);
+                        if ($val !== '' && ctype_digit($val)) {
+                            $resort_hotel_ids[] = $val;
+                        }
+                    }
+
+                    // Strategy 2: //HotelId (alternative element name)
+                    if (empty($resort_hotel_ids)) {
+                        $nodes = $xml->xpath('//HotelId') ?: [];
                         foreach ($nodes as $node) {
                             $val = trim((string)$node);
                             if ($val !== '' && ctype_digit($val)) {
@@ -257,6 +277,14 @@ if ($mode == 'check_prices') {
                             }
                         }
                     }
+
+                    // Strategy 3: Regex extraction from raw XML as last resort
+                    if (empty($resort_hotel_ids) && !empty($rawResponse)) {
+                        if (preg_match_all('/<IdHotel[^>]*>\s*(\d+)\s*<\/IdHotel>/i', $rawResponse, $matches)) {
+                            $resort_hotel_ids = $matches[1];
+                        }
+                    }
+
                     $resort_hotel_ids = array_unique($resort_hotel_ids);
 
                     if (!empty($resort_hotel_ids)) {
@@ -272,9 +300,30 @@ if ($mode == 'check_prices') {
                         if (!empty($errorNode)) {
                             echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
                         } elseif ($priceCount > 0) {
-                            echo "<span class='skip'>  0 hotel IDs but {$priceCount} prices in response ({$response_kb} KB) — unexpected format</span><br>\n";
+                            echo "<span class='skip'>  0 hotel IDs but {$priceCount} prices in response ({$response_kb} KB) — format mismatch</span><br>\n";
+                            // Debug: show XML structure of first resort for analysis
+                            if ($resort_idx === 0 || $resort_idx === 1) {
+                                $rootName = $xml->getName();
+                                $childNames = [];
+                                foreach ($xml->children() as $child) {
+                                    $childNames[] = $child->getName();
+                                    if (count($childNames) >= 15) {
+                                        $childNames[] = '...';
+                                        break;
+                                    }
+                                }
+                                echo "<span class='skip'>  XML root: &lt;" . htmlspecialchars($rootName) . "&gt; | Children: "
+                                    . htmlspecialchars(implode(', ', $childNames)) . "</span><br>\n";
+                                echo "<pre style='font-size:11px;max-height:100px;overflow:auto;background:#f8f8f8;padding:5px;'>"
+                                    . htmlspecialchars(substr($rawResponse, 0, 1000)) . "</pre>\n";
+                            }
                         } else {
                             echo "<span class='skip'>  No prices ({$response_kb} KB)</span><br>\n";
+                            // Show first empty resort response for debugging
+                            if ($resort_idx === 0) {
+                                echo "<pre style='font-size:11px;max-height:80px;overflow:auto;background:#f8f8f8;padding:5px;'>"
+                                    . htmlspecialchars(substr($rawResponse, 0, 500)) . "</pre>\n";
+                            }
                         }
                     }
 
