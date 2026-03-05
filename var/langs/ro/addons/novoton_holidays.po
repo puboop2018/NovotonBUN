@@ -3072,3 +3072,187 @@ msgstr "ID caracteristică Tip Proprietate"
 msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
 msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
 msgstr "ID-ul caracteristicii CS-Cart pentru tipul de proprietate (hotel, vilă, apartament). Tip Casetă de Selectare. Setați 0 pentru dezactivare."
+
+msgctxt "Languages::novoton_holidays.feature_mappings"
+msgid "Feature Mappings"
+msgstr "Mapări Caracteristici"
+
+msgctxt "Languages::novoton_holidays.feature_mapping_updated"
+msgid "Feature mapping updated successfully."
+msgstr "Maparea caracteristicii a fost actualizată cu succes."
+
+msgctxt "Languages::novoton_holidays.feature_mapping_not_found"
+msgid "Feature mapping not found."
+msgstr "Maparea caracteristicii nu a fost găsită."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_activated"
+msgid "[count] mapping(s) activated."
+msgstr "[count] mapare/mapări activate."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deactivated"
+msgid "[count] mapping(s) deactivated."
+msgstr "[count] mapare/mapări dezactivate."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deleted"
+msgid "[count] mapping(s) deleted."
+msgstr "[count] mapare/mapări șterse."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_reseeded"
+msgid "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+msgstr "Mapări regenerate: [seeded] rânduri actualizate, [skipped] omise (neconfigurate)."
+
+msgctxt "Languages::novoton_holidays.fm_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.fm_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::novoton_holidays.fm_auto_registered"
+msgid "Auto-registered"
+msgstr "Auto-înregistrate"
+
+msgctxt "Languages::novoton_holidays.fm_unmapped"
+msgid "Unmapped"
+msgstr "Nemapate"
+
+msgctxt "Languages::novoton_holidays.fm_configured_features"
+msgid "Configured features"
+msgstr "Caracteristici configurate"
+
+msgctxt "Languages::novoton_holidays.fm_not_set"
+msgid "not set"
+msgstr "nesetat"
+
+msgctxt "Languages::novoton_holidays.fm_configure"
+msgid "Configure"
+msgstr "Configurare"
+
+msgctxt "Languages::novoton_holidays.fm_feature_type"
+msgid "Feature type"
+msgstr "Tip caracteristică"
+
+msgctxt "Languages::novoton_holidays.fm_source"
+msgid "Source"
+msgstr "Sursă"
+
+msgctxt "Languages::novoton_holidays.fm_source_seed"
+msgid "Seed"
+msgstr "Seed"
+
+msgctxt "Languages::novoton_holidays.fm_source_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::novoton_holidays.fm_source_manual"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "Languages::novoton_holidays.fm_reseed"
+msgid "Re-seed Mappings"
+msgstr "Regenerare Mapări"
+
+msgctxt "Languages::novoton_holidays.fm_reseed_confirm"
+msgid "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+msgstr "Aceasta va regenera toate mapările din setările addon-ului și datele existente. Continuați?"
+
+msgctxt "Languages::novoton_holidays.fm_mappings"
+msgid "mappings"
+msgstr "mapări"
+
+msgctxt "Languages::novoton_holidays.fm_not_configured"
+msgid "Feature ID not configured"
+msgstr "ID caracteristică neconfigurat"
+
+msgctxt "Languages::novoton_holidays.fm_provider_code"
+msgid "Provider Code"
+msgstr "Cod Furnizor"
+
+msgctxt "Languages::novoton_holidays.fm_display_en"
+msgid "Display (EN)"
+msgstr "Afișare (EN)"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro"
+msgid "Display (RO)"
+msgstr "Afișare (RO)"
+
+msgctxt "Languages::novoton_holidays.fm_variant_id"
+msgid "Variant ID"
+msgstr "ID Variantă"
+
+msgctxt "Languages::novoton_holidays.fm_cs_type"
+msgid "CS Type"
+msgstr "Tip CS"
+
+msgctxt "Languages::novoton_holidays.fm_last_synced"
+msgid "Last Synced"
+msgstr "Ultima Sincronizare"
+
+msgctxt "Languages::novoton_holidays.fm_none"
+msgid "none"
+msgstr "niciuna"
+
+msgctxt "Languages::novoton_holidays.fm_with_selected"
+msgid "With selected"
+msgstr "Cu cele selectate"
+
+msgctxt "Languages::novoton_holidays.fm_activate"
+msgid "Activate"
+msgstr "Activare"
+
+msgctxt "Languages::novoton_holidays.fm_deactivate"
+msgid "Deactivate"
+msgstr "Dezactivare"
+
+msgctxt "Languages::novoton_holidays.fm_delete_confirm"
+msgid "Are you sure you want to delete the selected mappings?"
+msgstr "Sigur doriți să ștergeți mapările selectate?"
+
+msgctxt "Languages::novoton_holidays.fm_edit_mapping"
+msgid "Edit Mapping"
+msgstr "Editare Mapare"
+
+msgctxt "Languages::novoton_holidays.fm_mapping_id"
+msgid "Mapping ID"
+msgstr "ID Mapare"
+
+msgctxt "Languages::novoton_holidays.fm_provider"
+msgid "Provider"
+msgstr "Furnizor"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature"
+msgid "CS-Cart Feature"
+msgstr "Caracteristică CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature_id"
+msgid "CS-Cart Feature ID"
+msgstr "ID Caracteristică CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_not_found_in_cscart"
+msgid "not found in CS-Cart"
+msgstr "negăsit în CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_variant_missing"
+msgid "variant not found"
+msgstr "variantă negăsită"
+
+msgctxt "Languages::novoton_holidays.fm_will_be_created"
+msgid "Will be auto-created on first sync"
+msgstr "Va fi creat automat la prima sincronizare"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro_hint"
+msgid "Leave empty to use English name as fallback."
+msgstr "Lăsați gol pentru a folosi numele în engleză ca alternativă."
+
+msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
+msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
+msgstr "Suprascrie setarea addon-ului pentru această mapare specifică. De obicei setat prin setările addon-ului."
+
+msgctxt "Languages::novoton_holidays.fm_created_at"
+msgid "Created"
+msgstr "Creat"
+
+msgctxt "Languages::menu::feature_mappings"
+msgid "Feature Mappings"
+msgstr "Mapări Caracteristici"

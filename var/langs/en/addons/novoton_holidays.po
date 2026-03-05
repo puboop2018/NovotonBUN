@@ -3072,3 +3072,187 @@ msgstr "Property Type feature ID"
 msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
 msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
 msgstr "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+
+msgctxt "Languages::novoton_holidays.feature_mappings"
+msgid "Feature Mappings"
+msgstr "Feature Mappings"
+
+msgctxt "Languages::novoton_holidays.feature_mapping_updated"
+msgid "Feature mapping updated successfully."
+msgstr "Feature mapping updated successfully."
+
+msgctxt "Languages::novoton_holidays.feature_mapping_not_found"
+msgid "Feature mapping not found."
+msgstr "Feature mapping not found."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_activated"
+msgid "[count] mapping(s) activated."
+msgstr "[count] mapping(s) activated."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deactivated"
+msgid "[count] mapping(s) deactivated."
+msgstr "[count] mapping(s) deactivated."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deleted"
+msgid "[count] mapping(s) deleted."
+msgstr "[count] mapping(s) deleted."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_reseeded"
+msgid "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+msgstr "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+
+msgctxt "Languages::novoton_holidays.fm_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.fm_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::novoton_holidays.fm_auto_registered"
+msgid "Auto-registered"
+msgstr "Auto-registered"
+
+msgctxt "Languages::novoton_holidays.fm_unmapped"
+msgid "Unmapped"
+msgstr "Unmapped"
+
+msgctxt "Languages::novoton_holidays.fm_configured_features"
+msgid "Configured features"
+msgstr "Configured features"
+
+msgctxt "Languages::novoton_holidays.fm_not_set"
+msgid "not set"
+msgstr "not set"
+
+msgctxt "Languages::novoton_holidays.fm_configure"
+msgid "Configure"
+msgstr "Configure"
+
+msgctxt "Languages::novoton_holidays.fm_feature_type"
+msgid "Feature type"
+msgstr "Feature type"
+
+msgctxt "Languages::novoton_holidays.fm_source"
+msgid "Source"
+msgstr "Source"
+
+msgctxt "Languages::novoton_holidays.fm_source_seed"
+msgid "Seed"
+msgstr "Seed"
+
+msgctxt "Languages::novoton_holidays.fm_source_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::novoton_holidays.fm_source_manual"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "Languages::novoton_holidays.fm_reseed"
+msgid "Re-seed Mappings"
+msgstr "Re-seed Mappings"
+
+msgctxt "Languages::novoton_holidays.fm_reseed_confirm"
+msgid "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+msgstr "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+
+msgctxt "Languages::novoton_holidays.fm_mappings"
+msgid "mappings"
+msgstr "mappings"
+
+msgctxt "Languages::novoton_holidays.fm_not_configured"
+msgid "Feature ID not configured"
+msgstr "Feature ID not configured"
+
+msgctxt "Languages::novoton_holidays.fm_provider_code"
+msgid "Provider Code"
+msgstr "Provider Code"
+
+msgctxt "Languages::novoton_holidays.fm_display_en"
+msgid "Display (EN)"
+msgstr "Display (EN)"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro"
+msgid "Display (RO)"
+msgstr "Display (RO)"
+
+msgctxt "Languages::novoton_holidays.fm_variant_id"
+msgid "Variant ID"
+msgstr "Variant ID"
+
+msgctxt "Languages::novoton_holidays.fm_cs_type"
+msgid "CS Type"
+msgstr "CS Type"
+
+msgctxt "Languages::novoton_holidays.fm_last_synced"
+msgid "Last Synced"
+msgstr "Last Synced"
+
+msgctxt "Languages::novoton_holidays.fm_none"
+msgid "none"
+msgstr "none"
+
+msgctxt "Languages::novoton_holidays.fm_with_selected"
+msgid "With selected"
+msgstr "With selected"
+
+msgctxt "Languages::novoton_holidays.fm_activate"
+msgid "Activate"
+msgstr "Activate"
+
+msgctxt "Languages::novoton_holidays.fm_deactivate"
+msgid "Deactivate"
+msgstr "Deactivate"
+
+msgctxt "Languages::novoton_holidays.fm_delete_confirm"
+msgid "Are you sure you want to delete the selected mappings?"
+msgstr "Are you sure you want to delete the selected mappings?"
+
+msgctxt "Languages::novoton_holidays.fm_edit_mapping"
+msgid "Edit Mapping"
+msgstr "Edit Mapping"
+
+msgctxt "Languages::novoton_holidays.fm_mapping_id"
+msgid "Mapping ID"
+msgstr "Mapping ID"
+
+msgctxt "Languages::novoton_holidays.fm_provider"
+msgid "Provider"
+msgstr "Provider"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature"
+msgid "CS-Cart Feature"
+msgstr "CS-Cart Feature"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature_id"
+msgid "CS-Cart Feature ID"
+msgstr "CS-Cart Feature ID"
+
+msgctxt "Languages::novoton_holidays.fm_not_found_in_cscart"
+msgid "not found in CS-Cart"
+msgstr "not found in CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_variant_missing"
+msgid "variant not found"
+msgstr "variant not found"
+
+msgctxt "Languages::novoton_holidays.fm_will_be_created"
+msgid "Will be auto-created on first sync"
+msgstr "Will be auto-created on first sync"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro_hint"
+msgid "Leave empty to use English name as fallback."
+msgstr "Leave empty to use English name as fallback."
+
+msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
+msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
+msgstr "Override the addon setting for this specific mapping. Usually set via addon settings."
+
+msgctxt "Languages::novoton_holidays.fm_created_at"
+msgid "Created"
+msgstr "Created"
+
+msgctxt "Languages::menu::feature_mappings"
+msgid "Feature Mappings"
+msgstr "Feature Mappings"
