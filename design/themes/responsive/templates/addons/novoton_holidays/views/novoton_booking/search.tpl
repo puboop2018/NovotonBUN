@@ -122,10 +122,12 @@
              data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
              data-mode="search"
              data-lang="{$smarty.const.CART_LANGUAGE|default:'en'}"
-             >
+             {if $show_calendar_prices == 'Y' && $calendar_prices_json != '{}'}data-calendar-prices='{$calendar_prices_json nofilter}'
+             data-calendar-prices-currency="{$calendar_prices_currency|escape:'html'}"
+             {/if}>
         </div>
     </div>
-    
+
     {if $novoton_results && $novoton_results|@count > 0}
         
         {* ===== HOTEL HEADER - A76g: White background ===== *}

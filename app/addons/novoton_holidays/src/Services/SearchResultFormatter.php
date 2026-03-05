@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 use Tygh\Registry;
 use Tygh\Tygh;
 
@@ -84,6 +85,9 @@ class SearchResultFormatter
             ? fn_url("products.view?product_id={$productId}")
             : ''
         );
+
+        // ── Calendar prices (for datepicker in search form) ─────────
+        $this->assignCalendarPrices($view, $hotelId);
 
         // ── Debug ────────────────────────────────────────────────────
         if (!empty($debugLog)) {
@@ -368,6 +372,27 @@ class SearchResultFormatter
             }
         }
         $view->assign('early_booking_details', $ebDetails);
+    }
+
+    private function assignCalendarPrices($view, string $hotelId): void
+    {
+        $calendarPricesJson = '{}';
+        $calendarPricesCurrency = '';
+        $showCalendarPrices = ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N';
+
+        if (!empty($hotelId) && $showCalendarPrices === 'Y') {
+            $displayCurrency = CurrencyService::getDisplayCurrency();
+            $priceInfoService = Container::getInstance()->priceInfoService();
+            $calendarData = $priceInfoService->getCalendarPrices($hotelId, $displayCurrency, 2);
+            if (!empty($calendarData['prices'])) {
+                $calendarPricesJson = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
+                $calendarPricesCurrency = $calendarData['currency'];
+            }
+        }
+
+        $view->assign('calendar_prices_json', $calendarPricesJson);
+        $view->assign('calendar_prices_currency', $calendarPricesCurrency);
+        $view->assign('show_calendar_prices', $showCalendarPrices);
     }
 
     private function assignMeta($view): void
