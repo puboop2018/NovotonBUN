@@ -138,7 +138,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             if (!empty($booking['novoton_reservation_id'])) {
                 $this->api->getAlternatives($booking['novoton_reservation_id']);
-                $bookingRepo->update($booking['booking_id'], ['alternatives_requested' => 1]);
+                $bookingRepo->update((int) $booking['booking_id'], ['alternatives_requested' => 1]);
                 $this->output("checked");
             } else {
                 $this->output("no reservation ID");

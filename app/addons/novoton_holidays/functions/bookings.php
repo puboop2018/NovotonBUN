@@ -122,7 +122,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
                     ?? $booking['status'];
 
                 if ($internal_status != $booking['status']) {
-                    $bookingRepo->updateStatus($booking['booking_id'], $internal_status, $new_status);
+                    $bookingRepo->updateStatus((int) $booking['booking_id'], $internal_status, $new_status);
                     $result['updated']++;
                     $result['details'][$booking['booking_id']] = [
                         'old' => $booking['status'],

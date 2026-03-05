@@ -55,7 +55,7 @@ class ResInfoCommand extends AbstractCronCommand
                 $new_status = strtolower((string)$response->Status);
 
                 if ($new_status === Constants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
-                    $repo->update($booking['booking_id'], [
+                    $repo->update((int) $booking['booking_id'], [
                         'status'            => Constants::STATUS_CONFIRMED,
                         'novoton_status'    => Constants::NOVOTON_STATUS_CONFIRMED,
                         'last_status_check' => date('Y-m-d H:i:s'),
@@ -64,7 +64,7 @@ class ResInfoCommand extends AbstractCronCommand
                     $this->output("  -> Updated to CONFIRMED");
                     $updated++;
                 } elseif ($new_status === Constants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
-                    $repo->update($booking['booking_id'], [
+                    $repo->update((int) $booking['booking_id'], [
                         'status'            => Constants::STATUS_CANCELLED,
                         'novoton_status'    => Constants::NOVOTON_STATUS_CANCELLED,
                         'last_status_check' => date('Y-m-d H:i:s'),
@@ -73,7 +73,7 @@ class ResInfoCommand extends AbstractCronCommand
                     $this->output("  -> Updated to CANCELLED");
                     $updated++;
                 } else {
-                    $repo->update($booking['booking_id'], [
+                    $repo->update((int) $booking['booking_id'], [
                         'last_status_check' => date('Y-m-d H:i:s'),
                     ]);
                     $this->output("  -> Status unchanged: " . (string)$response->Status);
