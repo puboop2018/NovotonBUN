@@ -2093,6 +2093,18 @@ msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
 msgid "Novoton: Search button (hover)"
 msgstr "Novoton: Buton căutare (hover)"
 
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_bg"
+msgid "Novoton: Calendar cheapest price background"
+msgstr "Novoton: Fundal preț minim calendar"
+
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_color"
+msgid "Novoton: Calendar cheapest price text"
+msgstr "Novoton: Text preț minim calendar"
+
+msgctxt "Languages::theme_editor.novoton_cal_price_color"
+msgid "Novoton: Calendar price text"
+msgstr "Novoton: Text preț calendar"
+
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"
 msgstr "Disponibil pe date apropiate"

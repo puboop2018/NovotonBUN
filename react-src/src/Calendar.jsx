@@ -153,6 +153,27 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
 
     const nights = nightsBetween(tempCheckIn, tempCheckOut);
 
+    // Compute cheapest price across both visible months (for highlighting)
+    const cheapestPrice = useMemo(() => {
+        if (!hasPrices) return null;
+        let min = Infinity;
+        for (const monthInfo of [
+            { year: month1Year, month: month1Month },
+            { year: month2Year, month: month2Month },
+        ]) {
+            const daysInMonth = new Date(monthInfo.year, monthInfo.month + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key = toDateKey(monthInfo.year, monthInfo.month, d);
+                const date = new Date(monthInfo.year, monthInfo.month, d, 12, 0, 0);
+                if (date >= today && prices[key] !== undefined) {
+                    const p = Number(prices[key]);
+                    if (p < min) min = p;
+                }
+            }
+        }
+        return min === Infinity ? null : min;
+    }, [hasPrices, prices, month1Year, month1Month, month2Year, month2Month, today]);
+
     function renderMonth(year, month) {
         const cells = buildCalendarGrid(year, month);
 
@@ -181,6 +202,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                         const dateKey = toDateKey(year, month, day);
                         const dayPrice = hasPrices ? prices[dateKey] : undefined;
                         const hasNoPrice = hasPrices && !isPast && dayPrice === undefined;
+                        const isCheapest = hasPrices && !isPast && dayPrice !== undefined && cheapestPrice !== null && Number(dayPrice) === cheapestPrice;
 
                         let className = 'nvt-calendar-day';
                         if (hasPrices) className += ' nvt-calendar-day--has-prices';
@@ -189,6 +211,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                         if (isSelectedCheckIn || isSelectedCheckOut) className += ' nvt-calendar-day--selected';
                         if (inRange) className += ' nvt-calendar-day--in-range';
                         if (hasNoPrice) className += ' nvt-calendar-day--no-price';
+                        if (isCheapest) className += ' nvt-calendar-day--cheapest';
 
                         // Build accessible label for screen readers
                         const ariaLabel = (() => {
