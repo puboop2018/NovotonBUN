@@ -1202,7 +1202,7 @@ class PriceInfoCalculator
         return $price * (1 + ($this->commission / 100));
     }
 
-    private function log(string $message, $data = null): void
+    private function log(string $message, mixed $data = null): void
     {
         if ($this->logger) {
             ($this->logger)($message, $data);

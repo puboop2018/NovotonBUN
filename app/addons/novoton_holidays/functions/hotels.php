@@ -237,7 +237,7 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
  * @param bool $force Force refresh
  * @return array Packages with prices data
  */
-function fn_novoton_holidays_get_hotel_prices($product_id, $force = false, $hotel_id = null): array
+function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, ?int $hotel_id = null): array
 {
     static $cache = [];
 

@@ -311,7 +311,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /**
      * Log debug message
      */
-    public function log(string $message, $data = null): void
+    public function log(string $message, mixed $data = null): void
     {
         $entry = [
             'time' => date('H:i:s'),

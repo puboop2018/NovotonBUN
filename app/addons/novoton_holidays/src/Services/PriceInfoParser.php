@@ -526,7 +526,7 @@ class PriceInfoParser
         return $result;
     }
 
-    private function log(string $message, $data = null): void
+    private function log(string $message, mixed $data = null): void
     {
         if ($this->logger) {
             ($this->logger)($message, $data);
