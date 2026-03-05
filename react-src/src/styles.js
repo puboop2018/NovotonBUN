@@ -17,11 +17,11 @@ export function injectStyles() {
    ====================================================================== */
 
 .nvt-booking-engine {
-    /* React-only variables (no LESS equivalent) */
+    /* Component-scoped variables */
     --nvt-z-popup: 1000;
     --nvt-btn-height: 52px;
     --nvt-btn-font: 15px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--nvt-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     color: var(--nvt-text, #1a1a1a);
     position: relative;
 }

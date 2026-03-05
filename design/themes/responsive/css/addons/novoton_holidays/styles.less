@@ -94,7 +94,7 @@
 
 // Layout  (respects the "Rounded corners" toggle in Theme Editor)
 // When @rounded_corners is false the theme sets baseBorderRadius to 0;
-// we use a guard mixin so the addon follows the same toggle.
+// the addon follows the same toggle via direct assignment.
 @novoton-radius:            @baseBorderRadius;
 @novoton-radius-sm:         @borderRadiusSmall;
 @novoton-radius-pill:       20px;
@@ -130,9 +130,9 @@
 // ============================================================================
 // LESS → CSS CUSTOM PROPERTIES BRIDGE
 //
-// React, booking-form-react.css, and inline styles can all read these
-// via var(--nvt-*).  When the Visual Editor overrides a LESS variable
-// the custom property updates automatically on recompile.
+// React (styles.js) and inline styles can all read these via var(--nvt-*).
+// When the Visual Editor overrides a LESS variable the custom property
+// updates automatically on recompile.
 // ============================================================================
 
 // lessphp (CS-Cart's PHP LESS compiler) does not fully support CSS custom
