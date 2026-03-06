@@ -3258,5 +3258,5 @@ msgid "Feature Mappings"
 msgstr "Feature Mappings"
 
 msgctxt "Languages::novoton_holidays.actions.import_facilities"
-msgid "Import Facilities from API"
-msgstr "Import Facilities from API"
+msgid "Import All Facilities from API"
+msgstr "Import All Facilities from API"
