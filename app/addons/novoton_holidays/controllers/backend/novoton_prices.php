@@ -144,7 +144,7 @@ if ($mode == 'check_prices') {
     fn_novoton_holidays_stream_page_open('Checking Hotel Prices (Resort-based)');
 
     // Date / settings form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_prices.check_prices'));
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices'));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
@@ -401,12 +401,12 @@ if ($mode == 'check_prices_hotel') {
 
     echo '<div class="info-box">';
     echo '<strong>Hotel-based query:</strong> Queries each hotel by hotel_id individually.<br>';
-    echo 'Use this to compare with <a href="' . fn_url('novoton_prices.check_prices') . '">resort-based check</a> and find discrepancies.<br>';
+    echo 'Use this to compare with <a href="' . fn_url('novoton_holidays.check_prices') . '">resort-based check</a> and find discrepancies.<br>';
     echo 'Slower but more accurate - catches hotels with missing/mismatched city names.';
     echo '</div>';
 
     // Date / settings form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_prices.check_prices_hotel'));
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices_hotel'));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
@@ -430,7 +430,7 @@ if ($mode == 'check_prices_hotel') {
         echo '<p class="hint">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
         echo 'This method queries each hotel individually by hotel_id (slower but complete).</p>';
         fn_novoton_holidays_stream_page_close('', [
-            ['url' => fn_url('novoton_prices.check_prices'), 'label' => 'Resort-based Check']
+            ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
         ]);
         exit;
     }
@@ -584,7 +584,7 @@ if ($mode == 'check_prices_hotel') {
 
     echo '</div>';
     fn_novoton_holidays_stream_page_close('', [
-        ['url' => fn_url('novoton_prices.check_prices'), 'label' => 'Resort-based Check']
+        ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
     ]);
     exit;
 }

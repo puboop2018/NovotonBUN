@@ -44,40 +44,38 @@ $tools_modes = [
     'export_hotel_features_xml', 'download_hotel_features_xml'
 ];
 
-// Redirect to standalone sub-controllers.
+// Include sub-controller files for delegated modes.
 //
-// Previously these modes were handled via include() of the sub-controller file.
-// However, CS-Cart's dispatch mechanism resolves the template path from the
-// *original* controller name in the dispatch URL. When novoton_hotels.php was
-// include()'d from novoton_holidays.php, modes that fall through to template
-// rendering (add_hotels_as_products, view_hotels_to_add, list_facilities)
-// failed with 404 because CS-Cart couldn't properly resolve the template path.
+// Sub-controllers are organized in separate files for maintainability but
+// included here so the dispatch stays as novoton_holidays.{mode}. This ensures
+// CS-Cart's template resolution always works: it looks for templates at
+//   views/novoton_holidays/{mode}.tpl
+// which is the addon's own views directory — always discoverable.
 //
-// Streaming modes (which call exit;) worked fine via include() since they never
-// reach CS-Cart's template rendering. But template-rendering modes need a
-// proper dispatch cycle with their own controller name.
+// The previous redirect approach (redirecting to novoton_hotels.{mode} etc.)
+// caused 404 errors because CS-Cart's addon controller cache may not discover
+// controller files that don't match the addon name (novoton_holidays).
 //
-// The fix: redirect to the standalone sub-controller dispatch. This ensures
-// CS-Cart's full dispatch cycle runs with the correct controller name, and
-// templates are resolved at views/{controller}/{mode}.tpl.
-$redirect_map = [
-    ['modes' => $hotels_modes, 'controller' => 'novoton_hotels'],
-    ['modes' => $prices_modes, 'controller' => 'novoton_prices'],
-    ['modes' => $tools_modes,  'controller' => 'novoton_tools'],
+// Modes that call exit() (streaming modes) work directly. Template-rendering
+// modes fall through and CS-Cart renders views/novoton_holidays/{mode}.tpl.
+// Modes that return a status array (redirects) have their return value captured
+// and propagated back to CS-Cart's dispatch mechanism.
+$include_map = [
+    ['modes' => $hotels_modes, 'file' => __DIR__ . '/novoton_hotels.php'],
+    ['modes' => $prices_modes, 'file' => __DIR__ . '/novoton_prices.php'],
+    ['modes' => $tools_modes,  'file' => __DIR__ . '/novoton_tools.php'],
 ];
 
-foreach ($redirect_map as $entry) {
+foreach ($include_map as $entry) {
     if (in_array($mode, $entry['modes'], true)) {
-        $redirect_url = $entry['controller'] . '.' . $mode;
-
-        // Preserve query parameters (country, run, limit, etc.)
-        $params = $_REQUEST;
-        unset($params['dispatch']);
-        if (!empty($params)) {
-            $redirect_url .= '&' . http_build_query($params);
+        $result = include $entry['file'];
+        // Propagate status arrays (e.g. [CONTROLLER_STATUS_REDIRECT, 'url'])
+        if (is_array($result)) {
+            return $result;
         }
-
-        return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
+        // Template-rendering modes: fall through to CS-Cart's view rendering
+        // using views/novoton_holidays/{mode}.tpl
+        return;
     }
 }
 

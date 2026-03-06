@@ -752,11 +752,11 @@
                         <position>25</position>
                     </item>
                     <item id="add_hotels_as_products">
-                        <href>novoton_hotels.add_hotels_as_products</href>
+                        <href>novoton_holidays.add_hotels_as_products</href>
                         <position>26</position>
                     </item>
                     <item id="list_facilities">
-                        <href>novoton_hotels.list_facilities</href>
+                        <href>novoton_holidays.list_facilities</href>
                         <position>27</position>
                     </item>
                     <item id="feature_mappings">

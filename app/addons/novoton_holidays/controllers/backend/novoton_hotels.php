@@ -324,7 +324,7 @@ if ($mode == 'sync_facilities') {
         fn_set_notification('E', __('error'), $result['error'] ?? 'Sync failed');
     }
     
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
@@ -351,7 +351,7 @@ if ($mode == 'sync_hotel_facilities') {
 
     fn_set_notification('N', __('notice'), "Hotel facilities synced for {$synced} hotels. Failed: {$failed}.");
 
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
@@ -381,7 +381,7 @@ if ($mode == 'save_facility_types') {
 
     fn_set_notification('N', __('notice'), "Facility types saved ({$updated} updated).");
 
-    return [CONTROLLER_STATUS_REDIRECT, 'novoton_hotels.list_facilities'];
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
 /**
@@ -400,7 +400,7 @@ if ($mode == 'check_packages') {
     echo '<p class="hint">Retrieves <code>&lt;PackageName&gt;</code> from <code>hotelinfo</code> API for all hotels across all countries.</p>';
 
     // Form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_hotels.check_packages'));
+    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_packages'));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
