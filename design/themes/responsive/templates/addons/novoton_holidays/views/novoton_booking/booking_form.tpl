@@ -89,8 +89,14 @@
 {/function}
 
 <div class="novoton-reservation-form">
-    <form action="{fn_url("novoton_booking.add_to_cart")}" method="post" id="novoton-booking-form">
+    <form action="{if $is_edit_mode}{fn_url("novoton_booking.update_booking")}{else}{fn_url("novoton_booking.add_to_cart")}{/if}" method="post" id="novoton-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
+        {if $is_edit_mode}
+            <input type="hidden" name="booking_id" value="{$booking_id}" />
+            <input type="hidden" name="cart_id" value="{$cart_id}" />
+            <input type="hidden" name="contact[email]" value="{$booking_data.guest_email|default:''}" />
+            <input type="hidden" name="contact[phone]" value="{$booking_data.guest_phone|default:''}" />
+        {/if}
         <input type="hidden" name="hotel_id" value="{$booking_data.hotel_id}" />
         <input type="hidden" name="room_id" value="{$booking_data.room_id}" />
         <input type="hidden" name="board_id" value="{$booking_data.board_id}" />
