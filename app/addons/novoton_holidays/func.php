@@ -33,6 +33,7 @@ $function_files = [
     'functions/hotels.php',
     'functions/bookings.php',
     'functions/email.php',
+    'functions/exchange_rates.php',
 ];
 
 foreach ($function_files as $file) {

@@ -161,6 +161,7 @@ class CronHelper
         $logger->output("- add_hotels_as_products: Add hotels as products");
         $logger->output("- resort_list: Sync resort names from API (authoritative names for room_price)");
         $logger->output("- list_facilities: Sync facilities list from API");
+        $logger->output("- exchange_rates: Update currency rates from BNR (daily)");
         $logger->output("");
         $logger->output("Recommended workflow:");
         $logger->output("  1. hotel_info_batched (every 5 min) - Smart hotel info sync with resume");
@@ -173,5 +174,6 @@ class CronHelper
         $logger->output("     - Every 7 days: automatic full re-sync");
         $logger->output("  3. resort_list (weekly) - Sync resort names from API");
         $logger->output("  4. list_facilities (weekly) - Sync facilities list");
+        $logger->output("  5. exchange_rates (daily) - Update BNR exchange rates");
     }
 }

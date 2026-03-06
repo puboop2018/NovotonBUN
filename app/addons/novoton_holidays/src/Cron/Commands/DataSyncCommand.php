@@ -10,12 +10,12 @@ class DataSyncCommand extends AbstractCronCommand
 {
     public static function getModes(): array
     {
-        return ['resort_list', 'list_facilities'];
+        return ['resort_list', 'list_facilities', 'exchange_rates'];
     }
 
     public static function getDescription(): string
     {
-        return 'Sync reference data (resorts, facilities)';
+        return 'Sync reference data (resorts, facilities, exchange rates)';
     }
 
     public function execute(): array
@@ -27,6 +27,8 @@ class DataSyncCommand extends AbstractCronCommand
                 return $this->syncResortList();
             case 'list_facilities':
                 return $this->syncFacilities();
+            case 'exchange_rates':
+                return $this->updateExchangeRates();
         }
 
         return ['success' => false, 'error' => 'Unknown sub-mode'];
@@ -131,4 +133,44 @@ class DataSyncCommand extends AbstractCronCommand
         }
     }
 
+    private function updateExchangeRates(): array
+    {
+        $this->output("Exchange Rates Fetch (BNR)");
+        $this->output("=========================");
+        $this->output("Note: Rates saved to DB for reference only. CS-Cart currency conversion is handled by CS-Cart's own addon.");
+        $this->output("");
+
+        $result = fn_novoton_holidays_update_exchange_rates(true);
+        if (!is_array($result)) {
+            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
+        }
+
+        $this->output("Status: " . (($result['success'] ?? false) ? 'SUCCESS' : 'FAILED'));
+        $this->output("Message: " . ($result['message'] ?? 'Unknown'));
+
+        if (!empty($result['publishing_date'])) {
+            $this->output("Publishing Date: " . $result['publishing_date']);
+        }
+        $this->output("");
+
+        if (!empty($result['bnr_rates'])) {
+            $this->output("BNR Rates (RON-based):");
+            foreach ($result['bnr_rates'] as $currency => $rate) {
+                $this->output("  {$currency}: {$rate}");
+            }
+            $this->output("");
+        }
+
+        if (!empty($result['coefficients'])) {
+            $this->output("Calculated Coefficients (EUR-based, commission: " . ($result['commission'] ?? 0) . "%):");
+            foreach ($result['coefficients'] as $currency => $coefficient) {
+                $this->output("  {$currency}: {$coefficient}");
+            }
+            $this->output("");
+        }
+
+        $this->logToSyncTable('exchange_rates', count($result['bnr_rates'] ?? []));
+
+        return ['success' => $result['success'] ?? false, 'stats' => $result];
+    }
 }

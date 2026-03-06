@@ -1,0 +1,97 @@
+<?php
+declare(strict_types=1);
+/**
+ * Novoton Holidays - Exchange Rates Controller
+ *
+ * Admin controller for managing BNR exchange rate updates.
+ * Supports manual updates and cron job execution.
+ *
+ * @package NovotonHolidays
+ * @since 3.0.0
+ */
+
+use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+// Check admin permissions
+if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    return [CONTROLLER_STATUS_DENIED];
+}
+
+/**
+ * Cron mode - called via admin panel (no password needed, admin auth required)
+ * URL: admin.php?dispatch=novoton_exchange_rates.cron
+ */
+if ($mode == 'cron') {
+    // No password check needed - admin.php already requires admin authentication
+
+    // Run exchange rate update
+    $result = fn_novoton_holidays_update_exchange_rates(true);
+
+    // Output result for cron logging
+    header('Content-Type: text/plain');
+    echo "Novoton Exchange Rates Update\n";
+    echo "============================\n";
+    echo "Timestamp: " . ($result['timestamp'] ?? date('Y-m-d H:i:s')) . "\n";
+    echo "Status: " . (!empty($result['success']) ? 'SUCCESS' : 'FAILED') . "\n";
+    echo "Message: " . ($result['message'] ?? 'No message') . "\n";
+
+    if (!empty($result['bnr_rates'])) {
+        echo "\nBNR Rates (RON-based):\n";
+        foreach ($result['bnr_rates'] as $currency => $rate) {
+            echo "  $currency: $rate\n";
+        }
+    }
+
+    if (!empty($result['coefficients'])) {
+        echo "\nCalculated Coefficients (EUR-based, commission: " . ($result['commission'] ?? 0) . "%):\n";
+        foreach ($result['coefficients'] as $currency => $coefficient) {
+            echo "  $currency: $coefficient\n";
+        }
+    }
+
+    echo "\nNote: Rates saved to DB for reference. CS-Cart currency conversion handled by CS-Cart addon.\n";
+
+    exit;
+}
+
+/**
+ * Manage mode - admin panel view
+ */
+if ($mode == 'manage') {
+    // Get current exchange rate info
+    $exchange_info = fn_novoton_holidays_get_exchange_rate_info();
+
+    Tygh::$app['view']->assign('exchange_info', $exchange_info);
+
+    $cron_password = ConfigProvider::getCronAccessKey();
+    Tygh::$app['view']->assign('cron_password', $cron_password);
+
+    // Build cron URLs for display
+    // Frontend URL requires password (no session) - uses main cron controller
+    $cron_url_frontend = fn_url('novoton_cron.exchange_rates', 'C');
+    $cron_url_frontend .= '&cron_password=' . $cron_password;
+    Tygh::$app['view']->assign('cron_url_frontend', $cron_url_frontend);
+
+    // Admin URL doesn't need password (requires admin login)
+    $cron_url_admin = fn_url('novoton_exchange_rates.cron', 'A');
+    Tygh::$app['view']->assign('cron_url_admin', $cron_url_admin);
+}
+
+/**
+ * Update mode - manual trigger from admin panel
+ */
+if ($mode == 'update') {
+    // Run exchange rate update
+    $result = fn_novoton_holidays_update_exchange_rates(true);
+
+    if ($result['success']) {
+        fn_set_notification('N', __('notice'), __('novoton_holidays.exchange_rates_updated'));
+    } else {
+        fn_set_notification('E', __('error'), $result['message']);
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_exchange_rates.manage'];
+}

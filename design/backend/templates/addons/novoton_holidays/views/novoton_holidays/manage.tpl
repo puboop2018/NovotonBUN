@@ -243,6 +243,12 @@
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Exchange Rates</strong><br><small class="muted">Update BNR rates</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.exchange_rates}</div></td>
+                <td>Daily</td>
+                <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
                 <td><strong>Compute Prices</strong><br><small class="muted">min_price, seasons, early booking</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.compute_prices}</div></td>
                 <td>Every 5 min</td>
