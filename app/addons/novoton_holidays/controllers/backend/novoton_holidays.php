@@ -66,6 +66,12 @@ $include_map = [
     ['modes' => $tools_modes,  'file' => __DIR__ . '/novoton_tools.php'],
 ];
 
+// Track whether a sub-controller handled this mode.
+// IMPORTANT: template-rendering modes must NOT return early — CS-Cart requires
+// the controller to fall through to the end of the file for template resolution.
+// An explicit `return;` (null) causes CS-Cart's dispatch to show 404.
+$__handled = false;
+
 foreach ($include_map as $entry) {
     if (in_array($mode, $entry['modes'], true)) {
         $result = include $entry['file'];
@@ -73,9 +79,10 @@ foreach ($include_map as $entry) {
         if (is_array($result)) {
             return $result;
         }
-        // Template-rendering modes: fall through to CS-Cart's view rendering
-        // using views/novoton_holidays/{mode}.tpl
-        return;
+        // Template-rendering modes: mark as handled and fall through to end of file
+        // so CS-Cart renders views/novoton_holidays/{mode}.tpl
+        $__handled = true;
+        break;
     }
 }
 
