@@ -267,7 +267,7 @@ class PricingApiClient extends ApiClientBase
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <Resort>' . $this->xmlCdata($resort) . '</Resort>
+            <Resort>' . htmlspecialchars($resort, ENT_XML1, 'UTF-8') . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>
@@ -356,7 +356,7 @@ class PricingApiClient extends ApiClientBase
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <Resort>' . $this->xmlCdata($resort) . '</Resort>
+            <Resort>' . htmlspecialchars($resort, ENT_XML1, 'UTF-8') . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>

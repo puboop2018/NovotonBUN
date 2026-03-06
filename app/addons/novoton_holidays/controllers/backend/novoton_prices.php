@@ -243,6 +243,18 @@ if ($mode == 'check_prices') {
                     $response_kb = round(strlen($rawResponse) / 1024, 1);
                     $raw_kb = round(strlen($rawResponseRaw) / 1024, 1);
 
+                    // Show debug info for first resort to help diagnose issues
+                    if ($resort_idx === 0) {
+                        $rawSnippet = substr($rawResponseRaw, 0, 500);
+                        $reqSnippet = substr($api->getLastRequest() ?: '', 0, 500);
+                        echo "<details><summary class='debug'>Debug: first resort request/response</summary>";
+                        echo "<div style='font-size:11px;background:#f5f5f5;padding:8px;margin:4px 0;'>";
+                        echo "<strong>Request (first 500 chars):</strong><br><code>" . htmlspecialchars($reqSnippet) . "</code><br><br>";
+                        echo "<strong>Response (first 500 chars, raw {$raw_kb} KB / cleaned {$response_kb} KB):</strong><br><code>" . htmlspecialchars($rawSnippet) . "</code>";
+                        echo "</div></details>\n";
+                        flush();
+                    }
+
                     if ($xml === false) {
                         $errorDetail = $api->getLastError() ?: 'no error info';
                         echo "<span class='skip'>  Empty/invalid response (cleaned: {$response_kb} KB, raw: {$raw_kb} KB, error: " . htmlspecialchars($errorDetail) . ")</span><br>\n";
