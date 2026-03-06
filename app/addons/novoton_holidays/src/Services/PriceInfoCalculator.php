@@ -371,7 +371,7 @@ class PriceInfoCalculator
      *
      * @return array<string> Upper-cased, trimmed age-type strings (e.g. "ADULT", "3 RD ADULT", "CHD 2-11.99")
      */
-    private function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
+    public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {
         static $ageTypeMap = [
             '1' => 'ADULT',

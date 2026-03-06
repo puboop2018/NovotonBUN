@@ -767,9 +767,71 @@ if ($mode == 'verify') {
             echo '</table>';
         }
 
-        // 3. Show raw priceinfo structure
-        echo '<h2>3. Raw Priceinfo Structure (seasons only)</h2>';
+        // 3. Season-Price Age Types → Handling-Fee Correlation
+        echo '<h2>3. Handling-Fee Correlation with Season-Price</h2>';
+        echo '<div class="info-box">Handling-fee entries are only used when their IdAge matches an age type present in the season_price for this room. '
+           . 'For example, if season_price only defines "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), then positional handling-fee entries are skipped.</div>';
+
+        $seasonAgeTypes = $calculator->collectSeasonPriceAgeTypes($room_id, $board_id);
+        echo '<h3>Season-Price Age Types for this Room</h3>';
+        if (empty($seasonAgeTypes)) {
+            echo '<p><em>No season_price age types found for this room/board.</em></p>';
+        } else {
+            echo '<p>';
+            foreach ($seasonAgeTypes as $ageType) {
+                echo '<span class="season-badge season-2">' . htmlspecialchars($ageType) . '</span> ';
+            }
+            echo '</p>';
+        }
+
+        // Show handling_fee entries and their correlation status
         $priceinfo = json_decode($priceinfo_json, true);
+        $handlingFees = $priceinfo['handling_fee'] ?? [];
+        if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
+            $handlingFees = [$handlingFees];
+        }
+        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
+
+        if (!empty($handlingFees)) {
+            echo '<h3>Handling-Fee Entries &amp; Correlation</h3>';
+            echo '<table>';
+            echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
+            foreach ($handlingFees as $idx => $fee) {
+                $feeIdAge = trim(preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
+                // Strip "BY x AD" suffix for correlation check (same as feeKey)
+                $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
+                $feeUpper = strtoupper($feeKey);
+
+                $correlates = empty($seasonAgeSet); // if no season types, allow all
+                if (!empty($seasonAgeSet)) {
+                    foreach ($seasonAgeSet as $spAge) {
+                        if (\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
+                            $correlates = true;
+                            break;
+                        }
+                    }
+                }
+
+                $statusStyle = $correlates
+                    ? 'background: #c8e6c9; color: #2e7d32; font-weight: bold;'
+                    : 'background: #ffcdd2; color: #c62828; font-weight: bold;';
+                $statusText = $correlates ? 'YES - included' : 'NO - skipped';
+
+                echo '<tr' . (!$correlates ? ' style="opacity:0.6;"' : '') . '>';
+                echo '<td>' . $idx . '</td>';
+                echo '<td>' . htmlspecialchars($feeIdAge) . '</td>';
+                echo '<td>' . htmlspecialchars($fee['FromDate'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['ToDate'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['Price1'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['Price2'] ?? '-') . '</td>';
+                echo '<td style="' . $statusStyle . '">' . $statusText . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        // 4. Show raw priceinfo structure
+        echo '<h2>4. Raw Priceinfo Structure (seasons only)</h2>';
         echo '<pre>' . htmlspecialchars(json_encode($priceinfo['seasons'] ?? [], JSON_PRETTY_PRINT)) . '</pre>';
     }
 
