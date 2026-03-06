@@ -275,7 +275,13 @@ class PriceInfoCalculator
             $fees['details'][] = ['type' => 'extras_daily', 'amount' => $fees['extras_daily']];
         }
 
-        $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights);
+        // Collect the set of distinct IdAge values present in season_price for
+        // this room/board.  Handling-fee entries are only considered when their
+        // IdAge correlates with an age type that actually exists in season_price
+        // for the booked room (room-specific correlation).
+        $seasonAgeTypes = $this->collectSeasonPriceAgeTypes($roomId, $boardId);
+
+        $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights, $seasonAgeTypes);
         $fees['handling_fee'] = $handlingResult['total'];
         $fees['handling_fee_entries'] = $handlingResult['entries'];
         if ($fees['handling_fee'] > 0) {
@@ -360,13 +366,61 @@ class PriceInfoCalculator
     }
 
     /**
-     * Calculate handling_fee
+     * Collect the distinct resolved IdAge values from season_price rows
+     * that match the given room and board.
+     *
+     * @return array<string> Upper-cased, trimmed age-type strings (e.g. "ADULT", "3 RD ADULT", "CHD 2-11.99")
      */
-    private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights): float
+    private function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
+    {
+        static $ageTypeMap = [
+            '1' => 'ADULT',
+            '2' => 'CHD 0-1.99',
+            '3' => 'CHD 2-11.99',
+            '4' => 'CHD 12-17.99',
+        ];
+
+        $priceinfo = $this->parser->getPriceinfo();
+        $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        $ageTypes = [];
+        foreach ($seasonPrices as $row) {
+            $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
+            $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
+
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
+
+            $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $resolvedAge = $row['fAge'];
+            } else {
+                $resolvedAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+            $resolvedAge = strtoupper(trim(preg_replace('/\s+/', ' ', $resolvedAge)));
+            if ($resolvedAge !== '') {
+                $ageTypes[$resolvedAge] = true;
+            }
+        }
+
+        return array_keys($ageTypes);
+    }
+
+    /**
+     * Calculate handling_fee
+     *
+     * @param array $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     *                              Only handling_fee entries whose IdAge correlates with one of these
+     *                              are considered.
+     */
+    private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): array
     {
         $priceinfo = $this->parser->getPriceinfo();
         $handlingFees = $priceinfo['handling_fee'] ?? [];
-        if (empty($handlingFees)) return 0;
+        if (empty($handlingFees)) return ['total' => 0, 'entries' => []];
 
         if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
             $handlingFees = [$handlingFees];
@@ -380,32 +434,10 @@ class PriceInfoCalculator
         $entryDetails = [];
         $checkOutStr = $checkOutDate->format('Y-m-d');
 
-        // Pre-scan: count active positional entries per base type.
-        // When both generic ("ADULT") and positional ("3 RD ADULT", "4 TH ADULT")
-        // entries exist, the generic entry must exclude positions already covered
-        // by specific positional entries to avoid double-counting.
-        $positionalCountByType = [];
-        foreach ($handlingFees as $fee) {
-            $feeFromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
-            $feeToDate = PriceInfoFormatter::toScalar($fee['ToDate'] ?? '');
-            if (!empty($feeFromDate) && !empty($feeToDate)) {
-                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutStr, $feeFromDate, $feeToDate)) {
-                    continue;
-                }
-            }
-            $feeIdAge = PriceInfoFormatter::feeKey(PriceInfoFormatter::toScalar($fee['IdAge'] ?? ''));
-            if (empty($feeIdAge)) {
-                continue;
-            }
-            $upper = strtoupper(trim($feeIdAge));
-            if (preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+(.+)$/i', $upper, $m)) {
-                $baseType = strtoupper(trim($m[3]));
-                $matchCount = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
-                if ($matchCount > 0) {
-                    $positionalCountByType[$baseType] = ($positionalCountByType[$baseType] ?? 0) + $matchCount;
-                }
-            }
-        }
+        // Build a lookup set of season_price age types for fast matching.
+        // Handling-fee entries are only considered when their IdAge correlates
+        // with an age type present in the season_price for the booked room.
+        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
 
         foreach ($handlingFees as $idx => $fee) {
             $fromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
@@ -442,22 +474,35 @@ class PriceInfoCalculator
             $countMethod = '';
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
             if (!empty($feeIdAge)) {
-                $rawCount = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
-
-                // If this is a generic (non-positional) entry and there are
-                // positional entries for the same base type, reduce the count
-                // to avoid double-counting those persons.
-                $upper = strtoupper(trim($feeIdAge));
-                $isPositional = (bool) preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+/i', $upper);
-                $positionalDeduction = 0;
-                if (!$isPositional && isset($positionalCountByType[$upper])) {
-                    $positionalDeduction = $positionalCountByType[$upper];
-                    $count = max(0, $rawCount - $positionalDeduction);
-                    $countMethod = "matched '{$feeIdAge}': {$rawCount} total - {$positionalDeduction} covered by positional entries = {$count}";
-                } else {
-                    $count = $rawCount;
-                    $countMethod = "matched '{$feeIdAge}'";
+                // Season-price correlation: only consider this handling-fee
+                // entry if its age type exists in the season_price for the
+                // booked room.  For example, if season_price only defines
+                // "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), positional
+                // handling-fee entries are skipped — all adults use the
+                // generic "ADULT" rate.
+                if (!empty($seasonAgeSet)) {
+                    $feeUpper = strtoupper(trim(preg_replace('/\s+/', ' ', $feeIdAge)));
+                    $correlates = false;
+                    foreach ($seasonAgeSet as $spAge) {
+                        if (PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
+                            $correlates = true;
+                            break;
+                        }
+                    }
+                    if (!$correlates) {
+                        $entryDetails[] = [
+                            'entry' => $idx,
+                            'idAge' => $idAge,
+                            'feeKey' => $feeIdAge,
+                            'skipped' => 'no_season_price_correlation',
+                            'season_age_types' => $seasonAgeTypes,
+                        ];
+                        continue;
+                    }
                 }
+
+                $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
+                $countMethod = "matched '{$feeIdAge}'";
             } else {
                 $count = count($occupancy['adults']) + count($occupancy['children']);
                 $countMethod = 'all_persons (empty IdAge)';
