@@ -275,7 +275,9 @@ class PriceInfoCalculator
             $fees['details'][] = ['type' => 'extras_daily', 'amount' => $fees['extras_daily']];
         }
 
-        $fees['handling_fee'] = $this->calculateHandlingFee($occupancy, $checkIn, $nights);
+        $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights);
+        $fees['handling_fee'] = $handlingResult['total'];
+        $fees['handling_fee_entries'] = $handlingResult['entries'];
         if ($fees['handling_fee'] > 0) {
             $fees['details'][] = ['type' => 'handling_fee', 'amount' => $fees['handling_fee']];
         }
@@ -376,6 +378,34 @@ class PriceInfoCalculator
 
         $total = 0;
         $entryDetails = [];
+        $checkOutStr = $checkOutDate->format('Y-m-d');
+
+        // Pre-scan: count active positional entries per base type.
+        // When both generic ("ADULT") and positional ("3 RD ADULT", "4 TH ADULT")
+        // entries exist, the generic entry must exclude positions already covered
+        // by specific positional entries to avoid double-counting.
+        $positionalCountByType = [];
+        foreach ($handlingFees as $fee) {
+            $feeFromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
+            $feeToDate = PriceInfoFormatter::toScalar($fee['ToDate'] ?? '');
+            if (!empty($feeFromDate) && !empty($feeToDate)) {
+                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutStr, $feeFromDate, $feeToDate)) {
+                    continue;
+                }
+            }
+            $feeIdAge = PriceInfoFormatter::feeKey(PriceInfoFormatter::toScalar($fee['IdAge'] ?? ''));
+            if (empty($feeIdAge)) {
+                continue;
+            }
+            $upper = strtoupper(trim($feeIdAge));
+            if (preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+(.+)$/i', $upper, $m)) {
+                $baseType = strtoupper(trim($m[3]));
+                $matchCount = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
+                if ($matchCount > 0) {
+                    $positionalCountByType[$baseType] = ($positionalCountByType[$baseType] ?? 0) + $matchCount;
+                }
+            }
+        }
 
         foreach ($handlingFees as $idx => $fee) {
             $fromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
@@ -389,7 +419,7 @@ class PriceInfoCalculator
             $price2 = (float) PriceInfoFormatter::toScalar($fee['Price2'] ?? '0');
 
             if (!empty($fromDate) && !empty($toDate)) {
-                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
+                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutStr, $fromDate, $toDate)) {
                     $entryDetails[] = ['entry' => $idx, 'idAge' => $idAge, 'skipped' => 'date_range', 'fromDate' => $fromDate, 'toDate' => $toDate];
                     continue;
                 }
@@ -412,8 +442,22 @@ class PriceInfoCalculator
             $countMethod = '';
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
             if (!empty($feeIdAge)) {
-                $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
-                $countMethod = "matched '{$feeIdAge}'";
+                $rawCount = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
+
+                // If this is a generic (non-positional) entry and there are
+                // positional entries for the same base type, reduce the count
+                // to avoid double-counting those persons.
+                $upper = strtoupper(trim($feeIdAge));
+                $isPositional = (bool) preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+/i', $upper);
+                $positionalDeduction = 0;
+                if (!$isPositional && isset($positionalCountByType[$upper])) {
+                    $positionalDeduction = $positionalCountByType[$upper];
+                    $count = max(0, $rawCount - $positionalDeduction);
+                    $countMethod = "matched '{$feeIdAge}': {$rawCount} total - {$positionalDeduction} covered by positional entries = {$count}";
+                } else {
+                    $count = $rawCount;
+                    $countMethod = "matched '{$feeIdAge}'";
+                }
             } else {
                 $count = count($occupancy['adults']) + count($occupancy['children']);
                 $countMethod = 'all_persons (empty IdAge)';
@@ -440,7 +484,7 @@ class PriceInfoCalculator
 
         $this->log('Handling fee entries', $entryDetails);
 
-        return $total;
+        return ['total' => $total, 'entries' => $entryDetails];
     }
 
     /**

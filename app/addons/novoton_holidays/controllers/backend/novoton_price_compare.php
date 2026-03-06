@@ -327,6 +327,36 @@ if ($mode == 'compare') {
     echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
     echo '</table>';
 
+    // Handling Fee breakdown (per-entry details)
+    $feesDetail = $breakdown['fees_detail'] ?? [];
+    $hfEntries = $feesDetail['handling_fee_entries'] ?? [];
+    if (!empty($hfEntries)) {
+        echo '<h3>Handling Fee Breakdown</h3>';
+        echo '<p style="font-size:0.9em;color:#666;">Each entry from priceinfo handling_fee. '
+           . 'Generic entries (e.g. "ADULT") exclude persons already covered by positional entries (e.g. "3 RD ADULT") to avoid double-counting.</p>';
+        echo '<table>';
+        echo '<tr><th>#</th><th>IdAge</th><th>Tier</th><th>Price/person</th><th>Count</th><th>Subtotal</th><th>Explanation</th></tr>';
+        foreach ($hfEntries as $hfe) {
+            if (isset($hfe['skipped'])) {
+                echo '<tr class="zero-value"><td>' . ($hfe['entry'] ?? '') . '</td><td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>'
+                   . '<td colspan="4">Skipped: ' . htmlspecialchars($hfe['skipped']) . ' (dates: ' . ($hfe['fromDate'] ?? '') . ' - ' . ($hfe['toDate'] ?? '') . ')</td><td></td></tr>';
+                continue;
+            }
+            $subtotal = $hfe['subtotal'] ?? 0;
+            $cls = ($subtotal == 0) ? ' class="zero-value"' : '';
+            echo '<tr' . $cls . '>';
+            echo '<td>' . ($hfe['entry'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['tier'] ?? '') . '</td>';
+            echo '<td>' . number_format($hfe['price'] ?? 0, 2) . '</td>';
+            echo '<td>' . ($hfe['count'] ?? 0) . '</td>';
+            echo '<td>' . number_format($subtotal, 2) . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['count_method'] ?? '') . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    }
+
     $basePlusFees = ($breakdown['base_price'] ?? 0) + ($fees['total_fees'] ?? 0);
     echo '<div class="formula">Subtotal (Base + Fees) = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' + ' . number_format($fees['total_fees'] ?? 0, 2) . ' = ' . number_format($basePlusFees, 2) . ' EUR</div>';
     echo '</div>';
