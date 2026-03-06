@@ -33,7 +33,7 @@ if ($mode == 'compare') {
     $package_name = $_REQUEST['package_name'] ?? '';
     $room_id = $_REQUEST['room_id'] ?? '';
     $board_id = $_REQUEST['board_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y') . '-07-01';
     $nights = (int)($_REQUEST['nights'] ?? 7);
     $adults = (int)($_REQUEST['adults'] ?? 2);
     $children_ages = $_REQUEST['children_ages'] ?? '';
@@ -632,7 +632,7 @@ if ($mode == 'verify') {
     $package_name = $_REQUEST['package_name'] ?? '';
     $room_id = $_REQUEST['room_id'] ?? '';
     $board_id = $_REQUEST['board_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y') . '-07-01';
     $nights = (int)($_REQUEST['nights'] ?? 7);
 
     echo '<!DOCTYPE html><html><head><title>Season-Price Verification</title>
@@ -935,5 +935,5 @@ if (empty($mode) || $mode == 'manage') {
     );
 
     Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('default_check_in', date('Y-m-d', strtotime('+30 days')));
+    Tygh::$app['view']->assign('default_check_in', date('Y') . '-07-01');
 }

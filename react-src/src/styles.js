@@ -383,40 +383,47 @@ button.nvt-field-input:active {
     font-weight: 600;
     font-size: 14px;
 }
-/* Price label below the day number — default grey for non-cheapest */
+/* Price label below the day number */
 .nvt-calendar-day-price {
     font-size: 10px;
     line-height: 1;
-    color: var(--nvt-cal-price-color, #616161);
+    color: var(--nvt-cal-price-color, #4B5563);
     font-weight: 600;
     white-space: nowrap;
 }
-/* Cheapest price in visible 2-month window: soft pastel green */
-.nvt-calendar-day--cheapest .nvt-calendar-day-price {
+/* Price tiers: lowest (green), medium (gray), higher (amber), highest (rose) */
+.nvt-calendar-day--price-lowest .nvt-calendar-day-price {
     color: var(--nvt-cal-cheapest-color, #2e7d32);
 }
-.nvt-calendar-day--cheapest {
-    background: var(--nvt-cal-cheapest-bg, #e8f5e9);
+.nvt-calendar-day--price-medium .nvt-calendar-day-price {
+    color: #4B5563;
+}
+.nvt-calendar-day--price-higher .nvt-calendar-day-price {
+    color: #D97706;
+}
+.nvt-calendar-day--price-highest .nvt-calendar-day-price {
+    color: #881337;
+}
+
+/* Approximate prices disclaimer footer (now first/top) */
+.nvt-calendar-price-footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--nvt-text, #1a1a1a);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--nvt-border, #e0e0e0);
 }
 
 .nvt-calendar-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--nvt-border, #e0e0e0);
-    font-size: 13px;
-    color: var(--nvt-text-light, #6b6b6b);
-}
-/* Approximate prices disclaimer footer */
-.nvt-calendar-price-footer {
-    text-align: center;
-    font-size: 13px;
-    color: var(--nvt-text, #1a1a1a);
+    justify-content: center;
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px dashed var(--nvt-border, #e0e0e0);
+    font-size: 13px;
+    color: var(--nvt-text-light, #6b6b6b);
 }
 
 .nvt-done-btn {

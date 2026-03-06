@@ -144,9 +144,9 @@ class AvailabilityApiClient extends ApiClientBase
         return $this->xmlHeader() . '
         <frmsearch>
             ' . $this->xmlCredentials() . '
-            <Country>' . htmlspecialchars(strtoupper($params['country'] ?? '')) . '</Country>
-            <City>' . htmlspecialchars(strtoupper($params['city'] ?? '')) . '</City>
-            <Hotel>' . htmlspecialchars(strtoupper($params['hotel'] ?? '')) . '</Hotel>
+            <Country>' . $this->xmlCdata(strtoupper($params['country'] ?? '')) . '</Country>
+            <City>' . $this->xmlCdata(strtoupper($params['city'] ?? '')) . '</City>
+            <Hotel>' . $this->xmlCdata(strtoupper($params['hotel'] ?? '')) . '</Hotel>
             <Arr1>' . htmlspecialchars($params['check_in'] ?? '') . '</Arr1>
             <Dep1>' . htmlspecialchars($params['check_out'] ?? '') . '</Dep1>
             <OfferType>hotel</OfferType>

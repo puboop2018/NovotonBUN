@@ -27,10 +27,10 @@ class HotelApiClient extends ApiClientBase
         $xml = $this->xmlHeader() . '
         <hotel_list>
             <hotelinfo>
-                <Country>' . htmlspecialchars($country) . '</Country>
-                <City>' . htmlspecialchars($city) . '</City>
-                <Hotel>' . htmlspecialchars($hotel) . '</Hotel>
-                <HotelType>' . htmlspecialchars($hotelType) . '</HotelType>
+                <Country>' . $this->xmlCdata($country) . '</Country>
+                <City>' . $this->xmlCdata($city) . '</City>
+                <Hotel>' . $this->xmlCdata($hotel) . '</Hotel>
+                <HotelType>' . $this->xmlCdata($hotelType) . '</HotelType>
             </hotelinfo>
         </hotel_list>';
 

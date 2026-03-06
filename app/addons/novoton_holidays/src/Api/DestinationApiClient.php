@@ -32,9 +32,9 @@ class DestinationApiClient extends ApiClientBase
         <offers_update>
             ' . $this->xmlCredentials() . '
             <DateTime>' . htmlspecialchars($dateTime) . '</DateTime>
-            <Country>' . htmlspecialchars($country) . '</Country>
-            <Resort>' . htmlspecialchars($resort) . '</Resort>
-            <Hotel>' . htmlspecialchars($hotel) . '</Hotel>
+            <Country>' . $this->xmlCdata($country) . '</Country>
+            <Resort>' . $this->xmlCdata($resort) . '</Resort>
+            <Hotel>' . $this->xmlCdata($hotel) . '</Hotel>
         </offers_update>';
 
         return $this->callApiAndParse(Constants::API_FUNCTION_OFFERS_UPDATE, $xml);

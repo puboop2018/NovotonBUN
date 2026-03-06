@@ -177,7 +177,7 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
     public function save(array $data): int
     {
         if (isset($data['provider_code'])) {
-            $data['provider_code'] = trim($data['provider_code']);
+            $data['provider_code'] = trim((string) $data['provider_code']);
         }
 
         if (!empty($data['mapping_id'])) {

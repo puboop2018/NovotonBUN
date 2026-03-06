@@ -3256,3 +3256,7 @@ msgstr "Creat"
 msgctxt "Languages::menu::feature_mappings"
 msgid "Feature Mappings"
 msgstr "Mapări Caracteristici"
+
+msgctxt "Languages::novoton_holidays.actions.import_facilities"
+msgid "Import All Facilities from API"
+msgstr "Importă Toate Facilitățile din API"

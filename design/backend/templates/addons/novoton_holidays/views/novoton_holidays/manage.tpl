@@ -73,9 +73,9 @@
     <div class="novoton-actions">
         <h3>Actions</h3>
         <div class="novoton-btn-group">
-            <a href="{"novoton_holidays.check_prices"|fn_url}" class="novoton-btn novoton-btn-info">$ Check Prices</a>
-            <a href="{"novoton_holidays.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-info">$ Check Prices (Per-Hotel)</a>
-            <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-info">[P] Check Packages</a>
+            <a href="{"novoton_holidays.check_prices"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">$ Check Prices</a>
+            <a href="{"novoton_holidays.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">$ Check Prices (Per-Hotel)</a>
+            <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-info">+ Add Hotels as Products</a>
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-info">[L] Manage Bookings</a>
             <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-info">[R] Alternative Requests</a>
@@ -241,6 +241,12 @@
                 <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
                 <td>After sync</td>
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Exchange Rates</strong><br><small class="muted">Update BNR rates</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.exchange_rates}</div></td>
+                <td>Daily</td>
+                <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Compute Prices</strong><br><small class="muted">min_price, seasons, early booking</small></td>
