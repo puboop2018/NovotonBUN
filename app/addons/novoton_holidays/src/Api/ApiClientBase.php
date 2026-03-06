@@ -112,6 +112,23 @@ abstract class ApiClientBase
     }
 
     /**
+     * Wrap a value in CDATA for safe XML embedding.
+     *
+     * Resort/city/hotel names may contain characters like & which, when
+     * encoded via htmlspecialchars(), produce &amp; — technically valid XML,
+     * but the Novoton API performs literal string matching and expects the
+     * raw value.  CDATA preserves the exact string as returned by the API's
+     * own resort_list / hotel_list responses.
+     */
+    protected function xmlCdata(string $value): string
+    {
+        // CDATA sections cannot contain the literal ']]>' sequence.
+        // If present (extremely unlikely in resort names), split into two CDATA sections.
+        $safe = str_replace(']]>', ']]]]><![CDATA[>', $value);
+        return '<![CDATA[' . $safe . ']]>';
+    }
+
+    /**
      * Build children ages XML (<Age> elements).
      * Delegates to Occupancy::buildAgeXml() — single source of truth.
      */
