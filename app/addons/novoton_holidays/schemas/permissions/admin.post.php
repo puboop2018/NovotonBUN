@@ -102,9 +102,10 @@ $schema['novoton_admin'] = [
     ],
 ];
 
-// novoton_hotels controller
-// Modes previously routed via include() from novoton_holidays are now dispatched
-// directly to this controller for proper CS-Cart template resolution.
+// novoton_hotels controller (sub-controller included by novoton_holidays)
+// Only register modes that are dispatched directly to novoton_hotels.
+// Modes like add_hotels_as_products, view_hotels_to_add, list_facilities
+// are handled by novoton_holidays controller and registered above.
 $schema['novoton_hotels'] = [
     'modes' => [
         'manage'                 => ['permissions' => 'manage_catalog'],
@@ -112,9 +113,6 @@ $schema['novoton_hotels'] = [
         'update'                 => ['permissions' => 'manage_catalog'],
         'save_facility_types'    => ['permissions' => 'manage_catalog'],
         'sync'                   => ['permissions' => 'novoton_manage_sync'],
-        'add_hotels_as_products' => ['permissions' => 'manage_catalog'],
-        'view_hotels_to_add'     => ['permissions' => 'manage_catalog'],
-        'list_facilities'        => ['permissions' => 'manage_catalog'],
         'sync_facilities'        => ['permissions' => 'novoton_manage_sync'],
         'sync_hotel_facilities'  => ['permissions' => 'novoton_manage_sync'],
         'check_packages'         => ['permissions' => 'novoton_manage_sync'],
