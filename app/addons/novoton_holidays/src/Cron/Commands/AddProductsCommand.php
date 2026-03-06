@@ -137,6 +137,13 @@ class AddProductsCommand extends AbstractCronCommand
                         fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                     }
 
+                    // Assign CS-Cart product features via FeatureMapper
+                    try {
+                        $this->assignProductFeatures($product_id, $hotel_id, $hotel);
+                    } catch (\Exception $e) {
+                        fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to assign features for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                    }
+
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
@@ -161,6 +168,79 @@ class AddProductsCommand extends AbstractCronCommand
         ]);
 
         return ['success' => true, 'stats' => $stats];
+    }
+
+    /**
+     * Assign all mappable features to a newly created product.
+     */
+    private function assignProductFeatures(int $productId, string $hotelId, array $hotel): void
+    {
+        $container = Container::getInstance();
+        $featureMapper = $container->featureMapper();
+        $normalizer = $container->novotonNormalizer();
+        $facilityRepo = $container->facilityRepository();
+
+        // Star rating
+        if (!empty($hotel['star_rating']) && (int) $hotel['star_rating'] >= 1) {
+            $code = $normalizer->normalizeStarRating((string) $hotel['star_rating']);
+            if ($code !== null) {
+                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_STAR_RATING, $code);
+            }
+        }
+
+        // Board types (from hotel data if available)
+        $hotelData = fn_novoton_holidays_get_hotel_data($hotelId);
+        if (!empty($hotelData['boards'])) {
+            $boardCodes = [];
+            foreach ($hotelData['boards'] as $board) {
+                $raw = is_array($board) ? ($board['IdBoard'] ?? $board['Board'] ?? '') : (string) $board;
+                $code = $normalizer->normalizeBoardCode((string) $raw);
+                if ($code !== null) {
+                    $boardCodes[] = $code;
+                }
+            }
+            if (!empty($boardCodes)) {
+                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_BOARD, array_unique($boardCodes));
+            }
+        }
+
+        // Hotel facilities (type=M, merge with diff)
+        $hotelFacilities = $facilityRepo->getForHotelByType($hotelId, 'hotel');
+        if (!empty($hotelFacilities)) {
+            $facilityIds = [];
+            foreach ($hotelFacilities as $f) {
+                $code = $normalizer->normalizeFacilityCode($f['facility_id']);
+                if ($code !== null) {
+                    $facilityIds[] = $code;
+                }
+            }
+            if (!empty($facilityIds)) {
+                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_HOTEL_FACILITY, $facilityIds);
+            }
+        }
+
+        // Room facilities (type=M, merge with diff)
+        $roomFacilities = $facilityRepo->getForHotelByType($hotelId, 'room');
+        if (!empty($roomFacilities)) {
+            $facilityIds = [];
+            foreach ($roomFacilities as $f) {
+                $code = $normalizer->normalizeFacilityCode($f['facility_id']);
+                if ($code !== null) {
+                    $facilityIds[] = $code;
+                }
+            }
+            if (!empty($facilityIds)) {
+                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_ROOM_FACILITY, $facilityIds);
+            }
+        }
+
+        // Resort / City
+        if (!empty($hotel['city'])) {
+            $resortCode = $normalizer->normalizeResort($hotel['city']);
+            if ($resortCode !== null) {
+                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_RESORT, $resortCode);
+            }
+        }
     }
 
     private function getExcludedResorts(): array

@@ -450,8 +450,8 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
             $booking_record['user_id'] = (int)($auth['user_id']);
         }
         // A79: Use BookingRepository for update
-        _nvt_booking_repo()->update($existing_booking_id, $booking_record);
-        $booking_id = $existing_booking_id;
+        _nvt_booking_repo()->update((int) $existing_booking_id, $booking_record);
+        $booking_id = (int) $existing_booking_id;
     } else {
         // Get current user and session info
         $auth = Tygh::$app['session']['auth'] ?? [];

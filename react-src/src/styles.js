@@ -242,8 +242,8 @@ button.nvt-field-input:active {
     background: var(--nvt-bg, #ffffff);
     border-radius: var(--nvt-radius, 8px);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-    padding: 20px;
-    min-width: 600px;
+    padding: 24px;
+    min-width: 680px;
     max-width: calc(100vw - 24px);
     box-sizing: border-box;
 }
@@ -304,9 +304,9 @@ button.nvt-field-input:active {
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
 }
-/* When prices are displayed, switch from circles to rectangles */
+/* When prices are displayed, switch from circles to rectangles with more room */
 .nvt-calendar-days--with-prices {
-    gap: 1px;
+    gap: 2px;
 }
 
 .nvt-calendar-day {
@@ -318,7 +318,7 @@ button.nvt-field-input:active {
     border: none;
     border-radius: 50%;
     background: transparent;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
     color: var(--nvt-text, #1a1a1a);
     padding: 0;
@@ -328,10 +328,11 @@ button.nvt-field-input:active {
 .nvt-calendar-day--has-prices {
     flex-direction: column;
     aspect-ratio: auto;
-    border-radius: 4px;
-    padding: 3px 2px 2px;
-    min-height: 40px;
-    gap: 0;
+    border-radius: 6px;
+    padding: 6px 2px 5px;
+    min-height: 52px;
+    gap: 4px;
+    justify-content: flex-start;
 }
 .nvt-calendar-day:hover:not(.nvt-calendar-day--disabled):not(.nvt-calendar-day--selected):not(.nvt-calendar-day--empty) {
     background: var(--nvt-hover-bg, #f0f4f8);
@@ -355,6 +356,9 @@ button.nvt-field-input:active {
 .nvt-calendar-day--selected .nvt-calendar-day-price {
     color: rgba(255, 255, 255, 0.9) !important;
 }
+.nvt-calendar-day--selected .nvt-calendar-day-num {
+    color: #fff !important;
+}
 .nvt-calendar-day--in-range {
     background: #e8f0fe;
     border-radius: 0;
@@ -375,15 +379,24 @@ button.nvt-field-input:active {
 
 /* Day number inside price-enabled cells */
 .nvt-calendar-day-num {
-    line-height: 1.1;
+    line-height: 1.2;
+    font-weight: 600;
+    font-size: 14px;
 }
-/* Price label below the day number */
+/* Price label below the day number — default grey for non-cheapest */
 .nvt-calendar-day-price {
     font-size: 10px;
     line-height: 1;
-    color: var(--nvt-price-color, #008009);
+    color: var(--nvt-cal-price-color, #616161);
     font-weight: 600;
     white-space: nowrap;
+}
+/* Cheapest price in visible 2-month window: soft pastel green */
+.nvt-calendar-day--cheapest .nvt-calendar-day-price {
+    color: var(--nvt-cal-cheapest-color, #2e7d32);
+}
+.nvt-calendar-day--cheapest {
+    background: var(--nvt-cal-cheapest-bg, #e8f5e9);
 }
 
 .nvt-calendar-footer {
@@ -795,9 +808,29 @@ button.nvt-field-input:active {
         padding: 10px 20px;
     }
     .nvt-calendar-popup {
-        min-width: 100%;
+        position: fixed;
+        top: 0;
         left: 0;
         right: 0;
+        bottom: 0;
+        min-width: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: 16px;
+        overflow-y: auto;
+        z-index: calc(var(--nvt-z-popup) + 1);
+    }
+    .nvt-calendar-day--has-prices {
+        min-height: 46px;
+        padding: 5px 1px 4px;
+        gap: 3px;
+    }
+    .nvt-calendar-day-num {
+        font-size: 13px;
+    }
+    .nvt-calendar-day-price {
+        font-size: 9px;
     }
     .nvt-guest-popup {
         left: 0;

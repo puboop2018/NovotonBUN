@@ -8,7 +8,7 @@
     <supplier>VacanteLitoral.ro</supplier>
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
-    <!-- Novoton Holidays: hotel booking integration with Novoton XML API. See CHANGELOG.md -->
+    <!-- Novoton Holidays: hotel booking integration with Novoton XML API. Requires PHP 8.3+. See CHANGELOG.md -->
 
     <authors>
         <author>
@@ -25,8 +25,8 @@
         </core_version>
         <core_edition>ULTIMATE</core_edition>
         <php_version>
-            <min>7.4.0</min>
-            <max>8.4.12</max>
+            <min>8.3.0</min>
+            <max>8.4.99</max>
         </php_version>
  	<php_extensions>
             <curl>
@@ -375,6 +375,44 @@
                     </item>
                 </items>
             </section>
+            <section id="feature_mapping">
+                <items>
+                    <item id="feature_mapping_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_star_rating">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_board">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_hotel_facility">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_room_facility">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_resort">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_property_type">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
         </sections>
     </settings>
 
@@ -642,6 +680,33 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort names synced from Novoton API'
         </item>
 
+        <!-- Feature mapping hub: maps provider codes to CS-Cart feature variants -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
+                `mapping_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `provider` varchar(50) NOT NULL DEFAULT 'novoton' COMMENT 'Provider name (novoton, sphinx)',
+                `feature_type` varchar(50) NOT NULL COMMENT 'star_rating, board, hotel_facility, room_facility, resort, property_type',
+                `provider_code` varchar(255) NOT NULL COMMENT 'Provider-side code (AI, HB, 4, facility_id, resort name)',
+                `cs_cart_feature_id` int(11) unsigned NOT NULL COMMENT 'CS-Cart product_features.feature_id (from addon settings)',
+                `cs_cart_variant_id` int(11) unsigned DEFAULT NULL COMMENT 'CS-Cart product_feature_variants.variant_id (auto-populated)',
+                `cs_cart_feature_type` char(1) NOT NULL DEFAULT 'S' COMMENT 'S=SelectBox, M=MultipleCheckboxes (cached from CS-Cart)',
+                `display_name_en` varchar(255) DEFAULT NULL COMMENT 'English display name for variant creation',
+                `display_name_ro` varchar(255) DEFAULT NULL COMMENT 'Romanian display name for variant creation',
+                `position` int(5) DEFAULT 0 COMMENT 'Sort position for the variant',
+                `is_active` enum('Y','N') NOT NULL DEFAULT 'Y',
+                `mapping_source` enum('seed','auto','manual') NOT NULL DEFAULT 'seed' COMMENT 'Origin: seed=install, auto=API discovery, manual=admin',
+                `last_synced_at` datetime DEFAULT NULL COMMENT 'Last time this code was seen from the API',
+                `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`mapping_id`),
+                UNIQUE KEY `idx_provider_type_code` (`provider`, `feature_type`, `provider_code`(191)),
+                KEY `idx_feature_type` (`feature_type`),
+                KEY `idx_cs_cart_feature` (`cs_cart_feature_id`),
+                KEY `idx_active` (`is_active`),
+                KEY `idx_mapping_source` (`mapping_source`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Maps provider codes to CS-Cart feature variants'
+        </item>
+
         <!-- Uninstall queries -->
         <item for="uninstall">UPDATE ?:bm_layouts SET style_id = '' WHERE style_id = 'novoton_default'</item>
         <item for="uninstall">DELETE FROM ?:logos WHERE style_id = 'novoton_default'</item>
@@ -651,6 +716,7 @@
         <item for="uninstall">DELETE FROM ?:product_tabs WHERE addon = 'novoton_holidays'</item>
         <item for="uninstall">DELETE FROM ?:product_tabs_descriptions WHERE tab_id NOT IN (SELECT tab_id FROM ?:product_tabs)</item>
         <!-- Drop all addon tables -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:hotel_feature_mappings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_resorts`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_facilities`</item>
@@ -696,6 +762,10 @@
                     <item id="exchange_rates">
                         <href>novoton_exchange_rates.manage</href>
                         <position>28</position>
+                    </item>
+                    <item id="feature_mappings">
+                        <href>novoton_feature_mappings.manage</href>
+                        <position>29</position>
                     </item>
                     <item id="novoton_diagnostic">
                         <href>novoton_diagnostic.test</href>

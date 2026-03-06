@@ -43,4 +43,22 @@ $schema['colors']['fields']['novoton-search-btn-hover'] = [
 // variable (already a color picker in Theme Editor).  When the admin changes
 // the "Price" colour, the addon's @novoton-price-color follows automatically.
 
+$schema['colors']['fields']['novoton-cal-cheapest-bg'] = [
+    'description'   => 'theme_editor.novoton_cal_cheapest_bg',
+    'type'          => 'color',
+    'variable_name' => 'novoton-cal-cheapest-bg',
+];
+
+$schema['colors']['fields']['novoton-cal-cheapest-color'] = [
+    'description'   => 'theme_editor.novoton_cal_cheapest_color',
+    'type'          => 'color',
+    'variable_name' => 'novoton-cal-cheapest-color',
+];
+
+$schema['colors']['fields']['novoton-cal-price-color'] = [
+    'description'   => 'theme_editor.novoton_cal_price_color',
+    'type'          => 'color',
+    'variable_name' => 'novoton-cal-price-color',
+];
+
 return $schema;

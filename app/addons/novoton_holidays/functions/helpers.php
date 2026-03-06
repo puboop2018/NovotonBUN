@@ -26,7 +26,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * @return array List of country names in uppercase
  */
 if (!function_exists('fn_novoton_holidays_parse_countries')) {
-function fn_novoton_holidays_parse_countries($selected_countries = null): array
+function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): array
 {
     // When called without argument, delegate to ConfigProvider (single source of truth)
     if ($selected_countries === null) {

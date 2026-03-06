@@ -287,12 +287,46 @@ class PricingApiClient extends ApiClientBase
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
 
+        // Resort-based responses return multiple <room_price> siblings without
+        // a wrapper root element (not valid XML).  SimpleXML would only parse
+        // the first element and silently discard the rest.
+        // Fix: wrap all <room_price> elements in a <room_prices> root.
+        $response = $this->wrapMultiRootResponse($response, 'room_price', 'room_prices');
+
         try {
             return $this->xmlParser->parse($response);
         } catch (XmlParsingException $e) {
             $this->lastError = $e->getMessage();
             return false;
         }
+    }
+
+    /**
+     * Wrap a response that contains multiple sibling root elements into a single root.
+     *
+     * Some Novoton API responses (e.g. resort-based room_price) return multiple
+     * <room_price> siblings with no wrapper.  This is not valid XML and SimpleXML
+     * would only parse the first element.  This method detects the condition and
+     * wraps the content in a new root element.
+     */
+    private function wrapMultiRootResponse(string $response, string $elementName, string $wrapperName): string
+    {
+        // Quick check: does the response contain more than one closing tag?
+        $closingTag = '</' . $elementName . '>';
+        $firstPos = strpos($response, $closingTag);
+        if ($firstPos === false) {
+            return $response; // No element found at all
+        }
+        $secondPos = strpos($response, $closingTag, $firstPos + strlen($closingTag));
+        if ($secondPos === false) {
+            return $response; // Only one element — valid XML, no wrapping needed
+        }
+
+        // Multiple root elements detected — strip XML declaration and wrap
+        $body = preg_replace('/<\?xml[^?]*\?>\s*/', '', $response);
+        return '<?xml version="1.0" encoding="windows-1251"?><' . $wrapperName . '>'
+            . trim($body)
+            . '</' . $wrapperName . '>';
     }
 
     /**

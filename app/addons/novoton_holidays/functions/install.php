@@ -84,7 +84,7 @@ function fn_novoton_holidays_uninstall(): bool
  * @param int|null $tab_id Tab ID
  * @return bool
  */
-function fn_novoton_holidays_fix_tab_name($tab_id = null): bool
+function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 {
     if (empty($tab_id)) {
         $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = 'novoton_holidays'");

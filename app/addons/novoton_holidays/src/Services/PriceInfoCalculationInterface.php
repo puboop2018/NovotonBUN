@@ -76,5 +76,5 @@ interface PriceInfoCalculationInterface
      * @param string     $message Log message
      * @param mixed|null $data    Additional data
      */
-    public function log(string $message, $data = null): void;
+    public function log(string $message, mixed $data = null): void;
 }

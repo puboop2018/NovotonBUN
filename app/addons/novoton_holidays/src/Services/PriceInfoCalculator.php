@@ -375,41 +375,70 @@ class PriceInfoCalculator
         $checkOutDate->modify("+{$nights} days");
 
         $total = 0;
+        $entryDetails = [];
 
-        foreach ($handlingFees as $fee) {
-            $fromDate = $fee['FromDate'] ?? '';
-            $toDate = $fee['ToDate'] ?? '';
+        foreach ($handlingFees as $idx => $fee) {
+            $fromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($fee['ToDate'] ?? '');
             $idAge = PriceInfoFormatter::toScalar($fee['IdAge'] ?? '');
-            $toDays = (int) ($fee['ToDays'] ?? 3);
-            $fromDays = (int) ($fee['FromDays'] ?? 4);
-            $price1 = (float) ($fee['Price1'] ?? 0);
-            $price2 = (float) ($fee['Price2'] ?? 0);
+            $rawToDays = PriceInfoFormatter::toScalar($fee['ToDays'] ?? '');
+            $rawFromDays = PriceInfoFormatter::toScalar($fee['FromDays'] ?? '');
+            $toDays = ($rawToDays !== '') ? (int) $rawToDays : 3;
+            $fromDays = ($rawFromDays !== '') ? (int) $rawFromDays : 4;
+            $price1 = (float) PriceInfoFormatter::toScalar($fee['Price1'] ?? '0');
+            $price2 = (float) PriceInfoFormatter::toScalar($fee['Price2'] ?? '0');
 
             if (!empty($fromDate) && !empty($toDate)) {
                 if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
+                    $entryDetails[] = ['entry' => $idx, 'idAge' => $idAge, 'skipped' => 'date_range', 'fromDate' => $fromDate, 'toDate' => $toDate];
                     continue;
                 }
             }
 
             $price = 0;
+            $tierUsed = '';
             if ($nights <= $toDays) {
                 $price = $price1;
+                $tierUsed = "Price1 (nights={$nights} <= toDays={$toDays})";
             } elseif ($nights >= $fromDays) {
                 $price = $price2;
+                $tierUsed = "Price2 (nights={$nights} >= fromDays={$fromDays})";
             } else {
                 $price = $price1;
+                $tierUsed = "Price1 (fallback, nights={$nights} between toDays={$toDays} and fromDays={$fromDays})";
             }
 
             $count = 1;
+            $countMethod = '';
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
             if (!empty($feeIdAge)) {
                 $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
+                $countMethod = "matched '{$feeIdAge}'";
             } else {
                 $count = count($occupancy['adults']) + count($occupancy['children']);
+                $countMethod = 'all_persons (empty IdAge)';
             }
 
-            $total += $price * $count;
+            $entryTotal = $price * $count;
+            $total += $entryTotal;
+
+            $entryDetails[] = [
+                'entry' => $idx,
+                'idAge' => $idAge,
+                'feeKey' => $feeIdAge,
+                'tier' => $tierUsed,
+                'price' => $price,
+                'price1' => $price1,
+                'price2' => $price2,
+                'count' => $count,
+                'count_method' => $countMethod,
+                'subtotal' => $entryTotal,
+                'fromDate' => $fromDate,
+                'toDate' => $toDate,
+            ];
         }
+
+        $this->log('Handling fee entries', $entryDetails);
 
         return $total;
     }
@@ -531,6 +560,11 @@ class PriceInfoCalculator
      */
     private function calculateExtrasBoard(array $occupancy, string $checkIn, int $nights, string $boardId): float
     {
+        // No board supplement when booking the base board (empty boardId).
+        // extras_board entries are supplements for board upgrades (e.g. HB, ALL INCL).
+        // The base board is already included in the room/person base price.
+        if (empty($boardId)) return 0;
+
         $priceinfo = $this->parser->getPriceinfo();
         $extrasBoard = $priceinfo['extras_board'] ?? [];
         if (empty($extrasBoard)) return 0;
@@ -1168,7 +1202,7 @@ class PriceInfoCalculator
         return $price * (1 + ($this->commission / 100));
     }
 
-    private function log(string $message, $data = null): void
+    private function log(string $message, mixed $data = null): void
     {
         if ($this->logger) {
             ($this->logger)($message, $data);

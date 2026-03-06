@@ -238,23 +238,25 @@ if ($mode == 'check_prices') {
                         'adults'    => 2,
                     ]);
 
-                    $response_kb = round(strlen($api->getLastResponse() ?: '') / 1024, 1);
+                    $rawResponse = $api->getLastResponse() ?: '';
+                    $response_kb = round(strlen($rawResponse) / 1024, 1);
 
                     if ($xml === false) {
-                        echo "<span class='skip'>  Empty response ({$response_kb} KB)</span><br>\n";
+                        echo "<span class='skip'>  Empty/invalid response ({$response_kb} KB)</span><br>\n";
                         flush();
                         continue;
                     }
 
-                    // Extract hotel IDs via xpath on parsed XML
+                    // Extract hotel IDs from the parsed XML.
+                    // wrapMultiRootResponse() in PricingApiClient ensures all
+                    // <room_price> siblings are wrapped under a single root,
+                    // so //IdHotel xpath reliably finds all hotel IDs.
                     $resort_hotel_ids = [];
-                    $nodes = $xml->xpath('//IdHotel');
-                    if (!empty($nodes)) {
-                        foreach ($nodes as $node) {
-                            $val = trim((string)$node);
-                            if ($val !== '' && ctype_digit($val)) {
-                                $resort_hotel_ids[] = $val;
-                            }
+                    $nodes = $xml->xpath('//IdHotel') ?: [];
+                    foreach ($nodes as $node) {
+                        $val = trim((string)$node);
+                        if ($val !== '' && ctype_digit($val)) {
+                            $resort_hotel_ids[] = $val;
                         }
                     }
                     $resort_hotel_ids = array_unique($resort_hotel_ids);
@@ -266,13 +268,9 @@ if ($mode == 'check_prices') {
                         }
                         echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                     } else {
-                        // Check if response has prices but no hotel IDs (format mismatch)
-                        $priceCount = count($xml->xpath('//Price') ?: []);
                         $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
                         if (!empty($errorNode)) {
                             echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
-                        } elseif ($priceCount > 0) {
-                            echo "<span class='skip'>  0 hotel IDs but {$priceCount} prices in response ({$response_kb} KB) — unexpected format</span><br>\n";
                         } else {
                             echo "<span class='skip'>  No prices ({$response_kb} KB)</span><br>\n";
                         }

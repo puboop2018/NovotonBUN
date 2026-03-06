@@ -130,7 +130,7 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
 /**
  * Hook: checkout page display - add debug info and price change alerts
  */
-function fn_novoton_holidays_checkout_pre_dispatch(&$cart, &$auth, $storefront_id = null): void
+function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?int $storefront_id = null): void
 {
     if (fn_novoton_holidays_is_debug()) {
         \Tygh\Tygh::$app['view']->assign('novoton_checkout_debug', true);
@@ -249,7 +249,7 @@ function _nvt_inject_booking_into_cart_product(
  * Populates product_options_value[] with formatted booking details
  * for display in cart, checkout, and order pages.
  */
-function fn_novoton_holidays_add_booking_display_data(&$product, $cart = null): void
+function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $cart = null): void
 {
     $date_format = Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
 

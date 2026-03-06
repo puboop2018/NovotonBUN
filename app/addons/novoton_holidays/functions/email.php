@@ -350,17 +350,31 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             return $result;
         }
 
-        // CSV header
+        // Resolve feature column headers from mapping table (fallback to hardcoded)
+        $featureMapper = null;
+        try {
+            $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
+            $featureMapper = $container->featureMapper();
+        } catch (\Exception $e) {
+            // Fall through to hardcoded labels
+        }
+
+        $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING, 'ro') ?? 'Stele') : 'Stele';
+        $starHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING, 'en') ?? 'Stars') : 'Stars';
+        $boardHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD, 'ro') ?? 'Tip Masa') : 'Tip Masa';
+        $boardHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD, 'en') ?? 'Board Type') : 'Board Type';
+
+        // CSV header (use EN feature names as column headers)
         $csv_lines = [];
         $csv_lines[] = implode(';', [
             'Product code',
             'Language',
-            'Feature: Stele',
-            'Feature: Tip Masa'
+            'Feature: ' . $starHeaderEn,
+            'Feature: ' . $boardHeaderEn
         ]);
 
-        // Star rating labels
-        $star_labels = [
+        // Star rating labels — use FeatureMapper display names with hardcoded fallback
+        $star_labels_fallback = [
             'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
             'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars']
         ];
@@ -401,24 +415,29 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             }
             $boards_str = implode(',', array_unique($board_names));
 
-            // Romanian row
-            $star_ro = ($stars >= 1 && $stars <= 5) ? $star_labels['ro'][$stars - 1] : '';
-            $csv_lines[] = implode(';', [
-                fn_novoton_holidays_csv_escape($product_code),
-                fn_novoton_holidays_csv_escape('ro'),
-                fn_novoton_holidays_csv_escape($star_ro),
-                fn_novoton_holidays_csv_escape($boards_str)
-            ]);
+            // Generate star label from FeatureMapper or fallback
+            foreach (['ro', 'en'] as $lang) {
+                $star_label = '';
+                if ($stars >= 1 && $stars <= 5) {
+                    if ($featureMapper) {
+                        $star_label = $featureMapper->getDisplayName(
+                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                            (string) $stars,
+                            $lang
+                        ) ?? $star_labels_fallback[$lang][$stars - 1];
+                    } else {
+                        $star_label = $star_labels_fallback[$lang][$stars - 1];
+                    }
+                }
 
-            // English row
-            $star_en = ($stars >= 1 && $stars <= 5) ? $star_labels['en'][$stars - 1] : '';
-            $csv_lines[] = implode(';', [
-                fn_novoton_holidays_csv_escape($product_code),
-                fn_novoton_holidays_csv_escape('en'),
-                fn_novoton_holidays_csv_escape($star_en),
-                fn_novoton_holidays_csv_escape($boards_str)
-            ]);
-            
+                $csv_lines[] = implode(';', [
+                    fn_novoton_holidays_csv_escape($product_code),
+                    fn_novoton_holidays_csv_escape($lang),
+                    fn_novoton_holidays_csv_escape($star_label),
+                    fn_novoton_holidays_csv_escape($boards_str)
+                ]);
+            }
+
             $result['count']++;
         }
         
@@ -484,16 +503,25 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
             return $result;
         }
 
+        // Resolve feature mapper for dynamic display names
+        $featureMapper = null;
+        try {
+            $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
+            $featureMapper = $container->featureMapper();
+        } catch (\Exception $e) {
+            // Fall through to hardcoded labels
+        }
+
+        $star_labels_fallback = [
+            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
+            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
+        ];
+
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
         $root = $dom->createElement('products');
         $dom->appendChild($root);
-
-        $star_labels = [
-            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
-            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
-        ];
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code'])
@@ -536,9 +564,18 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
 
             // One <product> node per language
             foreach (['ro', 'en'] as $lang) {
-                $star_value = ($stars >= 1 && $stars <= 5)
-                    ? $star_labels[$lang][$stars - 1]
-                    : '';
+                $star_value = '';
+                if ($stars >= 1 && $stars <= 5) {
+                    if ($featureMapper) {
+                        $star_value = $featureMapper->getDisplayName(
+                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                            (string) $stars,
+                            $lang
+                        ) ?? $star_labels_fallback[$lang][$stars - 1];
+                    } else {
+                        $star_value = $star_labels_fallback[$lang][$stars - 1];
+                    }
+                }
 
                 $product_node = $dom->createElement('product');
 

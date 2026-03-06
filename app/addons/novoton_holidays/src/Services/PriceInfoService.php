@@ -85,7 +85,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param string|null $packageName Optional package name filter
      * @return array Prices grouped by room
      */
-    public function getStoredPrices($productIdOrHotelId, ?string $packageName = null): array
+    public function getStoredPrices(int|string $productIdOrHotelId, ?string $packageName = null): array
     {
         $hotelId = $productIdOrHotelId;
 

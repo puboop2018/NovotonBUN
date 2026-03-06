@@ -53,7 +53,7 @@
     {if $product.extra.novoton_booking_id}
     <div style="margin-top: 10px;">
         <a href="{"novoton_booking.edit_booking?booking_id=`$product.extra.novoton_booking_id`&cart_id=`$key`"|fn_url}"
-           style="color: #fff; background: var(--nvt-primary, #003580); font-size: 12px; text-decoration: none; display: inline-block; padding: 6px 12px; border-radius: 4px;">
+           style="color: #fff; background: var(--nvt-btn-primary-bg, #003580); font-size: 12px; text-decoration: none; display: inline-block; padding: 6px 12px; border-radius: 4px;">
              {__("novoton_holidays.edit_guest_details")}
         </a>
     </div>

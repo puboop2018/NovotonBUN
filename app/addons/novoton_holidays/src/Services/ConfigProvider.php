@@ -344,7 +344,7 @@ class ConfigProvider
      * @param mixed $default
      * @return mixed
      */
-    public static function get(string $key, $default = null)
+    public static function get(string $key, mixed $default = null): mixed
     {
         return self::settings()[$key] ?? $default;
     }
