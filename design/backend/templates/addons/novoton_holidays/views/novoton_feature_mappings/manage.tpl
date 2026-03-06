@@ -115,6 +115,7 @@
                 <tr>
                     <th width="30"><input type="checkbox" class="select-all-{$group_type}" onclick="toggleGroupCheckboxes(this, '{$group_type}')"></th>
                     <th width="60">ID</th>
+                    <th width="80">{__("novoton_holidays.fm_provider")}</th>
                     <th>{__("novoton_holidays.fm_provider_code")}</th>
                     <th>{__("novoton_holidays.fm_display_en")}</th>
                     <th>{__("novoton_holidays.fm_display_ro")}</th>
@@ -131,6 +132,7 @@
                 <tr class="{if $m.is_active == 'N'}muted{/if}">
                     <td><input type="checkbox" name="mapping_ids[]" value="{$m.mapping_id}" class="group-{$group_type}"></td>
                     <td>{$m.mapping_id}</td>
+                    <td><span class="label">{$m.provider}</span></td>
                     <td><code>{$m.provider_code}</code></td>
                     <td>{$m.display_name_en|default:'-'}</td>
                     <td>{$m.display_name_ro|default:'-'}</td>
