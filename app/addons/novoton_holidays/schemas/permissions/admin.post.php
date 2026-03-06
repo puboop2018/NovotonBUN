@@ -77,15 +77,6 @@ $schema['novoton_alternatives'] = [
     ],
 ];
 
-// novoton_exchange_rates controller
-$schema['novoton_exchange_rates'] = [
-    'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_settings'],
-        'update'  => ['permissions' => 'novoton_manage_settings'],
-        'cron'    => ['permissions' => 'novoton_manage_settings'],
-    ],
-];
-
 // novoton_diagnostic controller
 $schema['novoton_diagnostic'] = [
     'modes' => [
