@@ -450,7 +450,7 @@ class PriceInfoSync
                 $shard = substr($prefix, 0, 2);
                 foreach (glob($cacheDir . $shard . '/' . $prefix . '*.cache') ?: [] as $file) {
                     if (is_file($file)) {
-                        @unlink($file);
+                        unlink($file);
                     }
                 }
             }
@@ -474,7 +474,7 @@ class PriceInfoSync
         if (is_dir($cacheDir)) {
             foreach (glob($cacheDir . '*/nvt_api_*.cache') ?: [] as $file) {
                 if (is_file($file)) {
-                    @unlink($file);
+                    unlink($file);
                 }
             }
         }

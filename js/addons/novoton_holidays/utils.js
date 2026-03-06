@@ -140,7 +140,7 @@ window.NovotonUtils = (function() {
             try {
                 localStorage.setItem('nvt_' + key, JSON.stringify(item));
             } catch (e) {
-                console.warn('NovotonUtils: localStorage not available');
+                // localStorage not available — silently ignore
             }
         },
         

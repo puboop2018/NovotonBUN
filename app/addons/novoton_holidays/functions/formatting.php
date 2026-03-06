@@ -216,9 +216,9 @@ function fn_novoton_holidays_parse_payment_terms($xml_string): array
             }
         }
     } catch (\Exception $e) {
-        // Silently fail on parse errors
+        fn_log_event('general', 'runtime', ['message' => 'Novoton: payment terms parse error: ' . $e->getMessage()]);
     }
-    
+
     return $terms;
 }
 
@@ -323,9 +323,9 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
         }
         
     } catch (\Exception $e) {
-        // Silently fail
+        fn_log_event('general', 'runtime', ['message' => 'Novoton: cancellation terms parse error: ' . $e->getMessage()]);
     }
-    
+
     return $terms;
 }
 

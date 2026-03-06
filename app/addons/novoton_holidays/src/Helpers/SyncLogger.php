@@ -37,7 +37,6 @@ class SyncLogger implements SyncLoggerInterface
         'offers_update' => 'Offers Update',
         'facilities' => 'Facilities Sync',
         'resinfo' => 'Booking Status Check',
-        'exchange_rates' => 'Exchange Rates Update',
         'manual' => 'Manual Import',
         'cron' => 'Cron Sync',
     ];

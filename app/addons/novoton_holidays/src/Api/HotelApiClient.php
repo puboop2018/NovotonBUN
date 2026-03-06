@@ -84,6 +84,7 @@ class HotelApiClient extends ApiClientBase
                 try {
                     $results[$hotelId] = $this->xmlParser->cleanAndParse($raw);
                 } catch (XmlParsingException $e) {
+                    fn_log_event('general', 'runtime', ['message' => "Novoton: hotel info parse error for {$hotelId}: " . $e->getMessage()]);
                     $results[$hotelId] = false;
                 }
             }
