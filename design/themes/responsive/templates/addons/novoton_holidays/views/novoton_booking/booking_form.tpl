@@ -94,8 +94,6 @@
         {if $is_edit_mode}
             <input type="hidden" name="booking_id" value="{$booking_id}" />
             <input type="hidden" name="cart_id" value="{$cart_id}" />
-            <input type="hidden" name="contact[email]" value="{$booking_data.guest_email|default:''}" />
-            <input type="hidden" name="contact[phone]" value="{$booking_data.guest_phone|default:''}" />
         {/if}
         <input type="hidden" name="hotel_id" value="{$booking_data.hotel_id}" />
         <input type="hidden" name="room_id" value="{$booking_data.room_id}" />
