@@ -399,24 +399,25 @@ button.nvt-field-input:active {
     background: var(--nvt-cal-cheapest-bg, #e8f5e9);
 }
 
-.nvt-calendar-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--nvt-border, #e0e0e0);
-    font-size: 13px;
-    color: var(--nvt-text-light, #6b6b6b);
-}
-/* Approximate prices disclaimer footer */
+/* Approximate prices disclaimer footer (now first/top) */
 .nvt-calendar-price-footer {
     text-align: center;
     font-size: 13px;
     color: var(--nvt-text, #1a1a1a);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--nvt-border, #e0e0e0);
+}
+
+.nvt-calendar-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px dashed var(--nvt-border, #e0e0e0);
+    font-size: 13px;
+    color: var(--nvt-text-light, #6b6b6b);
 }
 
 .nvt-done-btn {

@@ -304,15 +304,15 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 {renderMonth(month2Year, month2Month)}
             </div>
 
-            <div className="nvt-calendar-footer">
-                <span>{footerText}</span>
-            </div>
-
             {priceFooterText && (
                 <div className="nvt-calendar-price-footer">
                     {priceFooterText}
                 </div>
             )}
+
+            <div className="nvt-calendar-footer">
+                <span>{footerText}</span>
+            </div>
         </div>
     );
 }
