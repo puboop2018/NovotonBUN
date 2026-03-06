@@ -71,6 +71,9 @@
                 <span class="label label-warning">#{$mapping.cs_cart_variant_id} ({__("novoton_holidays.fm_variant_missing")})</span>
             {else}
                 <span class="muted">{__("novoton_holidays.fm_will_be_created")}</span>
+                <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="btn btn-mini" style="margin-left: 8px;">
+                    <i class="icon-play"></i> Run Add Hotels as Products
+                </a>
             {/if}
         </div>
     </div>

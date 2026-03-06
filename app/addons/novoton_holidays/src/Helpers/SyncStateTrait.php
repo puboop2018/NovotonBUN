@@ -43,6 +43,10 @@ trait SyncStateTrait
      */
     private function saveState(array $state): void
     {
+        $dir = dirname($this->state_file);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
         file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
     }
 

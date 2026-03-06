@@ -17,6 +17,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 
 class HotelSync
@@ -24,6 +25,7 @@ class HotelSync
     use OutputWriterTrait;
 
     private NovotonApi $api;
+    private PropertyTypeDetector $propertyTypeDetector;
     private array $selectedCountries;
     private array $productPrefixes;
     private array $stats;
@@ -31,6 +33,7 @@ class HotelSync
     public function __construct()
     {
         $this->api = new NovotonApi();
+        $this->propertyTypeDetector = new PropertyTypeDetector();
         $this->selectedCountries = ConfigProvider::getSelectedCountries();
         $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
 
@@ -111,6 +114,9 @@ class HotelSync
                     // Parse star rating from hotel type
                     $starRating = $this->parseStarRating($hotelType);
 
+                    // Detect property type from hotel name (Pass 1 only — no packages/rooms yet)
+                    $propertyType = $this->propertyTypeDetector->detect($hotelName);
+
                     $this->stats['hotels_processed']++;
 
                     $batchData[] = [
@@ -119,7 +125,8 @@ class HotelSync
                         'city' => $city,
                         'country' => $countryName,
                         'hotel_type' => $hotelType,
-                        'star_rating' => $starRating
+                        'star_rating' => $starRating,
+                        'property_type' => $propertyType,
                     ];
 
                     // Execute batch when full
@@ -179,11 +186,13 @@ class HotelSync
                 $hotel['city'],
                 $hotel['country'],
                 $hotel['hotel_type']
-            ) . $starSql . db_quote(", NOW(), NOW())");
+            ) . $starSql . db_quote(", ?s, NOW(), NOW())",
+                $hotel['property_type'] ?? 'hotel'
+            );
         }
 
         $sql = "INSERT INTO ?:novoton_hotels
-                (hotel_id, hotel_name, city, country, hotel_type, star_rating, hotel_list_synced_at, created_at)
+                (hotel_id, hotel_name, city, country, hotel_type, star_rating, property_type, hotel_list_synced_at, created_at)
                 VALUES " . implode(', ', $values) . "
                 ON DUPLICATE KEY UPDATE
                 hotel_name = VALUES(hotel_name),
@@ -191,6 +200,7 @@ class HotelSync
                 country = VALUES(country),
                 hotel_type = VALUES(hotel_type),
                 star_rating = VALUES(star_rating),
+                property_type = VALUES(property_type),
                 hotel_list_synced_at = NOW()";
 
         db_query($sql);
@@ -260,6 +270,48 @@ class HotelSync
                 $longitude = (string)($hotelInfo->Longitude ?? '');
                 $region = (string)($hotelInfo->Region ?? '');
 
+                // Re-detect property type with full cascade (Pass 1-3)
+                $hotelName = (string) db_get_field(
+                    "SELECT hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s",
+                    $hotelId
+                );
+                $packageNames = [];
+                $roomNames = [];
+
+                // Collect package names for Pass 2
+                if (isset($hotelInfo->packages)) {
+                    $pkgs = $hotelInfo->packages;
+                    if (isset($pkgs->IdCont)) {
+                        $pkgs = [$pkgs];
+                    }
+                    foreach ($pkgs as $pkg) {
+                        $pn = (string)($pkg->PackageName ?? '');
+                        if ($pn !== '') {
+                            $packageNames[] = $pn;
+                        }
+                    }
+                }
+
+                // Collect room names for Pass 3
+                if (isset($hotelInfo->rooms)) {
+                    $rooms = $hotelInfo->rooms;
+                    if (isset($rooms->IdRoom)) {
+                        $rooms = [$rooms];
+                    }
+                    foreach ($rooms as $room) {
+                        $rn = (string)($room->IdRoom ?? '');
+                        if ($rn !== '') {
+                            $roomNames[] = $rn;
+                        }
+                        $rt = (string)($room->Type ?? '');
+                        if ($rt !== '' && $rt !== $rn) {
+                            $roomNames[] = $rt;
+                        }
+                    }
+                }
+
+                $propertyType = $this->propertyTypeDetector->detect($hotelName, $packageNames, $roomNames);
+
                 // Wrap hotel + package updates in a transaction for atomicity
                 db_query("START TRANSACTION");
                 try {
@@ -271,6 +323,7 @@ class HotelSync
                          longitude = ?s,
                          region = ?s,
                          packages_count = ?i,
+                         property_type = ?s,
                          hotelinfo_synced_at = NOW()
                          WHERE hotel_id = ?s",
                         $hotelDataJson,
@@ -278,6 +331,7 @@ class HotelSync
                         $longitude,
                         $region,
                         $packagesCount,
+                        $propertyType,
                         $hotelId
                     );
 

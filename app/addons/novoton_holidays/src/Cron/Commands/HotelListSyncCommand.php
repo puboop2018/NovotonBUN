@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
+use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -21,6 +22,7 @@ class HotelListSyncCommand extends AbstractCronCommand
     public function execute(): array
     {
         $dbHelper = Container::getInstance()->databaseHelper();
+        $detector = new PropertyTypeDetector();
         $this->output("Syncing hotels from API (hotel_list)...");
         $this->output("");
 
@@ -51,13 +53,16 @@ class HotelListSyncCommand extends AbstractCronCommand
                 $hotel_id = (string)($hotel->IdHotel ?? '');
                 if (empty($hotel_id)) continue;
 
+                $hotelName = (string)($hotel->Hotel ?? '');
+
                 $hotelBatch[] = [
                     'hotel_id' => $hotel_id,
-                    'hotel_name' => (string)($hotel->Hotel ?? ''),
+                    'hotel_name' => $hotelName,
                     'city' => (string)($hotel->City ?? ''),
                     'region' => (string)($hotel->Region ?? ''),
                     'country' => (string)($hotel->Country ?? $country),
                     'hotel_type' => (string)($hotel->HotelType ?? ''),
+                    'property_type' => $detector->detect($hotelName),
                     'latitude' => (string)($hotel->Lat ?? ''),
                     'longitude' => (string)($hotel->Lng ?? ''),
                     'hotel_list_synced_at' => date('Y-m-d H:i:s'),

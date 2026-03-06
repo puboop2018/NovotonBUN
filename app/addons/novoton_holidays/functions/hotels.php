@@ -1120,6 +1120,9 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
             'apartment'      => ['en' => 'Apartment',      'ro' => 'Apartament',     'pos' => 50],
             'boarding-house' => ['en' => 'Boarding House',  'ro' => 'Pensiune',       'pos' => 60],
             'cabin'          => ['en' => 'Cabin',          'ro' => 'Cabană',         'pos' => 70],
+            'chalet'         => ['en' => 'Chalet',         'ro' => 'Chalet',         'pos' => 80],
+            'guest-house'    => ['en' => 'Guest House',    'ro' => 'Pensiune',       'pos' => 90],
+            'resort'         => ['en' => 'Resort',         'ro' => 'Resort',         'pos' => 100],
         ];
         foreach ($propTypes as $code => $data) {
             $repo->save([
@@ -1137,7 +1140,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
             $seeded++;
         }
     } else {
-        $skipped += 7;
+        $skipped += 10;
     }
 
     // ── Hotel Facilities (from novoton_facilities where facility_type = 'hotel') ──
