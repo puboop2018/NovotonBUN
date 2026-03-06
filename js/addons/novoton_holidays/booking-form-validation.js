@@ -25,7 +25,7 @@
     // =========================================================================
 
     var CONFIG = {
-        debug: (window.NovotonConfig && window.NovotonConfig.debug) || (window.location.search.indexOf('novoton_debug') !== -1),
+        debug: !!(window.NovotonConfig && window.NovotonConfig.debug),
         selectors: {
             priceDisplay: '.price-total, .total-price-value, .booking-total-value, .price-amount',
             priceSection: '.booking-price-box, .price-summary, .booking-summary'
@@ -57,13 +57,9 @@
     // =========================================================================
 
     function escapeHtml(str) {
-        if (window.NovotonUtils && window.NovotonUtils.escapeHtml) {
-            return window.NovotonUtils.escapeHtml(str);
-        }
-        if (!str) return '';
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
+        return (window.NovotonUtils && window.NovotonUtils.escapeHtml)
+            ? window.NovotonUtils.escapeHtml(str)
+            : (str || '');
     }
 
     // =========================================================================

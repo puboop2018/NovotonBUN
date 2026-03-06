@@ -7,7 +7,7 @@
  *   manage_catalog            - hotel & product management
  *   novoton_manage_bookings   - view/manage bookings and alternatives
  *   novoton_manage_sync       - run syncs, diagnostics, cron tools
- *   novoton_manage_settings   - addon settings, exchange rates, API config
+ *   novoton_manage_settings   - addon settings, API config
  *
  * @package NovotonHolidays
  */
@@ -74,15 +74,6 @@ $schema['novoton_alternatives'] = [
         'notify_customer'     => ['permissions' => 'novoton_manage_bookings'],
         'delete'              => ['permissions' => 'novoton_manage_bookings'],
         'check_all_pending'   => ['permissions' => 'novoton_manage_bookings'],
-    ],
-];
-
-// novoton_exchange_rates controller
-$schema['novoton_exchange_rates'] = [
-    'modes' => [
-        'manage'  => ['permissions' => 'novoton_manage_settings'],
-        'update'  => ['permissions' => 'novoton_manage_settings'],
-        'cron'    => ['permissions' => 'novoton_manage_settings'],
     ],
 ];
 

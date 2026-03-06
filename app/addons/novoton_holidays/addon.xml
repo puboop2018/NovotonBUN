@@ -759,10 +759,6 @@
                         <href>novoton_hotels.list_facilities</href>
                         <position>27</position>
                     </item>
-                    <item id="exchange_rates">
-                        <href>novoton_exchange_rates.manage</href>
-                        <position>28</position>
-                    </item>
                     <item id="feature_mappings">
                         <href>novoton_feature_mappings.manage</href>
                         <position>29</position>

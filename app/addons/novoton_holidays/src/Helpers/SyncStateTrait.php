@@ -52,7 +52,7 @@ trait SyncStateTrait
     private function clearState(): void
     {
         if (file_exists($this->state_file)) {
-            @unlink($this->state_file);
+            unlink($this->state_file);
         }
     }
 

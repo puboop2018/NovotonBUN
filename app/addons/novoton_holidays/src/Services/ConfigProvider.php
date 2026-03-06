@@ -132,11 +132,6 @@ class ConfigProvider
         return max(0.0, (float) (self::settings()['commission'] ?? 0));
     }
 
-    public static function getCurrencyRiskCommission(): float
-    {
-        return max(0.0, (float) (self::settings()['currency_risk_commission'] ?? 0));
-    }
-
     // ── String Settings ──
 
     public static function getApiCurrency(): string
@@ -173,13 +168,6 @@ class ConfigProvider
     public static function getDefaultCountry(): string
     {
         return (string)(self::settings()['default_country'] ?? 'BULGARIA');
-    }
-
-    public static function getLastExchangeRateUpdate(): string
-    {
-        return (string) (db_get_field(
-            "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'"
-        ) ?: '');
     }
 
     public static function getVersion(): string

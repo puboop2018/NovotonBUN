@@ -113,7 +113,7 @@
         // Update per-room price header
         var priceEl = document.getElementById('room-' + roomNum + '-price');
         if (priceEl) {
-            priceEl.innerHTML = formatPrice(price, cfg);
+            priceEl.textContent = formatPrice(price, cfg);
             priceEl.style.color = '#ffc107';
         }
 
@@ -155,7 +155,7 @@
         // Total display
         var totalEl = document.getElementById('total-combined-price');
         if (totalEl) {
-            totalEl.innerHTML = totalPrice > 0
+            totalEl.textContent = totalPrice > 0
                 ? formatPrice(totalPrice, cfg)
                 : '-- ' + cfg.currency;
         }

@@ -330,14 +330,14 @@ function fn_novoton_holidays_remove_theme_presets(): void
         // Legacy cleanup: novoton_default preset artefacts
         $flat_file = "{$styles_dir}/data/novoton_default.less";
         if (file_exists($flat_file)) {
-            @unlink($flat_file);
+            unlink($flat_file);
         }
 
         $dir = "{$styles_dir}/data/novoton_default";
         if (is_dir($dir)) {
             $dir_file = "{$dir}/styles.less";
             if (file_exists($dir_file)) {
-                @unlink($dir_file);
+                unlink($dir_file);
             }
             if (count(scandir($dir)) === 2) {
                 @rmdir($dir);

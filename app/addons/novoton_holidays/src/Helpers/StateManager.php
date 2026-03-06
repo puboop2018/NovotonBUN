@@ -157,7 +157,7 @@ class StateManager implements StateManagerInterface
 
             // Atomically replace the state file
             if (!@rename($tempFile, $this->stateFile)) {
-                @unlink($tempFile);
+                if (file_exists($tempFile)) { unlink($tempFile); }
                 return false;
             }
 

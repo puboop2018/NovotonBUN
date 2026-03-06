@@ -153,15 +153,23 @@ class CacheService implements CacheServiceInterface
      */
     public function remember(string $key, callable $callback, ?int $ttl = null): mixed
     {
+        // Check memory cache with array_key_exists to support null values
+        if (array_key_exists($key, self::$memory_cache)) {
+            $item = self::$memory_cache[$key];
+            if ($item['expires'] > time()) {
+                return $item['data'];
+            }
+        }
+
         $value = $this->get($key);
-        
+
         if ($value !== null) {
             return $value;
         }
-        
+
         $value = $callback();
         $this->set($key, $value, $ttl);
-        
+
         return $value;
     }
     

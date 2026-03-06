@@ -938,14 +938,14 @@ function fn_novoton_holidays_add_product_image($product_id, $image_url, $is_main
     ]);
     
     if (empty($result) || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-        @unlink($temp_file);
+        if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
     
     // Detect image type
     $image_info = @getimagesize($temp_file);
     if (!$image_info) {
-        @unlink($temp_file);
+        if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
     
@@ -995,11 +995,11 @@ function fn_novoton_holidays_add_product_image($product_id, $image_url, $is_main
         
         $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, 'product', $product_id);
         
-        @unlink($temp_file);
+        if (file_exists($temp_file)) { unlink($temp_file); }
         return !empty($pair_ids);
     }
     
-    @unlink($temp_file);
+    if (file_exists($temp_file)) { unlink($temp_file); }
     return false;
 }
 

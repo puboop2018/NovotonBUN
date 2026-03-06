@@ -88,6 +88,8 @@ class PricingApiClient extends ApiClientBase
      */
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
     {
+        $concurrency = max(1, min(50, $concurrency));
+
         if (empty($requestParams)) {
             return [];
         }

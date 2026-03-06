@@ -16,7 +16,6 @@ declare(strict_types=1);
  * - functions/hotels.php         - Hotel data, sync, facilities
  * - functions/bookings.php       - Booking management, reservations, alternatives
  * - functions/email.php          - Email notifications, CSV reports
- * - functions/exchange_rates.php - BNR exchange rates, currency updates
  */
 
 use Tygh\Registry;
@@ -34,7 +33,6 @@ $function_files = [
     'functions/hotels.php',
     'functions/bookings.php',
     'functions/email.php',
-    'functions/exchange_rates.php',
 ];
 
 foreach ($function_files as $file) {
@@ -135,13 +133,4 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 //   fn_novoton_holidays_cleanup_old_reports()
 //   fn_novoton_holidays_generate_hotel_features_csv()
 //   fn_novoton_holidays_generate_hotel_features_xml()
-//
-// EXCHANGE RATES (functions/exchange_rates.php):
-//   fn_novoton_holidays_fetch_bnr_rates()
-//   fn_novoton_holidays_parse_bnr_xml()
-//   fn_novoton_holidays_calculate_currency_coefficients()
-//   fn_novoton_holidays_update_cscart_currencies()
-//   fn_novoton_holidays_update_exchange_rates()
-//   fn_novoton_holidays_get_exchange_rate_info()
-//   fn_novoton_holidays_cron_update_exchange_rates()
 // ============================================================================
