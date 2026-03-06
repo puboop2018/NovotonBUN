@@ -11,10 +11,10 @@
                 <strong>Total:</strong> {$facilities_count} facilities<br>
                 <strong>Last sync:</strong> {$last_sync|default:'Never'}
             </p>
-            <a href="{fn_url('novoton_hotels.sync_facilities')}" class="btn btn-primary">
+            <a href="{fn_url('novoton_holidays.sync_facilities')}" class="btn btn-primary">
                 <i class="icon-refresh"></i> Sync Facilities List
             </a>
-            <a href="{fn_url('novoton_hotels.sync_hotel_facilities')}" class="btn btn-success">
+            <a href="{fn_url('novoton_holidays.sync_hotel_facilities')}" class="btn btn-success">
                 <i class="icon-link"></i> Sync Hotel Facilities
             </a>
         </div>
@@ -22,7 +22,7 @@
 </div>
 
 {if $facilities}
-<form action="{fn_url('novoton_hotels.save_facility_types')}" method="post">
+<form action="{fn_url('novoton_holidays.save_facility_types')}" method="post">
 <input type="hidden" name="security_hash" value="{$security_hash}">
 <table class="table table-striped table-condensed">
     <thead>

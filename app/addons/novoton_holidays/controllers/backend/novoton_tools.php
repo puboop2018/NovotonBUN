@@ -80,7 +80,7 @@ if ($mode == 'export_hotel_features_xml') {
         ob_end_clean();
 
         if ($result['success']) {
-            $download_url = fn_url('novoton_tools.download_hotel_features_xml');
+            $download_url = fn_url('novoton_holidays.download_hotel_features_xml');
             fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.xml</a>");
         } else {
             fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
@@ -265,7 +265,7 @@ if ($mode == 'test_room_price') {
     echo '<h2>Room Price Test</h2>';
 
     echo '<form method="get">';
-    echo '<input type="hidden" name="dispatch" value="novoton_tools.test_room_price">';
+    echo '<input type="hidden" name="dispatch" value="novoton_holidays.test_room_price">';
     echo '<p>Hotel ID: <input name="hotel_id" value="' . htmlspecialchars($hotel_id) . '"></p>';
     echo '<p>Room ID: <input name="room_id" value="' . htmlspecialchars($room_id) . '"></p>';
     echo '<p>Board ID: <input name="board_id" value="' . htmlspecialchars($board_id) . '"></p>';
@@ -329,7 +329,7 @@ if ($mode == 'test_search') {
     echo '<h2>Search Availability Test</h2>';
 
     echo '<form method="get">';
-    echo '<input type="hidden" name="dispatch" value="novoton_tools.test_search">';
+    echo '<input type="hidden" name="dispatch" value="novoton_holidays.test_search">';
     echo '<p>Hotel ID (optional): <input name="hotel_id" value="' . htmlspecialchars($hotel_id) . '"></p>';
     echo '<p>Check In: <input type="date" name="check_in" value="' . htmlspecialchars($check_in) . '"></p>';
     echo '<p>Check Out: <input type="date" name="check_out" value="' . htmlspecialchars($check_out) . '"></p>';
@@ -626,7 +626,7 @@ if ($mode == 'get_hotel_features_csv') {
         header('HTTP/1.1 404 Not Found');
         header('Content-Type: text/plain');
         echo "CSV file not found. Please generate it first using:\n";
-        echo "admin.php?dispatch=novoton_tools.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY";
+        echo "admin.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY";
         exit;
     }
 

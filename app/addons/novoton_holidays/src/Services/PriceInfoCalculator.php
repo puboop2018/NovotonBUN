@@ -275,7 +275,15 @@ class PriceInfoCalculator
             $fees['details'][] = ['type' => 'extras_daily', 'amount' => $fees['extras_daily']];
         }
 
-        $fees['handling_fee'] = $this->calculateHandlingFee($occupancy, $checkIn, $nights);
+        // Collect the set of distinct IdAge values present in season_price for
+        // this room/board.  Handling-fee entries are only considered when their
+        // IdAge correlates with an age type that actually exists in season_price
+        // for the booked room (room-specific correlation).
+        $seasonAgeTypes = $this->collectSeasonPriceAgeTypes($roomId, $boardId);
+
+        $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights, $seasonAgeTypes);
+        $fees['handling_fee'] = $handlingResult['total'];
+        $fees['handling_fee_entries'] = $handlingResult['entries'];
         if ($fees['handling_fee'] > 0) {
             $fees['details'][] = ['type' => 'handling_fee', 'amount' => $fees['handling_fee']];
         }
@@ -358,13 +366,61 @@ class PriceInfoCalculator
     }
 
     /**
-     * Calculate handling_fee
+     * Collect the distinct resolved IdAge values from season_price rows
+     * that match the given room and board.
+     *
+     * @return array<string> Upper-cased, trimmed age-type strings (e.g. "ADULT", "3 RD ADULT", "CHD 2-11.99")
      */
-    private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights): float
+    public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
+    {
+        static $ageTypeMap = [
+            '1' => 'ADULT',
+            '2' => 'CHD 0-1.99',
+            '3' => 'CHD 2-11.99',
+            '4' => 'CHD 12-17.99',
+        ];
+
+        $priceinfo = $this->parser->getPriceinfo();
+        $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (isset($seasonPrices['IdRoom'])) {
+            $seasonPrices = [$seasonPrices];
+        }
+
+        $ageTypes = [];
+        foreach ($seasonPrices as $row) {
+            $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
+            $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
+
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
+
+            $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
+            if (!empty($row['fAge']) && is_string($row['fAge'])) {
+                $resolvedAge = $row['fAge'];
+            } else {
+                $resolvedAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+            }
+            $resolvedAge = strtoupper(trim(preg_replace('/\s+/', ' ', $resolvedAge)));
+            if ($resolvedAge !== '') {
+                $ageTypes[$resolvedAge] = true;
+            }
+        }
+
+        return array_keys($ageTypes);
+    }
+
+    /**
+     * Calculate handling_fee
+     *
+     * @param array $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     *                              Only handling_fee entries whose IdAge correlates with one of these
+     *                              are considered.
+     */
+    private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): array
     {
         $priceinfo = $this->parser->getPriceinfo();
         $handlingFees = $priceinfo['handling_fee'] ?? [];
-        if (empty($handlingFees)) return 0;
+        if (empty($handlingFees)) return ['total' => 0, 'entries' => []];
 
         if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
             $handlingFees = [$handlingFees];
@@ -376,6 +432,12 @@ class PriceInfoCalculator
 
         $total = 0;
         $entryDetails = [];
+        $checkOutStr = $checkOutDate->format('Y-m-d');
+
+        // Build a lookup set of season_price age types for fast matching.
+        // Handling-fee entries are only considered when their IdAge correlates
+        // with an age type present in the season_price for the booked room.
+        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
 
         foreach ($handlingFees as $idx => $fee) {
             $fromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
@@ -389,7 +451,7 @@ class PriceInfoCalculator
             $price2 = (float) PriceInfoFormatter::toScalar($fee['Price2'] ?? '0');
 
             if (!empty($fromDate) && !empty($toDate)) {
-                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
+                if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutStr, $fromDate, $toDate)) {
                     $entryDetails[] = ['entry' => $idx, 'idAge' => $idAge, 'skipped' => 'date_range', 'fromDate' => $fromDate, 'toDate' => $toDate];
                     continue;
                 }
@@ -412,6 +474,33 @@ class PriceInfoCalculator
             $countMethod = '';
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
             if (!empty($feeIdAge)) {
+                // Season-price correlation: only consider this handling-fee
+                // entry if its age type exists in the season_price for the
+                // booked room.  For example, if season_price only defines
+                // "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), positional
+                // handling-fee entries are skipped — all adults use the
+                // generic "ADULT" rate.
+                if (!empty($seasonAgeSet)) {
+                    $feeUpper = strtoupper(trim(preg_replace('/\s+/', ' ', $feeIdAge)));
+                    $correlates = false;
+                    foreach ($seasonAgeSet as $spAge) {
+                        if (PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
+                            $correlates = true;
+                            break;
+                        }
+                    }
+                    if (!$correlates) {
+                        $entryDetails[] = [
+                            'entry' => $idx,
+                            'idAge' => $idAge,
+                            'feeKey' => $feeIdAge,
+                            'skipped' => 'no_season_price_correlation',
+                            'season_age_types' => $seasonAgeTypes,
+                        ];
+                        continue;
+                    }
+                }
+
                 $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
                 $countMethod = "matched '{$feeIdAge}'";
             } else {
@@ -440,7 +529,7 @@ class PriceInfoCalculator
 
         $this->log('Handling fee entries', $entryDetails);
 
-        return $total;
+        return ['total' => $total, 'entries' => $entryDetails];
     }
 
     /**

@@ -8,7 +8,7 @@
 </div>
 
 <form method="get" class="form-inline" style="margin-bottom: 20px;">
-    <input type="hidden" name="dispatch" value="novoton_tools.test_alternative_rs">
+    <input type="hidden" name="dispatch" value="novoton_holidays.test_alternative_rs">
     
     <label>IdNum:</label>
     <input type="text" name="id_num" value="{$id_num}" placeholder="e.g., 94439" class="input-medium" required>
@@ -45,7 +45,7 @@
                 </td>
                 <td>{$req.created_at|date_format:"%d %b %H:%M"}</td>
                 <td>
-                    <a href="{fn_url("novoton_tools.test_alternative_rs?id_num=`$req.novoton_request_id`")}" class="btn btn-small">Check</a>
+                    <a href="{fn_url("novoton_holidays.test_alternative_rs?id_num=`$req.novoton_request_id`")}" class="btn btn-small">Check</a>
                 </td>
             </tr>
             {/foreach}
@@ -119,7 +119,7 @@
 <hr>
 <div class="well">
     <h4>Related Tools</h4>
-    <a href="{fn_url('novoton_tools.test_hotel_request')}" class="btn">
+    <a href="{fn_url('novoton_holidays.test_hotel_request')}" class="btn">
         <i class="icon-cloud-upload"></i> Test hotel_request
     </a>
     <a href="{fn_url('novoton_alternatives.manage')}" class="btn">

@@ -301,6 +301,18 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     }
 
     /**
+     * Collect distinct IdAge values from season_price for a room/board.
+     *
+     * Used by the handling-fee correlation logic: handling_fee entries are
+     * only considered when their IdAge matches an age type present in the
+     * season_price for the booked room.
+     */
+    public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
+    {
+        return $this->calculator->collectSeasonPriceAgeTypes($roomId, $boardId);
+    }
+
+    /**
      * Get the parser instance (for direct priceinfo access by debug tools)
      */
     public function getParser(): PriceInfoParser

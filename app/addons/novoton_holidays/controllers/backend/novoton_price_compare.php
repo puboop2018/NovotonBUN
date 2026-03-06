@@ -327,6 +327,36 @@ if ($mode == 'compare') {
     echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
     echo '</table>';
 
+    // Handling Fee breakdown (per-entry details)
+    $feesDetail = $breakdown['fees_detail'] ?? [];
+    $hfEntries = $feesDetail['handling_fee_entries'] ?? [];
+    if (!empty($hfEntries)) {
+        echo '<h3>Handling Fee Breakdown</h3>';
+        echo '<p style="font-size:0.9em;color:#666;">Each entry from priceinfo handling_fee. '
+           . 'Generic entries (e.g. "ADULT") exclude persons already covered by positional entries (e.g. "3 RD ADULT") to avoid double-counting.</p>';
+        echo '<table>';
+        echo '<tr><th>#</th><th>IdAge</th><th>Tier</th><th>Price/person</th><th>Count</th><th>Subtotal</th><th>Explanation</th></tr>';
+        foreach ($hfEntries as $hfe) {
+            if (isset($hfe['skipped'])) {
+                echo '<tr class="zero-value"><td>' . ($hfe['entry'] ?? '') . '</td><td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>'
+                   . '<td colspan="4">Skipped: ' . htmlspecialchars($hfe['skipped']) . ' (dates: ' . ($hfe['fromDate'] ?? '') . ' - ' . ($hfe['toDate'] ?? '') . ')</td><td></td></tr>';
+                continue;
+            }
+            $subtotal = $hfe['subtotal'] ?? 0;
+            $cls = ($subtotal == 0) ? ' class="zero-value"' : '';
+            echo '<tr' . $cls . '>';
+            echo '<td>' . ($hfe['entry'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['tier'] ?? '') . '</td>';
+            echo '<td>' . number_format($hfe['price'] ?? 0, 2) . '</td>';
+            echo '<td>' . ($hfe['count'] ?? 0) . '</td>';
+            echo '<td>' . number_format($subtotal, 2) . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['count_method'] ?? '') . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    }
+
     $basePlusFees = ($breakdown['base_price'] ?? 0) + ($fees['total_fees'] ?? 0);
     echo '<div class="formula">Subtotal (Base + Fees) = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' + ' . number_format($fees['total_fees'] ?? 0, 2) . ' = ' . number_format($basePlusFees, 2) . ' EUR</div>';
     echo '</div>';
@@ -737,9 +767,71 @@ if ($mode == 'verify') {
             echo '</table>';
         }
 
-        // 3. Show raw priceinfo structure
-        echo '<h2>3. Raw Priceinfo Structure (seasons only)</h2>';
+        // 3. Season-Price Age Types → Handling-Fee Correlation
+        echo '<h2>3. Handling-Fee Correlation with Season-Price</h2>';
+        echo '<div class="info-box">Handling-fee entries are only used when their IdAge matches an age type present in the season_price for this room. '
+           . 'For example, if season_price only defines "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), then positional handling-fee entries are skipped.</div>';
+
+        $seasonAgeTypes = $calculator->collectSeasonPriceAgeTypes($room_id, $board_id);
+        echo '<h3>Season-Price Age Types for this Room</h3>';
+        if (empty($seasonAgeTypes)) {
+            echo '<p><em>No season_price age types found for this room/board.</em></p>';
+        } else {
+            echo '<p>';
+            foreach ($seasonAgeTypes as $ageType) {
+                echo '<span class="season-badge season-2">' . htmlspecialchars($ageType) . '</span> ';
+            }
+            echo '</p>';
+        }
+
+        // Show handling_fee entries and their correlation status
         $priceinfo = json_decode($priceinfo_json, true);
+        $handlingFees = $priceinfo['handling_fee'] ?? [];
+        if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
+            $handlingFees = [$handlingFees];
+        }
+        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
+
+        if (!empty($handlingFees)) {
+            echo '<h3>Handling-Fee Entries &amp; Correlation</h3>';
+            echo '<table>';
+            echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
+            foreach ($handlingFees as $idx => $fee) {
+                $feeIdAge = trim(preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
+                // Strip "BY x AD" suffix for correlation check (same as feeKey)
+                $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
+                $feeUpper = strtoupper($feeKey);
+
+                $correlates = empty($seasonAgeSet); // if no season types, allow all
+                if (!empty($seasonAgeSet)) {
+                    foreach ($seasonAgeSet as $spAge) {
+                        if (\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
+                            $correlates = true;
+                            break;
+                        }
+                    }
+                }
+
+                $statusStyle = $correlates
+                    ? 'background: #c8e6c9; color: #2e7d32; font-weight: bold;'
+                    : 'background: #ffcdd2; color: #c62828; font-weight: bold;';
+                $statusText = $correlates ? 'YES - included' : 'NO - skipped';
+
+                echo '<tr' . (!$correlates ? ' style="opacity:0.6;"' : '') . '>';
+                echo '<td>' . $idx . '</td>';
+                echo '<td>' . htmlspecialchars($feeIdAge) . '</td>';
+                echo '<td>' . htmlspecialchars($fee['FromDate'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['ToDate'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['Price1'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fee['Price2'] ?? '-') . '</td>';
+                echo '<td style="' . $statusStyle . '">' . $statusText . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        // 4. Show raw priceinfo structure
+        echo '<h2>4. Raw Priceinfo Structure (seasons only)</h2>';
         echo '<pre>' . htmlspecialchars(json_encode($priceinfo['seasons'] ?? [], JSON_PRETTY_PRINT)) . '</pre>';
     }
 
