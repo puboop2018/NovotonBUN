@@ -110,14 +110,21 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             $e->getLine()
         );
 
-        // Log the REAL error to a dedicated file
-        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
-        if ($logDir) {
-            @file_put_contents(
-                $logDir . 'novoton_errors.log',
-                date('Y-m-d H:i:s') . ' ' . $error_detail . "\n" . $e->getTraceAsString() . "\n\n",
-                FILE_APPEND
-            );
+        // Log the REAL error to a dedicated file (wrapped so logging never crashes the page)
+        try {
+            $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
+            if ($logDir) {
+                if (!is_dir($logDir)) {
+                    @mkdir($logDir, 0775, true);
+                }
+                @file_put_contents(
+                    $logDir . 'novoton_errors.log',
+                    date('Y-m-d H:i:s') . ' ' . $error_detail . "\n" . $e->getTraceAsString() . "\n\n",
+                    FILE_APPEND
+                );
+            }
+        } catch (\Throwable $logEx) {
+            // Silently ignore — logging must never break the product page
         }
 
         // Assign safe defaults so templates don't crash on missing variables
@@ -229,13 +236,20 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
         $product_data['is_hotel_product'] = true;
     } catch (\Throwable $e) {
         // Log but don't crash — product page will work without hotel data
-        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
-        if ($logDir) {
-            @file_put_contents(
-                $logDir . 'novoton_errors.log',
-                date('Y-m-d H:i:s') . ' get_product_data_post: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n",
-                FILE_APPEND
-            );
+        try {
+            $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
+            if ($logDir) {
+                if (!is_dir($logDir)) {
+                    @mkdir($logDir, 0775, true);
+                }
+                @file_put_contents(
+                    $logDir . 'novoton_errors.log',
+                    date('Y-m-d H:i:s') . ' get_product_data_post: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n",
+                    FILE_APPEND
+                );
+            }
+        } catch (\Throwable $logEx) {
+            // Silently ignore — logging must never break the product page
         }
     }
 }
