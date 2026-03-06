@@ -235,9 +235,10 @@ function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
  *
  * @param int $product_id Product ID
  * @param bool $force Force refresh
+ * @param string|int|null $hotel_id Hotel ID (string from API, int from DB)
  * @return array Packages with prices data
  */
-function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, ?int $hotel_id = null): array
+function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, string|int|null $hotel_id = null): array
 {
     static $cache = [];
 
