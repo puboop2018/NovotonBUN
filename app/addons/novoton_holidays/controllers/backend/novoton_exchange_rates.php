@@ -52,7 +52,16 @@ if ($mode == 'cron') {
         }
     }
 
-    echo "\nNote: Rates saved to DB for reference. CS-Cart currency conversion handled by CS-Cart addon.\n";
+    if (!empty($result['updates'])) {
+        echo "\nUpdate Results:\n";
+        foreach ($result['updates'] as $currency => $update) {
+            if ($update['success']) {
+                echo "  $currency: " . ($update['old_rate'] ?? '-') . " -> " . ($update['new_rate'] ?? '-') . "\n";
+            } else {
+                echo "  $currency: FAILED - " . ($update['error'] ?? 'Unknown error') . "\n";
+            }
+        }
+    }
 
     exit;
 }

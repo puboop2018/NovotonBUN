@@ -135,9 +135,8 @@ class DataSyncCommand extends AbstractCronCommand
 
     private function updateExchangeRates(): array
     {
-        $this->output("Exchange Rates Fetch (BNR)");
-        $this->output("=========================");
-        $this->output("Note: Rates saved to DB for reference only. CS-Cart currency conversion is handled by CS-Cart's own addon.");
+        $this->output("Exchange Rates Update (BNR)");
+        $this->output("===========================");
         $this->output("");
 
         $result = fn_novoton_holidays_update_exchange_rates(true);
@@ -169,7 +168,18 @@ class DataSyncCommand extends AbstractCronCommand
             $this->output("");
         }
 
-        $this->logToSyncTable('exchange_rates', count($result['bnr_rates'] ?? []));
+        if (!empty($result['updates'])) {
+            $this->output("Update Results:");
+            foreach ($result['updates'] as $currency => $update) {
+                if ($update['success']) {
+                    $this->output("  {$currency}: " . ($update['old_rate'] ?? '-') . " -> " . ($update['new_rate'] ?? '-'));
+                } else {
+                    $this->output("  {$currency}: FAILED - " . ($update['error'] ?? 'Unknown'));
+                }
+            }
+        }
+
+        $this->logToSyncTable('exchange_rates', count($result['updates'] ?? []));
 
         return ['success' => $result['success'] ?? false, 'stats' => $result];
     }
