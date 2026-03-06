@@ -260,13 +260,14 @@ class PricingApiClient extends ApiClientBase
             ? $this->buildChildrenAgesXml($params['children'])
             : '';
 
+        // Match the exact Novoton API room_price request format.
+        // Do NOT include <PackageName> or <IdRoom> — these act as filters and
+        // an empty value causes the API to return zero results.
         $xml = $this->xmlHeader() . '
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <PackageName></PackageName>
-            <Resort><![CDATA[' . $resort . ']]></Resort>
-            <IdRoom></IdRoom>
+            <Resort>' . htmlspecialchars($resort) . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>
@@ -355,9 +356,7 @@ class PricingApiClient extends ApiClientBase
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <PackageName></PackageName>
-            <Resort><![CDATA[' . $resort . ']]></Resort>
-            <IdRoom></IdRoom>
+            <Resort>' . htmlspecialchars($resort) . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>

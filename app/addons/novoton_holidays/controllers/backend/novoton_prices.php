@@ -239,10 +239,13 @@ if ($mode == 'check_prices') {
                     ]);
 
                     $rawResponse = $api->getLastResponse() ?: '';
+                    $rawResponseRaw = $api->getLastResponseRaw() ?: '';
                     $response_kb = round(strlen($rawResponse) / 1024, 1);
+                    $raw_kb = round(strlen($rawResponseRaw) / 1024, 1);
 
                     if ($xml === false) {
-                        echo "<span class='skip'>  Empty/invalid response ({$response_kb} KB)</span><br>\n";
+                        $errorDetail = $api->getLastError() ?: 'no error info';
+                        echo "<span class='skip'>  Empty/invalid response (cleaned: {$response_kb} KB, raw: {$raw_kb} KB, error: " . htmlspecialchars($errorDetail) . ")</span><br>\n";
                         flush();
                         continue;
                     }
