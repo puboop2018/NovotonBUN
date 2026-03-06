@@ -67,8 +67,12 @@ class NovotonNormalizer implements ProviderNormalizerInterface
 
     public function normalizePropertyType(string $rawValue): ?string
     {
-        // Novoton API does not currently provide property type.
-        // Returns null to indicate unsupported.
-        return null;
+        $trimmed = trim($rawValue);
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return (new PropertyTypeDetector())->detectFromName($trimmed);
     }
 }
