@@ -303,10 +303,13 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
         if (!is_array($rooms_data)) {
             $rooms_data = [];
         }
-        // Fix room_id in each room (+ converted to space by URL decoding)
+        // Fix room_id and room_name in each room (+ converted to space by URL decoding)
         foreach ($rooms_data as &$rm) {
             if (!empty($rm['room_id'])) {
                 $rm['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $rm['room_id']);
+            }
+            if (!empty($rm['room_name'])) {
+                $rm['room_name'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $rm['room_name']);
             }
         }
         unset($rm);

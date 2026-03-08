@@ -27,16 +27,19 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
     // Parse rooms_data if it's a string (from form submission)
     $rooms_data = [];
     if (!empty($bookingData['rooms_data'])) {
-        $rooms_data = is_string($bookingData['rooms_data']) 
-            ? json_decode(urldecode($bookingData['rooms_data']), true) 
+        $rooms_data = is_string($bookingData['rooms_data'])
+            ? json_decode(rawurldecode($bookingData['rooms_data']), true)
             : $bookingData['rooms_data'];
         if (!is_array($rooms_data)) {
             $rooms_data = [];
         }
-        // Fix room_id in each room (+ converted to space by URL decoding)
+        // Fix room_id and room_name in each room (+ may be converted to space by URL decoding)
         foreach ($rooms_data as &$room) {
             if (!empty($room['room_id'])) {
                 $room['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room['room_id']);
+            }
+            if (!empty($room['room_name'])) {
+                $room['room_name'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room['room_name']);
             }
         }
         unset($room);

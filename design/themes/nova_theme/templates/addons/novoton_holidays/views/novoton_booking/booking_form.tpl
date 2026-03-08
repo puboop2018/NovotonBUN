@@ -63,10 +63,9 @@
 
 {* Helper function to format room type with full name *}
 {function name="format_room_type" room_id=""}
-    {* Fix URL encoding and add + before trailing child count (e.g., "DBL 2 1" -> "DBL 2 +1") *}
+    {* Fix URL encoding: decode %2b to +, then restore any + lost to space *}
     {$room_clean = $room_id|replace:'%2b':'+'|replace:'%2B':'+'}
-    {* Handle patterns like "2 1" -> "2 +1" for extra bed/child *}
-    {$room_clean = $room_clean|replace:' 2 1':' 2 +1'|replace:' 2 2':' 2 +2'|replace:' 3 1':' 3 +1'|replace:' 3 2':' 3 +2'|replace:' 4 1':' 4 +1'|replace:' 4 2':' 4 +2'}
+    {$room_clean = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room_clean)}
     {if strpos($room_clean, 'DBL') !== false}
         {__("novoton_holidays.room_type_double")} ({$room_clean})
     {elseif strpos($room_clean, 'SGL') !== false}
