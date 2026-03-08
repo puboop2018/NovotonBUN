@@ -619,16 +619,9 @@ function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, strin
  */
 function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $year): string
 {
-    // Assume hotel_name is already formatted (Title Case etc.) by fn_novoton_holidays_format_hotel_display_name().
-    // Apply Title Case here as safety net for callers that pass raw names directly.
-    $hotel_name = trim($hotel_name);
-    if ($hotel_name === mb_strtoupper($hotel_name, 'UTF-8')) {
-        // Only apply Title Case if the name is still ALL CAPS (not yet formatted)
-        $hotel_name = mb_convert_case($hotel_name, MB_CASE_TITLE, 'UTF-8');
-    }
-
-    // Fix common patterns after Title Case
-    $hotel_name = str_replace([' & ', ' And '], ' & ', $hotel_name);
+    // Apply the same display-name formatting used for product names.
+    // This is idempotent: names that already contain a type keyword pass through unchanged.
+    $hotel_name = fn_novoton_holidays_format_hotel_display_name(trim($hotel_name));
     
     // Build location part
     $location_parts = [];
