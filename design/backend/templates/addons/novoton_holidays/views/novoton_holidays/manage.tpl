@@ -77,6 +77,7 @@
             <a href="{"novoton_holidays.check_prices_hotel"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">$ Check Prices (Per-Hotel)</a>
             <a href="{"novoton_holidays.check_packages"|fn_url}" class="novoton-btn novoton-btn-info" target="_blank">[P] Check Packages</a>
             <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="novoton-btn novoton-btn-info">+ Add Hotels as Products</a>
+            <a href="{"novoton_holidays.view_hotels_to_add"|fn_url}" class="novoton-btn novoton-btn-info">[V] View Hotels to Add</a>
             <a href="{"novoton_bookings.manage"|fn_url}" class="novoton-btn novoton-btn-info">[L] Manage Bookings</a>
             <a href="{"novoton_alternatives.manage"|fn_url}" class="novoton-btn novoton-btn-info">[R] Alternative Requests</a>
             <a href="{"novoton_holidays.export_hotel_features_csv"|fn_url}" class="novoton-btn novoton-btn-info">[CSV] Download Hotel Features</a>
