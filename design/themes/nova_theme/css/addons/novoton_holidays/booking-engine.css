@@ -799,6 +799,21 @@ button.nvt-field-input:active {
         flex-direction: column;
         border-radius: var(--nvt-radius, 10px);
     }
+    /* Match inner field corners to outer container radius on mobile */
+    .nvt-field {
+        border-radius: 0;
+    }
+    .nvt-field:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+    .nvt-field:last-child,
+    .nvt-field--btn {
+        border-radius: 0 0 8px 8px;
+    }
+    /* When there's only one field (edge case) */
+    .nvt-field:only-child {
+        border-radius: 8px;
+    }
     .nvt-field--btn {
         flex: 0 0 auto;
         min-width: 0;
@@ -806,7 +821,7 @@ button.nvt-field-input:active {
     }
     .nvt-btn-search {
         width: 100%;
-        border-radius: 6px;
+        border-radius: 0 0 8px 8px;
         padding: 10px 20px;
     }
     .nvt-calendar-popup {
