@@ -34,6 +34,16 @@ class AddProductsCommand extends AbstractCronCommand
             $countries = ConfigProvider::getSelectedCountries();
         }
 
+        // Ensure feature mapping table is populated (auto-seeds if settings are configured but mappings missing)
+        $mappingCheck = fn_novoton_holidays_ensure_feature_mappings();
+        if (!empty($mappingCheck['unconfigured'])) {
+            $this->output("WARNING: Feature IDs not configured in addon settings for: " . implode(', ', $mappingCheck['unconfigured']));
+            $this->output("Go to Addons > Novoton Holidays > Feature Mapping and set the CS-Cart feature IDs.");
+        }
+        if ($mappingCheck['seeded'] > 0) {
+            $this->output("Auto-seeded {$mappingCheck['seeded']} feature mappings.");
+        }
+
         $this->output("Adding hotels as products...");
         $this->output("Countries: " . implode(', ', $countries));
         $this->output("Limit per country: " . ($limit > 0 ? $limit : "No limit"));

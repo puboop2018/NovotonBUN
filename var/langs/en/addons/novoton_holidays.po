@@ -3249,6 +3249,22 @@ msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
 msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
 msgstr "Override the addon setting for this specific mapping. Usually set via addon settings."
 
+msgctxt "Languages::novoton_holidays.fm_not_mapped"
+msgid "Not mapped"
+msgstr "Not mapped"
+
+msgctxt "Languages::novoton_holidays.fm_variant_hint"
+msgid "Select the CS-Cart variant that corresponds to this API value."
+msgstr "Select the CS-Cart variant that corresponds to this API value."
+
+msgctxt "Languages::novoton_holidays.fm_no_variants_exist"
+msgid "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+msgstr "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+
+msgctxt "Languages::novoton_holidays.fm_configure_feature_first"
+msgid "Set a CS-Cart Feature ID first."
+msgstr "Set a CS-Cart Feature ID first."
+
 msgctxt "Languages::novoton_holidays.fm_created_at"
 msgid "Created"
 msgstr "Created"

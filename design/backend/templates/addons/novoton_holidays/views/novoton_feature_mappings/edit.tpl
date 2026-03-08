@@ -63,17 +63,23 @@
     </div>
 
     <div class="control-group">
-        <label class="control-label">{__("novoton_holidays.fm_variant_id")}:</label>
+        <label class="control-label" for="cs_cart_variant_id">{__("novoton_holidays.fm_variant_id")}:</label>
         <div class="controls">
-            {if $variant_info}
-                <span class="label label-success">#{$variant_info.variant_id}</span> &mdash; {$variant_info.variant}
-            {elseif $mapping.cs_cart_variant_id > 0}
-                <span class="label label-warning">#{$mapping.cs_cart_variant_id} ({__("novoton_holidays.fm_variant_missing")})</span>
+            {if $feature_variants}
+                <select name="mapping_data[cs_cart_variant_id]" id="cs_cart_variant_id">
+                    <option value="0">-- {__("novoton_holidays.fm_not_mapped")} --</option>
+                    {foreach from=$feature_variants item=v}
+                        <option value="{$v.variant_id}" {if $mapping.cs_cart_variant_id == $v.variant_id}selected{/if}>
+                            #{$v.variant_id} &mdash; {$v.name}
+                        </option>
+                    {/foreach}
+                </select>
+                <p class="muted">{__("novoton_holidays.fm_variant_hint")}</p>
+            {elseif $mapping.cs_cart_feature_id > 0}
+                <span class="muted">{__("novoton_holidays.fm_no_variants_exist")}</span>
+                <input type="hidden" name="mapping_data[cs_cart_variant_id]" value="0" />
             {else}
-                <span class="muted">{__("novoton_holidays.fm_will_be_created")}</span>
-                <a href="{"novoton_holidays.add_hotels_as_products"|fn_url}" class="btn btn-mini" style="margin-left: 8px;">
-                    <i class="icon-play"></i> Run Add Hotels as Products
-                </a>
+                <span class="muted">{__("novoton_holidays.fm_configure_feature_first")}</span>
             {/if}
         </div>
     </div>

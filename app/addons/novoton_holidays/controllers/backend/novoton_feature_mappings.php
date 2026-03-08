@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mappingId = (int) ($_REQUEST['mapping_id'] ?? 0);
         if ($mappingId > 0 && !empty($_REQUEST['mapping_data'])) {
             $data = $_REQUEST['mapping_data'];
-            $allowed = ['display_name_en', 'display_name_ro', 'is_active', 'position', 'cs_cart_feature_id'];
-            $intFields = ['position', 'cs_cart_feature_id'];
+            $allowed = ['display_name_en', 'display_name_ro', 'is_active', 'position', 'cs_cart_feature_id', 'cs_cart_variant_id'];
+            $intFields = ['position', 'cs_cart_feature_id', 'cs_cart_variant_id'];
             $updateData = ['mapping_id' => $mappingId];
             foreach ($allowed as $field) {
                 if (isset($data[$field])) {
@@ -216,7 +216,22 @@ if ($mode == 'edit') {
         );
     }
 
+    // Load all existing variants for this feature (for the variant selector dropdown)
+    $featureVariants = [];
+    if ($mapping['cs_cart_feature_id'] > 0) {
+        $featureVariants = db_get_array(
+            "SELECT v.variant_id, vd.variant as name
+             FROM ?:product_feature_variants v
+             LEFT JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id AND vd.lang_code = ?s
+             WHERE v.feature_id = ?i
+             ORDER BY v.position, vd.variant",
+            DESCR_SL,
+            $mapping['cs_cart_feature_id']
+        );
+    }
+
     Tygh::$app['view']->assign('mapping', $mapping);
     Tygh::$app['view']->assign('feature_info', $featureInfo);
     Tygh::$app['view']->assign('variant_info', $variantInfo);
+    Tygh::$app['view']->assign('feature_variants', $featureVariants);
 }
