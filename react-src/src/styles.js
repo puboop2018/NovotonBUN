@@ -47,7 +47,7 @@ export function injectStyles() {
     align-items: stretch;
     gap: 4px;
     border: 3px solid var(--nvt-accent, #febb02);
-    border-radius: var(--nvt-radius, 12px);
+    border-radius: var(--nvt-radius, 10px);
     background: var(--nvt-accent, #febb02);
     overflow: visible;
     position: relative;
@@ -86,7 +86,7 @@ button.nvt-field-input:active {
     position: relative;
     flex: 1;
     background: var(--nvt-bg, #ffffff);
-    border-radius: 8px;
+    border-radius: 6px;
 }
 .nvt-field--date {
     flex: 2;
@@ -94,7 +94,7 @@ button.nvt-field-input:active {
 /* Red border highlight when date validation fails */
 .nvt-field--error {
     box-shadow: inset 0 0 0 2px var(--nvt-danger, #d32f2f);
-    border-radius: 8px;
+    border-radius: 6px;
     animation: nvt-field-shake 0.3s ease-out;
 }
 @keyframes nvt-field-shake {
@@ -186,7 +186,7 @@ button.nvt-field-input:active {
     background: var(--nvt-search-btn-bg, #006ce4);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -802,7 +802,7 @@ button.nvt-field-input:active {
 @media (max-width: 768px) {
     .nvt-form-row {
         flex-direction: column;
-        border-radius: var(--nvt-radius, 12px);
+        border-radius: var(--nvt-radius, 10px);
     }
     .nvt-field--btn {
         flex: 0 0 auto;
@@ -811,7 +811,7 @@ button.nvt-field-input:active {
     }
     .nvt-btn-search {
         width: 100%;
-        border-radius: 8px;
+        border-radius: 6px;
         padding: 10px 20px;
     }
     .nvt-calendar-popup {
