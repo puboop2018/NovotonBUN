@@ -135,8 +135,8 @@
 </div>
 {* /capture - DISABLED *}
 
-{* include file="common/mainbox.tpl" 
-    title="Add Hotels as Products" 
+{* include file="common/mainbox.tpl"
+    title="Add Hotels as Products"
     content=$smarty.capture.mainbox
     sidebar=$smarty.capture.sidebar
-}
+*}
