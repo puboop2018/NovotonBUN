@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Form Preview — Rounded Corners</title>
+    <style>
+        /* ── Page layout ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 40px 20px;
+            color: #1a1a1a;
+        }
+        .page-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #003580;
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #6b6b6b;
+            margin-bottom: 40px;
+        }
+        .preview-section {
+            max-width: 900px;
+            margin: 0 auto 50px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b6b6b;
+            margin-bottom: 16px;
+        }
+        .comparison {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+        .comparison-col {
+            flex: 1;
+        }
+        .comparison-col h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #003580;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .badge--old { background: #fef2f2; color: #991b1b; }
+        .badge--new { background: #f0fdf4; color: #166534; }
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+            font-size: 13px;
+        }
+        .spec-table th, .spec-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .spec-table th {
+            font-weight: 600;
+            color: #6b6b6b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .spec-table .old { color: #991b1b; text-decoration: line-through; }
+        .spec-table .new { color: #166534; font-weight: 600; }
+        .note {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #eff6ff;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+        /* ===================================================================
+           Booking Engine CSS — extracted from react-src/src/styles.js
+           =================================================================== */
+
+        .nvt-booking-engine {
+            --nvt-z-popup: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1a1a1a;
+            position: relative;
+        }
+
+        /* ---------- Form row ---------- */
+        .nvt-form-row {
+            display: flex;
+            align-items: stretch;
+            gap: 4px;
+            border: 3px solid #febb02;
+            border-radius: 12px;
+            background: #febb02;
+            overflow: visible;
+            position: relative;
+        }
+
+        /* OLD version for comparison */
+        .nvt-form-row--old {
+            border-radius: 8px;
+        }
+        .nvt-form-row--old .nvt-field {
+            border-radius: 4px;
+        }
+        .nvt-form-row--old .nvt-btn-search {
+            border-radius: 4px;
+        }
+
+        .nvt-field {
+            position: relative;
+            flex: 1;
+            background: #ffffff;
+            border-radius: 8px;
+        }
+        .nvt-field--date {
+            flex: 2;
+        }
+        .nvt-field--guests {
+            flex: 1.5;
+        }
+        .nvt-field--btn {
+            flex: 0.5;
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .nvt-field-input {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            min-height: 50px;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+        }
+
+        .nvt-field-input-icon {
+            flex: 0 0 20px;
+            color: #6b6b6b;
+            display: flex;
+            align-items: center;
+        }
+        .nvt-field-input-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .nvt-field-input-text {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .nvt-field-input-text .nvt-value {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a1a1a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+        }
+        .nvt-field-input-arrow {
+            flex: 0 0 16px;
+            color: #6b6b6b;
+            display: flex;
+            align-items: center;
+        }
+        .nvt-field-input-arrow svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ---------- Search button ---------- */
+        .nvt-btn-search {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 28px;
+            background: #006ce4;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            width: 100%;
+            height: 100%;
+            transition: background 0.15s;
+        }
+        .nvt-btn-search:hover {
+            background: #0057b8;
+        }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 768px) {
+            .comparison { flex-direction: column; }
+            .nvt-form-row {
+                flex-direction: column;
+                border-radius: 12px;
+            }
+            .nvt-form-row--old {
+                border-radius: 8px;
+            }
+            .nvt-field--btn {
+                flex: 0 0 auto;
+                min-width: 0;
+                padding: 0;
+            }
+            .nvt-btn-search {
+                width: 100%;
+                border-radius: 8px;
+                padding: 10px 20px;
+            }
+            .nvt-form-row--old .nvt-btn-search {
+                border-radius: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="page-title">Booking Form — Rounded Corners Preview</h1>
+    <p class="page-subtitle">Side-by-side comparison of old (cut) vs new (rounded) corners</p>
+
+    <!-- ── Comparison ── -->
+    <div class="preview-section">
+        <div class="section-label">Desktop View</div>
+
+        <div class="comparison">
+            <!-- OLD -->
+            <div class="comparison-col">
+                <h3>Before <span class="badge badge--old">border-radius: 8px / 4px</span></h3>
+                <div class="nvt-booking-engine">
+                    <div class="nvt-form-row nvt-form-row--old">
+                        <div class="nvt-field nvt-field--date">
+                            <button class="nvt-field-input" type="button">
+                                <span class="nvt-field-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <span class="nvt-field-input-text">
+                                    <span class="nvt-value">Lun. 14 Sept. &rarr; Dum. 20 Sept. (6 nopți)</span>
+                                </span>
+                                <span class="nvt-field-input-arrow">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="nvt-field nvt-field--guests">
+                            <button class="nvt-field-input" type="button">
+                                <span class="nvt-field-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
+                                <span class="nvt-field-input-text">
+                                    <span class="nvt-value">2 adulți &middot; 1 copil &middot; 1 cameră</span>
+                                </span>
+                                <span class="nvt-field-input-arrow">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="nvt-field nvt-field--btn">
+                            <button class="nvt-btn-search" type="button">Caută</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison">
+            <!-- NEW -->
+            <div class="comparison-col">
+                <h3>After <span class="badge badge--new">border-radius: 12px / 8px</span></h3>
+                <div class="nvt-booking-engine">
+                    <div class="nvt-form-row">
+                        <div class="nvt-field nvt-field--date">
+                            <button class="nvt-field-input" type="button">
+                                <span class="nvt-field-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <span class="nvt-field-input-text">
+                                    <span class="nvt-value">Lun. 14 Sept. &rarr; Dum. 20 Sept. (6 nopți)</span>
+                                </span>
+                                <span class="nvt-field-input-arrow">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="nvt-field nvt-field--guests">
+                            <button class="nvt-field-input" type="button">
+                                <span class="nvt-field-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
+                                <span class="nvt-field-input-text">
+                                    <span class="nvt-value">2 adulți &middot; 1 copil &middot; 1 cameră</span>
+                                </span>
+                                <span class="nvt-field-input-arrow">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="nvt-field nvt-field--btn">
+                            <button class="nvt-btn-search" type="button">Caută</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specs table -->
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Element</th>
+                    <th>CSS Selector</th>
+                    <th>Before</th>
+                    <th>After</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Outer container (yellow border)</td>
+                    <td><code>.nvt-form-row</code></td>
+                    <td class="old">8px</td>
+                    <td class="new">12px</td>
+                </tr>
+                <tr>
+                    <td>Inner fields (date, guests)</td>
+                    <td><code>.nvt-field</code></td>
+                    <td class="old">4px</td>
+                    <td class="new">8px</td>
+                </tr>
+                <tr>
+                    <td>Search button</td>
+                    <td><code>.nvt-btn-search</code></td>
+                    <td class="old">4px</td>
+                    <td class="new">8px</td>
+                </tr>
+                <tr>
+                    <td>Error state</td>
+                    <td><code>.nvt-field--error</code></td>
+                    <td class="old">4px</td>
+                    <td class="new">8px</td>
+                </tr>
+                <tr>
+                    <td>Mobile form row</td>
+                    <td><code>.nvt-form-row</code> (768px)</td>
+                    <td class="old">8px</td>
+                    <td class="new">12px</td>
+                </tr>
+                <tr>
+                    <td>Mobile search button</td>
+                    <td><code>.nvt-btn-search</code> (768px)</td>
+                    <td class="old">4px</td>
+                    <td class="new">8px</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>Source file:</strong> <code>react-src/src/styles.js</code> — CSS is injected at runtime via the React component.
+            The <code>--nvt-radius</code> CSS custom property (used for popups and other elements) was also updated from <code>8px</code> to <code>12px</code>.
+        </div>
+    </div>
+
+    <!-- ── Zoomed corners ── -->
+    <div class="preview-section">
+        <div class="section-label">Corner Detail (zoomed)</div>
+        <div class="comparison">
+            <div class="comparison-col" style="text-align:center;">
+                <h3>Before — 8px outer <span class="badge badge--old">cut look</span></h3>
+                <div style="display:inline-block; border:3px solid #febb02; border-radius:8px; background:#febb02; padding:3px; margin-top:8px;">
+                    <div style="background:#fff; border-radius:4px; width:200px; height:60px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#6b6b6b;">
+                        field content
+                    </div>
+                </div>
+            </div>
+            <div class="comparison-col" style="text-align:center;">
+                <h3>After — 12px outer <span class="badge badge--new">rounded</span></h3>
+                <div style="display:inline-block; border:3px solid #febb02; border-radius:12px; background:#febb02; padding:3px; margin-top:8px;">
+                    <div style="background:#fff; border-radius:8px; width:200px; height:60px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#6b6b6b;">
+                        field content
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Mobile preview ── -->
+    <div class="preview-section">
+        <div class="section-label">Mobile View (stacked layout)</div>
+        <div style="max-width:375px; margin:0 auto;">
+            <div class="nvt-booking-engine">
+                <div class="nvt-form-row" style="flex-direction:column; border-radius:12px;">
+                    <div class="nvt-field nvt-field--date">
+                        <button class="nvt-field-input" type="button">
+                            <span class="nvt-field-input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            </span>
+                            <span class="nvt-field-input-text">
+                                <span class="nvt-value">Lun. 14 Sept. &rarr; Dum. 20 Sept.</span>
+                            </span>
+                            <span class="nvt-field-input-arrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="nvt-field nvt-field--guests">
+                        <button class="nvt-field-input" type="button">
+                            <span class="nvt-field-input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </span>
+                            <span class="nvt-field-input-text">
+                                <span class="nvt-value">2 adulți &middot; 1 copil &middot; 1 cameră</span>
+                            </span>
+                            <span class="nvt-field-input-arrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="nvt-field nvt-field--btn" style="flex:0 0 auto;">
+                        <button class="nvt-btn-search" type="button" style="border-radius:8px; padding:10px 20px;">Caută</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
