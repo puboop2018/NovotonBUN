@@ -25,10 +25,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
     $bookingData = $_REQUEST;
 
-    // Fix room_id: PHP URL decoding converts + to space, restore it
-    // Pattern: "DBL 2 1)" should be "DBL 2+1)"
+    // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
-        $bookingData['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $bookingData['room_id']);
+        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code($bookingData['room_id']);
     }
 
     // --- Security: Validate booking data via SecurityService ---
@@ -303,13 +302,13 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
         if (!is_array($rooms_data)) {
             $rooms_data = [];
         }
-        // Fix room_id and room_name in each room (+ converted to space by URL decoding)
+        // Normalize room_id and room_name in each room (restore + lost by URL decoding)
         foreach ($rooms_data as &$rm) {
             if (!empty($rm['room_id'])) {
-                $rm['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $rm['room_id']);
+                $rm['room_id'] = fn_novoton_holidays_normalize_room_code($rm['room_id']);
             }
             if (!empty($rm['room_name'])) {
-                $rm['room_name'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $rm['room_name']);
+                $rm['room_name'] = fn_novoton_holidays_normalize_room_code($rm['room_name']);
             }
         }
         unset($rm);

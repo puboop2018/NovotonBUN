@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
 
 class BookingService implements BookingServiceInterface
 {
@@ -678,9 +679,12 @@ class BookingService implements BookingServiceInterface
                 $room['room_name'] = fn_novoton_holidays_format_room_type($room['room_id']);
             }
 
-            // Fix room_id: PHP URL decoding converts + to space
+            // Normalize room_id and room_name: restore + lost by URL decoding
             if (!empty($room['room_id'])) {
-                $room['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room['room_id']);
+                $room['room_id'] = RoomType::normalizeRoomCode($room['room_id']);
+            }
+            if (!empty($room['room_name'])) {
+                $room['room_name'] = RoomType::normalizeRoomCode($room['room_name']);
             }
         }
         unset($room);
