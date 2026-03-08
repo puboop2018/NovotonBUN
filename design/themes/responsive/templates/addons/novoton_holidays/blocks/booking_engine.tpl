@@ -43,5 +43,5 @@
 </div>
 
 {* Load React 19 vendor (cached separately) then app bundle *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>

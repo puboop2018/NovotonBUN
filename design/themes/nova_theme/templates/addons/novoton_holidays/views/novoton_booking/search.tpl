@@ -1051,9 +1051,9 @@ window.NovotonTranslations = {
     selectAgeForChildren: "{__('novoton_holidays.select_age_for_children')|default:'Select age for [count] children (Room [rooms]).'}"
 };
 </script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v={$smarty.const.NOVOTON_VERSION}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
 
 {* A73: JavaScript fallback to fix desktop/mobile display if CSS fails *}
 <script>

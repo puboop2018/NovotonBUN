@@ -14,11 +14,21 @@ use Tygh\Addons\NovotonHolidays\Constants;
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Addon version constant — single source of truth from addon.xml via Registry.
-// Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for use in script cache-busting.
+// Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for display purposes.
 if (!defined('NOVOTON_VERSION')) {
     $__nv = Registry::get('addons.novoton_holidays.version') ?: '0.0.0';
     define('NOVOTON_VERSION', preg_replace('/-.*$/', '', $__nv));
     unset($__nv);
+}
+
+// Cache-busting version — changes automatically when JS bundle is modified.
+// Uses filemtime of the React bundle so every deploy busts browser cache
+// even within the same addon version (e.g. hotfixes, rebuilds).
+if (!defined('NOVOTON_CACHE_VER')) {
+    $__bundle = __DIR__ . '/../../../../js/addons/novoton_holidays/react19-bundle.js';
+    $__mtime = file_exists($__bundle) ? (string) filemtime($__bundle) : '0';
+    define('NOVOTON_CACHE_VER', substr(md5(NOVOTON_VERSION . $__mtime), 0, 8));
+    unset($__bundle, $__mtime);
 }
 
 // Register PSR-4 autoloader for ALL addon namespaces.
