@@ -207,6 +207,12 @@
                 <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Resort List</strong><br><small class="muted">Sync resort names</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.resort_list}</div></td>
+                <td>Weekly</td>
+                <td><a href="{$cron_urls.resort_list}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
                 <td><strong>Facilities</strong><br><small class="muted">Sync facilities list</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
                 <td>Weekly</td>
@@ -217,18 +223,6 @@
                 <td><div class="novoton-cron-url">{$cron_urls.hotel_facilities_batched}</div></td>
                 <td>Weekly</td>
                 <td><a href="{$cron_urls.hotel_facilities_batched}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Resort List</strong><br><small class="muted">Sync resort names</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.resort_list}</div></td>
-                <td>Weekly</td>
-                <td><a href="{$cron_urls.resort_list}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Booking Status</strong><br><small class="muted">Check ASK bookings</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
-                <td>Every 2 hours</td>
-                <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Offers Update</strong><br><small class="muted">Check new offers</small></td>
@@ -259,6 +253,12 @@
                 <td><div class="novoton-cron-url">{$cron_urls.recompute_calendar_prices}</div></td>
                 <td>After sync or daily</td>
                 <td><a href="{$cron_urls.recompute_calendar_prices}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Booking Status</strong><br><small class="muted">Check ASK bookings</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
+                <td>Every 2 hours</td>
+                <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
         </table>
         {else}

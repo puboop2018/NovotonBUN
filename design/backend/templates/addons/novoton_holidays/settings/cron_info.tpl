@@ -16,9 +16,9 @@
             <thead><tr><th>Mode</th><th>Command</th><th>Suggested Schedule</th></tr></thead>
             <tbody>
                 <tr>
-                    <td><strong>compute_prices</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=compute_prices</code></td>
-                    <td>Every 5 min (<code>*/5 * * * *</code>)</td>
+                    <td><strong>hotel_info_batched</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_info_batched</code></td>
+                    <td>Daily (<code>0 3 * * *</code>)</td>
                 </tr>
                 <tr>
                     <td><strong>sync_priceinfo_batched</strong></td>
@@ -26,9 +26,9 @@
                     <td>Every 30 min (<code>*/30 * * * *</code>)</td>
                 </tr>
                 <tr>
-                    <td><strong>hotel_info_batched</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_info_batched</code></td>
-                    <td>Daily (<code>0 3 * * *</code>)</td>
+                    <td><strong>compute_prices</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=compute_prices</code></td>
+                    <td>Every 5 min (<code>*/5 * * * *</code>)</td>
                 </tr>
                 <tr>
                     <td><strong>recompute_calendar_prices</strong></td>
