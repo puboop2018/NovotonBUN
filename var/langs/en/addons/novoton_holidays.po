@@ -3257,6 +3257,10 @@ msgctxt "Languages::menu::feature_mappings"
 msgid "Feature Mappings"
 msgstr "Feature Mappings"
 
+msgctxt "Languages::novoton_holidays.actions.novoton_dashboard"
+msgid "Novoton Dashboard"
+msgstr "Novoton Dashboard"
+
 msgctxt "Languages::novoton_holidays.actions.import_facilities"
 msgid "Import All Facilities from API"
 msgstr "Import All Facilities from API"
