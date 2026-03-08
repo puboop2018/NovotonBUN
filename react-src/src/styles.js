@@ -423,7 +423,7 @@ button.nvt-field-input:active {
     padding-top: 8px;
     border-top: 1px dashed var(--nvt-border, #e0e0e0);
     font-size: 13px;
-    color: var(--nvt-text-light, #6b6b6b);
+    color: var(--nvt-text, #1a1a1a);
 }
 
 .nvt-done-btn {
