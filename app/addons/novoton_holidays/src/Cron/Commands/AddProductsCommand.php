@@ -7,6 +7,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -87,7 +88,26 @@ class AddProductsCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $page_title = fn_novoton_holidays_build_hotel_title($hotel['hotel_name'], $hotel['city'], $hotel['country'], $current_year);
+                // Detect property type for this hotel
+                $propertyDetector = new PropertyTypeDetector();
+                $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
+                $packageNames = [];
+                $roomNames = [];
+                if (!empty($hotelData['packages'])) {
+                    foreach ($hotelData['packages'] as $pkg) {
+                        $packageNames[] = is_array($pkg) ? ($pkg['PackageName'] ?? '') : (string) $pkg;
+                    }
+                }
+                if (!empty($hotelData['rooms'])) {
+                    foreach ($hotelData['rooms'] as $rm) {
+                        $roomNames[] = is_array($rm) ? ($rm['Type'] ?? $rm['IdRoom'] ?? '') : (string) $rm;
+                    }
+                }
+                $detectedType = $propertyDetector->detect($hotel['hotel_name'], $packageNames, $roomNames);
+
+                // Format hotel display name: Title Case + append property type for short names
+                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel['hotel_name'], $detectedType);
+                $page_title = fn_novoton_holidays_build_hotel_title($display_name, $hotel['city'], $hotel['country'], $current_year);
 
                 $description = '';
                 try {
@@ -100,7 +120,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
 
                 $product_data = [
-                    'product' => $hotel['hotel_name'],
+                    'product' => $display_name,
                     'product_code' => $product_code,
                     'price' => 0,
                     'status' => 'D',

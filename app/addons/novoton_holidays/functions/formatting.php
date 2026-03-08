@@ -542,6 +542,73 @@ function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
 }
 
 /**
+ * Format hotel display name: Title Case + append property type for short names.
+ *
+ * Rules:
+ *  1. Always convert to Title Case.
+ *  2. If the name already contains a property type keyword (Hotel, Resort, etc.) — keep as-is.
+ *  3. If the name has 3+ words — keep as-is.
+ *  4. If the name has 1-2 words — append the detected property type from the feature mapping system.
+ *
+ * @param string $hotel_name  Raw hotel name (usually UPPERCASE from API)
+ * @param string $detected_property_type  Property type code detected by PropertyTypeDetector (e.g. 'hotel', 'resort')
+ * @return string  Formatted display name
+ */
+function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, string $detected_property_type = ''): string
+{
+    $name = trim($hotel_name);
+    if ($name === '') {
+        return $name;
+    }
+
+    // Step 1: Title Case
+    $name = mb_convert_case($name, MB_CASE_TITLE, 'UTF-8');
+
+    // Fix common patterns after Title Case (Roman numerals, &)
+    $name = str_replace([' & ', ' And '], ' & ', $name);
+    // Restore common Roman numerals that Title Case lowercased
+    $name = preg_replace_callback('/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix)\b/', function ($m) {
+        return strtoupper($m[1]);
+    }, $name);
+
+    // Step 2: Check if name already contains a property type keyword
+    $detector = new \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector();
+    $nameType = $detector->detectFromName($name);
+    if ($nameType !== null) {
+        // Name already contains a type keyword (Hotel, Resort, Villa, etc.) — done
+        return $name;
+    }
+
+    // Step 3: Count words — if 3+, keep as-is
+    $word_count = count(preg_split('/\s+/', $name));
+    if ($word_count >= 3) {
+        return $name;
+    }
+
+    // Step 4: 1-2 words, append the property type
+    if (empty($detected_property_type)) {
+        $detected_property_type = 'hotel'; // default
+    }
+
+    // Map property type code to display label
+    $type_labels = [
+        'hotel'          => 'Hotel',
+        'motel'          => 'Motel',
+        'hostel'         => 'Hostel',
+        'villa'          => 'Villa',
+        'apartment'      => 'Apartments',
+        'boarding-house' => 'Boarding House',
+        'cabin'          => 'Cabin',
+        'chalet'         => 'Chalet',
+        'guest-house'    => 'Guest House',
+        'resort'         => 'Resort',
+    ];
+
+    $label = $type_labels[$detected_property_type] ?? 'Hotel';
+    return $name . ' ' . $label;
+}
+
+/**
  * Build hotel title in standard format
  * 
  * @param string $hotel_name Hotel name
@@ -552,10 +619,14 @@ function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
  */
 function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $year): string
 {
-    // Clean and Title Case the hotel name
+    // Assume hotel_name is already formatted (Title Case etc.) by fn_novoton_holidays_format_hotel_display_name().
+    // Apply Title Case here as safety net for callers that pass raw names directly.
     $hotel_name = trim($hotel_name);
-    $hotel_name = mb_convert_case($hotel_name, MB_CASE_TITLE, 'UTF-8');
-    
+    if ($hotel_name === mb_strtoupper($hotel_name, 'UTF-8')) {
+        // Only apply Title Case if the name is still ALL CAPS (not yet formatted)
+        $hotel_name = mb_convert_case($hotel_name, MB_CASE_TITLE, 'UTF-8');
+    }
+
     // Fix common patterns after Title Case
     $hotel_name = str_replace([' & ', ' And '], ' & ', $hotel_name);
     
