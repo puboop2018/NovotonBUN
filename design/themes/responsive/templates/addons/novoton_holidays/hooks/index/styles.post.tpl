@@ -11,5 +11,5 @@
 {* Main addon styles (LESS - will be compiled by CS-Cart) *}
 {style src="addons/novoton_holidays/styles.less"}
 
-{* Booking form React component styles *}
-{style src="addons/novoton_holidays/booking-form-react.css"}
+{* Booking engine React component styles (edit this file directly, no build needed) *}
+{style src="addons/novoton_holidays/booking-engine.css"}
