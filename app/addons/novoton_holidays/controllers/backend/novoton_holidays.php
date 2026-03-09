@@ -31,7 +31,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Hotels: exit/redirect modes only
 $hotels_delegate = [
-    'sync_facilities', 'sync_hotel_facilities', 'save_facility_types', 'check_packages'
+    'sync_facilities', 'sync_hotel_facilities', 'save_facilities', 'check_packages'
 ];
 
 // Hotels: add_hotels_as_products with &run= streams output and calls exit()

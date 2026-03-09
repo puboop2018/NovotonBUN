@@ -222,6 +222,20 @@ if ($mode == 'manage') {
             $mappings = db_get_array($query);
     }
 
+    // Resolve variant names for display
+    $variantIds = array_filter(array_unique(array_column($mappings, 'cs_cart_variant_id')));
+    $variantNames = [];
+    if (!empty($variantIds)) {
+        $variantNames = db_get_hash_single_array(
+            "SELECT variant_id, variant FROM ?:product_feature_variant_descriptions WHERE variant_id IN (?n) AND lang_code = ?s",
+            ['variant_id', 'variant'], $variantIds, DESCR_SL
+        );
+    }
+    foreach ($mappings as &$m) {
+        $m['variant_name'] = $variantNames[$m['cs_cart_variant_id']] ?? '';
+    }
+    unset($m);
+
     // Group by feature type for display
     $grouped = [];
     foreach ($mappings as $m) {

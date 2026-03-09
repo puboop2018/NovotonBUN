@@ -408,8 +408,7 @@
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][original_age]" id="child_orig_age_r{$room_num}_c{$i}" value="{$child_age_at_checkin}" />
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][calculated_age]" id="child_calc_age_r{$room_num}_c{$i}" value="" />
+                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][age]" id="child_age_r{$room_num}_c{$i}" value="{$child_age_at_checkin}" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
                                 </div>
@@ -613,7 +612,7 @@ function validateAndCheckAge(id, originalAge) {
     var dobInput = document.getElementById('child_dob_' + id);
     var errorDiv = document.getElementById('dob_error_' + id);
     var infoDiv = document.getElementById('dob_info_' + id);
-    var calcAgeInput = document.getElementById('child_calc_age_' + id);
+    var calcAgeInput = document.getElementById('child_age_' + id);
     var ageDisplay = document.getElementById('child_age_display_' + id);
 
     novotonLog('validateAndCheckAge called', {ldelim} id: id, originalAge: originalAge {rdelim});
@@ -755,19 +754,11 @@ function doCollectAndRecalculate(roomNum) {
     var childrenAges = [];
     var isMultiRoom = window.bookingData.numRooms > 1;
     var selector = isMultiRoom
-        ? '[id^="child_calc_age_r' + roomNum + '_c"]'
-        : '[id^="child_calc_age_"]';
+        ? '[id^="child_age_r' + roomNum + '_c"]'
+        : '[id^="child_age_"]';
 
     document.querySelectorAll(selector).forEach(function(input) {
         var age = parseInt(input.value, 10);
-        // If DOB not yet entered for this child, use original age from booking
-        if (isNaN(age)) {
-            var origId = input.id.replace('child_calc_age_', 'child_orig_age_');
-            var origInput = document.getElementById(origId);
-            if (origInput) {
-                age = parseInt(origInput.value, 10);
-            }
-        }
         if (!isNaN(age) && age >= 0 && age < 18) {
             childrenAges.push(age);
         }
@@ -1027,7 +1018,7 @@ function refreshPrice() {
 
     // Collect all children ages from the form
     var childrenAges = [];
-    document.querySelectorAll('[id^="child_calc_age_"]').forEach(function(input) {
+    document.querySelectorAll('[id^="child_age_"]').forEach(function(input) {
         var age = parseInt(input.value, 10);
         if (!isNaN(age) && age >= 0 && age < 18) {
             childrenAges.push(age);

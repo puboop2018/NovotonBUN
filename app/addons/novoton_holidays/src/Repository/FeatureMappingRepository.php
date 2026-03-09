@@ -261,6 +261,23 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
     }
 
     /**
+     * Find which feature_type a provider code is mapped to (across all feature types).
+     * Used for data-driven facility routing during product sync.
+     */
+    public function findFeatureTypeForCode(string $provider, string $providerCode): ?string
+    {
+        $providerCode = trim($providerCode);
+
+        $type = db_get_field(
+            "SELECT feature_type FROM ?:hotel_feature_mappings WHERE provider = ?s AND provider_code = ?s AND is_active = 'Y' LIMIT 1",
+            $provider,
+            $providerCode
+        );
+
+        return $type ?: null;
+    }
+
+    /**
      * Clear all in-memory caches.
      */
     private function clearCache(): void

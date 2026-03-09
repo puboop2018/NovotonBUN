@@ -62,7 +62,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
     {
         $trimmed = trim($rawValue);
 
-        return $trimmed !== '' ? $trimmed : null;
+        return $trimmed !== '' ? mb_convert_case($trimmed, MB_CASE_TITLE, 'UTF-8') : null;
     }
 
     public function normalizePropertyType(string $rawValue): ?string

@@ -160,11 +160,18 @@
             return;
         }
 
-        var displayValue = newPrice ? parseFloat(newPrice).toFixed(2) : (formattedPrice || '0.00');
+        // Use server-formatted price (includes currency symbol and rounding)
+        // Fallback: format with currency from NovotonTranslations
+        var displayValue = formattedPrice;
+        if (!displayValue) {
+            var currency = (window.NovotonTranslations && window.NovotonTranslations.currency) || '€';
+            displayValue = (newPrice ? parseFloat(newPrice).toFixed(2) : '0.00') + ' ' + currency;
+        }
 
         priceElements.forEach(function(el) {
             log('Updating: ' + el.className + ' from "' + el.textContent + '" to "' + displayValue + '"');
-            el.textContent = displayValue;
+            // Use innerHTML since formatted_price may contain <sup> for decimals
+            el.innerHTML = displayValue;
         });
 
         // Hide recalc notice

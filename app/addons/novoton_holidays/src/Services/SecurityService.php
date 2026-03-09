@@ -230,8 +230,17 @@ class SecurityService implements SecurityServiceInterface
                 'room' => max(1, min(5, (int) ($guest['room'] ?? 1))),
                 'is_holder' => !empty($guest['is_holder']),
             ];
-            
-            // Validate birthday format
+
+            // Validate and pass through DOB (DD/MM/YYYY format from form)
+            if (!empty($guest['dob'])) {
+                $dob = trim($guest['dob']);
+                // Accept DD/MM/YYYY or YYYY-MM-DD format
+                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+                    $sanitized[$key]['dob'] = $dob;
+                }
+            }
+
+            // Validate birthday format (YYYY-MM-DD)
             if (!empty($guest['birthday'])) {
                 if ($this->isValidDate($guest['birthday'])) {
                     $sanitized[$key]['birthday'] = $guest['birthday'];

@@ -1,5 +1,38 @@
 # Novoton Holidays - Changelog
 
+## A89 — Facility-to-Feature Routing, Travel Group & Beach Access, Adults-Only Detection
+
+### New Features
+
+- **NEW:** Adults-only hotel detection via `AdultOnlyDetector` — scans hotel names for patterns like "Adults Only", "18+", "No Children"
+- **NEW:** `is_adults_only` column on `novoton_hotels` table, populated during hotel list and hotel info sync
+- **NEW:** Travel Group feature type (`travel_group`) — maps adults_only, pets (facility 3), families (facility 26), disabilities (facility 23)
+- **NEW:** Beach Access feature type (`beach_access`) — maps beachfront/first line (facility 31) displayed as "Beachfront" / "La malul mării"
+- **NEW:** Data-driven facility routing — hotel facility IDs are routed to their target feature type via `hotel_feature_mappings` table lookup, not hardcoded constants
+- **NEW:** `findFeatureTypeForCode()` method on `FeatureMappingRepository` for routing lookup
+- **NEW:** Property type assignment during product sync
+
+### Admin UI Improvements
+
+- **CHANGED:** Settings tab renamed from "Feature Mapping" to "Feature IDs Mapping"
+- **CHANGED:** All 8 feature ID settings converted from input fields to selectbox dropdowns showing CS-Cart feature name + ID + type
+- **NEW:** Variant Name column on Feature Mappings manage page — shows resolved CS-Cart variant name
+- **CHANGED:** Resort names displayed as Title Case everywhere (normalizer, sync, seed)
+
+### Seed Data
+
+- **ADDED:** Travel Group seed entries: Adults only, Pets allowed, Suitable for families with children, Suitable for people with disabilities
+- **ADDED:** Beach Access seed entry: Beachfront (facility 31)
+- **CHANGED:** Hotel facility seed skips rerouted facility IDs (3, 23, 26, 31)
+- **CHANGED:** Resort seed applies Title Case to display names
+
+### Settings
+
+- **ADDED:** `feature_id_travel_group` setting (default: 14)
+- **ADDED:** `feature_id_beach_access` setting (default: 3)
+
+---
+
 ## A88 — Codebase Audit + Storefront ID Fix
 
 ### Bug Fixes

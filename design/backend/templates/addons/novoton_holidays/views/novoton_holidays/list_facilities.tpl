@@ -22,15 +22,15 @@
 </div>
 
 {if $facilities}
-<form action="{fn_url('novoton_holidays.save_facility_types')}" method="post">
+<form action="{fn_url('novoton_holidays.save_facilities')}" method="post">
 <input type="hidden" name="security_hash" value="{$security_hash}">
 <table class="table table-striped table-condensed">
     <thead>
         <tr>
-            <th width="8%">ID</th>
-            <th width="40%">Facility Name (EN)</th>
-            <th width="25%">Facility Name (RO)</th>
-            <th width="15%">Type</th>
+            <th width="6%">ID</th>
+            <th width="30%">Facility Name (EN)</th>
+            <th width="32%">Facility Name (RO)</th>
+            <th width="14%">Type</th>
             <th width="12%">Last Synced</th>
         </tr>
     </thead>
@@ -39,7 +39,12 @@
         <tr>
             <td>{$f.facility_id}</td>
             <td>{$f.facility_name_en}</td>
-            <td>{$f.facility_name_ro}</td>
+            <td>
+                <input type="text" name="facility_translations[{$f.facility_id}]"
+                       value="{$f.facility_name_ro|escape:'html'}"
+                       class="input-xlarge" style="width: 95%;"
+                       placeholder="{$f.facility_name_en|escape:'html'}" />
+            </td>
             <td>
                 <select name="facility_types[{$f.facility_id}]" class="input-small" style="width: 90px;">
                     <option value="hotel"{if $f.facility_type == 'hotel'} selected{/if}>Hotel</option>
@@ -53,7 +58,7 @@
 </table>
 <div style="text-align: right; margin-top: 10px;">
     <button type="submit" class="btn btn-primary">
-        <i class="icon-ok"></i> Save Types
+        <i class="icon-ok"></i> Save Changes
     </button>
 </div>
 </form>

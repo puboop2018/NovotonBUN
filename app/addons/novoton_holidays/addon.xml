@@ -382,34 +382,44 @@
                         <variants/>
                     </item>
                     <item id="feature_id_star_rating">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>4</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                     <item id="feature_id_board">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>6</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                     <item id="feature_id_hotel_facility">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>13</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                     <item id="feature_id_room_facility">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>7</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                     <item id="feature_id_resort">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>2</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                     <item id="feature_id_property_type">
-                        <type>input</type>
-                        <default_value>0</default_value>
-                        <variants/>
+                        <type>selectbox</type>
+                        <default_value>12</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                    </item>
+                    <item id="feature_id_travel_group">
+                        <type>selectbox</type>
+                        <default_value>14</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                    </item>
+                    <item id="feature_id_beach_access">
+                        <type>selectbox</type>
+                        <default_value>3</default_value>
+                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
                     </item>
                 </items>
             </section>
@@ -454,6 +464,7 @@
                 `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart (raw from API)',
                 `star_rating` tinyint(1) DEFAULT NULL COMMENT 'Parsed numeric rating 1-5',
                 `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin',
+                `is_adults_only` enum('Y','N') DEFAULT 'N' COMMENT 'Detected from hotel name: Adults Only, 18+, etc.',
                 `latitude` decimal(10,7) DEFAULT NULL,
                 `longitude` decimal(10,7) DEFAULT NULL,
                 `hotel_data` JSON COMMENT 'JSON: full hotelinfo API response',

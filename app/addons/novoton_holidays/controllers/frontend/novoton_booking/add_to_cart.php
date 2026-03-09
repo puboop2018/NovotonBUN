@@ -557,13 +557,20 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
     // Generate unique cart_id for this booking
     $cart_id = fn_generate_cart_id($product_id, $product['extra']);
     
+    // Convert price from API currency (EUR) to CS-Cart primary currency for cart storage.
+    // CS-Cart internally stores all cart prices in the primary currency and applies
+    // display-currency coefficients when rendering. Storing EUR directly would cause
+    // the coefficient to be applied on top, resulting in a wrong price on the cart page.
+    $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
+    $cart_price = CurrencyService::convertFromApiCurrency($total_price, $primaryCurrency);
+
     // Add product to cart
     $cart['products'][$cart_id] = [
         'product_id' => $product_id,
         'amount' => 1,
-        'price' => $total_price,
-        'base_price' => $total_price,
-        'original_price' => $total_price,
+        'price' => $cart_price,
+        'base_price' => $cart_price,
+        'original_price' => $cart_price,
         'extra' => $product['extra'],
         'stored_price' => 'Y'  // Important: use our calculated price
     ];

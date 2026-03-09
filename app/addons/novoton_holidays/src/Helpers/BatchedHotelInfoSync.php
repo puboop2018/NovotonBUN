@@ -29,6 +29,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class BatchedHotelInfoSync
@@ -46,6 +47,7 @@ class BatchedHotelInfoSync
     private bool $unlimited = false;
     private int $full_sync_interval;
     private ?NovotonApi $api = null;
+    private AdultOnlyDetector $adultOnlyDetector;
 
     public function __construct()
     {
@@ -57,6 +59,8 @@ class BatchedHotelInfoSync
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
+
+        $this->adultOnlyDetector = new AdultOnlyDetector();
 
         // Load configurable values from addon settings
         $this->batch_size = ConfigProvider::getCronBatchSize();
@@ -431,6 +435,12 @@ class BatchedHotelInfoSync
             'hotelinfo_synced_at' => $now,
             'hotel_data' => $hotel_data_json,
         ];
+
+        // Detect adults-only from hotel name
+        $hotel_name = $hotel_map[$hotel_id]['hotel_name'] ?? '';
+        if ($hotel_name !== '' && $this->adultOnlyDetector->detect($hotel_name)) {
+            $update['is_adults_only'] = 'Y';
+        }
 
         // Link product if not already linked — use pre-fetched maps (no extra queries)
         $current_product_id = $hotel_map[$hotel_id]['product_id'] ?? null;

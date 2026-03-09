@@ -332,7 +332,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
         // Apply commission so displayed price matches customer-facing price
         $new_price = $api->applyCommission($new_price);
 
-        // Price stays in primary currency (EUR); fn_format_price handles display conversion
+        // Price stays in API currency (EUR); formatter applies display coefficient for rendering
 
         // Check if room changed
         $room_changed = false;
@@ -350,10 +350,12 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
         // Calculate price difference (both prices now in display currency)
         $price_difference = $new_price - $original_price;
 
-        // Format price for display using the active display currency
+        // Format price for display using the addon formatter (handles rounding + currency symbol)
         $display_currency_code = CurrencyService::getDisplayCurrency();
-        $currency = Registry::get('currencies.' . $display_currency_code);
-        $formatted_price = fn_format_price($new_price, $currency);
+        $currencies = Registry::get('currencies');
+        $display_coefficient = (float) ($currencies[$display_currency_code]['coefficient'] ?? 1.0);
+        $display_symbol = $currencies[$display_currency_code]['symbol'] ?? $display_currency_code;
+        $formatted_price = fn_novoton_holidays_format_price($new_price, $display_coefficient, $display_symbol);
 
         $debug_log('SUCCESS', [
             'new_price' => $new_price,
