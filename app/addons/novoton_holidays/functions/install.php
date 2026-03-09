@@ -72,6 +72,18 @@ function fn_novoton_holidays_uninstall(): bool
         fn_rm($reports_dir);
     }
 
+    // Remove novoton_logs directory and its contents
+    $logs_dir = fn_get_files_dir_path() . 'novoton_logs/';
+    if (is_dir($logs_dir)) {
+        fn_rm($logs_dir);
+    }
+
+    // Remove API file cache directory (var/cache/novoton/)
+    $cache_dir = Registry::get('config.dir.root') . '/var/cache/novoton/';
+    if (is_dir($cache_dir)) {
+        fn_rm($cache_dir);
+    }
+
     // Drop all addon tables (in correct order due to foreign key constraints)
     db_query("DROP TABLE IF EXISTS ?:novoton_resorts");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_facilities");
