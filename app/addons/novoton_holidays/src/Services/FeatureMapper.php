@@ -187,7 +187,13 @@ class FeatureMapper
     // =========================================================================
 
     /**
-     * Ensure the CS-Cart variant exists. Auto-create if missing.
+     * Ensure the CS-Cart variant exists.
+     *
+     * Resolution order:
+     * 1. If variant_id is set and exists in CS-Cart → use it (no-op)
+     * 2. If variant_source='manual' → don't auto-resolve (admin locked it)
+     * 3. Try name-match against existing CS-Cart variants by display name
+     * 4. Auto-create if no match found
      *
      * @return int variant_id or 0 on failure
      */
@@ -195,6 +201,8 @@ class FeatureMapper
     {
         $variantId = (int) ($mapping['cs_cart_variant_id'] ?? 0);
         $featureId = (int) $mapping['cs_cart_feature_id'];
+        $mappingId = (int) $mapping['mapping_id'];
+        $variantSource = $mapping['variant_source'] ?? null;
 
         // Check if stored variant still exists in CS-Cart
         if ($variantId > 0) {
@@ -206,16 +214,96 @@ class FeatureMapper
             if ($exists) {
                 return $variantId;
             }
+            // Variant was deleted from CS-Cart — reset so we can re-resolve
+            // But if manually set, don't auto-resolve (admin must fix)
+            if ($variantSource === 'manual') {
+                return 0;
+            }
+        }
+
+        // Never auto-resolve manually locked mappings
+        if ($variantSource === 'manual') {
+            return $variantId;
+        }
+
+        // Try name-match against existing CS-Cart variants
+        $matched = $this->findVariantByName($mapping);
+        if ($matched > 0) {
+            $this->mappingRepo->updateVariantId($mappingId, $matched, 'auto');
+            return $matched;
         }
 
         // Auto-create the variant
         $variantId = $this->createCsCartVariant($mapping);
 
         if ($variantId > 0) {
-            $this->mappingRepo->updateVariantId((int) $mapping['mapping_id'], $variantId);
+            $this->mappingRepo->updateVariantId($mappingId, $variantId, 'auto');
         }
 
         return $variantId;
+    }
+
+    /**
+     * Try to find an existing CS-Cart variant by display name match.
+     *
+     * Checks both EN and RO variant descriptions against the mapping's display names.
+     *
+     * @return int Matched variant_id or 0
+     */
+    private function findVariantByName(array $mapping): int
+    {
+        $featureId = (int) $mapping['cs_cart_feature_id'];
+        $nameEn = trim($mapping['display_name_en'] ?? '');
+        $nameRo = trim($mapping['display_name_ro'] ?? '');
+
+        if ($featureId <= 0 || $nameEn === '') {
+            return 0;
+        }
+
+        // Search by EN name first (primary match)
+        $variantId = db_get_field(
+            "SELECT v.variant_id
+             FROM ?:product_feature_variants v
+             JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+             WHERE v.feature_id = ?i AND vd.lang_code = 'en' AND vd.variant = ?s
+             LIMIT 1",
+            $featureId,
+            $nameEn
+        );
+
+        if ($variantId) {
+            return (int) $variantId;
+        }
+
+        // Fallback: try RO name
+        if ($nameRo !== '' && $nameRo !== $nameEn) {
+            $variantId = db_get_field(
+                "SELECT v.variant_id
+                 FROM ?:product_feature_variants v
+                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                 WHERE v.feature_id = ?i AND vd.lang_code = 'ro' AND vd.variant = ?s
+                 LIMIT 1",
+                $featureId,
+                $nameRo
+            );
+
+            if ($variantId) {
+                return (int) $variantId;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Public wrapper for creating a CS-Cart variant from a mapping row.
+     * Used by the controller for bulk auto-resolve.
+     *
+     * @return int New variant_id or 0 on failure
+     */
+    public function createVariantFromMapping(array $mapping): int
+    {
+        return $this->createCsCartVariant($mapping);
     }
 
     /**

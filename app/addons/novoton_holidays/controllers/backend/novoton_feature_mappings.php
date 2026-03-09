@@ -41,6 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $updateData[$field] = in_array($field, $intFields, true) ? (int) $data[$field] : $data[$field];
                 }
             }
+            // When admin sets variant_id, mark as manually locked
+            if (isset($data['cs_cart_variant_id'])) {
+                $variantId = (int) $data['cs_cart_variant_id'];
+                $updateData['variant_source'] = ($variantId > 0) ? 'manual' : null;
+            }
             $repo->save($updateData);
             fn_set_notification('N', __('notice'), __('novoton_holidays.feature_mapping_updated'));
         }
@@ -89,6 +94,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_set_notification('N', __('notice'), __('novoton_holidays.feature_mappings_reseeded', [
             '[seeded]' => $seeded,
             '[skipped]' => $skipped,
+        ]));
+
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_feature_mappings.manage'];
+    }
+
+    // Auto-resolve unmapped variants (name-match + create)
+    if ($mode == 'resolve_variants') {
+        $featureMapper = $container->featureMapper();
+
+        // Get all active mappings where variant is unresolved and not manually locked
+        $unmapped = db_get_array(
+            "SELECT * FROM ?:hotel_feature_mappings " .
+            "WHERE (cs_cart_variant_id IS NULL OR cs_cart_variant_id = 0) " .
+            "AND (variant_source IS NULL OR variant_source != 'manual') " .
+            "AND cs_cart_feature_id > 0 AND is_active = 'Y'"
+        );
+
+        $resolved = 0;
+        $created = 0;
+        $failed = 0;
+
+        foreach ($unmapped as $mapping) {
+            $featureId = (int) $mapping['cs_cart_feature_id'];
+            $nameEn = trim($mapping['display_name_en'] ?? '');
+            $nameRo = trim($mapping['display_name_ro'] ?? '');
+            $mappingId = (int) $mapping['mapping_id'];
+
+            if ($featureId <= 0 || $nameEn === '') {
+                $failed++;
+                continue;
+            }
+
+            // Try name-match against existing CS-Cart variants (EN first)
+            $variantId = db_get_field(
+                "SELECT v.variant_id
+                 FROM ?:product_feature_variants v
+                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                 WHERE v.feature_id = ?i AND vd.lang_code = 'en' AND vd.variant = ?s
+                 LIMIT 1",
+                $featureId,
+                $nameEn
+            );
+
+            // Fallback: try RO name
+            if (!$variantId && $nameRo !== '' && $nameRo !== $nameEn) {
+                $variantId = db_get_field(
+                    "SELECT v.variant_id
+                     FROM ?:product_feature_variants v
+                     JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                     WHERE v.feature_id = ?i AND vd.lang_code = 'ro' AND vd.variant = ?s
+                     LIMIT 1",
+                    $featureId,
+                    $nameRo
+                );
+            }
+
+            if ($variantId) {
+                $repo->updateVariantId($mappingId, (int) $variantId, 'auto');
+                $resolved++;
+            } else {
+                // Create new variant
+                $variantId = $featureMapper->createVariantFromMapping($mapping);
+                if ($variantId > 0) {
+                    $repo->updateVariantId($mappingId, $variantId, 'auto');
+                    $created++;
+                } else {
+                    $failed++;
+                }
+            }
+        }
+
+        fn_set_notification('N', __('notice'), __('novoton_holidays.fm_variants_resolved', [
+            '[resolved]' => $resolved,
+            '[created]' => $created,
+            '[failed]' => $failed,
         ]));
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_feature_mappings.manage'];

@@ -91,9 +91,18 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
         return $type ?: null;
     }
 
-    public function updateVariantId(int $mappingId, int $variantId): bool
+    public function updateVariantId(int $mappingId, int $variantId, ?string $variantSource = null): bool
     {
         $this->clearCache();
+
+        if ($variantSource !== null && in_array($variantSource, ['auto', 'manual'], true)) {
+            return (bool) db_query(
+                "UPDATE ?:hotel_feature_mappings SET cs_cart_variant_id = ?i, variant_source = ?s WHERE mapping_id = ?i",
+                $variantId,
+                $variantSource,
+                $mappingId
+            );
+        }
 
         return (bool) db_query(
             "UPDATE ?:hotel_feature_mappings SET cs_cart_variant_id = ?i WHERE mapping_id = ?i",

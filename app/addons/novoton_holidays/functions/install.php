@@ -213,6 +213,11 @@ function fn_novoton_holidays_setup_db(): void
             'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin' AFTER `star_rating`",
             'post_sql' => "ALTER TABLE ?:novoton_hotels ADD KEY `idx_property_type` (`property_type`)",
         ],
+        [
+            'table'   => '?:hotel_feature_mappings',
+            'column'  => 'variant_source',
+            'sql'     => "ALTER TABLE ?:hotel_feature_mappings ADD COLUMN `variant_source` enum('auto','manual') DEFAULT NULL COMMENT 'How variant was resolved: auto=name-match/create, manual=admin override' AFTER `mapping_source`",
+        ],
     ];
 
     foreach ($migrations as $migration) {

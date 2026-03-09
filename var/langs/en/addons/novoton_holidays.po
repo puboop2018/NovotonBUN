@@ -3280,3 +3280,35 @@ msgstr "Novoton Dashboard"
 msgctxt "Languages::novoton_holidays.actions.import_facilities"
 msgid "Import All Facilities from API"
 msgstr "Import All Facilities from API"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_variants"
+msgid "Auto-resolve Variants"
+msgstr "Auto-resolve Variants"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_confirm"
+msgid "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+msgstr "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+
+msgctxt "Languages::novoton_holidays.fm_variants_resolved"
+msgid "[resolved] matched, [created] created, [failed] failed"
+msgstr "[resolved] matched, [created] created, [failed] failed"
+
+msgctxt "Languages::novoton_holidays.fm_variant_source"
+msgid "Variant Set"
+msgstr "Variant Set"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual"
+msgid "manual"
+msgstr "manual"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto_hint"
+msgid "Variant was auto-resolved by name match or auto-created"
+msgstr "Variant was auto-resolved by name match or auto-created"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
+msgid "Variant was manually set by admin — auto-resolve will not overwrite"
+msgstr "Variant was manually set by admin — auto-resolve will not overwrite"
