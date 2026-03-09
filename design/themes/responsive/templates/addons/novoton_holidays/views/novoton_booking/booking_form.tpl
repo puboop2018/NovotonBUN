@@ -835,7 +835,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
     // Build a clean AJAX URL with only dispatch — all data goes in the JSON body.
     // Do NOT inherit parent page URL params (children_ages[], hotel_id, etc.)
     // as CS-Cart's init processes them through __() causing PHP warnings.
-    var ajaxUrl = '{$config.current_location|default:""}/index.php?dispatch=novoton_booking.ajax_recalculate_price';
+    var ajaxUrl = '{"novoton_booking.ajax_recalculate_price"|fn_url}';
     novotonLog('AJAX URL', ajaxUrl);
     
     fetch(ajaxUrl, {
