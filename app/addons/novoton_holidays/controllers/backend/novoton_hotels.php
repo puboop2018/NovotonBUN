@@ -373,15 +373,16 @@ if ($mode == 'sync_hotel_facilities') {
 }
 
 /**
- * Mode: save_facility_types
- * Save facility type classifications (hotel/room) from admin form
+ * Mode: save_facilities
+ * Save facility type classifications and Romanian translations from admin form
  */
-if ($mode == 'save_facility_types') {
+if ($mode == 'save_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
 
     $facility_types = $_REQUEST['facility_types'] ?? [];
+    $facility_translations = $_REQUEST['facility_translations'] ?? [];
     $allowed = ['hotel', 'room'];
     $updated = 0;
 
@@ -390,14 +391,26 @@ if ($mode == 'save_facility_types') {
         if ($facility_id <= 0 || !in_array($type, $allowed, true)) {
             continue;
         }
-        db_query(
-            "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
-            $type, $facility_id
-        );
+
+        $name_ro = isset($facility_translations[$facility_id])
+            ? trim((string) $facility_translations[$facility_id])
+            : null;
+
+        if ($name_ro !== null) {
+            db_query(
+                "UPDATE ?:novoton_facilities SET facility_type = ?s, facility_name_ro = ?s WHERE facility_id = ?i",
+                $type, $name_ro, $facility_id
+            );
+        } else {
+            db_query(
+                "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
+                $type, $facility_id
+            );
+        }
         $updated++;
     }
 
-    fn_set_notification('N', __('notice'), "Facility types saved ({$updated} updated).");
+    fn_set_notification('N', __('notice'), "Facilities saved ({$updated} updated).");
 
     return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
