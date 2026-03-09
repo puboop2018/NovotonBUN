@@ -332,7 +332,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
         // Apply commission so displayed price matches customer-facing price
         $new_price = $api->applyCommission($new_price);
 
-        // Price stays in primary currency (EUR); fn_format_price handles display conversion
+        // Price stays in API currency (EUR); formatter applies display coefficient for rendering
 
         // Check if room changed
         $room_changed = false;

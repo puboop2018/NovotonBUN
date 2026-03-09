@@ -211,8 +211,9 @@ class PreOrderPriceVerifier
         float  $rawApiPrice,
         float  $threshold,
         array  $extra,
-        string $cartId
+        $cartId
     ): array {
+        $cartId = (string) $cartId;
         $hotelId   = $extra['hotel_id'] ?? '';
         $hotelName = $extra['hotel_name'] ?? '';
         $roomId    = $extra['room_id'] ?? '';
