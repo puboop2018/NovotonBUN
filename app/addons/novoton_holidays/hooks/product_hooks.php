@@ -26,7 +26,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * subsequent per-product gather_additional_product_data_post calls hit the
  * in-memory cache instead of issuing 2 DB queries each (N+1 fix).
  */
-function fn_novoton_holidays_get_products_post(&$products, $_params = [], $_lang_code = ''): void
+function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_code = ''): void
 {
     if (empty($products)) {
         return;
@@ -71,7 +71,7 @@ function fn_novoton_holidays_get_products_post(&$products, $_params = [], $_lang
  * 2. try/catch(\Throwable) catches all exceptions
  * 3. Safe Smarty defaults assigned in catch block
  */
-function fn_novoton_holidays_gather_additional_product_data_post(&$product, $_auth, $_params): void
+function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
     if (empty($product['product_id'])) {
         return;
@@ -210,7 +210,7 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
  * prevents product data from loading correctly, which cascades to template
  * failures inside the {capture} block.
  */
-function fn_novoton_holidays_get_product_data_post(&$product_data, $_auth, $_preview, $_lang_code): void
+function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
     if (empty($product_data)) {
         return;

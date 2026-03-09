@@ -27,7 +27,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 /**
  * Hook: Format cart product info for hotel bookings
  */
-function fn_novoton_holidays_get_cart_product_data_post(&$product, $_cart, $_auth): void
+function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth): void
 {
     if (!empty($product['extra']['novoton_booking'])) {
         fn_novoton_holidays_add_booking_display_data($product);
@@ -101,7 +101,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
 /**
  * Hook: after calculate cart - ensure rooms_data is preserved as array
  */
-function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $_auth): void
+function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
     if (fn_novoton_holidays_is_debug()) {
         fn_log_event('general', 'runtime', [
@@ -130,7 +130,7 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
 /**
  * Hook: checkout page display - add debug info and price change alerts
  */
-function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?int $_storefront_id = null): void
+function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?int $storefront_id = null): void
 {
     if (fn_novoton_holidays_is_debug()) {
         \Tygh\Tygh::$app['view']->assign('novoton_checkout_debug', true);

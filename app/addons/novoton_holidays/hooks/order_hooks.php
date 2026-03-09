@@ -109,7 +109,7 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
  * Uses a single batch query (not N+1) to fetch all bookings for all
  * orders in the result set.
  */
-function fn_novoton_holidays_get_orders_post($_params, &$orders): void
+function fn_novoton_holidays_get_orders_post($params, &$orders): void
 {
     if (empty($orders)) {
         return;
@@ -153,7 +153,7 @@ function fn_novoton_holidays_get_orders_post($_params, &$orders): void
  *   - Guest display names (Last, First format)
  *   - Board display name via BoardType value object
  */
-function fn_novoton_holidays_get_order_info(&$order, $_additional_data): void
+function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
     $debugMode = ConfigProvider::isDebugLogging();
 
