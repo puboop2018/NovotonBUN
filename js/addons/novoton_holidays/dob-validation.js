@@ -474,7 +474,7 @@
         );
 
         priceElements.forEach(function(el) {
-            el.dataset.originalText = el.textContent;
+            el.dataset.originalHtml = el.innerHTML;
             el.innerHTML = '<i class="icon-refresh"></i>';
             el.classList.add('novoton-price-loading');
         });
@@ -501,20 +501,16 @@
             '.price-total, .booking-price-box .price-total, .novoton-total-price'
         );
 
-        formattedPrice = formattedPrice || newPrice.toFixed(2);
+        // Use server-formatted price (includes currency symbol and rounding)
+        // Fallback: format with currency from NovotonTranslations
+        if (!formattedPrice) {
+            var currency = (window.NovotonTranslations && window.NovotonTranslations.currency) || '€';
+            formattedPrice = newPrice.toFixed(2) + ' ' + currency;
+        }
 
         priceElements.forEach(function(el) {
-            // Check if it's a price-only element or includes currency
-            var hasChildren = el.querySelector('.price-currency, .currency');
-            if (hasChildren) {
-                // Just update the number part
-                var textNode = el.firstChild;
-                if (textNode && textNode.nodeType === 3) {
-                    textNode.textContent = formattedPrice;
-                }
-            } else {
-                el.textContent = formattedPrice;
-            }
+            // Use innerHTML since formatted_price may contain <sup> for decimals
+            el.innerHTML = formattedPrice;
 
             // Show price change indicator
             if (priceDifference !== 0) {
@@ -578,8 +574,8 @@
         );
 
         priceElements.forEach(function(el) {
-            if (el.dataset.originalText) {
-                el.textContent = el.dataset.originalText;
+            if (el.dataset.originalHtml) {
+                el.innerHTML = el.dataset.originalHtml;
             }
         });
 
