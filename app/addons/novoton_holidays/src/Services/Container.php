@@ -32,6 +32,7 @@ use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer;
+use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Api\ProviderNormalizerInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelperInterface;
@@ -223,7 +224,7 @@ class Container
     {
         return $this->resolve('bookingSubmissionService', fn() => new BookingSubmissionService(
             $this->bookingRepository(),
-            new NovotonApi()
+            $this->novotonApi()
         ));
     }
 
@@ -247,6 +248,23 @@ class Container
     public function novotonNormalizer(): ProviderNormalizerInterface
     {
         return $this->resolve('novotonNormalizer', fn() => new NovotonNormalizer());
+    }
+
+    public function novotonApi(): NovotonApi
+    {
+        return $this->resolve('novotonApi', fn() => new NovotonApi());
+    }
+
+    public function adminCronService(): AdminCronService
+    {
+        return $this->resolve('adminCronService', fn() => new AdminCronService(
+            $this->novotonApi()
+        ));
+    }
+
+    public function propertyTypeDetector(): PropertyTypeDetector
+    {
+        return $this->resolve('propertyTypeDetector', fn() => new PropertyTypeDetector());
     }
 
     // ═══════════════════════════════════════════════════════════════════

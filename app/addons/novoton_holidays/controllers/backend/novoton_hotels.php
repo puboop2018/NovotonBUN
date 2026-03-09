@@ -223,7 +223,7 @@ if ($mode == 'add_hotels_as_products') {
             
             try {
                 // Detect property type and format display name
-                $propertyDetector = new \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector();
+                $propertyDetector = _nvt_property_type_detector();
                 $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
                 $packageNames = [];
                 $roomNames = [];

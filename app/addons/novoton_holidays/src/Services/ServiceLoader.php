@@ -110,6 +110,27 @@ function _nvt_booking_submission_service() {
     return Container::getInstance()->bookingSubmissionService();
 }
 
+/**
+ * @return \Tygh\Addons\NovotonHolidays\NovotonApi
+ */
+function _nvt_api() {
+    return Container::getInstance()->novotonApi();
+}
+
+/**
+ * @return \Tygh\Addons\NovotonHolidays\Services\AdminCronService
+ */
+function _nvt_admin_cron_service() {
+    return Container::getInstance()->adminCronService();
+}
+
+/**
+ * @return \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector
+ */
+function _nvt_property_type_detector() {
+    return Container::getInstance()->propertyTypeDetector();
+}
+
 // =============================================================================
 // REPOSITORY GETTERS
 // =============================================================================
@@ -140,6 +161,13 @@ function _nvt_facility_repo() {
  */
 function _nvt_sync_log_repo() {
     return Container::getInstance()->syncLogRepository();
+}
+
+/**
+ * @return \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface
+ */
+function _nvt_alternative_request_repo() {
+    return Container::getInstance()->alternativeRequestRepository();
 }
 
 // =============================================================================

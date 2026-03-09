@@ -57,7 +57,7 @@ class BatchedHotelInfoSync
         // Ensure directory exists
         $dir = dirname($this->state_file);
         if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            mkdir($dir, 0755, true);
         }
 
         $this->adultOnlyDetector = new AdultOnlyDetector();

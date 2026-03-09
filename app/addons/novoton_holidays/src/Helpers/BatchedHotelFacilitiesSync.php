@@ -47,7 +47,7 @@ class BatchedHotelFacilitiesSync
 
         $dir = dirname($this->state_file);
         if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            mkdir($dir, 0755, true);
         }
 
         // Load configurable values from addon settings

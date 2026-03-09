@@ -36,7 +36,7 @@ $logger = new SyncLogger($mode);
 $logger->outputHeader($mode);
 
 try {
-    $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+    $api = _nvt_api();
     $dispatcher = new CronDispatcher($api, $logger);
 
     if (!$dispatcher->hasMode($mode)) {

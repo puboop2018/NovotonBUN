@@ -139,7 +139,7 @@ if ($mode == 'booking_details') {
     
     if ($booking) {
         // Get invoice from Novoton
-        $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+        $api = _nvt_api();
         
         try {
             $invoice = $api->getInvoiceXml($booking['novoton_invoice_id']);
@@ -233,7 +233,7 @@ if ($mode == 'export_bookings') {
 // Test API connection
 if ($mode == 'test_api') {
     
-    $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+    $api = _nvt_api();
     
     try {
         $resorts = $api->getResortList('BULGARIA');
@@ -285,8 +285,8 @@ if ($mode == 'run_cron') {
     }
     
     try {
-        $api     = new \Tygh\Addons\NovotonHolidays\NovotonApi();
-        $service = new \Tygh\Addons\NovotonHolidays\Services\AdminCronService($api);
+        $api     = _nvt_api();
+        $service = _nvt_admin_cron_service();
 
         // Capture output via callback instead of ob_start()
         $outputLines = [];

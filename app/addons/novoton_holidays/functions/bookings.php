@@ -88,7 +88,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
         return ['success' => false, 'error' => 'API not available'];
     }
 
-    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $bookingRepo = _nvt_booking_repo();
 
     if ($booking_id > 0) {
         $booking = $bookingRepo->findById($booking_id);
@@ -150,7 +150,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
  */
 function fn_novoton_holidays_request_alternatives($booking_id): array
 {
-    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $bookingRepo = _nvt_booking_repo();
     $booking = $bookingRepo->findById($booking_id);
 
     if (empty($booking)) {
@@ -212,7 +212,7 @@ function fn_novoton_holidays_get_alternatives($booking_id): array
  */
 function fn_novoton_holidays_get_order_bookings($order_id): array
 {
-    $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+    $bookingRepo = _nvt_booking_repo();
     return $bookingRepo->findByOrderId($order_id);
 }
 
@@ -249,7 +249,7 @@ function fn_novoton_holidays_cron_resinfo(): array
             if (!empty($hotels)) {
                 $country_stats = ['synced' => 0, 'added' => 0, 'updated' => 0];
                 
-                $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+                $hotelRepo = _nvt_hotel_repo();
                 foreach ($hotels as $hotel) {
                     $hotel_id = (string)($hotel['HotelId'] ?? $hotel['hotelId'] ?? '');
                     if (empty($hotel_id)) continue;
@@ -280,7 +280,7 @@ function fn_novoton_holidays_cron_resinfo(): array
     }
     
     // Log sync via repository (column names must match addon.xml schema)
-    $syncRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+    $syncRepo = _nvt_sync_log_repo();
     $syncRepo->create('resinfo', [
         'total'   => $result['synced'],
         'updated' => $result['updated'],

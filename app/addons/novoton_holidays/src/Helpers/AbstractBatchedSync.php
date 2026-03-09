@@ -25,6 +25,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 
 abstract class AbstractBatchedSync implements SyncInterface
@@ -466,7 +467,7 @@ abstract class AbstractBatchedSync implements SyncInterface
         $status = $this->state->getStatus();
 
         if ($status['status'] === 'idle') {
-            $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+            $syncLogRepo = Container::getInstance()->syncLogRepository();
             $lastSync = $syncLogRepo->getLastSync($this->getSyncName());
 
             if ($lastSync) {
