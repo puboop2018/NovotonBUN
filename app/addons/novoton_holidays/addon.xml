@@ -105,7 +105,7 @@
                     <item id="api_currency">
                         <type>selectbox</type>
                         <default_value>EUR</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_api_currency</variants_function>
+                        <variants/>
                     </item>
                     <item id="currency_risk_commission">
                         <type>input</type>
@@ -384,42 +384,42 @@
                     <item id="feature_id_star_rating">
                         <type>selectbox</type>
                         <default_value>4</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_board">
                         <type>selectbox</type>
                         <default_value>6</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_hotel_facility">
                         <type>selectbox</type>
                         <default_value>13</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_room_facility">
                         <type>selectbox</type>
                         <default_value>7</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_resort">
                         <type>selectbox</type>
                         <default_value>2</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_property_type">
                         <type>selectbox</type>
                         <default_value>12</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_travel_group">
                         <type>selectbox</type>
                         <default_value>14</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                     <item id="feature_id_beach_access">
                         <type>selectbox</type>
                         <default_value>3</default_value>
-                        <variants_function>fn_settings_variants_addons_novoton_holidays_feature_ids</variants_function>
+                        <variants/>
                     </item>
                 </items>
             </section>
