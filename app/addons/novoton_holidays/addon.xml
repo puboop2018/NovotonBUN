@@ -454,6 +454,7 @@
                 `hotel_type` varchar(50) DEFAULT '' COMMENT 'e.g. 4*, 3* Sup, Apart (raw from API)',
                 `star_rating` tinyint(1) DEFAULT NULL COMMENT 'Parsed numeric rating 1-5',
                 `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin',
+                `is_adults_only` enum('Y','N') DEFAULT 'N' COMMENT 'Detected from hotel name: Adults Only, 18+, etc.',
                 `latitude` decimal(10,7) DEFAULT NULL,
                 `longitude` decimal(10,7) DEFAULT NULL,
                 `hotel_data` JSON COMMENT 'JSON: full hotelinfo API response',

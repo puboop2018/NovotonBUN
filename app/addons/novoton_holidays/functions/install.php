@@ -214,6 +214,11 @@ function fn_novoton_holidays_setup_db(): void
             'post_sql' => "ALTER TABLE ?:novoton_hotels ADD KEY `idx_property_type` (`property_type`)",
         ],
         [
+            'table'   => '?:novoton_hotels',
+            'column'  => 'is_adults_only',
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `is_adults_only` enum('Y','N') DEFAULT 'N' COMMENT 'Detected from hotel name: Adults Only, 18+, etc.' AFTER `property_type`",
+        ],
+        [
             'table'   => '?:hotel_feature_mappings',
             'column'  => 'variant_source',
             'sql'     => "ALTER TABLE ?:hotel_feature_mappings ADD COLUMN `variant_source` enum('auto','manual') DEFAULT NULL COMMENT 'How variant was resolved: auto=name-match/create, manual=admin override' AFTER `mapping_source`",

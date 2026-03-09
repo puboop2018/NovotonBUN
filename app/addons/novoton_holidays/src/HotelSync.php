@@ -17,6 +17,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 
@@ -25,6 +26,7 @@ class HotelSync
     use OutputWriterTrait;
 
     private NovotonApi $api;
+    private AdultOnlyDetector $adultOnlyDetector;
     private PropertyTypeDetector $propertyTypeDetector;
     private array $selectedCountries;
     private array $productPrefixes;
@@ -33,6 +35,7 @@ class HotelSync
     public function __construct()
     {
         $this->api = new NovotonApi();
+        $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->propertyTypeDetector = new PropertyTypeDetector();
         $this->selectedCountries = ConfigProvider::getSelectedCountries();
         $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
@@ -117,6 +120,9 @@ class HotelSync
                     // Detect property type from hotel name (Pass 1 only — no packages/rooms yet)
                     $propertyType = $this->propertyTypeDetector->detect($hotelName);
 
+                    // Detect adults-only from hotel name
+                    $isAdultsOnly = $this->adultOnlyDetector->detect($hotelName);
+
                     $this->stats['hotels_processed']++;
 
                     $batchData[] = [
@@ -127,6 +133,7 @@ class HotelSync
                         'hotel_type' => $hotelType,
                         'star_rating' => $starRating,
                         'property_type' => $propertyType,
+                        'is_adults_only' => $isAdultsOnly ? 'Y' : 'N',
                     ];
 
                     // Execute batch when full
@@ -186,13 +193,14 @@ class HotelSync
                 $hotel['city'],
                 $hotel['country'],
                 $hotel['hotel_type']
-            ) . $starSql . db_quote(", ?s, NOW(), NOW())",
-                $hotel['property_type'] ?? 'hotel'
+            ) . $starSql . db_quote(", ?s, ?s, NOW(), NOW())",
+                $hotel['property_type'] ?? 'hotel',
+                $hotel['is_adults_only'] ?? 'N'
             );
         }
 
         $sql = "INSERT INTO ?:novoton_hotels
-                (hotel_id, hotel_name, city, country, hotel_type, star_rating, property_type, hotel_list_synced_at, created_at)
+                (hotel_id, hotel_name, city, country, hotel_type, star_rating, property_type, is_adults_only, hotel_list_synced_at, created_at)
                 VALUES " . implode(', ', $values) . "
                 ON DUPLICATE KEY UPDATE
                 hotel_name = VALUES(hotel_name),
@@ -201,6 +209,7 @@ class HotelSync
                 hotel_type = VALUES(hotel_type),
                 star_rating = VALUES(star_rating),
                 property_type = VALUES(property_type),
+                is_adults_only = VALUES(is_adults_only),
                 hotel_list_synced_at = NOW()";
 
         db_query($sql);
