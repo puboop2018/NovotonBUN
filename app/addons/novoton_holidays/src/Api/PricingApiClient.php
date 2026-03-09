@@ -261,14 +261,16 @@ class PricingApiClient extends ApiClientBase
             : '';
 
         // Match the exact Novoton API room_price request format.
-        // The API uses <City> for location filtering (same as hotel_list and frmsearch).
         // Do NOT include <PackageName> or <IdRoom> — these act as filters and
         // an empty value causes the API to return zero results.
+        // The resort name is embedded raw (no CDATA, no htmlspecialchars) because
+        // the Novoton API performs literal string extraction, not proper XML parsing.
+        // Resort names come from the API's own resort_list, not user input.
         $xml = $this->xmlHeader() . '
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <City>' . $this->xmlCdata($resort) . '</City>
+            <Resort>' . $resort . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>
@@ -353,11 +355,12 @@ class PricingApiClient extends ApiClientBase
             ? $this->buildChildrenAgesXml($params['children'])
             : '';
 
+        // Same raw embedding as getRoomPriceByResort() — see comment there.
         $xml = $this->xmlHeader() . '
         <room_price>
             ' . $this->xmlCredentials() . '
             <IdHotel></IdHotel>
-            <City>' . $this->xmlCdata($resort) . '</City>
+            <Resort>' . $resort . '</Resort>
             <IdBoard>' . htmlspecialchars($boardId) . '</IdBoard>
             <IdExtBoard></IdExtBoard>
             <IdStar></IdStar>
