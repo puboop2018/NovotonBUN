@@ -339,6 +339,8 @@ PRICE RECALCULATION ON DOB CHANGE:
   - When a DOB field changes, system detects the child's age bracket
   - If the age bracket differs from the originally selected age, triggers
     an AJAX call to recalculate pricing
+  - AJAX URL: uses NovotonConfig.ajaxRecalcUrl (pre-built by fn_url in
+    scripts.post.tpl, includes storefront_id for multi-storefront support)
   - Debounced (1-second delay) to prevent excessive API calls
   - MutationObserver watches for dynamically added guest fields
   - Age brackets are hotel-specific (parsed from hotelinfo data)
@@ -834,12 +836,17 @@ FRONTEND TEMPLATES (Customer-Facing):
   - product_tabs/              : Hotel prices tab on product page
   - search.tpl                 : Search results page
 
+HOOK TEMPLATES:
+  - hooks/index/scripts.post.tpl : Loads all addon JS files + sets NovotonConfig
+    * window.NovotonConfig.debug          : mirrors addon debug_mode setting
+    * window.NovotonConfig.ajaxRecalcUrl  : fn_url-built AJAX URL (with storefront_id)
+
 BACKEND TEMPLATES (Admin Panel):
-  - manage.tpl                 : Sync dashboard
+  - manage.tpl                 : Sync dashboard (all strings use language variables)
   - view.tpl / manage.tpl      : Booking management UI
   - view_hotels_to_add.tpl     : Hotel import wizard
   - test_hotel_request.tpl     : Diagnostic tools
-  - cron_info.tpl              : Cron configuration display
+  - cron_info.tpl              : Cron configuration display (all strings use language variables)
   - excluded_resorts.tpl       : Resort exclusion management
 
 EMAIL TEMPLATES:
