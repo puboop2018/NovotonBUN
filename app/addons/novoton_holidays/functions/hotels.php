@@ -558,7 +558,7 @@ function fn_novoton_holidays_sync_resorts_list($country = \Tygh\Addons\NovotonHo
         $api_resort_names = [];
 
         foreach ($resorts as $r) {
-            $name = trim((string)$r);
+            $name = mb_convert_case(trim((string)$r), MB_CASE_TITLE, 'UTF-8');
             if (empty($name)) continue;
 
             $result['total']++;
@@ -1143,14 +1143,70 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         $skipped += 10;
     }
 
+    // ── Travel Group (adults_only + rerouted facility IDs 3, 23, 26) ──
+    $travelGroupFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP);
+    if ($travelGroupFeatureId > 0) {
+        $csType = $getActualFeatureType($travelGroupFeatureId, 'M');
+        $travelGroupItems = [
+            'adults_only' => ['en' => 'Adults only',                             'ro' => 'Exclusiv pentru adulți',               'pos' => 10],
+            '3'           => ['en' => 'Pets allowed',                             'ro' => 'Acceptă animale de companie',          'pos' => 20],
+            '26'          => ['en' => 'Suitable for families with children',      'ro' => 'Ideal pentru familii cu copii',        'pos' => 30],
+            '23'          => ['en' => 'Suitable for people with disabilities',    'ro' => 'Accesibil persoanelor cu dizabilități', 'pos' => 40],
+        ];
+        foreach ($travelGroupItems as $code => $data) {
+            $repo->save([
+                'provider' => $provider,
+                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
+                'provider_code' => $code,
+                'cs_cart_feature_id' => $travelGroupFeatureId,
+                'cs_cart_feature_type' => $csType,
+                'display_name_en' => $data['en'],
+                'display_name_ro' => $data['ro'],
+                'position' => $data['pos'],
+                'is_active' => 'Y',
+                'mapping_source' => 'seed',
+            ]);
+            $seeded++;
+        }
+    } else {
+        $skipped += 4;
+    }
+
+    // ── Beach Access (rerouted facility ID 31) ──
+    $beachAccessFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS);
+    if ($beachAccessFeatureId > 0) {
+        $csType = $getActualFeatureType($beachAccessFeatureId, 'S');
+        $repo->save([
+            'provider' => $provider,
+            'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+            'provider_code' => '31',
+            'cs_cart_feature_id' => $beachAccessFeatureId,
+            'cs_cart_feature_type' => $csType,
+            'display_name_en' => 'Beachfront',
+            'display_name_ro' => 'La malul mării',
+            'position' => 10,
+            'is_active' => 'Y',
+            'mapping_source' => 'seed',
+        ]);
+        $seeded++;
+    } else {
+        $skipped += 1;
+    }
+
     // ── Hotel Facilities (from novoton_facilities where facility_type = 'hotel') ──
+    // Facility IDs rerouted to travel_group or beach_access are skipped here
+    $reroutedFacilityIds = [3, 23, 26, 31];
     $hotelFacFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY);
     if ($hotelFacFeatureId > 0) {
         $csType = $getActualFeatureType($hotelFacFeatureId, 'M');
         $facilities = db_get_array(
             "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = 'hotel' ORDER BY facility_id"
         );
-        foreach ($facilities as $pos => $fac) {
+        $pos = 0;
+        foreach ($facilities as $fac) {
+            if (in_array((int) $fac['facility_id'], $reroutedFacilityIds, true)) {
+                continue;
+            }
             $repo->save([
                 'provider' => $provider,
                 'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
@@ -1163,6 +1219,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
                 'is_active' => 'Y',
                 'mapping_source' => 'seed',
             ]);
+            $pos++;
             $seeded++;
         }
     }
@@ -1199,7 +1256,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
             "SELECT resort_name, country FROM ?:novoton_resorts ORDER BY country, resort_name"
         );
         foreach ($resorts as $pos => $resort) {
-            $displayName = $resort['resort_name'];
+            $displayName = mb_convert_case($resort['resort_name'], MB_CASE_TITLE, 'UTF-8');
             $repo->save([
                 'provider' => $provider,
                 'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_RESORT,

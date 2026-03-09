@@ -126,6 +126,7 @@
                     <th>{__("novoton_holidays.fm_display_en")}</th>
                     <th>{__("novoton_holidays.fm_display_ro")}</th>
                     <th width="80">{__("novoton_holidays.fm_variant_id")}</th>
+                    <th>{__("novoton_holidays.fm_variant_name")}</th>
                     <th width="80">{__("novoton_holidays.fm_cs_type")}</th>
                     <th width="60">{__("novoton_holidays.fm_source")}</th>
                     <th width="70">{__("novoton_holidays.fm_variant_source")}</th>
@@ -150,6 +151,7 @@
                             <span class="label label-important">{__("novoton_holidays.fm_none")}</span>
                         {/if}
                     </td>
+                    <td>{$m.variant_name|default:'-'}</td>
                     <td>
                         {if $m.cs_cart_feature_type == 'M'}
                             <span title="Multiple Checkboxes">M</span>

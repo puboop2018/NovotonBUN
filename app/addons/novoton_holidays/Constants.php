@@ -178,6 +178,8 @@ final class Constants
     public const FEATURE_TYPE_ROOM_FACILITY  = 'room_facility';
     public const FEATURE_TYPE_RESORT         = 'resort';
     public const FEATURE_TYPE_PROPERTY_TYPE  = 'property_type';
+    public const FEATURE_TYPE_TRAVEL_GROUP  = 'travel_group';
+    public const FEATURE_TYPE_BEACH_ACCESS  = 'beach_access';
 
     /** All valid feature types for input validation */
     public const VALID_FEATURE_TYPES = [
@@ -187,6 +189,8 @@ final class Constants
         self::FEATURE_TYPE_ROOM_FACILITY,
         self::FEATURE_TYPE_RESORT,
         self::FEATURE_TYPE_PROPERTY_TYPE,
+        self::FEATURE_TYPE_TRAVEL_GROUP,
+        self::FEATURE_TYPE_BEACH_ACCESS,
     ];
 
     /** Strict feature types: unknown codes are logged + skipped, never auto-created */
@@ -194,6 +198,8 @@ final class Constants
         self::FEATURE_TYPE_STAR_RATING,
         self::FEATURE_TYPE_BOARD,
         self::FEATURE_TYPE_PROPERTY_TYPE,
+        self::FEATURE_TYPE_TRAVEL_GROUP,
+        self::FEATURE_TYPE_BEACH_ACCESS,
     ];
 
     /** Dynamic feature types: unknown codes are auto-registered in the mapping table */
@@ -211,6 +217,8 @@ final class Constants
     public const SETTING_FEATURE_ID_ROOM_FACILITY  = 'addons.novoton_holidays.feature_id_room_facility';
     public const SETTING_FEATURE_ID_RESORT         = 'addons.novoton_holidays.feature_id_resort';
     public const SETTING_FEATURE_ID_PROPERTY_TYPE  = 'addons.novoton_holidays.feature_id_property_type';
+    public const SETTING_FEATURE_ID_TRAVEL_GROUP  = 'addons.novoton_holidays.feature_id_travel_group';
+    public const SETTING_FEATURE_ID_BEACH_ACCESS  = 'addons.novoton_holidays.feature_id_beach_access';
 
     /** Maps feature_type -> addon setting key for the CS-Cart feature_id */
     public const FEATURE_TYPE_TO_SETTING = [
@@ -220,6 +228,8 @@ final class Constants
         self::FEATURE_TYPE_ROOM_FACILITY  => self::SETTING_FEATURE_ID_ROOM_FACILITY,
         self::FEATURE_TYPE_RESORT         => self::SETTING_FEATURE_ID_RESORT,
         self::FEATURE_TYPE_PROPERTY_TYPE  => self::SETTING_FEATURE_ID_PROPERTY_TYPE,
+        self::FEATURE_TYPE_TRAVEL_GROUP   => self::SETTING_FEATURE_ID_TRAVEL_GROUP,
+        self::FEATURE_TYPE_BEACH_ACCESS   => self::SETTING_FEATURE_ID_BEACH_ACCESS,
     ];
 
     // ========== Countries ==========

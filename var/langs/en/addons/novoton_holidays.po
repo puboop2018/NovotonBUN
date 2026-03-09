@@ -3018,8 +3018,8 @@ msgid "Price changes below this percentage threshold are applied silently withou
 msgstr "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
 
 msgctxt "SettingsSections::novoton_holidays::feature_mapping"
-msgid "Feature Mapping"
-msgstr "Feature Mapping"
+msgid "Feature IDs Mapping"
+msgstr "Feature IDs Mapping"
 
 msgctxt "SettingsOptions::novoton_holidays::feature_mapping_header"
 msgid "CS-Cart Feature IDs"
@@ -3072,6 +3072,26 @@ msgstr "Property Type feature ID"
 msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
 msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
 msgstr "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_travel_group"
+msgid "Travel Group feature ID"
+msgstr "Travel Group feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_travel_group"
+msgid "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_beach_access"
+msgid "Beach Access feature ID"
+msgstr "Beach Access feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_beach_access"
+msgid "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+msgstr "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+
+msgctxt "Languages::novoton_holidays.fm_variant_name"
+msgid "Variant Name"
+msgstr "Variant Name"
 
 msgctxt "Languages::novoton_holidays.feature_mappings"
 msgid "Feature Mappings"

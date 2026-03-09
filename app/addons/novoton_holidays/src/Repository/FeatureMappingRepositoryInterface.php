@@ -82,4 +82,10 @@ interface FeatureMappingRepositoryInterface
      * Update the cached cs_cart_feature_type for all mappings of a given type.
      */
     public function updateCachedFeatureType(string $featureType, string $csCartFeatureType, string $provider = 'novoton'): void;
+
+    /**
+     * Find which feature_type a provider code is mapped to (across all feature types).
+     * Used for data-driven facility routing during product sync.
+     */
+    public function findFeatureTypeForCode(string $provider, string $providerCode): ?string;
 }
