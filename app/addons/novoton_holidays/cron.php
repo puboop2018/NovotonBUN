@@ -61,7 +61,7 @@ fn_log_event('novoton_holidays', 'cron_start', [
 // Classes are auto-loaded via PSR-4 autoloader registered in init.php
 
 try {
-    $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+    $api = _nvt_api();
     $dispatcher = new CronDispatcher($api, null);
 
     if (!$dispatcher->hasMode($mode)) {

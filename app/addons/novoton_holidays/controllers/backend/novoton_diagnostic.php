@@ -40,9 +40,9 @@ if ($mode == 'health') {
 
     // 1. Database connectivity
     try {
-        $hotelRepo = new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
-        $bookingRepo = new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
-        $syncLogRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+        $hotelRepo = _nvt_hotel_repo();
+        $bookingRepo = _nvt_booking_repo();
+        $syncLogRepo = _nvt_sync_log_repo();
 
         $db_start = microtime(true);
         $hotels_count = $hotelRepo->count();
@@ -68,7 +68,7 @@ if ($mode == 'health') {
         $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
         if (file_exists($src_dir . 'NovotonApi.php')) {
             require_once($src_dir . 'NovotonApi.php');
-            $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+            $api = _nvt_api();
             $circuit_status = $api->getCircuitStatus();
 
             $api_status = 'healthy';
@@ -103,7 +103,7 @@ if ($mode == 'health') {
         $cache_service_file = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/CacheService.php';
         if (file_exists($cache_service_file)) {
             require_once($cache_service_file);
-            $cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
+            $cache = _nvt_cache_service();
             $cache_stats = $cache->getStats();
 
             $health['components']['cache'] = [
@@ -315,7 +315,7 @@ if ($mode == 'check') {
     echo "5. DATABASE STATUS\n";
     echo "-------------------\n";
     
-    $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = 'novoton_holidays'");
+    $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
     if ($addon) {
         echo "[OK] Addon in database\n";
         echo "     Status: {$addon['status']} " . ($addon['status'] == 'A' ? '(Active)' : '(Disabled)') . "\n";

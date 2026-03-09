@@ -251,6 +251,61 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 }
 
 // ============================================================================
+// XML PRICE MATCHING
+// ============================================================================
+
+/**
+ * Match a room/board price from a flat XML price response.
+ *
+ * Searches for //Price, //IdRoom, and //IdBoard (or //Board) elements
+ * and returns the first match for the given room/board IDs using
+ * case-insensitive comparison with URL-decoded room IDs.
+ *
+ * @param \SimpleXMLElement $xml      XML response from room_price API
+ * @param string|null       $room_id  Room ID to match (already URL-decoded), or null/empty to match any
+ * @param string|null       $board_id Board ID to match, or null/empty to match any
+ * @return array|null ['price' => float, 'room' => string, 'board' => string] or null if no match
+ */
+function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id): ?array
+{
+    $prices  = $xml->xpath('//Price');
+    $idRooms = $xml->xpath('//IdRoom');
+    // API may use //IdBoard or //Board depending on endpoint
+    $idBoards = $xml->xpath('//IdBoard');
+    if (empty($idBoards)) {
+        $idBoards = $xml->xpath('//Board');
+    }
+
+    if (empty($prices) || empty($idRooms) || empty($idBoards)) {
+        return null;
+    }
+
+    $numResults = min(count($prices), count($idRooms), count($idBoards));
+
+    for ($i = 0; $i < $numResults; $i++) {
+        $resultPrice = (float)((string)$prices[$i]);
+        $resultRoom  = rawurldecode((string)$idRooms[$i]);
+        $resultBoard = (string)$idBoards[$i];
+
+        $roomMatches  = empty($room_id) ||
+                        strcasecmp($resultRoom, $room_id) === 0;
+
+        $boardMatches = empty($board_id) ||
+                        strcasecmp($resultBoard, $board_id) === 0;
+
+        if ($roomMatches && $boardMatches && $resultPrice > 0) {
+            return [
+                'price' => $resultPrice,
+                'room'  => $resultRoom,
+                'board' => $resultBoard,
+            ];
+        }
+    }
+
+    return null;
+}
+
+// ============================================================================
 // STREAMING HTML HELPERS
 // ============================================================================
 

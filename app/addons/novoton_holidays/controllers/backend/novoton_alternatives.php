@@ -10,7 +10,7 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-$altRequestRepo = new \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository();
+$altRequestRepo = _nvt_alternative_request_repo();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     require_once($src_dir . 'NovotonApi.php');
                 }
                 
-                $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+                $api = _nvt_api();
                 $response = $api->getAlternatives($request['novoton_request_id']);
                 
                 if ($response && isset($response->alternative)) {
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 require_once($src_dir . 'NovotonApi.php');
             }
             
-            $api = new \Tygh\Addons\NovotonHolidays\NovotonApi();
+            $api = _nvt_api();
             $found = 0;
             
             foreach ($pending as $request) {

@@ -572,7 +572,7 @@ function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, strin
     }, $name);
 
     // Step 2: Check if name already contains a property type keyword
-    $detector = new \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector();
+    $detector = _nvt_property_type_detector();
     $nameType = $detector->detectFromName($name);
     if ($nameType !== null) {
         // Name already contains a type keyword (Hotel, Resort, Villa, etc.) — done

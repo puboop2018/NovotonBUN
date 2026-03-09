@@ -22,7 +22,7 @@ class DirectoryManager
         $cache_dir = PathResolver::getPath('cache');
 
         if (!is_dir($cache_dir)) {
-            return @mkdir($cache_dir, 0755, true);
+            return mkdir($cache_dir, 0755, true);
         }
 
         return true;
@@ -38,7 +38,7 @@ class DirectoryManager
         if (!is_dir($reports_dir)) {
             return function_exists('fn_mkdir')
                 ? fn_mkdir($reports_dir)
-                : @mkdir($reports_dir, 0755, true);
+                : mkdir($reports_dir, 0755, true);
         }
 
         return true;

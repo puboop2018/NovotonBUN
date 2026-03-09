@@ -85,7 +85,7 @@ class StateManager implements StateManagerInterface
 
         $this->acquireLock();
         try {
-            $content = @file_get_contents($this->stateFile);
+            $content = file_get_contents($this->stateFile);
             if ($content === false) {
                 return self::DEFAULT_STATE;
             }
@@ -144,8 +144,8 @@ class StateManager implements StateManagerInterface
         $this->acquireLock();
         try {
             // Backup current state before overwriting
-            if (file_exists($this->stateFile)) {
-                @copy($this->stateFile, $this->stateFile . '.bak');
+            if (file_exists($this->stateFile) && is_readable($this->stateFile)) {
+                copy($this->stateFile, $this->stateFile . '.bak');
             }
 
             // Write to temp file first for atomic operation
@@ -202,7 +202,7 @@ class StateManager implements StateManagerInterface
     {
         $backupFile = $this->stateFile . '.bak';
         if (file_exists($backupFile)) {
-            $backupContent = @file_get_contents($backupFile);
+            $backupContent = file_get_contents($backupFile);
             $decoded = json_decode($backupContent, true);
             if (is_array($decoded)) {
                 // Handle checksummed backup

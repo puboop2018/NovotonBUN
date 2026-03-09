@@ -690,48 +690,65 @@ app/addons/novoton_holidays/
 │   ├── email.php             # Email helpers
 │   ├── exchange_rates.php    # BNR exchange rate functions
 │   ├── bookings.php          # Booking helpers
-│   ├── helpers.php           # General helpers
+│   ├── helpers.php           # General helpers + fn_novoton_match_price_from_xml()
 │   ├── hotels.php            # Hotel helpers
 │   └── install.php           # Install/uninstall functions
 │
-├── Repository/               # Data repositories
-│   ├── HotelRepository.php
-│   ├── BookingRepository.php
-│   ├── FacilityRepository.php
-│   └── SyncLogRepository.php
-│
-├── services/                 # Service classes
-│   ├── ServiceLoader.php     # Lazy-loaded service factory
-│   ├── BookingService.php    # Booking operations
-│   ├── CacheService.php      # API response caching
-│   ├── CronService.php       # Cron job management
-│   ├── DateHelper.php        # Date formatting/calculations
-│   ├── ErrorHandler.php      # Error handling
-│   ├── GuestDataService.php  # Guest data parsing
-│   ├── LoggerTrait.php       # PSR-3-like logging trait
-│   ├── RoomPriceService.php  # Real-time room price calculations with commission
-│   ├── PriceInfoService.php  # Season price lists
-│   ├── PriceInfoCalculation.php # Price info calculations
-│   ├── SearchService.php     # Search parameter parsing
-│   ├── SecurityService.php   # Input validation and CSRF
-│   └── ValidationHelper.php  # Validation utilities
-│
-├── src/                      # Core classes
-│   ├── NovotonApi.php        # API client (37 public methods)
+├── src/                      # Core classes (PSR-4 autoloaded)
+│   ├── NovotonApi.php        # API facade (37 public methods)
 │   ├── HotelSync.php         # V3 Hotel synchronization
-│   └── PriceInfoSync.php     # Priceinfo synchronization
-│
-├── Helpers/                  # Helper classes
-│   ├── AbstractBatchedSync.php   # Base class for batched sync
-│   ├── BatchedHotelInfoSync.php  # Batched hotel sync with resume
-│   ├── BatchedPriceInfoSync.php  # Batched priceinfo sync with resume
-│   ├── Config.php                # Helper config
-│   ├── CronHelper.php            # Cron utilities
-│   ├── DatabaseHelper.php        # Database utilities
-│   ├── DatabaseIterator.php      # PHP Generators for memory-efficient iteration
-│   ├── StateManager.php          # Sync state management
-│   ├── SyncInterface.php         # Sync contract interface
-│   └── SyncLogger.php            # Sync logging utilities
+│   ├── PriceInfoSync.php     # Priceinfo synchronization
+│   │
+│   ├── Api/                  # Domain-specific API clients
+│   │   ├── HotelApiClient.php
+│   │   ├── PricingApiClient.php
+│   │   ├── AvailabilityApiClient.php
+│   │   ├── ReservationApiClient.php
+│   │   ├── DestinationApiClient.php
+│   │   ├── PropertyTypeDetector.php
+│   │   └── AdultOnlyDetector.php
+│   │
+│   ├── Services/             # Service classes
+│   │   ├── Container.php     # DI container (all instantiation goes here)
+│   │   ├── ServiceLoader.php # Global _nvt_*() helpers for procedural code
+│   │   ├── BookingService.php
+│   │   ├── CacheService.php
+│   │   ├── CronService.php
+│   │   ├── DateHelper.php
+│   │   ├── ErrorHandler.php
+│   │   ├── GuestDataService.php
+│   │   ├── RoomPriceService.php
+│   │   ├── PriceInfoService.php
+│   │   ├── SearchService.php
+│   │   ├── SecurityService.php
+│   │   ├── ConfigProvider.php
+│   │   ├── DirectoryManager.php
+│   │   └── ValidationHelper.php
+│   │
+│   ├── Repository/           # Data repositories
+│   │   ├── HotelRepository.php
+│   │   ├── BookingRepository.php
+│   │   ├── FacilityRepository.php
+│   │   ├── SyncLogRepository.php
+│   │   ├── AlternativeRequestRepository.php
+│   │   ├── HotelPackageRepository.php
+│   │   └── FeatureMappingRepository.php
+│   │
+│   ├── Helpers/              # Helper classes
+│   │   ├── AbstractBatchedSync.php   # Base class for batched sync
+│   │   ├── BatchedHotelInfoSync.php  # Batched hotel sync with resume
+│   │   ├── BatchedPriceInfoSync.php  # Batched priceinfo sync with resume
+│   │   ├── BatchedHotelFacilitiesSync.php
+│   │   ├── CronHelper.php            # Cron utilities
+│   │   ├── DatabaseHelper.php        # Database utilities
+│   │   ├── DatabaseIterator.php      # PHP Generators for memory-efficient iteration
+│   │   ├── StateManager.php          # Sync state management
+│   │   ├── SyncInterface.php         # Sync contract interface
+│   │   └── SyncLogger.php            # Sync logging utilities
+│   │
+│   └── Cron/                 # Cron command classes
+│       ├── CronDispatcher.php
+│       └── Commands/         # Individual cron commands
 │
 └── schemas/                  # CS-Cart schemas
     ├── block_manager/
@@ -740,11 +757,49 @@ app/addons/novoton_holidays/
     └── theme_editor/          # Visual editor schemas
 ```
 
+### Dependency Injection
+
+All service and repository instantiation is centralized through two classes:
+
+| Class | Purpose |
+|-------|---------|
+| `Container` | DI container — constructs, wires, and caches all singletons. Supports `override()` for testing. |
+| `ServiceLoader` | Global `_nvt_*()` functions that delegate to `Container::getInstance()`. Used in procedural code (hooks, controllers) where constructor injection is not possible. |
+
+**Rule:** Controllers, hooks, and function files must **never** use `new ClassName()` for addon classes. Use the appropriate `_nvt_*()` helper or `Container::getInstance()->method()` instead. Only `Container.php` itself may call `new`.
+
+#### Available ServiceLoader Helpers
+
+| Helper | Returns |
+|--------|---------|
+| `_nvt_api()` | `NovotonApi` |
+| `_nvt_booking_service()` | `BookingServiceInterface` |
+| `_nvt_guest_service()` | `GuestDataServiceInterface` |
+| `_nvt_search_service()` | `SearchServiceInterface` |
+| `_nvt_price_service()` | `RoomPriceServiceInterface` |
+| `_nvt_price_info_service()` | `PriceInfoServiceInterface` |
+| `_nvt_security_service()` | `SecurityServiceInterface` |
+| `_nvt_cache_service()` | `CacheServiceInterface` |
+| `_nvt_validation_helper()` | `ValidationHelper` |
+| `_nvt_date_helper()` | `DateHelper` |
+| `_nvt_cron_service()` | `CronServiceInterface` |
+| `_nvt_diagnostics_service()` | `DiagnosticsServiceInterface` |
+| `_nvt_alternative_request_service()` | `AlternativeRequestServiceInterface` |
+| `_nvt_booking_submission_service()` | `BookingSubmissionServiceInterface` |
+| `_nvt_admin_cron_service()` | `AdminCronService` |
+| `_nvt_property_type_detector()` | `PropertyTypeDetector` |
+| `_nvt_hotel_repo()` | `HotelRepositoryInterface` |
+| `_nvt_booking_repo()` | `BookingRepositoryInterface` |
+| `_nvt_facility_repo()` | `FacilityRepositoryInterface` |
+| `_nvt_sync_log_repo()` | `SyncLogRepositoryInterface` |
+| `_nvt_alternative_request_repo()` | `AlternativeRequestRepositoryInterface` |
+| `_nvt_db_iterator()` | `DatabaseIteratorInterface` |
+| `_nvt_batched_hotelinfo_sync()` | `SyncInterface` |
+
 ### Service Classes
 
 | Service | Purpose |
 |---------|---------|
-| `ServiceLoader` | Lazy-loaded singleton factory for all services |
 | `BookingService` | Create, update, retrieve bookings |
 | `CacheService` | API response caching |
 | `CronService` | Cron job scheduling and execution |

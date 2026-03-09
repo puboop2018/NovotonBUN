@@ -22,6 +22,7 @@ use Tygh\Addons\NovotonHolidays\Api\AvailabilityApiClient;
 use Tygh\Addons\NovotonHolidays\Api\ReservationApiClient;
 use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class NovotonApi implements NovotonApiInterface
 {
@@ -57,7 +58,7 @@ class NovotonApi implements NovotonApiInterface
 
         $this->enableCache = (ConfigProvider::get('enable_api_cache', 'Y') === 'Y');
         if ($this->enableCache) {
-            $this->cache = new \Tygh\Addons\NovotonHolidays\Services\CacheService('file');
+            $this->cache = Container::getInstance()->cacheService();
         }
 
         // Initialize domain clients with shared dependencies

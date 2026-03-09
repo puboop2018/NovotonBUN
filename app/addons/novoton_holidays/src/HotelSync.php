@@ -20,6 +20,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class HotelSync
 {
@@ -609,7 +610,7 @@ class HotelSync
      */
     private function saveLog(): void
     {
-        $syncRepo = new \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository();
+        $syncRepo = Container::getInstance()->syncLogRepository();
         $syncRepo->create('hotels', [
             'total'    => $this->stats['hotels_processed'] + $this->stats['packages_processed'],
             'updated'  => $this->stats['hotels_updated'] + $this->stats['packages_updated'],

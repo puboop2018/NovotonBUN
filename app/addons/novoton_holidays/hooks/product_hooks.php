@@ -115,9 +115,9 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
             if ($logDir) {
                 if (!is_dir($logDir)) {
-                    @mkdir($logDir, 0775, true);
+                    mkdir($logDir, 0775, true);
                 }
-                @file_put_contents(
+                file_put_contents(
                     $logDir . 'novoton_errors.log',
                     date('Y-m-d H:i:s') . ' ' . $error_detail . "\n" . $e->getTraceAsString() . "\n\n",
                     FILE_APPEND
@@ -240,9 +240,9 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
             $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
             if ($logDir) {
                 if (!is_dir($logDir)) {
-                    @mkdir($logDir, 0775, true);
+                    mkdir($logDir, 0775, true);
                 }
-                @file_put_contents(
+                file_put_contents(
                     $logDir . 'novoton_errors.log',
                     date('Y-m-d H:i:s') . ' get_product_data_post: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n",
                     FILE_APPEND

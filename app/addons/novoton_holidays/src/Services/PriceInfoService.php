@@ -378,14 +378,14 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Suppress errors if column doesn't exist yet.
         try {
             if (!empty($rawPrices)) {
-                @db_query(
+                db_query(
                     "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
                     json_encode($rawPrices, JSON_UNESCAPED_UNICODE),
                     $hotelId
                 );
             } else {
                 // Use explicit SQL NULL for JSON column (CS-Cart ?s converts null to '' which is invalid JSON)
-                @db_query(
+                db_query(
                     "UPDATE ?:novoton_hotels SET calendar_prices_raw = NULL WHERE hotel_id = ?s",
                     $hotelId
                 );

@@ -1,5 +1,50 @@
 # Novoton Holidays - Changelog
 
+## A90 — Code Smell Refactor: DI Consistency, Deduplication, Error Suppression Cleanup
+
+### Dependency Injection (Container / ServiceLoader)
+
+- **CHANGED:** Replaced 23 direct `new ClassName()` instantiations across controllers and functions with Container/ServiceLoader calls
+- **ADDED:** `Container::novotonApi()` — singleton NovotonApi instance
+- **ADDED:** `Container::adminCronService()` — AdminCronService with injected API
+- **ADDED:** `Container::propertyTypeDetector()` — PropertyTypeDetector singleton
+- **ADDED:** `_nvt_api()` ServiceLoader helper for procedural code
+- **ADDED:** `_nvt_admin_cron_service()` ServiceLoader helper
+- **ADDED:** `_nvt_property_type_detector()` ServiceLoader helper
+- **ADDED:** `_nvt_alternative_request_repo()` ServiceLoader helper
+- **CHANGED:** `BookingSubmissionService` now receives `NovotonApi` via Container (`$this->novotonApi()`) instead of `new NovotonApi()`
+- **CHANGED:** `NovotonApi` constructor uses `Container::getInstance()->cacheService()` instead of `new CacheService('file')`
+
+### Duplicated Logic
+
+- **ADDED:** `fn_novoton_match_price_from_xml()` helper in `functions/helpers.php` — shared XML price matching for flat room_price responses
+- **FIXED:** Inconsistent room matching between `ajax_recalculate_price.php` (`strcasecmp`) and `novoton_price_compare.php` (`===`) — both now use `strcasecmp` via shared helper
+- **CHANGED:** Helper handles both `//IdBoard` and `//Board` xpath variants automatically
+
+### Magic Strings → Constants
+
+- **CHANGED:** Hardcoded `'novoton_holidays'` in DB queries replaced with `Constants::ADDON_ID` using parameterized `?s` placeholders (novoton_diagnostic, novoton_holidays controller, install.php)
+
+### Error Suppression Cleanup
+
+- **CHANGED:** Removed redundant `@` error suppression from `db_query()` calls inside `try-catch` blocks (`PriceInfoService::precomputeCalendarPrices()`)
+- **CHANGED:** Removed redundant `@` from `mkdir()` / `file_put_contents()` inside `try-catch` blocks (product_hooks.php error logging)
+- **CHANGED:** Removed `@` from `file_get_contents()` calls already guarded by `file_exists()` (StateManager load/restoreFromBackup)
+- **CHANGED:** Replaced `@copy()` with `is_readable()` guard (StateManager save)
+- **CHANGED:** Removed `@` from `mkdir()` already guarded by `!is_dir()` (DirectoryManager, BatchedHotelInfoSync, BatchedHotelFacilitiesSync, BatchedPriceInfoSync)
+- **KEPT:** Intentional `@` suppression in StateManager atomic file ops (race conditions), install.php schema migrations, and PriceInfoService optional column checks
+
+### Files Changed (27)
+
+Controllers: `novoton_admin`, `novoton_alternatives`, `novoton_diagnostic`, `novoton_holidays`, `novoton_hotels`, `novoton_price_compare`, `ajax_recalculate_price`, `novoton_cron`
+Functions: `helpers`, `bookings`, `formatting`, `install`
+Hooks: `product_hooks`, `order_hooks`, `cart_hooks`
+Services: `Container`, `ServiceLoader`, `PriceInfoService`, `DirectoryManager`
+Core: `NovotonApi`, `HotelSync`, `AbstractBatchedSync`, `BatchedHotelInfoSync`, `BatchedHotelFacilitiesSync`, `BatchedPriceInfoSync`, `StateManager`
+Entry: `cron.php`
+
+---
+
 ## A89 — Facility-to-Feature Routing, Travel Group & Beach Access, Adults-Only Detection
 
 ### New Features

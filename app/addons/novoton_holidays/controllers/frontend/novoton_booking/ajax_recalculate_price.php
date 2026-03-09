@@ -247,64 +247,32 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             if (!$price_found) {
                 $debug_log('Trying flat structure parsing');
 
-                $prices = $response->xpath('//Price');
-                $idRooms = $response->xpath('//IdRoom');
-                $idBoards = $response->xpath('//IdBoard');
-
-                $debug_log('Found elements', [
-                    'prices' => count($prices),
-                    'rooms' => count($idRooms),
-                    'idBoards' => count($idBoards)
-                ]);
-
-                $numResults = min(count($prices), count($idRooms), count($idBoards));
-
-                for ($i = 0; $i < $numResults; $i++) {
-                    $resultPrice = (float)((string)$prices[$i]);
-                    $resultRoom = rawurldecode((string)$idRooms[$i]);
-                    $resultBoard = (string)$idBoards[$i];
-
-                    $debug_log("Result $i", [
-                        'price' => $resultPrice,
-                        'room' => $resultRoom,
-                        'board' => $resultBoard
-                    ]);
-
-                    // Use exact case-insensitive match to avoid false positives
-                    // (e.g. "AI" matching "AIR", "DBL" matching "ADBL")
-                    $roomMatches = empty($room_id_decoded) ||
-                                   strcasecmp($resultRoom, $room_id_decoded) === 0;
-
-                    $boardMatches = empty($board_id) ||
-                                    strcasecmp($resultBoard, $board_id) === 0;
-
-                    if ($roomMatches && $boardMatches && $resultPrice > 0) {
-                        $new_price = $resultPrice;
-                        $price_found = true;
-                        $matched_room = $resultRoom;
-                        $matched_board = $resultBoard;
-                        $debug_log('MATCH FOUND!', [
-                            'index' => $i,
-                            'room' => $resultRoom,
-                            'board' => $resultBoard,
-                            'price' => $resultPrice
-                        ]);
-                        break;
-                    }
+                $flatMatch = fn_novoton_match_price_from_xml($response, $room_id_decoded, $board_id);
+                if ($flatMatch !== null) {
+                    $new_price = $flatMatch['price'];
+                    $price_found = true;
+                    $matched_room = $flatMatch['room'];
+                    $matched_board = $flatMatch['board'];
+                    $debug_log('MATCH FOUND (flat)!', $flatMatch);
                 }
 
                 // Fallback: use first available price from response
-                if (!$price_found && $numResults > 0) {
-                    $new_price = (float)((string)$prices[0]);
-                    $matched_room = rawurldecode((string)$idRooms[0]);
-                    $matched_board = (string)$idBoards[0];
-                    if ($new_price > 0) {
-                        $price_found = true;
-                        $debug_log('Using first available price as fallback', [
-                            'price' => $new_price,
-                            'room' => $matched_room,
-                            'board' => $matched_board
-                        ]);
+                if (!$price_found) {
+                    $prices = $response->xpath('//Price');
+                    $idRooms = $response->xpath('//IdRoom');
+                    $idBoards = $response->xpath('//IdBoard') ?: $response->xpath('//Board');
+                    if (!empty($prices) && !empty($idRooms) && !empty($idBoards)) {
+                        $new_price = (float)((string)$prices[0]);
+                        $matched_room = rawurldecode((string)$idRooms[0]);
+                        $matched_board = (string)$idBoards[0];
+                        if ($new_price > 0) {
+                            $price_found = true;
+                            $debug_log('Using first available price as fallback', [
+                                'price' => $new_price,
+                                'room' => $matched_room,
+                                'board' => $matched_board
+                            ]);
+                        }
                     }
                 }
             }

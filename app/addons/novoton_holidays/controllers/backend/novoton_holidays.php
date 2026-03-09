@@ -104,8 +104,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $value = json_encode(array_unique($clean_excluded));
         db_query(
-            "UPDATE ?:addon_options SET value = ?s WHERE addon = 'novoton_holidays' AND option_id = 'excluded_resorts'",
-            $value
+            "UPDATE ?:addon_options SET value = ?s WHERE addon = ?s AND option_id = 'excluded_resorts'",
+            $value,
+            \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID
         );
 
         Registry::del('addons.novoton_holidays');

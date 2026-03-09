@@ -523,34 +523,20 @@ if ($mode == 'compare') {
     $apiPriceFound = false;
 
     if ($apiResult) {
-        $prices = $apiResult->xpath('//Price');
-        $idRooms = $apiResult->xpath('//IdRoom');
-        $boards = $apiResult->xpath('//Board');
-
-        $numResults = min(count($prices), count($idRooms), count($boards));
-
-        for ($i = 0; $i < $numResults; $i++) {
-            $resultPrice = (float)((string)$prices[$i]);
-            $resultRoom = rawurldecode((string)$idRooms[$i]);
-            $resultBoard = (string)$boards[$i];
-
-            $roomMatches = empty($room_id) ||
-                           $resultRoom === $room_id ||
-                           $resultRoom === rawurldecode($room_id);
-
-            $boardMatches = empty($board_id) ||
-                            strcasecmp($resultBoard, $board_id) === 0;
-
-            if ($roomMatches && $boardMatches && $resultPrice > 0) {
-                $apiPrice = $resultPrice;
-                $apiPriceFound = true;
-                break;
-            }
+        $room_id_decoded = !empty($room_id) ? rawurldecode($room_id) : null;
+        $match = fn_novoton_match_price_from_xml($apiResult, $room_id_decoded, $board_id);
+        if ($match !== null) {
+            $apiPrice = $match['price'];
+            $apiPriceFound = true;
         }
 
-        if (!$apiPriceFound && $numResults > 0) {
-            $apiPrice = (float)((string)$prices[0]);
-            $apiPriceFound = true;
+        // Fallback: use first available price
+        if (!$apiPriceFound) {
+            $prices = $apiResult->xpath('//Price');
+            if (!empty($prices)) {
+                $apiPrice = (float)((string)$prices[0]);
+                $apiPriceFound = true;
+            }
         }
     }
 
