@@ -708,6 +708,7 @@
                 `position` int(5) DEFAULT 0 COMMENT 'Sort position for the variant',
                 `is_active` enum('Y','N') NOT NULL DEFAULT 'Y',
                 `mapping_source` enum('seed','auto','manual') NOT NULL DEFAULT 'seed' COMMENT 'Origin: seed=install, auto=API discovery, manual=admin',
+                `variant_source` enum('auto','manual') DEFAULT NULL COMMENT 'How variant was resolved: auto=name-match/create, manual=admin override',
                 `last_synced_at` datetime DEFAULT NULL COMMENT 'Last time this code was seen from the API',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -728,6 +729,8 @@
         <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'</item>
         <item for="uninstall">DELETE FROM ?:product_tabs WHERE addon = 'novoton_holidays'</item>
         <item for="uninstall">DELETE FROM ?:product_tabs_descriptions WHERE tab_id NOT IN (SELECT tab_id FROM ?:product_tabs)</item>
+        <!-- Remove addon language variables -->
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'novoton_holidays.%'</item>
         <!-- Drop all addon tables -->
         <item for="uninstall">DROP TABLE IF EXISTS `?:hotel_feature_mappings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_resorts`</item>

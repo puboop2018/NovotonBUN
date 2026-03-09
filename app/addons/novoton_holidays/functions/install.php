@@ -63,6 +63,15 @@ function fn_novoton_holidays_uninstall(): bool
         }
     }
     
+    // Remove addon language variables
+    db_query("DELETE FROM ?:language_values WHERE name LIKE 'novoton_holidays.%'");
+
+    // Remove novoton_reports directory and its contents
+    $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
+    if (is_dir($reports_dir)) {
+        fn_rm($reports_dir);
+    }
+
     // Drop all addon tables (in correct order due to foreign key constraints)
     db_query("DROP TABLE IF EXISTS ?:novoton_resorts");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_facilities");
