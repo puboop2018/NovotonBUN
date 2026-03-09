@@ -56,6 +56,16 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 - Cancellation terms display
 - Price per person and total price columns
 
+### Feature Mapping System
+- Provider-agnostic 4-layer pipeline: API raw values → normalization → mapping table → CS-Cart product features
+- 8 feature types: star rating, board, hotel facility, room facility, resort, property type, travel group, beach access
+- Data-driven facility routing via `hotel_feature_mappings` table (not hardcoded)
+- Adults-only hotel detection from hotel names (regex patterns)
+- Title Case normalization for resort names
+- Auto-creation of CS-Cart feature variants with 3-pass fuzzy name matching
+- Admin UI for managing mappings with Variant Name display
+- See [Feature_Mapping_System.md](../../Documentation/Feature_Mapping_System.md) for full documentation
+
 ### Admin Features
 - Booking management with Novoton sync
 - Hotel import wizard (admin + cron)
@@ -111,9 +121,10 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 3. **Exchange Rates** - Currency risk commission percentage, last update timestamp
 4. **API Resilience** - Max retries, retry delay, retry multiplier, circuit breaker threshold/timeout
 5. **Products** - Selected countries, product code prefix, delete on uninstall, excluded resorts
-6. **Cron** - Cron access key, cron links info
-7. **Display** - Show booking form toggle, booking form position (before tabs / after description / sidebar)
-8. **Other** - Last sync date, test booking mode, disable API submission, debug logging, debug mode
+6. **Feature IDs Mapping** - CS-Cart feature ID selectbox dropdowns for: Star Rating, Board, Hotel Facility, Room Facility, Resort, Property Type, Travel Group, Beach Access
+7. **Cron** - Cron access key, cron links info
+8. **Display** - Show booking form toggle, booking form position (before tabs / after description / sidebar)
+9. **Other** - Last sync date, test booking mode, disable API submission, debug logging, debug mode
 
 ---
 
@@ -129,6 +140,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 | Room Price Check | `novoton_holidays.room_price` | Check hotel prices |
 | Add Hotels as Products | `novoton_holidays.add_hotels_as_products` | Import hotels to CS-Cart |
 | Facilities | `novoton_holidays.list_facilities` | Hotel facilities list |
+| Feature Mappings | `novoton_feature_mappings.manage` | Manage feature type mappings (with variant names) |
 | **Exchange Rates** | `novoton_exchange_rates.manage` | Currency rate management |
 | Diagnostic | `novoton_diagnostic.test` | API connectivity test |
 | Test Hotel Request | `novoton_holidays.test_hotel_request` | Debug hotel API calls |

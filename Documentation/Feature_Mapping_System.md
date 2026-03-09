@@ -2,7 +2,7 @@
 
 ## Provider-Agnostic Hub for CS-Cart Product Features
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-03-09
 **Scope:** Novoton XML API + Sphinx REST API (+ future providers)
 **Addon:** `novoton_holidays` (v3.3.0+)
@@ -262,7 +262,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
     public function normalizeResort(string $rawValue): ?string
     {
         $trimmed = trim($rawValue);
-        return $trimmed !== '' ? $trimmed : null;
+        return $trimmed !== '' ? mb_convert_case($trimmed, MB_CASE_TITLE, 'UTF-8') : null;
     }
 
     public function normalizePropertyType(string $rawValue): ?string
@@ -284,7 +284,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
 | `normalizeStarRating("4*")` | `"4*"` | `"4"` |
 | `normalizeStarRating("3 Sup")` | `"3 Sup"` | `"3"` |
 | `normalizeFacilityCode(42)` | `42` | `"42"` |
-| `normalizeResort("SUNNY BEACH")` | `"SUNNY BEACH"` | `"SUNNY BEACH"` |
+| `normalizeResort("SUNNY BEACH")` | `"SUNNY BEACH"` | `"Sunny Beach"` |
 
 ### 4.3 ProviderNormalizerInterface
 
@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
 |--------|------|---------|
 | `mapping_id` | int AUTO_INCREMENT | Primary key |
 | `provider` | varchar(50) | Provider name: `'novoton'` or `'sphinx'`. Allows same canonical code to exist for multiple providers |
-| `feature_type` | varchar(50) | One of: `star_rating`, `board`, `hotel_facility`, `room_facility`, `resort`, `property_type` |
+| `feature_type` | varchar(50) | One of: `star_rating`, `board`, `hotel_facility`, `room_facility`, `resort`, `property_type`, `travel_group`, `beach_access` |
 | `provider_code` | varchar(255) | The canonical code after normalization: `'AI'`, `'FB+'`, `'4'`, `'42'` (facility_id), `'SUNNY BEACH'` (resort name) |
 | `cs_cart_feature_id` | int | Links to CS-Cart's `product_features.feature_id`. Configured via addon settings |
 | `cs_cart_variant_id` | int or NULL | Links to CS-Cart's `product_feature_variants.variant_id`. Auto-populated on first use |
@@ -607,7 +607,7 @@ private function createCsCartVariant(array $mapping): int
 
 #### SelectBox (S) — Overwrite
 
-Used by: `star_rating`, `resort`, `property_type`
+Used by: `star_rating`, `resort`, `property_type`, `beach_access`
 
 Only **one value** can be active at a time. Assignment deletes the old value and inserts the new one:
 
@@ -649,7 +649,7 @@ private function assignSelectBox(int $productId, int $featureId, int $variantId)
 
 #### Multiple Checkboxes (M) — Merge
 
-Used by: `board`, `hotel_facility`, `room_facility`
+Used by: `board`, `hotel_facility`, `room_facility`, `travel_group`
 
 **Multiple values** can be active at the same time. Single-value assignment adds without removing:
 
@@ -724,9 +724,11 @@ Defined in `Constants.php` (lines 172–223):
 | Star Rating | `FEATURE_TYPE_STAR_RATING` | `S` (SelectBox) | **Strict** | Logged + skipped | `feature_id_star_rating` | `1`, `2`, `3`, `4`, `5` |
 | Board / Meal | `FEATURE_TYPE_BOARD` | `M` (Multiple Checkboxes) | **Strict** | Logged + skipped | `feature_id_board` | `AI`, `FB`, `FB+`, `HB`, `BB`, `RO` |
 | Property Type | `FEATURE_TYPE_PROPERTY_TYPE` | `S` (SelectBox) | **Strict** | Logged + skipped | `feature_id_property_type` | `hotel`, `villa`, `apartment` |
+| Travel Group | `FEATURE_TYPE_TRAVEL_GROUP` | `M` (Multiple Checkboxes) | **Strict** | Logged + skipped | `feature_id_travel_group` | `adults_only`, `3`, `23`, `26` |
+| Beach Access | `FEATURE_TYPE_BEACH_ACCESS` | `S` (SelectBox) | **Strict** | Logged + skipped | `feature_id_beach_access` | `31` |
 | Hotel Facility | `FEATURE_TYPE_HOTEL_FACILITY` | `M` (Multiple Checkboxes) | **Dynamic** | Auto-registered | `feature_id_hotel_facility` | `4`, `15`, `42` (facility IDs) |
 | Room Facility | `FEATURE_TYPE_ROOM_FACILITY` | `M` (Multiple Checkboxes) | **Dynamic** | Auto-registered | `feature_id_room_facility` | `8`, `23` (facility IDs) |
-| Resort / City | `FEATURE_TYPE_RESORT` | `S` (SelectBox) | **Dynamic** | Auto-registered | `feature_id_resort` | `SUNNY BEACH`, `GOLDEN SANDS` |
+| Resort / City | `FEATURE_TYPE_RESORT` | `S` (SelectBox) | **Dynamic** | Auto-registered | `feature_id_resort` | `Sunny Beach`, `Golden Sands` |
 
 ### Addon Settings
 
@@ -740,10 +742,12 @@ public const FEATURE_TYPE_TO_SETTING = [
     'room_facility'  => 'addons.novoton_holidays.feature_id_room_facility',
     'resort'         => 'addons.novoton_holidays.feature_id_resort',
     'property_type'  => 'addons.novoton_holidays.feature_id_property_type',
+    'travel_group'   => 'addons.novoton_holidays.feature_id_travel_group',
+    'beach_access'   => 'addons.novoton_holidays.feature_id_beach_access',
 ];
 ```
 
-These settings must be configured in the admin panel before the mapping system can function. Each setting holds the `feature_id` from CS-Cart's `product_features` table.
+These settings are configured as **selectbox dropdowns** in the admin panel (Settings → Feature IDs Mapping tab), showing each CS-Cart feature by name and ID. Each setting holds the `feature_id` from CS-Cart's `product_features` table.
 
 ---
 
@@ -756,6 +760,8 @@ public const STRICT_FEATURE_TYPES = [
     'star_rating',      // 5 values: 1-5
     'board',            // 9 values: AI, UAI, FB, FB+, HB, HB+, BB, RO, SC
     'property_type',    // 10 values: hotel, motel, hostel, villa, apartment, etc.
+    'travel_group',     // 4 values: adults_only, 3 (pets), 23 (disabilities), 26 (families)
+    'beach_access',     // 1 value: 31 (beachfront / first line)
 ];
 ```
 
@@ -792,6 +798,24 @@ public const DYNAMIC_FEATURE_TYPES = [
 
 Called during addon install and via the admin "Re-seed" button. Seeds all strict feature type values.
 
+### Facility-to-Feature Routing
+
+Certain hotel facility IDs are **rerouted** from the generic `hotel_facility` feature to more specific feature types during seeding. This routing is **data-driven via the `hotel_feature_mappings` table** — not hardcoded constants — so admins can edit the mappings from the admin UI.
+
+| Facility ID | Facility Name | Routed To Feature Type | Display Name (EN) |
+|------------|---------------|----------------------|-------------------|
+| 3 | Pets | `travel_group` | Pets allowed |
+| 23 | Disabilities | `travel_group` | Suitable for people with disabilities |
+| 26 | Families | `travel_group` | Suitable for families with children |
+| 31 | First line | `beach_access` | Beachfront |
+| `adults_only` | (detected from hotel name) | `travel_group` | Adults only |
+
+During product sync, `AddProductsCommand::assignProductFeatures()` looks up each facility's `feature_type` from the mapping table via `findFeatureTypeForCode()`. If a facility is seeded under `travel_group` or `beach_access`, it gets assigned to that feature instead of `hotel_facility`. Facilities not found in the mapping table default to `hotel_facility`.
+
+### Adults-Only Detection
+
+The `AdultOnlyDetector` class (`src/Api/AdultOnlyDetector.php`) scans hotel names for patterns like "Adults Only", "18+", "No Children", etc. Detection results are stored in the `is_adults_only` column of `novoton_hotels`. During product sync, hotels with `is_adults_only = 'Y'` get the `adults_only` code assigned to `travel_group`.
+
 ### Board Codes (9 values)
 
 ```php
@@ -823,6 +847,24 @@ $propTypes = [
     'guest-house'    => ['en' => 'Guest House',    'ro' => 'Pensiune',       'pos' => 90],
     'resort'         => ['en' => 'Resort',         'ro' => 'Resort',         'pos' => 100],
 ];
+```
+
+### Travel Group (4 values)
+
+```php
+$travelGroupItems = [
+    'adults_only' => ['en' => 'Adults only',                          'ro' => 'Exclusiv pentru adulți',               'pos' => 10],
+    '3'           => ['en' => 'Pets allowed',                          'ro' => 'Acceptă animale de companie',          'pos' => 20],
+    '26'          => ['en' => 'Suitable for families with children',   'ro' => 'Ideal pentru familii cu copii',        'pos' => 30],
+    '23'          => ['en' => 'Suitable for people with disabilities', 'ro' => 'Accesibil persoanelor cu dizabilități', 'pos' => 40],
+];
+```
+
+### Beach Access (1 value)
+
+```php
+// provider_code '31' maps to Novoton facility ID 31 (First line / Beachfront)
+$repo->save([..., 'provider_code' => '31', 'display_name_en' => 'Beachfront', 'display_name_ro' => 'La malul mării']);
 ```
 
 ### Star Ratings (5 values)
@@ -1135,7 +1177,7 @@ Accessible at `admin.php?dispatch=novoton_feature_mappings.manage`
 
 | Action | Mode | Description |
 |--------|------|-------------|
-| **List/Filter** | `manage` | View all mappings grouped by feature type. Filter by: feature type, mapping source (seed/auto/manual), active status |
+| **List/Filter** | `manage` | View all mappings grouped by feature type with **Variant Name** column. Filter by: feature type, mapping source (seed/auto/manual), active status |
 | **Edit** | `edit` | Edit a single mapping: display names (EN/RO), position, active status, CS-Cart feature ID, **CS-Cart variant dropdown** |
 | **Bulk Activate** | `bulk_update` (activate) | Activate multiple selected mappings |
 | **Bulk Deactivate** | `bulk_update` (deactivate) | Deactivate multiple selected mappings |
@@ -1179,15 +1221,19 @@ The controller is restricted:
 
 | File | Component | Description |
 |------|-----------|-------------|
-| `Constants.php` (lines 172–223) | Constants | Feature type constants, strict/dynamic classification, addon setting mappings |
+| `Constants.php` | Constants | Feature type constants (8 types), strict/dynamic classification, addon setting mappings |
 | `src/ValueObjects/BoardType.php` | Value Object | Canonical board codes, alias mapping, validation, plus-variant matching |
 | `src/Api/ProviderNormalizerInterface.php` | Interface | Contract for provider-specific normalization (5 methods) |
-| `src/Api/NovotonNormalizer.php` | Normalizer | Novoton-specific implementation: raw API values → canonical codes |
-| `src/Repository/FeatureMappingRepository.php` | Repository | CRUD for `hotel_feature_mappings` table with in-memory cache |
+| `src/Api/NovotonNormalizer.php` | Normalizer | Novoton-specific implementation: raw API values → canonical codes. Resort names normalized to Title Case |
+| `src/Api/AdultOnlyDetector.php` | Detector | Regex-based detection of adults-only hotels from hotel names |
+| `src/Repository/FeatureMappingRepository.php` | Repository | CRUD for `hotel_feature_mappings` table with in-memory cache. Includes `findFeatureTypeForCode()` for data-driven routing |
+| `src/Repository/FeatureMappingRepositoryInterface.php` | Interface | Contract for mapping repository (15 methods) |
 | `src/Services/FeatureMapper.php` | Service | Central assignment engine: mapping lookup → variant creation → S/M assignment |
-| `functions/hotels.php` (lines 1077–1139) | Seed Function | Pre-populates board, star rating, and property type mappings at install |
-| `addon.xml` (lines 687–709) | Schema | `hotel_feature_mappings` table DDL with columns, indexes, and constraints |
-| `controllers/backend/novoton_feature_mappings.php` | Controller | Admin UI for listing, editing, bulk operations, and re-seeding |
-| `src/Cron/Commands/AddProductsCommand.php` (lines 176–244) | Cron Command | Product creation flow that calls the normalizer and feature mapper |
+| `functions/hotels.php` | Seed Function | Pre-populates all 8 feature type mappings. Reroutes facility IDs 3/23/26/31 to travel_group/beach_access |
+| `addon.xml` | Schema | `hotel_feature_mappings` table DDL. Feature ID settings as selectbox dropdowns |
+| `controllers/backend/novoton_feature_mappings.php` | Controller | Admin UI for listing (with variant names), editing, bulk operations, and re-seeding |
+| `design/backend/templates/.../manage.tpl` | Template | Feature Mappings list view with Variant Name column |
+| `src/Cron/Commands/AddProductsCommand.php` | Cron Command | Product creation with data-driven facility routing, adults_only and property_type assignment |
+| `func.php` | Settings | `fn_settings_variants_addons_novoton_holidays_feature_ids()` — dynamic selectbox for Feature ID settings |
 
 All file paths are relative to `app/addons/novoton_holidays/`.
