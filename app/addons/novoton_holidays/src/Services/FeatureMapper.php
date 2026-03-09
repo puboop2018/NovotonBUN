@@ -246,7 +246,11 @@ class FeatureMapper
     /**
      * Try to find an existing CS-Cart variant by display name match.
      *
-     * Checks both EN and RO variant descriptions against the mapping's display names.
+     * Uses a 3-pass strategy per language (EN first, then RO fallback):
+     *   1. Exact match (fastest, relies on DB collation for case)
+     *   2. Case-insensitive match via LOWER()
+     *   3. Normalized match — strips non-alphanumeric chars and collapses
+     *      whitespace so "All-Inclusive" matches "All Inclusive", etc.
      *
      * @return int Matched variant_id or 0
      */
@@ -260,39 +264,77 @@ class FeatureMapper
             return 0;
         }
 
-        // Search by EN name first (primary match)
-        $variantId = db_get_field(
-            "SELECT v.variant_id
-             FROM ?:product_feature_variants v
-             JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-             WHERE v.feature_id = ?i AND vd.lang_code = 'en' AND vd.variant = ?s
-             LIMIT 1",
-            $featureId,
-            $nameEn
-        );
-
-        if ($variantId) {
-            return (int) $variantId;
+        // Try EN first, then RO fallback
+        $candidates = [['en', $nameEn]];
+        if ($nameRo !== '' && $nameRo !== $nameEn) {
+            $candidates[] = ['ro', $nameRo];
         }
 
-        // Fallback: try RO name
-        if ($nameRo !== '' && $nameRo !== $nameEn) {
+        foreach ($candidates as [$lang, $name]) {
+            // Pass 1: Exact match
             $variantId = db_get_field(
                 "SELECT v.variant_id
                  FROM ?:product_feature_variants v
                  JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = 'ro' AND vd.variant = ?s
+                 WHERE v.feature_id = ?i AND vd.lang_code = ?s AND vd.variant = ?s
                  LIMIT 1",
                 $featureId,
-                $nameRo
+                $lang,
+                $name
             );
-
             if ($variantId) {
                 return (int) $variantId;
+            }
+
+            // Pass 2: Case-insensitive match
+            $variantId = db_get_field(
+                "SELECT v.variant_id
+                 FROM ?:product_feature_variants v
+                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                 WHERE v.feature_id = ?i AND vd.lang_code = ?s AND LOWER(vd.variant) = LOWER(?s)
+                 LIMIT 1",
+                $featureId,
+                $lang,
+                $name
+            );
+            if ($variantId) {
+                return (int) $variantId;
+            }
+
+            // Pass 3: Normalized match — fetch all variants for this feature/lang
+            // and compare after stripping special chars and collapsing whitespace
+            $normalized = $this->normalizeName($name);
+            $rows = db_get_array(
+                "SELECT v.variant_id, vd.variant
+                 FROM ?:product_feature_variants v
+                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                 WHERE v.feature_id = ?i AND vd.lang_code = ?s",
+                $featureId,
+                $lang
+            );
+            foreach ($rows as $row) {
+                if ($this->normalizeName($row['variant']) === $normalized) {
+                    return (int) $row['variant_id'];
+                }
             }
         }
 
         return 0;
+    }
+
+    /**
+     * Normalize a variant name for fuzzy comparison.
+     *
+     * Lowercases, strips non-alphanumeric/non-space chars, and collapses whitespace.
+     * e.g. "All-Inclusive (Premium)" => "all inclusive premium"
+     */
+    private function normalizeName(string $name): string
+    {
+        $name = mb_strtolower($name, 'UTF-8');
+        // Remove everything except letters, digits, and spaces
+        $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name);
+        // Collapse multiple spaces into one and trim
+        return trim(preg_replace('/\s+/', ' ', $name));
     }
 
     /**
