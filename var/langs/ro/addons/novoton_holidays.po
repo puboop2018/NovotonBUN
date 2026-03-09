@@ -3312,3 +3312,47 @@ msgstr "Varianta a fost rezolvată automat prin potrivire de nume sau creată au
 msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
 msgid "Variant was manually set by admin — auto-resolve will not overwrite"
 msgstr "Varianta a fost setată manual de admin — rezolvarea automată nu va suprascrie"
+
+msgctxt "Languages::novoton_holidays.cleanup_confirm"
+msgid "This will delete all bookings without orders that are older than 24 hours. Continue?"
+msgstr "Aceasta va șterge toate rezervările fără comenzi mai vechi de 24 de ore. Continuați?"
+
+msgctxt "Languages::novoton_holidays.cleanup_orphan_bookings"
+msgid "Cleanup Orphan Bookings"
+msgstr "Curățare rezervări orfane"
+
+msgctxt "Languages::novoton_holidays.show_incomplete_bookings"
+msgid "Show incomplete bookings (no order)"
+msgstr "Afișează rezervările incomplete (fără comandă)"
+
+msgctxt "Languages::novoton_holidays.quick_actions"
+msgid "Quick Actions"
+msgstr "Acțiuni rapide"
+
+msgctxt "Languages::novoton_holidays.open_dashboard"
+msgid "Open Novoton Dashboard"
+msgstr "Deschide panoul Novoton"
+
+msgctxt "Languages::novoton_holidays.cron_info_description"
+msgid "All tools and cron information are available in the Novoton Dashboard."
+msgstr "Toate instrumentele și informațiile cron sunt disponibile în panoul Novoton."
+
+msgctxt "Languages::novoton_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Comenzi Cron"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_hint"
+msgid "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+msgstr "Programați-le prin crontab-ul serverului. Înlocuiți YOUR_KEY cu cheia de acces cron configurată mai sus."
+
+msgctxt "Languages::novoton_holidays.cron_mode"
+msgid "Mode"
+msgstr "Mod"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Command"
+msgstr "Comandă"
+
+msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
+msgid "Suggested Schedule"
+msgstr "Program sugerat"

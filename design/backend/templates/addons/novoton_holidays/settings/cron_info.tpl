@@ -1,19 +1,19 @@
 <div class="control-group">
     <div class="well">
-        <h4>Quick Actions</h4>
+        <h4>{__("novoton_holidays.quick_actions")}</h4>
         <p>
             <a href="admin.php?dispatch=novoton_holidays.manage" class="btn btn-primary">
-                Open Novoton Dashboard
+                {__("novoton_holidays.open_dashboard")}
             </a>
         </p>
         <p class="muted">
-            All tools and cron information are available in the Novoton Dashboard.
+            {__("novoton_holidays.cron_info_description")}
         </p>
 
-        <h4>Cron Commands</h4>
-        <p class="muted">Schedule these via your server's crontab. Replace <code>YOUR_KEY</code> with the cron access key configured above.</p>
+        <h4>{__("novoton_holidays.cron_commands")}</h4>
+        <p class="muted">{__("novoton_holidays.cron_schedule_hint")}</p>
         <table class="table table-condensed">
-            <thead><tr><th>Mode</th><th>Command</th><th>Suggested Schedule</th></tr></thead>
+            <thead><tr><th>{__("novoton_holidays.cron_mode")}</th><th>{__("novoton_holidays.cron_command")}</th><th>{__("novoton_holidays.cron_suggested_schedule")}</th></tr></thead>
             <tbody>
                 <tr>
                     <td><strong>hotel_info_batched</strong></td>

@@ -3312,3 +3312,47 @@ msgstr "Variant was auto-resolved by name match or auto-created"
 msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
 msgid "Variant was manually set by admin — auto-resolve will not overwrite"
 msgstr "Variant was manually set by admin — auto-resolve will not overwrite"
+
+msgctxt "Languages::novoton_holidays.cleanup_confirm"
+msgid "This will delete all bookings without orders that are older than 24 hours. Continue?"
+msgstr "This will delete all bookings without orders that are older than 24 hours. Continue?"
+
+msgctxt "Languages::novoton_holidays.cleanup_orphan_bookings"
+msgid "Cleanup Orphan Bookings"
+msgstr "Cleanup Orphan Bookings"
+
+msgctxt "Languages::novoton_holidays.show_incomplete_bookings"
+msgid "Show incomplete bookings (no order)"
+msgstr "Show incomplete bookings (no order)"
+
+msgctxt "Languages::novoton_holidays.quick_actions"
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+msgctxt "Languages::novoton_holidays.open_dashboard"
+msgid "Open Novoton Dashboard"
+msgstr "Open Novoton Dashboard"
+
+msgctxt "Languages::novoton_holidays.cron_info_description"
+msgid "All tools and cron information are available in the Novoton Dashboard."
+msgstr "All tools and cron information are available in the Novoton Dashboard."
+
+msgctxt "Languages::novoton_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Cron Commands"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_hint"
+msgid "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+msgstr "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+
+msgctxt "Languages::novoton_holidays.cron_mode"
+msgid "Mode"
+msgstr "Mode"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Command"
+msgstr "Command"
+
+msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
+msgid "Suggested Schedule"
+msgstr "Suggested Schedule"
