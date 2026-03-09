@@ -32,7 +32,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:logos WHERE style_id = 'novoton_default'");
 
     // Remove product tabs
-    $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     if (!empty($tab_ids)) {
         db_query("DELETE FROM ?:product_tabs WHERE tab_id IN (?n)", $tab_ids);
         db_query("DELETE FROM ?:product_tabs_descriptions WHERE tab_id IN (?n)", $tab_ids);
@@ -42,7 +42,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'");
     
     // Remove email templates
-    db_query("DELETE FROM ?:template_emails WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
     
     // OPTIONAL: Delete products that were created by the addon
     $delete_products = ConfigProvider::isDeleteProductsOnUninstall();
@@ -108,7 +108,7 @@ function fn_novoton_holidays_uninstall(): bool
 function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 {
     if (empty($tab_id)) {
-        $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+        $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     }
     
     if ($tab_id) {
@@ -147,7 +147,7 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 function fn_novoton_holidays_post_install(): bool
 {
     // Find the tab created by CS-Cart
-    $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     
     if ($tab_id) {
         $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
