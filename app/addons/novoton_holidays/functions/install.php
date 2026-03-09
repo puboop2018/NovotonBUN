@@ -10,7 +10,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -45,7 +44,8 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
     
     // OPTIONAL: Delete products that were created by the addon
-    $delete_products = ConfigProvider::isDeleteProductsOnUninstall();
+    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $delete_products = ($addon_settings['delete_products_on_uninstall'] ?? 'N') === 'Y';
     
     if ($delete_products) {
         $addon_product_ids = db_get_fields(
