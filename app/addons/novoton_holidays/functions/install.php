@@ -10,7 +10,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -32,7 +31,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:logos WHERE style_id = 'novoton_default'");
 
     // Remove product tabs
-    $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    $tab_ids = db_get_fields("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     if (!empty($tab_ids)) {
         db_query("DELETE FROM ?:product_tabs WHERE tab_id IN (?n)", $tab_ids);
         db_query("DELETE FROM ?:product_tabs_descriptions WHERE tab_id IN (?n)", $tab_ids);
@@ -42,10 +41,11 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'");
     
     // Remove email templates
-    db_query("DELETE FROM ?:template_emails WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
     
     // OPTIONAL: Delete products that were created by the addon
-    $delete_products = ConfigProvider::isDeleteProductsOnUninstall();
+    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $delete_products = ($addon_settings['delete_products_on_uninstall'] ?? 'N') === 'Y';
     
     if ($delete_products) {
         $addon_product_ids = db_get_fields(
@@ -72,6 +72,18 @@ function fn_novoton_holidays_uninstall(): bool
         fn_rm($reports_dir);
     }
 
+    // Remove novoton_logs directory and its contents
+    $logs_dir = fn_get_files_dir_path() . 'novoton_logs/';
+    if (is_dir($logs_dir)) {
+        fn_rm($logs_dir);
+    }
+
+    // Remove API file cache directory (var/cache/novoton/)
+    $cache_dir = Registry::get('config.dir.root') . '/var/cache/novoton/';
+    if (is_dir($cache_dir)) {
+        fn_rm($cache_dir);
+    }
+
     // Drop all addon tables (in correct order due to foreign key constraints)
     db_query("DROP TABLE IF EXISTS ?:novoton_resorts");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_facilities");
@@ -96,7 +108,7 @@ function fn_novoton_holidays_uninstall(): bool
 function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 {
     if (empty($tab_id)) {
-        $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+        $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     }
     
     if ($tab_id) {
@@ -135,7 +147,7 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 function fn_novoton_holidays_post_install(): bool
 {
     // Find the tab created by CS-Cart
-    $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     
     if ($tab_id) {
         $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
