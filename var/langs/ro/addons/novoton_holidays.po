@@ -3249,6 +3249,22 @@ msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
 msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
 msgstr "Suprascrie setarea addon-ului pentru această mapare specifică. De obicei setat prin setările addon-ului."
 
+msgctxt "Languages::novoton_holidays.fm_not_mapped"
+msgid "Not mapped"
+msgstr "Nemaapat"
+
+msgctxt "Languages::novoton_holidays.fm_variant_hint"
+msgid "Select the CS-Cart variant that corresponds to this API value."
+msgstr "Selectați varianta CS-Cart care corespunde acestei valori din API."
+
+msgctxt "Languages::novoton_holidays.fm_no_variants_exist"
+msgid "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+msgstr "Nu există variante pentru această caracteristică CS-Cart. Creați-le în Produse > Caracteristici mai întâi."
+
+msgctxt "Languages::novoton_holidays.fm_configure_feature_first"
+msgid "Set a CS-Cart Feature ID first."
+msgstr "Setați mai întâi un ID de caracteristică CS-Cart."
+
 msgctxt "Languages::novoton_holidays.fm_created_at"
 msgid "Created"
 msgstr "Creat"
@@ -3257,6 +3273,86 @@ msgctxt "Languages::menu::feature_mappings"
 msgid "Feature Mappings"
 msgstr "Mapări Caracteristici"
 
+msgctxt "Languages::novoton_holidays.actions.novoton_dashboard"
+msgid "Novoton Dashboard"
+msgstr "Novoton Dashboard"
+
 msgctxt "Languages::novoton_holidays.actions.import_facilities"
 msgid "Import All Facilities from API"
 msgstr "Importă Toate Facilitățile din API"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_variants"
+msgid "Auto-resolve Variants"
+msgstr "Rezolvare automată variante"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_confirm"
+msgid "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+msgstr "Aceasta va rezolva automat toate variantele nemapate prin potrivirea numelor cu variantele CS-Cart existente și va crea variante noi unde nu se găsește potrivire. Variantele setate manual nu vor fi modificate. Continuați?"
+
+msgctxt "Languages::novoton_holidays.fm_variants_resolved"
+msgid "[resolved] matched, [created] created, [failed] failed"
+msgstr "[resolved] potrivite, [created] create, [failed] eșuate"
+
+msgctxt "Languages::novoton_holidays.fm_variant_source"
+msgid "Variant Set"
+msgstr "Setare variantă"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual"
+msgid "manual"
+msgstr "manual"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto_hint"
+msgid "Variant was auto-resolved by name match or auto-created"
+msgstr "Varianta a fost rezolvată automat prin potrivire de nume sau creată automat"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
+msgid "Variant was manually set by admin — auto-resolve will not overwrite"
+msgstr "Varianta a fost setată manual de admin — rezolvarea automată nu va suprascrie"
+
+msgctxt "Languages::novoton_holidays.cleanup_confirm"
+msgid "This will delete all bookings without orders that are older than 24 hours. Continue?"
+msgstr "Aceasta va șterge toate rezervările fără comenzi mai vechi de 24 de ore. Continuați?"
+
+msgctxt "Languages::novoton_holidays.cleanup_orphan_bookings"
+msgid "Cleanup Orphan Bookings"
+msgstr "Curățare rezervări orfane"
+
+msgctxt "Languages::novoton_holidays.show_incomplete_bookings"
+msgid "Show incomplete bookings (no order)"
+msgstr "Afișează rezervările incomplete (fără comandă)"
+
+msgctxt "Languages::novoton_holidays.quick_actions"
+msgid "Quick Actions"
+msgstr "Acțiuni rapide"
+
+msgctxt "Languages::novoton_holidays.open_dashboard"
+msgid "Open Novoton Dashboard"
+msgstr "Deschide panoul Novoton"
+
+msgctxt "Languages::novoton_holidays.cron_info_description"
+msgid "All tools and cron information are available in the Novoton Dashboard."
+msgstr "Toate instrumentele și informațiile cron sunt disponibile în panoul Novoton."
+
+msgctxt "Languages::novoton_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Comenzi Cron"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_hint"
+msgid "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+msgstr "Programați-le prin crontab-ul serverului. Înlocuiți YOUR_KEY cu cheia de acces cron configurată mai sus."
+
+msgctxt "Languages::novoton_holidays.cron_mode"
+msgid "Mode"
+msgstr "Mod"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Command"
+msgstr "Comandă"
+
+msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
+msgid "Suggested Schedule"
+msgstr "Program sugerat"

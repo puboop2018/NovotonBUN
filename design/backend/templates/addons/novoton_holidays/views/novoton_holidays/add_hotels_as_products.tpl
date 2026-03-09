@@ -1,4 +1,4 @@
-{** Add Hotels as Products - Configuration Form **}
+{* Add Hotels as Products - Configuration Form *}
 
 {capture name="mainbox"}
 
@@ -25,8 +25,8 @@
 
 <div class="add-products-form">
 
-    {** Country selector tabs **}
-    {if $available_countries|count > 1}
+    {* Country selector tabs *}
+    {if $available_countries && $available_countries|@count > 1}
     <div class="country-tabs">
         {foreach from=$available_countries item=c}
             <a href="{"novoton_holidays.add_hotels_as_products&country=`$c`"|fn_url}"
@@ -40,7 +40,7 @@
         <input type="hidden" name="run" value="1">
         <input type="hidden" name="country" value="{$country}">
 
-        {** Statistics **}
+        {* Statistics *}
         <div class="section">
             <h3>Statistics for {$country}</h3>
             <div class="stat-grid">
@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        {** Import Settings **}
+        {* Import Settings *}
         <div class="section">
             <h3>Import Settings</h3>
 
@@ -114,7 +114,7 @@
             </div>
         </div>
 
-        {** Resort Selection **}
+        {* Resort Selection *}
         {if $resorts}
         <div class="section">
             <h3>Select Resorts</h3>
@@ -135,7 +135,7 @@
         </div>
         {/if}
 
-        {** Submit **}
+        {* Submit *}
         <div class="buttons-container">
             <button type="submit" class="btn btn-primary btn-large">
                 <i class="icon-plus"></i> Start Import

@@ -57,8 +57,13 @@ class ProductFactory implements ProductFactoryInterface
             return (int)$existingProductId;
         }
 
+        // Format display name (Title Case + append property type for short names)
+        $displayName = function_exists('fn_novoton_holidays_format_hotel_display_name')
+            ? fn_novoton_holidays_format_hotel_display_name($hotelName)
+            : $hotelName;
+
         // Build page title
-        $pageTitle = self::buildHotelTitle($hotelName, $city, $country, date('Y'));
+        $pageTitle = self::buildHotelTitle($displayName, $city, $country, date('Y'));
 
         // Fetch description
         $description = '';
@@ -73,7 +78,7 @@ class ProductFactory implements ProductFactoryInterface
 
         // Create product
         $productData = [
-            'product' => $hotelName,
+            'product' => $displayName,
             'product_code' => $productCode,
             'price' => 0,
             'status' => 'D',

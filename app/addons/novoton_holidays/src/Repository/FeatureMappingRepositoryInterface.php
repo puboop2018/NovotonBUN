@@ -30,9 +30,11 @@ interface FeatureMappingRepositoryInterface
     public function getCsCartFeatureType(string $featureType, string $provider = 'novoton'): ?string;
 
     /**
-     * Update the cs_cart_variant_id after auto-creation.
+     * Update the cs_cart_variant_id and optionally variant_source.
+     *
+     * @param string|null $variantSource 'auto' or 'manual' (null = don't change)
      */
-    public function updateVariantId(int $mappingId, int $variantId): bool;
+    public function updateVariantId(int $mappingId, int $variantId, ?string $variantSource = null): bool;
 
     /**
      * Auto-register an unknown value with mapping_source='auto'.

@@ -811,6 +811,17 @@ Orphan bookings (order_id=0, older than 24h) are abandoned cart items that can b
 
 Themes: `responsive` (default CS-Cart) and `nova_theme`.
 
+### Frontend JS Configuration (`NovotonConfig`)
+
+The `scripts.post.tpl` hook exposes a global `window.NovotonConfig` object:
+
+| Property | Description |
+|----------|-------------|
+| `debug` | `true`/`false` — mirrors addon debug_mode setting |
+| `ajaxRecalcUrl` | Pre-built URL for AJAX price recalculation (includes `storefront_id` via `fn_url`) |
+
+All JS files should use `NovotonConfig.ajaxRecalcUrl` instead of building AJAX URLs manually. This ensures CS-Cart multi-storefront compatibility.
+
 ### Booking Controller Modes (Frontend)
 
 | Dispatch | Description |
@@ -1040,6 +1051,11 @@ For search page debugging, pass `&debug=1` in the search URL.
 - Check BNR API connectivity
 - Verify `cron_password` parameter
 - Check commission is between 0-5%
+
+#### "ID-ul magazinului este necesar (parametrul storefront_id)"
+- Fixed in A88: AJAX `fetch()` calls now use `fn_url`-generated URLs that include `storefront_id`
+- JS files use `NovotonConfig.ajaxRecalcUrl` (set in `scripts.post.tpl` via `fn_url`)
+- If this error reappears, check that `scripts.post.tpl` hook is loading (clear template cache)
 
 #### PHP warnings corrupting JSON response
 - Fixed in A86: AJAX URLs now send only `dispatch` param (no leaked URL params)

@@ -591,7 +591,7 @@ class SearchService implements SearchServiceInterface
                     'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                     'board_id'               => $boardId,
                     'board_name'             => fn_novoton_holidays_format_board_name($boardId),
-                    'package_name'           => urldecode(self::xpathValue($packageNames, $i)),
+                    'package_name'           => rawurldecode(self::xpathValue($packageNames, $i)),
                     'price_data'             => null,
                     'nights'                 => $nights,
                     'total_price'            => $finalPrice,
@@ -647,7 +647,7 @@ class SearchService implements SearchServiceInterface
                 'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
                 'board_id'               => $boardId,
                 'board_name'             => fn_novoton_holidays_format_board_name($boardId),
-                'package_name'           => urldecode($packageName),
+                'package_name'           => rawurldecode($packageName),
                 'price_data'             => null, // SimpleXMLElement not serializable for cache
                 'nights'                 => $nights,
                 'total_price'            => $finalPrice,

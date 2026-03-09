@@ -90,6 +90,12 @@
                 <i class="icon-refresh"></i> {__("novoton_holidays.fm_reseed")}
             </button>
         </form>
+        <form action="{"novoton_feature_mappings.resolve_variants"|fn_url}" method="post" class="form-inline" style="display: inline-block; margin-left: 5px;">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
+            <button type="submit" class="btn btn-success" onclick="return confirm('{__("novoton_holidays.fm_resolve_confirm")}');">
+                <i class="icon-magic"></i> {__("novoton_holidays.fm_resolve_variants")}
+            </button>
+        </form>
     </div>
 
     {* Mappings Table *}
@@ -122,6 +128,7 @@
                     <th width="80">{__("novoton_holidays.fm_variant_id")}</th>
                     <th width="80">{__("novoton_holidays.fm_cs_type")}</th>
                     <th width="60">{__("novoton_holidays.fm_source")}</th>
+                    <th width="70">{__("novoton_holidays.fm_variant_source")}</th>
                     <th width="60">{__("status")}</th>
                     <th width="120">{__("novoton_holidays.fm_last_synced")}</th>
                     <th width="80">{__("tools")}</th>
@@ -159,6 +166,15 @@
                             <span class="label label-warning">{__("novoton_holidays.fm_source_auto")}</span>
                         {else}
                             <span class="label label-info">{__("novoton_holidays.fm_source_manual")}</span>
+                        {/if}
+                    </td>
+                    <td>
+                        {if $m.variant_source == 'manual'}
+                            <span class="label label-info" title="{__("novoton_holidays.fm_variant_manual_hint")}"><i class="icon-lock"></i> {__("novoton_holidays.fm_variant_manual")}</span>
+                        {elseif $m.variant_source == 'auto'}
+                            <span class="label" title="{__("novoton_holidays.fm_variant_auto_hint")}">{__("novoton_holidays.fm_variant_auto")}</span>
+                        {else}
+                            <span class="muted">-</span>
                         {/if}
                     </td>
                     <td>

@@ -228,12 +228,8 @@ if ($mode == 'add_hotels_as_products') {
         Tygh::$app['view']->assign('languages', $languages);
         Tygh::$app['view']->assign('available_countries', $available_countries);
     } catch (\Throwable $e) {
-        fn_log_event('general', 'runtime', [
-            'message' => 'add_hotels_as_products FAILED: ' . $e->getMessage(),
-            'file'    => $e->getFile() . ':' . $e->getLine(),
-            'trace'   => $e->getTraceAsString(),
-        ]);
         fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
+        error_log('[novoton] add_hotels_as_products FAILED: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
 }

@@ -15,10 +15,9 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 
     $bookingData = $_REQUEST;
     
-    // Fix room_id: PHP URL decoding converts + to space, restore it
-    // Pattern: "DBL 2 1)" should be "DBL 2+1)"
+    // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
-        $bookingData['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $bookingData['room_id']);
+        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code($bookingData['room_id']);
     }
     
     // Check if this is a multi-room booking
@@ -27,16 +26,19 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
     // Parse rooms_data if it's a string (from form submission)
     $rooms_data = [];
     if (!empty($bookingData['rooms_data'])) {
-        $rooms_data = is_string($bookingData['rooms_data']) 
-            ? json_decode(urldecode($bookingData['rooms_data']), true) 
+        $rooms_data = is_string($bookingData['rooms_data'])
+            ? json_decode(rawurldecode($bookingData['rooms_data']), true)
             : $bookingData['rooms_data'];
         if (!is_array($rooms_data)) {
             $rooms_data = [];
         }
-        // Fix room_id in each room (+ converted to space by URL decoding)
+        // Normalize room_id and room_name in each room (restore + lost by URL decoding)
         foreach ($rooms_data as &$room) {
             if (!empty($room['room_id'])) {
-                $room['room_id'] = preg_replace('/(\d)\s+(\d)/', '$1+$2', $room['room_id']);
+                $room['room_id'] = fn_novoton_holidays_normalize_room_code($room['room_id']);
+            }
+            if (!empty($room['room_name'])) {
+                $room['room_name'] = fn_novoton_holidays_normalize_room_code($room['room_name']);
             }
         }
         unset($room);
@@ -171,7 +173,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
         $package_name = $bookingData['package_name'];
     }
     // Decode URL encoding (e.g., %2b -> +)
-    $package_name = urldecode($package_name);
+    $package_name = rawurldecode($package_name);
     // Do NOT fall back to database - package_name must come from room_price result
     
     // Get hotel stars

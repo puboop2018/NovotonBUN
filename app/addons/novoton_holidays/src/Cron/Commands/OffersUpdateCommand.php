@@ -112,8 +112,10 @@ class OffersUpdateCommand extends AbstractCronCommand
                 $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
                 $category_id = fn_novoton_holidays_get_or_create_category($category_path);
             }
+            $raw_name = $existing['hotel_name'] ?? $hotel_name;
+            $display_name = fn_novoton_holidays_format_hotel_display_name($raw_name);
             $page_title = fn_novoton_holidays_build_hotel_title(
-                $existing['hotel_name'] ?? $hotel_name,
+                $display_name,
                 $existing['city'] ?? '',
                 $existing['country'] ?? $country,
                 $current_year
@@ -130,7 +132,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
 
             $product_data = [
-                'product' => $existing['hotel_name'] ?? $hotel_name,
+                'product' => $display_name,
                 'product_code' => $product_code,
                 'price' => 0,
                 'status' => 'D',

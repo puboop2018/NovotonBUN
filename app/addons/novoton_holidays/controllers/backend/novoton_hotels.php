@@ -222,12 +222,30 @@ if ($mode == 'add_hotels_as_products') {
             }
             
             try {
+                // Detect property type and format display name
+                $propertyDetector = new \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector();
+                $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
+                $packageNames = [];
+                $roomNames = [];
+                if (!empty($hotelData['packages'])) {
+                    foreach ($hotelData['packages'] as $pkg) {
+                        $packageNames[] = is_array($pkg) ? ($pkg['PackageName'] ?? '') : (string) $pkg;
+                    }
+                }
+                if (!empty($hotelData['rooms'])) {
+                    foreach ($hotelData['rooms'] as $rm) {
+                        $roomNames[] = is_array($rm) ? ($rm['Type'] ?? $rm['IdRoom'] ?? '') : (string) $rm;
+                    }
+                }
+                $detectedType = $propertyDetector->detect($hotel['hotel_name'], $packageNames, $roomNames);
+                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel['hotel_name'], $detectedType);
+
                 // Build product title
-                $title = fn_novoton_holidays_build_hotel_title($hotel_name, $hotel['city'], $country, date('Y'));
-                
+                $title = fn_novoton_holidays_build_hotel_title($display_name, $hotel['city'], $country, date('Y'));
+
                 // Create product
                 $product_data = [
-                    'product' => $title,
+                    'product' => $display_name,
                     'product_code' => ConfigProvider::PRODUCT_CODE_PREFIX . $hotel_id,
                     'price' => 0,
                     'status' => 'A',

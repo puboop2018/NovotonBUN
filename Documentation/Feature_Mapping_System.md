@@ -2,8 +2,8 @@
 
 ## Provider-Agnostic Hub for CS-Cart Product Features
 
-**Version:** 1.0
-**Date:** 2026-03-06
+**Version:** 1.1
+**Date:** 2026-03-09
 **Scope:** Novoton XML API + Sphinx REST API (+ future providers)
 **Addon:** `novoton_holidays` (v3.3.0+)
 
@@ -322,6 +322,7 @@ CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
     `provider_code`       varchar(255) NOT NULL,
     `cs_cart_feature_id`  int(11) unsigned NOT NULL,
     `cs_cart_variant_id`  int(11) unsigned DEFAULT NULL,
+    `variant_source`      enum('auto','manual') DEFAULT NULL,
     `cs_cart_feature_type` char(1)     NOT NULL DEFAULT 'S',
     `display_name_en`     varchar(255) DEFAULT NULL,
     `display_name_ro`     varchar(255) DEFAULT NULL,
@@ -350,6 +351,7 @@ CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
 | `provider_code` | varchar(255) | The canonical code after normalization: `'AI'`, `'FB+'`, `'4'`, `'42'` (facility_id), `'SUNNY BEACH'` (resort name) |
 | `cs_cart_feature_id` | int | Links to CS-Cart's `product_features.feature_id`. Configured via addon settings |
 | `cs_cart_variant_id` | int or NULL | Links to CS-Cart's `product_feature_variants.variant_id`. Auto-populated on first use |
+| `variant_source` | enum or NULL | How the variant was resolved: `'auto'` = name-matched or auto-created by `ensureVariantExists()`, `'manual'` = set by admin via dropdown. `NULL` = unresolved. **Manual locks are never overwritten by auto-resolve.** |
 | `cs_cart_feature_type` | char(1) | `'S'` = SelectBox (single value), `'M'` = Multiple Checkboxes. Cached from CS-Cart's actual feature type |
 | `display_name_en` | varchar(255) | English name for auto-creating CS-Cart variants (e.g., `"All Inclusive"`) |
 | `display_name_ro` | varchar(255) | Romanian name for auto-creating CS-Cart variants (e.g., `"All Inclusive"`) |
@@ -462,12 +464,21 @@ Step 2: updateLastSynced(mapping_id)
 
 Step 3: ensureVariantExists(mapping)
         │
-        ├── cs_cart_variant_id exists in CS-Cart → use it
+        ├── cs_cart_variant_id > 0 AND exists in CS-Cart → use it (fast path)
         │
-        └── variant missing or never created → createCsCartVariant()
+        ├── variant_source = 'manual' → SKIP auto-resolve (admin locked it)
+        │   └── return 0 if variant deleted, or existing id
+        │
+        ├── findVariantByName(mapping) → 3-pass fuzzy match
+        │   ├── Pass 1: Exact name match (EN, then RO)
+        │   ├── Pass 2: Case-insensitive LOWER() match
+        │   └── Pass 3: Normalized match (strip punctuation, collapse whitespace)
+        │   └── if found → updateVariantId(mapping_id, matched_id, 'auto')
+        │
+        └── No match → createCsCartVariant()
             ├── INSERT INTO product_feature_variants (feature_id, position)
             ├── INSERT INTO product_feature_variant_descriptions (for each active language)
-            └── updateVariantId(mapping_id, new_variant_id) → cache back
+            └── updateVariantId(mapping_id, new_variant_id, 'auto')
 
 Step 4: Assign based on cs_cart_feature_type
         │
@@ -519,9 +530,47 @@ Step 4: Execute diff
 
 This diff approach is critical for avoiding unnecessary deletes/inserts and for handling hotels whose meal plans change over time.
 
-### 6.3 `ensureVariantExists()` — Auto-Creating CS-Cart Variants
+### 6.3 `ensureVariantExists()` — Auto-Resolving & Creating CS-Cart Variants
 
-When a mapping row's `cs_cart_variant_id` is null (first use) or the variant was deleted by an admin, the FeatureMapper automatically creates it:
+When a mapping row's `cs_cart_variant_id` is null (first use) or the variant was deleted from CS-Cart, the FeatureMapper resolves it using a multi-step strategy:
+
+#### Resolution Order
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ variant_id = 0/NULL, variant_source = NULL → Unresolved │
+│   ↓ Step 1: Check if stored variant_id exists in DB     │
+│   ↓ Step 2: If variant_source = 'manual' → SKIP         │
+│   ↓ Step 3: findVariantByName() — 3-pass fuzzy match    │
+│   ↓ Step 4: If no match → createCsCartVariant()         │
+│   ↓ Sets variant_id + variant_source = 'auto'           │
+│                                                         │
+│ variant_source = 'auto' → Auto-resolved                 │
+│   ✓ Auto-resolve CAN re-resolve (if variant deleted)    │
+│   ✓ Admin can override via dropdown → becomes 'manual'  │
+│                                                         │
+│ variant_source = 'manual' → LOCKED                      │
+│   ✗ Auto-resolve SKIPS this row entirely                │
+│   ✓ Admin can change via dropdown (stays 'manual')      │
+│   ✓ Admin picks "Not mapped" → resets to NULL (unlocked)│
+└─────────────────────────────────────────────────────────┘
+```
+
+#### `findVariantByName()` — 3-Pass Fuzzy Match
+
+Searches existing CS-Cart variants by display name. Tries EN first, then RO fallback. For each language:
+
+| Pass | Strategy | Example Match |
+|------|----------|---------------|
+| 1 | **Exact** — `WHERE vd.variant = ?s` | `"All Inclusive"` = `"All Inclusive"` |
+| 2 | **Case-insensitive** — `WHERE LOWER(vd.variant) = LOWER(?s)` | `"all inclusive"` = `"All Inclusive"` |
+| 3 | **Normalized** — strip non-alphanumeric, collapse whitespace | `"All-Inclusive"` = `"All Inclusive"`, `"HALF BOARD+"` = `"Half Board +"` |
+
+Returns the first match found. If a match is found, the mapping is updated with `variant_source = 'auto'`.
+
+#### `createCsCartVariant()` — Auto-Creation
+
+When no existing variant matches, a new one is created:
 
 ```php
 private function createCsCartVariant(array $mapping): int
@@ -1087,11 +1136,27 @@ Accessible at `admin.php?dispatch=novoton_feature_mappings.manage`
 | Action | Mode | Description |
 |--------|------|-------------|
 | **List/Filter** | `manage` | View all mappings grouped by feature type. Filter by: feature type, mapping source (seed/auto/manual), active status |
-| **Edit** | `edit` | Edit a single mapping: display names (EN/RO), position, active status, CS-Cart feature ID |
+| **Edit** | `edit` | Edit a single mapping: display names (EN/RO), position, active status, CS-Cart feature ID, **CS-Cart variant dropdown** |
 | **Bulk Activate** | `bulk_update` (activate) | Activate multiple selected mappings |
 | **Bulk Deactivate** | `bulk_update` (deactivate) | Deactivate multiple selected mappings |
 | **Bulk Delete** | `bulk_update` (delete) | Delete multiple selected mappings |
 | **Re-seed** | `reseed` | Re-run `fn_novoton_holidays_seed_feature_mappings()` to restore/update seed data |
+| **Auto-resolve Variants** | `resolve_variants` | Batch name-match unmapped variants using `findVariantByName()`. Skips `variant_source='manual'` rows. Creates new variants when no match found |
+
+### Variant Source Tracking
+
+The `variant_source` column tracks how each mapping's variant was resolved:
+
+| Value | Meaning | Auto-resolve behavior |
+|-------|---------|----------------------|
+| `NULL` | Unresolved — no variant assigned yet | Will be auto-resolved |
+| `'auto'` | Set by `ensureVariantExists()` or "Auto-resolve Variants" button | Can be re-resolved if variant deleted |
+| `'manual'` | Set by admin via the variant dropdown in edit form | **Locked** — auto-resolve skips this row |
+
+**Admin workflow:**
+1. Click "Auto-resolve Variants" → bulk-matches all unmapped rows by display name
+2. Edit a mapping → pick a variant from the dropdown → `variant_source = 'manual'` (locked)
+3. Edit a mapping → pick "Not mapped" → `variant_source = NULL` (unlocked for auto-resolve)
 
 ### Dashboard Stats
 

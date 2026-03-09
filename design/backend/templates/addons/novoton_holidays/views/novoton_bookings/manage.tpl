@@ -67,8 +67,8 @@
     {* Cleanup Orphans Button *}
     <form action="{"novoton_bookings.cleanup_orphans"|fn_url}" method="post" class="form-inline" style="display: inline-block; margin-left: 10px; margin-bottom: 20px;">
         <input type="hidden" name="security_hash" value="{$security_hash}">
-        <button type="submit" class="btn btn-warning" onclick="return confirm('This will delete all bookings without orders that are older than 24 hours. Continue?');">
-            <i class="icon-trash"></i> Cleanup Orphan Bookings
+        <button type="submit" class="btn btn-warning" onclick="return confirm('{__("novoton_holidays.cleanup_confirm")|escape:"javascript"}');">
+            <i class="icon-trash"></i> {__("novoton_holidays.cleanup_orphan_bookings")}
         </button>
     </form>
 
@@ -76,7 +76,7 @@
     <form action="{"novoton_bookings.manage"|fn_url}" method="get" class="form-inline" style="display: inline-block; margin-left: 20px;">
         <label style="cursor: pointer;">
             <input type="checkbox" name="show_orphans" value="1" {if $search.show_orphans}checked{/if} onchange="this.form.submit()">
-            Show incomplete bookings (no order)
+            {__("novoton_holidays.show_incomplete_bookings")}
         </label>
     </form>
 

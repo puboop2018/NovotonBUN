@@ -322,8 +322,9 @@
         // Build clean AJAX URL — only dispatch param, all data in JSON body.
         // Do NOT inherit parent page URL params (children_ages[], etc.) as they
         // cause PHP warnings in CS-Cart's init that corrupt the JSON response.
-        var baseUrl = (window.Tygh && window.Tygh.current_location) || window.location.origin;
-        var ajaxUrl = baseUrl + '/index.php?dispatch=novoton_booking.ajax_recalculate_price';
+        // Use pre-built URL from template (includes storefront_id) with fallback
+        var ajaxUrl = (window.NovotonConfig && window.NovotonConfig.ajaxRecalcUrl)
+            || ((window.Tygh && window.Tygh.current_location) || window.location.origin) + '/index.php?dispatch=novoton_booking.ajax_recalculate_price';
 
         fetch(ajaxUrl, {
             method: 'POST',

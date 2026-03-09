@@ -213,6 +213,11 @@ function fn_novoton_holidays_setup_db(): void
             'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin' AFTER `star_rating`",
             'post_sql' => "ALTER TABLE ?:novoton_hotels ADD KEY `idx_property_type` (`property_type`)",
         ],
+        [
+            'table'   => '?:hotel_feature_mappings',
+            'column'  => 'variant_source',
+            'sql'     => "ALTER TABLE ?:hotel_feature_mappings ADD COLUMN `variant_source` enum('auto','manual') DEFAULT NULL COMMENT 'How variant was resolved: auto=name-match/create, manual=admin override' AFTER `mapping_source`",
+        ],
     ];
 
     foreach ($migrations as $migration) {
@@ -290,6 +295,60 @@ function fn_novoton_holidays_setup_db(): void
             );
         }
     }
+}
+
+/**
+ * Ensure the feature mapping table is populated.
+ *
+ * Checks whether `hotel_feature_mappings` has active rows for each feature
+ * type whose addon setting (feature_id_*) is configured (> 0).
+ * If mappings are missing, calls the seed function to populate them.
+ *
+ * Returns diagnostic info about which feature types are configured vs unconfigured.
+ *
+ * Idempotent — safe to call on every cron run (fast no-op when mappings exist).
+ *
+ * @return array{configured: string[], unconfigured: string[], seeded: int}
+ */
+function fn_novoton_holidays_ensure_feature_mappings(): array
+{
+    $configured   = [];
+    $unconfigured = [];
+    $needsSeed    = false;
+
+    foreach (\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING as $featureType => $settingKey) {
+        $featureId = (int) Registry::get($settingKey);
+
+        if ($featureId <= 0) {
+            $unconfigured[] = $featureType;
+            continue;
+        }
+
+        $configured[] = $featureType;
+
+        // Check if this feature type has any active mappings
+        $count = (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = ?s AND cs_cart_feature_id = ?i AND is_active = 'Y'",
+            $featureType,
+            $featureId
+        );
+
+        if ($count === 0) {
+            $needsSeed = true;
+        }
+    }
+
+    $seeded = 0;
+    if ($needsSeed && !empty($configured)) {
+        $seedResult = fn_novoton_holidays_seed_feature_mappings();
+        $seeded = $seedResult['seeded'] ?? 0;
+    }
+
+    return [
+        'configured'   => $configured,
+        'unconfigured' => $unconfigured,
+        'seeded'       => $seeded,
+    ];
 }
 
 /**

@@ -15,6 +15,7 @@
 <script>
 window.NovotonConfig = window.NovotonConfig || {};
 window.NovotonConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true{else}false{/if};
+window.NovotonConfig.ajaxRecalcUrl = '{"novoton_booking.ajax_recalculate_price"|fn_url:"C"}';
 </script>
 
 {* Core booking functionality - always load *}

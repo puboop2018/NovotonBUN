@@ -1,5 +1,25 @@
 # Novoton Holidays - Changelog
 
+## A88 — Codebase Audit + Storefront ID Fix
+
+### Bug Fixes
+
+- **FIXED:** "ID-ul magazinului este necesar (parametrul storefront_id)" error on frontend
+  - Root cause: manual `fetch()` AJAX calls bypassed CS-Cart's `fn_url` URL builder, missing the required `storefront_id` parameter for multi-storefront setups
+  - `booking_form.tpl` (both themes): replaced manual URL construction with `fn_url` Smarty function
+  - `scripts.post.tpl` (both themes): added `NovotonConfig.ajaxRecalcUrl` — pre-built URL via `fn_url` exposed to JavaScript
+  - `booking-form-validation.js`: uses `NovotonConfig.ajaxRecalcUrl` with fallback
+  - `dob-validation.js`: uses `NovotonConfig.ajaxRecalcUrl` with fallback
+
+### Code Quality (Codebase Audit)
+
+- **REMOVED:** Empty leftover template files (`country_selector.tpl`, `update_prices_button.tpl`)
+- **CHANGED:** Replaced hardcoded English strings in `novoton_bookings/manage.tpl` with `__()` language calls (cleanup confirm, orphan bookings button, incomplete bookings toggle)
+- **CHANGED:** Replaced hardcoded strings in `settings/cron_info.tpl` with language variables (headings, descriptions, table headers)
+- **ADDED:** 11 new translation keys to both EN and RO `.po` language files
+
+---
+
 ## Version 3.2.0
 
 Complete hotel booking integration with Novoton XML API.
