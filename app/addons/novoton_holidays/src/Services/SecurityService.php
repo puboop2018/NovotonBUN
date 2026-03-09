@@ -220,23 +220,13 @@ class SecurityService implements SecurityServiceInterface
         foreach ($guests as $key => $guest) {
             if (!is_array($guest)) continue;
             
-            // Resolve age: prefer calculated_age (from DOB), then age, then original_age
-            $age = null;
-            if (isset($guest['calculated_age']) && $guest['calculated_age'] !== '') {
-                $age = max(0, min(99, (int) $guest['calculated_age']));
-            } elseif (isset($guest['age']) && $guest['age'] !== '') {
-                $age = max(0, min(99, (int) $guest['age']));
-            } elseif (isset($guest['original_age']) && $guest['original_age'] !== '') {
-                $age = max(0, min(99, (int) $guest['original_age']));
-            }
-
             $sanitized[$key] = [
                 'first_name' => $this->sanitizeName($guest['first_name'] ?? ''),
                 'last_name' => $this->sanitizeName($guest['last_name'] ?? ''),
                 'name' => $this->sanitizeName($guest['name'] ?? ''),
                 'api_name' => $this->sanitizeName($guest['api_name'] ?? ''),
                 'type' => in_array($guest['type'] ?? '', ['adult', 'child']) ? $guest['type'] : 'adult',
-                'age' => $age,
+                'age' => isset($guest['age']) ? max(0, min(99, (int) $guest['age'])) : null,
                 'room' => max(1, min(5, (int) ($guest['room'] ?? 1))),
                 'is_holder' => !empty($guest['is_holder']),
             ];
