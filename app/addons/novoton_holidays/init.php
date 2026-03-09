@@ -60,6 +60,10 @@ spl_autoload_register(function ($class) {
 // addon (hooks, modifiers, registration) is killed. Never run DB schema
 // changes in init.php.
 
+// Load service accessor functions (_nvt_api, _nvt_hotel_repo, etc.)
+// These are plain functions (not class methods), so the PSR-4 autoloader won't load them.
+require_once __DIR__ . '/src/Services/ServiceLoader.php';
+
 // Force load hooks.php
 require_once __DIR__ . '/hooks.php';
 
