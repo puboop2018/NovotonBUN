@@ -180,8 +180,9 @@ class PriceInfoSync
             // Update hotel's has_prices flag and packages_count
             if ($packagesUpdated > 0) {
                 db_query(
-                    "UPDATE ?:novoton_hotels SET has_prices = 'Y', packages_count = ?i WHERE hotel_id = ?s",
+                    "UPDATE ?:novoton_hotels SET has_prices = 'Y', packages_count = ?i, last_price_check = ?s WHERE hotel_id = ?s",
                     $packagesUpdated,
+                    date('Y-m-d H:i:s'),
                     $hotelId
                 );
 
