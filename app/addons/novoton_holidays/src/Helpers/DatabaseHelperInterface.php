@@ -20,7 +20,7 @@ interface DatabaseHelperInterface
      * @param array $withoutPrices Hotel IDs that don't have prices
      * @return int Number of rows affected
      */
-    public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int;
+    public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int;
 
     /**
      * Bulk lookup: Get existing product IDs for multiple hotel IDs.

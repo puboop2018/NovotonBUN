@@ -461,11 +461,10 @@ class HotelSync
             usleep(Constants::API_DELAY_MODERATE);
         }
 
-        // Update hotel has_room_price flag
-        $hasRoomPrice = $synced > 0 ? 'Y' : 'N';
+        // Update packages_count (has_room_price is set exclusively by room_price check)
         db_query(
-            "UPDATE ?:novoton_hotels SET has_room_price = ?s WHERE hotel_id = ?s",
-            $hasRoomPrice,
+            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
+            $synced,
             $hotelId
         );
 

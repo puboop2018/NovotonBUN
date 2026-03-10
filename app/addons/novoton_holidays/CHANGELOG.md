@@ -1,5 +1,16 @@
 # Novoton Holidays - Changelog
 
+## A92 — Audit Fixes: HotelSync has_room_price Bug, Method & Filter Renames
+
+### Bug Fix: has_room_price incorrectly set in HotelSync.php (missed in A91)
+
+- **FIXED:** `HotelSync::syncPackagesForHotel()` was setting `has_room_price` based on priceinfo package sync count — now correctly updates only `packages_count` (matching the A91 fix applied to `helpers.php`, `BatchedHotelInfoSync.php`, `PriceInfoSync.php`)
+
+### Code Smell: Method and filter renames for clarity
+
+- **RENAMED:** `batchUpdateHasPricesFlag()` → `batchUpdateHasRoomPriceFlag()` in `DatabaseHelper`, `DatabaseHelperInterface`, `RoomPriceCheckCommand` — method name now matches the `has_room_price` column it updates
+- **RENAMED:** `has_room_prices` filter → `has_verified_room_price` in `HotelRepository::buildWhereClause()` and `novoton_holidays.php` controller — eliminates confusing singular/plural distinction with `has_room_price`
+
 ## A91 — room_price Exclusivity Fix, OK → Good Status Rename, Dashboard Documentation
 
 ### Bug Fix: has_room_price Set Exclusively by room_price Check

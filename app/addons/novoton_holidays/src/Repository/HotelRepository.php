@@ -391,7 +391,7 @@ class HotelRepository implements HotelRepositoryInterface
         if (!empty($filters['has_packages'])) {
             $conditions[] = "packages_count > 0";
         }
-        if (!empty($filters['has_room_prices'])) {
+        if (!empty($filters['has_verified_room_price'])) {
             $conditions[] = "has_room_price = 'Y' AND last_price_check IS NOT NULL";
         }
         if (!empty($filters['stars'])) {

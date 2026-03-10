@@ -31,7 +31,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * @param array $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
      * @return int Number of rows updated
      */
-    public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
+    public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int
     {
         $updated = 0;
 
