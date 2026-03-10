@@ -234,43 +234,24 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Hotel facilities — route via mapping table (each facility knows its feature_type)
-        $hotelFacilities = $facilityRepo->getForHotelByType($hotelId, 'hotel');
-        if (!empty($hotelFacilities)) {
-            $mappingRepo = $container->featureMappingRepository();
-            $byFeatureType = []; // feature_type => [provider_codes]
-            foreach ($hotelFacilities as $f) {
+        // Facilities — each facility's feature_type drives which CS-Cart feature it maps to
+        $facilitiesByType = $facilityRepo->getForHotelGroupedByType($hotelId);
+        foreach ($facilitiesByType as $featureType => $facilities) {
+            $codes = [];
+            foreach ($facilities as $f) {
                 $code = $normalizer->normalizeFacilityCode($f['facility_id']);
-                if ($code === null) {
-                    continue;
+                if ($code !== null) {
+                    $codes[] = $code;
                 }
-                $targetType = $mappingRepo->findFeatureTypeForCode('novoton', $code)
-                    ?? Constants::FEATURE_TYPE_HOTEL_FACILITY;
-                $byFeatureType[$targetType][] = $code;
             }
-            foreach ($byFeatureType as $featureType => $codes) {
+            if (!empty($codes)) {
                 $featureMapper->assignMultipleToProduct($productId, $featureType, array_unique($codes));
             }
         }
 
-        // Travel Group: adults-only detection
+        // Travel Group: adults-only detection (virtual code, not a facility)
         if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
             $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_TRAVEL_GROUP, 'adults_only');
-        }
-
-        // Room facilities (type=M, merge with diff)
-        $roomFacilities = $facilityRepo->getForHotelByType($hotelId, 'room');
-        if (!empty($roomFacilities)) {
-            $facilityIds = [];
-            foreach ($roomFacilities as $f) {
-                $code = $normalizer->normalizeFacilityCode($f['facility_id']);
-                if ($code !== null) {
-                    $facilityIds[] = $code;
-                }
-            }
-            if (!empty($facilityIds)) {
-                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_ROOM_FACILITY, $facilityIds);
-            }
         }
 
         // Resort / City

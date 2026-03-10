@@ -661,7 +661,7 @@
                 `facility_name` varchar(255) DEFAULT '',
                 `facility_name_en` varchar(255) DEFAULT '',
                 `facility_name_ro` varchar(255) DEFAULT '',
-                `facility_type` enum('hotel','room') NOT NULL DEFAULT 'hotel',
+                `facility_type` varchar(30) NOT NULL DEFAULT 'hotel_facility' COMMENT 'CS-Cart feature type: hotel_facility, room_facility, travel_group, beach_access, etc.',
                 `feature_variant_id` int(11) DEFAULT NULL,
                 `synced_at` datetime DEFAULT NULL,
                 `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,

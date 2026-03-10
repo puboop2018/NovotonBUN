@@ -261,6 +261,23 @@ function fn_novoton_holidays_setup_db(): void
         }
     }
 
+    // ── Facility type migration: enum('hotel','room') → varchar(30) feature type ──
+    // Allows each facility to map directly to a CS-Cart feature type (hotel_facility,
+    // room_facility, travel_group, beach_access, etc.) instead of just hotel/room.
+    $facTable = $resolve('?:novoton_facilities');
+    $colType = db_get_field(
+        "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?s AND COLUMN_NAME = 'facility_type'",
+        $facTable
+    );
+    if ($colType && stripos($colType, 'enum') !== false) {
+        @db_query("ALTER TABLE ?:novoton_facilities MODIFY COLUMN `facility_type` varchar(30) NOT NULL DEFAULT 'hotel_facility' COMMENT 'CS-Cart feature type: hotel_facility, room_facility, travel_group, beach_access, etc.'");
+        // Convert legacy enum values to feature type constants
+        @db_query("UPDATE ?:novoton_facilities SET facility_type = 'hotel_facility' WHERE facility_type = 'hotel'");
+        @db_query("UPDATE ?:novoton_facilities SET facility_type = 'room_facility'  WHERE facility_type = 'room'");
+    }
+
     // ── Foreign key constraints (idempotent — only adds if missing) ──
     $foreign_keys = [
         [

@@ -19,5 +19,6 @@ interface FacilityRepositoryInterface
     public function unlinkFromHotel(string $hotel_id, int $facility_id): bool;
     public function countHotelsWithFacility(int $facility_id): int;
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array;
+    public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array;
     public function updateType(int $facility_id, string $facility_type): bool;
 }

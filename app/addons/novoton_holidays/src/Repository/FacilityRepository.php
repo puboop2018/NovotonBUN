@@ -186,7 +186,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     // =========================================================================
 
     /**
-     * Get facilities for a hotel filtered by type (hotel/room)
+     * Get facilities for a hotel filtered by feature type (hotel_facility, room_facility, travel_group, beach_access)
      */
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array
     {
@@ -203,7 +203,31 @@ class FacilityRepository implements FacilityRepositoryInterface
     }
 
     /**
-     * Update facility type classification
+     * Get all facilities for a hotel, grouped by feature type.
+     * Returns ['hotel_facility' => [['facility_id' => 1, ...], ...], 'travel_group' => [...], ...]
+     */
+    public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array
+    {
+        $col = self::nameField($lang);
+
+        $rows = db_get_array(
+            "SELECT f.facility_id, f.facility_type, f.{$col} as facility_name
+             FROM ?:novoton_hotel_facilities hf
+             JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
+             WHERE hf.hotel_id = ?s
+             ORDER BY f.facility_type, f.{$col}",
+            $hotel_id
+        );
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row['facility_type']][] = $row;
+        }
+        return $grouped;
+    }
+
+    /**
+     * Update facility feature type mapping
      */
     public function updateType(int $facility_id, string $facility_type): bool
     {

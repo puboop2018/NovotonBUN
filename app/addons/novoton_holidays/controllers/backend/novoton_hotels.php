@@ -246,7 +246,7 @@ if ($mode == 'sync_hotel_facilities') {
 
 /**
  * Mode: save_facilities
- * Save facility type classifications and Romanian translations from admin form
+ * Save facility feature type mappings and Romanian translations from admin form
  */
 if ($mode == 'save_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -255,7 +255,12 @@ if ($mode == 'save_facilities') {
 
     $facility_types = $_REQUEST['facility_types'] ?? [];
     $facility_translations = $_REQUEST['facility_translations'] ?? [];
-    $allowed = ['hotel', 'room'];
+    $allowed = [
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+    ];
     $updated = 0;
 
     foreach ($facility_types as $facility_id => $type) {

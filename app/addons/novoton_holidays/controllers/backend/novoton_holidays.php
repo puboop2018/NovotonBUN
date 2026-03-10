@@ -303,9 +303,39 @@ if ($mode == 'list_facilities') {
     $count = count($facilities);
     $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
 
+    // Build feature type options with CS-Cart feature names for the dropdown
+    // Only show feature types that are relevant for facility classification
+    $facility_feature_types = [
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+    ];
+    $feature_type_options = [];
+    foreach ($facility_feature_types as $ft) {
+        $settingKey = \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING[$ft] ?? '';
+        $featureId = $settingKey ? (int) Registry::get($settingKey) : 0;
+        $label = ucwords(str_replace('_', ' ', $ft));
+        if ($featureId > 0) {
+            $featureName = db_get_field(
+                "SELECT fd.description FROM ?:product_features_descriptions fd WHERE fd.feature_id = ?i AND fd.lang_code = ?s",
+                $featureId, DESCR_SL
+            );
+            if ($featureName) {
+                $label .= " → {$featureName} #{$featureId}";
+            } else {
+                $label .= " → #{$featureId}";
+            }
+        } else {
+            $label .= ' (not configured)';
+        }
+        $feature_type_options[$ft] = $label;
+    }
+
     Tygh::$app['view']->assign('facilities', $facilities);
     Tygh::$app['view']->assign('facilities_count', $count);
     Tygh::$app['view']->assign('last_sync', $last_sync);
+    Tygh::$app['view']->assign('feature_type_options', $feature_type_options);
 }
 
 // ============================================================================
