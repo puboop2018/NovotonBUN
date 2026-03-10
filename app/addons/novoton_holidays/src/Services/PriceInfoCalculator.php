@@ -47,6 +47,14 @@ class PriceInfoCalculator
         $byNight = [];
         $byPerson = [];
 
+        // Initialize per-person entries so every occupant appears in the output
+        foreach ($occupancy['adults'] as $adult) {
+            $byPerson['adult_' . $adult['index']] = 0;
+        }
+        foreach ($occupancy['children'] as $child) {
+            $byPerson['child_' . $child['index']] = 0;
+        }
+
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
             $nightTotal = 0;
             $seasonNum = $nightInfo['season'];
@@ -224,6 +232,21 @@ class PriceInfoCalculator
     /**
      * Recursively resolve price from a season_price row
      */
+    /**
+     * Recursively resolve price from a season_price row.
+     *
+     * Pricing rule (Code / Base relationship):
+     *   - Code == Base  → price values (Price1..Price20) are absolute amounts
+     *   - Code != Base  → price values are PERCENTAGES of the base row's price,
+     *                      where the base row is the one whose Code == this row's Base
+     *
+     * Percentage detection:
+     *   1. Explicit '%' suffix in the price string (e.g. "20%")
+     *   2. Implicit: Code != Base means the numeric value IS a percentage
+     *
+     * When multiple rows share the same Code, the lookup prefers the row
+     * matching the current row's IdRoom and IdBoard.
+     */
     private function resolvePrice(array $row, string $priceKey, array &$visited): float
     {
         $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
@@ -238,13 +261,33 @@ class PriceInfoCalculator
             return 0;
         }
 
+        // Determine if price is percentage-based
+        $isPercentage = false;
+        $percentValue = 0.0;
+
         if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+            // Explicit percentage marker (e.g. "20%")
+            $isPercentage = true;
             $percentValue = (float) str_replace('%', '', $rawPrice);
+        } else {
+            // Implicit percentage: Code != Base means numeric value is a percentage
+            $base = PriceInfoFormatter::toScalar($row['Base'] ?? '');
+            if ($code !== '' && $base !== '' && $code !== $base) {
+                $isPercentage = true;
+                $percentValue = (float) $rawPrice;
+            }
+        }
+
+        if ($isPercentage) {
             $baseRef = PriceInfoFormatter::toScalar($row['Base'] ?? '');
             $codeIndex = $this->parser->getCodeIndex();
 
             if ($baseRef !== '' && isset($codeIndex[$baseRef])) {
-                $baseRow = $codeIndex[$baseRef][0];
+                $baseRow = $this->findBestBaseRow(
+                    $codeIndex[$baseRef],
+                    PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
+                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? '')
+                );
                 $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited);
                 return round($basePrice * ($percentValue / 100), 4);
             }
@@ -252,6 +295,37 @@ class PriceInfoCalculator
         }
 
         return (float) $rawPrice;
+    }
+
+    /**
+     * From a list of candidate base rows (all sharing the same Code),
+     * pick the one that best matches the given room and board.
+     *
+     * Falls back to the first row if no room/board match is found.
+     */
+    private function findBestBaseRow(array $candidates, string $roomId, string $boardId): array
+    {
+        if (count($candidates) === 1) {
+            return $candidates[0];
+        }
+
+        foreach ($candidates as $candidate) {
+            $cRoom = PriceInfoFormatter::toScalar($candidate['IdRoom'] ?? '');
+            $cBoard = PriceInfoFormatter::toScalar($candidate['IdBoard'] ?? '');
+            if (PriceInfoFormatter::matchRoom($cRoom, $roomId) && PriceInfoFormatter::matchBoard($cBoard, $boardId)) {
+                return $candidate;
+            }
+        }
+
+        // Fallback: match room only
+        foreach ($candidates as $candidate) {
+            $cRoom = PriceInfoFormatter::toScalar($candidate['IdRoom'] ?? '');
+            if (PriceInfoFormatter::matchRoom($cRoom, $roomId)) {
+                return $candidate;
+            }
+        }
+
+        return $candidates[0];
     }
 
     /**

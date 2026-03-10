@@ -1,5 +1,35 @@
 # Novoton Holidays - Changelog
 
+## A93 — Fix: Children Per-Person Price Calculation (Code/Base Percentage Rule)
+
+### Bug Fix: Children price not calculated in base price breakdown
+
+- **FIXED:** `PriceInfoCalculator::resolvePrice()` now correctly detects percentage-based pricing using the Code/Base rule: when `Code != Base`, price values are percentages of the base row (the row where `Code == current row's Base`), even without an explicit `%` suffix
+- **FIXED:** Previously, percentage detection relied solely on the `%` character in the price string. If percentage values were stored as plain numbers (e.g., `20` instead of `"20%"`), children's prices resolved to the raw number instead of being calculated as a percentage of the adult base price
+- **ADDED:** `PriceInfoCalculator::findBestBaseRow()` — when multiple season_price rows share the same Code, the lookup now prefers the row matching the current row's IdRoom and IdBoard for accurate percentage resolution
+- **FIXED:** Per-person totals now always include entries for all occupants (adults and children), even when no matching season_price row is found, ensuring the price comparison UI always displays all persons
+
+### Pricing Rule (Code / Base relationship)
+
+- `Code == Base` → Price1..Price20 values are absolute amounts (EUR)
+- `Code != Base` → Price1..Price20 values are percentages of the base row's price, where base row is identified by `Code == current row's Base`
+
+### Tests
+
+- **ADDED:** `testGetPriceFromRowCodeNotBaseImplicitPercentage` — verifies implicit percentage (no `%` suffix) when Code != Base
+- **ADDED:** `testGetPriceFromRowCodeEqualsBaseIsAbsolute` — verifies absolute pricing when Code == Base
+- **ADDED:** `testGetPriceFromRowExplicitPercentWithCodeNotBase` — verifies explicit `%` still works
+- **ADDED:** `testGetPriceFromRowBaseRowMatchesRoomBoard` — verifies room/board-aware base row selection
+- **ADDED:** `testCalculateBasePriceIncludesChildPercentage` — end-to-end: adult room price + 2 children at 20%
+- **ADDED:** `testCalculateBasePriceChildImplicitPercentage` — end-to-end: implicit percentage for child pricing
+
+### Files Changed
+
+- `src/Services/PriceInfoCalculator.php` — resolvePrice, findBestBaseRow, calculateBasePrice
+- `tests/Unit/PriceInfoCalculatorTest.php` — 6 new test cases
+
+---
+
 ## A92 — Audit Fixes: HotelSync has_room_price Bug, Method & Filter Renames
 
 ### Bug Fix: has_room_price incorrectly set in HotelSync.php (missed in A91)

@@ -10,6 +10,12 @@ declare(strict_types=1);
  *         + (extras_rooms - EB|reduction**) + (extras_board - EB|reduction**)
  *         - reduction* - reduction_perc_marketing - reduction_perc_additional + company_fee
  *
+ * Base Price — season_price Code/Base rule:
+ *   - Code == Base  → Price1..Price20 are absolute amounts (EUR)
+ *   - Code != Base  → Price1..Price20 are PERCENTAGES of the base row's price,
+ *                      where the base row is the season_price row whose Code == this row's Base
+ *   This applies to all person types including children on extra beds.
+ *
  * Priority Rules:
  * * If Priority='Yes', EB and reduction are NOT combinable
  *   - PriorityEB='Yes': Early Booking has priority
