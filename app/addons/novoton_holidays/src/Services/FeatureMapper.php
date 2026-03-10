@@ -357,7 +357,7 @@ class FeatureMapper
     {
         $featureId = (int) $mapping['cs_cart_feature_id'];
         $position = (int) ($mapping['position'] ?? 0);
-        $nameEn = $mapping['display_name_en'] ?? $mapping['provider_code'];
+        $nameEn = $mapping['display_name_en'] ?? mb_convert_case($mapping['provider_code'], MB_CASE_TITLE, 'UTF-8');
         $nameRo = $mapping['display_name_ro'] ?? '';
 
         // Language fallback

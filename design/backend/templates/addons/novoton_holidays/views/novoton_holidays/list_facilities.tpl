@@ -4,7 +4,7 @@
     <div class="row-fluid">
         <div class="span6">
             <h4><i class="icon-list"></i> Novoton Facilities</h4>
-            <p class="muted">Hotel facilities/amenities from Novoton API. Classify each as "hotel" or "room" level.</p>
+            <p class="muted">Hotel facilities/amenities from Novoton API. Classify each facility into the CS-Cart feature it maps to: "Hotel Amenity" or "Room Amenity".</p>
         </div>
         <div class="span6" style="text-align: right;">
             <p>
@@ -30,7 +30,7 @@
             <th width="6%">ID</th>
             <th width="30%">Facility Name (EN)</th>
             <th width="32%">Facility Name (RO)</th>
-            <th width="14%">Type</th>
+            <th width="14%">CS-Cart Feature</th>
             <th width="12%">Last Synced</th>
         </tr>
     </thead>
@@ -47,8 +47,8 @@
             </td>
             <td>
                 <select name="facility_types[{$f.facility_id}]" class="input-small" style="width: 90px;">
-                    <option value="hotel"{if $f.facility_type == 'hotel'} selected{/if}>Hotel</option>
-                    <option value="room"{if $f.facility_type == 'room'} selected{/if}>Room</option>
+                    <option value="hotel"{if $f.facility_type == 'hotel'} selected{/if}>Hotel Amenity</option>
+                    <option value="room"{if $f.facility_type == 'room'} selected{/if}>Room Amenity</option>
                 </select>
             </td>
             <td>{$f.synced_at|date_format:"%Y-%m-%d %H:%M"}</td>
