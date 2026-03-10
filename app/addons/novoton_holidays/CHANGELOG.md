@@ -1,5 +1,19 @@
 # Novoton Holidays - Changelog
 
+## A91 — Dashboard Statistics Documentation
+
+### Documentation
+
+- **DOCUMENTED:** Dashboard statistics "Real-time (room_price) available" and "Season prices (priceinfo) available" — explained what populates each counter and the DB conditions behind them
+- **NOTED:** Both counters can show values without running "Check Prices" actions — Hotel Info Sync (`hotel_info_batched`) sets `has_prices` and `packages_count` when `getHotelInfo` API returns packages
+- **NOTED:** Check Prices (Resort-based) and Check Prices (Per-Hotel) currently return the same number of hotels with prices — no discrepancies exist between the two methods in the current dataset
+
+### Files Changed (1)
+
+Documentation: `README.md`
+
+---
+
 ## A90 — Code Smell Refactor: DI Consistency, Deduplication, Error Suppression Cleanup
 
 ### Dependency Injection (Container / ServiceLoader)
