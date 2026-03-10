@@ -561,7 +561,8 @@ class SecurityService implements SecurityServiceInterface
 
         if (file_exists($keyFile)) {
             $key = trim(file_get_contents($keyFile));
-            if ($key !== '' && strlen($key) >= 32) {
+            // bin2hex(random_bytes(32)) produces 64 hex chars (256-bit key)
+            if ($key !== '' && strlen($key) >= 64) {
                 return $key;
             }
         }
@@ -579,11 +580,10 @@ class SecurityService implements SecurityServiceInterface
             ]);
         } else {
             @chmod($keyFile, 0600);
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton SecurityService: generated and persisted new encryption key'
+            ]);
         }
-
-        fn_log_event('general', 'runtime', [
-            'message' => 'Novoton SecurityService: generated and persisted new encryption key'
-        ]);
 
         return $key;
     }

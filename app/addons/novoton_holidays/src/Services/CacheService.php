@@ -81,9 +81,8 @@ class CacheService implements CacheServiceInterface
         $ttl = $ttl ?? $this->default_ttl;
         $expires = time() + $ttl;
         
-        // Evict oldest entries if memory cache is at capacity
+        // Evict oldest entries if memory cache is at capacity (FIFO eviction)
         if (count(self::$memory_cache) >= self::MEMORY_CACHE_MAX_SIZE && !isset(self::$memory_cache[$key])) {
-            // Remove the oldest entry (first inserted — approximates LRU)
             reset(self::$memory_cache);
             unset(self::$memory_cache[key(self::$memory_cache)]);
         }
@@ -518,9 +517,10 @@ class CacheService implements CacheServiceInterface
         if ($this->storage === 'file') {
             $files = glob($this->cache_dir . '*/*.cache') ?: [];
             $now = time();
-            // Use a generous max TTL heuristic: if file was last modified
-            // longer ago than max_ttl, it's definitely expired — skip reading.
-            $maxTtl = 86400; // 24 hours — any realistic TTL is smaller
+            // Fast-path heuristic: files older than this are definitely expired.
+            // All cache TTLs in this addon are ≤600s; 86400s (24h) is a safe
+            // upper bound that avoids reading files that are obviously stale.
+            $maxTtl = 86400;
             foreach ($files as $file) {
                 $mtime = @filemtime($file);
                 if ($mtime !== false && ($mtime + $maxTtl) < $now) {
