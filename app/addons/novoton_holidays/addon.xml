@@ -524,7 +524,7 @@
                 `novoton_confirm_id` varchar(50) DEFAULT NULL COMMENT 'Confirmation from Novoton API',
                 `novoton_invoice_id` varchar(50) DEFAULT NULL COMMENT 'IdNum from API',
                 `novoton_res_num` varchar(50) DEFAULT NULL COMMENT 'ResNum from resinfo',
-                `novoton_status` varchar(20) DEFAULT NULL COMMENT 'OK, ASK, ST, WT, RQ',
+                `novoton_status` varchar(20) DEFAULT NULL COMMENT 'Good, ASK, ST, WT, RQ',
                 `hotel_id` varchar(50) NOT NULL,
                 `hotel_name` varchar(255) NOT NULL,
                 `package_id` varchar(50) DEFAULT NULL,

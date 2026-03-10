@@ -595,7 +595,7 @@ if ($mode == 'cron_export_hotel_features') {
         echo "Status: SUCCESS\n";
         echo "File: " . ($result['file_path'] ?? $result['filename'] ?? 'N/A') . "\n";
         echo "Hotels: {$result['count']}\n";
-        echo "[OK] CSV ready for CS-Cart import.\n";
+        echo "[Good] CSV ready for CS-Cart import.\n";
     } else {
         echo "Status: FAILED\n";
         echo "Error: " . ($result['error'] ?? 'Unknown error') . "\n";

@@ -102,7 +102,7 @@ if ($mode == 'cron_update') {
             $result = fn_novoton_holidays_update_product_prices($product['product_id']);
             
             if ($result === true) {
-                echo "OK\n";
+                echo "Good\n";
                 $stats['updated']++;
             } elseif ($result === 'no_data') {
                 echo "NO_DATA\n";
@@ -177,7 +177,7 @@ if ($mode == 'cron_export_hotel_features') {
         echo "File: {$result['file_path']}\n";
         echo "Hotels: {$result['count']}\n";
         echo "Languages: RO, EN\n";
-        echo "[OK] CSV ready for CS-Cart import.\n";
+        echo "[Good] CSV ready for CS-Cart import.\n";
     } else {
         echo "Status: FAILED\n";
         echo "Error: {$result['error']}\n";

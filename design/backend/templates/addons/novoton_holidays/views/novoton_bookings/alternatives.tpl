@@ -118,7 +118,7 @@
                 </td>
                 <td>
                     {if $alt.alt_from_req == 'Y' || $alt.alt_from_req == '1'}
-                        <span class="label label-success" title="Same as original request">[OK] Exact Match</span>
+                        <span class="label label-success" title="Same as original request">[Good] Exact Match</span>
                     {else}
                         <span class="label label-default">Different</span>
                     {/if}

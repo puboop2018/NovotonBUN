@@ -33,37 +33,53 @@ final class Constants
     // ========== Novoton API Status Codes ==========
     //
     // hotel_res_RQ response:
-    //   OK  – reservation is accepted and confirmed
+    //   OK  – reservation is accepted and confirmed (displayed as "Good")
     //   ASK – reservation is accepted with asking status
     //   ST  – reservation is cancelled
     //   WT  – reservation is with waiting status
     //
     // resinfo polling (for ASK reservations):
-    //   OK  – confirmed
+    //   OK  – confirmed (displayed as "Good")
     //   ST  – cancelled / rejected
     //   RQ  – alternatives pending (retrieve via alternative_RS)
 
-    public const NOVOTON_STATUS_CONFIRMED  = 'OK';
+    public const NOVOTON_STATUS_CONFIRMED  = 'Good';
     public const NOVOTON_STATUS_ON_REQUEST = 'ASK';
     public const NOVOTON_STATUS_CANCELLED  = 'ST';
     public const NOVOTON_STATUS_WAITLIST   = 'WT';
     public const NOVOTON_STATUS_ALTERNATIVES_PENDING = 'RQ';
 
+    // ========== API Wire Format → Internal Status ==========
+    // The Novoton API returns 'OK' on the wire; we normalize it to 'Good' internally.
+
+    public const NOVOTON_API_WIRE_MAP = [
+        'OK' => 'Good',   // API sends 'OK', we store/display 'Good'
+    ];
+
     // ========== Reservation Status Mapping ==========
-    // Maps Novoton API response codes (hotel_res_RQ / resinfo) to internal statuses.
-    // Only codes the API actually returns are mapped — no guessed aliases.
+    // Maps internal status codes (after wire normalization) to internal statuses.
 
     public const NOVOTON_STATUS_TO_INTERNAL = [
-        self::NOVOTON_STATUS_CONFIRMED             => self::STATUS_CONFIRMED,  // OK  -> confirmed
-        self::NOVOTON_STATUS_ON_REQUEST            => self::STATUS_ASK,        // ASK -> ask (poll via resinfo)
-        self::NOVOTON_STATUS_CANCELLED             => self::STATUS_CANCELLED,  // ST  -> cancelled
-        self::NOVOTON_STATUS_WAITLIST              => self::STATUS_WAITING,    // WT  -> waiting
-        self::NOVOTON_STATUS_ALTERNATIVES_PENDING  => self::STATUS_PENDING,    // RQ  -> pending (check alternative_RS)
+        'OK'                                       => self::STATUS_CONFIRMED,  // API wire format (legacy/direct)
+        self::NOVOTON_STATUS_CONFIRMED             => self::STATUS_CONFIRMED,  // Good -> confirmed
+        self::NOVOTON_STATUS_ON_REQUEST            => self::STATUS_ASK,        // ASK  -> ask (poll via resinfo)
+        self::NOVOTON_STATUS_CANCELLED             => self::STATUS_CANCELLED,  // ST   -> cancelled
+        self::NOVOTON_STATUS_WAITLIST              => self::STATUS_WAITING,    // WT   -> waiting
+        self::NOVOTON_STATUS_ALTERNATIVES_PENDING  => self::STATUS_PENDING,    // RQ   -> pending (check alternative_RS)
     ];
+
+    /**
+     * Normalize a Novoton API status from wire format to internal format.
+     * Converts 'OK' → 'Good'; all other statuses pass through unchanged.
+     */
+    public static function normalizeApiStatus(string $status): string
+    {
+        return self::NOVOTON_API_WIRE_MAP[$status] ?? $status;
+    }
     
     // ========== Availability Status ==========
     
-    public const AVAIL_OK = 'OK';
+    public const AVAIL_OK = 'Good';
     public const AVAIL_RQ = 'RQ';           // On Request
     public const AVAIL_STOP = 'STOP';       // Stop Sale
     public const AVAIL_NA = 'NA';           // Not Available

@@ -1,16 +1,52 @@
 # Novoton Holidays - Changelog
 
-## A91 — Dashboard Statistics Documentation
+## A91 — room_price Exclusivity Fix, OK → Good Status Rename, Dashboard Documentation
+
+### Bug Fix: has_prices Set Exclusively by room_price Check
+
+- **FIXED:** `has_prices` and `last_price_check` are now set **only** by the room_price check process (Check Prices resort-based, Check Prices per-hotel, `room_price` cron mode)
+- **REMOVED:** `has_prices` assignment from Hotel Info Sync (`helpers.php`, `BatchedHotelInfoSync.php`) — these syncs now only update `packages_count`
+- **REMOVED:** `has_prices = 'Y'` from hotel info download in `novoton_hotels.php` controller — now only updates `packages_count`
+- **REMOVED:** `has_prices` and `last_price_check` from PriceInfo Sync (`PriceInfoSync.php`) — now only updates `packages_count`
+- **RATIONALE:** Real-time prices are provided by the `room_price` API response; having packages (priceinfo) does not mean the hotel has real-time availability
+
+### Status Rename: OK → Good
+
+- **CHANGED:** `NOVOTON_STATUS_CONFIRMED` constant from `'OK'` to `'Good'` — all internal status storage and display now uses "Good"
+- **CHANGED:** `AVAIL_OK` constant from `'OK'` to `'Good'`
+- **ADDED:** `NOVOTON_API_WIRE_MAP` constant — maps API wire format `'OK'` to internal `'Good'`
+- **ADDED:** `Constants::normalizeApiStatus()` static method — converts API responses (`'OK'` → `'Good'`) before storage
+- **CHANGED:** `BookingSubmissionService` normalizes API status via `normalizeApiStatus()` before storing in DB
+- **CHANGED:** `ResInfoCommand` normalizes API response status before comparison
+- **CHANGED:** `RoomPriceService` and `SearchService` normalize availability status from API responses
+- **CHANGED:** `BookingRepository` and `BookingRepositoryInterface` default parameter from `'OK'` to `'Good'`
+- **CHANGED:** `novoton_admin.php` allowed statuses: `'OK'` → `'Good'`
+- **CHANGED:** All booking template status comparisons and display labels from `'OK'` to `'Good'` (`manage.tpl`, `view.tpl`, `order_tab.tpl`)
+- **CHANGED:** Alternative match labels from `[OK]` to `[Good]` (`alternatives.tpl`, `order_tab.tpl`, `test_alternative_rs.tpl`)
+- **CHANGED:** Diagnostic output from `[OK]` to `[Good]` (`novoton_diagnostic.php`)
+- **CHANGED:** Cron/CLI success output from `"OK"` to `"Good"` (`CalendarPricesCommand.php`, frontend controller)
+- **CHANGED:** CSV export status from `[OK]` to `[Good]` (`novoton_holidays.php`, `novoton_tools.php`)
+- **CHANGED:** `addon.xml` schema comment from `'OK, ASK, ST, WT, RQ'` to `'Good, ASK, ST, WT, RQ'`
+- **KEPT:** `NOVOTON_STATUS_TO_INTERNAL` mapping accepts both `'OK'` (API wire) and `'Good'` (internal) → `STATUS_CONFIRMED`
 
 ### Documentation
 
-- **DOCUMENTED:** Dashboard statistics "Real-time (room_price) available" and "Season prices (priceinfo) available" — explained what populates each counter and the DB conditions behind them
-- **NOTED:** Both counters can show values without running "Check Prices" actions — Hotel Info Sync (`hotel_info_batched`) sets `has_prices` and `packages_count` when `getHotelInfo` API returns packages
-- **NOTED:** Check Prices (Resort-based) and Check Prices (Per-Hotel) currently return the same number of hotels with prices — no discrepancies exist between the two methods in the current dataset
+- **DOCUMENTED:** Dashboard statistics "Real-time (room_price) available" and "Season prices (priceinfo) available" — explained DB conditions and what populates each counter
+- **NOTED:** `room_price` available counter now reflects only hotels checked via room_price (not hotel info sync)
+- **NOTED:** Check Prices (Resort-based) and Check Prices (Per-Hotel) currently return the same number of hotels with prices
 
-### Files Changed (1)
+### Files Changed (19)
 
-Documentation: `README.md`
+Constants: `Constants.php`
+Controllers: `novoton_holidays.php` (backend), `novoton_holidays.php` (frontend), `novoton_hotels.php`, `novoton_admin.php`, `novoton_diagnostic.php`, `novoton_prices.php` (unchanged — already correct), `novoton_tools.php`
+Services: `BookingSubmissionService.php`, `RoomPriceService.php`, `SearchService.php`
+Repository: `BookingRepository.php`, `BookingRepositoryInterface.php`
+Sync: `BatchedHotelInfoSync.php`, `PriceInfoSync.php`
+Cron: `ResInfoCommand.php`, `CalendarPricesCommand.php`
+Functions: `helpers.php`
+Templates: `manage.tpl`, `view.tpl`, `order_tab.tpl`, `alternatives.tpl`, `test_alternative_rs.tpl`
+Schema: `addon.xml`
+Documentation: `README.md`, `CHANGELOG.md`
 
 ---
 

@@ -524,9 +524,9 @@ if ($mode == 'check_packages') {
                             }
                         }
 
-                        // Update hotel packages_count
+                        // Update hotel packages_count (has_prices is set exclusively by room_price check)
                         db_query(
-                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
+                            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
                             count($packages), $hotel['hotel_id']
                         );
 

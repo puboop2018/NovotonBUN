@@ -247,7 +247,7 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Set Novoton reservation ID
      */
-    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'OK'): bool
+    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool
     {
         $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? Constants::STATUS_PENDING;
 

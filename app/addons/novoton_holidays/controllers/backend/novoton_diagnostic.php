@@ -218,7 +218,7 @@ if ($mode == 'check') {
         $path = $addon_dir . $file;
         $exists = file_exists($path);
         $size = $exists ? filesize($path) : 0;
-        $status = $exists ? "[OK]" : "[MISSING]";
+        $status = $exists ? "[Good]" : "[MISSING]";
         echo "$status $file ($size bytes)\n";
         if (!$exists) {
             echo "       Path: $path\n";
@@ -240,7 +240,7 @@ if ($mode == 'check') {
     
     foreach ($functions as $func) {
         $exists = function_exists($func);
-        $status = $exists ? "[OK]" : "[MISSING]";
+        $status = $exists ? "[Good]" : "[MISSING]";
         echo "$status $func\n";
         
         if ($exists) {
@@ -261,12 +261,12 @@ if ($mode == 'check') {
         
         // Check for require
         $has_require = (strpos($init_content, 'require') !== false || strpos($init_content, 'include') !== false);
-        echo ($has_require ? "[OK]" : "[WARNING]") . " Includes hooks.php: " . ($has_require ? "YES" : "NO") . "\n";
+        echo ($has_require ? "[Good]" : "[WARNING]") . " Includes hooks.php: " . ($has_require ? "YES" : "NO") . "\n";
         
         // Check registered hooks
         preg_match_all("/'([^']+)'/", $init_content, $matches);
         if (!empty($matches[1])) {
-            echo "[OK] Registered hooks:\n";
+            echo "[Good] Registered hooks:\n";
             foreach ($matches[1] as $hook) {
                 echo "     - $hook\n";
             }
@@ -287,7 +287,7 @@ if ($mode == 'check') {
     
     $hooks_file = $addon_dir . 'hooks.php';
     if (file_exists($hooks_file)) {
-        echo "[OK] hooks.php exists\n";
+        echo "[Good] hooks.php exists\n";
         
         $hooks_content = file_get_contents($hooks_file);
         echo "     Size: " . strlen($hooks_content) . " bytes\n";
@@ -295,13 +295,13 @@ if ($mode == 'check') {
         // Check for each required function
         foreach ($functions as $func) {
             $found = strpos($hooks_content, "function $func") !== false;
-            echo "     " . ($found ? "[OK]" : "[MISSING]") . " $func defined\n";
+            echo "     " . ($found ? "[Good]" : "[MISSING]") . " $func defined\n";
         }
         
         // Check for syntax errors
         exec("php -l " . escapeshellarg($hooks_file) . " 2>&1", $output, $return);
         $syntax_ok = strpos(implode('', $output), 'No syntax errors') !== false;
-        echo "     " . ($syntax_ok ? "[OK]" : "[ERROR]") . " Syntax check\n";
+        echo "     " . ($syntax_ok ? "[Good]" : "[ERROR]") . " Syntax check\n";
         if (!$syntax_ok) {
             echo "     Error: " . implode("\n     ", $output) . "\n";
         }
@@ -317,7 +317,7 @@ if ($mode == 'check') {
     
     $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
     if ($addon) {
-        echo "[OK] Addon in database\n";
+        echo "[Good] Addon in database\n";
         echo "     Status: {$addon['status']} " . ($addon['status'] == 'A' ? '(Active)' : '(Disabled)') . "\n";
         echo "     Version: {$addon['version']}\n";
     } else {
@@ -328,7 +328,7 @@ if ($mode == 'check') {
     $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
         $exists = db_get_field("SHOW TABLES LIKE ?s", Registry::get('config.table_prefix') . $table);
-        echo ($exists ? "[OK]" : "[MISSING]") . " Table: $table\n";
+        echo ($exists ? "[Good]" : "[MISSING]") . " Table: $table\n";
     }
     echo "\n";
     

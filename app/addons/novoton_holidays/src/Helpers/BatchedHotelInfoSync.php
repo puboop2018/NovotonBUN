@@ -472,11 +472,9 @@ class BatchedHotelInfoSync
             $update['package_name'] = $package_name;
         }
 
-        // Extract and store packages
+        // Extract and store packages (has_prices is set exclusively by room_price check)
         $packages = $this->extractPackages($hotel_info);
         $update['packages_count'] = count($packages);
-        $update['has_prices'] = count($packages) > 0 ? 'Y' : 'N';
-        $update['last_price_check'] = date('Y-m-d H:i:s');
 
         // Wrap hotel + packages update in a transaction for atomicity
         db_query("START TRANSACTION");

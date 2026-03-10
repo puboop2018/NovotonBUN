@@ -159,11 +159,11 @@ The dashboard (`novoton_holidays.manage`) displays:
 
 | Statistic | DB Condition | Populated By |
 |-----------|-------------|-------------|
-| **Real-time (room_price) available** | `has_prices = 'Y' AND last_price_check IS NOT NULL` | Hotel Info Sync (`hotel_info_batched`), Check Prices (resort-based or per-hotel) |
+| **Real-time (room_price) available** | `has_prices = 'Y' AND last_price_check IS NOT NULL` | Check Prices (resort-based or per-hotel), `room_price` cron mode **only** |
 | **Season prices (priceinfo) available** | `packages_count > 0` | Hotel Info Sync (`hotel_info_batched`), PriceInfo Sync (`sync_priceinfo_batched`) |
 | **As Products** | Hotels linked to CS-Cart products | Add Hotels as Products action |
 
-> **Note (v3.2.0):** The "Real-time (room_price) available" and "Season prices (priceinfo) available" counters can be populated **without** running the "Check Prices" actions. The Hotel Info Sync (`hotel_info_batched` cron or manual Hotel Info download) sets `has_prices = 'Y'` and increments `packages_count` when the `getHotelInfo` API response contains packages. This means these statistics may show values even if the "Prices" Last Sync shows "Never".
+> **Note (v3.2.0):** The "Real-time (room_price) available" counter is populated **exclusively** by the room_price check process — either the "Check Prices" dashboard actions (resort-based or per-hotel) or the `room_price` cron mode. Hotel Info Sync and PriceInfo Sync do **not** set `has_prices`; they only update `packages_count` for the "Season prices" counter.
 
 > **Note (v3.2.0):** Both price check methods — **Check Prices (Resort-based)** and **Check Prices (Per-Hotel)** — currently return the same number of hotels with prices. The resort-based method queries by resort/destination in bulk, while the per-hotel method queries each hotel individually by `hotel_id`. The per-hotel method was designed to catch hotels with missing or mismatched city names, but at present no such discrepancies exist in the dataset.
 
@@ -542,7 +542,7 @@ Stores customer bookings.
 | novoton_confirm_id | varchar(50) | Confirmation from Novoton API |
 | novoton_invoice_id | varchar(50) | IdNum from API |
 | novoton_res_num | varchar(50) | ResNum from resinfo |
-| novoton_status | varchar(20) | API status: OK, ASK, ST, WT, RQ |
+| novoton_status | varchar(20) | Status: Good, ASK, ST, WT, RQ (API 'OK' normalized to 'Good') |
 | hotel_id | varchar(50) | Novoton hotel ID |
 | hotel_name | varchar(255) | Hotel name |
 | package_id | varchar(50) | Package ID |

@@ -93,7 +93,7 @@
             <td><strong>{$alt.total} {$smarty.const.CART_PRIMARY_CURRENCY}</strong></td>
             <td>
                 {if $alt.alt_from_req == 'Yes'}
-                    <span class="label label-success">[OK] Exact</span>
+                    <span class="label label-success">[Good] Exact</span>
                 {else}
                     <span class="label">Different</span>
                 {/if}
