@@ -203,14 +203,30 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Get distinct resorts (= city) for a country
+     * Get distinct resorts (= city) for a country.
+     * Hidden/internal resorts (e.g. "Gift Voucher") are excluded.
      */
     public function getResorts(string $country = ''): array
     {
+        $hidden = \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS;
+
         if (!empty($country)) {
+            if (!empty($hidden)) {
+                return db_get_fields(
+                    "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city NOT IN (?a) ORDER BY city",
+                    $country, $hidden
+                );
+            }
             return db_get_fields(
                 "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' ORDER BY city",
                 $country
+            );
+        }
+
+        if (!empty($hidden)) {
+            return db_get_fields(
+                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' AND city NOT IN (?a) ORDER BY city",
+                $hidden
             );
         }
         return db_get_fields("SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' ORDER BY city");

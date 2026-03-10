@@ -266,6 +266,14 @@ final class Constants
     ];
     
     public const DEFAULT_COUNTRY = 'BULGARIA';
+
+    // ========== Hidden Resorts ==========
+    // Resorts used only for internal/administrative purposes.
+    // These are filtered from all frontend and backend resort listings.
+
+    public const HIDDEN_RESORTS = [
+        'GIFT VOUCHER',
+    ];
     
     // ========== Languages ==========
     

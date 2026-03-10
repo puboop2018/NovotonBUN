@@ -294,10 +294,16 @@ class AddProductsCommand extends AbstractCronCommand
     {
         $paramVal = $this->getParam('exclude_resorts');
         if (!empty($paramVal)) {
-            if (is_array($paramVal)) return array_filter($paramVal);
-            return array_filter(array_map('trim', explode(',', $paramVal)));
+            if (is_array($paramVal)) {
+                $excluded = array_filter($paramVal);
+            } else {
+                $excluded = array_filter(array_map('trim', explode(',', $paramVal)));
+            }
+        } else {
+            $excluded = ConfigProvider::getExcludedResorts();
         }
 
-        return ConfigProvider::getExcludedResorts();
+        // Always include hidden/internal resorts in the exclusion list
+        return array_values(array_unique(array_merge($excluded, ConfigProvider::getHiddenResorts())));
     }
 }

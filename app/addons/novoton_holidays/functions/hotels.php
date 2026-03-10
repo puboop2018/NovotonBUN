@@ -784,10 +784,15 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
     $query .= " ORDER BY country, city";
 
     $db_resorts = db_get_array($query);
+    $hidden_resorts = array_map('strtoupper', \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS);
 
     foreach ($db_resorts as $row) {
         $country = $row['country'];
         $resort = $row['city'];
+
+        if (!empty($hidden_resorts) && in_array(strtoupper($resort), $hidden_resorts, true)) {
+            continue;
+        }
 
         if (!isset($resorts[$country])) {
             $resorts[$country] = [];
@@ -1255,7 +1260,11 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         $resorts = db_get_array(
             "SELECT resort_name, country FROM ?:novoton_resorts ORDER BY country, resort_name"
         );
+        $hiddenResorts = array_map('strtoupper', \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS);
         foreach ($resorts as $pos => $resort) {
+            if (!empty($hiddenResorts) && in_array(strtoupper($resort['resort_name']), $hiddenResorts, true)) {
+                continue;
+            }
             $displayName = mb_convert_case($resort['resort_name'], MB_CASE_TITLE, 'UTF-8');
             $repo->save([
                 'provider' => $provider,

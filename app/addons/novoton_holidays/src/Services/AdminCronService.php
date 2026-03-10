@@ -175,7 +175,7 @@ class AdminCronService
         foreach ($countries as $country) {
             $this->output("=== {$country} ===");
 
-            $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
+            $hotels = $hotelRepo->findUnlinkedWithPrices($country, ConfigProvider::getHiddenResorts(), $limit);
 
             if (empty($hotels)) {
                 $this->output("No hotels to add.\n");

@@ -509,8 +509,12 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
 
     $resorts_by_country = [];
+    $hidden_resorts = array_map('strtoupper', ConfigProvider::getHiddenResorts());
     $resorts = db_get_array("SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city");
     foreach ($resorts as $resort) {
+        if (!empty($hidden_resorts) && in_array(strtoupper($resort['city']), $hidden_resorts, true)) {
+            continue;
+        }
         $resorts_by_country[$resort['country']][] = $resort['city'];
     }
     Tygh::$app['view']->assign('resorts_by_country', $resorts_by_country);

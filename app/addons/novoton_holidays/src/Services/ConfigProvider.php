@@ -261,6 +261,12 @@ class ConfigProvider
         return 0;
     }
 
+    /** @return string[] Resorts that are internal-only and hidden from all UI listings. */
+    public static function getHiddenResorts(): array
+    {
+        return Constants::HIDDEN_RESORTS;
+    }
+
     /** @return string[] */
     public static function getExcludedResorts(): array
     {
