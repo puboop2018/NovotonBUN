@@ -14,7 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 interface DatabaseHelperInterface
 {
     /**
-     * Batch update hotels has_prices flag after room_price API checks.
+     * Batch update hotels has_room_price flag after room_price API checks.
      *
      * @param array $withPrices    Hotel IDs that have prices
      * @param array $withoutPrices Hotel IDs that don't have prices

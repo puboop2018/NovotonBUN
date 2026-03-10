@@ -66,25 +66,25 @@ if ($mode == 'view_hotels_to_add') {
              FROM ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              WHERE h.country = ?s 
-               AND h.has_prices = 'Y'
+               AND h.has_room_price = 'Y'
                AND (h.product_id IS NULL OR h.product_id = 0)
              ORDER BY h.hotel_name
              LIMIT 500",
             $country
         );
     }
-    
+
     // Get statistics
     $stats = [
         'total' => $hotelRepo->count(['country' => $country]),
-        'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+        'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
         'with_product' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         'ready_to_add' => count($hotels)
     ];
     
     // Country list for the filter dropdown
     $countries = db_get_array(
-        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_prices = 'Y' GROUP BY country ORDER BY country"
+        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
     );
 
     Tygh::$app['view']->assign('hotels', $hotels);
@@ -114,7 +114,7 @@ if ($mode == 'add_hotels_as_products') {
 
             $stats = [
                 'total' => $hotelRepo->count(['country' => $country]),
-                'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+                'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
                 'with_packages' => (int) db_get_field(
                     "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
                      INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
@@ -128,7 +128,7 @@ if ($mode == 'add_hotels_as_products') {
             // Get resorts
             $resorts = db_get_array(
                 "SELECT city, COUNT(*) as hotel_count,
-                        SUM(CASE WHEN has_prices = 'Y' THEN 1 ELSE 0 END) as with_prices
+                        SUM(CASE WHEN has_room_price = 'Y' THEN 1 ELSE 0 END) as with_prices
                  FROM ?:novoton_hotels
                  WHERE country = ?s AND city IS NOT NULL AND city != ''
                  GROUP BY city ORDER BY hotel_count DESC",
@@ -181,7 +181,7 @@ if ($mode == 'add_hotels_as_products') {
         }, $_REQUEST['languages'])) : ['en', 'ro'];
         
         // Build query based on import mode
-        $condition = "country = ?s AND has_prices = 'Y'";
+        $condition = "country = ?s AND has_room_price = 'Y'";
         $params = [$country];
         
         if ($import_mode == 'new_only') {
@@ -524,7 +524,7 @@ if ($mode == 'check_packages') {
                             }
                         }
 
-                        // Update hotel packages_count (has_prices is set exclusively by room_price check)
+                        // Update hotel packages_count (has_room_price is set exclusively by room_price check)
                         db_query(
                             "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
                             count($packages), $hotel['hotel_id']

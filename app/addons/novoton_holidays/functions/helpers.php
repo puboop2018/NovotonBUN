@@ -226,7 +226,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             $packagesUpdated++;
         }
 
-        // Update hotel record (packages_count only — has_prices is set exclusively by room_price check)
+        // Update hotel record (packages_count only — has_room_price is set exclusively by room_price check)
         $update_data = [
             'packages_count' => $packagesUpdated,
         ];

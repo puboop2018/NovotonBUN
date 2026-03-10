@@ -159,11 +159,11 @@ The dashboard (`novoton_holidays.manage`) displays:
 
 | Statistic | DB Condition | Populated By |
 |-----------|-------------|-------------|
-| **Real-time (room_price) available** | `has_prices = 'Y' AND last_price_check IS NOT NULL` | Check Prices (resort-based or per-hotel), `room_price` cron mode **only** |
+| **Real-time (room_price) available** | `has_room_price = 'Y' AND last_price_check IS NOT NULL` | Check Prices (resort-based or per-hotel), `room_price` cron mode **only** |
 | **Season prices (priceinfo) available** | `packages_count > 0` | Hotel Info Sync (`hotel_info_batched`), PriceInfo Sync (`sync_priceinfo_batched`) |
 | **As Products** | Hotels linked to CS-Cart products | Add Hotels as Products action |
 
-> **Note (v3.2.0):** The "Real-time (room_price) available" counter is populated **exclusively** by the room_price check process — either the "Check Prices" dashboard actions (resort-based or per-hotel) or the `room_price` cron mode. Hotel Info Sync and PriceInfo Sync do **not** set `has_prices`; they only update `packages_count` for the "Season prices" counter.
+> **Note (v3.2.0):** The "Real-time (room_price) available" counter is populated **exclusively** by the room_price check process — either the "Check Prices" dashboard actions (resort-based or per-hotel) or the `room_price` cron mode. Hotel Info Sync and PriceInfo Sync do **not** set `has_room_price`; they only update `packages_count` for the "Season prices" counter.
 
 > **Note (v3.2.0):** Both price check methods — **Check Prices (Resort-based)** and **Check Prices (Per-Hotel)** — currently return the same number of hotels with prices. The resort-based method queries by resort/destination in bulk, while the per-hotel method queries each hotel individually by `hotel_id`. The per-hotel method was designed to catch hotels with missing or mismatched city names, but at present no such discrepancies exist in the dataset.
 
@@ -503,7 +503,7 @@ Stores synced hotel information.
 | latitude | decimal(10,7) | Hotel latitude |
 | longitude | decimal(10,7) | Hotel longitude |
 | hotel_data | longtext | JSON: full hotelinfo API response |
-| has_prices | enum('Y','N') | Has active prices |
+| has_room_price | enum('Y','N') | Has room_price check results |
 | packages_count | int | Number of packages |
 | hotelinfo_synced_at | datetime | Last hotelinfo sync |
 | hotel_list_synced_at | datetime | Last hotel_list API sync |
@@ -1115,7 +1115,7 @@ For search page debugging, pass `&debug=1` in the search URL.
 
 #### Prices showing 0
 - Run price sync cron job (`mode=room_price`)
-- Check if hotel has `has_prices = 'Y'`
+- Check if hotel has `has_room_price = 'Y'`
 - Verify commission setting is not 0%
 
 #### Booking fails with "Not available"

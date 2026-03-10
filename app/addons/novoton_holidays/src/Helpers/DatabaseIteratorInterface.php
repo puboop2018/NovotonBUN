@@ -16,7 +16,7 @@ interface DatabaseIteratorInterface
     /**
      * Iterate over hotels with optional filters.
      *
-     * @param array $filters    Filter conditions (country, has_prices, etc.)
+     * @param array $filters    Filter conditions (country, has_room_price, etc.)
      * @param int   $chunk_size
      * @return \Generator Yields one hotel row at a time
      */

@@ -472,7 +472,7 @@ class BatchedHotelInfoSync
             $update['package_name'] = $package_name;
         }
 
-        // Extract and store packages (has_prices is set exclusively by room_price check)
+        // Extract and store packages (has_room_price is set exclusively by room_price check)
         $packages = $this->extractPackages($hotel_info);
         $update['packages_count'] = count($packages);
 

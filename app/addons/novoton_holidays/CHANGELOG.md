@@ -2,12 +2,12 @@
 
 ## A91 — room_price Exclusivity Fix, OK → Good Status Rename, Dashboard Documentation
 
-### Bug Fix: has_prices Set Exclusively by room_price Check
+### Bug Fix: has_room_price Set Exclusively by room_price Check
 
-- **FIXED:** `has_prices` and `last_price_check` are now set **only** by the room_price check process (Check Prices resort-based, Check Prices per-hotel, `room_price` cron mode)
-- **REMOVED:** `has_prices` assignment from Hotel Info Sync (`helpers.php`, `BatchedHotelInfoSync.php`) — these syncs now only update `packages_count`
-- **REMOVED:** `has_prices = 'Y'` from hotel info download in `novoton_hotels.php` controller — now only updates `packages_count`
-- **REMOVED:** `has_prices` and `last_price_check` from PriceInfo Sync (`PriceInfoSync.php`) — now only updates `packages_count`
+- **FIXED:** `has_room_price` and `last_price_check` are now set **only** by the room_price check process (Check Prices resort-based, Check Prices per-hotel, `room_price` cron mode)
+- **REMOVED:** `has_room_price` assignment from Hotel Info Sync (`helpers.php`, `BatchedHotelInfoSync.php`) — these syncs now only update `packages_count`
+- **REMOVED:** `has_room_price = 'Y'` from hotel info download in `novoton_hotels.php` controller — now only updates `packages_count`
+- **REMOVED:** `has_room_price` and `last_price_check` from PriceInfo Sync (`PriceInfoSync.php`) — now only updates `packages_count`
 - **RATIONALE:** Real-time prices are provided by the `room_price` API response; having packages (priceinfo) does not mean the hotel has real-time availability
 
 ### Status Rename: OK → Good

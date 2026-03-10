@@ -25,10 +25,10 @@ class DatabaseHelper implements DatabaseHelperInterface
     private array $hotelCache = [];
 
     /**
-     * Batch update hotels has_prices flag after room_price API checks
+     * Batch update hotels has_room_price flag after room_price API checks
      *
-     * @param array $withPrices Hotel IDs that have prices (set has_prices = 'Y')
-     * @param array $withoutPrices Hotel IDs without prices (set has_prices = 'N')
+     * @param array $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
+     * @param array $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
      * @return int Number of rows updated
      */
     public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
@@ -38,7 +38,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         if (!empty($withPrices)) {
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
-                 SET has_prices = 'Y', last_price_check = NOW()
+                 SET has_room_price = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withPrices
             );
@@ -47,7 +47,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         if (!empty($withoutPrices)) {
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
-                 SET has_prices = 'N', last_price_check = NOW()
+                 SET has_room_price = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withoutPrices
             );
@@ -223,7 +223,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /** @var string[] Allowed column names for dynamic queries */
     private const ALLOWED_COLUMNS = [
         'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
-        'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_prices',
+        'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_room_price',
         'packages_count', 'hotelinfo_synced_at', 'hotel_list_synced_at',
         'created_at', 'updated_at', 'hotel_data', 'last_price_check',
     ];
@@ -234,7 +234,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
     {
         if (empty($fields)) {
-            $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_prices', 'product_id'];
+            $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_room_price', 'product_id'];
         }
 
         // Validate field names against whitelist

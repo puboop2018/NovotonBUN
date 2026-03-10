@@ -177,7 +177,7 @@ class PriceInfoSync
                 $packagesUpdated++;
             }
 
-            // Update hotel's packages_count (has_prices is set exclusively by room_price check)
+            // Update hotel's packages_count (has_room_price is set exclusively by room_price check)
             if ($packagesUpdated > 0) {
                 db_query(
                     "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",

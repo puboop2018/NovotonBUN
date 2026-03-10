@@ -45,7 +45,7 @@ class HotelRepository implements HotelRepositoryInterface
      * Core columns for hotel listing (excludes large hotel_data JSON)
      */
     private const LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
-        hotel_type, star_rating, latitude, longitude, has_prices, packages_count,
+        hotel_type, star_rating, latitude, longitude, has_room_price, packages_count,
         hotelinfo_synced_at, hotel_list_synced_at, created_at, updated_at';
 
     /**
@@ -335,7 +335,7 @@ class HotelRepository implements HotelRepositoryInterface
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
         $query = "SELECT * FROM ?:novoton_hotels
-                  WHERE has_prices = 'Y' AND country = ?s
+                  WHERE has_room_price = 'Y' AND country = ?s
                   AND (product_id IS NULL OR product_id = 0)";
         $params = [$country];
 
@@ -379,8 +379,8 @@ class HotelRepository implements HotelRepositoryInterface
         if (!empty($filters['resort'])) {
             $conditions[] = db_quote("city = ?s", $filters['resort']);
         }
-        if (!empty($filters['has_prices'])) {
-            $conditions[] = db_quote("has_prices = ?s", $filters['has_prices']);
+        if (!empty($filters['has_room_price'])) {
+            $conditions[] = db_quote("has_room_price = ?s", $filters['has_room_price']);
         }
         if (!empty($filters['has_product'])) {
             $conditions[] = "product_id > 0";
@@ -392,7 +392,7 @@ class HotelRepository implements HotelRepositoryInterface
             $conditions[] = "packages_count > 0";
         }
         if (!empty($filters['has_room_prices'])) {
-            $conditions[] = "has_prices = 'Y' AND last_price_check IS NOT NULL";
+            $conditions[] = "has_room_price = 'Y' AND last_price_check IS NOT NULL";
         }
         if (!empty($filters['stars'])) {
             $conditions[] = db_quote("star_rating = ?i", (int) $filters['stars']);

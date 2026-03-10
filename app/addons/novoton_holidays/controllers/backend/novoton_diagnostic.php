@@ -168,7 +168,7 @@ if ($mode == 'health') {
         $recent_bookings = $bookingRepo->count(['check_in_from' => date('Y-m-d H:i:s', strtotime('-24 hours'))]);
         $pending_bookings = $bookingRepo->count(['status' => 'pending']);
         $failed_bookings = $bookingRepo->count(['status' => 'failed']);
-        $hotels_with_prices = $hotelRepo->count(['has_prices' => 'Y']);
+        $hotels_with_prices = $hotelRepo->count(['has_room_price' => 'Y']);
 
         $health['metrics'] = [
             'bookings_24h' => $recent_bookings,

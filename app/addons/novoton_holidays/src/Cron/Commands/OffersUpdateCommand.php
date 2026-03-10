@@ -77,7 +77,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                         'region' => (string)($hotel_info->Region ?? ''),
                         'country' => (string)($hotel_info->Country ?? $country),
                         'hotel_type' => (string)($hotel_info->HotelType ?? $hotel_info->Stars ?? ''),
-                        'has_prices' => 'N',
+                        'has_room_price' => 'N',
                         'hotel_list_synced_at' => date('Y-m-d H:i:s')
                     ];
                     $hotelRepo->upsert($hotel_data);
@@ -93,7 +93,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
 
             // Check if should add to CS-Cart
-            if (($existing['has_prices'] ?? '') != 'Y') {
+            if (($existing['has_room_price'] ?? '') != 'Y') {
                 $this->output("no prices");
                 continue;
             }
