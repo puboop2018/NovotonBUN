@@ -45,7 +45,7 @@
                 </td>
                 <td>{$req.created_at|date_format:"%d %b %H:%M"}</td>
                 <td>
-                    <a href="{fn_url("novoton_holidays.test_alternative_rs?id_num=`$req.novoton_request_id`")}" class="btn btn-small">Check</a>
+                    <a href="{"novoton_holidays.test_alternative_rs&id_num=`$req.novoton_request_id`"|fn_url}" class="btn btn-small">Check</a>
                 </td>
             </tr>
             {/foreach}

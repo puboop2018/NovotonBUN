@@ -95,7 +95,7 @@
     <h4><i class="icon-ok"></i> Request Sent Successfully!</h4>
     <p><strong>IdNum received:</strong> <span style="font-size: 18px; font-weight: bold;">{$id_num}</span></p>
     <p>Use this IdNum to check for alternatives (typically available after 24-48 hours):</p>
-    <a href="{fn_url("novoton_holidays.test_alternative_rs?id_num=`$id_num`")}" class="btn btn-success">
+    <a href="{"novoton_holidays.test_alternative_rs&id_num=`$id_num`"|fn_url}" class="btn btn-success">
         <i class="icon-search"></i> Check Alternatives for IdNum {$id_num}
     </a>
 </div>

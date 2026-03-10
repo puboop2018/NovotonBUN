@@ -86,7 +86,7 @@
                 </td>
                 <td>
                     <div class="btn-group">
-                        <a href="{fn_url("novoton_alternatives.view?request_id=`$request.request_id`")}" class="btn btn-small" title="View Details">
+                        <a href="{"novoton_alternatives.view&request_id=`$request.request_id`"|fn_url}" class="btn btn-small" title="View Details">
                             <i class="icon-eye-open"></i>
                         </a>
                         

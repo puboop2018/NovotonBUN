@@ -114,7 +114,7 @@
                     <span class="novoton-badge novoton-badge-info">{$country_stats.with_products}</span>
                 </div>
                 <div class="country-actions">
-                    <a href="{"novoton_holidays.add_hotels_as_products?country=`$country`"|fn_url}" class="novoton-btn novoton-btn-xs">Add as Products -></a>
+                    <a href="{"novoton_holidays.add_hotels_as_products&country=`$country`"|fn_url}" class="novoton-btn novoton-btn-xs">Add as Products -></a>
                 </div>
             </div>
             {/if}
