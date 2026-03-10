@@ -260,6 +260,20 @@ class PriceInfoParser
             ]);
         }
 
+        // Check if this room has separate pricing for 3rd+ adults on extra beds.
+        // When it does NOT (e.g., FAM 4+1 DELUXE where all adults are "ADULT"),
+        // extra-bed adults are classified as plain "ADULT" with "REGULAR" acc_type
+        // so they match the same season_price row as regular-bed adults.
+        $hasExtraBedAdultPricing = false;
+        if (!empty($roomId) && !empty($boardId) && !empty($this->priceinfo)) {
+            $hasExtraBedAdultPricing = $this->hasAdultExtraBedPricing($roomId, $boardId);
+            $this->log('Adult extra bed pricing check', [
+                'room_id' => $roomId,
+                'board_id' => $boardId,
+                'has_extra_bed_adult_pricing' => $hasExtraBedAdultPricing
+            ]);
+        }
+
         // Place adults
         $adultCount = $adults;
         for ($i = 0; $i < $adults; $i++) {
@@ -272,13 +286,25 @@ class PriceInfoParser
                 ];
                 $rbUsed++;
             } else {
-                $ordinal = PriceInfoFormatter::getOrdinal($i + 1);
-                $occupancy['adults'][] = [
-                    'index' => $i + 1,
-                    'bed_type' => 'EXTRA BED',
-                    'age_type' => $ordinal . ' ADULT',
-                    'acc_type' => 'EXTRA BED'
-                ];
+                if ($hasExtraBedAdultPricing) {
+                    // Room has separate pricing for 3rd+ adults (e.g., "3 RD ADULT" / "EXTRA BED")
+                    $ordinal = PriceInfoFormatter::getOrdinal($i + 1);
+                    $occupancy['adults'][] = [
+                        'index' => $i + 1,
+                        'bed_type' => 'EXTRA BED',
+                        'age_type' => $ordinal . ' ADULT',
+                        'acc_type' => 'EXTRA BED'
+                    ];
+                } else {
+                    // No separate pricing — all adults use plain "ADULT" / "REGULAR"
+                    // so they match the generic adult season_price row
+                    $occupancy['adults'][] = [
+                        'index' => $i + 1,
+                        'bed_type' => 'EXTRA BED',
+                        'age_type' => 'ADULT ',
+                        'acc_type' => 'REGULAR'
+                    ];
+                }
                 $ebUsed++;
             }
         }

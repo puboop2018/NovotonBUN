@@ -2,8 +2,8 @@
                     PRICEINFO CALCULATION ALGORITHM
 ================================================================================
 
-Document Version: 1.2
-Last Updated: 2026-02-28
+Document Version: 1.3
+Last Updated: 2026-03-10
 Repository: NovotonAddonRepoA
 
 ================================================================================
@@ -148,7 +148,10 @@ STEP 2: VALIDATE & BUILD OCCUPANCY
 - Validate occupancy against room capacity constraints
 - Build occupancy structure showing Regular Beds (RB) vs Extra Beds (EB)
 - Assign adults to regular beds first
-- Extra adults become "3RD ADULT", "4TH ADULT"
+- Extra adults become "3RD ADULT", "4TH ADULT" ONLY if the room has
+  separate pricing for positional adults (hasAdultExtraBedPricing).
+  Otherwise, extra-bed adults remain as plain "ADULT" with "REGULAR"
+  acc_type to match the generic adult pricing row.
 - Assign children to remaining regular beds, then extra beds
 - Each occupant marked with age_type (e.g., "1ST CHD 2-11,99", "ADULT")
 
@@ -331,6 +334,9 @@ EXTRAS_DAILY:
 - Has Type handling (see Section 10)
 - Has date range restrictions (FromDate/ToDate)
 - Person matching via IdAge field (normalized with feeKey)
+- Season-price correlation: entries whose IdAge does not exist in
+  season_price for the booked room are skipped (strict matching,
+  no ordinal stripping — "3 RD ADULT" ≠ "ADULT")
 Formula: price * matching_persons * applicable_nights
 
 EXTRAS_SINGLE:
@@ -606,10 +612,16 @@ The countMatchingPersons() method supports complex IdAge patterns:
 
 ADULT MATCHING:
 ---------------
-- "ADULT" or "ADT"      -> All regular adults (1st, 2nd position)
-- "3RD ADULT"           -> Only 3rd adult (if present)
-- "4TH ADULT"           -> Only 4th adult (if present)
+- "ADULT" or "ADT"      -> All adults in the occupancy structure
+- "3RD ADULT"           -> Only if an occupant has age_type "3 RD ADULT"
+- "4TH ADULT"           -> Only if an occupant has age_type "4 TH ADULT"
 - "3RD ADULT|4TH ADULT" -> 3rd or 4th adult
+
+IMPORTANT: Positional adult patterns (e.g., "3RD ADULT") are matched against
+the actual age_type assigned to each adult in the occupancy structure — NOT
+by simply counting total adults. This prevents double-counting in rooms where
+all adults are classified as plain "ADULT" (see "Rooms Without Positional
+Adult Pricing" below).
 
 CHILD MATCHING:
 ---------------
@@ -639,6 +651,37 @@ parseChildAgeBands() reads from hotelinfo data:
 getAvailableChildAgeBands() checks which bands have pricing rows:
 - For the given room/board, queries season_price for matching IdAge rows
 - Only bands with at least one pricing row are considered "available"
+
+ROOMS WITHOUT POSITIONAL ADULT PRICING:
+---------------------------------------
+Some room types (e.g., "FAM 4+1 DELUXE") define only "ADULT" as the IdAge
+in their season_price — there are no separate "3 RD ADULT" or "4 TH ADULT"
+pricing rows. In these rooms, ALL adults (including 3rd, 4th, etc.) are
+treated as plain "ADULT" regardless of bed assignment.
+
+Detection: hasAdultExtraBedPricing(roomId, boardId) checks if the room's
+season_price contains positional adult entries (e.g., "3 RD ADULT" with
+"EXTRA BED" accommodation). When it returns false:
+
+1. Occupancy: Extra-bed adults are classified as "ADULT" with "REGULAR"
+   acc_type (instead of "3 RD ADULT" / "EXTRA BED"). This ensures they
+   match the generic adult season_price row.
+
+2. Fee correlation: Fee entries (handling_fee, extras_daily) with positional
+   IdAge like "3 RD ADULT" are skipped via strict correlation check
+   (correlatesWithSeasonAgeTypes), which does NOT strip ordinal prefixes.
+   The generic "ADULT" fee row covers all adults.
+
+3. Person counting: countMatchingPersons() checks actual occupancy age_types
+   for positional adult patterns. "3 RD ADULT" returns 0 when no occupant
+   has that age_type, preventing double-counting.
+
+Example — FAM 4+1 DELUXE with 4 adults:
+  season_price has: ADULT (REGULAR) only
+  occupancy: all 4 adults → age_type="ADULT", acc_type="REGULAR"
+  handling_fee "ADULT" → 4 persons matched
+  handling_fee "3 RD ADULT" → skipped (no season_price correlation)
+  handling_fee "4 TH ADULT" → skipped (no season_price correlation)
 
 CHILD RECLASSIFICATION:
 -----------------------
@@ -846,6 +889,7 @@ KEY METHODS REFERENCE
 | buildCodeIndex()              | Creates code->rows lookup for resolution  |
 | resolvePrice()                | Recursive Code/Base price resolution      |
 | feeKey()                      | Strips "BY X AD" suffix from IdAge        |
+| correlatesWithSeasonAgeTypes()| Strict IdAge-to-season_price correlation  |
 | toScalar()                    | Extracts scalar from array/object fields  |
 | formatAgeBandLabel()          | Formats age band labels (comma decimal)   |
 | getSeasonsByNight()           | Maps nights to seasons                    |
