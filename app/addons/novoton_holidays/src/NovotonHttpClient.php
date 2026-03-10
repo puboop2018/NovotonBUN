@@ -45,19 +45,19 @@ class NovotonHttpClient implements HttpClientInterface
             );
         }
         $apiUrl = $settings['api_url'];
-        // Preserve scheme if provided in settings, otherwise default to https://
+        // Preserve scheme if provided in settings, otherwise default to http://
+        // (Novoton API provider currently specifies http:// only)
         if (preg_match('#^https?://#', $apiUrl)) {
             $this->apiUrl = $apiUrl;
         } else {
-            $this->apiUrl = 'https://' . $apiUrl;
+            $this->apiUrl = 'http://' . $apiUrl;
         }
 
-        // Warn when API credentials will be sent over unencrypted HTTP
+        // Log advisory when API credentials traverse unencrypted HTTP
         if (stripos($this->apiUrl, 'http://') === 0) {
-            fn_log_event('general', 'warning', [
-                'message' => 'Novoton API URL uses HTTP — API credentials are transmitted unencrypted. '
-                    . 'Configure HTTPS in addon settings for production environments.',
-                'api_url' => preg_replace('#//.*:.*@#', '//***:***@', $this->apiUrl),
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API URL uses HTTP — credentials are sent unencrypted. '
+                    . 'When the provider supports HTTPS, update api_url in addon settings.',
             ]);
         }
         $this->apiKey = $settings['api_key'] ?? '';

@@ -271,12 +271,12 @@ export default function BookingEngine({ config }) {
                     }
                     curPage.appendChild(fragment);
 
-                    // Re-execute only trusted same-origin external scripts;
-                    // inline scripts are stripped to prevent XSS via server response injection.
+                    // Re-execute scripts from the fetched same-origin page.
+                    // Block cross-origin external scripts to limit XSS surface.
                     curPage.querySelectorAll('script').forEach(oldScript => {
                         if (oldScript.closest('.novoton-search-form-wrapper')) return;
 
-                        // Only allow external scripts from the same origin
+                        // Block cross-origin external scripts
                         if (oldScript.src) {
                             try {
                                 const scriptUrl = new URL(oldScript.src, window.location.origin);
@@ -290,17 +290,15 @@ export default function BookingEngine({ config }) {
                             }
                             // Skip scripts already loaded (React, validation)
                             if (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation')) return;
-
-                            const newScript = document.createElement('script');
-                            newScript.src = oldScript.src;
-                            if (oldScript.type) newScript.type = oldScript.type;
-                            if (oldScript.defer) newScript.defer = true;
-                            if (oldScript.async) newScript.async = true;
-                            oldScript.parentNode.replaceChild(newScript, oldScript);
-                        } else {
-                            // Remove inline scripts entirely to prevent XSS
-                            oldScript.remove();
                         }
+
+                        // Re-execute both inline and same-origin external scripts
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
 
                     // Scroll to results area

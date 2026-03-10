@@ -43,10 +43,10 @@ class BookingService implements BookingServiceInterface
      * @param \Tygh\Addons\NovotonHolidays\NovotonApi|null $api Injected API instance (falls back to global helper)
      */
     public function __construct(
-        ?\Tygh\Addons\NovotonHolidays\NovotonApi $api = null,
         ?GuestDataServiceInterface $guestService = null,
         ?RoomPriceServiceInterface $priceService = null,
-        ?BookingRepositoryInterface $bookingRepo = null
+        ?BookingRepositoryInterface $bookingRepo = null,
+        ?\Tygh\Addons\NovotonHolidays\NovotonApi $api = null
     ) {
         if ($api === null) {
             $api = fn_novoton_holidays_get_api();
