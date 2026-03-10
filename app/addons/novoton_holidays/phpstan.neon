@@ -1,0 +1,17 @@
+parameters:
+    level: 5
+    paths:
+        - src
+    excludePaths:
+        - vendor
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # CS-Cart global functions (db_query, db_get_field, etc.)
+        - '#Function db_\w+ not found\.#'
+        - '#Function fn_\w+ not found\.#'
+        # CS-Cart Registry class
+        - '#Class Tygh\\Registry not found\.#'
+        - '#Class Tygh\\Tygh not found\.#'
+        # CS-Cart constants
+        - '#Constant DIR_ROOT not found\.#'
+        - '#Constant CONSOLE not found\.#'

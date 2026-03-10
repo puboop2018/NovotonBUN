@@ -16,6 +16,8 @@ use Tygh\Registry;
 
 class CacheService implements CacheServiceInterface
 {
+    private const MEMORY_CACHE_MAX_SIZE = 500;
+
     private string $storage = 'file';
     private string $cache_dir;
     private int $default_ttl = 300;
@@ -79,12 +81,19 @@ class CacheService implements CacheServiceInterface
         $ttl = $ttl ?? $this->default_ttl;
         $expires = time() + $ttl;
         
+        // Evict oldest entries if memory cache is at capacity
+        if (count(self::$memory_cache) >= self::MEMORY_CACHE_MAX_SIZE && !isset(self::$memory_cache[$key])) {
+            // Remove the oldest entry (first inserted — approximates LRU)
+            reset(self::$memory_cache);
+            unset(self::$memory_cache[key(self::$memory_cache)]);
+        }
+
         // Store in memory cache
         self::$memory_cache[$key] = [
             'data' => $value,
             'expires' => $expires
         ];
-        
+
         // Store in persistent cache
         if ($this->storage === 'file') {
             return $this->setToFile($key, $value, $expires);
@@ -194,8 +203,12 @@ class CacheService implements CacheServiceInterface
             return null;
         }
 
-        $data = unserialize($content, ['allowed_classes' => false]);
-        if ($data === false || !isset($data['expires']) || !isset($data['data'])) {
+        $data = json_decode($content, true);
+        // Backward compatibility: try unserialize for legacy cache files
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+            $data = unserialize($content, ['allowed_classes' => false]);
+        }
+        if (!is_array($data) || !isset($data['expires']) || !isset($data['data'])) {
             unlink($file);
             return null;
         }
@@ -227,12 +240,16 @@ class CacheService implements CacheServiceInterface
         // Convert SimpleXMLElement to array to allow serialization
         $value = $this->convertToSerializable($value);
         
-        $data = serialize([
+        $data = json_encode([
             'data' => $value,
             'expires' => $expires,
             'created' => time()
-        ]);
-        
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if ($data === false) {
+            return false;
+        }
+
         return file_put_contents($file, $data, LOCK_EX) !== false;
     }
     
@@ -414,8 +431,12 @@ class CacheService implements CacheServiceInterface
             return null;
         }
         
-        $data = unserialize($row['cache_data'], ['allowed_classes' => false]);
-        
+        $data = json_decode($row['cache_data'], true);
+        // Backward compatibility: try unserialize for legacy entries
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+            $data = unserialize($row['cache_data'], ['allowed_classes' => false]);
+        }
+
         // Store in memory
         self::$memory_cache[$key] = [
             'data' => $data,
@@ -437,7 +458,7 @@ class CacheService implements CacheServiceInterface
     {
         $data = [
             'cache_key' => $key,
-            'cache_data' => serialize($value),
+            'cache_data' => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'expires_at' => date('Y-m-d H:i:s', $expires),
             'created_at' => date('Y-m-d H:i:s')
         ];
@@ -496,11 +517,27 @@ class CacheService implements CacheServiceInterface
         
         if ($this->storage === 'file') {
             $files = glob($this->cache_dir . '*/*.cache') ?: [];
+            $now = time();
+            // Use a generous max TTL heuristic: if file was last modified
+            // longer ago than max_ttl, it's definitely expired — skip reading.
+            $maxTtl = 86400; // 24 hours — any realistic TTL is smaller
             foreach ($files as $file) {
+                $mtime = @filemtime($file);
+                if ($mtime !== false && ($mtime + $maxTtl) < $now) {
+                    // File is older than max possible TTL — definitely expired
+                    if (unlink($file)) {
+                        $count++;
+                    }
+                    continue;
+                }
+                // Uncertain — read and check actual expiration
                 $content = file_get_contents($file);
                 if ($content !== false) {
-                    $data = unserialize($content, ['allowed_classes' => false]);
-                    if ($data !== false && isset($data['expires']) && $data['expires'] < time()) {
+                    $data = json_decode($content, true);
+                    if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+                        $data = unserialize($content, ['allowed_classes' => false]);
+                    }
+                    if (is_array($data) && isset($data['expires']) && $data['expires'] < $now) {
                         if (unlink($file)) {
                             $count++;
                         }

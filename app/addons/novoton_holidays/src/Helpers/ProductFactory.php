@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -136,7 +137,7 @@ class ProductFactory implements ProductFactoryInterface
             $maxImages = ConfigProvider::MAX_IMAGES_PER_HOTEL;
 
             foreach ($imagesResponse->url as $url) {
-                $imageUrl = ConfigProvider::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
+                $imageUrl = Constants::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
 
                 if (function_exists('fn_novoton_holidays_add_product_image')) {
                     fn_novoton_holidays_add_product_image($productId, $imageUrl, $imgCount === 0);

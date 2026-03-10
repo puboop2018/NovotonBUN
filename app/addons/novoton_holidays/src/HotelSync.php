@@ -33,9 +33,9 @@ class HotelSync
     private array $productPrefixes;
     private array $stats;
 
-    public function __construct()
+    public function __construct(?NovotonApi $api = null)
     {
-        $this->api = new NovotonApi();
+        $this->api = $api ?? new NovotonApi();
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->propertyTypeDetector = new PropertyTypeDetector();
         $this->selectedCountries = ConfigProvider::getSelectedCountries();
@@ -242,6 +242,16 @@ class HotelSync
             $hotelIds = db_get_fields($query);
         }
 
+        // Pre-fetch hotel names to avoid N+1 query inside the loop
+        $hotelNames = [];
+        if (!empty($hotelIds)) {
+            $hotelNames = db_get_hash_single_array(
+                "SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+                ['hotel_id', 'hotel_name'],
+                $hotelIds
+            );
+        }
+
         $this->log("Syncing hotelinfo for " . count($hotelIds) . " hotels");
 
         foreach ($hotelIds as $hotelId) {
@@ -281,10 +291,7 @@ class HotelSync
                 $region = (string)($hotelInfo->Region ?? '');
 
                 // Re-detect property type with full cascade (Pass 1-3)
-                $hotelName = (string) db_get_field(
-                    "SELECT hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                    $hotelId
-                );
+                $hotelName = (string) ($hotelNames[$hotelId] ?? '');
                 $packageNames = [];
                 $roomNames = [];
 
@@ -399,6 +406,7 @@ class HotelSync
         }
 
         $synced = 0;
+        $batchUpsertData = [];
 
         foreach ($packages as $package) {
             $packageId = (string)$package->IdCont;
@@ -423,21 +431,13 @@ class HotelSync
                     }
                 }
 
-                // Upsert package record — flag for price recomputation by compute_prices cron
-                db_query(
-                    "INSERT INTO ?:novoton_hotel_packages
-                     (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
-                     VALUES (?s, ?s, ?s, ?s, 'Y', NOW())
-                     ON DUPLICATE KEY UPDATE
-                     package_name = VALUES(package_name),
-                     priceinfo_data = VALUES(priceinfo_data),
-                     needs_price_compute = 'Y',
-                     synced_at = NOW()",
-                    $hotelId,
-                    $packageId,
-                    $packageName,
-                    $priceInfoJson
-                );
+                // Collect for batch upsert instead of individual query
+                $batchUpsertData[] = [
+                    'hotel_id' => $hotelId,
+                    'package_id' => $packageId,
+                    'package_name' => $packageName,
+                    'priceinfo_data' => $priceInfoJson,
+                ];
 
                 $this->stats['packages_updated']++;
                 $synced++;
@@ -461,6 +461,11 @@ class HotelSync
             usleep(Constants::API_DELAY_MODERATE);
         }
 
+        // Batch upsert all collected packages in a single query
+        if (!empty($batchUpsertData)) {
+            $this->executeBatchPackageUpsert($batchUpsertData);
+        }
+
         // Update packages_count (has_room_price is set exclusively by room_price check)
         db_query(
             "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
@@ -469,6 +474,40 @@ class HotelSync
         );
 
         return $synced;
+    }
+
+    /**
+     * Execute batch INSERT ON DUPLICATE KEY UPDATE for packages
+     *
+     * @param array $batchData Array of package data arrays
+     */
+    private function executeBatchPackageUpsert(array $batchData): void
+    {
+        if (empty($batchData)) {
+            return;
+        }
+
+        $values = [];
+        foreach ($batchData as $pkg) {
+            $values[] = db_quote(
+                "(?s, ?s, ?s, ?s, 'Y', NOW())",
+                $pkg['hotel_id'],
+                $pkg['package_id'],
+                $pkg['package_name'],
+                $pkg['priceinfo_data']
+            );
+        }
+
+        $sql = "INSERT INTO ?:novoton_hotel_packages
+                (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
+                VALUES " . implode(', ', $values) . "
+                ON DUPLICATE KEY UPDATE
+                package_name = VALUES(package_name),
+                priceinfo_data = VALUES(priceinfo_data),
+                needs_price_compute = 'Y',
+                synced_at = NOW()";
+
+        db_query($sql);
     }
 
     /**

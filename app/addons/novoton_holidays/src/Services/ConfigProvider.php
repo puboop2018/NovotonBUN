@@ -28,12 +28,7 @@ class ConfigProvider
     public const MIN_EXECUTION_TIME = 60;
     public const MAX_EXECUTION_TIME = 3600;
 
-    // Image settings — canonical value in Constants::IMAGE_BASE_URL
-    public const IMAGE_BASE_URL = Constants::IMAGE_BASE_URL;
     public const MAX_IMAGES_PER_HOTEL = 10;
-
-    // Product code prefix — canonical value in Constants::PRODUCT_CODE_PREFIX
-    public const PRODUCT_CODE_PREFIX = Constants::PRODUCT_CODE_PREFIX;
 
     // Stale threshold for incremental sync (hours)
     public const STALE_HOURS = 24;
