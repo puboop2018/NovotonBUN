@@ -2,8 +2,8 @@
 
 ## Provider-Agnostic Hub for CS-Cart Product Features
 
-**Version:** 1.2
-**Date:** 2026-03-09
+**Version:** 1.3
+**Date:** 2026-03-10
 **Scope:** Novoton XML API + Sphinx REST API (+ future providers)
 **Addon:** `novoton_holidays` (v3.3.0+)
 
@@ -1232,7 +1232,7 @@ The controller is restricted:
 | `functions/hotels.php` | Seed Function | Pre-populates all 8 feature type mappings. Reroutes facility IDs 3/23/26/31 to travel_group/beach_access |
 | `addon.xml` | Schema | `hotel_feature_mappings` table DDL. Feature ID settings as selectbox dropdowns |
 | `controllers/backend/novoton_feature_mappings.php` | Controller | Admin UI for listing (with variant names), editing, bulk operations, and re-seeding |
-| `design/backend/templates/.../manage.tpl` | Template | Feature Mappings list view with Variant Name column |
+| `design/backend/templates/addons/novoton_holidays/views/novoton_feature_mappings/manage.tpl` | Template | Feature Mappings list view with Variant Name column |
 | `src/Cron/Commands/AddProductsCommand.php` | Cron Command | Product creation with data-driven facility routing, adults_only and property_type assignment |
 | `func.php` | Settings | `fn_settings_variants_addons_novoton_holidays_feature_ids()` — dynamic selectbox for Feature ID settings |
 

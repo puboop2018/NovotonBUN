@@ -2,7 +2,7 @@
                     PRICEINFO CALCULATION ALGORITHM
 ================================================================================
 
-Document Version: 1.3
+Document Version: 1.4
 Last Updated: 2026-03-10
 Repository: NovotonAddonRepoA
 
@@ -39,16 +39,24 @@ The PriceInfo calculation system computes hotel package prices based on:
 - Discounts (Early Booking, Free Nights)
 - Commission
 
-Primary Class: PriceInfoCalculation
-Location: /app/addons/novoton_holidays/services/PriceInfoCalculation.php
+Primary Class: PriceInfoCalculation (orchestrator)
+Location: /app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+Architecture: PriceInfoCalculation is a slim orchestrator that delegates to:
+  - PriceInfoParser     — loads raw price data, builds occupancy, validates
+  - PriceInfoCalculator — applies pricing formulas, discounts, fees
+  - PriceInfoFormatter  — matching, normalization, counting, debug formatting
 
 ================================================================================
 2. CORE FILES
 ================================================================================
 
-CALCULATION FILES:
-------------------
-- PriceInfoCalculation.php  - Main calculation engine
+CALCULATION FILES (src/Services/):
+----------------------------------
+- PriceInfoCalculation.php  - Orchestrator: coordinates parser + calculator
+- PriceInfoParser.php       - Data loading, occupancy structure, validation
+- PriceInfoCalculator.php   - All discount/fee/base price calculations
+- PriceInfoFormatter.php    - Person matching, normalization, utility methods
 - PriceInfoService.php      - Retrieval and formatting of stored priceinfo
 - RoomPriceService.php      - Real-time room price service (API-based)
 - PriceInfoSync.php         - Synchronizes priceinfo from API to database
@@ -865,38 +873,59 @@ additional_discount = subtotal_after_marketing * (Perc / 100)
 KEY METHODS REFERENCE
 ================================================================================
 
-| Method                        | Purpose                                    |
-|-------------------------------|-------------------------------------------|
-| calculate()                   | Main entry - orchestrates calculation     |
-| calculateBasePrice()          | Sums per-night prices for all occupants   |
-| calculateFees()               | Aggregates all supplements                |
-| calculateExtrasDaily()        | Daily charges with type handling          |
-| calculateExtrasSingle()       | Single supplement (1 adult in double)     |
-| calculateExtrasRooms()        | Per-room charges                          |
-| calculateExtrasBoard()        | Board upgrades per person/stay            |
-| calculateHandlingFee()        | Tiered fee based on stay length           |
-| calculateCompanyFee()         | Per-room flat fee                         |
-| calculateEarlyBookingDiscount()| EB discount with supplement flags        |
-| calculateReduction()          | Free nights with proportional reduction   |
-| calculateReductionPeriod()    | MaxDays cap (not currently in use)        |
-| calculateReductionPercMarketing()| Marketing % discount/surcharge          |
-| calculateReductionPercAdditional()| Flat promo % discount (not in use)     |
-| applyPriorityRules()          | Selects best discount scenario            |
-| buildOccupancyStructure()     | Maps guests to bed types + reclassifies   |
-| parseChildAgeBands()          | Extracts hotel-specific age bands         |
-| getAvailableChildAgeBands()   | Checks which bands have pricing rows      |
-| hasAdultExtraBedPricing()     | Checks if room has 3RD+ ADULT EB pricing  |
-| buildCodeIndex()              | Creates code->rows lookup for resolution  |
-| resolvePrice()                | Recursive Code/Base price resolution      |
-| feeKey()                      | Strips "BY X AD" suffix from IdAge        |
-| correlatesWithSeasonAgeTypes()| Strict IdAge-to-season_price correlation  |
-| toScalar()                    | Extracts scalar from array/object fields  |
-| formatAgeBandLabel()          | Formats age band labels (comma decimal)   |
-| getSeasonsByNight()           | Maps nights to seasons                    |
-| countMatchingPersons()        | Counts guests matching IdAge criteria     |
-| countOverlappingNights()      | Counts nights within date range           |
-| findSeasonPriceRow()          | Finds price row (with IdStar filtering)   |
-| getPriceFromRow()             | Extracts price, handles percentages       |
+Methods are distributed across four classes following a delegation pattern:
+
+PriceInfoCalculation (Orchestrator — src/Services/PriceInfoCalculation.php):
+  - Delegates parsing to PriceInfoParser, calculations to PriceInfoCalculator
+  - Uses static utilities from PriceInfoFormatter
+
+| Method                        | Class               | Purpose                                |
+|-------------------------------|---------------------|----------------------------------------|
+| calculate()                   | PriceInfoCalculation| Main entry - orchestrates calculation  |
+| calculateBasePrice()          | PriceInfoCalculator | Sums per-night prices for all occupants|
+| calculateFees()               | PriceInfoCalculator | Aggregates all supplements             |
+| calculateExtrasDaily()        | PriceInfoCalculator | Daily charges with type handling       |
+| calculateExtrasSingle()       | PriceInfoCalculator | Single supplement (1 adult in double)  |
+| calculateExtrasRooms()        | PriceInfoCalculator | Per-room charges                       |
+| calculateExtrasBoard()        | PriceInfoCalculator | Board upgrades per person/stay         |
+| calculateHandlingFee()        | PriceInfoCalculator | Tiered fee based on stay length        |
+| calculateCompanyFee()         | PriceInfoCalculator | Per-room flat fee                      |
+| calculateEarlyBookingDiscount()| PriceInfoCalculator| EB discount with supplement flags      |
+| calculateReduction()          | PriceInfoCalculator | Free nights with proportional reduction|
+| calculateReductionPeriod()    | PriceInfoCalculator | MaxDays cap (not currently in use)     |
+| calculateReductionPercMarketing()| PriceInfoCalculator| Marketing % discount/surcharge       |
+| calculateReductionPercAdditional()| PriceInfoCalculator| Flat promo % discount (not in use)  |
+| applyPriorityRules()          | PriceInfoCalculator | Selects best discount scenario         |
+| applyCommission()             | PriceInfoCalculator | Applies commission percentage          |
+| findSeasonPriceRow()          | PriceInfoCalculator | Finds price row (with IdStar filtering)|
+| getPriceFromRow()             | PriceInfoCalculator | Extracts price, handles percentages    |
+| resolvePrice()                | PriceInfoCalculator | Recursive Code/Base price resolution   |
+| findBaseCodeRow()             | PriceInfoCalculator | Finds base code row for % resolution   |
+| collectSeasonPriceAgeTypes()  | PriceInfoCalculator | Collects age types from season_price   |
+| buildOccupancyStructure()     | PriceInfoParser     | Maps guests to bed types + reclassifies|
+| parseChildAgeBands()          | PriceInfoParser     | Extracts hotel-specific age bands      |
+| getAvailableChildAgeBands()   | PriceInfoParser     | Checks which bands have pricing rows   |
+| hasAdultExtraBedPricing()     | PriceInfoParser     | Checks if room has 3RD+ ADULT EB pric.|
+| getRoomCapacity()             | PriceInfoParser     | Gets room capacity (RB, EB, max, min)  |
+| validateOccupancy()           | PriceInfoParser     | Validates guests against room capacity |
+| getSeasonsByNight()           | PriceInfoParser     | Maps nights to seasons                 |
+| buildCodeIndex()              | PriceInfoParser     | Creates code->rows lookup for resolut. |
+| loadPriceInfo()               | PriceInfoParser     | Loads priceinfo from database          |
+| loadHotelInfo()               | PriceInfoParser     | Loads hotelinfo for room capacities    |
+| feeKey()                      | PriceInfoFormatter  | Strips "BY X AD" suffix from IdAge     |
+| correlatesWithSeasonAgeTypes()| PriceInfoFormatter  | Strict IdAge-to-season_price correlat. |
+| countMatchingPersons()        | PriceInfoFormatter  | Counts guests matching IdAge criteria  |
+| countOverlappingNights()      | PriceInfoFormatter  | Counts nights within date range        |
+| matchRoom()                   | PriceInfoFormatter  | Room ID matching (URL encoding aware)  |
+| matchBoard()                  | PriceInfoFormatter  | Board ID matching                      |
+| matchAgeType()                | PriceInfoFormatter  | Age type fuzzy matching                |
+| matchAccType()                | PriceInfoFormatter  | Accommodation type matching            |
+| normalizeAccType()            | PriceInfoFormatter  | Acc type normalization                 |
+| toScalar()                    | PriceInfoFormatter  | Extracts scalar from array/object      |
+| formatAgeBandLabel()          | PriceInfoFormatter  | Formats age band labels (comma dec.)   |
+| datesOverlap()                | PriceInfoFormatter  | Date range overlap check               |
+| countByType()                 | PriceInfoFormatter  | Type-specific person counting          |
+| countChildrenInBand()         | PriceInfoFormatter  | Children in age band counting          |
 
 ================================================================================
 END OF DOCUMENT
