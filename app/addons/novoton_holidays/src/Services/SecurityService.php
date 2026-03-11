@@ -502,8 +502,12 @@ class SecurityService implements SecurityServiceInterface
         );
         
         if ($data) {
-            $unserialized = unserialize($data, ['allowed_classes' => false]);
-            return is_array($unserialized) ? $unserialized : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
+            $decoded = json_decode($data, true);
+            // Backward compatibility: try unserialize for legacy entries
+            if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                $decoded = unserialize($data, ['allowed_classes' => false]);
+            }
+            return is_array($decoded) ? $decoded : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
         }
         
         return ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
@@ -517,31 +521,71 @@ class SecurityService implements SecurityServiceInterface
         db_query(
             "REPLACE INTO ?:novoton_cache SET cache_key = ?s, cache_data = ?s, expires_at = ?s, created_at = NOW()",
             $key,
-            serialize($data),
+            json_encode($data, JSON_UNESCAPED_UNICODE),
             date('Y-m-d H:i:s', $data['reset'] + 60)
         );
     }
     
     /**
      * Get encryption key
+     *
+     * Priority: CS-Cart crypt_key → addon api_key → persisted random key.
+     * Never derives keys from predictable inputs (hostname, path, etc.).
      */
     private function getEncryptionKey(): string
     {
-        // Use CS-Cart's crypt key or generate one
+        // Use CS-Cart's crypt key first
         $key = Registry::get('config.crypt_key');
-        
+
         if (empty($key)) {
             $key = ConfigProvider::getApiKey();
         }
 
         if (empty($key)) {
-            fn_log_event('general', 'runtime', [
-                'message' => 'Novoton SecurityService: no encryption key available — set config.crypt_key or addon api_key'
-            ]);
-            $key = hash('sha256', __DIR__ . php_uname('n'), false);
+            $key = $this->getOrCreatePersistedKey();
         }
-        
+
         return hash('sha256', $key, true);
+    }
+
+    /**
+     * Get or generate a persisted random encryption key.
+     *
+     * Stores the key in a protected file under var/novoton/.encryption_key
+     * so it survives across requests but is not predictable.
+     */
+    private function getOrCreatePersistedKey(): string
+    {
+        $keyDir = DIR_ROOT . '/var/novoton';
+        $keyFile = $keyDir . '/.encryption_key';
+
+        if (file_exists($keyFile)) {
+            $key = trim(file_get_contents($keyFile));
+            // bin2hex(random_bytes(32)) produces 64 hex chars (256-bit key)
+            if ($key !== '' && strlen($key) >= 64) {
+                return $key;
+            }
+        }
+
+        // Generate a cryptographically secure random key
+        $key = bin2hex(random_bytes(32));
+
+        if (!is_dir($keyDir)) {
+            @mkdir($keyDir, 0700, true);
+        }
+
+        if (file_put_contents($keyFile, $key, LOCK_EX) === false) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton SecurityService: failed to persist encryption key to ' . $keyFile
+            ]);
+        } else {
+            @chmod($keyFile, 0600);
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton SecurityService: generated and persisted new encryption key'
+            ]);
+        }
+
+        return $key;
     }
     
     /**

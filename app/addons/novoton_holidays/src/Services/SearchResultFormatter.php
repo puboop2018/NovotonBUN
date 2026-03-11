@@ -189,7 +189,7 @@ class SearchResultFormatter
 
             // Room-level facilities
             $lang_code       = CART_LANGUAGE;
-            $roomFacilities  = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, 'room', $lang_code);
+            $roomFacilities  = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY, $lang_code);
             $view->assign('novoton_room_facilities', $roomFacilities);
         }
 

@@ -77,7 +77,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             // Batch update every 25 hotels
             if (($idx + 1) % 25 == 0) {
-                $dbHelper->batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+                $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
                 $withPricesCount += count($withPricesIds);
                 $withoutPricesCount += count($withoutPricesIds);
                 $withPricesIds = [];
@@ -89,7 +89,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
         // Final batch
         if (!empty($withPricesIds) || !empty($withoutPricesIds)) {
-            $dbHelper->batchUpdateHasPricesFlag($withPricesIds, $withoutPricesIds);
+            $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
             $withPricesCount += count($withPricesIds);
             $withoutPricesCount += count($withoutPricesIds);
         }

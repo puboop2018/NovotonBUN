@@ -89,7 +89,7 @@ if ($mode == 'bookings') {
         $condition .= db_quote(" AND b.order_id = ?i", (int)$_REQUEST['order_id']);
     }
 
-    $allowed_statuses = ['pending', 'confirmed', 'cancelled', 'failed', 'ASK', 'OK', 'XX'];
+    $allowed_statuses = ['pending', 'confirmed', 'cancelled', 'failed', 'ASK', 'Good', 'XX'];
     if (!empty($_REQUEST['status']) && in_array($_REQUEST['status'], $allowed_statuses, true)) {
         $condition .= db_quote(" AND b.status = ?s", $_REQUEST['status']);
     }

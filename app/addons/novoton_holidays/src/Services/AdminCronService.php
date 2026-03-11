@@ -108,19 +108,19 @@ class AdminCronService
                 'children'  => Constants::DEFAULT_CHILDREN,
                 'rooms'     => Constants::DEFAULT_ROOMS,
             ]);
-            $has_prices = ($response && isset($response->hotel)) ? 'Y' : 'N';
+            $has_room_price = ($response && isset($response->hotel)) ? 'Y' : 'N';
 
             $hotelRepo->update($hotel['hotel_id'], [
-                'has_prices'       => $has_prices,
+                'has_room_price'   => $has_room_price,
                 'last_price_check' => date('Y-m-d H:i:s'),
             ]);
 
             $checked++;
-            if ($has_prices === 'Y') {
+            if ($has_room_price === 'Y') {
                 $with_prices++;
             }
 
-            $this->output("[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_prices === 'Y' ? 'HAS PRICES' : 'no prices'));
+            $this->output("[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_room_price === 'Y' ? 'HAS PRICES' : 'no prices'));
             usleep(Constants::API_DELAY_NORMAL);
         }
 
@@ -175,7 +175,7 @@ class AdminCronService
         foreach ($countries as $country) {
             $this->output("=== {$country} ===");
 
-            $hotels = $hotelRepo->findUnlinkedWithPrices($country, [], $limit);
+            $hotels = $hotelRepo->findUnlinkedWithPrices($country, ConfigProvider::getHiddenResorts(), $limit);
 
             if (empty($hotels)) {
                 $this->output("No hotels to add.\n");

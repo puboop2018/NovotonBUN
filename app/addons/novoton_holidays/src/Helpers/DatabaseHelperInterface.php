@@ -14,13 +14,13 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 interface DatabaseHelperInterface
 {
     /**
-     * Batch update hotels has_prices flag after room_price API checks.
+     * Batch update hotels has_room_price flag after room_price API checks.
      *
      * @param array $withPrices    Hotel IDs that have prices
      * @param array $withoutPrices Hotel IDs that don't have prices
      * @return int Number of rows affected
      */
-    public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int;
+    public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int;
 
     /**
      * Bulk lookup: Get existing product IDs for multiple hotel IDs.

@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DatabaseHelper implements DatabaseHelperInterface
@@ -25,20 +26,20 @@ class DatabaseHelper implements DatabaseHelperInterface
     private array $hotelCache = [];
 
     /**
-     * Batch update hotels has_prices flag after room_price API checks
+     * Batch update hotels has_room_price flag after room_price API checks
      *
-     * @param array $withPrices Hotel IDs that have prices (set has_prices = 'Y')
-     * @param array $withoutPrices Hotel IDs without prices (set has_prices = 'N')
+     * @param array $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
+     * @param array $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
      * @return int Number of rows updated
      */
-    public function batchUpdateHasPricesFlag(array $withPrices, array $withoutPrices): int
+    public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int
     {
         $updated = 0;
 
         if (!empty($withPrices)) {
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
-                 SET has_prices = 'Y', last_price_check = NOW()
+                 SET has_room_price = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withPrices
             );
@@ -47,7 +48,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         if (!empty($withoutPrices)) {
             $updated += (int) \db_query(
                 "UPDATE ?:novoton_hotels
-                 SET has_prices = 'N', last_price_check = NOW()
+                 SET has_room_price = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withoutPrices
             );
@@ -68,7 +69,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         }
 
         $productCodes = array_map(function ($id) {
-            return ConfigProvider::PRODUCT_CODE_PREFIX . $id;
+            return Constants::PRODUCT_CODE_PREFIX . $id;
         }, $hotelIds);
 
         $results = \db_get_hash_array(
@@ -81,7 +82,7 @@ class DatabaseHelper implements DatabaseHelperInterface
 
         $map = [];
         foreach ($hotelIds as $hotelId) {
-            $code = ConfigProvider::PRODUCT_CODE_PREFIX . $hotelId;
+            $code = Constants::PRODUCT_CODE_PREFIX . $hotelId;
             if (isset($results[$code])) {
                 $map[$hotelId] = $results[$code]['product_id'];
             }
@@ -223,7 +224,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /** @var string[] Allowed column names for dynamic queries */
     private const ALLOWED_COLUMNS = [
         'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
-        'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_prices',
+        'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_room_price',
         'packages_count', 'hotelinfo_synced_at', 'hotel_list_synced_at',
         'created_at', 'updated_at', 'hotel_data', 'last_price_check',
     ];
@@ -234,7 +235,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
     {
         if (empty($fields)) {
-            $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_prices', 'product_id'];
+            $fields = ['hotel_id', 'hotel_name', 'country', 'city', 'has_room_price', 'product_id'];
         }
 
         // Validate field names against whitelist
@@ -341,7 +342,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      */
     public function getProductCode(string $hotelId): string
     {
-        return ConfigProvider::PRODUCT_CODE_PREFIX . $hotelId;
+        return Constants::PRODUCT_CODE_PREFIX . $hotelId;
     }
 
     /**
@@ -349,7 +350,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      */
     public function extractHotelId(string $productCode): ?string
     {
-        $prefix = ConfigProvider::PRODUCT_CODE_PREFIX;
+        $prefix = Constants::PRODUCT_CODE_PREFIX;
         if (strpos($productCode, $prefix) === 0) {
             return substr($productCode, strlen($prefix));
         }

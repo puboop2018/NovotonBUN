@@ -1,5 +1,96 @@
 # Novoton Holidays - Changelog
 
+## A93 — Fix: Children Per-Person Price Calculation (Code/Base Percentage Rule)
+
+### Bug Fix: Children price not calculated in base price breakdown
+
+- **FIXED:** `PriceInfoCalculator::resolvePrice()` now correctly detects percentage-based pricing using the Code/Base rule: when `Code != Base`, price values are percentages of the base row (the row where `Code == current row's Base`), even without an explicit `%` suffix
+- **FIXED:** Previously, percentage detection relied solely on the `%` character in the price string. If percentage values were stored as plain numbers (e.g., `20` instead of `"20%"`), children's prices resolved to the raw number instead of being calculated as a percentage of the adult base price
+- **ADDED:** `PriceInfoCalculator::findBestBaseRow()` — when multiple season_price rows share the same Code, the lookup now prefers the row matching the current row's IdRoom and IdBoard for accurate percentage resolution
+- **FIXED:** Per-person totals now always include entries for all occupants (adults and children), even when no matching season_price row is found, ensuring the price comparison UI always displays all persons
+
+### Pricing Rule (Code / Base relationship)
+
+- `Code == Base` → Price1..Price20 values are absolute amounts (EUR)
+- `Code != Base` → Price1..Price20 values are percentages of the base row's price, where base row is identified by `Code == current row's Base`
+
+### Tests
+
+- **ADDED:** `testGetPriceFromRowCodeNotBaseImplicitPercentage` — verifies implicit percentage (no `%` suffix) when Code != Base
+- **ADDED:** `testGetPriceFromRowCodeEqualsBaseIsAbsolute` — verifies absolute pricing when Code == Base
+- **ADDED:** `testGetPriceFromRowExplicitPercentWithCodeNotBase` — verifies explicit `%` still works
+- **ADDED:** `testGetPriceFromRowBaseRowMatchesRoomBoard` — verifies room/board-aware base row selection
+- **ADDED:** `testCalculateBasePriceIncludesChildPercentage` — end-to-end: adult room price + 2 children at 20%
+- **ADDED:** `testCalculateBasePriceChildImplicitPercentage` — end-to-end: implicit percentage for child pricing
+
+### Files Changed
+
+- `src/Services/PriceInfoCalculator.php` — resolvePrice, findBestBaseRow, calculateBasePrice
+- `tests/Unit/PriceInfoCalculatorTest.php` — 6 new test cases
+
+---
+
+## A92 — Audit Fixes: HotelSync has_room_price Bug, Method & Filter Renames
+
+### Bug Fix: has_room_price incorrectly set in HotelSync.php (missed in A91)
+
+- **FIXED:** `HotelSync::syncPackagesForHotel()` was setting `has_room_price` based on priceinfo package sync count — now correctly updates only `packages_count` (matching the A91 fix applied to `helpers.php`, `BatchedHotelInfoSync.php`, `PriceInfoSync.php`)
+
+### Code Smell: Method and filter renames for clarity
+
+- **RENAMED:** `batchUpdateHasPricesFlag()` → `batchUpdateHasRoomPriceFlag()` in `DatabaseHelper`, `DatabaseHelperInterface`, `RoomPriceCheckCommand` — method name now matches the `has_room_price` column it updates
+- **RENAMED:** `has_room_prices` filter → `has_verified_room_price` in `HotelRepository::buildWhereClause()` and `novoton_holidays.php` controller — eliminates confusing singular/plural distinction with `has_room_price`
+
+## A91 — room_price Exclusivity Fix, OK → Good Status Rename, Dashboard Documentation
+
+### Bug Fix: has_room_price Set Exclusively by room_price Check
+
+- **FIXED:** `has_room_price` and `last_price_check` are now set **only** by the room_price check process (Check Prices resort-based, Check Prices per-hotel, `room_price` cron mode)
+- **REMOVED:** `has_room_price` assignment from Hotel Info Sync (`helpers.php`, `BatchedHotelInfoSync.php`) — these syncs now only update `packages_count`
+- **REMOVED:** `has_room_price = 'Y'` from hotel info download in `novoton_hotels.php` controller — now only updates `packages_count`
+- **REMOVED:** `has_room_price` and `last_price_check` from PriceInfo Sync (`PriceInfoSync.php`) — now only updates `packages_count`
+- **RATIONALE:** Real-time prices are provided by the `room_price` API response; having packages (priceinfo) does not mean the hotel has real-time availability
+
+### Status Rename: OK → Good
+
+- **CHANGED:** `NOVOTON_STATUS_CONFIRMED` constant from `'OK'` to `'Good'` — all internal status storage and display now uses "Good"
+- **CHANGED:** `AVAIL_OK` constant from `'OK'` to `'Good'`
+- **ADDED:** `NOVOTON_API_WIRE_MAP` constant — maps API wire format `'OK'` to internal `'Good'`
+- **ADDED:** `Constants::normalizeApiStatus()` static method — converts API responses (`'OK'` → `'Good'`) before storage
+- **CHANGED:** `BookingSubmissionService` normalizes API status via `normalizeApiStatus()` before storing in DB
+- **CHANGED:** `ResInfoCommand` normalizes API response status before comparison
+- **CHANGED:** `RoomPriceService` and `SearchService` normalize availability status from API responses
+- **CHANGED:** `BookingRepository` and `BookingRepositoryInterface` default parameter from `'OK'` to `'Good'`
+- **CHANGED:** `novoton_admin.php` allowed statuses: `'OK'` → `'Good'`
+- **CHANGED:** All booking template status comparisons and display labels from `'OK'` to `'Good'` (`manage.tpl`, `view.tpl`, `order_tab.tpl`)
+- **CHANGED:** Alternative match labels from `[OK]` to `[Good]` (`alternatives.tpl`, `order_tab.tpl`, `test_alternative_rs.tpl`)
+- **CHANGED:** Diagnostic output from `[OK]` to `[Good]` (`novoton_diagnostic.php`)
+- **CHANGED:** Cron/CLI success output from `"OK"` to `"Good"` (`CalendarPricesCommand.php`, frontend controller)
+- **CHANGED:** CSV export status from `[OK]` to `[Good]` (`novoton_holidays.php`, `novoton_tools.php`)
+- **CHANGED:** `addon.xml` schema comment from `'OK, ASK, ST, WT, RQ'` to `'Good, ASK, ST, WT, RQ'`
+- **KEPT:** `NOVOTON_STATUS_TO_INTERNAL` mapping accepts both `'OK'` (API wire) and `'Good'` (internal) → `STATUS_CONFIRMED`
+
+### Documentation
+
+- **DOCUMENTED:** Dashboard statistics "Real-time (room_price) available" and "Season prices (priceinfo) available" — explained DB conditions and what populates each counter
+- **NOTED:** `room_price` available counter now reflects only hotels checked via room_price (not hotel info sync)
+- **NOTED:** Check Prices (Resort-based) and Check Prices (Per-Hotel) currently return the same number of hotels with prices
+
+### Files Changed (19)
+
+Constants: `Constants.php`
+Controllers: `novoton_holidays.php` (backend), `novoton_holidays.php` (frontend), `novoton_hotels.php`, `novoton_admin.php`, `novoton_diagnostic.php`, `novoton_prices.php` (unchanged — already correct), `novoton_tools.php`
+Services: `BookingSubmissionService.php`, `RoomPriceService.php`, `SearchService.php`
+Repository: `BookingRepository.php`, `BookingRepositoryInterface.php`
+Sync: `BatchedHotelInfoSync.php`, `PriceInfoSync.php`
+Cron: `ResInfoCommand.php`, `CalendarPricesCommand.php`
+Functions: `helpers.php`
+Templates: `manage.tpl`, `view.tpl`, `order_tab.tpl`, `alternatives.tpl`, `test_alternative_rs.tpl`
+Schema: `addon.xml`
+Documentation: `README.md`, `CHANGELOG.md`
+
+---
+
 ## A90 — Code Smell Refactor: DI Consistency, Deduplication, Error Suppression Cleanup
 
 ### Dependency Injection (Container / ServiceLoader)

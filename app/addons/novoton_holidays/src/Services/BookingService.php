@@ -39,15 +39,20 @@ class BookingService implements BookingServiceInterface
 
     /**
      * Constructor
+     *
+     * @param \Tygh\Addons\NovotonHolidays\NovotonApi|null $api Injected API instance (falls back to global helper)
      */
     public function __construct(
         ?GuestDataServiceInterface $guestService = null,
         ?RoomPriceServiceInterface $priceService = null,
-        ?BookingRepositoryInterface $bookingRepo = null
+        ?BookingRepositoryInterface $bookingRepo = null,
+        ?\Tygh\Addons\NovotonHolidays\NovotonApi $api = null
     ) {
-        $api = fn_novoton_holidays_get_api();
         if ($api === null) {
-            throw new \RuntimeException('Novoton API is not available. Check addon settings.');
+            $api = fn_novoton_holidays_get_api();
+            if ($api === null) {
+                throw new \RuntimeException('Novoton API is not available. Check addon settings.');
+            }
         }
         $this->api = $api;
         $this->guestService = $guestService ?? new GuestDataService();

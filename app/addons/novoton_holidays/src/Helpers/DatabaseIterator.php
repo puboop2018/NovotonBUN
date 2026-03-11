@@ -29,7 +29,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Iterate over hotels with optional filters
      *
-     * @param array $filters Filter conditions (country, has_prices, etc.)
+     * @param array $filters Filter conditions (country, has_room_price, etc.)
      * @param int $chunk_size Number of records to fetch per batch
      * @return \Generator Yields one hotel row at a time
      */
@@ -82,9 +82,9 @@ class DatabaseIterator implements DatabaseIteratorInterface
             }
         }
 
-        if (!empty($filters['has_prices'])) {
-            $where_parts[] = "has_prices = ?s";
-            $params[] = $filters['has_prices'];
+        if (!empty($filters['has_room_price'])) {
+            $where_parts[] = "has_room_price = ?s";
+            $params[] = $filters['has_room_price'];
         }
 
         if (!empty($filters['no_product'])) {
@@ -333,7 +333,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
      */
     private const ALLOWED_COLUMNS = [
         'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
-        'hotel_type', 'star_rating', 'has_prices', 'status', 'novoton_status',
+        'hotel_type', 'star_rating', 'has_room_price', 'status', 'novoton_status',
         'order_id', 'user_id', 'booking_id', 'package_id', 'sync_type',
         'log_id', 'facility_id', 'resort_id', 'packages_count',
     ];
@@ -391,9 +391,9 @@ class DatabaseIterator implements DatabaseIteratorInterface
             }
         }
 
-        if (!empty($filters['has_prices'])) {
-            $where_parts[] = "has_prices = ?s";
-            $params[] = $filters['has_prices'];
+        if (!empty($filters['has_room_price'])) {
+            $where_parts[] = "has_room_price = ?s";
+            $params[] = $filters['has_room_price'];
         }
 
         if (!empty($filters['no_product'])) {
@@ -404,7 +404,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         // Exclude large JSON columns for listing efficiency
         $query = "SELECT hotel_id, hotel_name, city, region, country, hotel_type,
-                         star_rating, has_prices, product_id, packages_count,
+                         star_rating, has_room_price, product_id, packages_count,
                          hotelinfo_synced_at, created_at, updated_at
                   FROM ?:novoton_hotels
                   {$where}

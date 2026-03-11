@@ -271,10 +271,28 @@ export default function BookingEngine({ config }) {
                     }
                     curPage.appendChild(fragment);
 
-                    // Execute inline scripts in the new content
+                    // Re-execute scripts from the fetched same-origin page.
+                    // Block cross-origin external scripts to limit XSS surface.
                     curPage.querySelectorAll('script').forEach(oldScript => {
                         if (oldScript.closest('.novoton-search-form-wrapper')) return;
-                        if (oldScript.src && (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation'))) return;
+
+                        // Block cross-origin external scripts
+                        if (oldScript.src) {
+                            try {
+                                const scriptUrl = new URL(oldScript.src, window.location.origin);
+                                if (scriptUrl.origin !== window.location.origin) {
+                                    oldScript.remove();
+                                    return;
+                                }
+                            } catch {
+                                oldScript.remove();
+                                return;
+                            }
+                            // Skip scripts already loaded (React, validation)
+                            if (oldScript.src.includes('react19') || oldScript.src.includes('dob-validation')) return;
+                        }
+
+                        // Re-execute both inline and same-origin external scripts
                         const newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(attr => {
                             newScript.setAttribute(attr.name, attr.value);

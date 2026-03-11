@@ -468,7 +468,7 @@
                 `latitude` decimal(10,7) DEFAULT NULL,
                 `longitude` decimal(10,7) DEFAULT NULL,
                 `hotel_data` JSON COMMENT 'JSON: full hotelinfo API response',
-                `has_prices` enum('Y','N') DEFAULT 'N' COMMENT 'Has packages with priceinfo',
+                `has_room_price` enum('Y','N') DEFAULT 'N' COMMENT 'Has room_price check results',
                 `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
@@ -482,7 +482,7 @@
                 KEY `idx_star_rating` (`star_rating`),
                 KEY `idx_property_type` (`property_type`),
                 KEY `idx_city_country` (`city`, `country`),
-                KEY `idx_has_prices` (`has_prices`),
+                KEY `idx_has_room_price` (`has_room_price`),
                 KEY `idx_hotelinfo_synced` (`hotelinfo_synced_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotels from Novoton API'
         </item>
@@ -524,7 +524,7 @@
                 `novoton_confirm_id` varchar(50) DEFAULT NULL COMMENT 'Confirmation from Novoton API',
                 `novoton_invoice_id` varchar(50) DEFAULT NULL COMMENT 'IdNum from API',
                 `novoton_res_num` varchar(50) DEFAULT NULL COMMENT 'ResNum from resinfo',
-                `novoton_status` varchar(20) DEFAULT NULL COMMENT 'OK, ASK, ST, WT, RQ',
+                `novoton_status` varchar(20) DEFAULT NULL COMMENT 'Good, ASK, ST, WT, RQ',
                 `hotel_id` varchar(50) NOT NULL,
                 `hotel_name` varchar(255) NOT NULL,
                 `package_id` varchar(50) DEFAULT NULL,
@@ -661,7 +661,7 @@
                 `facility_name` varchar(255) DEFAULT '',
                 `facility_name_en` varchar(255) DEFAULT '',
                 `facility_name_ro` varchar(255) DEFAULT '',
-                `facility_type` enum('hotel','room') NOT NULL DEFAULT 'hotel',
+                `facility_type` varchar(30) NOT NULL DEFAULT 'hotel_facility' COMMENT 'CS-Cart feature type: hotel_facility, room_facility, travel_group, beach_access, etc.',
                 `feature_variant_id` int(11) DEFAULT NULL,
                 `synced_at` datetime DEFAULT NULL,
                 `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,

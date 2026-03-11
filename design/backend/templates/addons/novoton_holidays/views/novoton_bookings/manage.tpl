@@ -21,7 +21,7 @@
             <div class="controls">
                 <select name="novoton_status" id="search_novoton_status">
                     <option value="">{__("all")}</option>
-                    <option value="OK" {if $search.novoton_status == 'OK'}selected{/if}>OK - Confirmed</option>
+                    <option value="Good" {if $search.novoton_status == 'Good'}selected{/if}>Good - Confirmed</option>
                     <option value="ASK" {if $search.novoton_status == 'ASK'}selected{/if}>ASK - Pending</option>
                     <option value="ST" {if $search.novoton_status == 'ST'}selected{/if}>ST - Cancelled</option>
                     <option value="WT" {if $search.novoton_status == 'WT'}selected{/if}>WT - Waiting</option>
@@ -188,8 +188,8 @@
                     {/if}
                 </td>
                 <td>
-                    {if $booking.novoton_status == 'OK'}
-                        <span class="label label-success">OK</span>
+                    {if $booking.novoton_status == 'Good'}
+                        <span class="label label-success">Good</span>
                     {elseif $booking.novoton_status == 'ASK'}
                         <span class="label label-warning">ASK</span>
                     {elseif $booking.novoton_status == 'ST'}

@@ -46,11 +46,19 @@ class NovotonHttpClient implements HttpClientInterface
         }
         $apiUrl = $settings['api_url'];
         // Preserve scheme if provided in settings, otherwise default to http://
-        // (Novoton API provider specifies http:// — do not force https://)
+        // (Novoton API provider currently specifies http:// only)
         if (preg_match('#^https?://#', $apiUrl)) {
             $this->apiUrl = $apiUrl;
         } else {
             $this->apiUrl = 'http://' . $apiUrl;
+        }
+
+        // Log advisory when API credentials traverse unencrypted HTTP
+        if (stripos($this->apiUrl, 'http://') === 0) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton API URL uses HTTP — credentials are sent unencrypted. '
+                    . 'When the provider supports HTTPS, update api_url in addon settings.',
+            ]);
         }
         $this->apiKey = $settings['api_key'] ?? '';
         $this->apiId = $settings['api_id'] ?? '';
@@ -238,6 +246,10 @@ class NovotonHttpClient implements HttpClientInterface
                 curl_setopt($ch, CURLOPT_TIMEOUT, 120);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+                // Enable HTTP/2 multiplexing for better batch throughput
+                if (defined('CURL_HTTP_VERSION_2_0')) {
+                    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+                }
 
                 curl_multi_add_handle($mh, $ch);
                 $handles[$key] = $ch;

@@ -136,6 +136,10 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
             ], true) ? 'M' : 'S';
         }
 
+        // Apply Title Case to auto-generated display names from provider codes
+        // to avoid storing raw UPPERCASE API values (e.g. "SUNNY BEACH" -> "Sunny Beach")
+        $effectiveDisplayName = $displayName ?: mb_convert_case($providerCode, MB_CASE_TITLE, 'UTF-8');
+
         $mappingId = db_query(
             "INSERT IGNORE INTO ?:hotel_feature_mappings SET " .
             "provider = ?s, feature_type = ?s, provider_code = ?s, " .
@@ -148,8 +152,8 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
             $providerCode,
             $featureId,
             $csCartFeatureType,
-            $displayName ?: $providerCode,
-            $displayName ?: $providerCode,
+            $effectiveDisplayName,
+            $effectiveDisplayName,
             $isActive
         );
 

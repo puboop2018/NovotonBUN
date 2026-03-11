@@ -398,7 +398,7 @@ class SearchService implements SearchServiceInterface
             'board_name' => $this->getBoardName((string)($room->IdBoard ?? $room->BoardId ?? 'BB')),
             'price' => $price_with_commission,
             'price_raw' => $raw_price,
-            'availability' => (string)($room->Availability ?? $room->Status ?? 'OK'),
+            'availability' => Constants::normalizeApiStatus((string)($room->Availability ?? $room->Status ?? 'OK')),
             'quota' => (int) ($room->Quota ?? $room->Available ?? 0),
             'cancellation_policy' => (string)($room->CancellationPolicy ?? ''),
             'payment_terms' => (string)($room->PaymentTerms ?? ''),

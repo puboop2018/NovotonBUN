@@ -1,18 +1,19 @@
 <?php
 declare(strict_types=1);
 /**
- * Novoton Holidays - Hotels Controller
- * 
- * Hotel synchronization, adding hotels as products, managing hotel data.
- * Split from novoton_holidays.php for maintainability.
- * 
- * Modes:
- * - add_hotels_as_products: Import hotels to CS-Cart
- * - view_hotels_to_add: Preview hotels for import
- * - list_facilities: View facilities list
- * - sync_facilities: Sync facilities from API
- * - check_packages: Check hotel packages from API
- * 
+ * Novoton Holidays - Hotels Sub-Controller
+ *
+ * Delegated from novoton_holidays.php for modes that stream output or redirect.
+ * Template-rendering modes (view_hotels_to_add, list_facilities, add_hotels_as_products
+ * form display) live in the main controller for proper CS-Cart template resolution.
+ *
+ * Modes handled here (all exit() or return redirect):
+ * - add_hotels_as_products (with &run): Streaming import process
+ * - sync_facilities: Sync facilities from API (redirect)
+ * - sync_hotel_facilities: Sync hotel facilities (redirect)
+ * - save_facilities: Save facility classifications (redirect)
+ * - check_packages: Check hotel packages from API (streaming + exit)
+ *
  * @package NovotonHolidays
  * @since 2.8.0
  */
@@ -32,137 +33,20 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * The cron version saves more complete data (region, lat/lng, proper timestamps).
  */
 
-/**
- * Mode: view_hotels_to_add
- * Preview hotels that can be added as products
- */
-if ($mode == 'view_hotels_to_add') {
-    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-        return [CONTROLLER_STATUS_DENIED];
-    }
-    
-    $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-    $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
-    
-    $hotelRepo = Container::getInstance()->hotelRepository();
-    
-    if ($filter == 'packages') {
-        // V3: Check for packages in novoton_hotel_packages table
-        $hotels = db_get_array(
-            "SELECT h.*, p.product_id as existing_product
-             FROM ?:novoton_hotels h
-             INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
-             LEFT JOIN ?:products p ON h.product_id = p.product_id
-             WHERE h.country = ?s
-               AND (h.product_id IS NULL OR h.product_id = 0)
-             GROUP BY h.hotel_id
-             ORDER BY h.hotel_name
-             LIMIT 500",
-            $country
-        );
-    } else {
-        $hotels = db_get_array(
-            "SELECT h.*, p.product_id as existing_product 
-             FROM ?:novoton_hotels h
-             LEFT JOIN ?:products p ON h.product_id = p.product_id
-             WHERE h.country = ?s 
-               AND h.has_prices = 'Y'
-               AND (h.product_id IS NULL OR h.product_id = 0)
-             ORDER BY h.hotel_name
-             LIMIT 500",
-            $country
-        );
-    }
-    
-    // Get statistics
-    $stats = [
-        'total' => $hotelRepo->count(['country' => $country]),
-        'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
-        'with_product' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-        'ready_to_add' => count($hotels)
-    ];
-    
-    // Country list for the filter dropdown
-    $countries = db_get_array(
-        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_prices = 'Y' GROUP BY country ORDER BY country"
-    );
-
-    Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('country', $country);
-    Tygh::$app['view']->assign('filter', $filter);
-    Tygh::$app['view']->assign('stats', $stats);
-    Tygh::$app['view']->assign('countries', $countries);
-    Tygh::$app['view']->assign('in_cart_count', $stats['with_product']);
-    Tygh::$app['view']->assign('current_year', date('Y'));
-}
+// NOTE: view_hotels_to_add template mode is handled by novoton_holidays.php (main controller).
+// This sub-controller is only included for the add_hotels_as_products 'run' branch
+// (streaming import) and delegate modes (sync_facilities, etc.).
 
 /**
  * Mode: add_hotels_as_products
- * Import hotels as CS-Cart products
+ * Import hotels as CS-Cart products (run branch only — form display is in main controller)
  */
 if ($mode == 'add_hotels_as_products') {
     // Permission check handled by schema in admin.post.php
+    // NOTE: Form display (no &run) is handled by novoton_holidays.php main controller.
+    // This sub-controller is only included when &run is set (import execution).
 
-    $run_process = isset($_REQUEST['run']);
-
-    if (!$run_process) {
-        // Show configuration form
-        try {
-            $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-
-            $hotelRepo = Container::getInstance()->hotelRepository();
-
-            $stats = [
-                'total' => $hotelRepo->count(['country' => $country]),
-                'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
-                'with_packages' => (int) db_get_field(
-                    "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
-                     INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-                     WHERE h.country = ?s",
-                    $country
-                ),
-                'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-            ];
-            $stats['to_add'] = max(0, $stats['with_prices'] - $stats['already_products']);
-
-            // Get resorts
-            $resorts = db_get_array(
-                "SELECT city, COUNT(*) as hotel_count,
-                        SUM(CASE WHEN has_prices = 'Y' THEN 1 ELSE 0 END) as with_prices
-                 FROM ?:novoton_hotels
-                 WHERE country = ?s AND city IS NOT NULL AND city != ''
-                 GROUP BY city ORDER BY hotel_count DESC",
-                $country
-            );
-
-            // Get categories
-            $categories = db_get_array(
-                "SELECT c.category_id, cd.category, c.parent_id
-                 FROM ?:categories c
-                 LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
-                 WHERE c.status = 'A'
-                 ORDER BY cd.category",
-                CART_LANGUAGE
-            );
-
-            // Get languages
-            $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
-
-            // Get available countries for country-selector tabs
-            $available_countries = ConfigProvider::getSelectedCountries();
-
-            Tygh::$app['view']->assign('country', $country);
-            Tygh::$app['view']->assign('stats', $stats);
-            Tygh::$app['view']->assign('resorts', $resorts);
-            Tygh::$app['view']->assign('categories', $categories);
-            Tygh::$app['view']->assign('languages', $languages);
-            Tygh::$app['view']->assign('available_countries', $available_countries);
-        } catch (\Throwable $e) {
-            fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
-            return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-        }
-
-    } else {
+    if (isset($_REQUEST['run'])) {
         // Process import
         fn_novoton_holidays_stream_page_open('Adding Hotels as Products');
         echo '<div class="log">';
@@ -181,7 +65,7 @@ if ($mode == 'add_hotels_as_products') {
         }, $_REQUEST['languages'])) : ['en', 'ro'];
         
         // Build query based on import mode
-        $condition = "country = ?s AND has_prices = 'Y'";
+        $condition = "country = ?s AND has_room_price = 'Y'";
         $params = [$country];
         
         if ($import_mode == 'new_only') {
@@ -246,7 +130,7 @@ if ($mode == 'add_hotels_as_products') {
                 // Create product
                 $product_data = [
                     'product' => $display_name,
-                    'product_code' => ConfigProvider::PRODUCT_CODE_PREFIX . $hotel_id,
+                    'product_code' => \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel_id,
                     'price' => 0,
                     'status' => 'A',
                     'company_id' => Registry::get('runtime.company_id') ?: 1,
@@ -311,19 +195,7 @@ if ($mode == 'add_hotels_as_products') {
     }
 }
 
-/**
- * Mode: list_facilities
- * View facilities list
- */
-if ($mode == 'list_facilities') {
-    $facilities = db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
-    $count = count($facilities);
-    $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
-
-    Tygh::$app['view']->assign('facilities', $facilities);
-    Tygh::$app['view']->assign('facilities_count', $count);
-    Tygh::$app['view']->assign('last_sync', $last_sync);
-}
+// NOTE: list_facilities template mode is handled by novoton_holidays.php (main controller).
 
 /**
  * Mode: sync_facilities
@@ -374,7 +246,7 @@ if ($mode == 'sync_hotel_facilities') {
 
 /**
  * Mode: save_facilities
- * Save facility type classifications and Romanian translations from admin form
+ * Save facility feature type mappings and Romanian translations from admin form
  */
 if ($mode == 'save_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
@@ -383,7 +255,12 @@ if ($mode == 'save_facilities') {
 
     $facility_types = $_REQUEST['facility_types'] ?? [];
     $facility_translations = $_REQUEST['facility_translations'] ?? [];
-    $allowed = ['hotel', 'room'];
+    $allowed = [
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+    ];
     $updated = 0;
 
     foreach ($facility_types as $facility_id => $type) {
@@ -524,9 +401,9 @@ if ($mode == 'check_packages') {
                             }
                         }
 
-                        // Update hotel packages_count
+                        // Update hotel packages_count (has_room_price is set exclusively by room_price check)
                         db_query(
-                            "UPDATE ?:novoton_hotels SET packages_count = ?i, has_prices = 'Y' WHERE hotel_id = ?s",
+                            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
                             count($packages), $hotel['hotel_id']
                         );
 

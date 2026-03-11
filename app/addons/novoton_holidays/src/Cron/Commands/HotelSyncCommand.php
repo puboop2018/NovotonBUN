@@ -23,7 +23,7 @@ class HotelSyncCommand extends AbstractCronCommand
         $country = $this->getParam('country');
         $limit = (int)$this->getParam('limit', 0);
 
-        $sync = new HotelSync();
+        $sync = new HotelSync($this->api);
         $stats = [];
 
         switch ($mode) {

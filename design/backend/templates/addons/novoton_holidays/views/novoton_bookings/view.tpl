@@ -20,7 +20,7 @@
                     <strong>Novoton ID: {$booking.novoton_invoice_id}</strong>
                 </div>
                 {/if}
-                {if $booking.novoton_status == 'OK'}
+                {if $booking.novoton_status == 'Good'}
                     <span class="label label-success status-label">&#10003; Confirmed</span>
                 {elseif $booking.novoton_status == 'ASK'}
                     <span class="label label-warning status-label">&#8987; On Request</span>

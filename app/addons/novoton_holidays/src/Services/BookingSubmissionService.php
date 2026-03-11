@@ -699,7 +699,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             if ($response) {
                 $novotonId     = (string) ($response->IdNum   ?? '');
-                $novotonStatus = (string) ($response->Status  ?? '');
+                $novotonStatus = Constants::normalizeApiStatus((string) ($response->Status ?? ''));
                 $novotonPrice  = (string) ($response->Price   ?? '');
 
                 $update = [

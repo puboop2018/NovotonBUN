@@ -52,7 +52,7 @@ class ResInfoCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $new_status = strtolower((string)$response->Status);
+                $new_status = strtolower(Constants::normalizeApiStatus((string)$response->Status));
 
                 if ($new_status === Constants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
                     $repo->update((int) $booking['booking_id'], [

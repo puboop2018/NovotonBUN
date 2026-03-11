@@ -96,6 +96,185 @@ class PriceInfoCalculatorTest extends TestCase
         $this->assertEqualsWithDelta(0.0, $calc->getPriceFromRow($row, 'Price1'), 0.001);
     }
 
+    public function testGetPriceFromRowCodeNotBaseImplicitPercentage(): void
+    {
+        // When Code != Base, numeric prices are percentages of the base row
+        $parser = $this->createMock(PriceInfoParser::class);
+        $parser->method('getCodeIndex')->willReturn([
+            '54' => [['Price4' => '382.5', 'Code' => '54', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI']],
+        ]);
+
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        // Child row: Code=58, Base=54, Price4=20 (no '%' suffix — implicit percentage)
+        $row = ['Price4' => 20, 'Code' => '58', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI'];
+        // 20% of 382.5 = 76.5
+        $this->assertEqualsWithDelta(76.5, $calc->getPriceFromRow($row, 'Price4'), 0.001);
+    }
+
+    public function testGetPriceFromRowCodeEqualsBaseIsAbsolute(): void
+    {
+        // When Code == Base, prices are absolute amounts
+        $parser = $this->createMock(PriceInfoParser::class);
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        $row = ['Price4' => '382.5', 'Code' => '54', 'Base' => '54'];
+        $this->assertEqualsWithDelta(382.5, $calc->getPriceFromRow($row, 'Price4'), 0.001);
+    }
+
+    public function testGetPriceFromRowExplicitPercentWithCodeNotBase(): void
+    {
+        // Explicit "20%" with Code != Base should still work
+        $parser = $this->createMock(PriceInfoParser::class);
+        $parser->method('getCodeIndex')->willReturn([
+            '54' => [['Price1' => '200.00', 'Code' => '54', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI']],
+        ]);
+
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        $row = ['Price1' => '20%', 'Code' => '58', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI'];
+        // 20% of 200 = 40
+        $this->assertEqualsWithDelta(40.0, $calc->getPriceFromRow($row, 'Price1'), 0.001);
+    }
+
+    public function testGetPriceFromRowBaseRowMatchesRoomBoard(): void
+    {
+        // When multiple rows share the same Code, prefer the one matching room/board
+        $parser = $this->createMock(PriceInfoParser::class);
+        $parser->method('getCodeIndex')->willReturn([
+            '54' => [
+                ['Price1' => '100.00', 'Code' => '54', 'Base' => '54', 'IdRoom' => 'SGL', 'IdBoard' => 'BB'],
+                ['Price1' => '200.00', 'Code' => '54', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI'],
+            ],
+        ]);
+
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        // Child row for DBL/AI — should pick the base row for DBL/AI (200), not SGL/BB (100)
+        $row = ['Price1' => '50%', 'Code' => '58', 'Base' => '54', 'IdRoom' => 'DBL', 'IdBoard' => 'AI'];
+        // 50% of 200 = 100
+        $this->assertEqualsWithDelta(100.0, $calc->getPriceFromRow($row, 'Price1'), 0.001);
+    }
+
+    // ── calculateBasePrice with children ────────────────────────────────
+
+    public function testCalculateBasePriceIncludesChildPercentage(): void
+    {
+        $parser = $this->createMock(PriceInfoParser::class);
+        $parser->method('getPriceinfo')->willReturn([
+            'season_price' => [
+                [
+                    'Code' => '54', 'Base' => '54',
+                    'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                    'IdAge' => 'ADULT ', 'IdAcc' => 'REGULAR',
+                    'RoomPrice' => 'Yes', 'FromDays' => '1', 'ToDays' => '99',
+                    'Price4' => '382.5',
+                ],
+                [
+                    'Code' => '58', 'Base' => '54',
+                    'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                    'IdAge' => '2 ND CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
+                    'RoomPrice' => 'No', 'FromDays' => '1', 'ToDays' => '99',
+                    'Price4' => '20%',
+                ],
+            ],
+        ]);
+        $parser->method('getCodeIndex')->willReturn([
+            '54' => [[
+                'Code' => '54', 'Base' => '54',
+                'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                'IdAge' => 'ADULT ', 'IdAcc' => 'REGULAR',
+                'RoomPrice' => 'Yes', 'FromDays' => '1', 'ToDays' => '99',
+                'Price4' => '382.5',
+            ]],
+            '58' => [[
+                'Code' => '58', 'Base' => '54',
+                'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                'IdAge' => '2 ND CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
+                'RoomPrice' => 'No', 'FromDays' => '1', 'ToDays' => '99',
+                'Price4' => '20%',
+            ]],
+        ]);
+
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        $occupancy = [
+            'adults' => [
+                ['index' => 1, 'age_type' => 'ADULT ', 'acc_type' => 'REGULAR'],
+                ['index' => 2, 'age_type' => 'ADULT ', 'acc_type' => 'REGULAR'],
+            ],
+            'children' => [
+                ['index' => 1, 'age' => 2, 'age_band' => '2-11,99', 'age_type' => '1 ST CHD 2-11,99', 'acc_type' => 'EXTRA BED', 'by_1_ad' => false],
+                ['index' => 2, 'age' => 11, 'age_band' => '2-11,99', 'age_type' => '2 ND CHD 2-11,99', 'acc_type' => 'EXTRA BED', 'by_1_ad' => false],
+            ],
+        ];
+
+        // 1 night, season 4
+        $seasonsByNight = [['date' => '2026-07-04', 'season' => 4]];
+
+        $result = $calc->calculateBasePrice($occupancy, $seasonsByNight, 'DBL 2+2', 'ULTRA ALL INCL', 7);
+
+        // Adult room price: 382.5 (RoomPrice=Yes, only 1 charge)
+        // Child 1: 20% of 382.5 = 76.5
+        // Child 2: 20% of 382.5 = 76.5
+        // Total = 382.5 + 76.5 + 76.5 = 535.5
+        $this->assertEqualsWithDelta(535.5, $result['total'], 0.01);
+        $this->assertEqualsWithDelta(382.5, $result['by_person']['adult_1'], 0.01);
+        $this->assertEqualsWithDelta(0.0, $result['by_person']['adult_2'], 0.01); // RoomPrice dedup
+        $this->assertEqualsWithDelta(76.5, $result['by_person']['child_1'], 0.01);
+        $this->assertEqualsWithDelta(76.5, $result['by_person']['child_2'], 0.01);
+    }
+
+    public function testCalculateBasePriceChildImplicitPercentage(): void
+    {
+        // Same test but prices stored as plain numbers (no '%' suffix)
+        $parser = $this->createMock(PriceInfoParser::class);
+        $parser->method('getPriceinfo')->willReturn([
+            'season_price' => [
+                [
+                    'Code' => '54', 'Base' => '54',
+                    'IdRoom' => 'DBL 2+2', 'IdBoard' => 'AI',
+                    'IdAge' => 'ADULT ', 'IdAcc' => 'REGULAR',
+                    'RoomPrice' => 'Yes', 'FromDays' => '1', 'ToDays' => '99',
+                    'Price4' => '382.5',
+                ],
+                [
+                    'Code' => '58', 'Base' => '54',
+                    'IdRoom' => 'DBL 2+2', 'IdBoard' => 'AI',
+                    'IdAge' => '1 ST CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
+                    'RoomPrice' => 'No', 'FromDays' => '1', 'ToDays' => '99',
+                    'Price4' => 20, // no '%' — implicit percentage because Code != Base
+                ],
+            ],
+        ]);
+        $parser->method('getCodeIndex')->willReturn([
+            '54' => [[
+                'Code' => '54', 'Base' => '54',
+                'IdRoom' => 'DBL 2+2', 'IdBoard' => 'AI',
+                'Price4' => '382.5',
+            ]],
+        ]);
+
+        $calc = new PriceInfoCalculator($parser, 0.0);
+
+        $occupancy = [
+            'adults' => [
+                ['index' => 1, 'age_type' => 'ADULT ', 'acc_type' => 'REGULAR'],
+            ],
+            'children' => [
+                ['index' => 1, 'age' => 5, 'age_band' => '2-11,99', 'age_type' => '1 ST CHD 2-11,99', 'acc_type' => 'EXTRA BED', 'by_1_ad' => false],
+            ],
+        ];
+
+        $seasonsByNight = [['date' => '2026-07-04', 'season' => 4]];
+
+        $result = $calc->calculateBasePrice($occupancy, $seasonsByNight, 'DBL 2+2', 'AI', 7);
+
+        // Adult: 382.5, Child: 20% of 382.5 = 76.5
+        $this->assertEqualsWithDelta(382.5 + 76.5, $result['total'], 0.01);
+        $this->assertEqualsWithDelta(76.5, $result['by_person']['child_1'], 0.01);
+    }
+
     // ── applyPriorityRules ──────────────────────────────────────────────
 
     private function makeCalcWithPriority(string $priority, string $priorityEB, string $priorityEXT): PriceInfoCalculator

@@ -176,9 +176,14 @@ class PriceInfoFormatter
      *
      * Algorithm:
      *   - Parse the positional prefix (if any) and the type separately.
-     *   - Count all persons that match the type (including age-band filter).
-     *   - If positional: return 1 when the Nth matching person exists, else 0.
-     *   - If non-positional: return the full count.
+     *   - For positional adult patterns (e.g., "3 RD ADULT"):
+     *     Check if any occupant actually has that positional age_type.
+     *     This prevents double-counting when a room classifies all adults
+     *     as plain "ADULT" (e.g., FAM 4+1 rooms with no separate 3RD/4TH
+     *     ADULT pricing).
+     *   - For non-positional patterns: count all persons matching the type.
+     *   - For positional child patterns: return 1 when the Nth matching
+     *     child exists, else 0.
      */
     public static function countMatchingPersons(array $occupancy, string $idAge): int
     {
@@ -201,10 +206,26 @@ class PriceInfoFormatter
             $type = trim($m[3]);
         }
 
-        // --- Step 2: Count persons matching the type ---
+        // --- Step 2: Handle positional adult patterns ---
+        // For positional adult patterns like "3 RD ADULT", check if any
+        // occupant in the adults array actually has that positional age_type.
+        // This avoids double-counting when a room has no separate positional
+        // adult pricing (all adults are plain "ADULT").
+        if ($position !== null && ($type === 'ADULT' || $type === 'ADT' || $type === 'ADULTS')) {
+            $normalizedIdAge = trim(preg_replace('/\s+/', ' ', $idAge));
+            foreach ($occupancy['adults'] as $adult) {
+                $adultAgeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', $adult['age_type'] ?? '')));
+                if ($adultAgeNorm === $normalizedIdAge) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        // --- Step 3: Count persons matching the type ---
         $typeCount = self::countByType($occupancy, $type);
 
-        // --- Step 3: Apply positional constraint ---
+        // --- Step 4: Apply positional constraint (children) ---
         if ($position !== null) {
             return ($typeCount >= $position) ? 1 : 0;
         }
@@ -268,6 +289,36 @@ class PriceInfoFormatter
             }
         }
         return $count;
+    }
+
+    /**
+     * Check if a fee's IdAge correlates with any of the season_price age types.
+     *
+     * Unlike matchAgeType(), this method does NOT strip ordinal prefixes.
+     * A fee IdAge of "3 RD ADULT" only correlates if season_price explicitly
+     * contains "3 RD ADULT" — it will NOT match plain "ADULT".
+     *
+     * This prevents double-counting in rooms where all adults are classified
+     * as plain "ADULT" (e.g., FAM 4+1 rooms with no separate 3RD/4TH ADULT
+     * pricing rows in season_price).
+     *
+     * Comma/dot and whitespace normalization IS applied for consistency.
+     */
+    public static function correlatesWithSeasonAgeTypes(string $feeIdAge, array $seasonAgeTypes): bool
+    {
+        $feeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', str_replace(',', '.', $feeIdAge))));
+        if ($feeNorm === '') {
+            return false;
+        }
+
+        foreach ($seasonAgeTypes as $spAge) {
+            $spNorm = strtoupper(trim(preg_replace('/\s+/', ' ', str_replace(',', '.', $spAge))));
+            if ($feeNorm === $spNorm) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

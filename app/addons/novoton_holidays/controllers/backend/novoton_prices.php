@@ -189,7 +189,7 @@ if ($mode == 'check_prices') {
 
         // Step 1: Get resort names from resort_list API (the authoritative source).
         $all_hotels = db_get_hash_array(
-            "SELECT hotel_id, hotel_name, city, product_id, has_prices FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+            "SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
             'hotel_id',
             $country
         );
@@ -313,7 +313,7 @@ if ($mode == 'check_prices') {
                 $has = isset($hotels_with_prices[$hotel_id]);
 
                 $hotelRepo->update((string) $hotel_id, [
-                    'has_prices' => $has ? 'Y' : 'N',
+                    'has_room_price' => $has ? 'Y' : 'N',
                     'last_price_check' => $now
                 ]);
 
@@ -516,12 +516,12 @@ if ($mode == 'check_prices_hotel') {
                 ]);
 
                 // Check if result has any prices
-                $has_prices = false;
+                $has_room_price = false;
                 $min_price = 0;
                 if ($result instanceof \SimpleXMLElement) {
                     $prices = $result->xpath('//Price');
-                    $has_prices = !empty($prices) && count($prices) > 0;
-                    if ($has_prices) {
+                    $has_room_price = !empty($prices) && count($prices) > 0;
+                    if ($has_room_price) {
                         foreach ($prices as $p) {
                             $pval = (float)((string)$p);
                             if ($pval > 0 && ($min_price == 0 || $pval < $min_price)) {
@@ -533,11 +533,11 @@ if ($mode == 'check_prices_hotel') {
 
                 // Update database
                 $hotelRepo->update((string) $hotel_id, [
-                    'has_prices' => $has_prices ? 'Y' : 'N',
+                    'has_room_price' => $has_room_price ? 'Y' : 'N',
                     'last_price_check' => $now
                 ]);
 
-                if ($has_prices) {
+                if ($has_room_price) {
                     $with_prices++;
                     $price_display = $min_price > 0 ? ' | <strong>' . number_format($min_price, 2) . ' EUR</strong>' : '';
                     echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city}){$price_display}</span><br>\n";
@@ -657,9 +657,9 @@ if ($mode == 'download_active_prices_csv') {
     $country = preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
     $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name, city, hotel_type, has_prices, product_id, last_price_check
+        "SELECT hotel_id, hotel_name, city, hotel_type, has_room_price, product_id, last_price_check
          FROM ?:novoton_hotels
-         WHERE country = ?s AND has_prices = 'Y'
+         WHERE country = ?s AND has_room_price = 'Y'
          ORDER BY city, hotel_name",
         $country
     );
@@ -716,7 +716,7 @@ if ($mode == 'cron_offers_update') {
         $hotels = db_get_array(
             "SELECT hotel_id, hotel_name, product_id 
              FROM ?:novoton_hotels 
-             WHERE has_prices = 'Y'
+             WHERE has_room_price = 'Y'
                AND (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 24 HOUR))
              ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
              LIMIT 100"

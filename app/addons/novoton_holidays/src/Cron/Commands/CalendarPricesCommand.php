@@ -119,7 +119,7 @@ class CalendarPricesCommand extends AbstractCronCommand
 
         try {
             PriceInfoService::precomputeCalendarPrices($hotelId);
-            $this->output("OK");
+            $this->output("Good");
             return ['success' => true, 'stats' => ['hotel_id' => $hotelId]];
         } catch (\Throwable $e) {
             $this->output("ERROR: " . $e->getMessage());

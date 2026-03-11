@@ -47,6 +47,14 @@ class PriceInfoCalculator
         $byNight = [];
         $byPerson = [];
 
+        // Initialize per-person entries so every occupant appears in the output
+        foreach ($occupancy['adults'] as $adult) {
+            $byPerson['adult_' . $adult['index']] = 0;
+        }
+        foreach ($occupancy['children'] as $child) {
+            $byPerson['child_' . $child['index']] = 0;
+        }
+
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
             $nightTotal = 0;
             $seasonNum = $nightInfo['season'];
@@ -224,6 +232,21 @@ class PriceInfoCalculator
     /**
      * Recursively resolve price from a season_price row
      */
+    /**
+     * Recursively resolve price from a season_price row.
+     *
+     * Pricing rule (Code / Base relationship):
+     *   - Code == Base  → price values (Price1..Price20) are absolute amounts
+     *   - Code != Base  → price values are PERCENTAGES of the base row's price,
+     *                      where the base row is the one whose Code == this row's Base
+     *
+     * Percentage detection:
+     *   1. Explicit '%' suffix in the price string (e.g. "20%")
+     *   2. Implicit: Code != Base means the numeric value IS a percentage
+     *
+     * When multiple rows share the same Code, the lookup prefers the row
+     * matching the current row's IdRoom and IdBoard.
+     */
     private function resolvePrice(array $row, string $priceKey, array &$visited): float
     {
         $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
@@ -238,13 +261,33 @@ class PriceInfoCalculator
             return 0;
         }
 
+        // Determine if price is percentage-based
+        $isPercentage = false;
+        $percentValue = 0.0;
+
         if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+            // Explicit percentage marker (e.g. "20%")
+            $isPercentage = true;
             $percentValue = (float) str_replace('%', '', $rawPrice);
+        } else {
+            // Implicit percentage: Code != Base means numeric value is a percentage
+            $base = PriceInfoFormatter::toScalar($row['Base'] ?? '');
+            if ($code !== '' && $base !== '' && $code !== $base) {
+                $isPercentage = true;
+                $percentValue = (float) $rawPrice;
+            }
+        }
+
+        if ($isPercentage) {
             $baseRef = PriceInfoFormatter::toScalar($row['Base'] ?? '');
             $codeIndex = $this->parser->getCodeIndex();
 
             if ($baseRef !== '' && isset($codeIndex[$baseRef])) {
-                $baseRow = $codeIndex[$baseRef][0];
+                $baseRow = $this->findBestBaseRow(
+                    $codeIndex[$baseRef],
+                    PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
+                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? '')
+                );
                 $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited);
                 return round($basePrice * ($percentValue / 100), 4);
             }
@@ -252,6 +295,37 @@ class PriceInfoCalculator
         }
 
         return (float) $rawPrice;
+    }
+
+    /**
+     * From a list of candidate base rows (all sharing the same Code),
+     * pick the one that best matches the given room and board.
+     *
+     * Falls back to the first row if no room/board match is found.
+     */
+    private function findBestBaseRow(array $candidates, string $roomId, string $boardId): array
+    {
+        if (count($candidates) === 1) {
+            return $candidates[0];
+        }
+
+        foreach ($candidates as $candidate) {
+            $cRoom = PriceInfoFormatter::toScalar($candidate['IdRoom'] ?? '');
+            $cBoard = PriceInfoFormatter::toScalar($candidate['IdBoard'] ?? '');
+            if (PriceInfoFormatter::matchRoom($cRoom, $roomId) && PriceInfoFormatter::matchBoard($cBoard, $boardId)) {
+                return $candidate;
+            }
+        }
+
+        // Fallback: match room only
+        foreach ($candidates as $candidate) {
+            $cRoom = PriceInfoFormatter::toScalar($candidate['IdRoom'] ?? '');
+            if (PriceInfoFormatter::matchRoom($cRoom, $roomId)) {
+                return $candidate;
+            }
+        }
+
+        return $candidates[0];
     }
 
     /**
@@ -270,16 +344,16 @@ class PriceInfoCalculator
             'details' => []
         ];
 
-        $fees['extras_daily'] = $this->calculateExtrasDaily($occupancy, $checkIn, $nights);
+        // Collect the set of distinct IdAge values present in season_price for
+        // this room/board.  Fee entries (extras_daily, handling_fee) are only
+        // considered when their IdAge correlates with an age type that actually
+        // exists in season_price for the booked room (room-specific correlation).
+        $seasonAgeTypes = $this->collectSeasonPriceAgeTypes($roomId, $boardId);
+
+        $fees['extras_daily'] = $this->calculateExtrasDaily($occupancy, $checkIn, $nights, $seasonAgeTypes);
         if ($fees['extras_daily'] > 0) {
             $fees['details'][] = ['type' => 'extras_daily', 'amount' => $fees['extras_daily']];
         }
-
-        // Collect the set of distinct IdAge values present in season_price for
-        // this room/board.  Handling-fee entries are only considered when their
-        // IdAge correlates with an age type that actually exists in season_price
-        // for the booked room (room-specific correlation).
-        $seasonAgeTypes = $this->collectSeasonPriceAgeTypes($roomId, $boardId);
 
         $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights, $seasonAgeTypes);
         $fees['handling_fee'] = $handlingResult['total'];
@@ -317,8 +391,11 @@ class PriceInfoCalculator
 
     /**
      * Calculate extras_daily fees
+     *
+     * @param array $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     *                              Entries whose IdAge does not correlate are skipped.
      */
-    private function calculateExtrasDaily(array $occupancy, string $checkIn, int $nights): float
+    private function calculateExtrasDaily(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): float
     {
         $priceinfo = $this->parser->getPriceinfo();
         $extrasDaily = $priceinfo['extras_daily'] ?? [];
@@ -345,6 +422,15 @@ class PriceInfoCalculator
             }
 
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
+
+            // Season-price correlation: skip extras_daily entries whose IdAge
+            // does not exist in the season_price for the booked room.
+            if (!empty($feeIdAge) && !empty($seasonAgeTypes)) {
+                if (!PriceInfoFormatter::correlatesWithSeasonAgeTypes($feeIdAge, $seasonAgeTypes)) {
+                    continue;
+                }
+            }
+
             $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
 
             if ($count > 0) {
@@ -478,17 +564,13 @@ class PriceInfoCalculator
                 // entry if its age type exists in the season_price for the
                 // booked room.  For example, if season_price only defines
                 // "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), positional
-                // handling-fee entries are skipped — all adults use the
-                // generic "ADULT" rate.
+                // handling-fee entries like "3 RD ADULT" are skipped — all
+                // adults are covered by the generic "ADULT" rate.
+                //
+                // Uses strict correlation (no ordinal stripping) so that
+                // "3 RD ADULT" does NOT match plain "ADULT" in season_price.
                 if (!empty($seasonAgeSet)) {
-                    $feeUpper = strtoupper(trim(preg_replace('/\s+/', ' ', $feeIdAge)));
-                    $correlates = false;
-                    foreach ($seasonAgeSet as $spAge) {
-                        if (PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
-                            $correlates = true;
-                            break;
-                        }
-                    }
+                    $correlates = PriceInfoFormatter::correlatesWithSeasonAgeTypes($feeIdAge, $seasonAgeSet);
                     if (!$correlates) {
                         $entryDetails[] = [
                             'entry' => $idx,

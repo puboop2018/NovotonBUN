@@ -768,9 +768,9 @@ TABLE: novoton_hotels
   - hotel_name, city, region, country
   - star_rating (1-5)
   - hotel_data (JSON)       : Full hotelinfo API response
-  - has_prices, packages_count
+  - has_room_price, packages_count
   - hotelinfo_synced_at, hotel_list_synced_at
-  - Indexes: country, star_rating, city_country, has_prices
+  - Indexes: country, star_rating, city_country, has_room_price
 
 TABLE: novoton_hotel_packages
   - id (PK, auto-increment)

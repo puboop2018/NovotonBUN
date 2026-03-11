@@ -189,7 +189,7 @@ if ($mode == 'add_hotels_as_products') {
 
         $stats = [
             'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+            'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
             'with_packages' => (int) db_get_field(
                 "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
                  INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
@@ -202,7 +202,7 @@ if ($mode == 'add_hotels_as_products') {
 
         $resorts = db_get_array(
             "SELECT city, COUNT(*) as hotel_count,
-                    SUM(CASE WHEN has_prices = 'Y' THEN 1 ELSE 0 END) as with_prices
+                    SUM(CASE WHEN has_room_price = 'Y' THEN 1 ELSE 0 END) as with_prices
              FROM ?:novoton_hotels
              WHERE country = ?s AND city IS NOT NULL AND city != ''
              GROUP BY city ORDER BY hotel_count DESC",
@@ -267,7 +267,7 @@ if ($mode == 'view_hotels_to_add') {
              FROM ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              WHERE h.country = ?s
-               AND h.has_prices = 'Y'
+               AND h.has_room_price = 'Y'
                AND (h.product_id IS NULL OR h.product_id = 0)
              ORDER BY h.hotel_name
              LIMIT 500",
@@ -277,13 +277,13 @@ if ($mode == 'view_hotels_to_add') {
 
     $stats = [
         'total' => $hotelRepo->count(['country' => $country]),
-        'with_prices' => $hotelRepo->count(['country' => $country, 'has_prices' => 'Y']),
+        'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
         'with_product' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         'ready_to_add' => count($hotels)
     ];
 
     $countries = db_get_array(
-        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_prices = 'Y' GROUP BY country ORDER BY country"
+        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
     );
 
     Tygh::$app['view']->assign('hotels', $hotels);
@@ -303,9 +303,39 @@ if ($mode == 'list_facilities') {
     $count = count($facilities);
     $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
 
+    // Build feature type options with CS-Cart feature names for the dropdown
+    // Only show feature types that are relevant for facility classification
+    $facility_feature_types = [
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+    ];
+    $feature_type_options = [];
+    foreach ($facility_feature_types as $ft) {
+        $settingKey = \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING[$ft] ?? '';
+        $featureId = $settingKey ? (int) Registry::get($settingKey) : 0;
+        $label = ucwords(str_replace('_', ' ', $ft));
+        if ($featureId > 0) {
+            $featureName = db_get_field(
+                "SELECT fd.description FROM ?:product_features_descriptions fd WHERE fd.feature_id = ?i AND fd.lang_code = ?s",
+                $featureId, DESCR_SL
+            );
+            if ($featureName) {
+                $label .= " → {$featureName} #{$featureId}";
+            } else {
+                $label .= " → #{$featureId}";
+            }
+        } else {
+            $label .= ' (not configured)';
+        }
+        $feature_type_options[$ft] = $label;
+    }
+
     Tygh::$app['view']->assign('facilities', $facilities);
     Tygh::$app['view']->assign('facilities_count', $count);
     Tygh::$app['view']->assign('last_sync', $last_sync);
+    Tygh::$app['view']->assign('feature_type_options', $feature_type_options);
 }
 
 // ============================================================================
@@ -449,7 +479,7 @@ if ($mode == 'manage' || empty($mode)) {
     $stats = [
         'hotels' => [
             'total' => $hotelRepo->count(),
-            'with_prices' => $hotelRepo->count(['has_room_prices' => true]),
+            'with_prices' => $hotelRepo->count(['has_verified_room_price' => true]),
             'with_products' => $hotelRepo->count(['has_product' => true]),
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
@@ -461,7 +491,7 @@ if ($mode == 'manage' || empty($mode)) {
     foreach ($countries as $country) {
         $stats['by_country'][$country] = [
             'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_prices' => true]),
+            'with_prices' => $hotelRepo->count(['country' => $country, 'has_verified_room_price' => true]),
             'with_packages' => $hotelRepo->count(['country' => $country, 'has_packages' => true]),
             'with_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         ];
@@ -509,8 +539,12 @@ if ($mode == 'manage' || empty($mode)) {
     Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
 
     $resorts_by_country = [];
+    $hidden_resorts = array_map('strtoupper', ConfigProvider::getHiddenResorts());
     $resorts = db_get_array("SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city");
     foreach ($resorts as $resort) {
+        if (!empty($hidden_resorts) && in_array(strtoupper($resort['city']), $hidden_resorts, true)) {
+            continue;
+        }
         $resorts_by_country[$resort['country']][] = $resort['city'];
     }
     Tygh::$app['view']->assign('resorts_by_country', $resorts_by_country);
@@ -535,8 +569,8 @@ if ($mode == 'hotels') {
     if (!empty($_REQUEST['country'])) {
         $filters['country'] = $_REQUEST['country'];
     }
-    if (!empty($_REQUEST['has_prices'])) {
-        $filters['has_prices'] = $_REQUEST['has_prices'];
+    if (!empty($_REQUEST['has_room_price'])) {
+        $filters['has_room_price'] = $_REQUEST['has_room_price'];
     }
     if (!empty($_REQUEST['has_product'])) {
         $filters['has_product'] = true;

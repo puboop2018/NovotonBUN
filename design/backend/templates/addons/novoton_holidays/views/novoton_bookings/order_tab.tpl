@@ -15,7 +15,7 @@
                     <span style="opacity: 0.8;">| {$booking.room_id|replace:'%2b':'+'} | {$booking.board_id}</span>
                 </div>
                 <div>
-                    {if $booking.novoton_status == 'OK'}
+                    {if $booking.novoton_status == 'Good'}
                         <span class="label label-success">Confirmed</span>
                     {elseif $booking.novoton_status == 'ASK'}
                         <span class="label label-warning">Pending</span>
@@ -105,7 +105,7 @@
                         </td>
                         <td>
                             {if $alt.alt_from_req == 'Y' || $alt.alt_from_req == '1'}
-                                <span class="label label-success" title="Same as original request">[OK] Match</span>
+                                <span class="label label-success" title="Same as original request">[Good] Match</span>
                             {else}
                                 <span class="label label-default">Different</span>
                             {/if}

@@ -739,7 +739,7 @@ function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): arra
  * Get facilities for a hotel filtered by type
  *
  * @param string $hotel_id Hotel ID
- * @param string $facility_type 'hotel' or 'room'
+ * @param string $facility_type Feature type constant: hotel_facility, room_facility, travel_group, beach_access
  * @param string $lang Language code (en/ro)
  * @return array Facilities list
  */
@@ -784,10 +784,15 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
     $query .= " ORDER BY country, city";
 
     $db_resorts = db_get_array($query);
+    $hidden_resorts = array_map('strtoupper', \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS);
 
     foreach ($db_resorts as $row) {
         $country = $row['country'];
         $resort = $row['city'];
+
+        if (!empty($hidden_resorts) && in_array(strtoupper($resort), $hidden_resorts, true)) {
+            continue;
+        }
 
         if (!isset($resorts[$country])) {
             $resorts[$country] = [];
@@ -1143,16 +1148,28 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         $skipped += 10;
     }
 
-    // ── Travel Group (adults_only + rerouted facility IDs 3, 23, 26) ──
+    // ── Travel Group (adults_only + facility IDs mapped to travel_group) ──
     $travelGroupFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP);
     if ($travelGroupFeatureId > 0) {
         $csType = $getActualFeatureType($travelGroupFeatureId, 'M');
+        // adults_only is a virtual code (not a facility ID), always seeded here
         $travelGroupItems = [
             'adults_only' => ['en' => 'Adults only',                             'ro' => 'Exclusiv pentru adulți',               'pos' => 10],
-            '3'           => ['en' => 'Pets allowed',                             'ro' => 'Acceptă animale de companie',          'pos' => 20],
-            '26'          => ['en' => 'Suitable for families with children',      'ro' => 'Ideal pentru familii cu copii',        'pos' => 30],
-            '23'          => ['en' => 'Suitable for people with disabilities',    'ro' => 'Accesibil persoanelor cu dizabilități', 'pos' => 40],
         ];
+        // Also seed facilities that the admin has classified as travel_group
+        $tgFacilities = db_get_array(
+            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = ?s ORDER BY facility_id",
+            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP
+        );
+        $tgPos = 20;
+        foreach ($tgFacilities as $fac) {
+            $travelGroupItems[(string) $fac['facility_id']] = [
+                'en' => $fac['facility_name_en'] ?: (string) $fac['facility_id'],
+                'ro' => $fac['facility_name_ro'] ?: '',
+                'pos' => $tgPos,
+            ];
+            $tgPos += 10;
+        }
         foreach ($travelGroupItems as $code => $data) {
             $repo->save([
                 'provider' => $provider,
@@ -1169,44 +1186,45 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
             $seeded++;
         }
     } else {
-        $skipped += 4;
-    }
-
-    // ── Beach Access (rerouted facility ID 31) ──
-    $beachAccessFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS);
-    if ($beachAccessFeatureId > 0) {
-        $csType = $getActualFeatureType($beachAccessFeatureId, 'S');
-        $repo->save([
-            'provider' => $provider,
-            'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
-            'provider_code' => '31',
-            'cs_cart_feature_id' => $beachAccessFeatureId,
-            'cs_cart_feature_type' => $csType,
-            'display_name_en' => 'Beachfront',
-            'display_name_ro' => 'La malul mării',
-            'position' => 10,
-            'is_active' => 'Y',
-            'mapping_source' => 'seed',
-        ]);
-        $seeded++;
-    } else {
         $skipped += 1;
     }
 
-    // ── Hotel Facilities (from novoton_facilities where facility_type = 'hotel') ──
-    // Facility IDs rerouted to travel_group or beach_access are skipped here
-    $reroutedFacilityIds = [3, 23, 26, 31];
+    // ── Beach Access (facility IDs mapped to beach_access) ──
+    $beachAccessFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS);
+    if ($beachAccessFeatureId > 0) {
+        $csType = $getActualFeatureType($beachAccessFeatureId, 'S');
+        $baFacilities = db_get_array(
+            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = ?s ORDER BY facility_id",
+            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS
+        );
+        $baPos = 10;
+        foreach ($baFacilities as $fac) {
+            $repo->save([
+                'provider' => $provider,
+                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
+                'provider_code' => (string) $fac['facility_id'],
+                'cs_cart_feature_id' => $beachAccessFeatureId,
+                'cs_cart_feature_type' => $csType,
+                'display_name_en' => $fac['facility_name_en'] ?: (string) $fac['facility_id'],
+                'display_name_ro' => $fac['facility_name_ro'] ?: '',
+                'position' => $baPos,
+                'is_active' => 'Y',
+                'mapping_source' => 'seed',
+            ]);
+            $baPos += 10;
+            $seeded++;
+        }
+    }
+
+    // ── Hotel Facilities (from novoton_facilities where facility_type = 'hotel_facility') ──
     $hotelFacFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY);
     if ($hotelFacFeatureId > 0) {
         $csType = $getActualFeatureType($hotelFacFeatureId, 'M');
         $facilities = db_get_array(
-            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = 'hotel' ORDER BY facility_id"
+            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = ?s ORDER BY facility_id",
+            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY
         );
-        $pos = 0;
-        foreach ($facilities as $fac) {
-            if (in_array((int) $fac['facility_id'], $reroutedFacilityIds, true)) {
-                continue;
-            }
+        foreach ($facilities as $pos => $fac) {
             $repo->save([
                 'provider' => $provider,
                 'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
@@ -1219,17 +1237,17 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
                 'is_active' => 'Y',
                 'mapping_source' => 'seed',
             ]);
-            $pos++;
             $seeded++;
         }
     }
 
-    // ── Room Facilities (from novoton_facilities where facility_type = 'room') ──
+    // ── Room Facilities (from novoton_facilities where facility_type = 'room_facility') ──
     $roomFacFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY);
     if ($roomFacFeatureId > 0) {
         $csType = $getActualFeatureType($roomFacFeatureId, 'M');
         $facilities = db_get_array(
-            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = 'room' ORDER BY facility_id"
+            "SELECT facility_id, facility_name_en, facility_name_ro FROM ?:novoton_facilities WHERE facility_type = ?s ORDER BY facility_id",
+            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY
         );
         foreach ($facilities as $pos => $fac) {
             $repo->save([
@@ -1255,7 +1273,11 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         $resorts = db_get_array(
             "SELECT resort_name, country FROM ?:novoton_resorts ORDER BY country, resort_name"
         );
+        $hiddenResorts = array_map('strtoupper', \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS);
         foreach ($resorts as $pos => $resort) {
+            if (!empty($hiddenResorts) && in_array(strtoupper($resort['resort_name']), $hiddenResorts, true)) {
+                continue;
+            }
             $displayName = mb_convert_case($resort['resort_name'], MB_CASE_TITLE, 'UTF-8');
             $repo->save([
                 'provider' => $provider,

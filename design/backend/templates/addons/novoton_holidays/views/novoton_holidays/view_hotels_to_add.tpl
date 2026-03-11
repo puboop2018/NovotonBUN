@@ -1,6 +1,6 @@
 {* View Hotels to Add as Products *}
 
-{* capture name="mainbox" - DISABLED *}
+{capture name="mainbox"}
 
 <div class="well">
     <h4><i class="icon-plus-sign"></i> Add Hotels as Products</h4>
@@ -45,27 +45,14 @@
 {* Action Buttons *}
 <div class="well">
     <h5>Add Hotels as Products</h5>
-    <p class="muted">Products will be created with:</p>
-    <ul class="muted" style="font-size: 12px;">
-        <li>Product Code: <code>NVT{ldelim}IdHotel{rdelim}</code></li>
-        <li>Price: 0</li>
-        <li>Status: Disabled</li>
-        <li>Category: {$country}///Litoral {$country}</li>
-        <li>Page Title: Hotel Name, City, Country (prices {$current_year})</li>
-        <li>Description: From Novoton API</li>
-        <li>Images: From Novoton API (up to 10)</li>
-    </ul>
-    
+    <p class="muted">Configure import settings (category, languages, resorts) before adding:</p>
+
     <div style="margin-top: 15px;">
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&dry_run=1&limit=10")}" class="btn" target="_blank">
-            <i class="icon-eye-open"></i> Preview First 10 (Dry Run)
+        <a href="{"novoton_holidays.add_hotels_as_products&country=`$country`"|fn_url}" class="btn btn-primary">
+            <i class="icon-plus"></i> Configure &amp; Add {$hotels|@count} Hotels as Products
         </a>
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&timeout=15")}" class="btn btn-primary" target="_blank" 
-           onclick="return confirm('This will add {$hotels|@count} hotels as products.\n\nThis may take 10-15 minutes.\n\nContinue?');">
-            <i class="icon-plus"></i> Add All {$hotels|@count} Hotels
-        </a>
-        <a href="{fn_url("novoton_holidays.add_hotels_as_products?country=`$country`&timeout=5&limit=50")}" class="btn btn-warning" target="_blank">
-            <i class="icon-play"></i> Add First 50 Only
+        <a href="{"novoton_holidays.manage"|fn_url}" class="btn">
+            <i class="icon-arrow-left"></i> Back to Dashboard
         </a>
     </div>
 </div>
@@ -96,12 +83,12 @@
                     {* Build preview title *}
                     {assign var="name_lower" value=$hotel.hotel_name|lower}
                     {if $name_lower|strpos:'villa' !== false || $name_lower|strpos:'aparthotel' !== false || $name_lower|strpos:'complex' !== false || $name_lower|strpos:'resort' !== false}
-                        {$hotel.hotel_name|regex_replace:"/\s*\*+\s*/":""|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}, 
+                        {$hotel.hotel_name|regex_replace:"/\s*\*+\s*/":""|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'},
                     {else}
-                        Hotel {$hotel.hotel_name|regex_replace:"/\s*\*+\s*/":""|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}, 
+                        Hotel {$hotel.hotel_name|regex_replace:"/\s*\*+\s*/":""|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'},
                     {/if}
-                    {$hotel.city|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}, 
-                    {$hotel.country|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'} 
+                    {$hotel.city|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'},
+                    {$hotel.country|mb_convert_case:constant('MB_CASE_TITLE'):'UTF-8'}
                     (prices {$current_year})
                 </small>
             </td>
@@ -121,22 +108,22 @@
 </div>
 {/if}
 
-{* /capture - DISABLED *}
+{/capture}
 
-{* capture name="sidebar" - DISABLED *}
+{capture name="sidebar"}
 <div class="sidebar-row">
     <h6>Cron Job</h6>
     <p class="muted" style="font-size: 11px;">
         Run weekly to check for new hotels:
     </p>
     <code style="font-size: 10px; word-break: break-all;">
-        0 5 * * 0 curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&password=PASS&mode=offers_update&country=BULGARIA"
+        0 5 * * 0 curl -s "{$config.http_location}/index.php?dispatch=novoton_cron.run&amp;password=PASS&amp;mode=offers_update&amp;country=BULGARIA"
     </code>
 </div>
-{* /capture - DISABLED *}
+{/capture}
 
-{* include file="common/mainbox.tpl"
-    title="Add Hotels as Products"
+{include file="common/mainbox.tpl"
+    title="View Hotels to Add - `$country`"
     content=$smarty.capture.mainbox
     sidebar=$smarty.capture.sidebar
-*}
+}

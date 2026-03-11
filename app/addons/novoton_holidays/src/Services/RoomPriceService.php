@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 class RoomPriceService implements RoomPriceServiceInterface
 {
     /** @var float Commission percentage */
@@ -160,7 +162,7 @@ class RoomPriceService implements RoomPriceServiceInterface
             'price' => $price_with_commission,
             'commission' => $this->commission,
             'commission_amount' => $price_with_commission - $base_price,
-            'availability' => (string)($response->Status ?? 'OK'),
+            'availability' => Constants::normalizeApiStatus((string)($response->Status ?? 'OK')),
             'currency' => $this->currency,
         ];
         

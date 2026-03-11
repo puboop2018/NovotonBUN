@@ -2,6 +2,9 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 abstract class AbstractCronCommand
@@ -81,5 +84,33 @@ abstract class AbstractCronCommand
     protected function sendReport(string $type, array $stats, string $context = ''): void
     {
         fn_novoton_holidays_send_import_report_email([], $type, $stats, $context);
+    }
+
+    /**
+     * Execute a sync operation with standardized error handling.
+     *
+     * Catches SyncException, ApiException, XmlParsingException, and general
+     * Throwable, logging each consistently. Returns true on success, false on failure.
+     *
+     * @param callable $work The sync operation to execute
+     * @param string $context Human-readable context for error messages (e.g. "hotel 123")
+     * @param array &$errors Array to collect error messages
+     * @return bool Whether the operation succeeded
+     */
+    protected function trySyncItem(callable $work, string $context, array &$errors): bool
+    {
+        try {
+            $work();
+            return true;
+        } catch (SyncException $e) {
+            $errors[] = $e->getMessage();
+        } catch (ApiException $e) {
+            $errors[] = "API error for {$context} (HTTP {$e->getHttpCode()}): " . $e->getMessage();
+        } catch (XmlParsingException $e) {
+            $errors[] = "XML parsing error for {$context}: " . $e->getMessage();
+        } catch (\Throwable $e) {
+            $errors[] = "Unexpected error for {$context}: " . $e->getMessage();
+        }
+        return false;
     }
 }
