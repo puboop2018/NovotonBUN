@@ -304,13 +304,8 @@ if ($mode == 'list_facilities') {
     $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
 
     // Build feature type options with CS-Cart feature names for the dropdown
-    // Only show feature types that are relevant for facility classification
-    $facility_feature_types = [
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP,
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
-    ];
+    // Show all feature types so admins can classify facilities into any category
+    $facility_feature_types = \Tygh\Addons\NovotonHolidays\Constants::VALID_FEATURE_TYPES;
     $feature_type_options = [];
     foreach ($facility_feature_types as $ft) {
         $settingKey = \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING[$ft] ?? '';

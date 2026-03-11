@@ -214,7 +214,7 @@ class AddProductsCommand extends AbstractCronCommand
         if (!empty($hotel['star_rating']) && (int) $hotel['star_rating'] >= 1) {
             $code = $normalizer->normalizeStarRating((string) $hotel['star_rating']);
             if ($code !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_STAR_RATING, $code);
+                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_PROPERTY_RATING, $code);
             }
         }
 
@@ -230,7 +230,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
             }
             if (!empty($boardCodes)) {
-                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_BOARD, array_unique($boardCodes));
+                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_MEALS, array_unique($boardCodes));
             }
         }
 

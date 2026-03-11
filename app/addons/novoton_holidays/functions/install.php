@@ -261,6 +261,37 @@ function fn_novoton_holidays_setup_db(): void
         }
     }
 
+    // ── Feature type rename: star_rating → property_rating, board → meals ──
+    // Updates existing data in hotel_feature_mappings and addon settings
+    $mappingsTable = $resolve('?:hotel_feature_mappings');
+    $hasOldStarRating = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = 'star_rating'"
+    );
+    if ($hasOldStarRating > 0) {
+        @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'property_rating' WHERE feature_type = 'star_rating'");
+    }
+    $hasOldBoard = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = 'board'"
+    );
+    if ($hasOldBoard > 0) {
+        @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'meals' WHERE feature_type = 'board'");
+    }
+
+    // Migrate addon settings keys: feature_id_star_rating → feature_id_property_rating, feature_id_board → feature_id_meals
+    $settingRenames = [
+        'feature_id_star_rating' => 'feature_id_property_rating',
+        'feature_id_board'       => 'feature_id_meals',
+    ];
+    foreach ($settingRenames as $oldName => $newName) {
+        $oldExists = db_get_field(
+            "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')",
+            $oldName
+        );
+        if ($oldExists) {
+            @db_query("UPDATE ?:settings_objects SET name = ?s WHERE name = ?s AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')", $newName, $oldName);
+        }
+    }
+
     // ── Facility type migration: enum('hotel','room') → varchar(30) feature type ──
     // Allows each facility to map directly to a CS-Cart feature type (hotel_facility,
     // room_facility, travel_group, beach_access, etc.) instead of just hotel/room.

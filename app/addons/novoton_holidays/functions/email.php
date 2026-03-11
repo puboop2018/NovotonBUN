@@ -359,10 +359,10 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             // Fall through to hardcoded labels
         }
 
-        $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING, 'ro') ?? 'Stele') : 'Stele';
-        $starHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING, 'en') ?? 'Stars') : 'Stars';
-        $boardHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD, 'ro') ?? 'Tip Masa') : 'Tip Masa';
-        $boardHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD, 'en') ?? 'Board Type') : 'Board Type';
+        $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
+        $starHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'en') ?? 'Stars') : 'Stars';
+        $boardHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'ro') ?? 'Tip Masa') : 'Tip Masa';
+        $boardHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'en') ?? 'Board Type') : 'Board Type';
 
         // CSV header (use EN feature names as column headers)
         $csv_lines = [];
@@ -421,7 +421,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
                 if ($stars >= 1 && $stars <= 5) {
                     if ($featureMapper) {
                         $star_label = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
                             (string) $stars,
                             $lang
                         ) ?? $star_labels_fallback[$lang][$stars - 1];
@@ -568,7 +568,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                 if ($stars >= 1 && $stars <= 5) {
                     if ($featureMapper) {
                         $star_value = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
                             (string) $stars,
                             $lang
                         ) ?? $star_labels_fallback[$lang][$stars - 1];

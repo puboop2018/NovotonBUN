@@ -381,12 +381,12 @@
                         <type>header</type>
                         <variants/>
                     </item>
-                    <item id="feature_id_star_rating">
+                    <item id="feature_id_property_rating">
                         <type>selectbox</type>
                         <default_value>4</default_value>
                         <variants/>
                     </item>
-                    <item id="feature_id_board">
+                    <item id="feature_id_meals">
                         <type>selectbox</type>
                         <default_value>6</default_value>
                         <variants/>
@@ -698,7 +698,7 @@
             CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
                 `mapping_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `provider` varchar(50) NOT NULL DEFAULT 'novoton' COMMENT 'Provider name (novoton, sphinx)',
-                `feature_type` varchar(50) NOT NULL COMMENT 'star_rating, board, hotel_facility, room_facility, resort, property_type',
+                `feature_type` varchar(50) NOT NULL COMMENT 'property_rating, meals, hotel_facility, room_facility, resort, property_type',
                 `provider_code` varchar(255) NOT NULL COMMENT 'Provider-side code (AI, HB, 4, facility_id, resort name)',
                 `cs_cart_feature_id` int(11) unsigned NOT NULL COMMENT 'CS-Cart product_features.feature_id (from addon settings)',
                 `cs_cart_variant_id` int(11) unsigned DEFAULT NULL COMMENT 'CS-Cart product_feature_variants.variant_id (auto-populated)',
