@@ -33,9 +33,14 @@ class HotelSync
     private array $productPrefixes;
     private array $stats;
 
-    public function __construct(?NovotonApi $api = null)
+    /**
+     * Constructor — API dependency must be injected explicitly.
+     *
+     * Use Container to get a properly wired instance.
+     */
+    public function __construct(NovotonApi $api)
     {
-        $this->api = $api ?? new NovotonApi();
+        $this->api = $api;
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->propertyTypeDetector = new PropertyTypeDetector();
         $this->selectedCountries = ConfigProvider::getSelectedCountries();

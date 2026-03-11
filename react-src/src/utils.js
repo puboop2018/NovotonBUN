@@ -5,6 +5,7 @@
  * a helper to read window.NovotonTranslations.
  */
 
+import { useEffect } from 'react';
 import {
     MONTHS_SHORT_EN,
     MONTHS_SHORT_RO,
@@ -135,4 +136,68 @@ export function tPlural(n, oneKey, fewKey, otherKey, oneFallback, fewFallback, o
     const mod100 = n % 100;
     if (n === 0 || (mod100 >= 2 && mod100 <= 19)) return t(fewKey, fewFallback);
     return t(otherKey || fewKey, otherFallback || fewFallback);
+}
+
+// ---------------------------------------------------------------------------
+// Focus trap hook for WCAG 2.1 dialog compliance
+// ---------------------------------------------------------------------------
+
+const FOCUSABLE_SELECTOR = [
+    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+    'select:not([disabled])', 'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+/**
+ * Trap keyboard focus within a dialog element while it is mounted.
+ * Moves focus to the first focusable element on mount and restores
+ * focus to the previously focused element on unmount.
+ *
+ * @param {React.RefObject} ref - Ref to the dialog container element
+ */
+export function useFocusTrap(ref) {
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const previouslyFocused = document.activeElement;
+
+        // Focus first focusable element inside the dialog
+        const focusable = el.querySelectorAll(FOCUSABLE_SELECTOR);
+        if (focusable.length > 0) {
+            focusable[0].focus();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key !== 'Tab') return;
+
+            const nodes = el.querySelectorAll(FOCUSABLE_SELECTOR);
+            if (nodes.length === 0) return;
+
+            const first = nodes[0];
+            const last = nodes[nodes.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        }
+
+        el.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            el.removeEventListener('keydown', handleKeyDown);
+            // Restore focus to previously focused element
+            if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+                previouslyFocused.focus();
+            }
+        };
+    }, [ref]);
 }

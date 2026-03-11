@@ -33,11 +33,58 @@ class ConfigProvider
     // Stale threshold for incremental sync (hours)
     public const STALE_HOURS = 24;
 
+    /** @var self|null Instance-based singleton. */
+    private static ?self $instance = null;
+
     /** @var array|null Cached settings array, loaded once per request. */
     private static $settings;
 
     /** @var string|null Cached addon version, loaded once per request. */
     private static $version;
+
+    /** @var array|null Instance-level settings (for injected/test instances). */
+    private ?array $instanceSettings;
+
+    /**
+     * Instance constructor for DI / testing.
+     *
+     * @param array|null $settings If provided, this instance uses these settings
+     *                             instead of the Registry. Pass null to use Registry.
+     */
+    public function __construct(?array $settings = null)
+    {
+        $this->instanceSettings = $settings;
+    }
+
+    /**
+     * Get or create the singleton instance.
+     */
+    public static function instance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Replace the singleton instance (for testing or multi-store).
+     */
+    public static function setInstance(?self $instance): void
+    {
+        self::$instance = $instance;
+    }
+
+    /**
+     * Instance method: get settings array.
+     */
+    public function getSettings(): array
+    {
+        if ($this->instanceSettings !== null) {
+            return $this->instanceSettings;
+        }
+        return self::settings();
+    }
 
     public static function settings(): array
     {
@@ -51,6 +98,7 @@ class ConfigProvider
     {
         self::$settings = null;
         self::$version = null;
+        self::$instance = null;
     }
 
     // ── Boolean Settings ──

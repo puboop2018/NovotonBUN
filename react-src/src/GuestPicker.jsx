@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { t, getLocale } from './utils';
+import { t, getLocale, useFocusTrap } from './utils';
 import { TrashIcon } from './icons';
 
 export default function GuestPicker({
@@ -21,6 +21,9 @@ export default function GuestPicker({
     triggerRef,
 }) {
     const popupRef = useRef(null);
+
+    // WCAG 2.1: trap focus within the guest picker dialog
+    useFocusTrap(popupRef);
 
     // Close on outside click or Escape key
     useEffect(() => {

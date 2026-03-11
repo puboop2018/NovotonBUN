@@ -9,6 +9,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\ValueObjects\Occupancy;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RequestDebugInfo;
 
 abstract class ApiClientBase
 {
@@ -23,13 +24,16 @@ abstract class ApiClientBase
     /** @var string[] Functions that bypass cache */
     protected array $noCacheFunctions = [];
 
-    // Debug state (synced from parent NovotonApi)
+    // Debug state — encapsulated in RequestDebugInfo value object.
+    // Public properties kept for backward compatibility but populated via debugInfo().
     public string $lastRequest = '';
     public string $lastResponse = '';
     public string $lastResponseRaw = '';
     public array $lastRequestFormatted = [];
     public string $lastError = '';
     public int $lastHttpCode = 0;
+
+    private RequestDebugInfo $debugInfo;
 
     public function __construct(
         NovotonHttpClient $httpClient,
@@ -41,6 +45,7 @@ abstract class ApiClientBase
         $this->xmlParser = $xmlParser;
         $this->cache = $cache;
         $this->enableCache = $enableCache;
+        $this->debugInfo = new RequestDebugInfo();
     }
 
     protected function callApi(string $function, string $xml, string $lang = 'UK'): string
@@ -69,6 +74,24 @@ abstract class ApiClientBase
         $this->lastResponseRaw = $this->httpClient->lastResponseRaw;
         $this->lastError = $this->httpClient->lastError;
         $this->lastHttpCode = $this->httpClient->lastHttpCode;
+
+        // Update the encapsulated debug info object
+        $this->debugInfo = new RequestDebugInfo(
+            $this->lastRequest,
+            $this->lastResponse,
+            $this->lastResponseRaw,
+            $this->lastRequestFormatted,
+            $this->lastError,
+            $this->lastHttpCode
+        );
+    }
+
+    /**
+     * Get debug info as an immutable value object.
+     */
+    public function debugInfo(): RequestDebugInfo
+    {
+        return $this->debugInfo;
     }
 
     protected function getFromCache(string $function, string $cacheKey): mixed

@@ -244,3 +244,30 @@ Circuit breaker state is stored in static properties — it resets on every PHP 
 2. **Short-term (1-2 weeks):** 1.2, 1.3, 3.3, 3.4, 5.1, 5.4
 3. **Medium-term (1-2 months):** 2.1, 2.3, 4.1, 4.2
 4. **Long-term (ongoing):** 6.1-6.5
+
+---
+
+## Implementation Status (Updated 2026-03-11)
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1.1 | Encryption key fallback | DONE | Random key generated & persisted to `var/novoton/.encryption_key` |
+| 1.2 | unserialize → json | DONE | All `unserialize()` fallbacks removed; invalid legacy entries deleted as cache miss |
+| 1.3 | XSS via AJAX scripts | MITIGATED | Cross-origin scripts blocked; same-origin origin-check added |
+| 1.4 | HTTP API warning | DONE | Warning logged when HTTP URL detected |
+| 2.1 | Procedural/OOP migration | PARTIAL | Procedural layer is mostly thin wrappers; services still call some procedural helpers |
+| 2.2 | Constructor DI | DONE | `BookingService` and `HotelSync` require all dependencies via constructor |
+| 2.3 | ConfigProvider instance | DONE | Instance-based pattern with `instance()`, `setInstance()`, and Container registration |
+| 2.4 | NovotonApi facade | PARTIAL | Domain clients accessible directly via `$api->hotels()` etc. |
+| 3.1 | N+1 hotel sync query | DONE | Hotel names pre-fetched in single upfront query |
+| 3.2 | Unbounded memory cache | DONE | FIFO eviction at 500 entries (`MEMORY_CACHE_MAX_SIZE`) |
+| 3.3 | File cache cleanup | DONE | `filemtime()` fast-path heuristic before reading file contents |
+| 3.4 | Batch package upsert | DONE | `executeBatchPackageUpsert()` with multi-value INSERT |
+| 3.5 | HTTP/2 multiplexing | DONE | `CURL_HTTP_VERSION_2_0` set conditionally in batch requests |
+| 4.1 | Test coverage | DONE | Added CommissionCalculator, NovotonXmlParser, SearchParameterNormalizer tests (7→10 test files, 140 tests) |
+| 4.2 | Integration tests | DONE | `tests/Integration/BookingFlowTest.php` — search→normalize→price→commission flow |
+| 4.3 | Static analysis | DONE | `phpstan.neon` configured |
+| 5.1 | Cron error handling | DONE | `trySyncItem()` helper in `AbstractCronCommand` |
+| 5.2 | Debug properties | DONE | `RequestDebugInfo` value object in `ValueObjects/`; `debugInfo()` method on ApiClientBase and NovotonApi |
+| 5.3 | Duplicate constants | DONE | Duplicates removed from ConfigProvider |
+| 5.4 | Calendar accessibility | DONE | Focus trap (`useFocusTrap` hook), Escape key, `role="dialog"`, `aria-modal`, `aria-label` |

@@ -11,10 +11,25 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+// ── CS-Cart path constants ──────────────────────────────────────────────────
+if (!defined('DIR_ROOT')) {
+    define('DIR_ROOT', sys_get_temp_dir() . '/novoton_test_root');
+    if (!is_dir(DIR_ROOT)) {
+        @mkdir(DIR_ROOT, 0755, true);
+    }
+}
+
 // ── CS-Cart function stubs ──────────────────────────────────────────────────
 // Only define stubs for functions that are referenced at class-load time
 // or in the specific methods under test. Tests that need different behaviour
 // should use function mocking or override via Closure.
+
+if (!function_exists('__')) {
+    function __(string $key): string
+    {
+        return $key;
+    }
+}
 
 if (!function_exists('fn_log_event')) {
     function fn_log_event(string $type, string $action, array $data = []): void

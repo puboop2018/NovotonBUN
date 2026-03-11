@@ -10,7 +10,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { getLocale, nightsBetween, formatDateShort, t, tPlural } from './utils';
+import { getLocale, nightsBetween, formatDateShort, t, tPlural, useFocusTrap } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
 import { ChevronLeft, ChevronRight } from './icons';
 
@@ -87,6 +87,9 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
     const popupRef = useRef(null);
+
+    // WCAG 2.1: trap focus within the calendar dialog
+    useFocusTrap(popupRef);
 
     // Close on outside click or Escape key
     // Use 'click' (not 'mousedown') so the toggle button's onClick fires first

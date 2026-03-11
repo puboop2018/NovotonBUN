@@ -38,26 +38,20 @@ class BookingService implements BookingServiceInterface
     private $debug = false;
 
     /**
-     * Constructor
+     * Constructor — all dependencies must be injected explicitly.
      *
-     * @param \Tygh\Addons\NovotonHolidays\NovotonApi|null $api Injected API instance (falls back to global helper)
+     * Use Container::bookingService() to get a properly wired instance.
      */
     public function __construct(
-        ?GuestDataServiceInterface $guestService = null,
-        ?RoomPriceServiceInterface $priceService = null,
-        ?BookingRepositoryInterface $bookingRepo = null,
-        ?\Tygh\Addons\NovotonHolidays\NovotonApi $api = null
+        GuestDataServiceInterface $guestService,
+        RoomPriceServiceInterface $priceService,
+        BookingRepositoryInterface $bookingRepo,
+        \Tygh\Addons\NovotonHolidays\NovotonApi $api
     ) {
-        if ($api === null) {
-            $api = fn_novoton_holidays_get_api();
-            if ($api === null) {
-                throw new \RuntimeException('Novoton API is not available. Check addon settings.');
-            }
-        }
         $this->api = $api;
-        $this->guestService = $guestService ?? new GuestDataService();
-        $this->priceService = $priceService ?? new RoomPriceService();
-        $this->bookingRepo = $bookingRepo ?? new BookingRepository();
+        $this->guestService = $guestService;
+        $this->priceService = $priceService;
+        $this->bookingRepo = $bookingRepo;
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     

@@ -23,6 +23,7 @@ use Tygh\Addons\NovotonHolidays\Api\ReservationApiClient;
 use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RequestDebugInfo;
 
 class NovotonApi implements NovotonApiInterface
 {
@@ -87,6 +88,21 @@ class NovotonApi implements NovotonApiInterface
         $this->lastRequestFormatted = $client->lastRequestFormatted;
         $this->lastError = $client->lastError;
         $this->lastHttpCode = $client->lastHttpCode;
+    }
+
+    /**
+     * Get debug info as an immutable value object (preferred over raw public properties).
+     */
+    public function debugInfo(): RequestDebugInfo
+    {
+        return new RequestDebugInfo(
+            $this->lastRequest,
+            $this->lastResponse,
+            $this->lastResponseRaw,
+            $this->lastRequestFormatted,
+            $this->lastError,
+            $this->lastHttpCode
+        );
     }
 
     // ========== BACKWARD-COMPATIBLE DELEGATES ==========
