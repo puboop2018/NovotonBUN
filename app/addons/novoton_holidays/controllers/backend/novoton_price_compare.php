@@ -257,38 +257,114 @@ if ($mode == 'compare') {
     $breakdown = $calcResult['breakdown'] ?? [];
     $byNight = $breakdown['base_per_night'] ?? [];
     $byPerson = $breakdown['base_per_person'] ?? [];
+    $byPersonByNight = $breakdown['base_per_person_per_night'] ?? [];
+    $matchedRows = $breakdown['matched_rows'] ?? [];
 
-    // Per-night breakdown
-    if (!empty($byNight)) {
-        echo '<h3>Per-Night Breakdown</h3>';
+    // Per-person per-night matrix (main breakdown table)
+    if (!empty($byPersonByNight) && !empty($byNight)) {
+        $personKeys = array_keys($byPersonByNight);
+
+        echo '<h3>Per-Person Per-Night Breakdown</h3>';
+        echo '<div style="overflow-x:auto;">';
         echo '<table>';
-        echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price (EUR)</th></tr>';
-        $nightTotal = 0;
+
+        // Header row: Night dates
+        echo '<tr><th>Person</th><th>Age Type</th><th>Acc Type</th>';
         foreach ($byNight as $idx => $n) {
             $sNum = $n['season'] ?? '?';
-            $nightPrice = $n['price'] ?? 0;
-            $nightTotal += $nightPrice;
+            echo '<th style="text-align:right;"><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span><br><small>' . ($n['date'] ?? '') . '</small></th>';
+        }
+        echo '<th style="text-align:right;font-weight:bold;">Total</th></tr>';
+
+        // One row per person
+        foreach ($personKeys as $pKey) {
+            $rowInfo = $matchedRows[$pKey] ?? [];
+            $personTotal = $byPerson[$pKey] ?? 0;
+            $isAdult = strpos($pKey, 'adult_') === 0;
+            $badgeClass = $isAdult ? 'badge-adult' : 'badge-child';
+            $label = str_replace('_', ' ', ucfirst($pKey));
+
             echo '<tr>';
-            echo '<td>' . ($idx + 1) . '</td>';
-            echo '<td>' . ($n['date'] ?? '-') . '</td>';
-            echo '<td><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span></td>';
-            echo '<td>' . number_format($nightPrice, 2) . '</td>';
+            echo '<td><span class="badge ' . $badgeClass . '">' . htmlspecialchars($label) . '</span></td>';
+            echo '<td><small>' . htmlspecialchars(trim($rowInfo['age_type'] ?? '-')) . '</small></td>';
+            echo '<td><small>' . htmlspecialchars($rowInfo['acc_type'] ?? '-') . '</small></td>';
+
+            foreach ($byNight as $idx => $n) {
+                $nightPrice = $byPersonByNight[$pKey][$idx] ?? 0;
+                $cls = ($nightPrice == 0) ? ' class="zero-value"' : '';
+                echo '<td style="text-align:right;"' . $cls . '>' . number_format($nightPrice, 2) . '</td>';
+            }
+            echo '<td style="text-align:right;font-weight:bold;">' . number_format($personTotal, 2) . '</td>';
             echo '</tr>';
         }
-        echo '<tr class="total-row"><td colspan="3">Total Base Price</td><td>' . number_format($nightTotal, 2) . '</td></tr>';
-        echo '</table>';
-    }
 
-    // Per-person totals
-    if (!empty($byPerson)) {
-        echo '<h3>Per-Person Totals (all nights)</h3>';
-        echo '<table>';
-        echo '<tr><th>Person</th><th>Total (EUR)</th></tr>';
-        foreach ($byPerson as $key => $amount) {
-            $label = str_replace('_', ' ', ucfirst($key));
-            echo '<tr><td>' . htmlspecialchars($label) . '</td><td>' . number_format($amount, 2) . '</td></tr>';
+        // Night totals row
+        echo '<tr class="total-row"><td colspan="3">Night Total</td>';
+        foreach ($byNight as $idx => $n) {
+            echo '<td style="text-align:right;">' . number_format($n['price'] ?? 0, 2) . '</td>';
         }
+        $basePriceVal = $breakdown['base_price'] ?? 0;
+        echo '<td style="text-align:right;">' . number_format($basePriceVal, 2) . '</td>';
+        echo '</tr>';
+
         echo '</table>';
+        echo '</div>';
+
+        // Matched season_price row details
+        if (!empty($matchedRows)) {
+            echo '<h3>Matched Season Price Rows</h3>';
+            echo '<p style="font-size:0.9em;color:#666;">Shows which season_price row was matched for each person. '
+               . 'If Code &ne; Base, prices are <strong>percentages</strong> of the Base row.</p>';
+            echo '<table>';
+            echo '<tr><th>Person</th><th>Matched Age Type</th><th>Code</th><th>Base</th><th>Raw Price</th><th>Is %</th><th>RoomPrice</th></tr>';
+            foreach ($matchedRows as $pKey => $mRow) {
+                $label = str_replace('_', ' ', ucfirst($pKey));
+                $isPercent = $mRow['is_percentage'] ?? false;
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($label) . '</td>';
+                echo '<td>' . htmlspecialchars($mRow['row_age'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($mRow['code'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($mRow['base'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($mRow['raw_price'] ?? '-') . ($isPercent ? '%' : '') . '</td>';
+                echo '<td>' . ($isPercent ? '<span class="badge badge-active">Yes</span>' : 'No') . '</td>';
+                echo '<td>' . htmlspecialchars($mRow['room_price'] ?? 'No') . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+    } else {
+        // Fallback: Per-night breakdown (legacy view)
+        if (!empty($byNight)) {
+            echo '<h3>Per-Night Breakdown</h3>';
+            echo '<table>';
+            echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price (EUR)</th></tr>';
+            $nightTotal = 0;
+            foreach ($byNight as $idx => $n) {
+                $sNum = $n['season'] ?? '?';
+                $nightPrice = $n['price'] ?? 0;
+                $nightTotal += $nightPrice;
+                echo '<tr>';
+                echo '<td>' . ($idx + 1) . '</td>';
+                echo '<td>' . ($n['date'] ?? '-') . '</td>';
+                echo '<td><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span></td>';
+                echo '<td>' . number_format($nightPrice, 2) . '</td>';
+                echo '</tr>';
+            }
+            echo '<tr class="total-row"><td colspan="3">Total Base Price</td><td>' . number_format($nightTotal, 2) . '</td></tr>';
+            echo '</table>';
+        }
+
+        // Per-person totals
+        if (!empty($byPerson)) {
+            echo '<h3>Per-Person Totals (all nights)</h3>';
+            echo '<table>';
+            echo '<tr><th>Person</th><th>Total (EUR)</th></tr>';
+            foreach ($byPerson as $key => $amount) {
+                $label = str_replace('_', ' ', ucfirst($key));
+                echo '<tr><td>' . htmlspecialchars($label) . '</td><td>' . number_format($amount, 2) . '</td></tr>';
+            }
+            echo '</table>';
+        }
     }
 
     $basePriceVal = $breakdown['base_price'] ?? 0;
@@ -580,6 +656,150 @@ if ($mode == 'compare') {
             echo '<p style="text-align:center;color:red;font-weight:bold;margin-top:15px;">PRICES DO NOT MATCH - Check steps above for discrepancies</p>';
         }
         echo '</div>';
+
+        // =====================================================================
+        // Discrepancy Analysis (only when prices don't match)
+        // =====================================================================
+        if (!$isMatch) {
+            echo '<div class="step" style="border-color:#f44336;">';
+            echo '<div class="step-header"><span class="step-num" style="background:#f44336;">!</span><span class="step-title">Discrepancy Analysis</span></div>';
+
+            $calcBasePrice = $breakdown['base_price'] ?? 0;
+            $calcFees = $fees['total_fees'] ?? 0;
+            $ebPercent = $eb['percent'] ?? 0;
+            $calcDiscount = $breakdown['discount_amount'] ?? 0;
+
+            // Reverse-engineer API implied values
+            // API price = (API_base * (1 - EB%)) + fees  (if EB applies to base only)
+            // API price = API_base * (1 - EB%) + fees
+            // => API_base = (API_price - fees) / (1 - EB%)
+            $apiImpliedBase = 0;
+            $apiBaseDiff = 0;
+            if ($ebPercent > 0 && $ebPercent < 100) {
+                $apiImpliedBase = round(($apiPrice - $calcFees) / (1 - $ebPercent / 100), 2);
+                $apiBaseDiff = $calcBasePrice - $apiImpliedBase;
+            }
+
+            echo '<table>';
+            echo '<tr><th>Metric</th><th>Calculated</th><th>API (implied)</th><th>Difference</th></tr>';
+
+            echo '<tr>';
+            echo '<td>Base Price (before discounts)</td>';
+            echo '<td>' . number_format($calcBasePrice, 2) . '</td>';
+            if ($apiImpliedBase > 0) {
+                echo '<td>' . number_format($apiImpliedBase, 2) . '</td>';
+                $cls = abs($apiBaseDiff) < 1 ? 'match' : 'mismatch';
+                echo '<td class="' . $cls . '">' . ($apiBaseDiff >= 0 ? '+' : '') . number_format($apiBaseDiff, 2) . '</td>';
+            } else {
+                echo '<td colspan="2"><em>Cannot reverse-engineer (EB% = 0 or unknown)</em></td>';
+            }
+            echo '</tr>';
+
+            echo '<tr>';
+            echo '<td>Fees (handling + extras)</td>';
+            echo '<td>' . number_format($calcFees, 2) . '</td>';
+            echo '<td>' . number_format($calcFees, 2) . ' <small>(assumed same)</small></td>';
+            echo '<td class="match">0.00</td>';
+            echo '</tr>';
+
+            echo '<tr>';
+            echo '<td>Early Booking Discount (' . $ebPercent . '%)</td>';
+            echo '<td>-' . number_format($calcDiscount, 2) . '</td>';
+            if ($apiImpliedBase > 0) {
+                $apiImpliedDiscount = round($apiImpliedBase * $ebPercent / 100, 2);
+                echo '<td>-' . number_format($apiImpliedDiscount, 2) . '</td>';
+                $discDiff = $calcDiscount - $apiImpliedDiscount;
+                echo '<td>' . ($discDiff >= 0 ? '+' : '') . number_format($discDiff, 2) . '</td>';
+            } else {
+                echo '<td colspan="2">-</td>';
+            }
+            echo '</tr>';
+
+            echo '<tr class="total-row">';
+            echo '<td>Final Price</td>';
+            echo '<td>' . number_format($calcPrice, 2) . '</td>';
+            echo '<td>' . number_format($apiPriceWithCommission, 2) . '</td>';
+            echo '<td class="mismatch">' . ($difference >= 0 ? '+' : '') . number_format($difference, 2) . '</td>';
+            echo '</tr>';
+            echo '</table>';
+
+            // Per-person analysis: show what each person would need to cost
+            // for the API price to match
+            if ($apiImpliedBase > 0 && abs($apiBaseDiff) >= 1 && !empty($byPerson)) {
+                echo '<h3>Per-Person Base Price Analysis</h3>';
+                echo '<p style="font-size:0.9em;color:#666;">Compares calculated per-person base prices with what the API implies. '
+                   . 'The "API Implied" column is estimated by proportional scaling. '
+                   . 'A large difference on a specific person suggests their pricing row or percentage may be wrong.</p>';
+
+                $scaleFactor = ($calcBasePrice > 0) ? $apiImpliedBase / $calcBasePrice : 1;
+
+                echo '<table>';
+                echo '<tr><th>Person</th><th>Calculated Base</th><th>API Implied Base</th><th>Difference</th><th>% of Adult Rate</th></tr>';
+
+                // Find first adult's total for reference
+                $firstAdultTotal = 0;
+                $apiFirstAdultTotal = 0;
+                foreach ($byPerson as $pKey => $pAmt) {
+                    if (strpos($pKey, 'adult_1') === 0) {
+                        $firstAdultTotal = $pAmt;
+                        $apiFirstAdultTotal = round($pAmt * $scaleFactor, 2);
+                        break;
+                    }
+                }
+
+                foreach ($byPerson as $pKey => $pAmt) {
+                    $label = str_replace('_', ' ', ucfirst($pKey));
+                    $apiPAmt = round($pAmt * $scaleFactor, 2);
+                    $pDiff = $pAmt - $apiPAmt;
+                    $cls = abs($pDiff) < 1 ? 'match' : 'mismatch';
+
+                    $pctOfAdult = '';
+                    if ($firstAdultTotal > 0) {
+                        $calcPct = round($pAmt / $firstAdultTotal * 100, 1);
+                        $pctOfAdult = $calcPct . '%';
+                    }
+
+                    echo '<tr>';
+                    echo '<td>' . htmlspecialchars($label) . '</td>';
+                    echo '<td>' . number_format($pAmt, 2) . '</td>';
+                    echo '<td>' . number_format($apiPAmt, 2) . '</td>';
+                    echo '<td class="' . $cls . '">' . ($pDiff >= 0 ? '+' : '') . number_format($pDiff, 2) . '</td>';
+                    echo '<td>' . $pctOfAdult . '</td>';
+                    echo '</tr>';
+                }
+
+                $baseDiffAbs = abs($apiBaseDiff);
+                echo '<tr class="total-row"><td>Total</td><td>' . number_format($calcBasePrice, 2) . '</td>'
+                   . '<td>' . number_format($apiImpliedBase, 2) . '</td>'
+                   . '<td class="mismatch">' . ($apiBaseDiff >= 0 ? '+' : '') . number_format($apiBaseDiff, 2) . '</td><td></td></tr>';
+                echo '</table>';
+
+                // Hint: if base diff closely matches a person's rate or fraction thereof
+                if ($firstAdultTotal > 0 && $baseDiffAbs > 1) {
+                    $ratioOfAdult = $baseDiffAbs / $firstAdultTotal;
+                    $pctStr = number_format($ratioOfAdult * 100, 1);
+                    echo '<div style="background:#fff3cd;color:#856404;padding:12px;border-radius:4px;margin-top:10px;font-size:0.95em;">';
+                    echo '<strong>Hint:</strong> The base price difference of <strong>' . number_format($baseDiffAbs, 2)
+                       . ' EUR</strong> equals <strong>' . $pctStr . '%</strong> of the first adult\'s rate (' . number_format($firstAdultTotal, 2) . '). ';
+
+                    if (abs($ratioOfAdult - 0.25) < 0.02) {
+                        echo 'This suggests <strong>one person</strong> (likely the 3rd adult on a regular bed) should be priced at <strong>75%</strong> of the full adult rate instead of 100%. '
+                           . 'Check if the season_price data has a separate row for the 3rd regular bed occupant with a percentage-based price.';
+                    } elseif (abs($ratioOfAdult - 0.50) < 0.02) {
+                        echo 'This suggests <strong>one person</strong> should be priced at <strong>50%</strong> of the adult rate. '
+                           . 'Check for a missing or mismatched child/extra-bed pricing row.';
+                    } elseif (abs($ratioOfAdult - 1.0) < 0.02) {
+                        echo 'This suggests <strong>one full adult\'s price</strong> is being over-counted. '
+                           . 'Check for RoomPrice=Yes vs per-person pricing mismatch.';
+                    } else {
+                        echo 'Check if any person\'s pricing row is missing or using an incorrect percentage.';
+                    }
+                    echo '</div>';
+                }
+            }
+
+            echo '</div>'; // step
+        }
     } else {
         echo '<div class="result-box result-mismatch">';
         echo '<strong>API Error:</strong> No price found for this room/board combination';

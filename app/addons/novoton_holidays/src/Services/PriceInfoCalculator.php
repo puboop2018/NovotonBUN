@@ -46,13 +46,19 @@ class PriceInfoCalculator
         $total = 0;
         $byNight = [];
         $byPerson = [];
+        $byPersonByNight = [];  // person_key => [nightIdx => price]
+        $matchedRows = [];      // person_key => matched row info (first night only)
 
         // Initialize per-person entries so every occupant appears in the output
         foreach ($occupancy['adults'] as $adult) {
-            $byPerson['adult_' . $adult['index']] = 0;
+            $key = 'adult_' . $adult['index'];
+            $byPerson[$key] = 0;
+            $byPersonByNight[$key] = [];
         }
         foreach ($occupancy['children'] as $child) {
-            $byPerson['child_' . $child['index']] = 0;
+            $key = 'child_' . $child['index'];
+            $byPerson[$key] = 0;
+            $byPersonByNight[$key] = [];
         }
 
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
@@ -64,6 +70,7 @@ class PriceInfoCalculator
 
             // Adults
             foreach ($occupancy['adults'] as $adult) {
+                $personKey = 'adult_' . $adult['index'];
                 $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adult['age_type'], $adult['acc_type'], $nights);
 
                 if ($row) {
@@ -74,22 +81,52 @@ class PriceInfoCalculator
                     // the per-room charge.  Extra-bed guests always have their own
                     // supplement and must never be blocked.
                     if ($isRoomPrice && !$isExtraBed) {
-                        if ($roomPriceCharged) continue;
+                        if ($roomPriceCharged) {
+                            $byPersonByNight[$personKey][$nightIdx] = 0;
+                            continue;
+                        }
                         $roomPriceCharged = true;
                     }
 
                     $price = $this->getPriceFromRow($row, $priceKey);
                     $nightTotal += $price;
+                    $byPersonByNight[$personKey][$nightIdx] = $price;
 
-                    if (!isset($byPerson['adult_' . $adult['index']])) {
-                        $byPerson['adult_' . $adult['index']] = 0;
+                    if (!isset($byPerson[$personKey])) {
+                        $byPerson[$personKey] = 0;
                     }
-                    $byPerson['adult_' . $adult['index']] += $price;
+                    $byPerson[$personKey] += $price;
+
+                    // Capture matched row info on first night
+                    if (!isset($matchedRows[$personKey])) {
+                        $rowCode = PriceInfoFormatter::toScalar($row['Code'] ?? '');
+                        $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
+                        $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
+                        $isPercentage = false;
+                        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+                            $isPercentage = true;
+                        } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
+                            $isPercentage = true;
+                        }
+                        $matchedRows[$personKey] = [
+                            'age_type' => $adult['age_type'],
+                            'acc_type' => $adult['acc_type'],
+                            'row_age' => PriceInfoFormatter::toScalar($row['fAge'] ?? $row['IdAge'] ?? ''),
+                            'code' => $rowCode,
+                            'base' => $rowBase,
+                            'raw_price' => (string)$rawPrice,
+                            'is_percentage' => $isPercentage,
+                            'room_price' => $row['RoomPrice'] ?? 'No',
+                        ];
+                    }
+                } else {
+                    $byPersonByNight[$personKey][$nightIdx] = 0;
                 }
             }
 
             // Children
             foreach ($occupancy['children'] as $child) {
+                $personKey = 'child_' . $child['index'];
                 $row = null;
                 if ($child['by_1_ad']) {
                     $ageTypeBy1Ad = $child['age_type'] . ' BY 1 AD';
@@ -113,17 +150,46 @@ class PriceInfoCalculator
                     // (rare — a child occupying a regular bed in the room).
                     // Extra-bed children always have their own supplement.
                     if ($childRoomPrice && !$isExtraBed) {
-                        if ($roomPriceCharged) continue;
+                        if ($roomPriceCharged) {
+                            $byPersonByNight[$personKey][$nightIdx] = 0;
+                            continue;
+                        }
                         $roomPriceCharged = true;
                     }
 
                     $price = $this->getPriceFromRow($row, $priceKey);
                     $nightTotal += $price;
+                    $byPersonByNight[$personKey][$nightIdx] = $price;
 
-                    if (!isset($byPerson['child_' . $child['index']])) {
-                        $byPerson['child_' . $child['index']] = 0;
+                    if (!isset($byPerson[$personKey])) {
+                        $byPerson[$personKey] = 0;
                     }
-                    $byPerson['child_' . $child['index']] += $price;
+                    $byPerson[$personKey] += $price;
+
+                    // Capture matched row info on first night
+                    if (!isset($matchedRows[$personKey])) {
+                        $rowCode = PriceInfoFormatter::toScalar($row['Code'] ?? '');
+                        $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
+                        $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
+                        $isPercentage = false;
+                        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+                            $isPercentage = true;
+                        } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
+                            $isPercentage = true;
+                        }
+                        $matchedRows[$personKey] = [
+                            'age_type' => $child['age_type'],
+                            'acc_type' => $child['acc_type'],
+                            'row_age' => PriceInfoFormatter::toScalar($row['fAge'] ?? $row['IdAge'] ?? ''),
+                            'code' => $rowCode,
+                            'base' => $rowBase,
+                            'raw_price' => (string)$rawPrice,
+                            'is_percentage' => $isPercentage,
+                            'room_price' => $row['RoomPrice'] ?? 'No',
+                        ];
+                    }
+                } else {
+                    $byPersonByNight[$personKey][$nightIdx] = 0;
                 }
             }
 
@@ -139,7 +205,9 @@ class PriceInfoCalculator
         return [
             'total' => $total,
             'by_night' => $byNight,
-            'by_person' => $byPerson
+            'by_person' => $byPerson,
+            'by_person_by_night' => $byPersonByNight,
+            'matched_rows' => $matchedRows,
         ];
     }
 
