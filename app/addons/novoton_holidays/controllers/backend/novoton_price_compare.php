@@ -363,6 +363,47 @@ if ($mode == 'compare') {
             }
             echo '</table>';
         }
+
+        // Raw Season Prices (migrated from Verify Season-Price Mapping)
+        $samplePrices = $calculator->getSamplePrices($room_id, $board_id);
+        if (!empty($samplePrices)) {
+            echo '<h3>Raw Season Prices (Price1-20) for this Room/Board</h3>';
+            echo '<p style="font-size:0.9em;color:#666;">Raw price values from season_price data. Percentages (e.g., "80%") are calculated from the Base code row.</p>';
+
+            $usedPriceCols = [];
+            foreach ($samplePrices as $sample) {
+                for ($i = 1; $i <= 20; $i++) {
+                    if (isset($sample['Price' . $i])) {
+                        $usedPriceCols[$i] = true;
+                    }
+                }
+            }
+            ksort($usedPriceCols);
+
+            echo '<div style="overflow-x:auto;">';
+            echo '<table>';
+            echo '<tr><th>IdAge</th><th>IdAcc</th><th>Code</th><th>Base</th><th>RoomPrice</th>';
+            foreach (array_keys($usedPriceCols) as $col) {
+                echo '<th style="background:#fffde7;"><strong>Price' . $col . '</strong></th>';
+            }
+            echo '</tr>';
+
+            foreach ($samplePrices as $sample) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($sample['IdAge']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['IdAcc']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Code']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Base']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['RoomPrice']) . '</td>';
+                foreach (array_keys($usedPriceCols) as $col) {
+                    $val = $sample['Price' . $col] ?? '-';
+                    echo '<td style="background:#fffde7;">' . htmlspecialchars($val) . '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</table>';
+            echo '</div>';
+        }
     } else {
         // Fallback: Per-night breakdown (legacy view)
         if (!empty($byNight)) {
