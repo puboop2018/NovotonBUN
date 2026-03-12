@@ -203,11 +203,8 @@ class CacheService implements CacheServiceInterface
         }
 
         $data = json_decode($content, true);
-        // Backward compatibility: try unserialize for legacy cache files
-        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-            $data = unserialize($content, ['allowed_classes' => false]);
-        }
         if (!is_array($data) || !isset($data['expires']) || !isset($data['data'])) {
+            // Invalid or legacy serialized format — delete and treat as cache miss
             unlink($file);
             return null;
         }
@@ -431,9 +428,10 @@ class CacheService implements CacheServiceInterface
         }
         
         $data = json_decode($row['cache_data'], true);
-        // Backward compatibility: try unserialize for legacy entries
         if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-            $data = unserialize($row['cache_data'], ['allowed_classes' => false]);
+            // Invalid or legacy serialized format — treat as cache miss
+            $this->deleteFromDatabase($key);
+            return null;
         }
 
         // Store in memory
@@ -534,10 +532,12 @@ class CacheService implements CacheServiceInterface
                 $content = file_get_contents($file);
                 if ($content !== false) {
                     $data = json_decode($content, true);
-                    if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-                        $data = unserialize($content, ['allowed_classes' => false]);
-                    }
-                    if (is_array($data) && isset($data['expires']) && $data['expires'] < $now) {
+                    if (!is_array($data) || !isset($data['expires'])) {
+                        // Invalid or legacy serialized format — delete it
+                        if (unlink($file)) {
+                            $count++;
+                        }
+                    } elseif ($data['expires'] < $now) {
                         if (unlink($file)) {
                             $count++;
                         }

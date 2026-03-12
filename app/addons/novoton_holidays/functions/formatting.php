@@ -407,34 +407,7 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
  */
 function fn_novoton_holidays_format_payment_terms($xml_string): string
 {
-    $terms = fn_novoton_holidays_parse_payment_terms($xml_string);
-
-    if (empty($terms)) {
-        return '';
-    }
-
-    $lines = [];
-
-    foreach ($terms as $term) {
-        $percent = isset($term['percent']) ? number_format($term['percent'], 0) : '0';
-        $date = $term['date'] ?? '';
-
-        if (!empty($date)) {
-            $formatted_date = fn_novoton_holidays_format_date($date);
-            // "[percent]% until [date]" / "[percent]% până la [date]"
-            $lines[] = __('novoton_holidays.payment_percent_until', [
-                '[percent]' => $percent,
-                '[date]' => $formatted_date
-            ]);
-        } elseif (!empty($term['is_on_booking'])) {
-            // "[percent]% on booking" / "[percent]% la rezervare"
-            $lines[] = __('novoton_holidays.payment_percent_on_booking', ['[percent]' => $percent]);
-        } else {
-            $lines[] = "{$percent}%";
-        }
-    }
-
-    return implode("\n", $lines);
+    return \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::formatPaymentTerms((string) $xml_string);
 }
 
 /**
@@ -446,72 +419,7 @@ function fn_novoton_holidays_format_payment_terms($xml_string): string
  */
 function fn_novoton_holidays_format_cancellation_terms($xml_string, $check_in = ''): string
 {
-    $terms = fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in);
-
-    if (empty($terms)) {
-        return '';
-    }
-
-    $lines = [];
-    $prev_till_date = null;
-
-    foreach ($terms as $idx => $term) {
-        $value = $term['value'] ?? 0;
-        $type = $term['type'] ?? 'Percent';
-        $tillDate = $term['till_date'] ?? '';
-        $is_last = ($idx === count($terms) - 1);
-
-        if ($value === 'FREE' || $value == 0) {
-            // Free cancellation tier
-            if (!empty($tillDate)) {
-                // "Free cancellation before [date]" / "Anulare gratuită până la [date]"
-                $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => fn_novoton_holidays_format_date($tillDate)]);
-            } else {
-                // "Free cancellation" / "Anulare gratuită"
-                $lines[] = __('novoton_holidays.cancel_free');
-            }
-            $prev_till_date = $tillDate;
-        } elseif ($is_last && $type === 'Percent' && (float)$value >= 100) {
-            // Final 100% tier = No Show
-            // "No show: 100% penalty" / "Neprezentare: penalizare 100%"
-            $lines[] = __('novoton_holidays.cancel_no_show');
-        } else {
-            // Middle tier: show date range from [prev_tillDate + 1 day] to [current_tillDate]
-            $penalty_str = '';
-            if ($type === 'Over Nights' || $type === 'Overnights') {
-                $nights = (int)$value;
-                // "X night(s) penalty" / "penalizare X noapte/nopți"
-                $penalty_str = __('novoton_holidays.cancel_nights_penalty', ['[nights]' => $nights]);
-            } else {
-                $percent = number_format((float)$value, 0);
-                // "X% penalty" / "penalizare X%"
-                $penalty_str = __('novoton_holidays.cancel_percent_penalty', ['[percent]' => $percent]);
-            }
-
-            if (!empty($prev_till_date) && !empty($tillDate)) {
-                $from_str = fn_novoton_holidays_format_date(strtotime($prev_till_date . ' +1 day'));
-                $to_str = fn_novoton_holidays_format_date($tillDate);
-                // "Between [from] - [to]: [penalty]" / "Între [from] - [to]: [penalty]"
-                $lines[] = __('novoton_holidays.cancel_between_dates', [
-                    '[from]' => $from_str,
-                    '[to]' => $to_str,
-                    '[penalty]' => $penalty_str
-                ]);
-            } elseif (!empty($tillDate)) {
-                // "Until [date]: [penalty]" / "Până la [date]: [penalty]"
-                $lines[] = __('novoton_holidays.cancel_until_date', [
-                    '[date]' => fn_novoton_holidays_format_date($tillDate),
-                    '[penalty]' => $penalty_str
-                ]);
-            } else {
-                $lines[] = ucfirst($penalty_str);
-            }
-
-            $prev_till_date = $tillDate;
-        }
-    }
-
-    return implode("\n", $lines);
+    return \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::formatCancellationTerms((string) $xml_string, $check_in);
 }
 
 /**

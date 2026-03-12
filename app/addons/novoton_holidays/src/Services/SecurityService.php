@@ -503,10 +503,6 @@ class SecurityService implements SecurityServiceInterface
         
         if ($data) {
             $decoded = json_decode($data, true);
-            // Backward compatibility: try unserialize for legacy entries
-            if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
-                $decoded = unserialize($data, ['allowed_classes' => false]);
-            }
             return is_array($decoded) ? $decoded : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
         }
         

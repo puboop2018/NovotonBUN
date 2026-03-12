@@ -147,7 +147,9 @@ class Container
         return $this->resolve('bookingService', fn() => new BookingService(
             $this->guestDataService(),
             $this->roomPriceService(),
-            $this->bookingRepository()
+            $this->bookingRepository(),
+            $this->novotonApi(),
+            $this->hotelRepository()
         ));
     }
 
@@ -191,6 +193,11 @@ class Container
     public function dateHelper(): DateHelper
     {
         return $this->resolve('dateHelper', fn() => new DateHelper());
+    }
+
+    public function configProvider(): ConfigProvider
+    {
+        return $this->resolve('configProvider', fn() => ConfigProvider::instance());
     }
 
     public function cronService(): CronServiceInterface

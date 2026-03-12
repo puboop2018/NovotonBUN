@@ -1,0 +1,339 @@
+<?php
+declare(strict_types=1);
+/**
+ * Novoton Holidays - Terms Formatter
+ *
+ * OOP replacement for the procedural fn_novoton_holidays_format_payment_terms()
+ * and fn_novoton_holidays_format_cancellation_terms() functions.
+ *
+ * Parses Novoton API XML terms and formats them for display.
+ *
+ * @package NovotonHolidays
+ * @since 3.6.0
+ */
+
+namespace Tygh\Addons\NovotonHolidays\Services;
+
+use Tygh\Registry;
+
+class TermsFormatter
+{
+    /**
+     * Format payment terms XML for display.
+     *
+     * @param string $xmlString Raw XML string from Novoton API
+     * @return string Formatted payment terms (newline-separated)
+     */
+    public static function formatPaymentTerms(string $xmlString): string
+    {
+        $terms = self::parsePaymentTerms($xmlString);
+
+        if (empty($terms)) {
+            return '';
+        }
+
+        $lines = [];
+
+        foreach ($terms as $term) {
+            $percent = isset($term['percent']) ? number_format($term['percent'], 0) : '0';
+            $date = $term['date'] ?? '';
+
+            if (!empty($date)) {
+                $formattedDate = self::formatDate($date);
+                $lines[] = __('novoton_holidays.payment_percent_until', [
+                    '[percent]' => $percent,
+                    '[date]' => $formattedDate,
+                ]);
+            } elseif (!empty($term['is_on_booking'])) {
+                $lines[] = __('novoton_holidays.payment_percent_on_booking', ['[percent]' => $percent]);
+            } else {
+                $lines[] = "{$percent}%";
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Format cancellation terms XML for display.
+     *
+     * @param string $xmlString Raw XML string from Novoton API
+     * @param string $checkIn   Check-in date for relative calculations
+     * @return string Formatted cancellation terms (newline-separated)
+     */
+    public static function formatCancellationTerms(string $xmlString, string $checkIn = ''): string
+    {
+        $terms = self::parseCancellationTerms($xmlString, $checkIn);
+
+        if (empty($terms)) {
+            return '';
+        }
+
+        $lines = [];
+        $prevTillDate = null;
+
+        foreach ($terms as $idx => $term) {
+            $value = $term['value'] ?? 0;
+            $type = $term['type'] ?? 'Percent';
+            $tillDate = $term['till_date'] ?? '';
+            $isLast = ($idx === count($terms) - 1);
+
+            if ($value === 'FREE' || $value == 0) {
+                if (!empty($tillDate)) {
+                    $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => self::formatDate($tillDate)]);
+                } else {
+                    $lines[] = __('novoton_holidays.cancel_free');
+                }
+                $prevTillDate = $tillDate;
+            } elseif ($isLast && $type === 'Percent' && (float) $value >= 100) {
+                $lines[] = __('novoton_holidays.cancel_no_show');
+            } else {
+                $penaltyStr = '';
+                if ($type === 'Over Nights' || $type === 'Overnights') {
+                    $nights = (int) $value;
+                    $penaltyStr = __('novoton_holidays.cancel_nights_penalty', ['[nights]' => $nights]);
+                } else {
+                    $percent = number_format((float) $value, 0);
+                    $penaltyStr = __('novoton_holidays.cancel_percent_penalty', ['[percent]' => $percent]);
+                }
+
+                if (!empty($prevTillDate) && !empty($tillDate)) {
+                    $fromStr = self::formatDate(strtotime($prevTillDate . ' +1 day'));
+                    $toStr = self::formatDate($tillDate);
+                    $lines[] = __('novoton_holidays.cancel_between_dates', [
+                        '[from]' => $fromStr,
+                        '[to]' => $toStr,
+                        '[penalty]' => $penaltyStr,
+                    ]);
+                } elseif (!empty($tillDate)) {
+                    $lines[] = __('novoton_holidays.cancel_until_date', [
+                        '[date]' => self::formatDate($tillDate),
+                        '[penalty]' => $penaltyStr,
+                    ]);
+                } else {
+                    $lines[] = ucfirst($penaltyStr);
+                }
+
+                $prevTillDate = $tillDate;
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Format a date using CS-Cart's configured date format.
+     *
+     * @param string|int $date Date string or timestamp
+     * @return string Formatted date
+     */
+    public static function formatDate($date): string
+    {
+        if (empty($date)) {
+            return '';
+        }
+
+        $timestamp = is_numeric($date) ? (int) $date : strtotime((string) $date);
+        if (!$timestamp) {
+            return (string) $date;
+        }
+
+        $dateFormat = Registry::get('settings.Appearance.date_format');
+        if (empty($dateFormat)) {
+            $dateFormat = '%d.%m.%Y';
+        }
+
+        $phpFormat = str_replace(
+            ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a'],
+            ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D'],
+            $dateFormat
+        );
+
+        return date($phpFormat, $timestamp);
+    }
+
+    /**
+     * Parse payment terms from XML string.
+     *
+     * @param string $xmlString XML terms string
+     * @return array Parsed terms data
+     */
+    public static function parsePaymentTerms(string $xmlString): array
+    {
+        if (empty($xmlString)) {
+            return [];
+        }
+
+        $terms = [];
+
+        try {
+            $xml = self::parseXmlString($xmlString);
+            if ($xml === null) {
+                return [];
+            }
+
+            $percentRules = $xml->xpath('//Percent') ?: [];
+
+            if (!empty($percentRules)) {
+                foreach ($percentRules as $rule) {
+                    $percent = (int) round((float) (string) $rule);
+                    $tillDate = (string) ($rule['tillDate'] ?? $rule['TillDate'] ?? '');
+
+                    if ($percent > 0) {
+                        $terms[] = [
+                            'percent' => $percent,
+                            'date' => $tillDate,
+                            'date_formatted' => !empty($tillDate) ? self::formatDate($tillDate) : '',
+                            'is_on_booking' => empty($tillDate),
+                        ];
+                    }
+                }
+            } else {
+                $paymentRules = $xml->xpath('//PaymentRule') ?: $xml->xpath('//paymentRule') ?: [];
+
+                foreach ($paymentRules as $rule) {
+                    $rawDate = (string) ($rule['DateTo'] ?? $rule['tillDate'] ?? $rule['to'] ?? '');
+                    $term = [
+                        'percent' => (int) round((float) ($rule['PerCent'] ?? $rule['percent'] ?? (string) $rule ?? 0)),
+                        'date' => $rawDate,
+                        'date_formatted' => !empty($rawDate) ? self::formatDate($rawDate) : '',
+                        'is_on_booking' => false,
+                    ];
+
+                    if ($term['percent'] > 0) {
+                        $terms[] = $term;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            fn_log_event('general', 'runtime', ['message' => 'Novoton: payment terms parse error: ' . $e->getMessage()]);
+        }
+
+        return $terms;
+    }
+
+    /**
+     * Parse cancellation terms from XML string.
+     *
+     * @param string $xmlString XML terms string
+     * @param string $checkIn   Check-in date for relative calculations
+     * @return array Parsed cancellation terms
+     */
+    public static function parseCancellationTerms(string $xmlString, string $checkIn = ''): array
+    {
+        if (empty($xmlString)) {
+            return [];
+        }
+
+        $terms = [];
+
+        try {
+            $xml = self::parseXmlString($xmlString);
+            if ($xml === null) {
+                return [];
+            }
+
+            $penaltyRules = $xml->xpath('//Penalty') ?: [];
+
+            if (!empty($penaltyRules)) {
+                $checkInTs = !empty($checkIn) ? strtotime($checkIn) : 0;
+
+                foreach ($penaltyRules as $rule) {
+                    $value = (float) (string) $rule;
+                    $tillDate = (string) ($rule['tillDate'] ?? $rule['TillDate'] ?? '');
+                    $type = (string) ($rule['Type'] ?? $rule['type'] ?? 'Percent');
+
+                    $daysBefore = 0;
+                    if (!empty($tillDate) && $checkInTs) {
+                        $tillTs = strtotime($tillDate);
+                        if ($tillTs && $checkInTs) {
+                            $daysBefore = max(0, ($checkInTs - $tillTs) / 86400);
+                        }
+                    }
+
+                    $term = [
+                        'value' => $value,
+                        'type' => $type,
+                        'till_date' => $tillDate,
+                        'days_before' => (int) $daysBefore,
+                        'is_penalty' => ($value > 0),
+                    ];
+
+                    if ($value === 0 || $value === 0.0) {
+                        $term['value'] = 'FREE';
+                        $term['is_penalty'] = false;
+                    }
+
+                    $terms[] = $term;
+                }
+
+                usort($terms, function ($a, $b) {
+                    return strcmp($a['till_date'], $b['till_date']);
+                });
+            } else {
+                $cancelRules = $xml->xpath('//CancelRule') ?: $xml->xpath('//cancelRule') ?: [];
+
+                foreach ($cancelRules as $rule) {
+                    $term = [
+                        'days_before' => (int) ($rule['DaysBefore'] ?? $rule['daysBefore'] ?? $rule['Days'] ?? 0),
+                        'value' => (float) ($rule['PerCent'] ?? $rule['percent'] ?? $rule['Penalty'] ?? 0),
+                        'type' => (string) ($rule['Type'] ?? $rule['type'] ?? 'Percent'),
+                        'is_penalty' => true,
+                    ];
+
+                    if (!empty($checkIn) && $term['days_before'] > 0) {
+                        $checkInTs = strtotime($checkIn);
+                        if ($checkInTs) {
+                            $term['till_date'] = date('Y-m-d', strtotime("-{$term['days_before']} days", $checkInTs));
+                        }
+                    }
+
+                    if ($term['days_before'] > 0 || $term['value'] > 0) {
+                        $terms[] = $term;
+                    }
+                }
+
+                usort($terms, function ($a, $b) {
+                    return $b['days_before'] - $a['days_before'];
+                });
+            }
+        } catch (\Exception $e) {
+            fn_log_event('general', 'runtime', ['message' => 'Novoton: cancellation terms parse error: ' . $e->getMessage()]);
+        }
+
+        return $terms;
+    }
+
+    /**
+     * Parse an XML string, handling CDATA and wrapping in root if needed.
+     *
+     * @param string $xmlString Raw XML
+     * @return \SimpleXMLElement|null
+     */
+    private static function parseXmlString(string $xmlString): ?\SimpleXMLElement
+    {
+        if (empty($xmlString)) {
+            return null;
+        }
+
+        $xmlString = trim($xmlString);
+
+        if (strpos($xmlString, '<') !== 0) {
+            if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xmlString, $matches)) {
+                $xmlString = $matches[1];
+            }
+        }
+
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($xmlString, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+
+        if ($xml === false) {
+            libxml_clear_errors();
+            $xml = simplexml_load_string('<root>' . $xmlString . '</root>', 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+        }
+
+        libxml_clear_errors();
+
+        return $xml ?: null;
+    }
+}

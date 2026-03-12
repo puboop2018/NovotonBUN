@@ -98,8 +98,8 @@ function fn_novoton_holidays_get_feature_variants(): array
 }
 
 // CS-Cart auto-discovers variants functions by name: fn_settings_variants_addons_{addon}_{setting_id}
-function fn_settings_variants_addons_novoton_holidays_feature_id_star_rating(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_board(): array { return fn_novoton_holidays_get_feature_variants(); }
+function fn_settings_variants_addons_novoton_holidays_feature_id_property_rating(): array { return fn_novoton_holidays_get_feature_variants(); }
+function fn_settings_variants_addons_novoton_holidays_feature_id_meals(): array { return fn_novoton_holidays_get_feature_variants(); }
 function fn_settings_variants_addons_novoton_holidays_feature_id_hotel_facility(): array { return fn_novoton_holidays_get_feature_variants(); }
 function fn_settings_variants_addons_novoton_holidays_feature_id_room_facility(): array { return fn_novoton_holidays_get_feature_variants(); }
 function fn_settings_variants_addons_novoton_holidays_feature_id_resort(): array { return fn_novoton_holidays_get_feature_variants(); }
@@ -156,7 +156,7 @@ function fn_settings_variants_addons_novoton_holidays_feature_id_beach_access():
 //   fn_novoton_holidays_sync_hotel_facilities()
 //   fn_novoton_holidays_get_hotel_facilities()
 //   fn_novoton_holidays_get_resorts_for_settings()
-//   fn_novoton_holidays_assign_star_rating_feature()
+//   fn_novoton_holidays_assign_property_rating_feature()
 //   fn_novoton_holidays_add_product_image()
 //
 // BOOKINGS (functions/bookings.php):

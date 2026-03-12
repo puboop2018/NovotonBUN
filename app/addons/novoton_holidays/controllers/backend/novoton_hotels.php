@@ -162,7 +162,7 @@ if ($mode == 'add_hotels_as_products') {
                         // Set star rating feature
                         $star_rating = (int)($hotel['hotel_type'] ?? '');
                         if ($star_rating > 0) {
-                            fn_novoton_holidays_assign_star_rating_feature($product_id, $star_rating);
+                            fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating);
                         }
                         
                         $added++;

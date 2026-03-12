@@ -14,6 +14,8 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
 
 class SearchService implements SearchServiceInterface
 {
@@ -393,7 +395,7 @@ class SearchService implements SearchServiceInterface
         
         return [
             'room_id' => $room_id,
-            'room_name' => fn_novoton_holidays_format_room_type($room_id),
+            'room_name' => RoomType::formatRoomLabel($room_id),
             'board_id' => (string)($room->IdBoard ?? $room->BoardId ?? 'BB'),
             'board_name' => $this->getBoardName((string)($room->IdBoard ?? $room->BoardId ?? 'BB')),
             'price' => $price_with_commission,
@@ -588,9 +590,9 @@ class SearchService implements SearchServiceInterface
                     'room'                   => null,
                     'room_id'                => $roomId,
                     'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                    'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                    'room_type_display'      => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
                     'board_id'               => $boardId,
-                    'board_name'             => fn_novoton_holidays_format_board_name($boardId),
+                    'board_name'             => BoardType::toDisplayName($boardId),
                     'package_name'           => rawurldecode(self::xpathValue($packageNames, $i)),
                     'price_data'             => null,
                     'nights'                 => $nights,
@@ -644,9 +646,9 @@ class SearchService implements SearchServiceInterface
                 'room'                   => null,
                 'room_id'                => $roomId,
                 'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                'room_type_display'      => fn_novoton_holidays_format_room_type($roomId, $roomTypeMap[$roomId] ?? ''),
+                'room_type_display'      => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
                 'board_id'               => $boardId,
-                'board_name'             => fn_novoton_holidays_format_board_name($boardId),
+                'board_name'             => BoardType::toDisplayName($boardId),
                 'package_name'           => rawurldecode($packageName),
                 'price_data'             => null, // SimpleXMLElement not serializable for cache
                 'nights'                 => $nights,

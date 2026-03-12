@@ -130,7 +130,7 @@ class FeatureMappingRepository implements FeatureMappingRepositoryInterface
         $csCartFeatureType = $this->getCsCartFeatureType($featureType, $provider);
         if ($csCartFeatureType === null) {
             $csCartFeatureType = in_array($featureType, [
-                Constants::FEATURE_TYPE_BOARD,
+                Constants::FEATURE_TYPE_MEALS,
                 Constants::FEATURE_TYPE_HOTEL_FACILITY,
                 Constants::FEATURE_TYPE_ROOM_FACILITY,
             ], true) ? 'M' : 'S';

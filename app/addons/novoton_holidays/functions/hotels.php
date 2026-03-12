@@ -812,7 +812,7 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
  * @param int $feature_id Feature ID for stars
  * @return bool Success
  */
-function fn_novoton_holidays_assign_star_rating_feature($product_id, $star_rating, $feature_id = 4): bool
+function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating, $feature_id = 4): bool
 {
     if ($star_rating < 1 || $star_rating > 5) {
         return false;
@@ -828,7 +828,7 @@ function fn_novoton_holidays_assign_star_rating_feature($product_id, $star_ratin
         if ($code !== null) {
             $result = $featureMapper->assignFeatureToProduct(
                 (int) $product_id,
-                \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
                 $code
             );
             if ($result) {
@@ -1050,7 +1050,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
     };
 
     // ── Star Ratings (1-5) ──
-    $starFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING);
+    $starFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING);
     if ($starFeatureId > 0) {
         $csType = $getActualFeatureType($starFeatureId, 'S');
         $starNames = [
@@ -1063,7 +1063,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         foreach ($starNames as $code => $names) {
             $repo->save([
                 'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_STAR_RATING,
+                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
                 'provider_code' => $code,
                 'cs_cart_feature_id' => $starFeatureId,
                 'cs_cart_feature_type' => $csType,
@@ -1080,7 +1080,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
     }
 
     // ── Board Types ──
-    $boardFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD);
+    $boardFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS);
     if ($boardFeatureId > 0) {
         $csType = $getActualFeatureType($boardFeatureId, 'M');
         $boards = [
@@ -1097,7 +1097,7 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
         foreach ($boards as $code => $data) {
             $repo->save([
                 'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BOARD,
+                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS,
                 'provider_code' => $code,
                 'cs_cart_feature_id' => $boardFeatureId,
                 'cs_cart_feature_type' => $csType,
