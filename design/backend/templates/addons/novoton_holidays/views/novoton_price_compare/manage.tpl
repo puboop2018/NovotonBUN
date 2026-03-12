@@ -94,13 +94,9 @@
 
         <div class="form-group form-actions">
             <button type="submit" class="btn-compare">Compare Prices</button>
-            <button type="button" class="btn-compare btn-compare-verify" id="btn-verify-seasons"
-                    title="Shows which season period (Price1, Price2, ...) applies to each night of the stay. Useful for diagnosing Base Price = 0 issues.">
-                Verify Season-Price Mapping
-            </button>
             <small style="display: block; color: #666; margin-top: 6px;">
-                <strong>Compare Prices</strong> — calculates total price from priceinfo and compares with room_price API.<br>
-                <strong>Verify Season-Price Mapping</strong> — maps each night to its season period (Price1-20) to diagnose which price columns are used.
+                Calculates total price from priceinfo and compares with room_price API.<br>
+                Includes season date ranges, raw season prices (Price1-20), and handling-fee correlation diagnostics.
             </small>
         </div>
     </form>
@@ -115,10 +111,6 @@ document.addEventListener('DOMContentLoaded', function() {
             loadPackages(this.value);
             loadRooms(this.value);
         });
-    }
-    var verifyBtn = document.getElementById('btn-verify-seasons');
-    if (verifyBtn) {
-        verifyBtn.addEventListener('click', verifySeasons);
     }
 });
 
@@ -209,33 +201,6 @@ function loadRooms(hotelId) {
 
 function onRoomSelectChange(sel) {
     // If user picks "custom..." option we could add, but for now just let them use the select
-}
-
-function verifySeasons() {
-    var hotelId = document.getElementById('hotel_id').value;
-    var packageName = document.getElementById('package_name').value;
-    // Get room_id from whichever field is active
-    var roomSelect = document.getElementById('room_id_select');
-    var roomText = document.getElementById('room_id_text');
-    var roomId = roomSelect.style.display !== 'none' ? roomSelect.value : roomText.value;
-    var boardId = document.getElementById('board_id').value;
-    var checkIn = document.getElementById('check_in').value;
-    var nights = document.getElementById('nights').value;
-
-    if (!hotelId || !packageName) {
-        alert('Please select a hotel and package first.');
-        return;
-    }
-
-    var url = '{""|fn_url}' + '&dispatch=novoton_price_compare.verify' +
-              '&hotel_id=' + encodeURIComponent(hotelId) +
-              '&package_name=' + encodeURIComponent(packageName) +
-              '&room_id=' + encodeURIComponent(roomId) +
-              '&board_id=' + encodeURIComponent(boardId) +
-              '&check_in=' + encodeURIComponent(checkIn) +
-              '&nights=' + encodeURIComponent(nights);
-
-    window.location.href = url;
 }
 </script>
 

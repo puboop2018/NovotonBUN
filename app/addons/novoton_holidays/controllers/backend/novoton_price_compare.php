@@ -246,6 +246,25 @@ if ($mode == 'compare') {
     } else {
         echo '<p class="zero-value">No season mapping available.</p>';
     }
+
+    // Season Date Ranges (migrated from Verify Season-Price Mapping)
+    $verifyMapping = $calculator->verifySeasonPriceMapping($check_in, $nights);
+
+    if (!empty($verifyMapping['seasons_raw'])) {
+        echo '<h3>Season Date Ranges</h3>';
+        echo '<table>';
+        echo '<tr><th>Season #</th><th>From Date</th><th>To Date</th><th>Price Column</th></tr>';
+        foreach ($verifyMapping['seasons_raw'] as $season) {
+            $seasonNum = $season['Season'] ?? $season['IdSeason'] ?? '?';
+            echo '<tr>';
+            echo '<td><span class="badge badge-season season-' . $seasonNum . '">Season ' . $seasonNum . '</span></td>';
+            echo '<td>' . ($season['FromDate'] ?? '-') . '</td>';
+            echo '<td>' . ($season['ToDate'] ?? '-') . '</td>';
+            echo '<td><strong>Price' . $seasonNum . '</strong></td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    }
     echo '</div>';
 
     // =========================================================================
@@ -332,6 +351,47 @@ if ($mode == 'compare') {
             }
             echo '</table>';
         }
+
+        // Raw Season Prices (migrated from Verify Season-Price Mapping)
+        $samplePrices = $calculator->getSamplePrices($room_id, $board_id);
+        if (!empty($samplePrices)) {
+            echo '<h3>Raw Season Prices (Price1-20) for this Room/Board</h3>';
+            echo '<p style="font-size:0.9em;color:#666;">Raw price values from season_price data. Percentages (e.g., "80%") are calculated from the Base code row.</p>';
+
+            $usedPriceCols = [];
+            foreach ($samplePrices as $sample) {
+                for ($i = 1; $i <= 20; $i++) {
+                    if (isset($sample['Price' . $i])) {
+                        $usedPriceCols[$i] = true;
+                    }
+                }
+            }
+            ksort($usedPriceCols);
+
+            echo '<div style="overflow-x:auto;">';
+            echo '<table>';
+            echo '<tr><th>IdAge</th><th>IdAcc</th><th>Code</th><th>Base</th><th>RoomPrice</th>';
+            foreach (array_keys($usedPriceCols) as $col) {
+                echo '<th style="background:#fffde7;"><strong>Price' . $col . '</strong></th>';
+            }
+            echo '</tr>';
+
+            foreach ($samplePrices as $sample) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($sample['IdAge']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['IdAcc']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Code']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['Base']) . '</td>';
+                echo '<td>' . htmlspecialchars($sample['RoomPrice']) . '</td>';
+                foreach (array_keys($usedPriceCols) as $col) {
+                    $val = $sample['Price' . $col] ?? '-';
+                    echo '<td style="background:#fffde7;">' . htmlspecialchars($val) . '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</table>';
+            echo '</div>';
+        }
     } else {
         // Fallback: Per-night breakdown (legacy view)
         if (!empty($byNight)) {
@@ -372,7 +432,7 @@ if ($mode == 'compare') {
     if ($basePriceVal == 0) {
         echo '<div style="background:#fff3cd;color:#856404;padding:10px;border-radius:4px;margin-top:8px;">';
         echo '<strong>Base Price is 0.</strong> This usually means no matching season_price rows were found for the selected room/board/occupancy combination. ';
-        echo 'Use the <strong>Verify Season-Price Mapping</strong> button to check which price columns map to which dates, or enable <strong>Debug</strong> to see detailed matching info.';
+        echo 'Check the <strong>Season Date Ranges</strong> and <strong>Raw Season Prices</strong> sections above to diagnose which price columns map to which dates, or enable <strong>Debug</strong> to see detailed matching info.';
         echo '</div>';
     }
     echo '</div>';
@@ -403,9 +463,27 @@ if ($mode == 'compare') {
     echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
     echo '</table>';
 
+    // Handling-Fee Age Type Correlation (migrated from Verify Season-Price Mapping)
+    $seasonAgeTypes = $calculator->collectSeasonPriceAgeTypes($room_id, $board_id);
+    if (!empty($seasonAgeTypes)) {
+        echo '<h3>Season-Price Age Types for this Room</h3>';
+        echo '<p style="font-size:0.9em;color:#666;">Handling-fee entries are only used when their IdAge matches an age type present in the season_price for this room.</p>';
+        echo '<p>';
+        foreach ($seasonAgeTypes as $ageType) {
+            echo '<span class="badge badge-season season-2">' . htmlspecialchars($ageType) . '</span> ';
+        }
+        echo '</p>';
+    }
+
     // Handling Fee breakdown (per-entry details)
     $feesDetail = $breakdown['fees_detail'] ?? [];
     $hfEntries = $feesDetail['handling_fee_entries'] ?? [];
+    $priceinfo_data = $calculator->getParser()->getPriceinfo() ?? [];
+    $rawHandlingFees = $priceinfo_data['handling_fee'] ?? [];
+    if (isset($rawHandlingFees['Price1']) || isset($rawHandlingFees['ToDays'])) {
+        $rawHandlingFees = [$rawHandlingFees];
+    }
+
     if (!empty($hfEntries)) {
         echo '<h3>Handling Fee Breakdown</h3>';
         echo '<p style="font-size:0.9em;color:#666;">Each entry from priceinfo handling_fee. '
@@ -428,6 +506,43 @@ if ($mode == 'compare') {
             echo '<td>' . ($hfe['count'] ?? 0) . '</td>';
             echo '<td>' . number_format($subtotal, 2) . '</td>';
             echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['count_method'] ?? '') . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    } elseif (!empty($rawHandlingFees) && !empty($seasonAgeTypes)) {
+        // No calculated entries but raw data exists — show correlation table (from Verify)
+        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
+        echo '<h3>Handling-Fee Entries &amp; Correlation</h3>';
+        echo '<table>';
+        echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
+        foreach ($rawHandlingFees as $idx => $fee) {
+            $feeIdAge = trim(preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
+            $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
+            $feeUpper = strtoupper($feeKey);
+
+            $correlates = empty($seasonAgeSet);
+            if (!empty($seasonAgeSet)) {
+                foreach ($seasonAgeSet as $spAge) {
+                    if (\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
+                        $correlates = true;
+                        break;
+                    }
+                }
+            }
+
+            $statusStyle = $correlates
+                ? 'background: #c8e6c9; color: #2e7d32; font-weight: bold;'
+                : 'background: #ffcdd2; color: #c62828; font-weight: bold;';
+            $statusText = $correlates ? 'YES - included' : 'NO - skipped';
+
+            echo '<tr' . (!$correlates ? ' style="opacity:0.6;"' : '') . '>';
+            echo '<td>' . $idx . '</td>';
+            echo '<td>' . htmlspecialchars($feeIdAge) . '</td>';
+            echo '<td>' . htmlspecialchars($fee['FromDate'] ?? '-') . '</td>';
+            echo '<td>' . htmlspecialchars($fee['ToDate'] ?? '-') . '</td>';
+            echo '<td>' . htmlspecialchars($fee['Price1'] ?? '-') . '</td>';
+            echo '<td>' . htmlspecialchars($fee['Price2'] ?? '-') . '</td>';
+            echo '<td style="' . $statusStyle . '">' . $statusText . '</td>';
             echo '</tr>';
         }
         echo '</table>';
@@ -822,229 +937,22 @@ if ($mode == 'compare') {
         echo '</div>';
     }
 
-    echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
-    echo '</div></body></html>';
-    exit;
-}
-
-/**
- * Mode: verify
- * Verify season-to-price correlation
- */
-if ($mode == 'verify') {
-    header('Content-Type: text/html; charset=utf-8');
-
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $package_name = $_REQUEST['package_name'] ?? '';
-    $room_id = $_REQUEST['room_id'] ?? '';
-    $board_id = $_REQUEST['board_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y') . '-07-01';
-    $nights = (int)($_REQUEST['nights'] ?? 7);
-
-    echo '<!DOCTYPE html><html><head><title>Season-Price Verification</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-        h1 { color: #003580; margin-bottom: 5px; }
-        h2 { color: #555; margin-top: 25px; border-bottom: 2px solid #003580; padding-bottom: 5px; }
-        .params { background: #f0f0f0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
-        .params strong { display: inline-block; width: 120px; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #003580; color: white; }
-        tr:nth-child(even) { background: #f9f9f9; }
-        .highlight { background: #fff3cd !important; font-weight: bold; }
-        .info-box { background: #e3f2fd; padding: 15px; border-radius: 6px; margin: 15px 0; }
-        .btn { display: inline-block; padding: 10px 20px; background: #003580; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
-        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 11px; }
-        .season-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin: 2px; }
-        .season-1 { background: #4caf50; color: white; }
-        .season-2 { background: #2196f3; color: white; }
-        .season-3 { background: #ff9800; color: white; }
-        .season-4 { background: #e91e63; color: white; }
-        .season-5 { background: #9c27b0; color: white; }
-    </style></head><body><div class="container">';
-
-    echo '<h1>Season-Price Verification</h1>';
-
-    echo '<div class="params">';
-    echo "<strong>Hotel ID:</strong> " . htmlspecialchars($hotel_id) . "<br>";
-    echo "<strong>Package:</strong> " . htmlspecialchars($package_name) . "<br>";
-    echo "<strong>Room:</strong> " . htmlspecialchars(rawurldecode($room_id)) . "<br>";
-    echo "<strong>Board:</strong> " . htmlspecialchars($board_id) . "<br>";
-    echo "<strong>Check-in:</strong> " . htmlspecialchars($check_in) . "<br>";
-    echo "<strong>Nights:</strong> " . htmlspecialchars((string)$nights) . "<br>";
-    echo '</div>';
-
-    // Load priceinfo
-    $priceinfo_json = db_get_field(
-        "SELECT priceinfo_data FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_name = ?s",
-        $hotel_id,
-        $package_name
-    );
-
-    if (empty($priceinfo_json)) {
-        echo '<div class="info-box" style="background: #ffebee;">No priceinfo data found for this package.</div>';
-    } else {
-        $calculator = new PriceInfoCalculation();
-
-        // Set priceinfo directly on the parser for verification methods
-        $calculator->getParser()->setPriceinfo(json_decode($priceinfo_json, true));
-
-        // 1. Show season mapping
-        echo '<h2>1. Season Mapping for Each Night</h2>';
-        echo '<div class="info-box">This shows which Price column (Price1, Price2, etc.) is used for each night based on the season date ranges.</div>';
-
-        $mapping = $calculator->verifySeasonPriceMapping($check_in, $nights);
-
-        echo '<p><strong>Total seasons found:</strong> ' . $mapping['total_seasons_found'] . '</p>';
-
-        if (!empty($mapping['seasons_raw'])) {
-            echo '<h3>Season Date Ranges</h3>';
-            echo '<table>';
-            echo '<tr><th>Season #</th><th>From Date</th><th>To Date</th><th>Price Column</th></tr>';
-            foreach ($mapping['seasons_raw'] as $season) {
-                $seasonNum = $season['Season'] ?? $season['IdSeason'] ?? '?';
-                echo '<tr>';
-                echo '<td><span class="season-badge season-' . $seasonNum . '">Season ' . $seasonNum . '</span></td>';
-                echo '<td>' . ($season['FromDate'] ?? '-') . '</td>';
-                echo '<td>' . ($season['ToDate'] ?? '-') . '</td>';
-                echo '<td><strong>Price' . $seasonNum . '</strong></td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-        }
-
-        echo '<h3>Night-by-Night Mapping</h3>';
-        echo '<table>';
-        echo '<tr><th>Night #</th><th>Date</th><th>Season</th><th>Price Column</th><th>Date Range</th></tr>';
-        foreach ($mapping['night_mapping'] as $night) {
-            $seasonClass = 'season-' . $night['season_num'];
-            echo '<tr>';
-            echo '<td>' . $night['night'] . '</td>';
-            echo '<td>' . $night['date'] . '</td>';
-            echo '<td><span class="season-badge ' . $seasonClass . '">Season ' . $night['season_num'] . '</span></td>';
-            echo '<td><strong>' . $night['price_key'] . '</strong></td>';
-            echo '<td>' . $night['matched_range'] . '</td>';
-            echo '</tr>';
-        }
-        echo '</table>';
-
-        // 2. Show sample prices
-        echo '<h2>2. Season Prices for Selected Room/Board</h2>';
-        echo '<div class="info-box">These are the raw price values from season_price data. Percentages (e.g., "80%") are calculated from the Base code row.</div>';
-
-        $samples = $calculator->getSamplePrices($room_id, $board_id);
-
-        if (empty($samples)) {
-            echo '<p><em>No prices found for the selected room/board combination.</em></p>';
-        } else {
-            // Find all used price columns
-            $usedPriceColumns = [];
-            foreach ($samples as $sample) {
-                for ($i = 1; $i <= 20; $i++) {
-                    if (isset($sample['Price' . $i])) {
-                        $usedPriceColumns[$i] = true;
-                    }
-                }
-            }
-            ksort($usedPriceColumns);
-
-            echo '<table>';
-            echo '<tr><th>IdAge</th><th>IdAcc</th><th>Code</th><th>Base</th><th>RoomPrice</th>';
-            foreach (array_keys($usedPriceColumns) as $col) {
-                echo '<th class="highlight">Price' . $col . '</th>';
-            }
-            echo '</tr>';
-
-            foreach ($samples as $sample) {
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars($sample['IdAge']) . '</td>';
-                echo '<td>' . htmlspecialchars($sample['IdAcc']) . '</td>';
-                echo '<td>' . htmlspecialchars($sample['Code']) . '</td>';
-                echo '<td>' . htmlspecialchars($sample['Base']) . '</td>';
-                echo '<td>' . htmlspecialchars($sample['RoomPrice']) . '</td>';
-                foreach (array_keys($usedPriceColumns) as $col) {
-                    $val = $sample['Price' . $col] ?? '-';
-                    echo '<td class="highlight">' . htmlspecialchars($val) . '</td>';
-                }
-                echo '</tr>';
-            }
-            echo '</table>';
-        }
-
-        // 3. Season-Price Age Types → Handling-Fee Correlation
-        echo '<h2>3. Handling-Fee Correlation with Season-Price</h2>';
-        echo '<div class="info-box">Handling-fee entries are only used when their IdAge matches an age type present in the season_price for this room. '
-           . 'For example, if season_price only defines "ADULT" (no "3 RD ADULT" / "4 TH ADULT"), then positional handling-fee entries are skipped.</div>';
-
-        $seasonAgeTypes = $calculator->collectSeasonPriceAgeTypes($room_id, $board_id);
-        echo '<h3>Season-Price Age Types for this Room</h3>';
-        if (empty($seasonAgeTypes)) {
-            echo '<p><em>No season_price age types found for this room/board.</em></p>';
-        } else {
-            echo '<p>';
-            foreach ($seasonAgeTypes as $ageType) {
-                echo '<span class="season-badge season-2">' . htmlspecialchars($ageType) . '</span> ';
-            }
-            echo '</p>';
-        }
-
-        // Show handling_fee entries and their correlation status
-        $priceinfo = json_decode($priceinfo_json, true);
-        $handlingFees = $priceinfo['handling_fee'] ?? [];
-        if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
-            $handlingFees = [$handlingFees];
-        }
-        $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
-
-        if (!empty($handlingFees)) {
-            echo '<h3>Handling-Fee Entries &amp; Correlation</h3>';
-            echo '<table>';
-            echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
-            foreach ($handlingFees as $idx => $fee) {
-                $feeIdAge = trim(preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
-                // Strip "BY x AD" suffix for correlation check (same as feeKey)
-                $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
-                $feeUpper = strtoupper($feeKey);
-
-                $correlates = empty($seasonAgeSet); // if no season types, allow all
-                if (!empty($seasonAgeSet)) {
-                    foreach ($seasonAgeSet as $spAge) {
-                        if (\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::matchAgeType($spAge, $feeUpper)) {
-                            $correlates = true;
-                            break;
-                        }
-                    }
-                }
-
-                $statusStyle = $correlates
-                    ? 'background: #c8e6c9; color: #2e7d32; font-weight: bold;'
-                    : 'background: #ffcdd2; color: #c62828; font-weight: bold;';
-                $statusText = $correlates ? 'YES - included' : 'NO - skipped';
-
-                echo '<tr' . (!$correlates ? ' style="opacity:0.6;"' : '') . '>';
-                echo '<td>' . $idx . '</td>';
-                echo '<td>' . htmlspecialchars($feeIdAge) . '</td>';
-                echo '<td>' . htmlspecialchars($fee['FromDate'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['ToDate'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['Price1'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['Price2'] ?? '-') . '</td>';
-                echo '<td style="' . $statusStyle . '">' . $statusText . '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-        }
-
-        // 4. Show raw priceinfo structure
-        echo '<h2>4. Raw Priceinfo Structure (seasons only)</h2>';
-        echo '<pre>' . htmlspecialchars(json_encode($priceinfo['seasons'] ?? [], JSON_PRETTY_PRINT)) . '</pre>';
+    // Raw seasons data (migrated from Verify Season-Price Mapping)
+    if ($show_debug && !empty($priceinfo_data['seasons'])) {
+        echo '<h3>Raw Seasons Structure</h3>';
+        echo '<div class="debug-section">';
+        echo '<pre>' . htmlspecialchars(json_encode($priceinfo_data['seasons'], JSON_PRETTY_PRINT)) . '</pre>';
+        echo '</div>';
     }
 
     echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
     echo '</div></body></html>';
     exit;
 }
+
+// Note: "Verify Season-Price Mapping" mode has been merged into the "compare" mode above.
+// Season date ranges, raw season prices (Price1-20), age type correlation, and raw seasons
+// JSON are now displayed as part of the Compare Prices output (Steps 3-5 and debug section).
 
 /**
  * Mode: get_packages (AJAX)
