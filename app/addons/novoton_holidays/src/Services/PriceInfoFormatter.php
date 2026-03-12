@@ -66,9 +66,15 @@ class PriceInfoFormatter
     }
 
     /**
-     * Match age type (with fuzzy matching)
+     * Match age type — exact matching only.
      *
-     * Handles comma/dot variation in age bands (2-11,99 vs 2-11.99)
+     * Compares case-insensitively with whitespace normalization.
+     * The only tolerance is comma/dot equivalence in age bands
+     * (2-11,99 == 2-11.99) since this is a serialization artifact.
+     *
+     * No fuzzy matching, no ordinal stripping. "1 ST CHD 2-11,99" and
+     * "2 ND CHD 2-11,99" are distinct types with different pricing
+     * percentages — they must never match each other.
      */
     public static function matchAgeType(string $rowAge, string $ageType): bool
     {
@@ -79,23 +85,12 @@ class PriceInfoFormatter
             return true;
         }
 
+        // Comma/dot normalization — the only tolerance.
+        // Age bands use comma in some locales (2-11,99) and dot in others (2-11.99).
         $rowAgeNorm = str_replace(',', '.', $rowAge);
         $ageTypeNorm = str_replace(',', '.', $ageType);
-        if (strcasecmp($rowAgeNorm, $ageTypeNorm) === 0) {
-            return true;
-        }
 
-        // Fallback: strip ordinal prefixes ("1 ST ", "2 ND ", "3 RD ", etc.)
-        // and compare the core age type.  This handles IdAge-mapped rows like
-        // "CHD 2-11.99" matching occupancy-generated types like "1 ST CHD 2-11,99".
-        $ordinalPattern = '/^\d+\s*(ST|ND|RD|TH)\s+/i';
-        $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
-        $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
-        if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
-            return true;
-        }
-
-        return false;
+        return strcasecmp($rowAgeNorm, $ageTypeNorm) === 0;
     }
 
     /**

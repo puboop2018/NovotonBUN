@@ -561,6 +561,10 @@
                 `alternatives_requested` tinyint(1) DEFAULT 0 COMMENT 'Whether alternatives were requested',
                 `last_status_check` timestamp NULL DEFAULT NULL COMMENT 'Last time status was polled',
                 `notes` text,
+                `terms_of_payment_raw` text COMMENT 'Raw payment terms from API',
+                `terms_of_cancellation_raw` text COMMENT 'Raw cancellation terms from API',
+                `terms_of_payment_formatted` text COMMENT 'Formatted payment terms for display',
+                `terms_of_cancellation_formatted` text COMMENT 'Formatted cancellation terms for display',
                 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`booking_id`),
@@ -579,6 +583,15 @@
                 KEY `idx_hotel_status` (`hotel_id`, `status`),
                 KEY `idx_item_id` (`item_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Booking records'
+        </item>
+
+        <!-- Migration: add terms columns to bookings table (for existing installations) -->
+        <item for="install">
+            ALTER TABLE `?:novoton_bookings`
+                ADD COLUMN IF NOT EXISTS `terms_of_payment_raw` text COMMENT 'Raw payment terms from API' AFTER `notes`,
+                ADD COLUMN IF NOT EXISTS `terms_of_cancellation_raw` text COMMENT 'Raw cancellation terms from API' AFTER `terms_of_payment_raw`,
+                ADD COLUMN IF NOT EXISTS `terms_of_payment_formatted` text COMMENT 'Formatted payment terms for display' AFTER `terms_of_cancellation_raw`,
+                ADD COLUMN IF NOT EXISTS `terms_of_cancellation_formatted` text COMMENT 'Formatted cancellation terms for display' AFTER `terms_of_payment_formatted`
         </item>
 
         <!-- Sync log table -->

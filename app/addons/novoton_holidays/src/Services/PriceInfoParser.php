@@ -309,9 +309,15 @@ class PriceInfoParser
             }
         }
 
+        // Sort children by age descending (oldest first) before assigning ordinals.
+        // The API uses ordinal-based child pricing (1 ST CHD = highest %, 2 ND CHD = lower %)
+        // and expects the oldest child to be the 1st child.
+        $sortedChildrenAges = $childrenAges;
+        rsort($sortedChildrenAges);
+
         // Place children
         $childOrdinalCounter = 0;
-        foreach ($childrenAges as $idx => $age) {
+        foreach ($sortedChildrenAges as $idx => $age) {
             $ageBand = $this->getAgeBand($age);
 
             $bandHasPricing = true;

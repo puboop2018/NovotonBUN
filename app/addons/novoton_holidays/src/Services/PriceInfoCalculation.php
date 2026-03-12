@@ -219,6 +219,8 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                 'base_price' => round($basePrice['total'], 2),
                 'base_per_night' => $basePrice['by_night'] ?? [],
                 'base_per_person' => $basePrice['by_person'] ?? [],
+                'base_per_person_per_night' => $basePrice['by_person_by_night'] ?? [],
+                'matched_rows' => $basePrice['matched_rows'] ?? [],
                 'fees' => [
                     'extras_daily' => round($fees['extras_daily'] ?? 0, 2),
                     'extras_single' => round($fees['extras_single'] ?? 0, 2),

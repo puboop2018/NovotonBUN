@@ -2,8 +2,8 @@
                     PRICEINFO CALCULATION ALGORITHM
 ================================================================================
 
-Document Version: 1.4
-Last Updated: 2026-03-10
+Document Version: 1.5
+Last Updated: 2026-03-12
 Repository: NovotonAddonRepoA
 
 ================================================================================
@@ -160,6 +160,11 @@ STEP 2: VALIDATE & BUILD OCCUPANCY
   separate pricing for positional adults (hasAdultExtraBedPricing).
   Otherwise, extra-bed adults remain as plain "ADULT" with "REGULAR"
   acc_type to match the generic adult pricing row.
+- Sort children by age DESCENDING (oldest first) before ordinal assignment.
+  The API uses ordinal-based child pricing where 1ST CHD gets the highest
+  percentage (e.g. 50%) and 2ND CHD gets a lower one (e.g. 25%).
+  Sorting ensures the oldest child is always the 1st child.
+  Example: children [2, 11] → sorted [11, 2] → 11yo=1ST CHD, 2yo=2ND CHD
 - Assign children to remaining regular beds, then extra beds
 - Each occupant marked with age_type (e.g., "1ST CHD 2-11,99", "ADULT")
 
@@ -283,12 +288,15 @@ For each night of stay:
     2. Get price column (Price1, Price2, etc.) from season
     3. For each person (adults + children + children_as_adults):
         a. Find matching season_price row via findSeasonPriceRow():
-           - Room matches
-           - Board matches
-           - IdAge matches person's age_type
+           - Room matches (exact, URL-encoding aware)
+           - Board matches (exact, case-insensitive)
+           - IdAge matches person's age_type (exact, comma/dot tolerant)
            - AccType matches person's acc_type (RB/EB)
            - Stay length within FromDays-ToDays range
            - IdStar matches hotel's star category (if row has IdStar)
+           When multiple rows match: picks the most specific (largest FromDays).
+           IMPORTANT: Age type matching is EXACT — "1 ST CHD 2-11,99" and
+           "2 ND CHD 2-11,99" are distinct types. No fuzzy/ordinal stripping.
         b. Resolve price via resolvePrice():
            - If numeric: use directly
            - If percentage string (e.g., "80%"):
@@ -691,6 +699,42 @@ Example — FAM 4+1 DELUXE with 4 adults:
   handling_fee "3 RD ADULT" → skipped (no season_price correlation)
   handling_fee "4 TH ADULT" → skipped (no season_price correlation)
 
+CHILD SORTING:
+--------------
+Children are sorted by age DESCENDING (oldest to youngest) before ordinal
+assignment. This is critical because ordinal-based child pricing uses
+different percentages (e.g. 1ST CHD=50%, 2ND CHD=25% of adult price).
+
+Example: FAM 3+2 room, children ages [2, 11]
+  → Sorted: [11, 2]
+  → 11yo → 1 ST CHD 2-11,99 → 50% of adult price
+  →  2yo → 2 ND CHD 2-11,99 → 25% of adult price
+
+Without sorting, if [2, 11] were processed as-is:
+  → 2yo → 1 ST CHD → 50% (wrong: younger child gets higher discount)
+  → 11yo → 2 ND CHD → 25% (wrong: older child gets lower discount)
+
+AGE TYPE MATCHING (matchAgeType):
+---------------------------------
+Exact matching only. No fuzzy matching, no ordinal stripping.
+
+"1 ST CHD 2-11,99" and "2 ND CHD 2-11,99" are distinct types with
+different pricing percentages — they must never match each other.
+
+Normalization applied:
+  - Case-insensitive comparison
+  - Whitespace normalized (multiple spaces → single space, trimmed)
+  - Comma/dot equivalence in age bands (2-11,99 == 2-11.99)
+    This is the ONLY tolerance — it's a serialization artifact,
+    not a semantic difference.
+
+Examples:
+  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11,99" → MATCH (exact)
+  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11.99" → MATCH (comma/dot)
+  "1 ST CHD 2-11,99" vs "2 ND CHD 2-11,99" → NO MATCH (different ordinal)
+  "CHD 2-11.99"      vs "1 ST CHD 2-11,99" → NO MATCH (different types)
+  "ADULT"            vs "3 RD ADULT"        → NO MATCH (different types)
+
 CHILD RECLASSIFICATION:
 -----------------------
 When a child's age band has NO pricing rows for the selected room/board:
@@ -918,7 +962,7 @@ PriceInfoCalculation (Orchestrator — src/Services/PriceInfoCalculation.php):
 | countOverlappingNights()      | PriceInfoFormatter  | Counts nights within date range        |
 | matchRoom()                   | PriceInfoFormatter  | Room ID matching (URL encoding aware)  |
 | matchBoard()                  | PriceInfoFormatter  | Board ID matching                      |
-| matchAgeType()                | PriceInfoFormatter  | Age type fuzzy matching                |
+| matchAgeType()                | PriceInfoFormatter  | Age type exact matching (comma/dot ok) |
 | matchAccType()                | PriceInfoFormatter  | Accommodation type matching            |
 | normalizeAccType()            | PriceInfoFormatter  | Acc type normalization                 |
 | toScalar()                    | PriceInfoFormatter  | Extracts scalar from array/object      |

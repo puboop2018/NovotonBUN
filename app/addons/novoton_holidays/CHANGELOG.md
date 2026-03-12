@@ -1,5 +1,51 @@
 # Novoton Holidays - Changelog
 
+## A94 — Fix: Child Pricing Discrepancy (Exact Age Matching + Descending Sort)
+
+### Bug Fix: 2nd+ child priced at wrong percentage (hotel 476 FAM 3+2 DELUXE)
+
+- **ROOT CAUSE:** `matchAgeType()` had a fuzzy ordinal-stripping fallback that treated "1 ST CHD 2-11,99" and "2 ND CHD 2-11,99" as equivalent — both matched any CHD row. The 2nd child got the 1st child's 50% rate instead of its own 25% rate.
+- **IMPACT:** Price calculated as 4,123.10 EUR instead of correct 3,867.50 EUR (+6.6% overcharge)
+
+### Fix 1: Exact age type matching (no fuzzy logic)
+
+- **REMOVED:** All fuzzy/ordinal-stripping logic from `matchAgeType()`. The API data (fAge field) always provides the full, specific age type — there is no real scenario with bare "CHD 2-11.99" without an ordinal prefix.
+- **REMOVED:** `matchAgeTypeScore()` — unnecessary with exact matching.
+- **SIMPLIFIED:** `matchAgeType()` now does exact comparison with only comma/dot normalization (serialization artifact tolerance). "1 ST CHD 2-11,99" ≠ "2 ND CHD 2-11,99" — they are distinct pricing types.
+- **SIMPLIFIED:** `findSeasonPriceRow()` back to simple FromDays selection (no scoring needed when matching is exact).
+
+### Fix 2: Children sorted by age descending
+
+- **FIXED:** `buildOccupancyStructure()` now sorts children by age descending (oldest first) before assigning ordinals. The API expects the oldest child = 1ST CHD (highest discount %).
+- **EXAMPLE:** Children [2, 11] → sorted [11, 2] → 11yo=1ST CHD (50%), 2yo=2ND CHD (25%)
+
+### Price Verification (hotel 476, FAM 3+2 DELUXE, 3 adults + 2 children ages 11,2)
+
+| Component | Before | After |
+|---|---|---|
+| 1st CHD (11 y.o.) | 50% × 1,136 = 568 | 50% × 1,136 = 568 |
+| 2nd CHD (2 y.o.) | **50%** × 1,136 = **568** | **25%** × 1,136 = **284** |
+| Base total | 4,544 | **4,260** |
+| After EB -10% | 4,089.60 | **3,834** |
+| + Handling fee | **4,123.10** | **3,867.50** ✓ |
+
+### Architecture Decision
+
+Fuzzy matching (ordinal stripping, scored selection) was rejected as over-engineering. The API data contract guarantees specific age types via the `fAge` field. Exact matching is simpler, correct, and impossible to break with edge cases.
+
+### Documentation
+
+- **UPDATED:** `Documentation/PriceInfo_calculation_algorithm.txt` v1.5 — child sorting rule, exact age type matching policy
+
+### Files Changed
+
+- `src/Services/PriceInfoFormatter.php` — matchAgeType rewritten as exact match, matchAgeTypeScore removed
+- `src/Services/PriceInfoCalculator.php` — findSeasonPriceRow simplified
+- `src/Services/PriceInfoParser.php` — rsort children in buildOccupancyStructure
+- `Documentation/PriceInfo_calculation_algorithm.txt` — v1.5 updates
+
+---
+
 ## A93 — Fix: Children Per-Person Price Calculation (Code/Base Percentage Rule)
 
 ### Bug Fix: Children price not calculated in base price breakdown
