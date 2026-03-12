@@ -66,62 +66,31 @@ class PriceInfoFormatter
     }
 
     /**
-     * Match age type (with fuzzy matching)
+     * Match age type — exact matching only.
      *
-     * Handles comma/dot variation in age bands (2-11,99 vs 2-11.99)
+     * Compares case-insensitively with whitespace normalization.
+     * The only tolerance is comma/dot equivalence in age bands
+     * (2-11,99 == 2-11.99) since this is a serialization artifact.
+     *
+     * No fuzzy matching, no ordinal stripping. "1 ST CHD 2-11,99" and
+     * "2 ND CHD 2-11,99" are distinct types with different pricing
+     * percentages — they must never match each other.
      */
     public static function matchAgeType(string $rowAge, string $ageType): bool
-    {
-        return self::matchAgeTypeScore($rowAge, $ageType) > 0;
-    }
-
-    /**
-     * Score an age-type match.  Higher score = more specific match.
-     *
-     * Returns:
-     *   3 — exact match (case-insensitive, whitespace-normalized)
-     *   2 — comma/dot-normalized match (2-11,99 == 2-11.99)
-     *   1 — ordinal-stripped fallback (row "CHD 2-11.99" matches "1 ST CHD 2-11,99")
-     *   0 — no match
-     *
-     * Used by findSeasonPriceRow() to prefer exact matches over fuzzy ones.
-     */
-    public static function matchAgeTypeScore(string $rowAge, string $ageType): int
     {
         $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
         $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
 
         if (strcasecmp($rowAge, $ageType) === 0) {
-            return 3;
+            return true;
         }
 
+        // Comma/dot normalization — the only tolerance.
+        // Age bands use comma in some locales (2-11,99) and dot in others (2-11.99).
         $rowAgeNorm = str_replace(',', '.', $rowAge);
         $ageTypeNorm = str_replace(',', '.', $ageType);
-        if (strcasecmp($rowAgeNorm, $ageTypeNorm) === 0) {
-            return 2;
-        }
 
-        // Fallback: strip ordinal prefixes ("1 ST ", "2 ND ", "3 RD ", etc.)
-        // and compare the core age type.  This handles IdAge-mapped rows like
-        // "CHD 2-11.99" matching occupancy-generated types like "1 ST CHD 2-11,99".
-        //
-        // IMPORTANT: Only strip ordinals when one side lacks them.  When BOTH
-        // sides carry ordinals (e.g. row="1 ST CHD 2-11,99" vs search="2 ND CHD 2-11,99"),
-        // the specific ordinals must match — stripping would incorrectly equate
-        // the 1st-child row (50%) with a 2nd-child search (25%).
-        $ordinalPattern = '/^\d+\s*(ST|ND|RD|TH)\s+/i';
-        $rowHasOrdinal = (bool) preg_match($ordinalPattern, $rowAgeNorm);
-        $ageTypeHasOrdinal = (bool) preg_match($ordinalPattern, $ageTypeNorm);
-
-        if (!$rowHasOrdinal || !$ageTypeHasOrdinal) {
-            $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
-            $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
-            if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
-                return 1;
-            }
-        }
-
-        return 0;
+        return strcasecmp($rowAgeNorm, $ageTypeNorm) === 0;
     }
 
     /**

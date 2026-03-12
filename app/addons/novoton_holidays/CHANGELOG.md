@@ -1,17 +1,18 @@
 # Novoton Holidays - Changelog
 
-## A94 — Fix: Child Pricing Discrepancy (Ordinal-Aware Age Matching + Descending Sort)
+## A94 — Fix: Child Pricing Discrepancy (Exact Age Matching + Descending Sort)
 
 ### Bug Fix: 2nd+ child priced at wrong percentage (hotel 476 FAM 3+2 DELUXE)
 
-- **ROOT CAUSE:** `matchAgeType()` ordinal-stripping fallback was too aggressive — when searching for "2 ND CHD 2-11,99", it stripped ordinals from BOTH sides, causing "1 ST CHD 2-11,99" (50%) to match instead of the correct "2 ND CHD 2-11,99" (25%). Both children got the 1st child's rate.
+- **ROOT CAUSE:** `matchAgeType()` had a fuzzy ordinal-stripping fallback that treated "1 ST CHD 2-11,99" and "2 ND CHD 2-11,99" as equivalent — both matched any CHD row. The 2nd child got the 1st child's 50% rate instead of its own 25% rate.
 - **IMPACT:** Price calculated as 4,123.10 EUR instead of correct 3,867.50 EUR (+6.6% overcharge)
 
-### Fix 1: Ordinal-aware age type matching
+### Fix 1: Exact age type matching (no fuzzy logic)
 
-- **FIXED:** `matchAgeType()` now only strips ordinal prefixes when ONE side lacks them (e.g., row "CHD 2-11.99" vs search "1 ST CHD 2-11,99"). When BOTH sides carry ordinals, the specific ordinals must match exactly.
-- **ADDED:** `matchAgeTypeScore()` — returns quality score (3=exact, 2=comma-normalized, 1=ordinal-stripped, 0=no match)
-- **IMPROVED:** `findSeasonPriceRow()` now uses match quality as PRIMARY sort key, with FromDays as SECONDARY. Exact matches are always preferred over fuzzy fallbacks.
+- **REMOVED:** All fuzzy/ordinal-stripping logic from `matchAgeType()`. The API data (fAge field) always provides the full, specific age type — there is no real scenario with bare "CHD 2-11.99" without an ordinal prefix.
+- **REMOVED:** `matchAgeTypeScore()` — unnecessary with exact matching.
+- **SIMPLIFIED:** `matchAgeType()` now does exact comparison with only comma/dot normalization (serialization artifact tolerance). "1 ST CHD 2-11,99" ≠ "2 ND CHD 2-11,99" — they are distinct pricing types.
+- **SIMPLIFIED:** `findSeasonPriceRow()` back to simple FromDays selection (no scoring needed when matching is exact).
 
 ### Fix 2: Children sorted by age descending
 
@@ -28,14 +29,18 @@
 | After EB -10% | 4,089.60 | **3,834** |
 | + Handling fee | **4,123.10** | **3,867.50** ✓ |
 
+### Architecture Decision
+
+Fuzzy matching (ordinal stripping, scored selection) was rejected as over-engineering. The API data contract guarantees specific age types via the `fAge` field. Exact matching is simpler, correct, and impossible to break with edge cases.
+
 ### Documentation
 
-- **UPDATED:** `Documentation/PriceInfo_calculation_algorithm.txt` v1.5 — added child sorting rule, age type match scoring, findSeasonPriceRow selection priority
+- **UPDATED:** `Documentation/PriceInfo_calculation_algorithm.txt` v1.5 — child sorting rule, exact age type matching policy
 
 ### Files Changed
 
-- `src/Services/PriceInfoFormatter.php` — matchAgeType ordinal guard, new matchAgeTypeScore()
-- `src/Services/PriceInfoCalculator.php` — findSeasonPriceRow scored selection
+- `src/Services/PriceInfoFormatter.php` — matchAgeType rewritten as exact match, matchAgeTypeScore removed
+- `src/Services/PriceInfoCalculator.php` — findSeasonPriceRow simplified
 - `src/Services/PriceInfoParser.php` — rsort children in buildOccupancyStructure
 - `Documentation/PriceInfo_calculation_algorithm.txt` — v1.5 updates
 

@@ -288,17 +288,15 @@ For each night of stay:
     2. Get price column (Price1, Price2, etc.) from season
     3. For each person (adults + children + children_as_adults):
         a. Find matching season_price row via findSeasonPriceRow():
-           - Room matches
-           - Board matches
-           - IdAge matches person's age_type (scored by quality, see below)
+           - Room matches (exact, URL-encoding aware)
+           - Board matches (exact, case-insensitive)
+           - IdAge matches person's age_type (exact, comma/dot tolerant)
            - AccType matches person's acc_type (RB/EB)
            - Stay length within FromDays-ToDays range
            - IdStar matches hotel's star category (if row has IdStar)
-           Selection priority:
-             1. Match quality: exact (3) > comma-normalized (2) > ordinal-stripped (1)
-             2. FromDays specificity (largest value wins among equal quality)
-           This ensures "2 ND CHD 2-11,99" always prefers the exact row
-           over a generic "CHD 2-11.99" row.
+           When multiple rows match: picks the most specific (largest FromDays).
+           IMPORTANT: Age type matching is EXACT — "1 ST CHD 2-11,99" and
+           "2 ND CHD 2-11,99" are distinct types. No fuzzy/ordinal stripping.
         b. Resolve price via resolvePrice():
            - If numeric: use directly
            - If percentage string (e.g., "80%"):
@@ -716,25 +714,26 @@ Without sorting, if [2, 11] were processed as-is:
   → 2yo → 1 ST CHD → 50% (wrong: younger child gets higher discount)
   → 11yo → 2 ND CHD → 25% (wrong: older child gets lower discount)
 
-AGE TYPE MATCHING (matchAgeType / matchAgeTypeScore):
------------------------------------------------------
-Returns a quality score (0=no match, 1-3=match with quality):
+AGE TYPE MATCHING (matchAgeType):
+---------------------------------
+Exact matching only. No fuzzy matching, no ordinal stripping.
 
-Score 3 — EXACT: case-insensitive, whitespace-normalized
-  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11,99" → 3
+"1 ST CHD 2-11,99" and "2 ND CHD 2-11,99" are distinct types with
+different pricing percentages — they must never match each other.
 
-Score 2 — COMMA/DOT NORMALIZED: comma↔dot equivalence
-  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11.99" → 2
+Normalization applied:
+  - Case-insensitive comparison
+  - Whitespace normalized (multiple spaces → single space, trimmed)
+  - Comma/dot equivalence in age bands (2-11,99 == 2-11.99)
+    This is the ONLY tolerance — it's a serialization artifact,
+    not a semantic difference.
 
-Score 1 — ORDINAL-STRIPPED FALLBACK: ordinal prefixes removed
-  "CHD 2-11.99" vs "1 ST CHD 2-11,99" → 1
-  (Only when ONE side lacks ordinals. When BOTH have ordinals,
-   e.g. "1 ST CHD" vs "2 ND CHD", stripping is blocked → score 0.)
-
-Score 0 — NO MATCH
-
-findSeasonPriceRow() uses this score as PRIMARY sort key to prefer
-exact matches over fuzzy ones, with FromDays as SECONDARY key.
+Examples:
+  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11,99" → MATCH (exact)
+  "2 ND CHD 2-11,99" vs "2 ND CHD 2-11.99" → MATCH (comma/dot)
+  "1 ST CHD 2-11,99" vs "2 ND CHD 2-11,99" → NO MATCH (different ordinal)
+  "CHD 2-11.99"      vs "1 ST CHD 2-11,99" → NO MATCH (different types)
+  "ADULT"            vs "3 RD ADULT"        → NO MATCH (different types)
 
 CHILD RECLASSIFICATION:
 -----------------------
@@ -963,8 +962,7 @@ PriceInfoCalculation (Orchestrator — src/Services/PriceInfoCalculation.php):
 | countOverlappingNights()      | PriceInfoFormatter  | Counts nights within date range        |
 | matchRoom()                   | PriceInfoFormatter  | Room ID matching (URL encoding aware)  |
 | matchBoard()                  | PriceInfoFormatter  | Board ID matching                      |
-| matchAgeType()                | PriceInfoFormatter  | Age type fuzzy matching (bool)         |
-| matchAgeTypeScore()           | PriceInfoFormatter  | Age type scored matching (0-3)         |
+| matchAgeType()                | PriceInfoFormatter  | Age type exact matching (comma/dot ok) |
 | matchAccType()                | PriceInfoFormatter  | Accommodation type matching            |
 | normalizeAccType()            | PriceInfoFormatter  | Acc type normalization                 |
 | toScalar()                    | PriceInfoFormatter  | Extracts scalar from array/object      |

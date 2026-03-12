@@ -229,15 +229,10 @@ class PriceInfoCalculator
     }
 
     /**
-     * Find season_price row matching criteria
+     * Find season_price row matching criteria.
      *
-     * Selection priority:
-     *   1. Match quality (exact > comma-normalized > ordinal-stripped fallback)
-     *   2. FromDays specificity (largest FromDays wins among equal quality)
-     *
-     * This ensures that e.g. a "2 ND CHD 2-11,99" search always prefers
-     * the row with that exact age type over a generic "CHD 2-11.99" row,
-     * even if the generic row has a higher FromDays value.
+     * Uses exact matching for all fields (room, board, age type, acc type).
+     * When multiple rows match, picks the most specific (largest FromDays).
      */
     public function findSeasonPriceRow(array $seasonPrices, string $roomId, string $boardId, string $ageType, string $accType, int $nights): ?array
     {
@@ -275,15 +270,12 @@ class PriceInfoCalculator
 
             if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
             if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
-
-            $ageScore = PriceInfoFormatter::matchAgeTypeScore($rowAge, $ageType);
-            if ($ageScore === 0) continue;
-
+            if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) continue;
             if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) continue;
 
             if ($nights < $fromDays || $nights > $toDays) continue;
 
-            $candidates[] = ['row' => $row, 'fromDays' => $fromDays, 'ageScore' => $ageScore];
+            $candidates[] = ['row' => $row, 'fromDays' => $fromDays];
         }
 
         if (empty($candidates)) {
@@ -291,11 +283,6 @@ class PriceInfoCalculator
         }
 
         usort($candidates, function($a, $b) {
-            // Primary: higher age match score wins (exact > normalized > fallback)
-            if ($a['ageScore'] !== $b['ageScore']) {
-                return $b['ageScore'] <=> $a['ageScore'];
-            }
-            // Secondary: more specific FromDays wins
             return $b['fromDays'] <=> $a['fromDays'];
         });
 
