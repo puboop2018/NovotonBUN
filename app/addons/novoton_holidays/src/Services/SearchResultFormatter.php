@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Registry;
 use Tygh\Tygh;
 
@@ -328,17 +329,12 @@ class SearchResultFormatter
 
         $checkInForTerms = $searchParams['check_in'] ?? '';
 
-        // Ensure func.php is loaded
-        if (!function_exists('fn_novoton_holidays_parse_payment_terms')) {
-            require_once(Registry::get('config.dir.addons') . 'novoton_holidays/func.php');
-        }
-
-        $view->assign('terms_of_payment', fn_novoton_holidays_format_payment_terms($termsPaymentRaw));
-        $view->assign('terms_of_cancellation', fn_novoton_holidays_format_cancellation_terms($termsCancellationRaw, $checkInForTerms));
+        $view->assign('terms_of_payment', TermsFormatter::formatPaymentTerms($termsPaymentRaw));
+        $view->assign('terms_of_cancellation', TermsFormatter::formatCancellationTerms($termsCancellationRaw, $checkInForTerms));
         $view->assign('terms_of_payment_raw', $termsPaymentRaw);
         $view->assign('terms_of_cancellation_raw', $termsCancellationRaw);
-        $view->assign('parsed_payment_terms', fn_novoton_holidays_parse_payment_terms($termsPaymentRaw));
-        $view->assign('parsed_cancellation_terms', fn_novoton_holidays_parse_cancellation_terms($termsCancellationRaw, $checkInForTerms));
+        $view->assign('parsed_payment_terms', TermsFormatter::parsePaymentTerms($termsPaymentRaw));
+        $view->assign('parsed_cancellation_terms', TermsFormatter::parseCancellationTerms($termsCancellationRaw, $checkInForTerms));
 
         // Early-booking tooltip details
         $ebDetails = '';

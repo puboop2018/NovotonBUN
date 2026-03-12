@@ -14,6 +14,8 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
 
 class BookingRepository implements BookingRepositoryInterface
 {
@@ -454,8 +456,8 @@ class BookingRepository implements BookingRepositoryInterface
             $booking['room_types_list'] = implode(', ', $room_types);
             $booking['board_display'] = !empty($board_names) ? $board_names[0] : $booking['board_name'];
         } else {
-            $booking['room_types_list'] = $booking['room_type'] ?: fn_novoton_holidays_format_room_type($booking['room_id']);
-            $booking['board_display'] = $booking['board_name'] ?: fn_novoton_holidays_format_board_name($booking['board_id']);
+            $booking['room_types_list'] = $booking['room_type'] ?: RoomType::formatRoomLabel($booking['room_id']);
+            $booking['board_display'] = $booking['board_name'] ?: BoardType::toDisplayName($booking['board_id']);
         }
     }
 

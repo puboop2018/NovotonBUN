@@ -16,8 +16,11 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
 use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
 
 class BookingService implements BookingServiceInterface
@@ -34,6 +37,9 @@ class BookingService implements BookingServiceInterface
     /** @var BookingRepositoryInterface */
     private $bookingRepo;
 
+    /** @var HotelRepositoryInterface */
+    private $hotelRepo;
+
     /** @var bool */
     private $debug = false;
 
@@ -46,12 +52,14 @@ class BookingService implements BookingServiceInterface
         GuestDataServiceInterface $guestService,
         RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
-        \Tygh\Addons\NovotonHolidays\NovotonApi $api
+        \Tygh\Addons\NovotonHolidays\NovotonApi $api,
+        ?HotelRepositoryInterface $hotelRepo = null
     ) {
         $this->api = $api;
         $this->guestService = $guestService;
         $this->priceService = $priceService;
         $this->bookingRepo = $bookingRepo;
+        $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -80,7 +88,7 @@ class BookingService implements BookingServiceInterface
         $totals = $this->calculateTotals($rooms_data);
         
         // Get hotel info
-        $hotel_info = fn_novoton_holidays_get_hotel_data($bookingData['hotel_id']);
+        $hotel_info = $this->hotelRepo->findById($bookingData['hotel_id']);
         
         // Build booking record
         $booking_record = [
@@ -306,7 +314,7 @@ class BookingService implements BookingServiceInterface
         if (empty($rooms_data) || !is_array($rooms_data)) {
             $rooms_data = [[
                 'room_id' => $bookingData['room_id'] ?? '',
-                'room_name' => fn_novoton_holidays_format_room_type($bookingData['room_id'] ?? ''),
+                'room_name' => RoomType::formatRoomLabel($bookingData['room_id'] ?? ''),
                 'board_id' => $bookingData['board_id'] ?? 'BB',
                 'adults' => (int) ($bookingData['adults'] ?? 2),
                 'children' => (int) ($bookingData['children'] ?? 0),
@@ -339,14 +347,14 @@ class BookingService implements BookingServiceInterface
             } elseif (!empty($room['room_type_display'])) {
                 $room_types[] = $room['room_type_display'];
             } elseif (!empty($room['room_id'])) {
-                $room_types[] = fn_novoton_holidays_format_room_type($room['room_id']);
+                $room_types[] = RoomType::formatRoomLabel($room['room_id']);
             }
         }
         
         // Fallback to bookingData
         if (empty($room_ids) && !empty($bookingData['room_id'])) {
             $room_ids[] = $bookingData['room_id'];
-            $room_types[] = fn_novoton_holidays_format_room_type($bookingData['room_id']);
+            $room_types[] = RoomType::formatRoomLabel($bookingData['room_id']);
         }
         
         return [
@@ -605,9 +613,9 @@ class BookingService implements BookingServiceInterface
                 'package_name' => $bookingData['package_name'] ?? '',
                 'room_id' => $bookingData['room_id'],
                 'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
-                'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
+                'room_type_display' => RoomType::formatRoomLabel($bookingData['room_id']),
                 'board_id' => $boardId,
-                'board_name' => fn_novoton_holidays_format_board_name($boardId),
+                'board_name' => BoardType::toDisplayName($boardId),
                 'check_in' => $bookingData['check_in'],
                 'check_out' => $bookingData['check_out'],
                 'nights' => $nights,
@@ -621,8 +629,8 @@ class BookingService implements BookingServiceInterface
                 'guests_data' => json_encode($guestsData),
                 'contact_email' => $bookingData['contact']['email'] ?? '',
                 'contact_phone' => $bookingData['contact']['phone'] ?? '',
-                'terms_of_payment' => fn_novoton_holidays_format_payment_terms($priceResult['terms_of_payment']),
-                'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
+                'terms_of_payment' => TermsFormatter::formatPaymentTerms($priceResult['terms_of_payment']),
+                'terms_of_cancellation' => TermsFormatter::formatCancellationTerms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
                 'terms_of_payment_raw' => $priceResult['terms_of_payment'],
                 'terms_of_cancellation_raw' => $priceResult['terms_of_cancellation'],
                 'remark' => $priceResult['remark'],
@@ -674,8 +682,8 @@ class BookingService implements BookingServiceInterface
 
             // Ensure room_type_display is set
             if (empty($room['room_type_display']) && !empty($room['room_id'])) {
-                $room['room_type_display'] = fn_novoton_holidays_format_room_type($room['room_id']);
-                $room['room_name'] = fn_novoton_holidays_format_room_type($room['room_id']);
+                $room['room_type_display'] = RoomType::formatRoomLabel($room['room_id']);
+                $room['room_name'] = RoomType::formatRoomLabel($room['room_id']);
             }
 
             // Normalize room_id and room_name: restore + lost by URL decoding

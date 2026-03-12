@@ -148,7 +148,8 @@ class Container
             $this->guestDataService(),
             $this->roomPriceService(),
             $this->bookingRepository(),
-            $this->novotonApi()
+            $this->novotonApi(),
+            $this->hotelRepository()
         ));
     }
 

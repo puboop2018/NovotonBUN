@@ -387,7 +387,6 @@ class PriceInfoCalculatorTest extends TestCase
     public function testFindSeasonPriceRowSelectsMostSpecific(): void
     {
         $parser = $this->createMock(PriceInfoParser::class);
-        $parser->method('getIdStar')->willReturn('4*');
         $calc = new PriceInfoCalculator($parser, 0.0);
 
         $seasonPrices = [
@@ -413,7 +412,6 @@ class PriceInfoCalculatorTest extends TestCase
     public function testFindSeasonPriceRowReturnsNullWhenNoMatch(): void
     {
         $parser = $this->createMock(PriceInfoParser::class);
-        $parser->method('getIdStar')->willReturn('4*');
         $calc = new PriceInfoCalculator($parser, 0.0);
 
         $row = $calc->findSeasonPriceRow([], 'DBL', 'AI', 'ADULT', 'REGULAR', 7);
@@ -423,7 +421,6 @@ class PriceInfoCalculatorTest extends TestCase
     public function testFindSeasonPriceRowRespectsNightsRange(): void
     {
         $parser = $this->createMock(PriceInfoParser::class);
-        $parser->method('getIdStar')->willReturn('4*');
         $calc = new PriceInfoCalculator($parser, 0.0);
 
         $seasonPrices = [

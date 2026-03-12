@@ -10,6 +10,16 @@ declare(strict_types=1);
  * - ReservationApiClient: reservations, invoices, alternatives
  * - DestinationApiClient: resort list, offers updates, kickback
  *
+ * Callers are encouraged to use the domain client accessors directly:
+ *   $api->hotels()->getHotelList()
+ *   $api->pricing()->getRoomPrice($params)
+ *   $api->availability()->searchAvailability($params)
+ *   $api->reservations()->createReservation($data)
+ *   $api->destinations()->getResortList()
+ *
+ * The flat delegate methods (e.g. $api->getHotelList()) are retained for
+ * backward compatibility but are deprecated.
+ *
  * @package NovotonHolidays
  * @since 3.4.0
  */
@@ -80,7 +90,7 @@ class NovotonApi implements NovotonApiInterface
 
     // ========== SYNC DEBUG STATE ==========
 
-    private function syncFrom($client): void
+    private function syncFrom(object $client): void
     {
         $this->lastRequest = $client->lastRequest;
         $this->lastResponse = $client->lastResponse;
@@ -88,6 +98,21 @@ class NovotonApi implements NovotonApiInterface
         $this->lastRequestFormatted = $client->lastRequestFormatted;
         $this->lastError = $client->lastError;
         $this->lastHttpCode = $client->lastHttpCode;
+    }
+
+    /**
+     * Delegate a method call to a domain client and sync debug state.
+     *
+     * @param object $client The domain API client to delegate to
+     * @param string $method The method name on the client
+     * @param array $args Arguments to pass through
+     * @return mixed The client method's return value
+     */
+    private function delegateTo(object $client, string $method, array $args): mixed
+    {
+        $result = $client->$method(...$args);
+        $this->syncFrom($client);
+        return $result;
     }
 
     /**
@@ -106,235 +131,196 @@ class NovotonApi implements NovotonApiInterface
     }
 
     // ========== BACKWARD-COMPATIBLE DELEGATES ==========
+    // Prefer using domain client accessors directly: $api->hotels(), $api->pricing(), etc.
 
     // -- Hotels --
 
+    /** @deprecated Use $api->hotels()->getHotelList() */
     public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
     {
-        $result = $this->hotelApi->getHotelList($country, $city, $hotel, $hotelType);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelList', [$country, $city, $hotel, $hotelType]);
     }
 
+    /** @deprecated Use $api->hotels()->getHotelInfo() */
     public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->hotelApi->getHotelInfo($hotelId, $lang);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelInfo', [$hotelId, $lang]);
     }
 
+    /** @deprecated Use $api->hotels()->getHotelInfoBatch() */
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
     {
-        $result = $this->hotelApi->getHotelInfoBatch($hotelIds, $lang, $concurrency);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelInfoBatch', [$hotelIds, $lang, $concurrency]);
     }
 
+    /** @deprecated Use $api->hotels()->getHotelDescription() */
     public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
     {
-        $result = $this->hotelApi->getHotelDescription($hotelId, $lang, $includePackage);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelDescription', [$hotelId, $lang, $includePackage]);
     }
 
+    /** @deprecated Use $api->hotels()->getHotelImages() */
     public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->hotelApi->getHotelImages($hotelId, $lang);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelImages', [$hotelId, $lang]);
     }
 
+    /** @deprecated Use $api->hotels()->getHotelFacilities() */
     public function getHotelFacilities(string $hotelId): \SimpleXMLElement
     {
-        $result = $this->hotelApi->getHotelFacilities($hotelId);
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'getHotelFacilities', [$hotelId]);
     }
 
+    /** @deprecated Use $api->hotels()->listFacilities() */
     public function listFacilities(): \SimpleXMLElement
     {
-        $result = $this->hotelApi->listFacilities();
-        $this->syncFrom($this->hotelApi);
-        return $result;
+        return $this->delegateTo($this->hotelApi, 'listFacilities', []);
     }
 
     // -- Pricing --
 
+    /** Not deprecated — delegates to CommissionCalculator, not a domain client. */
     public function applyCommission(float $price): float
     {
         return $this->commissionCalculator->apply($price);
     }
 
+    /** @deprecated Use $api->pricing()->getRoomPrice() */
     public function getRoomPrice(array $params): \SimpleXMLElement|false
     {
-        $result = $this->pricingApi->getRoomPrice($params);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getRoomPrice', [$params]);
     }
 
-    /**
-     * Batch room_price requests using curl_multi.
-     *
-     * @param array<string, array> $requestParams Keyed array: key => room_price params
-     * @param int $concurrency Max simultaneous requests
-     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}>
-     */
+    /** @deprecated Use $api->pricing()->getRoomPriceBatch() */
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
     {
-        $result = $this->pricingApi->getRoomPriceBatch($requestParams, $concurrency);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getRoomPriceBatch', [$requestParams, $concurrency]);
     }
 
+    /** @deprecated Use $api->pricing()->getRoomPriceByResort() */
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
     {
-        $result = $this->pricingApi->getRoomPriceByResort($params);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getRoomPriceByResort', [$params]);
     }
 
+    /** @deprecated Use $api->pricing()->getRoomPriceByResortRaw() */
     public function getRoomPriceByResortRaw(array $params): string
     {
-        $result = $this->pricingApi->getRoomPriceByResortRaw($params);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getRoomPriceByResortRaw', [$params]);
     }
 
+    /** @deprecated Use $api->pricing()->getPriceInfo() */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->pricingApi->getPriceInfo($hotelId, $packageName, $lang);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getPriceInfo', [$hotelId, $packageName, $lang]);
     }
 
+    /** @deprecated Use $api->pricing()->getSpecialOffers() */
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->pricingApi->getSpecialOffers($hotelId, $packageName, $lang);
-        $this->syncFrom($this->pricingApi);
-        return $result;
+        return $this->delegateTo($this->pricingApi, 'getSpecialOffers', [$hotelId, $packageName, $lang]);
     }
 
     // -- Availability --
 
+    /** @deprecated Use $api->availability()->getHotelQuotaAll() */
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
     {
-        $result = $this->availabilityApi->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
-        $this->syncFrom($this->availabilityApi);
-        return $result;
+        return $this->delegateTo($this->availabilityApi, 'getHotelQuotaAll', [$hotelId, $checkIn, $checkOut]);
     }
 
+    /** @deprecated Use $api->availability()->getHotelQuota() */
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
-        $result = $this->availabilityApi->getHotelQuota($hotelId, $roomId, $checkIn, $checkOut, $roomType);
-        $this->syncFrom($this->availabilityApi);
-        return $result;
+        return $this->delegateTo($this->availabilityApi, 'getHotelQuota', [$hotelId, $roomId, $checkIn, $checkOut, $roomType]);
     }
 
+    /** @deprecated Use $api->availability()->getHotelQuotaAdditional() */
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
     {
-        $result = $this->availabilityApi->getHotelQuotaAdditional($hotelId, $roomId, $checkIn, $checkOut);
-        $this->syncFrom($this->availabilityApi);
-        return $result;
+        return $this->delegateTo($this->availabilityApi, 'getHotelQuotaAdditional', [$hotelId, $roomId, $checkIn, $checkOut]);
     }
 
+    /** @deprecated Use $api->availability()->searchAvailability() */
     public function searchAvailability(array $params): array
     {
-        $result = $this->availabilityApi->searchAvailability($params);
-        $this->syncFrom($this->availabilityApi);
-        return $result;
+        return $this->delegateTo($this->availabilityApi, 'searchAvailability', [$params]);
     }
 
-    /**
-     * Batch availability search using curl_multi.
-     *
-     * @param array<string, array> $paramsList Keyed array: key => search params
-     * @param int $concurrency Max simultaneous requests
-     * @return array<string, array> key => parsed search results
-     */
+    /** @deprecated Use $api->availability()->searchAvailabilityBatch() */
     public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
     {
-        $result = $this->availabilityApi->searchAvailabilityBatch($paramsList, $concurrency);
-        $this->syncFrom($this->availabilityApi);
-        return $result;
+        return $this->delegateTo($this->availabilityApi, 'searchAvailabilityBatch', [$paramsList, $concurrency]);
     }
 
     // -- Reservations --
 
+    /** @deprecated Use $api->reservations()->createReservation() */
     public function createReservation(array $bookingData): \SimpleXMLElement
     {
-        $result = $this->reservationApi->createReservation($bookingData);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'createReservation', [$bookingData]);
     }
 
+    /** @deprecated Use $api->reservations()->createHotelRequest() */
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
     {
-        $result = $this->reservationApi->createHotelRequest($requestData, $lang, $returnXml);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'createHotelRequest', [$requestData, $lang, $returnXml]);
     }
 
+    /** @deprecated Use $api->reservations()->generateHotelRequestXml() — no debug sync needed. */
     public function generateHotelRequestXml(array $requestData): string
     {
         return $this->reservationApi->generateHotelRequestXml($requestData);
     }
 
+    /** @deprecated Use $api->reservations()->getAlternatives() */
     public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->reservationApi->getAlternatives($idNum, $lang);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'getAlternatives', [$idNum, $lang]);
     }
 
+    /** @deprecated Use $api->reservations()->getReservationInfo() */
     public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->reservationApi->getReservationInfo($idNum, $confirmAgency, $lang);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'getReservationInfo', [$idNum, $confirmAgency, $lang]);
     }
 
+    /** @deprecated Use $api->reservations()->getInvoiceHtml() */
     public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
     {
-        $result = $this->reservationApi->getInvoiceHtml($idNum, $lang);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'getInvoiceHtml', [$idNum, $lang]);
     }
 
+    /** @deprecated Use $api->reservations()->getInvoiceXml() */
     public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->reservationApi->getInvoiceXml($idNum, $lang);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'getInvoiceXml', [$idNum, $lang]);
     }
 
+    /** @deprecated Use $api->reservations()->listInvoices() */
     public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->reservationApi->listInvoices($arrFrom, $arrTo, $lang);
-        $this->syncFrom($this->reservationApi);
-        return $result;
+        return $this->delegateTo($this->reservationApi, 'listInvoices', [$arrFrom, $arrTo, $lang]);
     }
 
     // -- Destinations --
 
+    /** @deprecated Use $api->destinations()->getResortList() */
     public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->destinationApi->getResortList($country, $lang);
-        $this->syncFrom($this->destinationApi);
-        return $result;
+        return $this->delegateTo($this->destinationApi, 'getResortList', [$country, $lang]);
     }
 
+    /** @deprecated Use $api->destinations()->getOffersUpdate() */
     public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
     {
-        $result = $this->destinationApi->getOffersUpdate($dateTime, $country, $resort, $hotel);
-        $this->syncFrom($this->destinationApi);
-        return $result;
+        return $this->delegateTo($this->destinationApi, 'getOffersUpdate', [$dateTime, $country, $resort, $hotel]);
     }
 
+    /** @deprecated Use $api->destinations()->getKickbackInfo() */
     public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
     {
-        $result = $this->destinationApi->getKickbackInfo($lang);
-        $this->syncFrom($this->destinationApi);
-        return $result;
+        return $this->delegateTo($this->destinationApi, 'getKickbackInfo', [$lang]);
     }
 
     // ========== DEBUG GETTERS ==========
