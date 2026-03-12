@@ -3376,3 +3376,11 @@ msgstr "Command"
 msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
 msgid "Suggested Schedule"
 msgstr "Suggested Schedule"
+
+msgctxt "Languages::novoton_holidays.book_x_pay_y"
+msgid "Book [book] nights, pay for [pay]"
+msgstr "Book [book] nights, pay for [pay]"
+
+msgctxt "Languages::novoton_holidays.off"
+msgid "off"
+msgstr "off"

@@ -771,6 +771,11 @@ class SearchService implements SearchServiceInterface
     /**
      * Deduplicate results, keeping the lowest price for each room/board/package.
      *
+     * When two entries share the same key but differ in extras (one has an
+     * extras promotion like "7 = 6", the other doesn't), they are merged into
+     * a single row: the standard (non-extras) entry is kept as the base, and
+     * the promotional price / label are attached as extras_price / extras_label.
+     *
      * @param array $results
      * @return array Deduplicated results (re-indexed)
      */
@@ -779,9 +784,30 @@ class SearchService implements SearchServiceInterface
         $unique = [];
         foreach ($results as $result) {
             $key = $result['room_id'] . '|' . $result['board_id'] . '|' . ($result['package_name'] ?? '');
-            if (!isset($unique[$key])
-                || ($result['total_price'] > 0 && $result['total_price'] < $unique[$key]['total_price'])) {
+
+            if (!isset($unique[$key])) {
                 $unique[$key] = $result;
+                continue;
+            }
+
+            $existing = $unique[$key];
+            $existingHasExtras = !empty(trim($existing['extras'] ?? ''));
+            $currentHasExtras  = !empty(trim($result['extras'] ?? ''));
+
+            if ($existingHasExtras !== $currentHasExtras) {
+                // One has extras promotion, one doesn't — combine into one row
+                $standard    = $existingHasExtras ? $result  : $existing;
+                $promotional = $existingHasExtras ? $existing : $result;
+
+                $standard['extras_price'] = $promotional['total_price'];
+                $standard['extras_label'] = $promotional['extras'];
+                $unique[$key] = $standard;
+            } else {
+                // Same type (both with or both without extras) — keep lowest price
+                if ($result['total_price'] > 0
+                    && $result['total_price'] < $existing['total_price']) {
+                    $unique[$key] = $result;
+                }
             }
         }
         return array_values($unique);

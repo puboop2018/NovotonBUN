@@ -86,6 +86,8 @@
 @novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
 @novoton-danger:            @out_of_stock;
 @novoton-info:              @links;
+@novoton-discount:          #2e7d32;   // Discount / extras promotion label
+@novoton-discount-light:    lighten(@novoton-discount, 50%);
 
 // Subtle hover surface for interactive cells (calendar, lists)
 @novoton-hover-bg:          darken(@novoton-bg, 3%);
@@ -175,6 +177,8 @@
     --nvt-info:             ~"@{novoton-info}";
     --nvt-info-light:       ~"@{novoton-info-light}";
     --nvt-info-dark:        ~"@{novoton-info-dark}";
+    --nvt-discount:         ~"@{novoton-discount}";
+    --nvt-discount-light:   ~"@{novoton-discount-light}";
 
     // Focus & tint
     --nvt-primary-focus:    ~"@{novoton-primary-focus}";
