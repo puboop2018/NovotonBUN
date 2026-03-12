@@ -88,11 +88,21 @@ class PriceInfoFormatter
         // Fallback: strip ordinal prefixes ("1 ST ", "2 ND ", "3 RD ", etc.)
         // and compare the core age type.  This handles IdAge-mapped rows like
         // "CHD 2-11.99" matching occupancy-generated types like "1 ST CHD 2-11,99".
+        //
+        // IMPORTANT: Only strip ordinals when one side lacks them.  When BOTH
+        // sides carry ordinals (e.g. row="1 ST CHD 2-11,99" vs search="2 ND CHD 2-11,99"),
+        // the specific ordinals must match — stripping would incorrectly equate
+        // the 1st-child row (50%) with a 2nd-child search (25%).
         $ordinalPattern = '/^\d+\s*(ST|ND|RD|TH)\s+/i';
-        $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
-        $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
-        if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
-            return true;
+        $rowHasOrdinal = (bool) preg_match($ordinalPattern, $rowAgeNorm);
+        $ageTypeHasOrdinal = (bool) preg_match($ordinalPattern, $ageTypeNorm);
+
+        if (!$rowHasOrdinal || !$ageTypeHasOrdinal) {
+            $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
+            $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
+            if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
+                return true;
+            }
         }
 
         return false;
