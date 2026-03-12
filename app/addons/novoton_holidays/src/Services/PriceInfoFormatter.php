@@ -72,17 +72,33 @@ class PriceInfoFormatter
      */
     public static function matchAgeType(string $rowAge, string $ageType): bool
     {
+        return self::matchAgeTypeScore($rowAge, $ageType) > 0;
+    }
+
+    /**
+     * Score an age-type match.  Higher score = more specific match.
+     *
+     * Returns:
+     *   3 — exact match (case-insensitive, whitespace-normalized)
+     *   2 — comma/dot-normalized match (2-11,99 == 2-11.99)
+     *   1 — ordinal-stripped fallback (row "CHD 2-11.99" matches "1 ST CHD 2-11,99")
+     *   0 — no match
+     *
+     * Used by findSeasonPriceRow() to prefer exact matches over fuzzy ones.
+     */
+    public static function matchAgeTypeScore(string $rowAge, string $ageType): int
+    {
         $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
         $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
 
         if (strcasecmp($rowAge, $ageType) === 0) {
-            return true;
+            return 3;
         }
 
         $rowAgeNorm = str_replace(',', '.', $rowAge);
         $ageTypeNorm = str_replace(',', '.', $ageType);
         if (strcasecmp($rowAgeNorm, $ageTypeNorm) === 0) {
-            return true;
+            return 2;
         }
 
         // Fallback: strip ordinal prefixes ("1 ST ", "2 ND ", "3 RD ", etc.)
@@ -101,11 +117,11 @@ class PriceInfoFormatter
             $rowAgeCore = trim(preg_replace($ordinalPattern, '', $rowAgeNorm));
             $ageTypeCore = trim(preg_replace($ordinalPattern, '', $ageTypeNorm));
             if ($rowAgeCore !== '' && $ageTypeCore !== '' && strcasecmp($rowAgeCore, $ageTypeCore) === 0) {
-                return true;
+                return 1;
             }
         }
 
-        return false;
+        return 0;
     }
 
     /**

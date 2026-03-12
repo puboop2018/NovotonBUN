@@ -1,5 +1,46 @@
 # Novoton Holidays - Changelog
 
+## A94 — Fix: Child Pricing Discrepancy (Ordinal-Aware Age Matching + Descending Sort)
+
+### Bug Fix: 2nd+ child priced at wrong percentage (hotel 476 FAM 3+2 DELUXE)
+
+- **ROOT CAUSE:** `matchAgeType()` ordinal-stripping fallback was too aggressive — when searching for "2 ND CHD 2-11,99", it stripped ordinals from BOTH sides, causing "1 ST CHD 2-11,99" (50%) to match instead of the correct "2 ND CHD 2-11,99" (25%). Both children got the 1st child's rate.
+- **IMPACT:** Price calculated as 4,123.10 EUR instead of correct 3,867.50 EUR (+6.6% overcharge)
+
+### Fix 1: Ordinal-aware age type matching
+
+- **FIXED:** `matchAgeType()` now only strips ordinal prefixes when ONE side lacks them (e.g., row "CHD 2-11.99" vs search "1 ST CHD 2-11,99"). When BOTH sides carry ordinals, the specific ordinals must match exactly.
+- **ADDED:** `matchAgeTypeScore()` — returns quality score (3=exact, 2=comma-normalized, 1=ordinal-stripped, 0=no match)
+- **IMPROVED:** `findSeasonPriceRow()` now uses match quality as PRIMARY sort key, with FromDays as SECONDARY. Exact matches are always preferred over fuzzy fallbacks.
+
+### Fix 2: Children sorted by age descending
+
+- **FIXED:** `buildOccupancyStructure()` now sorts children by age descending (oldest first) before assigning ordinals. The API expects the oldest child = 1ST CHD (highest discount %).
+- **EXAMPLE:** Children [2, 11] → sorted [11, 2] → 11yo=1ST CHD (50%), 2yo=2ND CHD (25%)
+
+### Price Verification (hotel 476, FAM 3+2 DELUXE, 3 adults + 2 children ages 11,2)
+
+| Component | Before | After |
+|---|---|---|
+| 1st CHD (11 y.o.) | 50% × 1,136 = 568 | 50% × 1,136 = 568 |
+| 2nd CHD (2 y.o.) | **50%** × 1,136 = **568** | **25%** × 1,136 = **284** |
+| Base total | 4,544 | **4,260** |
+| After EB -10% | 4,089.60 | **3,834** |
+| + Handling fee | **4,123.10** | **3,867.50** ✓ |
+
+### Documentation
+
+- **UPDATED:** `Documentation/PriceInfo_calculation_algorithm.txt` v1.5 — added child sorting rule, age type match scoring, findSeasonPriceRow selection priority
+
+### Files Changed
+
+- `src/Services/PriceInfoFormatter.php` — matchAgeType ordinal guard, new matchAgeTypeScore()
+- `src/Services/PriceInfoCalculator.php` — findSeasonPriceRow scored selection
+- `src/Services/PriceInfoParser.php` — rsort children in buildOccupancyStructure
+- `Documentation/PriceInfo_calculation_algorithm.txt` — v1.5 updates
+
+---
+
 ## A93 — Fix: Children Per-Person Price Calculation (Code/Base Percentage Rule)
 
 ### Bug Fix: Children price not calculated in base price breakdown
