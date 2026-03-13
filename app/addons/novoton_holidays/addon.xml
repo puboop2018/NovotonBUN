@@ -8,6 +8,7 @@
     <supplier>VacanteLitoral.ro</supplier>
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
+    <dependencies>travel_core</dependencies>
     <!-- Novoton Holidays: hotel booking integration with Novoton XML API. Requires PHP 8.3+. See CHANGELOG.md -->
 
     <authors>
