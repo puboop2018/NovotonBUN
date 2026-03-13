@@ -1,0 +1,371 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>sphinx_holidays</id>
+    <version>1.0.0</version>
+    <priority>112</priority>
+    <position>2</position>
+    <status>active</status>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+    <default_language>en</default_language>
+    <dependencies>travel_core</dependencies>
+    <!-- Sphinx Holidays: hotel & package booking integration with Sphinx REST API
+         (Christian Tour). Supports hotel-only search, flight+hotel packages,
+         bus+hotel packages, circuits, and experiences.
+         Requires PHP 8.3+ and travel_core addon. -->
+
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+
+    <compatibility>
+        <core_version>
+            <min>4.9.3</min>
+            <max>4.20.1</max>
+        </core_version>
+        <core_edition>ULTIMATE</core_edition>
+        <php_version>
+            <min>8.3.0</min>
+            <max>8.4.99</max>
+        </php_version>
+        <php_extensions>
+            <curl>
+                <supported>Y</supported>
+            </curl>
+            <json>
+                <supported>Y</supported>
+            </json>
+        </php_extensions>
+    </compatibility>
+
+    <settings layout="separate">
+        <sections>
+            <section id="general">
+                <items>
+                    <!-- API Settings Header -->
+                    <item id="api_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_base_url">
+                        <type>input</type>
+                        <default_value>https://api.sphinx2.christiantour.dev.ploi.imementohub.com</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_key">
+                        <type>password</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="enable_api_cache">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="cache_ttl_search">
+                        <type>input</type>
+                        <default_value>300</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Search Settings Header -->
+                    <item id="search_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="default_currency">
+                        <type>selectbox</type>
+                        <default_value>EUR</default_value>
+                        <variants>
+                            <item id="EUR">EUR</item>
+                            <item id="RON">RON</item>
+                            <item id="USD">USD</item>
+                            <item id="GBP">GBP</item>
+                        </variants>
+                    </item>
+                    <item id="ignore_domains">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="search_poll_interval">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="search_max_polls">
+                        <type>input</type>
+                        <default_value>30</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Pricing Header -->
+                    <item id="pricing_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="round_prices">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Product Mapping Header -->
+                    <item id="product_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="hotels_category_id">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="packages_category_id">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- API Resilience Header -->
+                    <item id="resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_delay_ms">
+                        <type>input</type>
+                        <default_value>500</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_multiplier">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Debug Header -->
+                    <item id="debug_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="debug_logging">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <queries>
+        <!-- Sphinx hotels (local cache of static hotel data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_hotels` (
+                `hotel_id`          VARCHAR(100) NOT NULL PRIMARY KEY COMMENT 'Sphinx hotel ID (e.g. s1-hotel-123)',
+                `product_id`        INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
+                `name`              VARCHAR(255) NOT NULL,
+                `classification`    TINYINT UNSIGNED DEFAULT NULL COMMENT 'Star rating 1-5',
+                `property_type`     VARCHAR(30) DEFAULT 'hotel',
+                `destination_id`    INT UNSIGNED DEFAULT NULL,
+                `destination_name`  VARCHAR(255) DEFAULT NULL,
+                `region_id`         INT UNSIGNED DEFAULT NULL,
+                `region_name`       VARCHAR(255) DEFAULT NULL,
+                `country_code`      VARCHAR(5) DEFAULT NULL,
+                `country_name`      VARCHAR(255) DEFAULT NULL,
+                `latitude`          DECIMAL(10,7) DEFAULT NULL,
+                `longitude`         DECIMAL(10,7) DEFAULT NULL,
+                `description`       TEXT DEFAULT NULL,
+                `short_description` TEXT DEFAULT NULL,
+                `image_url`         VARCHAR(500) DEFAULT NULL,
+                `amenities_json`    JSON DEFAULT NULL COMMENT 'Array of amenity objects',
+                `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
+                `facilities_json`   JSON DEFAULT NULL COMMENT 'Array of facility objects from static endpoint',
+                `is_recommended`    ENUM('Y','N') DEFAULT 'N',
+                `is_adults_only`    ENUM('Y','N') DEFAULT 'N',
+                `rating`            DECIMAL(3,1) DEFAULT NULL COMMENT 'Guest rating (e.g. 8.5)',
+                `rating_count`      INT UNSIGNED DEFAULT NULL,
+                `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_product_id` (`product_id`),
+                KEY `idx_destination` (`destination_id`),
+                KEY `idx_region` (`region_id`),
+                KEY `idx_country` (`country_code`),
+                KEY `idx_classification` (`classification`),
+                KEY `idx_sync_status` (`sync_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx destinations (cached destination tree) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_destinations` (
+                `destination_id`    INT UNSIGNED NOT NULL PRIMARY KEY,
+                `name`              VARCHAR(255) NOT NULL,
+                `type`              VARCHAR(30) NOT NULL COMMENT 'continent, country, region, city, destination',
+                `parent_id`         INT UNSIGNED DEFAULT NULL,
+                `country_code`      VARCHAR(5) DEFAULT NULL,
+                `geoname_id`        INT UNSIGNED DEFAULT NULL,
+                `latitude`          DECIMAL(10,7) DEFAULT NULL,
+                `longitude`         DECIMAL(10,7) DEFAULT NULL,
+                `hotel_count`       INT UNSIGNED DEFAULT 0,
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                KEY `idx_type` (`type`),
+                KEY `idx_parent` (`parent_id`),
+                KEY `idx_country` (`country_code`),
+                KEY `idx_geoname` (`geoname_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx package routes (cached flight/bus routes) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_package_routes` (
+                `route_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `transport_type`    VARCHAR(10) NOT NULL COMMENT 'flight, bus',
+                `departure_id`      INT UNSIGNED NOT NULL,
+                `departure_name`    VARCHAR(255) NOT NULL,
+                `departure_iata`    VARCHAR(10) DEFAULT NULL,
+                `arrival_id`        INT UNSIGNED NOT NULL,
+                `arrival_name`      VARCHAR(255) NOT NULL,
+                `arrival_iata`      VARCHAR(10) DEFAULT NULL,
+                `available_dates`   JSON NOT NULL COMMENT 'Array of date strings',
+                `duration`          TINYINT UNSIGNED NOT NULL COMMENT 'Number of nights',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                UNIQUE KEY `uq_route` (`transport_type`, `departure_id`, `arrival_id`, `duration`),
+                KEY `idx_departure` (`departure_id`),
+                KEY `idx_arrival` (`arrival_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx bookings (provider-specific booking data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_bookings` (
+                `id`                    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `travel_booking_id`     INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:travel_bookings',
+                `sphinx_order_id`       VARCHAR(100) DEFAULT NULL COMMENT 'Order ID from Sphinx API',
+                `offer_id`              VARCHAR(255) DEFAULT NULL COMMENT 'Original offer ID',
+                `offer_type`            VARCHAR(20) DEFAULT 'hotel' COMMENT 'hotel, package, circuit, experience',
+                `hotel_id`              VARCHAR(100) DEFAULT NULL,
+                `flight_hash`           VARCHAR(100) DEFAULT NULL COMMENT 'Flight hash for packages',
+                `bus_id`                VARCHAR(100) DEFAULT NULL COMMENT 'Bus ID for bus packages',
+                `raw_response_json`     JSON DEFAULT NULL COMMENT 'Full API booking response',
+                `verification_json`     JSON DEFAULT NULL COMMENT 'Verification response (terms, cancellation)',
+                `sphinx_status`         VARCHAR(30) DEFAULT NULL COMMENT 'confirmed, pending, cancelled',
+                `has_transfer`          ENUM('Y','N') DEFAULT 'N',
+                `has_cancellation`      ENUM('Y','N') DEFAULT 'N',
+                `free_cancellation_until` DATE DEFAULT NULL,
+                `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_travel_booking` (`travel_booking_id`),
+                KEY `idx_sphinx_order` (`sphinx_order_id`),
+                KEY `idx_hotel` (`hotel_id`),
+                KEY `idx_status` (`sphinx_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx sync log -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_sync_log` (
+                `log_id`        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `sync_type`     VARCHAR(50) NOT NULL COMMENT 'destinations, hotels, routes, full',
+                `status`        ENUM('started','completed','failed') NOT NULL,
+                `items_total`   INT UNSIGNED DEFAULT 0,
+                `items_synced`  INT UNSIGNED DEFAULT 0,
+                `items_failed`  INT UNSIGNED DEFAULT 0,
+                `error_message` TEXT DEFAULT NULL,
+                `duration_ms`   INT UNSIGNED DEFAULT NULL,
+                `started_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `completed_at`  DATETIME DEFAULT NULL,
+                KEY `idx_type_status` (`sync_type`, `status`),
+                KEY `idx_started` (`started_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx API cache -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_cache` (
+                `cache_key`     VARCHAR(255) NOT NULL PRIMARY KEY,
+                `cache_data`    LONGBLOB NOT NULL,
+                `expires_at`    INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
+                KEY `idx_expires` (`expires_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+    </queries>
+
+    <language_variables>
+        <item lang="en" id="sphinx_holidays"><![CDATA[Sphinx Holidays]]></item>
+        <item lang="ro" id="sphinx_holidays"><![CDATA[Sphinx Holidays]]></item>
+        <item lang="en" id="sphinx_holidays.api_header"><![CDATA[Sphinx API Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.api_header"><![CDATA[Setări API Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.api_base_url"><![CDATA[API Base URL]]></item>
+        <item lang="ro" id="sphinx_holidays.api_base_url"><![CDATA[URL bază API]]></item>
+        <item lang="en" id="sphinx_holidays.api_key"><![CDATA[API Key (Bearer Token)]]></item>
+        <item lang="ro" id="sphinx_holidays.api_key"><![CDATA[Cheie API (Bearer Token)]]></item>
+        <item lang="en" id="sphinx_holidays.enable_api_cache"><![CDATA[Enable API response caching]]></item>
+        <item lang="ro" id="sphinx_holidays.enable_api_cache"><![CDATA[Activează cache-ul răspunsurilor API]]></item>
+        <item lang="en" id="sphinx_holidays.cache_ttl_search"><![CDATA[Search cache TTL (seconds)]]></item>
+        <item lang="ro" id="sphinx_holidays.cache_ttl_search"><![CDATA[TTL cache căutare (secunde)]]></item>
+        <item lang="en" id="sphinx_holidays.search_header"><![CDATA[Search Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.search_header"><![CDATA[Setări Căutare]]></item>
+        <item lang="en" id="sphinx_holidays.default_currency"><![CDATA[Default search currency]]></item>
+        <item lang="ro" id="sphinx_holidays.default_currency"><![CDATA[Monedă implicită căutare]]></item>
+        <item lang="en" id="sphinx_holidays.ignore_domains"><![CDATA[Ignore domains (comma-separated supplier IDs to skip)]]></item>
+        <item lang="ro" id="sphinx_holidays.ignore_domains"><![CDATA[Domenii ignorate (ID-uri furnizori separați prin virgulă)]]></item>
+        <item lang="en" id="sphinx_holidays.search_poll_interval"><![CDATA[Search poll interval (seconds)]]></item>
+        <item lang="ro" id="sphinx_holidays.search_poll_interval"><![CDATA[Interval verificare căutare (secunde)]]></item>
+        <item lang="en" id="sphinx_holidays.search_max_polls"><![CDATA[Maximum search polls before timeout]]></item>
+        <item lang="ro" id="sphinx_holidays.search_max_polls"><![CDATA[Număr maxim de verificări înainte de timeout]]></item>
+        <item lang="en" id="sphinx_holidays.pricing_header"><![CDATA[Pricing]]></item>
+        <item lang="ro" id="sphinx_holidays.pricing_header"><![CDATA[Prețuri]]></item>
+        <item lang="en" id="sphinx_holidays.commission"><![CDATA[Commission percentage]]></item>
+        <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
+        <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
+        <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
+        <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
+        <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
+        <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels_category_id"><![CDATA[ID categorie CS-Cart pentru hoteluri Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.packages_category_id"><![CDATA[CS-Cart category ID for Sphinx packages]]></item>
+        <item lang="ro" id="sphinx_holidays.packages_category_id"><![CDATA[ID categorie CS-Cart pentru pachete Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.resilience_header"><![CDATA[API Resilience]]></item>
+        <item lang="ro" id="sphinx_holidays.resilience_header"><![CDATA[Reziliență API]]></item>
+        <item lang="en" id="sphinx_holidays.api_max_retries"><![CDATA[Maximum retries on failure]]></item>
+        <item lang="ro" id="sphinx_holidays.api_max_retries"><![CDATA[Număr maxim de reîncercări]]></item>
+        <item lang="en" id="sphinx_holidays.api_retry_delay_ms"><![CDATA[Initial retry delay (ms)]]></item>
+        <item lang="ro" id="sphinx_holidays.api_retry_delay_ms"><![CDATA[Întârziere inițială reîncercare (ms)]]></item>
+        <item lang="en" id="sphinx_holidays.api_retry_multiplier"><![CDATA[Retry delay multiplier]]></item>
+        <item lang="ro" id="sphinx_holidays.api_retry_multiplier"><![CDATA[Multiplicator întârziere reîncercare]]></item>
+        <item lang="en" id="sphinx_holidays.circuit_breaker_threshold"><![CDATA[Circuit breaker threshold (failures before open)]]></item>
+        <item lang="ro" id="sphinx_holidays.circuit_breaker_threshold"><![CDATA[Prag circuit breaker (eșecuri înainte de deschidere)]]></item>
+        <item lang="en" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Circuit breaker timeout (seconds)]]></item>
+        <item lang="ro" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Timeout circuit breaker (secunde)]]></item>
+        <item lang="en" id="sphinx_holidays.debug_header"><![CDATA[Debug]]></item>
+        <item lang="ro" id="sphinx_holidays.debug_header"><![CDATA[Depanare]]></item>
+        <item lang="en" id="sphinx_holidays.debug_logging"><![CDATA[Enable debug logging]]></item>
+        <item lang="ro" id="sphinx_holidays.debug_logging"><![CDATA[Activează logare depanare]]></item>
+    </language_variables>
+</addon>

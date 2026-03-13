@@ -1,0 +1,3386 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO\n"
+
+msgctxt "Addons::name::novoton_holidays"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Addons::description::novoton_holidays"
+msgid "Integration with Novoton XML API for hotel bookings and price management"
+msgstr "Integrare cu Novoton XML API pentru rezervări hoteliere și gestionarea prețurilor"
+
+msgctxt "SettingsSections::novoton_holidays::general"
+msgid "General Settings"
+msgstr "Setări Generale"
+
+msgctxt "SettingsSections::novoton_holidays::tools_cron"
+msgid "Tools & Cron"
+msgstr "Instrumente & Cron"
+
+msgctxt "SettingsSections::novoton_holidays::advanced"
+msgid "Advanced"
+msgstr "Avansat"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_header"
+msgid "Cache TTL (Time to Live)"
+msgstr "Cache TTL (Durată de Viață)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_room_price"
+msgid "Room price cache (seconds)"
+msgstr "Cache preț cameră (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_room_price"
+msgid "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+msgstr "Cât timp sunt stocate în cache prețurile camerelor înainte de a fi reinterogate de la API. Valori mai mici = prețuri mai actuale dar mai multe apeluri API. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_availability"
+msgid "Availability cache (seconds)"
+msgstr "Cache disponibilitate (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_availability"
+msgid "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+msgstr "Cât timp sunt stocate în cache datele de disponibilitate. Disponibilitatea se schimbă frecvent, păstrați această valoare mică. Implicit: 180 (3 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_search"
+msgid "Search results cache (seconds)"
+msgstr "Cache rezultate căutare (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_search"
+msgid "How long search results are cached. Default: 300 (5 minutes)"
+msgstr "Cât timp sunt stocate în cache rezultatele căutării. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_intervals_header"
+msgid "Sync Intervals"
+msgstr "Intervale Sincronizare"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_days"
+msgid "Hotel info full sync interval (days)"
+msgstr "Interval sincronizare completă informații hotel (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
+msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+msgstr "Cât de des se efectuează o re-sincronizare completă a informațiilor hoteliere de la API. Între sincronizări complete, doar hotelurile noi/modificate sunt actualizate. Implicit: 180 (6 luni)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
+msgid "Price info full sync interval (days)"
+msgstr "Interval sincronizare completă prețuri (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_days"
+msgid "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+msgstr "Cât de des se efectuează o re-sincronizare completă a prețurilor sezoniere. Între sincronizări complete, doar pachetele expirate sunt actualizate. Implicit: 7 (săptămânal)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_facilities_days"
+msgid "Facilities sync interval (days)"
+msgstr "Interval sincronizare facilități (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_facilities_days"
+msgid "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+msgstr "Cât de des se re-sincronizează facilitățile hoteliere. Facilitățile se schimbă rar. Implicit: 30 (lunar)"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_header"
+msgid "Cron Batch Processing"
+msgstr "Procesare Cron pe Loturi"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_size"
+msgid "Batch size (items per run)"
+msgstr "Dimensiune lot (elemente per rulare)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_batch_size"
+msgid "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+msgstr "Numărul de hoteluri/pachete procesate per lot cron. Valori mai mari = sincronizare mai rapidă dar consum mai mare de memorie și posibile depășiri de timeout. Interval: 10-500. Implicit: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_max_execution_time"
+msgid "Max execution time (seconds)"
+msgstr "Timp maxim de execuție (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_max_execution_time"
+msgid "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+msgstr "Timpul maxim de execuție pentru o singură rulare cron înainte de pauză. Sincronizarea continuă la următoarea rulare. Ignorat în modul CLI. Interval: 60-3600. Implicit: 300 (5 minute)"
+
+msgctxt "SettingsOptions::novoton_holidays::slow_item_warning_ms"
+msgid "Slow item warning threshold (ms)"
+msgstr "Prag avertizare element lent (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::slow_item_warning_ms"
+msgid "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+msgstr "În timpul sincronizării, înregistrează un avertisment când procesarea unui hotel durează mai mult decât această valoare. Implicit: 30000 (30 secunde)"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limiting_header"
+msgid "Rate Limiting"
+msgstr "Limitare Rată"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_requests_per_min"
+msgid "Max API requests per minute"
+msgstr "Cereri API maxime pe minut"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_requests_per_min"
+msgid "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+msgstr "Numărul maxim de cereri API permise per adresă IP pe minut. Previne abuzul. Implicit: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Max booking attempts per hour"
+msgstr "Încercări maxime de rezervare pe oră"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+msgstr "Numărul maxim de încercări de rezervare permise per utilizator/sesiune pe oră. Previne spam-ul de rezervări. Implicit: 20"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
+msgid "Booking Limits"
+msgstr "Limite Rezervări"
+
+msgctxt "SettingsOptions::novoton_holidays::api_url"
+msgid "API URL"
+msgstr "URL API"
+
+msgctxt "SettingsOptions::novoton_holidays::api_key"
+msgid "API Key"
+msgstr "Cheie API"
+
+msgctxt "SettingsOptions::novoton_holidays::api_user"
+msgid "API Username"
+msgstr "Utilizator API"
+
+msgctxt "SettingsOptions::novoton_holidays::api_password"
+msgid "API Password"
+msgstr "Parolă API"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_api_cache"
+msgid "Enable API Response Caching"
+msgstr "Activează Cache pentru Răspunsuri API"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_api_cache"
+msgid "Cache API responses to improve performance. Prices cached for 5 minutes, availability for 3 minutes."
+msgstr "Memorează răspunsurile API pentru îmbunătățirea performanței. Prețurile sunt memorate 5 minute, disponibilitatea 3 minute."
+
+msgctxt "SettingsOptions::novoton_holidays::commission"
+msgid "Commission (%)"
+msgstr "Comision (%)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_currency"
+msgid "API prices currency"
+msgstr "Moneda prețurilor API"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_currency"
+msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+msgstr "Moneda în care API-ul Novoton returnează prețurile. Prețurile vor fi convertite din această monedă în moneda selectată de client."
+
+msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
+msgid "Currency risk commission %"
+msgstr "Comision risc valutar %"
+
+msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
+msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
+msgstr "Procentaj adăugat la cursul de schimb (0-5%, implicit 1.8%). Protejează împotriva fluctuațiilor valutare."
+
+msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
+msgid "API Resilience"
+msgstr "Reziliență API"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_retries"
+msgid "Max retries"
+msgstr "Număr maxim de reîncercări"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_retries"
+msgid "Number of retry attempts for failed API calls (recommended: 3)"
+msgstr "Numărul de reîncercări pentru apeluri API eșuate (recomandat: 3)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_delay_ms"
+msgid "Retry delay (ms)"
+msgstr "Întârziere reîncercare (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_delay_ms"
+msgid "Initial delay in milliseconds before first retry (recommended: 1000)"
+msgstr "Întârzierea inițială în milisecunde înainte de prima reîncercare (recomandat: 1000)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_multiplier"
+msgid "Retry multiplier"
+msgstr "Multiplicator reîncercare"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_multiplier"
+msgid "Exponential backoff multiplier for retries (recommended: 2, gives delays: 1s, 2s, 4s)"
+msgstr "Multiplicator exponențial pentru reîncercări (recomandat: 2, rezultă: 1s, 2s, 4s)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_threshold"
+msgid "Circuit breaker threshold"
+msgstr "Prag circuit breaker"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_threshold"
+msgid "Number of consecutive failures before circuit opens (recommended: 5)"
+msgstr "Numărul de eșecuri consecutive înainte de deschiderea circuitului (recomandat: 5)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_timeout"
+msgid "Circuit breaker timeout (s)"
+msgstr "Timeout circuit breaker (s)"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_timeout"
+msgid "Seconds to wait before retrying after circuit opens (recommended: 60)"
+msgstr "Secunde de așteptare înainte de reîncercare după deschiderea circuitului (recomandat: 60)"
+
+msgctxt "Languages::novoton_holidays.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Cursuri Valutare"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_info"
+msgid "Current Exchange Rates"
+msgstr "Cursuri Valutare Actuale"
+
+msgctxt "Languages::novoton_holidays.coefficient"
+msgid "Coefficient"
+msgstr "Coeficient"
+
+msgctxt "Languages::novoton_holidays.is_primary"
+msgid "Primary"
+msgstr "Primar"
+
+msgctxt "Languages::novoton_holidays.primary_currency"
+msgid "primary currency"
+msgstr "monedă primară"
+
+msgctxt "Languages::novoton_holidays.update_info"
+msgid "Update Information"
+msgstr "Informații Actualizare"
+
+msgctxt "Languages::novoton_holidays.last_update"
+msgid "Last Update"
+msgstr "Ultima Actualizare"
+
+msgctxt "Languages::novoton_holidays.currency_risk_commission"
+msgid "Currency Risk Commission"
+msgstr "Comision Risc Valutar"
+
+msgctxt "Languages::novoton_holidays.data_source"
+msgid "Data Source"
+msgstr "Sursă Date"
+
+msgctxt "Languages::novoton_holidays.manual_update"
+msgid "Manual Update"
+msgstr "Actualizare Manuală"
+
+msgctxt "Languages::novoton_holidays.manual_update_description"
+msgid "Click the button below to fetch the latest exchange rates from BNR and update CS-Cart currencies."
+msgstr "Apăsați butonul de mai jos pentru a prelua cele mai recente cursuri de la BNR și a actualiza monedele CS-Cart."
+
+msgctxt "Languages::novoton_holidays.update_rates_now"
+msgid "Update Rates Now"
+msgstr "Actualizează Cursurile Acum"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_updated"
+msgid "Exchange rates have been updated successfully."
+msgstr "Cursurile valutare au fost actualizate cu succes."
+
+msgctxt "Languages::novoton_holidays.cron_setup"
+msgid "Automatic Updates (Cron)"
+msgstr "Actualizări Automate (Cron)"
+
+msgctxt "Languages::novoton_holidays.cron_setup_description"
+msgid "Set up a cron job to automatically update exchange rates daily. BNR publishes new rates around 1:00 PM Romanian time."
+msgstr "Configurați o sarcină cron pentru actualizarea automată zilnică a cursurilor. BNR publică noile cursuri în jurul orei 13:00."
+
+msgctxt "Languages::novoton_holidays.cron_url"
+msgid "Cron URL"
+msgstr "URL Cron"
+
+msgctxt "Languages::novoton_holidays.cron_url_frontend"
+msgid "Frontend Cron URL"
+msgstr "URL Cron Frontend"
+
+msgctxt "Languages::novoton_holidays.cron_url_admin"
+msgid "Admin Cron URL"
+msgstr "URL Cron Admin"
+
+msgctxt "Languages::novoton_holidays.recommended"
+msgid "recommended"
+msgstr "recomandat"
+
+msgctxt "Languages::novoton_holidays.requires_admin_login"
+msgid "requires admin login"
+msgstr "necesită autentificare admin"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Cron Command (daily at 13:05)"
+msgstr "Comandă Cron (zilnic la 13:05)"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_note"
+msgid "This runs daily at 13:05 (1:05 PM) to fetch rates after BNR publishes them."
+msgstr "Rulează zilnic la 13:05 pentru a prelua cursurile după ce BNR le publică."
+
+msgctxt "Languages::novoton_holidays.cron_password_not_set"
+msgid "Cron access key is not configured. Please set it in addon settings first."
+msgstr "Cheia de acces cron nu este configurată. Vă rugăm să o setați mai întâi în setările addon-ului."
+
+msgctxt "Languages::novoton_holidays.configure_settings"
+msgid "Configure Settings"
+msgstr "Configurează Setările"
+
+msgctxt "Languages::novoton_holidays.how_it_works"
+msgid "How It Works"
+msgstr "Cum Funcționează"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step1"
+msgid "Fetches exchange rates from BNR (National Bank of Romania) API"
+msgstr "Preia cursurile valutare de la API-ul BNR (Banca Națională a României)"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step2"
+msgid "Extracts rates for EUR, USD, GBP (relative to RON)"
+msgstr "Extrage cursurile pentru EUR, USD, GBP (relative la RON)"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step3"
+msgid "Calculates EUR-based coefficients and applies commission"
+msgstr "Calculează coeficienții bazați pe EUR și aplică comisionul"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step4"
+msgid "Updates CS-Cart currency rates automatically"
+msgstr "Actualizează automat cursurile valutare în CS-Cart"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
+msgid "Exchange Rates Help"
+msgstr "Ajutor Cursuri Valutare"
+
+msgctxt "Languages::menu.novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Rezervări Hoteluri"
+
+msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Cereri Alternative"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_sync"
+msgid "Hotels Sync"
+msgstr "Sincronizare Hoteluri"
+
+msgctxt "Languages::menu.novoton_holidays_menu.room_price"
+msgid "Room Price Check"
+msgstr "Verificare Preț Cameră"
+
+msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
+msgid "Add Hotels as Products"
+msgstr "Adaugă Hoteluri ca Produse"
+
+msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
+msgid "Facilities"
+msgstr "Facilități"
+
+msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Cursuri Valutare"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_diagnostic"
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_hotel_request"
+msgid "Test Hotel Request"
+msgstr "Test Cerere Hotel"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_alternative_rs"
+msgid "Test Alternative RS"
+msgstr "Test RS Alternative"
+
+msgctxt "SettingsOptions::novoton_holidays::selected_countries"
+msgid "Selected Countries"
+msgstr "Țări Selectate"
+
+msgctxt "SettingsOptions::novoton_holidays::test_booking"
+msgid "Test Booking Mode"
+msgstr "Mod Testare Rezervări"
+
+msgctxt "SettingsOptions::novoton_holidays::disable_api_submission"
+msgid "Disable API Submission (Testing Mode)"
+msgstr "Dezactivează Trimiterea API (Mod Testare)"
+
+msgctxt "Languages::novoton_holidays.book_your_stay"
+msgid "Book Your Stay"
+msgstr "Rezervă Sejurul"
+
+msgctxt "Languages::novoton_holidays.find_your_next_stay"
+msgid "Find your next stay"
+msgstr "Găsește următorul tău sejur"
+
+msgctxt "Languages::novoton_holidays.check_in"
+msgid "Check-in"
+msgstr "Check-in"
+
+msgctxt "Languages::novoton_holidays.check_out"
+msgid "Check-out"
+msgstr "Check-out"
+
+msgctxt "Languages::novoton_holidays.select_dates"
+msgid "Select dates"
+msgstr "Selectează datele"
+
+msgctxt "Languages::novoton_holidays.guests"
+msgid "Guests"
+msgstr "Turiști"
+
+msgctxt "Languages::novoton_holidays.adults"
+msgid "novoton_holidays.adults"
+msgstr "Adulți"
+
+msgctxt "Languages::novoton_holidays.children"
+msgid "novoton_holidays.children"
+msgstr "Copii"
+
+msgctxt "Languages::novoton_holidays.child"
+msgid "child"
+msgstr "copil"
+
+msgctxt "Languages::novoton_holidays.rooms"
+msgid "rooms"
+msgstr "camere"
+
+msgctxt "Languages::novoton_holidays.room"
+msgid "Room"
+msgstr "Cameră"
+
+msgctxt "Languages::novoton_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adulți"
+
+msgctxt "Languages::novoton_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Copil|[n] Copii"
+
+msgctxt "Languages::novoton_holidays.n_nights"
+msgid "[n] Night|[n] Nights"
+msgstr "[n] Noapte|[n] Nopți"
+
+msgctxt "Languages::novoton_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Cameră|[n] Camere"
+
+msgctxt "Languages::novoton_holidays.n_years"
+msgid "[n] year|[n] years"
+msgstr "[n] an|[n] ani"
+
+msgctxt "Languages::novoton_holidays.search"
+msgid "Search"
+msgstr "Caută"
+
+msgctxt "Languages::novoton_holidays.add_room"
+msgid "Add Room"
+msgstr "Adaugă cameră"
+
+msgctxt "Languages::novoton_holidays.done"
+msgid "Done"
+msgstr "Gata"
+
+msgctxt "Languages::novoton_holidays.age"
+msgid "age"
+msgstr "vârstă"
+
+msgctxt "Languages::novoton_holidays.select_age"
+msgid "Select age"
+msgstr "Selectează vârsta"
+
+msgctxt "Languages::novoton_holidays.years_old"
+msgid "years old"
+msgstr "ani"
+
+msgctxt "Languages::novoton_holidays.remove"
+msgid "Remove"
+msgstr "Șterge"
+
+msgctxt "Languages::novoton_holidays.where_going"
+msgid "Where are you going?"
+msgstr "Unde mergi?"
+
+msgctxt "Languages::novoton_holidays.destination"
+msgid "Destination"
+msgstr "Destinație"
+
+msgctxt "Languages::novoton_holidays.availability"
+msgid "Availability"
+msgstr "Disponibilitate"
+
+msgctxt "Languages::novoton_holidays.room_type"
+msgid "Room Type"
+msgstr "Tip Cameră"
+
+msgctxt "Languages::novoton_holidays.your_choices"
+msgid "Your Choices"
+msgstr "Opțiunile Tale"
+
+msgctxt "Languages::novoton_holidays.price_for_stay"
+msgid "Price for [nights] nights"
+msgstr "Preț pentru [nights] nopți"
+
+msgctxt "Languages::novoton_holidays.select"
+msgid "Select"
+msgstr "Selectează"
+
+msgctxt "Languages::novoton_holidays.book_now"
+msgid "Book Now"
+msgstr "Rezervă Acum"
+
+msgctxt "Languages::novoton_holidays.book"
+msgid "Book"
+msgstr "Rezervă"
+
+msgctxt "Languages::novoton_holidays.nights"
+msgid "nights"
+msgstr "nopți"
+
+msgctxt "Languages::novoton_holidays.package"
+msgid "Package"
+msgstr "Pachet"
+
+msgctxt "Languages::novoton_holidays.night"
+msgid "night"
+msgstr "noapte"
+
+msgctxt "Languages::novoton_holidays.available"
+msgid "Available"
+msgstr "Disponibil"
+
+msgctxt "Languages::novoton_holidays.total_for_all_rooms"
+msgid "Total for all rooms"
+msgstr "Total pentru toate camerele"
+
+msgctxt "Languages::novoton_holidays.no_availability"
+msgid "No availability for the selected dates"
+msgstr "Fără disponibilitate pentru datele selectate"
+
+msgctxt "Languages::novoton_holidays.no_rooms_available"
+msgid "No rooms available"
+msgstr "Nu există camere disponibile"
+
+msgctxt "Languages::novoton_holidays.all_inclusive"
+msgid "All Inclusive"
+msgstr "All Inclusive"
+
+msgctxt "Languages::novoton_holidays.ultra_all_inclusive"
+msgid "Ultra All Inclusive"
+msgstr "Ultra All Inclusive"
+
+msgctxt "Languages::novoton_holidays.full_board"
+msgid "Full Board"
+msgstr "Pensiune Completă"
+
+msgctxt "Languages::novoton_holidays.half_board"
+msgid "Half Board"
+msgstr "Demipensiune"
+
+msgctxt "Languages::novoton_holidays.bed_breakfast"
+msgid "Bed & Breakfast"
+msgstr "Mic Dejun Inclus"
+
+msgctxt "Languages::novoton_holidays.room_only"
+msgid "Room Only"
+msgstr "Doar Cameră"
+
+msgctxt "Languages::novoton_holidays.meal_plan"
+msgid "Meal Plan"
+msgstr "Masă"
+
+msgctxt "Languages::novoton_holidays.all_boards"
+msgid "All Boards"
+msgstr "Toate Tipurile"
+
+msgctxt "Languages::novoton_holidays.payment_terms"
+msgid "Payment Terms"
+msgstr "Condiții de Plată"
+
+msgctxt "Languages::novoton_holidays.cancellation_terms"
+msgid "Cancellation Terms"
+msgstr "Condiții de anulare"
+
+msgctxt "Languages::novoton_holidays.payment_cancellation_terms"
+msgid "Payment and Cancellation Terms"
+msgstr "Termeni de plată și anulare"
+
+msgctxt "Languages::novoton_holidays.payment_terms_apply"
+msgid "Payment Terms Apply"
+msgstr "Se aplică Condiții de Plată"
+
+msgctxt "Languages::novoton_holidays.cancellation_terms_apply"
+msgid "Cancellation Terms Apply"
+msgstr "Se aplică Condiții de Anulare"
+
+msgctxt "Languages::novoton_holidays.payment_and_cancellation_terms_apply"
+msgid "Payment and cancellation terms apply"
+msgstr "Se aplică Condiții de Anulare și Plată"
+
+msgctxt "Languages::novoton_holidays.includes_taxes"
+msgid "Includes taxes and fees"
+msgstr "Include taxe și comisioane"
+
+msgctxt "Languages::novoton_holidays.early_booking"
+msgid "Early Booking"
+msgstr "Early Booking"
+
+msgctxt "Languages::novoton_holidays.early_booking_discount"
+msgid "Early Booking Discount"
+msgstr "Reducere Early Booking"
+
+msgctxt "Languages::novoton_holidays.discount"
+msgid "Discount"
+msgstr "Reducere"
+
+msgctxt "Languages::novoton_holidays.guest_details"
+msgid "Guest Details"
+msgstr "Detalii Turiști"
+
+msgctxt "Languages::novoton_holidays.guest_name"
+msgid "Guest Name"
+msgstr "Nume Turist"
+
+msgctxt "Languages::novoton_holidays.first_name"
+msgid "First Name"
+msgstr "Prenume"
+
+msgctxt "Languages::novoton_holidays.last_name"
+msgid "Last Name"
+msgstr "Nume"
+
+msgctxt "Languages::novoton_holidays.full_name"
+msgid "Full Name"
+msgstr "Nume Complet"
+
+msgctxt "Languages::novoton_holidays.birth_date"
+msgid "Birth Date"
+msgstr "Data Nașterii"
+
+msgctxt "Languages::novoton_holidays.nationality"
+msgid "Nationality"
+msgstr "Naționalitate"
+
+msgctxt "Languages::novoton_holidays.continue_to_payment"
+msgid "Continue to Payment"
+msgstr "Continuă la Plată"
+
+msgctxt "Languages::novoton_holidays.add_to_cart"
+msgid "Add to Cart"
+msgstr "Adaugă în Coș"
+
+msgctxt "Languages::novoton_holidays.booking_summary"
+msgid "Booking Summary"
+msgstr "Sumar Rezervare"
+
+msgctxt "Languages::novoton_holidays.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.dates"
+msgid "Dates"
+msgstr "Date"
+
+msgctxt "Languages::novoton_holidays.total_price"
+msgid "Total Price"
+msgstr "Preț Total"
+
+msgctxt "Languages::novoton_holidays.price_per_night"
+msgid "Price per night"
+msgstr "Preț pe noapte"
+
+msgctxt "Languages::novoton_holidays.select_room_for"
+msgid "Select room for"
+msgstr "Selectează cameră pentru"
+
+msgctxt "Languages::novoton_holidays.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::novoton_holidays.room_number"
+msgid "Room"
+msgstr "cameră"
+
+msgctxt "Languages::novoton_holidays.enter_guest_details"
+msgid "Enter guest details"
+msgstr "Introduceți detaliile turiștilor"
+
+msgctxt "Languages::novoton_holidays.main_guest"
+msgid "Main Guest"
+msgstr "Turist Principal"
+
+msgctxt "Languages::novoton_holidays.additional_guest"
+msgid "Additional Guest"
+msgstr "Turist Suplimentar"
+
+msgctxt "Languages::novoton_holidays.required_field"
+msgid "This field is required"
+msgstr "Acest câmp este obligatoriu"
+
+msgctxt "Languages::novoton_holidays.invalid_booking_data"
+msgid "Invalid booking data"
+msgstr "Date de rezervare invalide"
+
+msgctxt "Languages::novoton_holidays.booking_added_to_cart"
+msgid "Booking added to cart"
+msgstr "Rezervarea a fost adăugată în coș"
+
+msgctxt "Languages::novoton_holidays.added_to_cart"
+msgid "Booking added to cart successfully"
+msgstr "Rezervarea a fost adăugată în coș cu succes!"
+
+msgctxt "Languages::novoton_holidays.booking_confirmed"
+msgid "Booking Confirmed"
+msgstr "Rezervare Confirmată"
+
+msgctxt "Languages::novoton_holidays.booking_pending"
+msgid "Booking Pending"
+msgstr "Rezervare în Așteptare"
+
+msgctxt "Languages::novoton_holidays.booking_failed"
+msgid "Booking Failed"
+msgstr "Rezervare Eșuată"
+
+msgctxt "Languages::novoton_holidays.per_room"
+msgid "per room"
+msgstr "pe cameră"
+
+msgctxt "Languages::novoton_holidays.total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.modify_search"
+msgid "Modify Search"
+msgstr "Modifică Căutarea"
+
+msgctxt "Languages::novoton_holidays.new_search"
+msgid "New Search"
+msgstr "Căutare Nouă"
+
+msgctxt "Languages::novoton_holidays.more_info"
+msgid "More Info"
+msgstr "Mai Multe Informații"
+
+msgctxt "Languages::novoton_holidays.room_details"
+msgid "Room Details"
+msgstr "Detalii Cameră"
+
+msgctxt "Languages::novoton_holidays.request"
+msgid "On Request"
+msgstr "La Cerere"
+
+msgctxt "Languages::novoton_holidays.january"
+msgid "January"
+msgstr "Ianuarie"
+
+msgctxt "Languages::novoton_holidays.february"
+msgid "February"
+msgstr "Februarie"
+
+msgctxt "Languages::novoton_holidays.march"
+msgid "March"
+msgstr "Martie"
+
+msgctxt "Languages::novoton_holidays.april"
+msgid "April"
+msgstr "Aprilie"
+
+msgctxt "Languages::novoton_holidays.may"
+msgid "May"
+msgstr "Mai"
+
+msgctxt "Languages::novoton_holidays.june"
+msgid "June"
+msgstr "Iunie"
+
+msgctxt "Languages::novoton_holidays.july"
+msgid "July"
+msgstr "Iulie"
+
+msgctxt "Languages::novoton_holidays.august"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::novoton_holidays.september"
+msgid "September"
+msgstr "Septembrie"
+
+msgctxt "Languages::novoton_holidays.october"
+msgid "October"
+msgstr "Octombrie"
+
+msgctxt "Languages::novoton_holidays.november"
+msgid "November"
+msgstr "Noiembrie"
+
+msgctxt "Languages::novoton_holidays.december"
+msgid "December"
+msgstr "Decembrie"
+
+msgctxt "Languages::novoton_holidays.mon"
+msgid "Mon"
+msgstr "Lun"
+
+msgctxt "Languages::novoton_holidays.tue"
+msgid "Tue"
+msgstr "Mar"
+
+msgctxt "Languages::novoton_holidays.wed"
+msgid "Wed"
+msgstr "Mie"
+
+msgctxt "Languages::novoton_holidays.thu"
+msgid "Thu"
+msgstr "Joi"
+
+msgctxt "Languages::novoton_holidays.fri"
+msgid "Fri"
+msgstr "Vin"
+
+msgctxt "Languages::novoton_holidays.sat"
+msgid "Sat"
+msgstr "Sâm"
+
+msgctxt "Languages::novoton_holidays.sun"
+msgid "Sun"
+msgstr "Dum"
+
+msgctxt "Languages::novoton_holidays.today"
+msgid "Today"
+msgstr "Astăzi"
+
+msgctxt "Languages::novoton_holidays.clear"
+msgid "Clear"
+msgstr "Șterge"
+
+msgctxt "Languages::novoton_holidays.close"
+msgid "Close"
+msgstr "Închide"
+
+msgctxt "Languages::novoton_holidays.nights_stay"
+msgid "nights stay"
+msgstr "nopți"
+
+msgctxt "Languages::novoton_holidays.flexible_dates"
+msgid "Flexible dates"
+msgstr "Date flexibile"
+
+msgctxt "Languages::novoton_holidays.exact_dates"
+msgid "Exact dates"
+msgstr "Date exacte"
+
+msgctxt "Languages::novoton_holidays.plus_minus_days"
+msgid "± [days] days"
+msgstr "± [days] zile"
+
+msgctxt "Languages::novoton_holidays.from"
+msgid "From"
+msgstr "De la"
+
+msgctxt "Languages::novoton_holidays.to"
+msgid "To"
+msgstr "Până la"
+
+msgctxt "Languages::novoton_holidays.person"
+msgid "person"
+msgstr "persoană"
+
+msgctxt "Languages::novoton_holidays.persons"
+msgid "persons"
+msgstr "persoane"
+
+msgctxt "Languages::novoton_holidays.year"
+msgid "Year"
+msgstr "An"
+
+msgctxt "Languages::novoton_holidays.years"
+msgid "years"
+msgstr "ani"
+
+msgctxt "Languages::novoton_holidays.select_check_in"
+msgid "Select check-in date"
+msgstr "Selectează data de check-in"
+
+msgctxt "Languages::novoton_holidays.select_check_out"
+msgid "Select check-out date"
+msgstr "Selectează data check-out"
+
+msgctxt "Languages::novoton_holidays.loading"
+msgid "Loading..."
+msgstr "Se încarcă..."
+
+msgctxt "Languages::novoton_holidays.please_wait"
+msgid "Please wait..."
+msgstr "Vă rugăm așteptați..."
+
+msgctxt "Languages::novoton_holidays.error_occurred"
+msgid "An error occurred"
+msgstr "A apărut o eroare"
+
+msgctxt "Languages::novoton_holidays.try_again"
+msgid "Try again"
+msgstr "Încearcă din nou"
+
+msgctxt "Languages::novoton_holidays.select_room_type"
+msgid "Select room type for each room"
+msgstr "Selectează tipul camerei pentru fiecare cameră"
+
+msgctxt "Languages::novoton_holidays.room_type_sgl"
+msgid "Single Room"
+msgstr "Cameră Single"
+
+msgctxt "Languages::novoton_holidays.room_type_dbl"
+msgid "Double Room"
+msgstr "Cameră Dublă"
+
+msgctxt "Languages::novoton_holidays.room_type_trp"
+msgid "Triple Room"
+msgstr "Cameră Triplă"
+
+msgctxt "Languages::novoton_holidays.room_type_app"
+msgid "Apartment"
+msgstr "Apartament"
+
+msgctxt "Languages::novoton_holidays.room_type_sui"
+msgid "Suite"
+msgstr "Suită"
+
+msgctxt "Languages::novoton_holidays.room_type_std"
+msgid "Standard Room"
+msgstr "Cameră Standard"
+
+msgctxt "Languages::novoton_holidays.room_type_dlx"
+msgid "Deluxe Room"
+msgstr "Cameră Deluxe"
+
+msgctxt "Languages::novoton_holidays.room_type_fam"
+msgid "Family Room"
+msgstr "Cameră Familială"
+
+msgctxt "Languages::novoton_holidays.room_type_sup"
+msgid "Superior Room"
+msgstr "Cameră Superior"
+
+msgctxt "Languages::novoton_holidays.room_type_stu"
+msgid "novoton_holidays.room_type_stu"
+msgstr "Studio"
+
+msgctxt "Languages::novoton_holidays.room_type_mais"
+msgid "novoton_holidays.room_type_mais"
+msgstr "Maisonette"
+
+msgctxt "Languages::novoton_holidays.room_type_quad"
+msgid "novoton_holidays.room_type_quad"
+msgstr "Cameră Cvadruplă"
+
+msgctxt "Languages::novoton_holidays.room_type_bung"
+msgid "novoton_holidays.room_type_bung"
+msgstr "Bungalow"
+
+msgctxt "Languages::novoton_holidays.room_type_villa"
+msgid "novoton_holidays.room_type_villa"
+msgstr "Vilă"
+
+msgctxt "Languages::novoton_holidays.bedroom"
+msgid "novoton_holidays.bedroom"
+msgstr "Dormitor"
+
+msgctxt "Languages::novoton_holidays.room_superior"
+msgid "novoton_holidays.room_superior"
+msgstr "Superior"
+
+msgctxt "Languages::novoton_holidays.room_deluxe"
+msgid "novoton_holidays.room_deluxe"
+msgstr "Deluxe"
+
+msgctxt "Languages::novoton_holidays.room_economy"
+msgid "novoton_holidays.room_economy"
+msgstr "Economic"
+
+msgctxt "Languages::novoton_holidays.room_standard"
+msgid "novoton_holidays.room_standard"
+msgstr "Standard"
+
+msgctxt "Languages::novoton_holidays.room_kitchenette"
+msgid "novoton_holidays.room_kitchenette"
+msgstr "cu Chicineta"
+
+msgctxt "Languages::novoton_holidays.room_sea_view"
+msgid "novoton_holidays.room_sea_view"
+msgstr "Vedere la Mare"
+
+msgctxt "Languages::novoton_holidays.room_pool_view"
+msgid "novoton_holidays.room_pool_view"
+msgstr "Vedere la Piscină"
+
+msgctxt "Languages::novoton_holidays.room_garden_view"
+msgid "novoton_holidays.room_garden_view"
+msgstr "Vedere la Grădină"
+
+msgctxt "Languages::novoton_holidays.room_balcony"
+msgid "novoton_holidays.room_balcony"
+msgstr "cu Balcon"
+
+msgctxt "Languages::novoton_holidays.room_terrace"
+msgid "novoton_holidays.room_terrace"
+msgstr "cu Terasă"
+
+msgctxt "Languages::novoton_holidays.till"
+msgid "till"
+msgstr "până la"
+
+msgctxt "Languages::novoton_holidays.no_show"
+msgid "No Show"
+msgstr "Neprezentare"
+
+msgctxt "Languages::novoton_holidays.penalty"
+msgid "penalty"
+msgstr "penalizare"
+
+msgctxt "Languages::novoton_holidays.no_penalty"
+msgid "No penalty"
+msgstr "Fără penalizare"
+
+msgctxt "Languages::novoton_holidays.up_to"
+msgid "Up to"
+msgstr "Până la"
+
+msgctxt "Languages::novoton_holidays.days_before_arrival"
+msgid "days before arrival"
+msgstr "zile înainte de sosire"
+
+msgctxt "Languages::novoton_holidays.terms_of_payment"
+msgid "Terms of payment"
+msgstr "Condiții de plată"
+
+msgctxt "Languages::novoton_holidays.payment_cancellation_terms_link"
+msgid "Payment and cancellation terms"
+msgstr "Condiții de Anulare și Plată"
+
+msgctxt "Languages::novoton_holidays.refresh_price"
+msgid "Refresh price"
+msgstr "Actualizează prețul"
+
+msgctxt "Languages::novoton_holidays.price_unverified"
+msgid "unverified"
+msgstr "neconfirmat"
+
+msgctxt "Languages::novoton_holidays.price_must_be_verified"
+msgid "Price must be verified before proceeding"
+msgstr "Prețul trebuie verificat înainte de a continua"
+
+msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
+msgid "Price could not be verified for the entered ages. Please try refreshing the price."
+msgstr "Prețul nu a putut fi verificat pentru vârstele introduse. Vă rugăm să actualizați prețul."
+
+msgctxt "Languages::novoton_holidays.check_child_dob"
+msgid "Check date of birth"
+msgstr "Verifică data nașterii"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age"
+msgid "Unavailable"
+msgstr "Indisponibil"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age_sub"
+msgid "for child age"
+msgstr "pentru vârsta copilului"
+
+msgctxt "Languages::novoton_holidays.price_verification_failed"
+msgid "Price verification failed. The booking cannot proceed."
+msgstr "Verificarea prețului a eșuat. Rezervarea nu poate continua."
+
+msgctxt "Languages::novoton_holidays.price_changed_on_submit"
+msgid "The price has changed. Please review the new price and try again."
+msgstr "Prețul s-a modificat. Vă rugăm să verificați noul preț și să încercați din nou."
+
+msgctxt "Languages::novoton_holidays.try_different_dates"
+msgid "Please try different dates or check back later"
+msgstr "Vă rugăm încercați alte date sau reveniți mai târziu"
+
+msgctxt "Languages::novoton_holidays.search_results"
+msgid "Search Results"
+msgstr "Rezultate Căutare"
+
+msgctxt "Languages::novoton_holidays.jan"
+msgid "Jan"
+msgstr "Ian"
+
+msgctxt "Languages::novoton_holidays.feb"
+msgid "Feb"
+msgstr "Feb"
+
+msgctxt "Languages::novoton_holidays.mar"
+msgid "Mar"
+msgstr "Mar"
+
+msgctxt "Languages::novoton_holidays.apr"
+msgid "Apr"
+msgstr "Apr"
+
+msgctxt "Languages::novoton_holidays.jun"
+msgid "Jun"
+msgstr "Iun"
+
+msgctxt "Languages::novoton_holidays.jul"
+msgid "Jul"
+msgstr "Iul"
+
+msgctxt "Languages::novoton_holidays.aug"
+msgid "Aug"
+msgstr "Aug"
+
+msgctxt "Languages::novoton_holidays.sep"
+msgid "Sep"
+msgstr "Sep"
+
+msgctxt "Languages::novoton_holidays.oct"
+msgid "Oct"
+msgstr "Oct"
+
+msgctxt "Languages::novoton_holidays.nov"
+msgid "Nov"
+msgstr "Noi"
+
+msgctxt "Languages::novoton_holidays.dec"
+msgid "Dec"
+msgstr "Dec"
+
+msgctxt "Languages::novoton_holidays.children_age"
+msgid "Children's age"
+msgstr "Vârsta copiilor"
+
+msgctxt "Languages::novoton_holidays.child_age"
+msgid "Child's age"
+msgstr "Vârsta copilului"
+
+msgctxt "Languages::novoton_holidays.child_n_age"
+msgid "Child [n] age"
+msgstr "Vârsta copilului [n]"
+
+msgctxt "Languages::novoton_holidays.select_ages"
+msgid "Select ages"
+msgstr "Selectează vârstele"
+
+msgctxt "Languages::novoton_holidays.adults_label"
+msgid "Adults"
+msgstr "Adulți"
+
+msgctxt "Languages::novoton_holidays.children_label"
+msgid "Children"
+msgstr "Copii"
+
+msgctxt "Languages::novoton_holidays.children_ages_label"
+msgid "Children's ages:"
+msgstr "Vârsta copiilor:"
+
+msgctxt "Languages::novoton_holidays.year_old"
+msgid "year old"
+msgstr "an"
+
+msgctxt "Languages::novoton_holidays.selected"
+msgid "selected"
+msgstr "selectate"
+
+msgctxt "Languages::novoton_holidays.check_in_date"
+msgid "Check-in date"
+msgstr "Data check-in"
+
+msgctxt "Languages::novoton_holidays.check_out_date"
+msgid "Check-out date"
+msgstr "Data check-out"
+
+msgctxt "Languages::novoton_holidays.select_dates_message"
+msgid "Select dates to see this property's availability and prices"
+msgstr "Selectați datele pentru a vedea disponibilitatea și prețurile"
+
+msgctxt "Languages::novoton_holidays.change_search"
+msgid "Change Search"
+msgstr "Modifică căutarea"
+
+msgctxt "Languages::novoton_holidays.apply_changes"
+msgid "Apply changes"
+msgstr "Aplică modificări"
+
+msgctxt "Languages::novoton_holidays.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Vă rugăm selectați datele de check-in și check-out"
+
+msgctxt "Languages::novoton_holidays.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Selectează vârsta ([count] lipsă)"
+
+msgctxt "Languages::novoton_holidays.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Selectează vârsta pentru 1 copil (Cameră [rooms])."
+
+msgctxt "Languages::novoton_holidays.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Selectează vârsta pentru [count] copii (Cameră [rooms])."
+
+msgctxt "Languages::novoton_holidays.day"
+msgid "Day"
+msgstr "Zi"
+
+msgctxt "Languages::novoton_holidays.days"
+msgid "days"
+msgstr "zile"
+
+msgctxt "Languages::novoton_holidays.night_stay"
+msgid "night stay"
+msgstr "noapte"
+
+msgctxt "Languages::novoton_holidays.flexible_dates_found"
+msgid "We found availability on nearby dates!"
+msgstr "Am găsit disponibilitate la date apropiate!"
+
+msgctxt "Languages::novoton_holidays.alternative_dates_found"
+msgid "No availability on selected dates, but found on:"
+msgstr "Nu există disponibilitate la datele selectate, dar am găsit la:"
+
+msgctxt "Languages::novoton_holidays.view_availability"
+msgid "View availability for these dates"
+msgstr "Vezi disponibilitatea pentru aceste date"
+
+msgctxt "Languages::novoton_holidays.no_availability_selected_dates"
+msgid "No availability for your selected dates"
+msgstr "Nu există disponibilitate pentru datele selectate"
+
+msgctxt "Languages::novoton_holidays.available_rooms"
+msgid "available"
+msgstr "disponibile"
+
+msgctxt "Languages::novoton_holidays.reservation_on_request"
+msgid "Reservation on request"
+msgstr "Rezervare la cerere"
+
+msgctxt "Languages::novoton_holidays.cancellation_policy"
+msgid "Cancellation Policy"
+msgstr "Condiții de anulare"
+
+msgctxt "Languages::novoton_holidays.edit_guest_details"
+msgid "Edit Guest Details"
+msgstr "Editează detalii turiști"
+
+msgctxt "Languages::novoton_holidays.we_have_left"
+msgid "We have [count] left"
+msgstr "[count] disponibile"
+
+msgctxt "Languages::novoton_holidays.board"
+msgid "Board"
+msgstr "Masă"
+
+msgctxt "Languages::novoton_holidays.back_to_results"
+msgid "Back to Results"
+msgstr "Înapoi la rezultate"
+
+msgctxt "Languages::novoton_holidays.stay_nights"
+msgid "Stay: [nights] nights"
+msgstr "Cazare: [nights] nopți"
+
+msgctxt "Languages::novoton_holidays.stay_night"
+msgid "Stay: 1 night"
+msgstr "Cazare: 1 noapte"
+
+msgctxt "Languages::novoton_holidays.childrens_ages"
+msgid "Children's ages"
+msgstr "Vârstele copiilor"
+
+msgctxt "Languages::novoton_holidays.adult_holder"
+msgid "Adult - Holder"
+msgstr "Adult - Lider rezervare"
+
+msgctxt "Languages::novoton_holidays.enter_booking_details"
+msgid "Enter your booking details"
+msgstr "Introduceți detaliile rezervării"
+
+msgctxt "Languages::novoton_holidays.room_lowercase"
+msgid "room"
+msgstr "cameră"
+
+msgctxt "Languages::novoton_holidays.x_available"
+msgid "[count] available"
+msgstr "[count] disponibile"
+
+msgctxt "Languages::novoton_holidays.reservation_on_request_confirm"
+msgid "Reservation on request - confirmation within max 48 hours"
+msgstr "Rezervare la cerere - confirmare în max 48 ore"
+
+msgctxt "Languages::novoton_holidays.available_rooms_offers"
+msgid "Available: [rooms] rooms, [offers] offers"
+msgstr "Disponibil: [rooms] camere, [offers] oferte"
+
+msgctxt "Languages::novoton_holidays.room_type_double"
+msgid "Double Room"
+msgstr "Cameră Dublă"
+
+msgctxt "Languages::novoton_holidays.room_type_single"
+msgid "Single Room"
+msgstr "Cameră Single"
+
+msgctxt "Languages::novoton_holidays.room_type_apartment"
+msgid "Apartment"
+msgstr "Apartament"
+
+msgctxt "Languages::novoton_holidays.room_type_studio"
+msgid "Studio"
+msgstr "Studio"
+
+msgctxt "Languages::novoton_holidays.room_type_maisonette"
+msgid "Maisonette"
+msgstr "Maisonette"
+
+msgctxt "Languages::novoton_holidays.room_type_family"
+msgid "Family Room"
+msgstr "Cameră Familială"
+
+msgctxt "Languages::novoton_holidays.room_type_suite"
+msgid "Suite"
+msgstr "Suită"
+
+msgctxt "Languages::novoton_holidays.room_type_triple"
+msgid "Triple Room"
+msgstr "Cameră Triplă"
+
+msgctxt "Languages::novoton_holidays.overnights"
+msgid "overnights"
+msgstr "nopți"
+
+msgctxt "Languages::novoton_holidays.overnight"
+msgid "overnight"
+msgstr "noapte"
+
+msgctxt "Languages::novoton_holidays.nights_many"
+msgid "nights"
+msgstr "de nopți"
+
+msgctxt "Languages::novoton_holidays.confirmation_48h"
+msgid "confirmation within max 48 hours"
+msgstr "confirmare în max 48 ore"
+
+msgctxt "Languages::novoton_holidays.offer"
+msgid "offer"
+msgstr "ofertă"
+
+msgctxt "Languages::novoton_holidays.offers"
+msgid "offers"
+msgstr "oferte"
+
+msgctxt "Languages::novoton_holidays.holder"
+msgid "Holder"
+msgstr "Lider rezervare"
+
+msgctxt "Languages::novoton_holidays.regular_bed"
+msgid "Regular Bed"
+msgstr "Pat principal"
+
+msgctxt "Languages::novoton_holidays.extra_bed"
+msgid "Extra Bed"
+msgstr "Pat suplimentar"
+
+msgctxt "Languages::novoton_holidays.fill_all_fields"
+msgid "Please fill in all required fields"
+msgstr "Vă rugăm completați toate câmpurile obligatorii"
+
+msgctxt "Languages::novoton_holidays.your_booking_details"
+msgid "Your booking details"
+msgstr "Detaliile rezervării"
+
+msgctxt "Languages::novoton_holidays.total_stay"
+msgid "Total length of stay"
+msgstr "Durata totală a sejurului"
+
+msgctxt "Languages::novoton_holidays.for"
+msgid "for"
+msgstr "pentru"
+
+msgctxt "Languages::novoton_holidays.occupancy"
+msgid "Occupancy"
+msgstr "Turiști"
+
+msgctxt "Languages::novoton_holidays.guest_names"
+msgid "Guest names"
+msgstr "Nume turiști"
+
+msgctxt "Languages::novoton_holidays.no_guest_details"
+msgid "No guest details entered"
+msgstr "Detaliile turiștilor nu au fost completate"
+
+msgctxt "Languages::novoton_holidays.camera"
+msgid "Room"
+msgstr "cameră"
+
+msgctxt "Languages::novoton_holidays.camere"
+msgid "Rooms"
+msgstr "camere"
+
+msgctxt "Languages::novoton_holidays.ani"
+msgid "years old"
+msgstr "ani"
+
+msgctxt "Languages::novoton_holidays.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Introduceți detaliile rezervării"
+
+msgctxt "Languages::novoton_holidays.stay"
+msgid "Stay"
+msgstr "Cazare"
+
+msgctxt "Languages::novoton_holidays.selected_singular"
+msgid "selected"
+msgstr "selectată"
+
+msgctxt "Languages::novoton_holidays.on_request"
+msgid "On request"
+msgstr "La cerere"
+
+msgctxt "Languages::novoton_holidays.left"
+msgid "left"
+msgstr "disponibile"
+
+msgctxt "Languages::novoton_holidays.free_cancel"
+msgid "Free cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::novoton_holidays.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::novoton_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Anulare gratuită până la"
+
+msgctxt "Languages::novoton_holidays.until"
+msgid "until"
+msgstr "până la"
+
+msgctxt "Languages::novoton_holidays.on_booking"
+msgid "on booking"
+msgstr "la rezervare"
+
+msgctxt "Languages::novoton_holidays.payment_terms_short"
+msgid "Payment terms"
+msgstr "Condiții plată"
+
+msgctxt "Languages::novoton_holidays.details"
+msgid "Details"
+msgstr "Detalii"
+
+msgctxt "Languages::novoton_holidays.select_room"
+msgid "Select"
+msgstr "Selectează"
+
+msgctxt "Languages::novoton_holidays.booking_terms_conditions"
+msgid "Booking Terms & Conditions"
+msgstr "Termeni și condiții rezervare"
+
+msgctxt "Languages::novoton_holidays.month"
+msgid "Month"
+msgstr "Luna"
+
+msgctxt "Languages::novoton_holidays.month_short"
+msgid "Mon"
+msgstr "Luna"
+
+msgctxt "Languages::novoton_holidays.dob_age_mismatch"
+msgid "Date of birth corresponds to age"
+msgstr "Data nașterii corespunde vârstei de"
+
+msgctxt "Languages::novoton_holidays.dob_age_mismatch_alert"
+msgid "Selected age does not match date of birth. Please check children data."
+msgstr "Vârsta selectată nu corespunde cu data nașterii. Verificați datele copiilor."
+
+msgctxt "Languages::novoton_holidays.not"
+msgid "not"
+msgstr "nu"
+
+msgctxt "Languages::novoton_holidays.date_of_birth"
+msgid "Date of birth"
+msgstr "Data nașterii"
+
+msgctxt "Languages::novoton_holidays.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Cereri alternative"
+
+msgctxt "Languages::novoton_holidays.alternatives_info"
+msgid "Information"
+msgstr "Informații"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_title"
+msgid "Can't find what you're looking for?"
+msgstr "Nu găsiți ce căutați?"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_desc"
+msgid "Leave your contact details and we'll notify you when alternatives become available for your dates."
+msgstr "Lăsați datele de contact și vă vom notifica când devin disponibile alternative pentru datele selectate."
+
+msgctxt "Languages::novoton_holidays.request_alternatives_btn"
+msgid "Notify me when available"
+msgstr "Notifică-mă când este disponibil"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_privacy"
+msgid "We'll only use your contact info to notify you about availability."
+msgstr "Vom folosi datele de contact doar pentru a vă notifica despre disponibilitate."
+
+msgctxt "Languages::novoton_holidays.alternatives_notes_placeholder"
+msgid "Any specific requirements or preferences..."
+msgstr "Cerințe sau preferințe specifice..."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_sent"
+msgid "Your request has been submitted! We'll notify you when alternatives become available."
+msgstr "Cererea a fost trimisă! Vă vom notifica când apar alternative disponibile."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_saved"
+msgid "Your request has been saved. Our team will contact you soon."
+msgstr "Cererea a fost salvată. Echipa noastră vă va contacta în curând."
+
+msgctxt "Languages::novoton_holidays.alternatives_found"
+msgid "[count] alternatives found"
+msgstr "[count] alternative găsite"
+
+msgctxt "Languages::novoton_holidays.no_alternatives_yet"
+msgid "No alternatives available yet. Please check again later."
+msgstr "Nu sunt încă alternative disponibile. Verificați mai târziu."
+
+msgctxt "Languages::novoton_holidays.no_novoton_request_id"
+msgid "No Novoton request ID available for this request."
+msgstr "Nu există ID de cerere Novoton pentru această cerere."
+
+msgctxt "Languages::novoton_holidays.customer_notified"
+msgid "Customer has been notified via email."
+msgstr "Clientul a fost notificat prin email."
+
+msgctxt "Languages::novoton_holidays.request_deleted"
+msgid "Request has been deleted."
+msgstr "Cererea a fost ștearsă."
+
+msgctxt "Languages::novoton_holidays.bulk_check_complete"
+msgid "Checked [checked] requests, found alternatives for [found]."
+msgstr "Verificate [checked] cereri, găsite alternative pentru [found]."
+
+msgctxt "Languages::novoton_holidays.no_pending_requests"
+msgid "No pending requests to check."
+msgstr "Nu sunt cereri în așteptare de verificat."
+
+msgctxt "Languages::novoton_holidays.menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Cereri alternative"
+
+msgctxt "Languages::novoton_holidays.menu.check_active_prices"
+msgid "Check Active Prices"
+msgstr "Verificare prețuri active"
+
+msgctxt "Languages::novoton_holidays.menu.test_hotel_request"
+msgid "Test hotel_request"
+msgstr "Test hotel_request"
+
+msgctxt "Languages::novoton_holidays.menu.test_alternative_rs"
+msgid "Test alternative_RS"
+msgstr "Test alternative_RS"
+
+
+msgctxt "Languages::novoton_holidays.dob_placeholder"
+msgid "DD/MM/YYYY"
+msgstr "ZZ/LL/AAAA"
+
+msgctxt "Languages::novoton_holidays.dob_incomplete"
+msgid "Complete date of birth (DD/MM/YYYY)"
+msgstr "Completați data nașterii (ZZ/LL/AAAA)"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_format"
+msgid "Invalid format"
+msgstr "Format invalid"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_date"
+msgid "Invalid date"
+msgstr "Dată invalidă"
+
+msgctxt "Languages::novoton_holidays.dob_year_invalid"
+msgid "Year must be between 1925 and"
+msgstr "Anul trebuie să fie între 1925 și"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_day"
+msgid "Invalid day (1-31)"
+msgstr "Ziua invalidă (1-31)"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_month"
+msgid "Invalid month (1-12)"
+msgstr "Luna invalidă (1-12)"
+
+msgctxt "Languages::novoton_holidays.age_label"
+msgid "Age"
+msgstr "ani"
+
+msgctxt "Languages::novoton_holidays.age_label_singular"
+msgid "year"
+msgstr "an"
+
+msgctxt "Languages::novoton_holidays.age_format"
+msgid "Age {n}"
+msgstr "{n} ani"
+
+msgctxt "Languages::novoton_holidays.dob_age_info"
+msgid "The date of birth corresponds to age"
+msgstr "Data nașterii corespunde vârstei de"
+
+msgctxt "Languages::novoton_holidays.age_accepted"
+msgid "You can proceed."
+msgstr "Puteți continua."
+
+msgctxt "Languages::novoton_holidays.years_at_checkin"
+msgid "years old at check-in and is categorized as Adult."
+msgstr "ani la check-in și este considerat Adult."
+
+msgctxt "Languages::novoton_holidays.price_will_update"
+msgid "The total price will be updated automatically."
+msgstr "Prețul total va fi actualizat automat."
+
+msgctxt "Languages::novoton_holidays.years_at_checkin_infant"
+msgid "years old at check-in and is categorized as Infant."
+msgstr "ani la check-in și este considerat Infant."
+
+msgctxt "Languages::novoton_holidays.infant_policy"
+msgid "Check the hotel policy for infants."
+msgstr "Verificați politica hotelului pentru infanți."
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded"
+msgid "Occupancy limit exceeded!"
+msgstr "Limită depășită!"
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded_detail"
+msgid "The selected room allows a maximum of"
+msgstr "Camera selectată permite maxim"
+
+msgctxt "Languages::novoton_holidays.but_total_is"
+msgid "but the total is"
+msgstr "dar totalul este"
+
+msgctxt "Languages::novoton_holidays.change_room_selection"
+msgid "← Change your room selection"
+msgstr "← Modificați selecția camerei"
+
+msgctxt "Languages::novoton_holidays.price_updated"
+msgid "Price updated based on child age"
+msgstr "Prețul a fost actualizat în funcție de vârsta copilului"
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded_alert"
+msgid "The selected room does not allow this number of adults. Please change your selection."
+msgstr "Camera selectată nu permite acest număr de adulți. Vă rugăm modificați selecția."
+
+msgctxt "Languages::novoton_holidays.dob_validation_error"
+msgid "Please check the dates of birth entered."
+msgstr "Verificați datele de naștere introduse."
+
+msgctxt "Languages::novoton_holidays.capacity_exceeded"
+msgid "Room capacity is"
+msgstr "Capacitatea camerei este de"
+
+msgctxt "Languages::novoton_holidays.price_verify_on_submit"
+msgid "Price will be verified on submission."
+msgstr "Prețul va fi verificat la finalizare."
+
+msgctxt "Languages::novoton_holidays.price_not_available"
+msgid "Price not available for this configuration."
+msgstr "Prețul nu este disponibil pentru această configurație."
+
+msgctxt "Languages::novoton_holidays.price_not_found_for_combination"
+msgid "Price not found for this room/board combination."
+msgstr "Prețul nu a fost găsit pentru această combinație cameră/masă."
+
+msgctxt "Languages::novoton_holidays.price_calculation_error"
+msgid "Error calculating price. Price will be verified on submission."
+msgstr "Eroare la calculul prețului. Prețul va fi verificat la finalizare."
+
+msgctxt "Languages::novoton_holidays.same_price_bracket"
+msgid "Same price bracket, you can proceed."
+msgstr "Același tarif, puteți continua."
+
+msgctxt "Languages::novoton_holidays.category_label"
+msgid "Category:"
+msgstr "Categorie:"
+
+msgctxt "Languages::novoton_holidays.age_bracket_changed"
+msgid "Age corresponds to a different price category:"
+msgstr "Vârsta corespunde unei alte categorii de preț:"
+
+msgctxt "Languages::novoton_holidays.price_may_change"
+msgid "Price may differ for this category."
+msgstr "Prețul poate fi diferit pentru această categorie."
+
+msgctxt "SettingsOptions::novoton_holidays::delete_products_on_uninstall"
+msgid "Delete products on uninstall"
+msgstr "Șterge produsele la dezinstalare"
+
+msgctxt "SettingsTooltips::novoton_holidays::delete_products_on_uninstall"
+msgid "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
+msgstr "Dacă este activat, toate produsele create de acest addon vor fi șterse la dezinstalare. Doar produsele înregistrate în baza de date a addon-ului vor fi șterse - produsele create manual nu sunt afectate."
+
+msgctxt "SettingsOptions::novoton_holidays::country_category_map"
+msgid "Country → Category mapping"
+msgstr "Mapare Țară → Categorie"
+
+msgctxt "SettingsTooltips::novoton_holidays::country_category_map"
+msgid "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+msgstr "Asociază fiecare țară cu un ID de categorie CS-Cart existent. Câte una pe linie: TARA:id_categorie (ex. BULGARIA:123). Țările fără mapare folosesc categorii create automat."
+
+msgctxt "SettingsOptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts (JSON)"
+msgstr "Stațiuni Excluse"
+
+msgctxt "SettingsTooltips::novoton_holidays::excluded_resorts"
+msgid "JSON array of resort names to exclude when adding hotels as products. Use the checkbox selector below to configure this."
+msgstr "Array JSON cu stațiunile de exclus. Se configurează prin selectorul de mai jos."
+
+msgctxt "SettingsOptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions for Add Hotels"
+msgstr "Selectează Stațiuni de Exclus"
+
+msgctxt "SettingsTooltips::novoton_holidays::excluded_resorts_selector"
+msgid "Select resorts to exclude when adding hotels as products. These settings apply to both the admin interface and cron jobs."
+msgstr "Selectați stațiunile de exclus la adăugarea hotelurilor ca produse. Aceste setări se aplică atât interfeței admin cât și joburilor cron."
+
+msgctxt "Languages::novoton_holidays.dob_cannot_be_future"
+msgid "Date of birth cannot be in the future"
+msgstr "Data nașterii nu poate fi în viitor"
+
+msgctxt "Languages::novoton_holidays.child_age_invalid"
+msgid "This person will be"
+msgstr "Persoana va avea"
+
+msgctxt "Languages::novoton_holidays.years_at_checkin_adult"
+msgid "years old at check-in. A child must be under 18 years old."
+msgstr "ani la check-in. Un copil trebuie să aibă sub 18 ani."
+
+msgctxt "Languages::novoton_holidays.please_modify_search"
+msgid "Please modify your search to include additional adults instead of children."
+msgstr "Vă rugăm să modificați căutarea pentru a include adulți suplimentari în loc de copii."
+
+msgctxt "Languages::novoton_holidays.child_must_be_under_18"
+msgid "Child must be under 18 years old at check-in"
+msgstr "Copilul trebuie să aibă sub 18 ani la check-in"
+
+msgctxt "Languages::novoton_holidays.not_child"
+msgid "At check-in, the child will be"
+msgstr "La check-in, copilul va avea"
+
+msgctxt "Languages::novoton_holidays.must_be_under_18"
+msgid "Must be under 18 years old."
+msgstr "Trebuie să fie sub 18 ani."
+
+msgctxt "Languages::novoton_holidays.price_increased"
+msgid "Price increased"
+msgstr "Prețul a crescut"
+
+msgctxt "Languages::novoton_holidays.price_decreased"
+msgid "Price decreased"
+msgstr "Prețul a scăzut"
+
+msgctxt "Languages::novoton_holidays.price_recalculating"
+msgid "Recalculating price..."
+msgstr "Se recalculează prețul..."
+
+msgctxt "Languages::novoton_holidays.age_at_checkin"
+msgid "Age at check-in"
+msgstr "Vârsta la check-in"
+
+msgctxt "Languages::novoton_holidays.configuration_not_available"
+msgid "This room configuration is not available"
+msgstr "Această configurație de camere nu este disponibilă"
+
+msgctxt "Languages::novoton_holidays.no_rooms_for_configuration"
+msgid "We couldn't find rooms that match all your requirements:"
+msgstr "Nu am găsit camere care să corespundă tuturor cerințelor:"
+
+msgctxt "Languages::novoton_holidays.no_room_types_support"
+msgid "No room types available for this occupancy"
+msgstr "Nu există tipuri de camere disponibile pentru această ocupare"
+
+msgctxt "Languages::novoton_holidays.suggestions"
+msgid "Suggestions"
+msgstr "Sugestii"
+
+msgctxt "Languages::novoton_holidays.suggestion_max_2_adults"
+msgid "Most rooms accommodate max 2 adults - try splitting into more rooms"
+msgstr "Majoritatea camerelor acceptă max 2 adulți - încercați să împărțiți în mai multe camere"
+
+msgctxt "Languages::novoton_holidays.suggestion_different_dates"
+msgid "Try different dates when more room types may be available"
+msgstr "Încercați alte date când mai multe tipuri de camere ar putea fi disponibile"
+
+msgctxt "Languages::novoton_holidays.suggestion_contact_us"
+msgid "Contact us for assistance with special arrangements"
+msgstr "Contactați-ne pentru asistență cu aranjamente speciale"
+
+msgctxt "Languages::novoton_holidays.go_back"
+msgid "Go Back"
+msgstr "Înapoi"
+
+msgctxt "Languages::novoton_holidays.hotel_max_capacity"
+msgid "Maximum room capacity at this hotel"
+msgstr "Capacitatea maximă per cameră la acest hotel"
+
+msgctxt "Languages::novoton_holidays.persons_per_room"
+msgid "persons per room"
+msgstr "persoane per cameră"
+
+msgctxt "Languages::novoton_holidays.suggestion_split_rooms"
+msgid "Split your group into more rooms with fewer guests each"
+msgstr "Împărțiți grupul în mai multe camere cu mai puțini turiști"
+
+msgctxt "Languages::novoton_holidays.email_alternatives_title"
+msgid "Great news! We found alternatives for you!"
+msgstr "Vești bune! Am găsit alternative pentru dumneavoastră!"
+
+msgctxt "Languages::novoton_holidays.email_greeting"
+msgid "Hello"
+msgstr "Bună ziua"
+
+msgctxt "Languages::novoton_holidays.email_alternatives_intro"
+msgid "We're happy to inform you that we found accommodation alternatives for your request"
+msgstr "Vă informăm că am găsit alternative de cazare pentru cererea dumneavoastră"
+
+msgctxt "Languages::novoton_holidays.email_original_request"
+msgid "Original request"
+msgstr "Cerere inițială"
+
+msgctxt "Languages::novoton_holidays.email_available_alternatives"
+msgid "Available alternatives"
+msgstr "Alternative disponibile"
+
+msgctxt "Languages::novoton_holidays.email_availability_note"
+msgid "Availability may vary. We recommend booking as soon as possible to take advantage of these offers."
+msgstr "Disponibilitatea poate varia. Vă recomandăm să rezervați cât mai curând pentru a beneficia de aceste oferte."
+
+msgctxt "Languages::novoton_holidays.email_regards"
+msgid "Best regards"
+msgstr "Cu stimă"
+
+msgctxt "Languages::novoton_holidays.period"
+msgid "Period"
+msgstr "Perioada"
+
+msgctxt "Languages::novoton_holidays.price"
+msgid "Price"
+msgstr "Preț"
+
+msgctxt "Languages::novoton_holidays.note"
+msgid "Note"
+msgstr "Notă"
+
+msgctxt "Languages::novoton_holidays.checking_price"
+msgid "Checking price..."
+msgstr "Se verifică prețul..."
+
+msgctxt "Languages::novoton_holidays.room_changed_title"
+msgid "Room Changed"
+msgstr "Camera s-a modificat"
+
+msgctxt "Languages::novoton_holidays.room_changed_due_to_age"
+msgid "The selected room is not available for the entered child age."
+msgstr "Camera selectată nu este disponibilă pentru vârsta copilului introdusă."
+
+msgctxt "Languages::novoton_holidays.original_room"
+msgid "Selected room"
+msgstr "Camera selectată"
+
+msgctxt "Languages::novoton_holidays.new_room"
+msgid "New room"
+msgstr "Camera nouă"
+
+msgctxt "Languages::novoton_holidays.price_change"
+msgid "Price change"
+msgstr "Modificare preț"
+
+msgctxt "Languages::novoton_holidays.go_back_to_search"
+msgid "Back to search"
+msgstr "Înapoi la căutare"
+
+msgctxt "Languages::novoton_holidays.continue_with_new_room"
+msgid "Continue with new room"
+msgstr "Continuă cu noua cameră"
+
+msgctxt "Languages::novoton_holidays.room_updated"
+msgid "Room has been updated:"
+msgstr "Camera a fost actualizată:"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::novoton_holidays.excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Stațiuni Excluse"
+
+msgctxt "Languages::novoton_holidays.excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Excluderi Stațiuni"
+
+msgctxt "Languages::novoton_holidays.invalid_log_file"
+msgid "Invalid log file specified"
+msgstr "Fișier de log invalid"
+
+msgctxt "Languages::novoton_holidays.alternatives_available_subject"
+msgid "Alternative Hotels Available for Your Booking"
+msgstr "Hoteluri Alternative Disponibile pentru Rezervarea Dvs."
+
+msgctxt "Languages::novoton_holidays.alternatives_available_title"
+msgid "Alternative Hotels Are Now Available"
+msgstr "Hoteluri Alternative Sunt Acum Disponibile"
+
+msgctxt "Languages::novoton_holidays.dear_customer"
+msgid "Dear [name],"
+msgstr "Dragă [name],"
+
+msgctxt "Languages::novoton_holidays.alternatives_available_body"
+msgid "We have found alternative options for your booking at [hotel] (Order #[order_id])."
+msgstr "Am găsit opțiuni alternative pentru rezervarea dvs. la [hotel] (Comanda #[order_id])."
+
+msgctxt "Languages::novoton_holidays.available_alternatives"
+msgid "Available Alternatives"
+msgstr "Alternative Disponibile"
+
+msgctxt "Languages::novoton_holidays.contact_us_alternatives"
+msgid "Please contact us if you would like to switch to one of these alternatives."
+msgstr "Vă rugăm să ne contactați dacă doriți să treceți la una dintre aceste alternative."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_subject"
+msgid "Alternative Request Received - Your Booking"
+msgstr "Cerere Alternative Primită - Rezervarea Dvs."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_title"
+msgid "Your Alternative Request Has Been Received"
+msgstr "Cererea Dvs. de Alternative a Fost Primită"
+
+msgctxt "Languages::novoton_holidays.alternatives_request_body"
+msgid "We have received your request for alternative options for [hotel]."
+msgstr "Am primit cererea dvs. pentru opțiuni alternative la [hotel]."
+
+msgctxt "Languages::novoton_holidays.original_booking"
+msgid "Original Booking Details"
+msgstr "Detalii Rezervare Originală"
+
+msgctxt "Languages::novoton_holidays.alternatives_request_waiting"
+msgid "We will notify you as soon as alternative options become available."
+msgstr "Vă vom notifica de îndată ce opțiunile alternative devin disponibile."
+
+msgctxt "Languages::email_template.novoton_holidays_import_report"
+msgid "Novoton: Hotel Import Report"
+msgstr "Novoton: Raport Import Hoteluri"
+
+msgctxt "Languages::email_template.novoton_holidays_alternatives_available"
+msgid "Novoton: Alternatives Available"
+msgstr "Novoton: Alternative Disponibile"
+
+msgctxt "Languages::email_template.novoton_holidays_alternatives_request"
+msgid "Novoton: Alternatives Request Confirmation"
+msgstr "Novoton: Confirmare Cerere Alternative"
+
+msgctxt "Languages::novoton_holidays.cancel_free"
+msgid "Free cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::novoton_holidays.cancel_free_before"
+msgid "Free cancellation before [date]"
+msgstr "Anulare gratuită până la [date]"
+
+msgctxt "Languages::novoton_holidays.cancel_no_show"
+msgid "No show: 100% penalty"
+msgstr "Neprezentare: penalizare 100%"
+
+msgctxt "Languages::novoton_holidays.cancel_nights_penalty"
+msgid "[nights] night(s) penalty"
+msgstr "penalizare [nights] nopți"
+
+msgctxt "Languages::novoton_holidays.cancel_percent_penalty"
+msgid "[percent]% penalty"
+msgstr "penalizare [percent]%"
+
+msgctxt "Languages::novoton_holidays.cancel_between_dates"
+msgid "Between [from] - [to]: [penalty]"
+msgstr "Între [from] - [to]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.cancel_until_date"
+msgid "Until [date]: [penalty]"
+msgstr "Până la [date]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_until"
+msgid "[percent]% until [date]"
+msgstr "[percent]% până la [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
+msgid "[percent]% on booking"
+msgstr "[percent]% la rezervare"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_until"
+msgid "[percent]% ([amount]) - due by [date]"
+msgstr "[percent]% ([amount]) - până la [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
+msgid "[percent]% ([amount]) on booking"
+msgstr "[percent]% ([amount]) la rezervare"
+
+msgctxt "Languages::novoton_holidays.no_prices_available"
+msgid "No prices available"
+msgstr "Nu sunt prețuri disponibile"
+
+msgctxt "Languages::novoton_holidays.prices_coming_soon"
+msgid "Prices will be available once price data is synced."
+msgstr "Prețurile vor fi disponibile după sincronizarea datelor de preț."
+
+msgctxt "Languages::novoton_holidays.prices_include_commission"
+msgid "Prices include agency commission"
+msgstr "Prețurile includ comisionul agenției"
+
+msgctxt "Languages::novoton_holidays.additional_information"
+msgid "Additional Information"
+msgstr "Informații suplimentare"
+
+msgctxt "Languages::novoton_holidays.important"
+msgid "Important"
+msgstr "Important"
+
+msgctxt "Languages::novoton_holidays.remarks"
+msgid "Remarks"
+msgstr "Observații"
+
+msgctxt "Languages::theme_editor.novoton_primary_color"
+msgid "Novoton: Primary color"
+msgstr "Novoton: Culoare primară"
+
+msgctxt "Languages::theme_editor.novoton_accent_color"
+msgid "Novoton: Accent color"
+msgstr "Novoton: Culoare accent"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_color"
+msgid "Novoton: Search button"
+msgstr "Novoton: Buton căutare"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
+msgid "Novoton: Search button (hover)"
+msgstr "Novoton: Buton căutare (hover)"
+
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_bg"
+msgid "Novoton: Calendar cheapest price background"
+msgstr "Novoton: Fundal preț minim calendar"
+
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_color"
+msgid "Novoton: Calendar cheapest price text"
+msgstr "Novoton: Text preț minim calendar"
+
+msgctxt "Languages::theme_editor.novoton_cal_price_color"
+msgid "Novoton: Calendar price text"
+msgstr "Novoton: Text preț calendar"
+
+msgctxt "Languages::novoton_holidays.nearby_dates_available"
+msgid "Available on nearby dates"
+msgstr "Disponibil pe date apropiate"
+
+msgctxt "Languages::novoton_holidays.rooms_short"
+msgid "rooms"
+msgstr "camere"
+
+msgctxt "SettingsOptions::novoton_holidays::show_calendar_prices"
+msgid "Show Calendar Prices"
+msgstr "Afișare prețuri pe calendar"
+
+msgctxt "SettingsTooltips::novoton_holidays::show_calendar_prices"
+msgid "Display approximate per-night prices on calendar date cells in the booking form"
+msgstr "Afișează prețuri aproximative pe noapte pe celulele calendarului din formularul de rezervare"
+
+msgctxt "Languages::novoton_holidays.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Prețuri aproximative în %s pentru un sejur de 1 noapte"
+
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Prețul a fost actualizat în funcție de vârsta copilului"
+
+msgctxt "SettingsSections::novoton_holidays::api"
+msgid "API Configuration"
+msgstr "Configurare API"
+
+msgctxt "SettingsSections::novoton_holidays::pricing"
+msgid "Pricing Settings"
+msgstr "Setări Prețuri"
+
+msgctxt "SettingsSections::novoton_holidays::sync"
+msgid "Synchronization Settings"
+msgstr "Setări Sincronizare"
+
+msgctxt "SettingsOptions::novoton_holidays::api_header"
+msgid "API Configuration"
+msgstr "Configurare API"
+
+msgctxt "SettingsOptions::novoton_holidays::api_id"
+msgid "API ID"
+msgstr "ID API"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_form_position"
+msgid "Booking Form Position"
+msgstr "Poziția Formularului de Rezervare"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_access_key"
+msgid "Cron Access Key"
+msgstr "Cheie Acces Cron"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_header"
+msgid "Cron / Automation"
+msgstr "Cron / Automatizare"
+
+msgctxt "SettingsOptions::novoton_holidays::display_header"
+msgid "Display Settings"
+msgstr "Setări Afișare"
+
+msgctxt "SettingsOptions::novoton_holidays::other_header"
+msgid "Other Settings"
+msgstr "Alte Setări"
+
+msgctxt "SettingsOptions::novoton_holidays::pricing_header"
+msgid "Pricing Settings"
+msgstr "Setări Prețuri"
+
+msgctxt "SettingsOptions::novoton_holidays::product_code_prefixes"
+msgid "Product Code Prefixes (comma separated)"
+msgstr "Prefixe Cod Produs (separate prin virgulă)"
+
+msgctxt "SettingsOptions::novoton_holidays::products_header"
+msgid "Product Settings"
+msgstr "Setări Produse"
+
+msgctxt "SettingsOptions::novoton_holidays::round_prices"
+msgid "Round hotel prices"
+msgstr "Rotunjire prețuri hotel"
+
+msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
+msgid "Show Booking Form on Product Pages"
+msgstr "Afișare Formular Rezervare pe Paginile Produselor"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_id"
+msgid "Your Novoton API ID for authentication"
+msgstr "ID-ul API Novoton pentru autentificare"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_key"
+msgid "Your Novoton API key for authentication"
+msgstr "Cheia API Novoton pentru autentificare"
+
+msgctxt "SettingsTooltips::novoton_holidays::commission"
+msgid "Percentage to add to API prices"
+msgstr "Procentaj adăugat la prețurile API"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_access_key"
+msgid "Secret key for authenticating automated cron jobs. Use in cron URLs: index.php?dispatch=novoton_cron.run&api_key=YOUR_KEY"
+msgstr "Cheie secretă pentru autentificarea joburilor cron automate. Folosiți în URL-urile cron: index.php?dispatch=novoton_cron.run&api_key=CHEIA_DVS"
+
+msgctxt "SettingsTooltips::novoton_holidays::product_code_prefixes"
+msgid "Products with these prefixes will be synced with Novoton API"
+msgstr "Produsele cu aceste prefixe vor fi sincronizate cu API-ul Novoton"
+
+msgctxt "SettingsTooltips::novoton_holidays::selected_countries"
+msgid "Select countries to sync hotels from. Hold Ctrl/Cmd to select multiple."
+msgstr "Selectați țările din care să sincronizați hotelurile. Țineți Ctrl/Cmd pentru selecție multiplă."
+
+msgctxt "SettingsTooltips::novoton_holidays::show_booking_form"
+msgid "Automatically display the booking search form on hotel product pages"
+msgstr "Afișare automată a formularului de căutare rezervări pe paginile produselor hoteliere"
+
+msgctxt "SettingsTooltips::novoton_holidays::test_booking"
+msgid "When enabled, all reservations will be marked as test and will not be processed by Novoton"
+msgstr "Când este activat, toate rezervările vor fi marcate ca test și nu vor fi procesate de Novoton"
+
+msgctxt "SettingsVariants::novoton_holidays::booking_form_position::after_description"
+msgid "After Description"
+msgstr "După Descriere"
+
+msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
+msgid "Before Tabs"
+msgstr "Înainte de Tab-uri"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::ALBANIA"
+msgid "Albania"
+msgstr "Albania"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::BULGARIA"
+msgid "Bulgaria"
+msgstr "Bulgaria"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::CYPRUS"
+msgid "Cyprus"
+msgstr "Cipru"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::EGYPT"
+msgid "Egypt"
+msgstr "Egipt"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::FRANCE"
+msgid "France"
+msgstr "Franța"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::GREECE"
+msgid "Greece"
+msgstr "Grecia"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::ITALY"
+msgid "Italy"
+msgstr "Italia"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::MALDIVES"
+msgid "Maldives"
+msgstr "Maldive"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::SPAIN"
+msgid "Spain"
+msgstr "Spania"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::UNITED ARAB EMIRATES"
+msgid "United Arab Emirates"
+msgstr "Emiratele Arabe Unite"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::UNITED KINGDOM"
+msgid "United Kingdom"
+msgstr "Regatul Unit"
+
+msgctxt "Languages::novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Rezervări Hoteluri"
+
+msgctxt "Languages::novoton_sync"
+msgid "Sync Prices"
+msgstr "Sincronizare Prețuri"
+
+msgctxt "Languages::novoton_diagnostic"
+msgid "API Diagnostic"
+msgstr "Diagnostic API"
+
+msgctxt "Languages::product_tabs.novoton_hotel_prices"
+msgid "Hotel Prices"
+msgstr "Prețuri Hotel"
+
+msgctxt "Languages::block_novoton_holidays_booking_engine"
+msgid "Novoton: Booking Form"
+msgstr "Novoton: Formular Rezervare"
+
+msgctxt "Languages::block_novoton_holidays_homepage_booking"
+msgid "Novoton: Homepage Booking Search"
+msgstr "Novoton: Căutare Rezervare Pagina Principală"
+
+msgctxt "Languages::novoton_holidays.booking_engine"
+msgid "Book Your Stay"
+msgstr "Rezervă Sejurul"
+
+msgctxt "Languages::novoton_holidays.select_destination"
+msgid "Select destination"
+msgstr "Selectați destinația"
+
+msgctxt "Languages::novoton_holidays.children_ages"
+msgid "Children Ages"
+msgstr "Vârsta Copiilor"
+
+msgctxt "Languages::novoton_holidays.bed_only"
+msgid "Bed Only"
+msgstr "Doar Pat"
+
+msgctxt "Languages::novoton_holidays.child_label"
+msgid "Child"
+msgstr "Copil"
+
+msgctxt "Languages::novoton_holidays.age_of_child"
+msgid "Age of child"
+msgstr "Vârsta copilului"
+
+msgctxt "Languages::novoton_holidays.check_in_past"
+msgid "Check-in date cannot be in the past"
+msgstr "Data de check-in nu poate fi în trecut"
+
+msgctxt "Languages::novoton_holidays.includes_on_request"
+msgid "(includes on-request)"
+msgstr "(include la cerere)"
+
+msgctxt "Languages::novoton_holidays.of"
+msgid "of"
+msgstr "din"
+
+msgctxt "Languages::novoton_holidays.search_availability"
+msgid "Search Availability"
+msgstr "Caută Disponibilitate"
+
+msgctxt "Languages::novoton_holidays.last_updated"
+msgid "Last updated"
+msgstr "Ultima actualizare"
+
+msgctxt "Languages::novoton_holidays.5_nights"
+msgid "5 Nights"
+msgstr "5 Nopți"
+
+msgctxt "Languages::novoton_holidays.7_nights"
+msgid "7 Nights"
+msgstr "7 Nopți"
+
+msgctxt "Languages::novoton_holidays.season"
+msgid "Season"
+msgstr "Sezon"
+
+msgctxt "Languages::novoton_holidays.season_prices_note"
+msgid "Prices shown are per person per night. Season dates vary by package - use the booking form for exact pricing."
+msgstr "Prețurile afișate sunt per persoană pe noapte. Datele sezonului variază în funcție de pachet - utilizați formularul de rezervare pentru prețuri exacte."
+
+msgctxt "Languages::novoton_holidays.how_to_book"
+msgid "How to book"
+msgstr "Cum se rezervă"
+
+msgctxt "Languages::novoton_holidays.prices_info_text"
+msgid "Prices shown are starting prices per person. Final price depends on travel dates and room availability. Use the booking form above for exact quotes."
+msgstr "Prețurile afișate sunt prețuri de pornire per persoană. Prețul final depinde de datele călătoriei și disponibilitatea camerelor. Utilizați formularul de rezervare de mai sus pentru o cotație exactă."
+
+msgctxt "Languages::novoton_holidays.use_booking_form"
+msgid "Please use the booking form to search for availability and pricing."
+msgstr "Vă rugăm utilizați formularul de rezervare pentru a căuta disponibilitate și prețuri."
+
+msgctxt "Languages::novoton_holidays.early_booking_discounts"
+msgid "Early Booking Discounts"
+msgstr "Reduceri Early Booking"
+
+msgctxt "Languages::novoton_holidays.all_dates"
+msgid "All dates"
+msgstr "Toate datele"
+
+msgctxt "Languages::novoton_holidays.all_season"
+msgid "All Season"
+msgstr "Tot Sezonul"
+
+msgctxt "Languages::novoton_holidays.selected_countries"
+msgid "Selected Countries"
+msgstr "Țări Selectate"
+
+msgctxt "Languages::novoton_holidays.countries_help"
+msgid "Hold Ctrl (Cmd on Mac) to select multiple. Hotels from selected countries will be synced."
+msgstr "Țineți Ctrl (Cmd pe Mac) pentru selecție multiplă. Hotelurile din țările selectate vor fi sincronizate."
+
+msgctxt "Languages::novoton_holidays.no_availability_for_dates"
+msgid "No availability for selected dates"
+msgstr "Nu există disponibilitate pentru datele selectate"
+
+msgctxt "Languages::novoton_holidays.alternative_dates"
+msgid "Available on alternative dates"
+msgstr "Disponibil pe date alternative"
+
+msgctxt "Languages::novoton_holidays.showing_results_for"
+msgid "Showing results for"
+msgstr "Rezultate pentru"
+
+msgctxt "Languages::novoton_holidays.accept_terms_text"
+msgid "I have read and accept the"
+msgstr "Am citit și accept"
+
+msgctxt "Languages::novoton_holidays.add_to_cart_and_checkout"
+msgid "Add to Cart & Checkout"
+msgstr "Adaugă în Coș și Finalizează"
+
+msgctxt "Languages::novoton_holidays.adult_guests"
+msgid "Adult Guests"
+msgstr "Turiști Adulți"
+
+msgctxt "Languages::novoton_holidays.contact_information"
+msgid "Contact Information"
+msgstr "Informații de Contact"
+
+msgctxt "Languages::novoton_holidays.birthdate"
+msgid "Date of Birth"
+msgstr "Data Nașterii"
+
+msgctxt "Languages::novoton_holidays.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "Languages::novoton_holidays.phone"
+msgid "Phone"
+msgstr "Telefon"
+
+msgctxt "Languages::novoton_holidays.terms_and_conditions"
+msgid "Terms and Conditions"
+msgstr "Termeni și Condiții"
+
+msgctxt "Languages::novoton_holidays.price_unavailable"
+msgid "Price is not available. Please try again."
+msgstr "Prețul nu este disponibil. Vă rugăm încercați din nou."
+
+msgctxt "Languages::novoton_holidays.apartment"
+msgid "Apartment"
+msgstr "Apartament"
+
+msgctxt "Languages::novoton_holidays.book_by"
+msgid "Book by"
+msgstr "Rezervare până la"
+
+msgctxt "Languages::novoton_holidays.travel_period"
+msgid "Travel Period"
+msgstr "Perioada de Călătorie"
+
+msgctxt "Languages::novoton_holidays.prices_last_updated"
+msgid "Prices last updated"
+msgstr "Ultima actualizare prețuri"
+
+msgctxt "Languages::novoton_holidays.view_season_prices"
+msgid "View Detailed Season Prices"
+msgstr "Vezi Prețurile Detaliate pe Sezoane"
+
+msgctxt "Languages::novoton_holidays.for_all_room_types"
+msgid "For all room types"
+msgstr "Pentru toate tipurile de camere"
+
+msgctxt "Languages::novoton_holidays.up_to_days_before"
+msgid "Up to %s days before arrival"
+msgstr "Până la %s zile înainte de sosire"
+
+msgctxt "Languages::novoton_holidays.from_days_before"
+msgid "From %s days before arrival"
+msgstr "De la %s zile înainte de sosire"
+
+msgctxt "Languages::novoton_holidays.overnights_penalty"
+msgid "overnights penalty"
+msgstr "penalizare nopți"
+
+msgctxt "Languages::novoton_holidays.extras_arrivals"
+msgid "Extras for arrivals"
+msgstr "Extra la sosire"
+
+msgctxt "Languages::novoton_holidays.nights_to_pay"
+msgid "Nights to Pay"
+msgstr "Nopți de Plătit"
+
+msgctxt "Languages::novoton_holidays.off_season"
+msgid "Off-season"
+msgstr "Extrasezon"
+
+msgctxt "Languages::novoton_holidays.intermediate_season"
+msgid "Intermediate season"
+msgstr "Sezon intermediar"
+
+msgctxt "Languages::novoton_holidays.high_season"
+msgid "High season"
+msgstr "Sezon de vârf"
+
+msgctxt "Languages::novoton_holidays.peak_season"
+msgid "Peak season"
+msgstr "Sezon de vârf maxim"
+
+msgctxt "Languages::novoton_holidays.adults_short"
+msgid "Adults"
+msgstr "Adulți"
+
+msgctxt "Languages::novoton_holidays.child_short"
+msgid "CHD"
+msgstr "COP"
+
+msgctxt "Languages::novoton_holidays.mid_season"
+msgid "Mid-season"
+msgstr "Mijloc de sezon"
+
+msgctxt "Languages::novoton_holidays.capacity"
+msgid "Capacity"
+msgstr "Capacitate"
+
+msgctxt "Languages::novoton_holidays.max"
+msgid "Max"
+msgstr "Max"
+
+msgctxt "Languages::novoton_holidays.children_short"
+msgid "Children"
+msgstr "Copii"
+
+msgctxt "Languages::novoton_holidays.early_booking_extra_discounts"
+msgid "Early Booking & Extra Discounts"
+msgstr "Early Booking & Reduceri Extra"
+
+msgctxt "Languages::novoton_holidays.if_booked_by"
+msgid "if booked by"
+msgstr "dacă se rezervă până la"
+
+msgctxt "Languages::novoton_holidays.for_stays"
+msgid "for stays"
+msgstr "pentru sejururi"
+
+msgctxt "Languages::novoton_holidays.free_nights_promotions"
+msgid "Free Nights Promotions"
+msgstr "Promoții Nopți Gratuite"
+
+msgctxt "Languages::novoton_holidays.nights_booked"
+msgid "Nights Booked"
+msgstr "Nopți Rezervate"
+
+msgctxt "Languages::novoton_holidays.valid_period"
+msgid "Valid Period"
+msgstr "Perioadă Validă"
+
+msgctxt "Languages::novoton_holidays.rooms_available"
+msgid "rooms available"
+msgstr "camere disponibile"
+
+msgctxt "Languages::novoton_holidays.rooms_left"
+msgid "rooms left"
+msgstr "camere rămase"
+
+msgctxt "Languages::novoton_holidays.select_room_types"
+msgid "Select Room Types"
+msgstr "Selectați Tipul Camerelor"
+
+msgctxt "Languages::novoton_holidays.select_room_type_for_each"
+msgid "Choose a room type for each room in your booking"
+msgstr "Alegeți un tip de cameră pentru fiecare cameră din rezervare"
+
+msgctxt "Languages::novoton_holidays.select_rooms_to_continue"
+msgid "Select rooms to continue"
+msgstr "Selectați camerele pentru a continua"
+
+msgctxt "Languages::novoton_holidays.please_select_all_rooms"
+msgid "Please select a room type for all rooms before booking"
+msgstr "Vă rugăm selectați un tip de cameră pentru toate camerele înainte de a rezerva"
+
+msgctxt "Languages::novoton_holidays.remove_room"
+msgid "Remove"
+msgstr "Șterge"
+
+msgctxt "Languages::novoton_holidays.age_18_plus"
+msgid "18+"
+msgstr "18+"
+
+msgctxt "Languages::novoton_holidays.age_0_17"
+msgid "0-17"
+msgstr "0-17"
+
+msgctxt "Languages::novoton_holidays.failed_to_add_to_cart"
+msgid "Failed to add booking to cart"
+msgstr "Nu s-a putut adăuga rezervarea în coș"
+
+msgctxt "Languages::novoton_holidays.edit_booking"
+msgid "Edit Booking"
+msgstr "Editare Rezervare"
+
+msgctxt "Languages::novoton_holidays.booking_updated"
+msgid "Booking details updated successfully"
+msgstr "Detaliile rezervării au fost actualizate cu succes"
+
+msgctxt "Languages::novoton_holidays.update_booking"
+msgid "Update Booking"
+msgstr "Actualizare Rezervare"
+
+msgctxt "Languages::novoton_holidays.back_to_cart"
+msgid "Back to Cart"
+msgstr "Înapoi la Coș"
+
+msgctxt "Languages::novoton_holidays.updating_prices"
+msgid "Updating prices..."
+msgstr "Se actualizează prețurile..."
+
+msgctxt "Languages::novoton_holidays.sync_completed"
+msgid "Synchronization completed"
+msgstr "Sincronizare finalizată"
+
+msgctxt "Languages::novoton_holidays.updated"
+msgid "Updated"
+msgstr "Actualizat"
+
+msgctxt "Languages::novoton_holidays.failed"
+msgid "Failed"
+msgstr "Eșuat"
+
+msgctxt "Languages::novoton_holidays.no_data"
+msgid "No data"
+msgstr "Fără date"
+
+msgctxt "Languages::novoton_holidays.product_updated_successfully"
+msgid "Product prices updated successfully"
+msgstr "Prețurile produsului au fost actualizate cu succes"
+
+msgctxt "Languages::novoton_holidays.product_update_failed"
+msgid "Product update failed"
+msgstr "Actualizarea produsului a eșuat"
+
+msgctxt "Languages::novoton_holidays.sync_failed"
+msgid "Synchronization failed"
+msgstr "Sincronizarea a eșuat"
+
+msgctxt "Languages::novoton_holidays.api_connection_successful"
+msgid "API connection successful"
+msgstr "Conexiune API reușită"
+
+msgctxt "Languages::novoton_holidays.api_connection_failed"
+msgid "API connection failed"
+msgstr "Conexiune API eșuată"
+
+msgctxt "Languages::novoton_holidays.api_connection_no_data"
+msgid "API connected but no data returned"
+msgstr "API conectat dar nu au fost returnate date"
+
+msgctxt "Languages::novoton_holidays.bookings"
+msgid "Bookings"
+msgstr "Rezervări"
+
+msgctxt "Languages::novoton_holidays.sync_logs"
+msgid "Sync Logs"
+msgstr "Jurnale Sincronizare"
+
+msgctxt "Languages::novoton_holidays.booking_not_found"
+msgid "Booking not found"
+msgstr "Rezervarea nu a fost găsită"
+
+msgctxt "Languages::novoton_holidays.failed_to_get_invoice"
+msgid "Failed to retrieve invoice from Novoton"
+msgstr "Nu s-a putut obține factura de la Novoton"
+
+msgctxt "Languages::novoton_holidays.log_file_not_found"
+msgid "Log file not found"
+msgstr "Fișierul de log nu a fost găsit"
+
+msgctxt "Languages::novoton_holidays.test_api_connection"
+msgid "Test API Connection"
+msgstr "Testare Conexiune API"
+
+msgctxt "Languages::novoton_holidays.update_all_prices"
+msgid "Update All Prices"
+msgstr "Actualizare Toate Prețurile"
+
+msgctxt "Languages::novoton_holidays.view_sync_logs"
+msgid "View Sync Logs"
+msgstr "Vizualizare Jurnale Sincronizare"
+
+msgctxt "Languages::novoton_holidays.view_bookings"
+msgid "View Bookings"
+msgstr "Vizualizare Rezervări"
+
+msgctxt "Languages::novoton_holidays.export_bookings"
+msgid "Export Bookings"
+msgstr "Export Rezervări"
+
+msgctxt "Languages::novoton_holidays.confirm_update_all_prices"
+msgid "This will update prices for all hotel products. It may take several minutes. Continue?"
+msgstr "Aceasta va actualiza prețurile pentru toate produsele hoteliere. Poate dura câteva minute. Continuați?"
+
+msgctxt "Languages::novoton_holidays.update_prices_help"
+msgid "Click the button above to manually update prices, or use the cron command for automatic updates."
+msgstr "Apăsați butonul de mai sus pentru actualizare manuală sau folosiți comanda cron pentru actualizări automate."
+
+msgctxt "Languages::novoton_holidays.cron_example"
+msgid "Cron Example"
+msgstr "Exemplu Cron"
+
+msgctxt "Languages::novoton_holidays.updating_product"
+msgid "Updating %s of %s (%s) - %s"
+msgstr "Se actualizează %s din %s (%s) - %s"
+
+msgctxt "Languages::novoton_holidays.search_hotels"
+msgid "Search Hotels"
+msgstr "Caută Hoteluri"
+
+msgctxt "Languages::novoton_holidays.enter_destination"
+msgid "Enter destination or hotel name..."
+msgstr "Introduceți destinația sau numele hotelului..."
+
+msgctxt "Languages::novoton_holidays.best_price_guarantee"
+msgid "Best Price Guarantee"
+msgstr "Garanția Celui Mai Bun Preț"
+
+msgctxt "Languages::novoton_holidays.instant_confirmation"
+msgid "Instant Confirmation"
+msgstr "Confirmare Instantă"
+
+msgctxt "Languages::novoton_holidays.per_night"
+msgid "per night"
+msgstr "pe noapte"
+
+msgctxt "Languages::novoton_holidays.back_to_hotel"
+msgid "Back to Hotel"
+msgstr "Înapoi la Hotel"
+
+msgctxt "Languages::novoton_holidays.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Rezervări Hoteluri"
+
+msgctxt "Languages::novoton_holidays.status_ok"
+msgid "Confirmed"
+msgstr "Confirmat"
+
+msgctxt "Languages::novoton_holidays.status_ask"
+msgid "On Request"
+msgstr "La Cerere"
+
+msgctxt "Languages::novoton_holidays.status_st"
+msgid "Cancelled"
+msgstr "Anulat"
+
+msgctxt "Languages::novoton_holidays.status_wt"
+msgid "Waiting"
+msgstr "În Așteptare"
+
+msgctxt "Languages::novoton_holidays.status_checked"
+msgid "Reservation status has been checked"
+msgstr "Statusul rezervării a fost verificat"
+
+msgctxt "Languages::novoton_holidays.no_alternatives"
+msgid "No alternatives available"
+msgstr "Nu sunt alternative disponibile"
+
+msgctxt "Languages::novoton_holidays.bulk_status_checked"
+msgid "Checked [checked] bookings, [changed] status changes"
+msgstr "Verificate [checked] rezervări, [changed] modificări de status"
+
+msgctxt "Languages::novoton_holidays.alternative_hotels"
+msgid "Alternative Hotels"
+msgstr "Hoteluri Alternative"
+
+msgctxt "Languages::novoton_holidays.check_status"
+msgid "Check Status"
+msgstr "Verificare Status"
+
+msgctxt "Languages::novoton_holidays.request_alternatives"
+msgid "Request Alternatives"
+msgstr "Solicită Alternative"
+
+msgctxt "Languages::novoton_holidays.booking_cancelled"
+msgid "Booking Cancelled"
+msgstr "Rezervare Anulată"
+
+msgctxt "Languages::novoton_holidays.booking_waiting"
+msgid "Booking Waiting"
+msgstr "Rezervare în Așteptare"
+
+msgctxt "Languages::novoton_holidays.test_reservation_notice"
+msgid "TEST MODE: Reservations are marked as test and will not be processed"
+msgstr "MOD TEST: Rezervările sunt marcate ca test și nu vor fi procesate"
+
+msgctxt "Languages::novoton_holidays.check_all_status"
+msgid "Check All ASK Status"
+msgstr "Verificare Status Toate Cererile"
+
+msgctxt "Languages::novoton_holidays.novoton_status"
+msgid "Novoton Status"
+msgstr "Status Novoton"
+
+msgctxt "Languages::novoton_holidays.booking_details"
+msgid "Booking Details"
+msgstr "Detalii Rezervare"
+
+msgctxt "Languages::novoton_holidays.hotel_booking"
+msgid "Hotel Booking"
+msgstr "Rezervare Hotel"
+
+msgctxt "Languages::novoton_holidays.send_request"
+msgid "Send Request"
+msgstr "Trimite Cererea"
+
+msgctxt "Languages::novoton_holidays.unavailable"
+msgid "Unavailable"
+msgstr "Indisponibil"
+
+msgctxt "Languages::novoton_holidays.request_sent"
+msgid "Your request has been sent"
+msgstr "Cererea dvs. a fost trimisă"
+
+msgctxt "Languages::novoton_holidays.request_pending"
+msgid "Request pending confirmation"
+msgstr "Cerere în așteptarea confirmării"
+
+msgctxt "Languages::novoton_holidays.names_of_persons"
+msgid "Names of the persons"
+msgstr "Numele persoanelor"
+
+msgctxt "Languages::novoton_holidays.name_surname"
+msgid "Name&Surname"
+msgstr "Nume&Prenume"
+
+msgctxt "Languages::novoton_holidays.enter_full_name"
+msgid "Enter full name"
+msgstr "Introduceți numele complet"
+
+msgctxt "Languages::novoton_holidays.clients_wish"
+msgid "Client's wish"
+msgstr "Dorința clientului"
+
+msgctxt "Languages::novoton_holidays.important_info"
+msgid "Important info"
+msgstr "Informații importante"
+
+msgctxt "Languages::novoton_holidays.reservation_number"
+msgid "Reservation number"
+msgstr "Număr rezervare"
+
+msgctxt "Languages::novoton_holidays.book_date"
+msgid "Book date"
+msgstr "Data rezervării"
+
+msgctxt "Languages::novoton_holidays.names"
+msgid "Names"
+msgstr "Nume"
+
+msgctxt "Languages::novoton_holidays.contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::novoton_holidays.view_booking"
+msgid "View Booking"
+msgstr "Vizualizare Rezervare"
+
+msgctxt "Languages::novoton_holidays.match"
+msgid "Match"
+msgstr "Potrivire"
+
+msgctxt "Languages::novoton_holidays.different"
+msgid "Different"
+msgstr "Diferit"
+
+msgctxt "Languages::novoton_holidays.not_available"
+msgid "Not available"
+msgstr "Indisponibil"
+
+msgctxt "Languages::novoton_holidays.please_fill_required_fields"
+msgid "Please fill all required fields"
+msgstr "Vă rugăm completați toate câmpurile obligatorii"
+
+msgctxt "Languages::novoton_holidays.please_select_destination"
+msgid "Please select a destination"
+msgstr "Vă rugăm selectați o destinație"
+
+msgctxt "Languages::novoton_holidays.hotel_not_found"
+msgid "Hotel not found"
+msgstr "Hotelul nu a fost găsit"
+
+msgctxt "Languages::novoton_holidays.product_not_found"
+msgid "Product not found for this hotel."
+msgstr "Produsul nu a fost găsit pentru acest hotel."
+
+msgctxt "Languages::novoton_holidays.free_nights"
+msgid "Free Nights"
+msgstr "Nopți Gratuite"
+
+msgctxt "Languages::novoton_holidays.pay_nights_get_free"
+msgid "Pay %s nights, get %s free!"
+msgstr "Plătiți %s nopți, primiți %s gratuit!"
+
+msgctxt "Languages::novoton_holidays.api_not_submitted"
+msgid "API submission disabled - booking saved locally only"
+msgstr "Trimiterea API dezactivată - rezervarea salvată doar local"
+
+msgctxt "Languages::novoton_holidays.api_price"
+msgid "API Price"
+msgstr "Preț API"
+
+msgctxt "Languages::novoton_holidays.api_request_sent"
+msgid "API Request Sent"
+msgstr "Cerere API Trimisă"
+
+msgctxt "Languages::novoton_holidays.api_response_received"
+msgid "API Response Received"
+msgstr "Răspuns API Primit"
+
+msgctxt "Languages::novoton_holidays.booking_preview"
+msgid "Booking Preview"
+msgstr "Previzualizare Rezervare"
+
+msgctxt "Languages::novoton_holidays.data_to_send"
+msgid "Data to be sent to Novoton API"
+msgstr "Date de trimis către API-ul Novoton"
+
+msgctxt "SettingsOptions::novoton_holidays::debug_logging"
+msgid "Enable Debug Logging"
+msgstr "Activare Jurnalizare Debug"
+
+msgctxt "SettingsOptions::novoton_holidays::debug_mode"
+msgid "Enable Frontend Debug Mode"
+msgstr "Activare Mod Debug Frontend"
+
+msgctxt "SettingsTooltips::novoton_holidays::debug_logging"
+msgid "Log all API requests and responses for debugging. Check Administration > Logs > Runtime."
+msgstr "Înregistrează toate cererile și răspunsurile API pentru debugging. Verificați Administrare > Jurnale > Runtime."
+
+msgctxt "SettingsTooltips::novoton_holidays::debug_mode"
+msgid "Enable JavaScript console debug logging on storefront. Shows detailed [Novoton] messages in browser console."
+msgstr "Activează logarea de debug în consola JavaScript pe vitrină. Afișează mesaje detaliate [Novoton] în consola browserului."
+
+msgctxt "SettingsTooltips::novoton_holidays::disable_api_submission"
+msgid "When enabled, bookings are saved to database but NOT sent to Novoton API. Use for testing booking flow without making real reservations."
+msgstr "Când este activat, rezervările sunt salvate în baza de date dar NU sunt trimise la API-ul Novoton. Folosiți pentru testarea fluxului de rezervare fără a face rezervări reale."
+
+msgctxt "Languages::novoton_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Condiții de Anulare și Plată"
+
+msgctxt "Languages::novoton_holidays.use_booking_engine_to_search"
+msgid "Please use the booking engine to search for availability."
+msgstr "Vă rugăm utilizați motorul de rezervare pentru a căuta disponibilitate."
+
+msgctxt "SettingsOptions::novoton_holidays::price_check_header"
+msgid "Price Discrepancy Check"
+msgstr "Verificare Discrepanță Preț"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_preorder_price_check"
+msgid "Enable pre-order price verification"
+msgstr "Activare verificare preț înainte de comandă"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_preorder_price_check"
+msgid "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+msgstr "Când este activat, sistemul verifică prețul curent din API chiar înainte de plasarea comenzii. Dacă prețul din formular este mai mic decât prețul API, comanda este blocată. Aceasta este cea mai importantă plasă de siguranță împotriva prețurilor învechite."
+
+msgctxt "SettingsOptions::novoton_holidays::price_higher_threshold"
+msgid "Price higher alert threshold (%)"
+msgstr "Prag alertă preț mai mare (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_higher_threshold"
+msgid "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+msgstr "Dacă prețul din formular depășește prețul API cu mai mult decât acest procent, comanda este permisă dar se trimite o notificare email către admin. Implicit: 55%."
+
+msgctxt "SettingsOptions::novoton_holidays::preorder_cache_ttl"
+msgid "Price check cache TTL (seconds)"
+msgstr "TTL cache verificare preț (secunde)"
+
+msgctxt "SettingsTooltips::novoton_holidays::preorder_cache_ttl"
+msgid "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+msgstr "Cât timp (în secunde) să se folosească prețul verificat la adăugare în coș înainte de a apela API-ul din nou la finalizare. Setați 0 pentru a apela mereu API-ul. Implicit: 180 (3 minute)."
+
+msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
+msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+msgstr "Prețul s-a modificat de când ați adăugat acest articol în coș. Vă rugăm reveniți și reîmprospătați prețul înainte de a plasa comanda."
+
+msgctxt "Languages::novoton_holidays.price_updated_from_to"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "Tariful curent a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real."
+
+msgctxt "Languages::novoton_holidays.price_dropped"
+msgid "Price Dropped!"
+msgstr "Preț redus!"
+
+msgctxt "Languages::novoton_holidays.price_dropped_to"
+msgid "Good news! The price has dropped to [new_price]."
+msgstr "Vești bune! Prețul a scăzut la [new_price]."
+
+msgctxt "Languages::novoton_holidays.price_updated_at_checkout"
+msgid "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+msgstr "Prețul a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real. Vă rugăm să verificați și să plasați din nou comanda."
+
+msgctxt "Languages::novoton_holidays.price_updated_badge"
+msgid "Price Updated"
+msgstr "Preț actualizat"
+
+msgctxt "Languages::novoton_holidays.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Preț redus!"
+
+msgctxt "Languages::novoton_holidays.price_updated_explanation"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "Tariful curent a fost actualizat de la [old_price] la [new_price] pe baza disponibilității în timp real."
+
+msgctxt "Languages::novoton_holidays.price_dropped_explanation"
+msgid "Good news! The price has decreased to [new_price]."
+msgstr "Vești bune! Prețul a scăzut la [new_price]."
+
+msgctxt "SettingsOptions::novoton_holidays::price_change_tolerance_percent"
+msgid "Price change tolerance (%)"
+msgstr "Toleranță modificare preț (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
+msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+msgstr "Modificările de preț sub acest prag procentual sunt aplicate silențios fără a notifica clientul. Modificările peste acest prag afișează o comparație vizibilă 'Vechi vs Nou'. Implicit: 1%."
+
+msgctxt "SettingsSections::novoton_holidays::feature_mapping"
+msgid "Feature IDs Mapping"
+msgstr "Feature IDs Mapping"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_mapping_header"
+msgid "CS-Cart Feature IDs"
+msgstr "ID-uri Caracteristici CS-Cart"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_property_rating"
+msgid "Property Rating feature ID"
+msgstr "ID caracteristică Clasificare Proprietate"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_rating"
+msgid "CS-Cart product feature ID for property rating (Select Box type). Set to 0 to disable. Find the ID in Products > Features."
+msgstr "ID-ul caracteristicii CS-Cart pentru clasificare proprietate (tip Casetă de Selectare). Setați 0 pentru dezactivare. Găsiți ID-ul în Produse > Caracteristici."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_meals"
+msgid "Meals feature ID"
+msgstr "ID caracteristică Mese"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_meals"
+msgid "CS-Cart product feature ID for meal plan (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "ID-ul caracteristicii CS-Cart pentru tipul de masă (tip Casete de Bifat Multiple). Setați 0 pentru dezactivare."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_hotel_facility"
+msgid "Hotel Facilities feature ID"
+msgstr "ID caracteristică Facilități Hotel"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_hotel_facility"
+msgid "CS-Cart product feature ID for hotel-level facilities like pool, spa, restaurant (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "ID-ul caracteristicii CS-Cart pentru facilități la nivel de hotel (piscină, spa, restaurant). Tip Casete de Bifat Multiple. Setați 0 pentru dezactivare."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_room_facility"
+msgid "Room Facilities feature ID"
+msgstr "ID caracteristică Facilități Cameră"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_room_facility"
+msgid "CS-Cart product feature ID for room-level facilities like WiFi, AC, minibar (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "ID-ul caracteristicii CS-Cart pentru facilități la nivel de cameră (WiFi, AC, minibar). Tip Casete de Bifat Multiple. Setați 0 pentru dezactivare."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_resort"
+msgid "Resort / City feature ID"
+msgstr "ID caracteristică Stațiune / Oraș"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_resort"
+msgid "CS-Cart product feature ID for resort/city location (Select Box type). Set to 0 to disable."
+msgstr "ID-ul caracteristicii CS-Cart pentru locația stațiune/oraș (tip Casetă de Selectare). Setați 0 pentru dezactivare."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_property_type"
+msgid "Property Type feature ID"
+msgstr "ID caracteristică Tip Proprietate"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
+msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+msgstr "ID-ul caracteristicii CS-Cart pentru tipul de proprietate (hotel, vilă, apartament). Tip Casetă de Selectare. Setați 0 pentru dezactivare."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_travel_group"
+msgid "Travel Group feature ID"
+msgstr "Travel Group feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_travel_group"
+msgid "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_beach_access"
+msgid "Beach Access feature ID"
+msgstr "Beach Access feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_beach_access"
+msgid "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+msgstr "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+
+msgctxt "Languages::novoton_holidays.fm_variant_name"
+msgid "Variant Name"
+msgstr "Variant Name"
+
+msgctxt "Languages::novoton_holidays.feature_mappings"
+msgid "Feature Mappings"
+msgstr "Mapări Caracteristici"
+
+msgctxt "Languages::novoton_holidays.feature_mapping_updated"
+msgid "Feature mapping updated successfully."
+msgstr "Maparea caracteristicii a fost actualizată cu succes."
+
+msgctxt "Languages::novoton_holidays.feature_mapping_not_found"
+msgid "Feature mapping not found."
+msgstr "Maparea caracteristicii nu a fost găsită."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_activated"
+msgid "[count] mapping(s) activated."
+msgstr "[count] mapare/mapări activate."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deactivated"
+msgid "[count] mapping(s) deactivated."
+msgstr "[count] mapare/mapări dezactivate."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deleted"
+msgid "[count] mapping(s) deleted."
+msgstr "[count] mapare/mapări șterse."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_reseeded"
+msgid "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+msgstr "Mapări regenerate: [seeded] rânduri actualizate, [skipped] omise (neconfigurate)."
+
+msgctxt "Languages::novoton_holidays.fm_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.fm_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::novoton_holidays.fm_auto_registered"
+msgid "Auto-registered"
+msgstr "Auto-înregistrate"
+
+msgctxt "Languages::novoton_holidays.fm_unmapped"
+msgid "Unmapped"
+msgstr "Nemapate"
+
+msgctxt "Languages::novoton_holidays.fm_configured_features"
+msgid "Configured features"
+msgstr "Caracteristici configurate"
+
+msgctxt "Languages::novoton_holidays.fm_not_set"
+msgid "not set"
+msgstr "nesetat"
+
+msgctxt "Languages::novoton_holidays.fm_configure"
+msgid "Configure"
+msgstr "Configurare"
+
+msgctxt "Languages::novoton_holidays.fm_feature_type"
+msgid "Feature type"
+msgstr "Tip caracteristică"
+
+msgctxt "Languages::novoton_holidays.fm_source"
+msgid "Source"
+msgstr "Sursă"
+
+msgctxt "Languages::novoton_holidays.fm_source_seed"
+msgid "Seed"
+msgstr "Seed"
+
+msgctxt "Languages::novoton_holidays.fm_source_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::novoton_holidays.fm_source_manual"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "Languages::novoton_holidays.fm_reseed"
+msgid "Re-seed Mappings"
+msgstr "Regenerare Mapări"
+
+msgctxt "Languages::novoton_holidays.fm_reseed_confirm"
+msgid "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+msgstr "Aceasta va regenera toate mapările din setările addon-ului și datele existente. Continuați?"
+
+msgctxt "Languages::novoton_holidays.fm_mappings"
+msgid "mappings"
+msgstr "mapări"
+
+msgctxt "Languages::novoton_holidays.fm_not_configured"
+msgid "Feature ID not configured"
+msgstr "ID caracteristică neconfigurat"
+
+msgctxt "Languages::novoton_holidays.fm_provider_code"
+msgid "Provider Code"
+msgstr "Cod Furnizor"
+
+msgctxt "Languages::novoton_holidays.fm_display_en"
+msgid "Display (EN)"
+msgstr "Afișare (EN)"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro"
+msgid "Display (RO)"
+msgstr "Afișare (RO)"
+
+msgctxt "Languages::novoton_holidays.fm_variant_id"
+msgid "Variant ID"
+msgstr "ID Variantă"
+
+msgctxt "Languages::novoton_holidays.fm_cs_type"
+msgid "CS Type"
+msgstr "Tip CS"
+
+msgctxt "Languages::novoton_holidays.fm_last_synced"
+msgid "Last Synced"
+msgstr "Ultima Sincronizare"
+
+msgctxt "Languages::novoton_holidays.fm_none"
+msgid "none"
+msgstr "niciuna"
+
+msgctxt "Languages::novoton_holidays.fm_with_selected"
+msgid "With selected"
+msgstr "Cu cele selectate"
+
+msgctxt "Languages::novoton_holidays.fm_activate"
+msgid "Activate"
+msgstr "Activare"
+
+msgctxt "Languages::novoton_holidays.fm_deactivate"
+msgid "Deactivate"
+msgstr "Dezactivare"
+
+msgctxt "Languages::novoton_holidays.fm_delete_confirm"
+msgid "Are you sure you want to delete the selected mappings?"
+msgstr "Sigur doriți să ștergeți mapările selectate?"
+
+msgctxt "Languages::novoton_holidays.fm_edit_mapping"
+msgid "Edit Mapping"
+msgstr "Editare Mapare"
+
+msgctxt "Languages::novoton_holidays.fm_mapping_id"
+msgid "Mapping ID"
+msgstr "ID Mapare"
+
+msgctxt "Languages::novoton_holidays.fm_provider"
+msgid "Provider"
+msgstr "Furnizor"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature"
+msgid "CS-Cart Feature"
+msgstr "Caracteristică CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature_id"
+msgid "CS-Cart Feature ID"
+msgstr "ID Caracteristică CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_not_found_in_cscart"
+msgid "not found in CS-Cart"
+msgstr "negăsit în CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_variant_missing"
+msgid "variant not found"
+msgstr "variantă negăsită"
+
+msgctxt "Languages::novoton_holidays.fm_will_be_created"
+msgid "Will be auto-created on first sync"
+msgstr "Va fi creat automat la prima sincronizare"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro_hint"
+msgid "Leave empty to use English name as fallback."
+msgstr "Lăsați gol pentru a folosi numele în engleză ca alternativă."
+
+msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
+msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
+msgstr "Suprascrie setarea addon-ului pentru această mapare specifică. De obicei setat prin setările addon-ului."
+
+msgctxt "Languages::novoton_holidays.fm_not_mapped"
+msgid "Not mapped"
+msgstr "Nemaapat"
+
+msgctxt "Languages::novoton_holidays.fm_variant_hint"
+msgid "Select the CS-Cart variant that corresponds to this API value."
+msgstr "Selectați varianta CS-Cart care corespunde acestei valori din API."
+
+msgctxt "Languages::novoton_holidays.fm_no_variants_exist"
+msgid "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+msgstr "Nu există variante pentru această caracteristică CS-Cart. Creați-le în Produse > Caracteristici mai întâi."
+
+msgctxt "Languages::novoton_holidays.fm_configure_feature_first"
+msgid "Set a CS-Cart Feature ID first."
+msgstr "Setați mai întâi un ID de caracteristică CS-Cart."
+
+msgctxt "Languages::novoton_holidays.fm_created_at"
+msgid "Created"
+msgstr "Creat"
+
+msgctxt "Languages::menu::feature_mappings"
+msgid "Feature Mappings"
+msgstr "Mapări Caracteristici"
+
+msgctxt "Languages::novoton_holidays.actions.novoton_dashboard"
+msgid "Novoton Dashboard"
+msgstr "Novoton Dashboard"
+
+msgctxt "Languages::novoton_holidays.actions.import_facilities"
+msgid "Import All Facilities from API"
+msgstr "Importă Toate Facilitățile din API"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_variants"
+msgid "Auto-resolve Variants"
+msgstr "Rezolvare automată variante"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_confirm"
+msgid "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+msgstr "Aceasta va rezolva automat toate variantele nemapate prin potrivirea numelor cu variantele CS-Cart existente și va crea variante noi unde nu se găsește potrivire. Variantele setate manual nu vor fi modificate. Continuați?"
+
+msgctxt "Languages::novoton_holidays.fm_variants_resolved"
+msgid "[resolved] matched, [created] created, [failed] failed"
+msgstr "[resolved] potrivite, [created] create, [failed] eșuate"
+
+msgctxt "Languages::novoton_holidays.fm_variant_source"
+msgid "Variant Set"
+msgstr "Setare variantă"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual"
+msgid "manual"
+msgstr "manual"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto_hint"
+msgid "Variant was auto-resolved by name match or auto-created"
+msgstr "Varianta a fost rezolvată automat prin potrivire de nume sau creată automat"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
+msgid "Variant was manually set by admin — auto-resolve will not overwrite"
+msgstr "Varianta a fost setată manual de admin — rezolvarea automată nu va suprascrie"
+
+msgctxt "Languages::novoton_holidays.cleanup_confirm"
+msgid "This will delete all bookings without orders that are older than 24 hours. Continue?"
+msgstr "Aceasta va șterge toate rezervările fără comenzi mai vechi de 24 de ore. Continuați?"
+
+msgctxt "Languages::novoton_holidays.cleanup_orphan_bookings"
+msgid "Cleanup Orphan Bookings"
+msgstr "Curățare rezervări orfane"
+
+msgctxt "Languages::novoton_holidays.show_incomplete_bookings"
+msgid "Show incomplete bookings (no order)"
+msgstr "Afișează rezervările incomplete (fără comandă)"
+
+msgctxt "Languages::novoton_holidays.quick_actions"
+msgid "Quick Actions"
+msgstr "Acțiuni rapide"
+
+msgctxt "Languages::novoton_holidays.open_dashboard"
+msgid "Open Novoton Dashboard"
+msgstr "Deschide panoul Novoton"
+
+msgctxt "Languages::novoton_holidays.cron_info_description"
+msgid "All tools and cron information are available in the Novoton Dashboard."
+msgstr "Toate instrumentele și informațiile cron sunt disponibile în panoul Novoton."
+
+msgctxt "Languages::novoton_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Comenzi Cron"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_hint"
+msgid "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+msgstr "Programați-le prin crontab-ul serverului. Înlocuiți YOUR_KEY cu cheia de acces cron configurată mai sus."
+
+msgctxt "Languages::novoton_holidays.cron_mode"
+msgid "Mode"
+msgstr "Mod"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Command"
+msgstr "Comandă"
+
+msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
+msgid "Suggested Schedule"
+msgstr "Program sugerat"
+
+msgctxt "Languages::novoton_holidays.book_x_pay_y"
+msgid "Book [book] nights, pay for [pay]"
+msgstr "Rezervă [book] nopți, plătești [pay]"
+
+msgctxt "Languages::novoton_holidays.off"
+msgid "off"
+msgstr "reducere"

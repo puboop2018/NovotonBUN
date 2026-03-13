@@ -1,0 +1,694 @@
+/**
+ * Novoton Holidays - LESS Styles
+ *
+ * Design tokens → LESS variables → CSS custom properties.
+ * CS-Cart compiles this into a single cached CSS file.
+ *
+ * Strategy: inherit chrome/status colors from the active theme preset so the
+ * addon automatically adapts when the merchant switches between Blue, Green,
+ * Orange, etc.  Only the four booking-engine brand colors are addon-specific
+ * and customisable via the Theme Editor (schema.post.php).
+ *
+ * @package NovotonHolidays
+ * @since   2.8.0
+ */
+
+// ============================================================================
+// DESIGN TOKENS  (single source of truth for the whole addon)
+//
+// Hybrid approach:
+//   - Brand colors → addon-specific (Theme Editor customisable)
+//   - Chrome (text, surfaces, borders, status, fonts) → inherited from theme
+//
+// When a merchant switches the theme preset (Blue → Green), the addon
+// automatically adapts because these tokens resolve to the active theme's
+// variables at LESS compile time.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// 1. ADDON-SPECIFIC  (booking engine brand identity)
+//    These have no theme equivalent; customisable via Theme Editor.
+//    Registered as color pickers in schema.post.php (type: color,
+//    variable_name maps to the LESS variable below).  The values here
+//    are defaults — the Theme Editor overrides them when the admin
+//    picks a custom colour.
+// ---------------------------------------------------------------------------
+@novoton-primary:           #003580;   // Theme Editor → "Novoton: Primary color"
+@novoton-accent:            #febb02;   // Theme Editor → "Novoton: Accent color"
+@novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Novoton: Search button"
+@novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Novoton: Search button (hover)"
+
+// Calendar price colors  (Theme Editor customisable)
+@novoton-cal-cheapest-color: #2e7d32;  // Theme Editor → "Novoton: Calendar lowest price text"
+@novoton-cal-price-color:    #4B5563;  // Theme Editor → "Novoton: Calendar price text"
+
+// Brand derived (computed so they adapt when Theme Editor overrides the base)
+@novoton-primary-light:     lighten(@novoton-primary, 15%);
+@novoton-primary-dark:      darken(@novoton-primary, 15%);
+@novoton-accent-hover:      darken(@novoton-accent, 10%);
+
+// Primary focus ring (10 % opacity of brand)
+@novoton-primary-focus:     fade(@novoton-primary, 10%);
+
+// Primary tint  (very light background, e.g. calendar range, add-room)
+@novoton-primary-tint:      fade(@novoton-primary, 8%);
+
+// ---------------------------------------------------------------------------
+// 2. CHROME & STATUS COLORS  (inherited from the active theme preset)
+//
+//    These map directly to CS-Cart theme variables so the addon auto-adapts
+//    when the merchant switches presets (Blue → Orange → Green, etc.).
+//    Variables used here (@font, @base, @content_bg, @in_stock, etc.) are
+//    guaranteed to exist in every CS-Cart theme data file.
+//
+//    DO NOT register these in schema.post.php — they must follow the theme.
+// ---------------------------------------------------------------------------
+
+// Text  (from theme: @font is the main text color)
+@novoton-text:              @font;
+@novoton-text-light:        lighten(@font, 35%);
+@novoton-text-disabled:     lighten(@font, 50%);
+
+// Surfaces  (from theme: @content_bg, @general_bg_color, @base)
+@novoton-bg:                @content_bg;
+@novoton-bg-light:          @general_bg_color;
+@novoton-border:            @base;
+
+// Price  (from theme: @links — matches Links color in Theme Editor)
+@novoton-price-color:       @links;
+
+// Primary action button (from theme: @links — the "Primary button" in Theme Editor)
+@novoton-btn-primary-bg:    @links;
+@novoton-btn-primary-hover: darken(@links, 10%);
+
+// Status  (from theme: @in_stock, @out_of_stock, @links)
+@novoton-success:           @in_stock;
+@novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
+@novoton-danger:            @out_of_stock;
+@novoton-info:              @links;
+@novoton-discount:          #2e7d32;   // Discount / extras promotion label
+@novoton-discount-light:    lighten(@novoton-discount, 50%);
+
+// Subtle hover surface for interactive cells (calendar, lists)
+@novoton-hover-bg:          darken(@novoton-bg, 3%);
+
+// Status derived
+@novoton-success-dark:      darken(@novoton-success, 10%);
+@novoton-success-light:     lighten(@novoton-success, 40%);
+@novoton-warning-dark:      darken(@novoton-warning, 25%);
+@novoton-warning-light:     lighten(@novoton-warning, 35%);
+@novoton-danger-dark:       darken(@novoton-danger, 10%);
+@novoton-danger-light:      lighten(@novoton-danger, 35%);
+@novoton-info-dark:         darken(@novoton-info, 15%);
+@novoton-info-light:        lighten(@novoton-info, 40%);
+
+// Layout  (respects the "Rounded corners" toggle in Theme Editor)
+// When @rounded_corners is false the theme sets baseBorderRadius to 0;
+// the addon follows the same toggle via direct assignment.
+@novoton-radius:            @baseBorderRadius;
+@novoton-radius-sm:         @borderRadiusSmall;
+@novoton-radius-pill:       20px;
+
+// Typography  (from theme: @body_font, @body_font_size)
+@novoton-font-family:       @body_font;
+@novoton-font-size-base:    unit(@body_font_size, px);
+@novoton-font-size-small:   round(@body_font_size * 0.79);
+@novoton-font-size-large:   round(@body_font_size * 1.29);
+
+// ---------------------------------------------------------------------------
+// 3. ADDON-SPECIFIC  (spacing & shadows — no theme equivalents)
+// ---------------------------------------------------------------------------
+@novoton-spacing-xs:  5px;
+@novoton-spacing-sm:  10px;
+@novoton-spacing-md:  15px;
+@novoton-spacing-lg:  20px;
+@novoton-spacing-xl:  30px;
+
+@novoton-shadow:    0 2px 4px rgba(0, 0, 0, 0.1);
+@novoton-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// Z-index scale (LESS variables for direct use in components;
+// the :root block below bridges them to CSS custom properties for JS)
+@novoton-z-dropdown:       1000;
+@novoton-z-sticky:         1020;
+@novoton-z-fixed:          1030;
+@novoton-z-modal-backdrop: 1040;
+@novoton-z-modal:          1050;
+@novoton-z-notification:   1060;
+@novoton-z-tooltip:        1070;
+
+// ============================================================================
+// LESS → CSS CUSTOM PROPERTIES BRIDGE
+//
+// React (styles.js) and inline styles can all read these via var(--nvt-*).
+// When the Visual Editor overrides a LESS variable the custom property
+// updates automatically on recompile.
+// ============================================================================
+
+// lessphp (CS-Cart's PHP LESS compiler) does not fully support CSS custom
+// properties.  Bare values inside --custom-prop declarations can trigger
+// "expected color value" errors.  Wrapping every value with ~"@{var}" or
+// ~"literal" forces lessphp to emit the resolved value as an unquoted
+// string, bypassing its broken value-type validation.
+:root {
+    // Brand
+    --nvt-primary:          ~"@{novoton-primary}";
+    --nvt-primary-light:    ~"@{novoton-primary-light}";
+    --nvt-primary-dark:     ~"@{novoton-primary-dark}";
+    --nvt-accent:           ~"@{novoton-accent}";
+    --nvt-accent-hover:     ~"@{novoton-accent-hover}";
+    --nvt-search-btn-bg:    ~"@{novoton-search-btn-bg}";
+    --nvt-search-btn-hover: ~"@{novoton-search-btn-hover}";
+
+    // Primary action button
+    --nvt-btn-primary-bg:   ~"@{novoton-btn-primary-bg}";
+    --nvt-btn-primary-hover:~"@{novoton-btn-primary-hover}";
+
+    // Status
+    --nvt-success:          ~"@{novoton-success}";
+    --nvt-success-light:    ~"@{novoton-success-light}";
+    --nvt-success-dark:     ~"@{novoton-success-dark}";
+    --nvt-warning:          ~"@{novoton-warning}";
+    --nvt-warning-light:    ~"@{novoton-warning-light}";
+    --nvt-warning-dark:     ~"@{novoton-warning-dark}";
+    --nvt-danger:           ~"@{novoton-danger}";
+    --nvt-danger-light:     ~"@{novoton-danger-light}";
+    --nvt-danger-dark:      ~"@{novoton-danger-dark}";
+    --nvt-info:             ~"@{novoton-info}";
+    --nvt-info-light:       ~"@{novoton-info-light}";
+    --nvt-info-dark:        ~"@{novoton-info-dark}";
+    --nvt-discount:         ~"@{novoton-discount}";
+    --nvt-discount-light:   ~"@{novoton-discount-light}";
+
+    // Focus & tint
+    --nvt-primary-focus:    ~"@{novoton-primary-focus}";
+    --nvt-primary-tint:     ~"@{novoton-primary-tint}";
+
+    // Text
+    --nvt-text:             ~"@{novoton-text}";
+    --nvt-text-light:       ~"@{novoton-text-light}";
+    --nvt-text-disabled:    ~"@{novoton-text-disabled}";
+
+    // Surfaces
+    --nvt-bg:               ~"@{novoton-bg}";
+    --nvt-bg-light:         ~"@{novoton-bg-light}";
+    --nvt-border:           ~"@{novoton-border}";
+    --nvt-hover-bg:         ~"@{novoton-hover-bg}";
+
+    // Calendar
+    --nvt-price-color:          ~"@{novoton-price-color}";
+    --nvt-cal-cheapest-color:   ~"@{novoton-cal-cheapest-color}";
+    --nvt-cal-price-color:      ~"@{novoton-cal-price-color}";
+
+    // Layout
+    --nvt-radius:           ~"@{novoton-radius}";
+    --nvt-radius-sm:        ~"@{novoton-radius-sm}";
+    --nvt-radius-pill:      ~"@{novoton-radius-pill}";
+
+    // Typography
+    --nvt-font-family:      ~"@{novoton-font-family}";
+    --nvt-font-size-base:   ~"@{novoton-font-size-base}";
+    --nvt-font-size-small:  ~"@{novoton-font-size-small}";
+    --nvt-font-size-large:  ~"@{novoton-font-size-large}";
+
+    // Shadows
+    --nvt-shadow:           ~"@{novoton-shadow}";
+    --nvt-shadow-lg:        ~"@{novoton-shadow-lg}";
+
+    // Spacing
+    --nvt-spacing-xs:       ~"@{novoton-spacing-xs}";
+    --nvt-spacing-sm:       ~"@{novoton-spacing-sm}";
+    --nvt-spacing-md:       ~"@{novoton-spacing-md}";
+    --nvt-spacing-lg:       ~"@{novoton-spacing-lg}";
+    --nvt-spacing-xl:       ~"@{novoton-spacing-xl}";
+
+    // Z-index scale
+    --nvt-z-dropdown:       ~"@{novoton-z-dropdown}";
+    --nvt-z-sticky:         ~"@{novoton-z-sticky}";
+    --nvt-z-fixed:          ~"@{novoton-z-fixed}";
+    --nvt-z-modal-backdrop: ~"@{novoton-z-modal-backdrop}";
+    --nvt-z-modal:          ~"@{novoton-z-modal}";
+    --nvt-z-notification:   ~"@{novoton-z-notification}";
+    --nvt-z-tooltip:        ~"@{novoton-z-tooltip}";
+}
+
+// ============================================================================
+// MIXINS
+// ============================================================================
+
+.novoton-button() {
+    display: inline-block;
+    padding: @novoton-spacing-sm @novoton-spacing-lg;
+    font-size: @novoton-font-size-base;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: @novoton-radius-sm;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.novoton-card() {
+    background: @novoton-bg;
+    border: 1px solid @novoton-border;
+    border-radius: @novoton-radius;
+    padding: @novoton-spacing-lg;
+    box-shadow: @novoton-shadow;
+}
+
+.novoton-input() {
+    width: 100%;
+    padding: @novoton-spacing-sm @novoton-spacing-md;
+    font-size: @novoton-font-size-base;
+    border: 1px solid @novoton-border;
+    border-radius: @novoton-radius-sm;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+        outline: none;
+        border-color: @novoton-primary;
+        box-shadow: 0 0 0 3px @novoton-primary-focus;
+    }
+}
+
+// ============================================================================
+// BASE COMPONENT STYLES
+// ============================================================================
+
+.novoton-btn-primary {
+    .novoton-button();
+    background-color: @novoton-primary;
+    color: #fff;
+
+    &:hover {
+        background-color: @novoton-primary-dark;
+        color: #fff;
+    }
+}
+
+.novoton-btn-accent {
+    .novoton-button();
+    background-color: @novoton-accent;
+    color: @novoton-text;
+
+    &:hover {
+        background-color: @novoton-accent-hover;
+        color: @novoton-text;
+    }
+}
+
+.novoton-btn-success {
+    .novoton-button();
+    background-color: @novoton-success;
+    color: #fff;
+
+    &:hover {
+        background-color: @novoton-success-dark;
+        color: #fff;
+    }
+}
+
+.novoton-card {
+    .novoton-card();
+}
+
+.novoton-input {
+    .novoton-input();
+}
+
+// ============================================================================
+// BOOKING ENGINE STYLES (LESS version)
+// ============================================================================
+
+.novoton-booking-engine {
+    .novoton-card();
+
+    .booking-header {
+        color: @novoton-primary;
+        font-size: @novoton-font-size-large;
+        margin-bottom: @novoton-spacing-md;
+        padding-bottom: @novoton-spacing-sm;
+        border-bottom: 2px solid @novoton-border;
+    }
+
+    .booking-form {
+        .form-group {
+            margin-bottom: @novoton-spacing-md;
+
+            label {
+                display: block;
+                margin-bottom: @novoton-spacing-xs;
+                font-weight: 600;
+                color: @novoton-text;
+            }
+
+            input, select {
+                .novoton-input();
+            }
+        }
+
+        .submit-btn {
+            .novoton-button();
+            width: 100%;
+            background-color: @novoton-accent;
+            color: @novoton-text;
+            font-size: @novoton-font-size-large;
+            padding: @novoton-spacing-md;
+
+            &:hover {
+                background-color: @novoton-accent-hover;
+            }
+        }
+    }
+}
+
+// ============================================================================
+// PRICE DISPLAY
+// ============================================================================
+
+.novoton-price {
+    font-weight: 700;
+    color: @novoton-price-color;
+
+    .price-amount {
+        font-size: 1.5em;
+    }
+
+    .price-currency {
+        font-size: 0.8em;
+    }
+
+    .price-per-night {
+        font-size: @novoton-font-size-small;
+        color: @novoton-text-light;
+        font-weight: normal;
+    }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.novoton-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: @novoton-font-size-small;
+    font-weight: 600;
+    border-radius: @novoton-radius-pill;
+
+    &.badge-success {
+        background-color: @novoton-success-light;
+        color: @novoton-success-dark;
+    }
+
+    &.badge-warning {
+        background-color: @novoton-warning-light;
+        color: @novoton-warning-dark;
+    }
+
+    &.badge-danger {
+        background-color: @novoton-danger-light;
+        color: @novoton-danger-dark;
+    }
+
+    &.badge-info {
+        background-color: @novoton-info-light;
+        color: @novoton-info-dark;
+    }
+}
+
+// ============================================================================
+// JS-COMPONENT STYLES (used by dob-validation.js, booking-form-validation.js)
+// ============================================================================
+
+// DOB field error state
+.novoton-dob-error {
+    border-color: @novoton-danger;
+    background-color: @novoton-danger-light;
+}
+
+// DOB inline error message
+.novoton-dob-error-message {
+    color: @novoton-danger;
+    font-size: @novoton-font-size-small;
+    margin-top: @novoton-spacing-xs;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+// Modal overlay (room change warning)
+.novoton-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: @novoton-z-modal-backdrop;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.novoton-modal-content {
+    background: @novoton-bg;
+    border-radius: @novoton-radius;
+    padding: 25px;
+    max-width: 450px;
+    margin: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.novoton-modal-header {
+    text-align: center;
+    margin-bottom: @novoton-spacing-lg;
+}
+
+.novoton-modal-icon {
+    font-size: 40px;
+    margin-bottom: @novoton-spacing-sm;
+    color: @novoton-warning-dark;
+}
+
+.novoton-modal-title {
+    margin: 0;
+    color: @novoton-warning-dark;
+    font-size: 18px;
+}
+
+.novoton-modal-body {
+    text-align: center;
+    color: @novoton-text-light;
+    margin-bottom: @novoton-spacing-lg;
+    font-size: @novoton-font-size-base;
+}
+
+.novoton-modal-actions {
+    display: flex;
+    gap: @novoton-spacing-sm;
+    justify-content: center;
+}
+
+.novoton-modal-btn-secondary {
+    padding: 12px 20px;
+    border: 2px solid @novoton-primary;
+    background: @novoton-bg;
+    color: @novoton-primary;
+    border-radius: @novoton-radius-sm;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: @novoton-font-size-base;
+}
+
+.novoton-modal-btn-primary {
+    padding: 12px 20px;
+    border: none;
+    background: @novoton-primary;
+    color: #fff;
+    border-radius: @novoton-radius-sm;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: @novoton-font-size-base;
+}
+
+// Room change info box
+.novoton-room-change-info {
+    background: @novoton-warning-light;
+    border: 1px solid @novoton-warning;
+    border-radius: @novoton-radius;
+    padding: @novoton-spacing-md;
+    margin-bottom: @novoton-spacing-lg;
+}
+
+.novoton-room-change-compare {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: @novoton-spacing-md;
+    flex-wrap: wrap;
+}
+
+.novoton-room-change-label {
+    font-size: 11px;
+    color: @novoton-text-light;
+    text-transform: uppercase;
+}
+
+.novoton-room-change-old {
+    font-weight: 600;
+    color: @novoton-warning-dark;
+    text-decoration: line-through;
+}
+
+.novoton-room-change-new {
+    font-weight: 600;
+    color: @novoton-success-dark;
+}
+
+.novoton-room-change-arrow {
+    font-size: 24px;
+    color: @novoton-warning-dark;
+}
+
+// Price section in modal
+.novoton-price-change-box {
+    background: @novoton-bg-light;
+    border-radius: @novoton-radius;
+    padding: @novoton-spacing-md;
+    margin-bottom: @novoton-spacing-lg;
+    text-align: center;
+}
+
+.novoton-price-change-label {
+    font-size: @novoton-font-size-small;
+    color: @novoton-text-light;
+    margin-bottom: @novoton-spacing-xs;
+}
+
+.novoton-price-change-values {
+    font-size: 20px;
+}
+
+// Toast notification (price change, etc.)
+.novoton-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: @novoton-spacing-md 25px;
+    border-radius: @novoton-radius;
+    font-weight: 600;
+    z-index: @novoton-z-notification;
+    box-shadow: @novoton-shadow-lg;
+    transition: opacity 0.3s;
+
+    &.novoton-toast--increase {
+        background-color: @novoton-danger-light;
+        color: @novoton-danger;
+        border: 1px solid @novoton-danger;
+    }
+
+    &.novoton-toast--decrease {
+        background-color: @novoton-success-light;
+        color: @novoton-success;
+        border: 1px solid @novoton-success;
+    }
+}
+
+// Price recalculation notice
+.novoton-recalc-notice {
+    background: lighten(@novoton-info, 45%);
+    border-left: 4px solid @novoton-primary-light;
+    color: darken(@novoton-info, 30%);
+    padding: @novoton-spacing-sm @novoton-spacing-md;
+    margin: @novoton-spacing-sm 0;
+    border-radius: @novoton-radius-sm;
+    font-size: 13px;
+}
+
+// Price change notification bar
+.novoton-price-change-notif {
+    background: @novoton-warning-light;
+    border-left: 4px solid @novoton-warning;
+    color: @novoton-warning-dark;
+    padding: 8px @novoton-spacing-md;
+    margin: 0 0 @novoton-spacing-sm 0;
+    border-radius: @novoton-radius-sm;
+    font-size: @novoton-font-size-base;
+}
+
+// Room change confirmation
+.novoton-room-confirmed {
+    background: @novoton-success-light;
+    border-left: 4px solid @novoton-success;
+    color: @novoton-success-dark;
+    padding: @novoton-spacing-md;
+    margin: @novoton-spacing-md 0;
+    border-radius: @novoton-radius-sm;
+    font-size: @novoton-font-size-base;
+    transition: opacity 0.3s;
+}
+
+// Price loading state
+.novoton-price-loading {
+    opacity: 0.7;
+}
+
+// Desktop/mobile visibility (replaces JS !important hacks)
+.novoton-mobile-only.novoton-mobile-visible {
+    display: block;
+    visibility: visible;
+    height: auto;
+    position: relative;
+    left: auto;
+}
+
+.novoton-mobile-only.novoton-mobile-hidden {
+    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    position: absolute;
+    left: -9999px;
+}
+
+.novoton-desktop-only.novoton-desktop-visible {
+    display: grid;
+    visibility: visible;
+    position: relative;
+    left: auto;
+}
+
+.novoton-desktop-only.novoton-desktop-hidden {
+    display: none;
+    visibility: hidden;
+}
+
+// ============================================================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================================================
+
+@media (max-width: 768px) {
+    .novoton-booking-engine {
+        padding: @novoton-spacing-md;
+
+        .booking-form {
+            .form-row {
+                flex-direction: column;
+
+                .form-group {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}

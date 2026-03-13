@@ -1,0 +1,1 @@
+{include file="addons/novoton_holidays/views/novoton_holidays/add_hotels_as_products.tpl"}

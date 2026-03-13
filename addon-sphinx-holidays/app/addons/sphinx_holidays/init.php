@@ -1,0 +1,39 @@
+<?php
+declare(strict_types=1);
+/***************************************************************************
+ *                                                                          *
+ *   (c) 2024-2026 VacanteLitoral.ro                                       *
+ *                                                                          *
+ *   Location: app/addons/sphinx_holidays/init.php                         *
+ *                                                                          *
+ ***************************************************************************/
+
+use Tygh\Registry;
+use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+
+if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+// Addon version constant
+if (!defined('SPHINX_HOLIDAYS_VERSION')) {
+    $__sv = Registry::get('addons.sphinx_holidays.version') ?: '0.0.0';
+    define('SPHINX_HOLIDAYS_VERSION', preg_replace('/-.*$/', '', $__sv));
+    unset($__sv);
+}
+
+// Register PSR-4 autoloader for sphinx_holidays namespace.
+spl_autoload_register(function ($class) {
+    $prefix = 'Tygh\\Addons\\SphinxHolidays\\';
+    if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+        return;
+    }
+
+    $relative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+    $file = __DIR__ . '/src/' . $relative;
+
+    if (file_exists($file)) {
+        require $file;
+    }
+});
+
+// Register Sphinx as a travel provider (once Container is ready).
+// The provider will be registered lazily to avoid loading classes during bootstrap.

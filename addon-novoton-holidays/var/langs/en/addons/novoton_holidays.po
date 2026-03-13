@@ -1,0 +1,3386 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US"
+
+msgctxt "Addons::name::novoton_holidays"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Addons::description::novoton_holidays"
+msgid "Integration with Novoton XML API for hotel bookings and price management"
+msgstr "Integration with Novoton XML API for hotel bookings and price management"
+
+msgctxt "SettingsSections::novoton_holidays::general"
+msgid "General Settings"
+msgstr "General Settings"
+
+msgctxt "SettingsSections::novoton_holidays::api"
+msgid "API Configuration"
+msgstr "API Configuration"
+
+msgctxt "SettingsSections::novoton_holidays::pricing"
+msgid "Pricing Settings"
+msgstr "Pricing Settings"
+
+msgctxt "SettingsSections::novoton_holidays::sync"
+msgid "Synchronization Settings"
+msgstr "Synchronization Settings"
+
+msgctxt "SettingsOptions::novoton_holidays::api_url"
+msgid "API URL"
+msgstr "API URL"
+
+msgctxt "SettingsOptions::novoton_holidays::api_key"
+msgid "API Key"
+msgstr "API Key"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_key"
+msgid "Your Novoton API key for authentication"
+msgstr "Your Novoton API key for authentication"
+
+msgctxt "SettingsOptions::novoton_holidays::api_id"
+msgid "API ID"
+msgstr "API ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_id"
+msgid "Your Novoton API ID for authentication"
+msgstr "Your Novoton API ID for authentication"
+
+msgctxt "SettingsOptions::novoton_holidays::api_user"
+msgid "API Username"
+msgstr "API Username"
+
+msgctxt "SettingsOptions::novoton_holidays::api_password"
+msgid "API Password"
+msgstr "API Password"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_api_cache"
+msgid "Enable API Response Caching"
+msgstr "Enable API Response Caching"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_api_cache"
+msgid "Cache API responses to improve performance. Prices cached for 5 minutes, availability for 3 minutes."
+msgstr "Cache API responses to improve performance. Prices cached for 5 minutes, availability for 3 minutes."
+
+msgctxt "SettingsOptions::novoton_holidays::commission"
+msgid "Commission (%)"
+msgstr "Commission (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::commission"
+msgid "Percentage to add to API prices"
+msgstr "Percentage to add to API prices"
+
+msgctxt "SettingsOptions::novoton_holidays::round_prices"
+msgid "Round hotel prices"
+msgstr "Round hotel prices"
+
+msgctxt "SettingsOptions::novoton_holidays::api_currency"
+msgid "API prices currency"
+msgstr "API prices currency"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_currency"
+msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+msgstr "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
+
+msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
+msgid "Currency risk commission %"
+msgstr "Currency risk commission %"
+
+msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
+msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
+msgstr "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
+
+msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
+msgid "API Resilience"
+msgstr "API Resilience"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_retries"
+msgid "Max retries"
+msgstr "Max retries"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_retries"
+msgid "Number of retry attempts for failed API calls (recommended: 3)"
+msgstr "Number of retry attempts for failed API calls (recommended: 3)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_delay_ms"
+msgid "Retry delay (ms)"
+msgstr "Retry delay (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_delay_ms"
+msgid "Initial delay in milliseconds before first retry (recommended: 1000)"
+msgstr "Initial delay in milliseconds before first retry (recommended: 1000)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_retry_multiplier"
+msgid "Retry multiplier"
+msgstr "Retry multiplier"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_retry_multiplier"
+msgid "Exponential backoff multiplier for retries (recommended: 2, gives delays: 1s, 2s, 4s)"
+msgstr "Exponential backoff multiplier for retries (recommended: 2, gives delays: 1s, 2s, 4s)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_threshold"
+msgid "Circuit breaker threshold"
+msgstr "Circuit breaker threshold"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_threshold"
+msgid "Number of consecutive failures before circuit opens (recommended: 5)"
+msgstr "Number of consecutive failures before circuit opens (recommended: 5)"
+
+msgctxt "SettingsOptions::novoton_holidays::circuit_breaker_timeout"
+msgid "Circuit breaker timeout (s)"
+msgstr "Circuit breaker timeout (s)"
+
+msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_timeout"
+msgid "Seconds to wait before retrying after circuit opens (recommended: 60)"
+msgstr "Seconds to wait before retrying after circuit opens (recommended: 60)"
+
+msgctxt "Languages::novoton_holidays.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_info"
+msgid "Current Exchange Rates"
+msgstr "Current Exchange Rates"
+
+msgctxt "Languages::novoton_holidays.coefficient"
+msgid "Coefficient"
+msgstr "Coefficient"
+
+msgctxt "Languages::novoton_holidays.is_primary"
+msgid "Primary"
+msgstr "Primary"
+
+msgctxt "Languages::novoton_holidays.primary_currency"
+msgid "primary currency"
+msgstr "primary currency"
+
+msgctxt "Languages::novoton_holidays.update_info"
+msgid "Update Information"
+msgstr "Update Information"
+
+msgctxt "Languages::novoton_holidays.last_update"
+msgid "Last Update"
+msgstr "Last Update"
+
+msgctxt "Languages::novoton_holidays.currency_risk_commission"
+msgid "Currency Risk Commission"
+msgstr "Currency Risk Commission"
+
+msgctxt "Languages::novoton_holidays.data_source"
+msgid "Data Source"
+msgstr "Data Source"
+
+msgctxt "Languages::novoton_holidays.manual_update"
+msgid "Manual Update"
+msgstr "Manual Update"
+
+msgctxt "Languages::novoton_holidays.manual_update_description"
+msgid "Click the button below to fetch the latest exchange rates from BNR and update CS-Cart currencies."
+msgstr "Click the button below to fetch the latest exchange rates from BNR and update CS-Cart currencies."
+
+msgctxt "Languages::novoton_holidays.update_rates_now"
+msgid "Update Rates Now"
+msgstr "Update Rates Now"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_updated"
+msgid "Exchange rates have been updated successfully."
+msgstr "Exchange rates have been updated successfully."
+
+msgctxt "Languages::novoton_holidays.cron_setup"
+msgid "Automatic Updates (Cron)"
+msgstr "Automatic Updates (Cron)"
+
+msgctxt "Languages::novoton_holidays.cron_setup_description"
+msgid "Set up a cron job to automatically update exchange rates daily. BNR publishes new rates around 1:00 PM Romanian time."
+msgstr "Set up a cron job to automatically update exchange rates daily. BNR publishes new rates around 1:00 PM Romanian time."
+
+msgctxt "Languages::novoton_holidays.cron_url"
+msgid "Cron URL"
+msgstr "Cron URL"
+
+msgctxt "Languages::novoton_holidays.cron_url_frontend"
+msgid "Frontend Cron URL"
+msgstr "Frontend Cron URL"
+
+msgctxt "Languages::novoton_holidays.cron_url_admin"
+msgid "Admin Cron URL"
+msgstr "Admin Cron URL"
+
+msgctxt "Languages::novoton_holidays.recommended"
+msgid "recommended"
+msgstr "recommended"
+
+msgctxt "Languages::novoton_holidays.requires_admin_login"
+msgid "requires admin login"
+msgstr "requires admin login"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Cron Command (daily at 13:05)"
+msgstr "Cron Command (daily at 13:05)"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_note"
+msgid "This runs daily at 13:05 (1:05 PM) to fetch rates after BNR publishes them."
+msgstr "This runs daily at 13:05 (1:05 PM) to fetch rates after BNR publishes them."
+
+msgctxt "Languages::novoton_holidays.cron_password_not_set"
+msgid "Cron access key is not configured. Please set it in addon settings first."
+msgstr "Cron access key is not configured. Please set it in addon settings first."
+
+msgctxt "Languages::novoton_holidays.configure_settings"
+msgid "Configure Settings"
+msgstr "Configure Settings"
+
+msgctxt "Languages::novoton_holidays.how_it_works"
+msgid "How It Works"
+msgstr "How It Works"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step1"
+msgid "Fetches exchange rates from BNR (National Bank of Romania) API"
+msgstr "Fetches exchange rates from BNR (National Bank of Romania) API"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step2"
+msgid "Extracts rates for EUR, USD, GBP (relative to RON)"
+msgstr "Extracts rates for EUR, USD, GBP (relative to RON)"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step3"
+msgid "Calculates EUR-based coefficients and applies commission"
+msgstr "Calculates EUR-based coefficients and applies commission"
+
+msgctxt "Languages::novoton_holidays.how_it_works_step4"
+msgid "Updates CS-Cart currency rates automatically"
+msgstr "Updates CS-Cart currency rates automatically"
+
+msgctxt "Languages::novoton_holidays.exchange_rates_help_title"
+msgid "Exchange Rates Help"
+msgstr "Exchange Rates Help"
+
+msgctxt "Languages::menu.novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Hotel Bookings"
+
+msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Alternative Requests"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_sync"
+msgid "Hotels Sync"
+msgstr "Hotels Sync"
+
+msgctxt "Languages::menu.novoton_holidays_menu.room_price"
+msgid "Room Price Check"
+msgstr "Room Price Check"
+
+msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
+msgid "Add Hotels as Products"
+msgstr "Add Hotels as Products"
+
+msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
+msgid "Facilities"
+msgstr "Facilities"
+
+msgctxt "Languages::menu.novoton_holidays_menu.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_diagnostic"
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_hotel_request"
+msgid "Test Hotel Request"
+msgstr "Test Hotel Request"
+
+msgctxt "Languages::menu.novoton_holidays_menu.test_alternative_rs"
+msgid "Test Alternative RS"
+msgstr "Test Alternative RS"
+
+msgctxt "SettingsOptions::novoton_holidays::selected_countries"
+msgid "Selected Countries"
+msgstr "Selected Countries"
+
+msgctxt "SettingsTooltips::novoton_holidays::selected_countries"
+msgid "Select countries to sync hotels from. Hold Ctrl/Cmd to select multiple."
+msgstr "Select countries to sync hotels from. Hold Ctrl/Cmd to select multiple."
+
+msgctxt "SettingsOptions::novoton_holidays::product_code_prefixes"
+msgid "Product Code Prefixes"
+msgstr "Product Code Prefixes (comma separated)"
+
+msgctxt "SettingsTooltips::novoton_holidays::product_code_prefixes"
+msgid "Products with these prefixes will be synced with Novoton API"
+msgstr "Products with these prefixes will be synced with Novoton API"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_access_key"
+msgid "Cron Access Key"
+msgstr "Cron Access Key"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_access_key"
+msgid "Secret key for authenticating automated cron jobs (not related to Novoton API). Use in cron URLs: index.php?dispatch=novoton_cron.run&api_key=YOUR_KEY"
+msgstr "Secret key for authenticating automated cron jobs (not related to Novoton API). Use in cron URLs: index.php?dispatch=novoton_cron.run&api_key=YOUR_KEY"
+
+msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
+msgid "Show Booking Form on Product Pages"
+msgstr "Show Booking Form on Product Pages"
+
+msgctxt "SettingsTooltips::novoton_holidays::show_booking_form"
+msgid "Automatically display the booking search form on hotel product pages"
+msgstr "Automatically display the booking search form on hotel product pages"
+
+msgctxt "SettingsOptions::novoton_holidays::show_calendar_prices"
+msgid "Show Calendar Prices"
+msgstr "Show Calendar Prices"
+
+msgctxt "SettingsTooltips::novoton_holidays::show_calendar_prices"
+msgid "Display approximate per-night prices on calendar date cells in the booking form"
+msgstr "Display approximate per-night prices on calendar date cells in the booking form"
+
+msgctxt "Languages::novoton_holidays.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Approximate prices in %s for a 1-night stay"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_form_position"
+msgid "Booking Form Position"
+msgstr "Booking Form Position"
+
+msgctxt "SettingsVariants::novoton_holidays::booking_form_position::after_description"
+msgid "After Description"
+msgstr "After Description"
+
+msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
+msgid "Before Tabs"
+msgstr "Before Tabs"
+
+msgctxt "Languages::product_tabs.novoton_hotel_prices"
+msgid "Hotel Prices"
+msgstr "Hotel Prices"
+
+msgctxt "Languages::novoton_holidays.booking_engine"
+msgid "Book Your Stay"
+msgstr "Book Your Stay"
+
+msgctxt "Languages::novoton_holidays.book_your_stay"
+msgid "Book Your Stay"
+msgstr "Book Your Stay"
+
+msgctxt "Languages::novoton_holidays.destination"
+msgid "Destination"
+msgstr "Destination"
+
+msgctxt "Languages::novoton_holidays.select_destination"
+msgid "Select destination"
+msgstr "Select destination"
+
+msgctxt "Languages::novoton_holidays.check_in"
+msgid "Check-in"
+msgstr "Check-in"
+
+msgctxt "Languages::novoton_holidays.check_out"
+msgid "Check-out"
+msgstr "Check-out"
+
+msgctxt "Languages::novoton_holidays.nights"
+msgid "Nights"
+msgstr "Nights"
+
+msgctxt "Languages::novoton_holidays.night"
+msgid "night"
+msgstr "night"
+
+msgctxt "Languages::novoton_holidays.nights_many"
+msgid "nights"
+msgstr "nights"
+
+msgctxt "Languages::novoton_holidays.adults"
+msgid "novoton_holidays.adults"
+msgstr "Adults"
+
+msgctxt "Languages::novoton_holidays.children"
+msgid "novoton_holidays.children"
+msgstr "Children"
+
+msgctxt "Languages::novoton_holidays.child"
+msgid "child"
+msgstr "child"
+
+msgctxt "Languages::novoton_holidays.children_ages"
+msgid "Children Ages"
+msgstr "Children Ages"
+
+msgctxt "Languages::novoton_holidays.meal_plan"
+msgid "Meal Plan"
+msgstr "Meal Plan"
+
+msgctxt "Languages::novoton_holidays.bed_only"
+msgid "Bed Only"
+msgstr "Bed Only"
+
+msgctxt "Languages::novoton_holidays.bed_breakfast"
+msgid "Bed & Breakfast"
+msgstr "Bed & Breakfast"
+
+msgctxt "Languages::novoton_holidays.half_board"
+msgid "Half Board"
+msgstr "Half Board"
+
+msgctxt "Languages::novoton_holidays.full_board"
+msgid "Full Board"
+msgstr "Full Board"
+
+msgctxt "Languages::novoton_holidays.all_inclusive"
+msgid "All Inclusive"
+msgstr "All Inclusive"
+
+msgctxt "Languages::novoton_holidays.ultra_all_inclusive"
+msgid "Ultra All Inclusive"
+msgstr "Ultra All Inclusive"
+
+msgctxt "Languages::novoton_holidays.years_old"
+msgid "years old"
+msgstr "years old"
+
+msgctxt "Languages::novoton_holidays.year_old"
+msgid "year old"
+msgstr "year old"
+
+msgctxt "Languages::novoton_holidays.child_label"
+msgid "Child"
+msgstr "Child"
+
+msgctxt "Languages::novoton_holidays.age_of_child"
+msgid "Age of child"
+msgstr "Age of child"
+
+msgctxt "Languages::novoton_holidays.check_in_past"
+msgid "Check-in date cannot be in the past"
+msgstr "Check-in date cannot be in the past"
+
+msgctxt "Languages::novoton_holidays.includes_on_request"
+msgid "(includes on-request)"
+msgstr "(includes on-request)"
+
+msgctxt "Languages::novoton_holidays.of"
+msgid "of"
+msgstr "of"
+
+msgctxt "Languages::novoton_holidays.selected"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::novoton_holidays.search_availability"
+msgid "Search Availability"
+msgstr "Search Availability"
+
+msgctxt "Languages::novoton_holidays.book_now"
+msgid "Book Now"
+msgstr "Book Now"
+
+msgctxt "Languages::novoton_holidays.last_updated"
+msgid "Last updated"
+msgstr "Last updated"
+
+msgctxt "Languages::novoton_holidays.period"
+msgid "Period"
+msgstr "Period"
+
+msgctxt "Languages::novoton_holidays.5_nights"
+msgid "5 Nights"
+msgstr "5 Nights"
+
+msgctxt "Languages::novoton_holidays.7_nights"
+msgid "7 Nights"
+msgstr "7 Nights"
+
+msgctxt "Languages::novoton_holidays.price_per_night"
+msgid "Price per Night"
+msgstr "Price per Night"
+
+msgctxt "Languages::novoton_holidays.room_type"
+msgid "Room type"
+msgstr "Room type"
+
+msgctxt "Languages::novoton_holidays.early_booking"
+msgid "Early Booking"
+msgstr "Early Booking"
+
+msgctxt "Languages::novoton_holidays.until"
+msgid "until"
+msgstr "until"
+
+msgctxt "Languages::novoton_holidays.remarks"
+msgid "Remarks"
+msgstr "Remarks"
+
+msgctxt "Languages::novoton_holidays.important"
+msgid "Important"
+msgstr "Important"
+
+msgctxt "Languages::novoton_holidays.additional_information"
+msgid "Additional Information"
+msgstr "Additional Information"
+
+msgctxt "Languages::novoton_holidays.no_prices_available"
+msgid "No prices available"
+msgstr "No prices available"
+
+msgctxt "Languages::novoton_holidays.prices_coming_soon"
+msgid "Prices will be available once price data is synced."
+msgstr "Prices will be available once price data is synced."
+
+msgctxt "Languages::novoton_holidays.use_booking_engine_to_search"
+msgid "Please use the booking engine to search for availability."
+msgstr "Please use the booking engine to search for availability."
+
+msgctxt "Languages::novoton_holidays.please_fill_required_fields"
+msgid "Please fill all required fields"
+msgstr "Please fill all required fields"
+
+msgctxt "Languages::novoton_holidays.please_select_destination"
+msgid "Please select a destination"
+msgstr "Please select a destination"
+
+msgctxt "Languages::novoton_holidays.hotel_not_found"
+msgid "Hotel not found"
+msgstr "Hotel not found"
+
+msgctxt "Languages::novoton_holidays.product_not_found"
+msgid "Product not found for this hotel."
+msgstr "Product not found for this hotel."
+
+msgctxt "Languages::novoton_holidays.price_not_available"
+msgid "Price not available for this configuration."
+msgstr "Price not available for this configuration."
+
+msgctxt "Languages::novoton_holidays.refresh_price"
+msgid "Refresh price"
+msgstr "Refresh price"
+
+msgctxt "Languages::novoton_holidays.price_unverified"
+msgid "unverified"
+msgstr "unverified"
+
+msgctxt "Languages::novoton_holidays.price_must_be_verified"
+msgid "Price must be verified before proceeding"
+msgstr "Price must be verified before proceeding"
+
+msgctxt "Languages::novoton_holidays.price_not_available_for_ages"
+msgid "Price could not be verified for the entered ages. Please try refreshing the price."
+msgstr "Price could not be verified for the entered ages. Please try refreshing the price."
+
+msgctxt "Languages::novoton_holidays.check_child_dob"
+msgid "Check date of birth"
+msgstr "Check date of birth"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age"
+msgid "Unavailable"
+msgstr "Unavailable"
+
+msgctxt "Languages::novoton_holidays.unavailable_for_child_age_sub"
+msgid "for child age"
+msgstr "for child age"
+
+msgctxt "Languages::novoton_holidays.added_to_cart"
+msgid "Booking added to cart successfully!"
+msgstr "Booking added to cart successfully!"
+
+msgctxt "Languages::novoton_holidays.add_to_cart"
+msgid "Add to Cart"
+msgstr "Add to Cart"
+
+msgctxt "Languages::novoton_holidays.failed_to_add_to_cart"
+msgid "Failed to add booking to cart"
+msgstr "Failed to add booking to cart"
+
+msgctxt "Languages::novoton_holidays.invalid_booking_data"
+msgid "Invalid booking data. Please try again."
+msgstr "Invalid booking data. Please try again."
+
+msgctxt "Languages::novoton_holidays.edit_guest_details"
+msgid "Edit Guest Details"
+msgstr "Edit Guest Details"
+
+msgctxt "Languages::novoton_holidays.edit_booking"
+msgid "Edit Booking"
+msgstr "Edit Booking"
+
+msgctxt "Languages::novoton_holidays.booking_updated"
+msgid "Booking details updated successfully"
+msgstr "Booking details updated successfully"
+
+msgctxt "Languages::novoton_holidays.update_booking"
+msgid "Update Booking"
+msgstr "Update Booking"
+
+msgctxt "Languages::novoton_holidays.back_to_cart"
+msgid "Back to Cart"
+msgstr "Back to Cart"
+
+msgctxt "Languages::novoton_holidays.updating_prices"
+msgid "Updating prices..."
+msgstr "Updating prices..."
+
+msgctxt "Languages::novoton_holidays.sync_completed"
+msgid "Synchronization completed"
+msgstr "Synchronization completed"
+
+msgctxt "Languages::novoton_holidays.updated"
+msgid "Updated"
+msgstr "Updated"
+
+msgctxt "Languages::novoton_holidays.failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::novoton_holidays.no_data"
+msgid "No data"
+msgstr "No data"
+
+msgctxt "Languages::novoton_holidays.product_updated_successfully"
+msgid "Product prices updated successfully"
+msgstr "Product prices updated successfully"
+
+msgctxt "Languages::novoton_holidays.product_update_failed"
+msgid "Product update failed"
+msgstr "Product update failed"
+
+msgctxt "Languages::novoton_holidays.sync_failed"
+msgid "Synchronization failed"
+msgstr "Synchronization failed"
+
+msgctxt "Languages::novoton_holidays.api_connection_successful"
+msgid "API connection successful"
+msgstr "API connection successful"
+
+msgctxt "Languages::novoton_holidays.api_connection_failed"
+msgid "API connection failed"
+msgstr "API connection failed"
+
+msgctxt "Languages::novoton_holidays.api_connection_no_data"
+msgid "API connected but no data returned"
+msgstr "API connected but no data returned"
+
+msgctxt "Languages::novoton_holidays.bookings"
+msgid "Bookings"
+msgstr "Bookings"
+
+msgctxt "Languages::novoton_holidays.sync_logs"
+msgid "Sync Logs"
+msgstr "Sync Logs"
+
+msgctxt "Languages::novoton_holidays.booking_not_found"
+msgid "Booking not found"
+msgstr "Booking not found"
+
+msgctxt "Languages::novoton_holidays.failed_to_get_invoice"
+msgid "Failed to retrieve invoice from Novoton"
+msgstr "Failed to retrieve invoice from Novoton"
+
+msgctxt "Languages::novoton_holidays.log_file_not_found"
+msgid "Log file not found"
+msgstr "Log file not found"
+
+msgctxt "Languages::novoton_holidays.test_api_connection"
+msgid "Test API Connection"
+msgstr "Test API Connection"
+
+msgctxt "Languages::novoton_holidays.update_all_prices"
+msgid "Update All Prices"
+msgstr "Update All Prices"
+
+msgctxt "Languages::novoton_holidays.view_sync_logs"
+msgid "View Sync Logs"
+msgstr "View Sync Logs"
+
+msgctxt "Languages::novoton_holidays.view_bookings"
+msgid "View Bookings"
+msgstr "View Bookings"
+
+msgctxt "Languages::novoton_holidays.export_bookings"
+msgid "Export Bookings"
+msgstr "Export Bookings"
+
+msgctxt "Languages::novoton_holidays.confirm_update_all_prices"
+msgid "This will update prices for all hotel products. This may take several minutes. Continue?"
+msgstr "This will update prices for all hotel products. This may take several minutes. Continue?"
+
+msgctxt "Languages::novoton_holidays.update_prices_help"
+msgid "Click the button above to manually update hotel prices, or use the cron command below for automated updates."
+msgstr "Click the button above to manually update hotel prices, or use the cron command below for automated updates."
+
+msgctxt "Languages::novoton_holidays.cron_example"
+msgid "Cron Example"
+msgstr "Cron Example"
+
+msgctxt "Languages::novoton_holidays.updating_product"
+msgid "Updating %s of %s (%s) - %s"
+msgstr "Updating %s of %s (%s) - %s"
+
+msgctxt "Languages::novoton_holidays.search_hotels"
+msgid "Search Hotels"
+msgstr "Search Hotels"
+
+msgctxt "Languages::novoton_holidays.enter_destination"
+msgid "Enter destination or hotel name..."
+msgstr "Enter destination or hotel name..."
+
+msgctxt "Languages::novoton_holidays.guests"
+msgid "Guests"
+msgstr "Guests"
+
+msgctxt "Languages::novoton_holidays.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::novoton_holidays.search"
+msgid "Search"
+msgstr "Search"
+
+msgctxt "Languages::novoton_holidays.best_price_guarantee"
+msgid "Best Price Guarantee"
+msgstr "Best Price Guarantee"
+
+msgctxt "Languages::novoton_holidays.instant_confirmation"
+msgid "Instant Confirmation"
+msgstr "Instant Confirmation"
+
+msgctxt "Languages::novoton_holidays.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Free Cancellation"
+
+msgctxt "Languages::block_novoton_holidays_booking_engine"
+msgid "Novoton: Booking Form"
+msgstr "Novoton: Booking Form"
+
+msgctxt "Languages::block_novoton_holidays_homepage_booking"
+msgid "Novoton: Homepage Booking Search"
+msgstr "Novoton: Homepage Booking Search"
+
+msgctxt "Languages::novoton_holidays.search_results"
+msgid "Search Results"
+msgstr "Search Results"
+
+msgctxt "Languages::novoton_holidays.no_availability"
+msgid "No Availability"
+msgstr "No Availability"
+
+msgctxt "Languages::novoton_holidays.try_different_dates"
+msgid "Please try different dates or check back later"
+msgstr "Please try different dates or check back later"
+
+msgctxt "Languages::novoton_holidays.back_to_hotel"
+msgid "Back to Hotel"
+msgstr "Back to Hotel"
+
+msgctxt "Languages::novoton_holidays.per_night"
+msgid "per night"
+msgstr "per night"
+
+msgctxt "Languages::novoton_holidays.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Complete Your Booking"
+
+msgctxt "Languages::novoton_holidays.apartment"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::novoton_holidays.early_booking_discount"
+msgid "Early Booking Discount"
+msgstr "Early Booking Discount"
+
+msgctxt "Languages::novoton_holidays.book_by"
+msgid "Book by"
+msgstr "Book by"
+
+msgctxt "Languages::novoton_holidays.discount"
+msgid "Discount"
+msgstr "Discount"
+
+msgctxt "Languages::novoton_holidays.travel_period"
+msgid "Travel Period"
+msgstr "Travel Period"
+
+msgctxt "Languages::novoton_holidays.prices_last_updated"
+msgid "Prices last updated"
+msgstr "Prices last updated"
+
+msgctxt "Languages::novoton_holidays.board"
+msgid "Board"
+msgstr "Board"
+
+msgctxt "Languages::novoton_holidays.from"
+msgid "from"
+msgstr "from"
+
+msgctxt "Languages::novoton_holidays.view_season_prices"
+msgid "View Detailed Season Prices"
+msgstr "View Detailed Season Prices"
+
+msgctxt "Languages::novoton_holidays.season"
+msgid "Season"
+msgstr "Season"
+
+msgctxt "Languages::novoton_holidays.season_prices_note"
+msgid "Prices shown are per person per night. Season dates vary by package - use the booking form for exact pricing."
+msgstr "Prices shown are per person per night. Season dates vary by package - use the booking form for exact pricing."
+
+msgctxt "Languages::novoton_holidays.how_to_book"
+msgid "How to book"
+msgstr "How to book"
+
+msgctxt "Languages::novoton_holidays.prices_info_text"
+msgid "Prices shown are starting prices per person. Final price depends on travel dates and room availability. Use the booking form above to get an exact quote for your dates."
+msgstr "Prices shown are starting prices per person. Final price depends on travel dates and room availability. Use the booking form above to get an exact quote for your dates."
+
+msgctxt "Languages::novoton_holidays.use_booking_form"
+msgid "Please use the booking form to search for availability and pricing."
+msgstr "Please use the booking form to search for availability and pricing."
+
+msgctxt "Languages::novoton_holidays.early_booking_discounts"
+msgid "Early Booking Discounts"
+msgstr "Early Booking Discounts"
+
+msgctxt "Languages::novoton_holidays.all_dates"
+msgid "All dates"
+msgstr "All dates"
+
+msgctxt "Languages::novoton_holidays.all_season"
+msgid "All Season"
+msgstr "All Season"
+
+msgctxt "Languages::novoton_holidays.for"
+msgid "for"
+msgstr "for"
+
+msgctxt "Languages::novoton_holidays.selected_countries"
+msgid "Selected Countries"
+msgstr "Selected Countries"
+
+msgctxt "Languages::novoton_holidays.countries_help"
+msgid "Hold Ctrl (Cmd on Mac) to select multiple countries. Hotels from selected countries will be synced."
+msgstr "Hold Ctrl (Cmd on Mac) to select multiple countries. Hotels from selected countries will be synced."
+
+msgctxt "Languages::novoton_holidays.no_availability_for_dates"
+msgid "No availability for selected dates"
+msgstr "No availability for selected dates"
+
+msgctxt "Languages::novoton_holidays.alternative_dates"
+msgid "Available on alternative dates"
+msgstr "Available on alternative dates"
+
+msgctxt "Languages::novoton_holidays.showing_results_for"
+msgid "Showing results for"
+msgstr "Showing results for"
+
+msgctxt "Languages::novoton_holidays.all_boards"
+msgid "All Boards"
+msgstr "All Boards"
+
+msgctxt "Languages::novoton_holidays.room_only"
+msgid "Room Only"
+msgstr "Room Only"
+
+msgctxt "Languages::novoton_holidays.payment_cancellation_terms"
+msgid "Payment and Cancellation Terms"
+msgstr "Payment and Cancellation Terms"
+
+msgctxt "Languages::novoton_holidays.payment_terms"
+msgid "Terms of payment"
+msgstr "Terms of payment"
+
+msgctxt "Languages::novoton_holidays.cancellation_terms"
+msgid "Cancellation Terms"
+msgstr "Cancellation Terms"
+
+msgctxt "Languages::novoton_holidays.for_all_room_types"
+msgid "For all room types"
+msgstr "For all room types"
+
+msgctxt "Languages::novoton_holidays.till"
+msgid "till"
+msgstr "till"
+
+msgctxt "Languages::novoton_holidays.up_to_days_before"
+msgid "Up to %s days before arrival"
+msgstr "Up to %s days before arrival"
+
+msgctxt "Languages::novoton_holidays.from_days_before"
+msgid "From %s days before arrival"
+msgstr "From %s days before arrival"
+
+msgctxt "Languages::novoton_holidays.no_penalty"
+msgid "No penalty"
+msgstr "No penalty"
+
+msgctxt "Languages::novoton_holidays.overnights_penalty"
+msgid "overnights penalty"
+msgstr "overnights penalty"
+
+msgctxt "Languages::novoton_holidays.no_show"
+msgid "No Show"
+msgstr "No Show"
+
+msgctxt "Languages::novoton_holidays.penalty"
+msgid "penalty"
+msgstr "penalty"
+
+msgctxt "Languages::novoton_holidays.extras_arrivals"
+msgid "Extras for arrivals"
+msgstr "Extras for arrivals"
+
+msgctxt "Languages::novoton_holidays.nights_to_pay"
+msgid "Nights to Pay"
+msgstr "Nights to Pay"
+
+msgctxt "Languages::novoton_holidays.off_season"
+msgid "Off-season"
+msgstr "Off-season"
+
+msgctxt "Languages::novoton_holidays.intermediate_season"
+msgid "Intermediate season"
+msgstr "Intermediate season"
+
+msgctxt "Languages::novoton_holidays.high_season"
+msgid "High season"
+msgstr "High season"
+
+msgctxt "Languages::novoton_holidays.peak_season"
+msgid "Peak season"
+msgstr "Peak season"
+
+msgctxt "Languages::novoton_holidays.occupancy"
+msgid "Occupancy"
+msgstr "Occupancy"
+
+msgctxt "Languages::novoton_holidays.adults_short"
+msgid "Adults"
+msgstr "Adults"
+
+msgctxt "Languages::novoton_holidays.child_short"
+msgid "CHD"
+msgstr "CHD"
+
+msgctxt "Languages::novoton_holidays.mid_season"
+msgid "Mid-season"
+msgstr "Mid-season"
+
+msgctxt "Languages::novoton_holidays.capacity"
+msgid "Capacity"
+msgstr "Capacity"
+
+msgctxt "Languages::novoton_holidays.max"
+msgid "Max"
+msgstr "Max"
+
+msgctxt "Languages::novoton_holidays.children_short"
+msgid "Children"
+msgstr "Children"
+
+msgctxt "Languages::novoton_holidays.years"
+msgid "years"
+msgstr "years"
+
+msgctxt "Languages::novoton_holidays.extra_bed"
+msgid "Extra Bed"
+msgstr "Extra Bed"
+
+msgctxt "Languages::novoton_holidays.early_booking_extra_discounts"
+msgid "Early Booking & Extra Discounts"
+msgstr "Early Booking & Extra Discounts"
+
+msgctxt "Languages::novoton_holidays.if_booked_by"
+msgid "if booked by"
+msgstr "if booked by"
+
+msgctxt "Languages::novoton_holidays.for_stays"
+msgid "for stays"
+msgstr "for stays"
+
+msgctxt "Languages::novoton_holidays.free_nights_promotions"
+msgid "Free Nights Promotions"
+msgstr "Free Nights Promotions"
+
+msgctxt "Languages::novoton_holidays.nights_booked"
+msgid "Nights Booked"
+msgstr "Nights Booked"
+
+msgctxt "Languages::novoton_holidays.valid_period"
+msgid "Valid Period"
+msgstr "Valid Period"
+
+msgctxt "Languages::novoton_holidays.terms_of_payment"
+msgid "Terms of payment"
+msgstr "Terms of payment"
+
+msgctxt "Languages::novoton_holidays.payment_cancellation_terms_link"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
+msgctxt "Languages::novoton_holidays.up_to"
+msgid "Up to"
+msgstr "Up to"
+
+msgctxt "Languages::novoton_holidays.days_before_arrival"
+msgid "days before arrival"
+msgstr "days before arrival"
+
+msgctxt "Languages::novoton_holidays.rooms_available"
+msgid "rooms available"
+msgstr "rooms available"
+
+msgctxt "Languages::novoton_holidays.rooms"
+msgid "rooms"
+msgstr "rooms"
+
+msgctxt "Languages::novoton_holidays.booking_summary"
+msgid "Booking Summary"
+msgstr "Booking Summary"
+
+msgctxt "Languages::novoton_holidays.room"
+msgid "Room"
+msgstr "Room"
+
+msgctxt "Languages::novoton_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adults"
+
+msgctxt "Languages::novoton_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Child|[n] Children"
+
+msgctxt "Languages::novoton_holidays.n_nights"
+msgid "[n] Night|[n] Nights"
+msgstr "[n] Night|[n] Nights"
+
+msgctxt "Languages::novoton_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Room|[n] Rooms"
+
+msgctxt "Languages::novoton_holidays.n_years"
+msgid "[n] year|[n] years"
+msgstr "[n] year|[n] years"
+
+msgctxt "Languages::novoton_holidays.total_price"
+msgid "Total Price"
+msgstr "Total Price"
+
+msgctxt "Languages::novoton_holidays.guest_details"
+msgid "Guest Details"
+msgstr "Guest Details"
+
+msgctxt "Languages::novoton_holidays.adult_guests"
+msgid "Adult Guests"
+msgstr "Adult Guests"
+
+msgctxt "Languages::novoton_holidays.main_guest"
+msgid "Main Guest (Lead)"
+msgstr "Main Guest (Lead)"
+
+msgctxt "Languages::novoton_holidays.first_name"
+msgid "First Name"
+msgstr "First Name"
+
+msgctxt "Languages::novoton_holidays.last_name"
+msgid "Last Name"
+msgstr "Last Name"
+
+msgctxt "Languages::novoton_holidays.birthdate"
+msgid "Date of Birth"
+msgstr "Date of Birth"
+
+msgctxt "Languages::novoton_holidays.age"
+msgid "Age"
+msgstr "Age"
+
+msgctxt "Languages::novoton_holidays.select_age"
+msgid "Select age"
+msgstr "Select age"
+
+msgctxt "Languages::novoton_holidays.contact_information"
+msgid "Contact Information"
+msgstr "Contact Information"
+
+msgctxt "Languages::novoton_holidays.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "Languages::novoton_holidays.phone"
+msgid "Phone"
+msgstr "Phone"
+
+msgctxt "Languages::novoton_holidays.accept_terms_text"
+msgid "I have read and accept the"
+msgstr "I have read and accept the"
+
+msgctxt "Languages::novoton_holidays.terms_and_conditions"
+msgid "Terms and Conditions"
+msgstr "Terms and Conditions"
+
+msgctxt "Languages::novoton_holidays.back_to_results"
+msgid "Back to Results"
+msgstr "Back to Results"
+
+msgctxt "Languages::novoton_holidays.add_to_cart_and_checkout"
+msgid "Add to Cart & Checkout"
+msgstr "Add to Cart & Checkout"
+
+msgctxt "Languages::novoton_holidays.price_unavailable"
+msgid "Price is not available. Please try again."
+msgstr "Price is not available. Please try again."
+
+msgctxt "Languages::novoton_holidays.free_nights"
+msgid "Free Nights"
+msgstr "Free Nights"
+
+msgctxt "Languages::novoton_holidays.pay_nights_get_free"
+msgid "Pay %s nights, get %s free!"
+msgstr "Pay %s nights, get %s free!"
+
+msgctxt "Languages::novoton_holidays.guest_names"
+msgid "Guest names"
+msgstr "Guest names"
+
+msgctxt "Languages::novoton_holidays.prices_include_commission"
+msgid "Prices include agency commission"
+msgstr "Prices include agency commission"
+
+msgctxt "Languages::novoton_holidays.booking_details"
+msgid "Booking Details"
+msgstr "Booking Details"
+
+msgctxt "Languages::novoton_holidays.hotel_booking"
+msgid "Hotel Booking"
+msgstr "Hotel Booking"
+
+msgctxt "Languages::novoton_holidays.on_request"
+msgid "On request"
+msgstr "On request"
+
+msgctxt "Languages::novoton_holidays.send_request"
+msgid "Send Request"
+msgstr "Send Request"
+
+msgctxt "Languages::novoton_holidays.available"
+msgid "Available"
+msgstr "Available"
+
+msgctxt "Languages::novoton_holidays.unavailable"
+msgid "Unavailable"
+msgstr "Unavailable"
+
+msgctxt "Languages::novoton_holidays.request_sent"
+msgid "Your request has been sent"
+msgstr "Your request has been sent"
+
+msgctxt "Languages::novoton_holidays.request_pending"
+msgid "Request pending confirmation"
+msgstr "Request pending confirmation"
+
+msgctxt "Languages::novoton_holidays.names_of_persons"
+msgid "Names of the persons"
+msgstr "Names of the persons"
+
+msgctxt "Languages::novoton_holidays.regular_bed"
+msgid "Regular Bed"
+msgstr "Regular Bed"
+
+msgctxt "Languages::novoton_holidays.name_surname"
+msgid "Name&Surname"
+msgstr "Name&Surname"
+
+msgctxt "Languages::novoton_holidays.enter_full_name"
+msgid "Enter full name"
+msgstr "Enter full name"
+
+msgctxt "Languages::novoton_holidays.clients_wish"
+msgid "Client's wish"
+msgstr "Client's wish"
+
+msgctxt "Languages::novoton_holidays.important_info"
+msgid "Important info"
+msgstr "Important info"
+
+msgctxt "Languages::novoton_holidays.overnights"
+msgid "overnights"
+msgstr "nights"
+
+msgctxt "Languages::novoton_holidays.package"
+msgid "Package"
+msgstr "Package"
+
+msgctxt "Languages::novoton_holidays.stay"
+msgid "Stay"
+msgstr "Stay"
+
+msgctxt "Languages::novoton_holidays.reservation_number"
+msgid "Reservation number"
+msgstr "Reservation number"
+
+msgctxt "Languages::novoton_holidays.holder"
+msgid "Holder"
+msgstr "Holder"
+
+msgctxt "Languages::novoton_holidays.book_date"
+msgid "Book date"
+msgstr "Book date"
+
+msgctxt "Languages::novoton_holidays.names"
+msgid "Names"
+msgstr "Names"
+
+msgctxt "Languages::novoton_holidays.contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::novoton_holidays.view_booking"
+msgid "View Booking"
+msgstr "View Booking"
+
+msgctxt "Languages::novoton_holidays.age_18_plus"
+msgid "18+"
+msgstr "18+"
+
+msgctxt "Languages::novoton_holidays.age_0_17"
+msgid "0-17"
+msgstr "0-17"
+
+msgctxt "Languages::novoton_holidays.done"
+msgid "Done"
+msgstr "Done"
+
+msgctxt "Languages::novoton_holidays.select_dates"
+msgid "Select dates"
+msgstr "Select dates"
+
+msgctxt "Languages::novoton_holidays.total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.status_ok"
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgctxt "Languages::novoton_holidays.status_ask"
+msgid "On Request"
+msgstr "On Request"
+
+msgctxt "Languages::novoton_holidays.status_st"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::novoton_holidays.status_wt"
+msgid "Waiting"
+msgstr "Waiting"
+
+msgctxt "SettingsOptions::novoton_holidays::test_booking"
+msgid "Test Booking Mode"
+msgstr "Test Booking Mode"
+
+msgctxt "SettingsTooltips::novoton_holidays::test_booking"
+msgid "When enabled, all reservations will be marked as test and will not be processed by Novoton"
+msgstr "When enabled, all reservations will be marked as test and will not be processed by Novoton"
+
+msgctxt "Languages::novoton_holidays.hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Hotel Bookings"
+
+msgctxt "Languages::novoton_holidays.status_checked"
+msgid "Reservation status has been checked"
+msgstr "Reservation status has been checked"
+
+msgctxt "Languages::novoton_holidays.alternatives_found"
+msgid "[count] alternatives found"
+msgstr "[count] alternatives found"
+
+msgctxt "Languages::novoton_holidays.no_alternatives"
+msgid "No alternatives available"
+msgstr "No alternatives available"
+
+msgctxt "Languages::novoton_holidays.bulk_status_checked"
+msgid "Checked [checked] bookings, [changed] status changes"
+msgstr "Checked [checked] bookings, [changed] status changes"
+
+msgctxt "Languages::novoton_holidays.alternative_hotels"
+msgid "Alternative Hotels"
+msgstr "Alternative Hotels"
+
+msgctxt "Languages::novoton_holidays.check_status"
+msgid "Check Status"
+msgstr "Check Status"
+
+msgctxt "Languages::novoton_holidays.request_alternatives"
+msgid "Request Alternatives"
+msgstr "Request Alternatives"
+
+msgctxt "Languages::novoton_holidays.booking_confirmed"
+msgid "Booking Confirmed"
+msgstr "Booking Confirmed"
+
+msgctxt "Languages::novoton_holidays.booking_pending"
+msgid "Booking Pending"
+msgstr "Booking Pending"
+
+msgctxt "Languages::novoton_holidays.booking_cancelled"
+msgid "Booking Cancelled"
+msgstr "Booking Cancelled"
+
+msgctxt "Languages::novoton_holidays.booking_waiting"
+msgid "Booking Waiting"
+msgstr "Booking Waiting"
+
+msgctxt "Languages::novoton_holidays.test_reservation_notice"
+msgid "TEST MODE: Reservations are marked as test and will not be processed"
+msgstr "TEST MODE: Reservations are marked as test and will not be processed"
+
+msgctxt "Languages::novoton_holidays.match"
+msgid "Match"
+msgstr "Match"
+
+msgctxt "Languages::novoton_holidays.different"
+msgid "Different"
+msgstr "Different"
+
+msgctxt "Languages::novoton_holidays.not_available"
+msgid "Not available"
+msgstr "Not available"
+
+msgctxt "Languages::novoton_holidays_menu"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::hotel_bookings"
+msgid "Hotel Bookings"
+msgstr "Hotel Bookings"
+
+msgctxt "Languages::novoton_sync"
+msgid "Sync Prices"
+msgstr "Sync Prices"
+
+msgctxt "Languages::novoton_diagnostic"
+msgid "API Diagnostic"
+msgstr "API Diagnostic"
+
+msgctxt "Languages::novoton_holidays.check_all_status"
+msgid "Check All ASK Status"
+msgstr "Check All ASK Status"
+
+msgctxt "Languages::novoton_holidays.novoton_status"
+msgid "Novoton Status"
+msgstr "Novoton Status"
+
+msgctxt "Languages::novoton_holidays.dates"
+msgid "Dates"
+msgstr "Dates"
+
+msgctxt "Languages::novoton_holidays.day"
+msgid "Day"
+msgstr "Day"
+
+msgctxt "Languages::novoton_holidays.month"
+msgid "Month"
+msgstr "Month"
+
+msgctxt "Languages::novoton_holidays.year"
+msgid "Year"
+msgstr "Year"
+
+msgctxt "Languages::novoton_holidays.jan"
+msgid "Jan"
+msgstr "Jan"
+
+msgctxt "Languages::novoton_holidays.feb"
+msgid "Feb"
+msgstr "Feb"
+
+msgctxt "Languages::novoton_holidays.mar"
+msgid "Mar"
+msgstr "Mar"
+
+msgctxt "Languages::novoton_holidays.apr"
+msgid "Apr"
+msgstr "Apr"
+
+msgctxt "Languages::novoton_holidays.may"
+msgid "May"
+msgstr "May"
+
+msgctxt "Languages::novoton_holidays.jun"
+msgid "Jun"
+msgstr "Jun"
+
+msgctxt "Languages::novoton_holidays.jul"
+msgid "Jul"
+msgstr "Jul"
+
+msgctxt "Languages::novoton_holidays.aug"
+msgid "Aug"
+msgstr "Aug"
+
+msgctxt "Languages::novoton_holidays.sep"
+msgid "Sep"
+msgstr "Sep"
+
+msgctxt "Languages::novoton_holidays.oct"
+msgid "Oct"
+msgstr "Oct"
+
+msgctxt "Languages::novoton_holidays.nov"
+msgid "Nov"
+msgstr "Nov"
+
+msgctxt "Languages::novoton_holidays.dec"
+msgid "Dec"
+msgstr "Dec"
+
+msgctxt "Languages::novoton_holidays.add_room"
+msgid "Add Room"
+msgstr "Add Room"
+
+msgctxt "Languages::novoton_holidays.remove_room"
+msgid "Remove"
+msgstr "Remove"
+
+msgctxt "Languages::novoton_holidays.room_number"
+msgid "Room"
+msgstr "Room"
+
+msgctxt "Languages::novoton_holidays.select_room_types"
+msgid "Select Room Types"
+msgstr "Select Room Types"
+
+msgctxt "Languages::novoton_holidays.select_room_type_for_each"
+msgid "Choose a room type for each room in your booking"
+msgstr "Choose a room type for each room in your booking"
+
+msgctxt "Languages::novoton_holidays.total_for_all_rooms"
+msgid "Total for all rooms"
+msgstr "Total for all rooms"
+
+msgctxt "Languages::novoton_holidays.select_rooms_to_continue"
+msgid "Select rooms to continue"
+msgstr "Select rooms to continue"
+
+msgctxt "Languages::novoton_holidays.rooms_left"
+msgid "rooms left"
+msgstr "rooms left"
+
+msgctxt "Languages::novoton_holidays.please_select_all_rooms"
+msgid "Please select a room type for all rooms before booking"
+msgstr "Please select a room type for all rooms before booking"
+
+msgctxt "Languages::novoton_holidays.room_type_sgl"
+msgid "Single Room"
+msgstr "Single Room"
+
+msgctxt "Languages::novoton_holidays.room_type_dbl"
+msgid "Double Room"
+msgstr "Double Room"
+
+msgctxt "Languages::novoton_holidays.room_type_app"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::novoton_holidays.room_type_trp"
+msgid "Triple Room"
+msgstr "Triple Room"
+
+msgctxt "Languages::novoton_holidays.room_type_sui"
+msgid "Suite"
+msgstr "Suite"
+
+msgctxt "Languages::novoton_holidays.room_type_std"
+msgid "Standard Room"
+msgstr "Standard Room"
+
+msgctxt "Languages::novoton_holidays.room_type_dlx"
+msgid "Deluxe Room"
+msgstr "Deluxe Room"
+
+msgctxt "Languages::novoton_holidays.room_type_fam"
+msgid "Family Room"
+msgstr "Family Room"
+
+msgctxt "Languages::novoton_holidays.room_type_sup"
+msgid "Superior Room"
+msgstr "Superior Room"
+
+msgctxt "Languages::novoton_holidays.room_type_stu"
+msgid "Studio"
+msgstr "Studio"
+
+msgctxt "Languages::novoton_holidays.room_type_mais"
+msgid "Maisonette"
+msgstr "Maisonette"
+
+msgctxt "Languages::novoton_holidays.room_type_quad"
+msgid "Quadruple Room"
+msgstr "Quadruple Room"
+
+msgctxt "Languages::novoton_holidays.room_type_bung"
+msgid "Bungalow"
+msgstr "Bungalow"
+
+msgctxt "Languages::novoton_holidays.room_type_villa"
+msgid "Villa"
+msgstr "Villa"
+
+msgctxt "Languages::novoton_holidays.bedroom"
+msgid "Bedroom"
+msgstr "Bedroom"
+
+msgctxt "Languages::novoton_holidays.room_superior"
+msgid "Superior"
+msgstr "Superior"
+
+msgctxt "Languages::novoton_holidays.room_deluxe"
+msgid "Deluxe"
+msgstr "Deluxe"
+
+msgctxt "Languages::novoton_holidays.room_economy"
+msgid "Economy"
+msgstr "Economy"
+
+msgctxt "Languages::novoton_holidays.room_standard"
+msgid "Standard"
+msgstr "Standard"
+
+msgctxt "Languages::novoton_holidays.room_kitchenette"
+msgid "with Kitchenette"
+msgstr "with Kitchenette"
+
+msgctxt "Languages::novoton_holidays.room_sea_view"
+msgid "Sea View"
+msgstr "Sea View"
+
+msgctxt "Languages::novoton_holidays.room_pool_view"
+msgid "Pool View"
+msgstr "Pool View"
+
+msgctxt "Languages::novoton_holidays.room_garden_view"
+msgid "Garden View"
+msgstr "Garden View"
+
+msgctxt "Languages::novoton_holidays.room_balcony"
+msgid "with Balcony"
+msgstr "with Balcony"
+
+msgctxt "Languages::novoton_holidays.room_terrace"
+msgid "with Terrace"
+msgstr "with Terrace"
+
+msgctxt "SettingsOptions::novoton_holidays::api_header"
+msgid "API Configuration"
+msgstr "API Configuration"
+
+msgctxt "SettingsOptions::novoton_holidays::pricing_header"
+msgid "Pricing Settings"
+msgstr "Pricing Settings"
+
+msgctxt "SettingsOptions::novoton_holidays::products_header"
+msgid "Product Settings"
+msgstr "Product Settings"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_header"
+msgid "Cron / Automation"
+msgstr "Cron / Automation"
+
+msgctxt "SettingsOptions::novoton_holidays::display_header"
+msgid "Display Settings"
+msgstr "Display Settings"
+
+msgctxt "SettingsOptions::novoton_holidays::other_header"
+msgid "Other Settings"
+msgstr "Other Settings"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::ALBANIA"
+msgid "Albania"
+msgstr "Albania"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::BULGARIA"
+msgid "Bulgaria"
+msgstr "Bulgaria"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::CYPRUS"
+msgid "Cyprus"
+msgstr "Cyprus"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::EGYPT"
+msgid "Egypt"
+msgstr "Egypt"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::FRANCE"
+msgid "France"
+msgstr "France"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::GREECE"
+msgid "Greece"
+msgstr "Greece"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::ITALY"
+msgid "Italy"
+msgstr "Italy"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::MALDIVES"
+msgid "Maldives"
+msgstr "Maldives"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::SPAIN"
+msgid "Spain"
+msgstr "Spain"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::UNITED ARAB EMIRATES"
+msgid "United Arab Emirates"
+msgstr "United Arab Emirates"
+
+msgctxt "SettingsVariants::novoton_holidays::selected_countries::UNITED KINGDOM"
+msgid "United Kingdom"
+msgstr "United Kingdom"
+
+msgctxt "SettingsSections::novoton_holidays::tools_cron"
+msgid "Tools & Cron"
+msgstr "Tools & Cron"
+
+msgctxt "SettingsSections::novoton_holidays::advanced"
+msgid "Advanced"
+msgstr "Advanced"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_header"
+msgid "Cache TTL (Time to Live)"
+msgstr "Cache TTL (Time to Live)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_room_price"
+msgid "Room price cache (seconds)"
+msgstr "Room price cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_room_price"
+msgid "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+msgstr "How long live room prices are cached before re-fetching from the API. Lower values = fresher prices but more API calls. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_availability"
+msgid "Availability cache (seconds)"
+msgstr "Availability cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_availability"
+msgid "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+msgstr "How long room availability (quota) data is cached. Availability changes frequently, so keep this short. Default: 180 (3 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::cache_ttl_search"
+msgid "Search results cache (seconds)"
+msgstr "Search results cache (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cache_ttl_search"
+msgid "How long search results are cached. Default: 300 (5 minutes)"
+msgstr "How long search results are cached. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_intervals_header"
+msgid "Sync Intervals"
+msgstr "Sync Intervals"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_days"
+msgid "Hotel info full sync interval (days)"
+msgstr "Hotel info full sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
+msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+msgstr "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
+msgid "Price info full sync interval (days)"
+msgstr "Price info full sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_days"
+msgid "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+msgstr "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
+
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_facilities_days"
+msgid "Facilities sync interval (days)"
+msgstr "Facilities sync interval (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_facilities_days"
+msgid "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+msgstr "How often to re-sync hotel facilities. Facilities rarely change. Default: 30 (monthly)"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_header"
+msgid "Cron Batch Processing"
+msgstr "Cron Batch Processing"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_batch_size"
+msgid "Batch size (items per run)"
+msgstr "Batch size (items per run)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_batch_size"
+msgid "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+msgstr "Number of hotels/packages to process per cron batch. Higher values sync faster but use more memory and may exceed server timeouts. Range: 10-500. Default: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::cron_max_execution_time"
+msgid "Max execution time (seconds)"
+msgstr "Max execution time (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::cron_max_execution_time"
+msgid "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+msgstr "Maximum time a single cron run can execute before pausing. The sync resumes on the next run. Ignored in CLI mode. Range: 60-3600. Default: 300 (5 minutes)"
+
+msgctxt "SettingsOptions::novoton_holidays::slow_item_warning_ms"
+msgid "Slow item warning threshold (ms)"
+msgstr "Slow item warning threshold (ms)"
+
+msgctxt "SettingsTooltips::novoton_holidays::slow_item_warning_ms"
+msgid "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+msgstr "During sync, log a warning when a single hotel takes longer than this to process. Default: 30000 (30 seconds)"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limiting_header"
+msgid "Rate Limiting"
+msgstr "Rate Limiting"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_requests_per_min"
+msgid "Max API requests per minute"
+msgstr "Max API requests per minute"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_requests_per_min"
+msgid "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+msgstr "Maximum number of API requests allowed per IP address per minute. Prevents abuse. Default: 100"
+
+msgctxt "SettingsOptions::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Max booking attempts per hour"
+msgstr "Max booking attempts per hour"
+
+msgctxt "SettingsTooltips::novoton_holidays::rate_limit_bookings_per_hour"
+msgid "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+msgstr "Maximum number of booking attempts allowed per user/session per hour. Prevents booking spam. Default: 20"
+
+msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
+msgid "Booking Limits"
+msgstr "Booking Limits"
+
+msgctxt "Languages::novoton_holidays.api_price"
+msgid "API Price"
+msgstr "API Price"
+
+msgctxt "Languages::novoton_holidays.booking_preview"
+msgid "Booking Preview"
+msgstr "Booking Preview"
+
+msgctxt "Languages::novoton_holidays.data_to_send"
+msgid "Data to be sent to Novoton API"
+msgstr "Data to be sent to Novoton API"
+
+msgctxt "SettingsOptions::novoton_holidays::disable_api_submission"
+msgid "Disable API Submission (Test Mode)"
+msgstr "Disable API Submission (Test Mode)"
+
+msgctxt "SettingsTooltips::novoton_holidays::disable_api_submission"
+msgid "When enabled, bookings are saved to database but NOT sent to Novoton API. Use for testing booking flow without making real reservations."
+msgstr "When enabled, bookings are saved to database but NOT sent to Novoton API. Use for testing booking flow without making real reservations."
+
+msgctxt "SettingsOptions::novoton_holidays::debug_logging"
+msgid "Enable Debug Logging"
+msgstr "Enable Debug Logging"
+
+msgctxt "SettingsTooltips::novoton_holidays::debug_logging"
+msgid "Log all API requests and responses for debugging. Check Administration > Logs > Runtime."
+msgstr "Log all API requests and responses for debugging. Check Administration > Logs > Runtime."
+
+msgctxt "SettingsOptions::novoton_holidays::debug_mode"
+msgid "Enable Frontend Debug Mode"
+msgstr "Enable Frontend Debug Mode"
+
+msgctxt "SettingsTooltips::novoton_holidays::debug_mode"
+msgid "Enable JavaScript console debug logging on storefront. Shows detailed [Novoton] messages in browser console."
+msgstr "Enable JavaScript console debug logging on storefront. Shows detailed [Novoton] messages in browser console."
+
+msgctxt "Languages::novoton_holidays.api_request_sent"
+msgid "API Request Sent"
+msgstr "API Request Sent"
+
+msgctxt "Languages::novoton_holidays.api_response_received"
+msgid "API Response Received"
+msgstr "API Response Received"
+
+msgctxt "Languages::novoton_holidays.api_not_submitted"
+msgid "API submission disabled - booking saved locally only"
+msgstr "API submission disabled - booking saved locally only"
+
+msgctxt "Languages::novoton_holidays.availability"
+msgid "Availability"
+msgstr "Availability"
+
+msgctxt "Languages::novoton_holidays.change_search"
+msgid "Change Search"
+msgstr "Change Search"
+
+msgctxt "Languages::novoton_holidays.your_choices"
+msgid "Your choices"
+msgstr "Your choices"
+
+msgctxt "Languages::novoton_holidays.price_for_stay"
+msgid "Price for [nights] nights"
+msgstr "Price for [nights] nights"
+
+msgctxt "Languages::novoton_holidays.select"
+msgid "Select"
+msgstr "Select"
+
+msgctxt "Languages::novoton_holidays.we_have_left"
+msgid "We have [count] left"
+msgstr "We have [count] left"
+
+msgctxt "Languages::novoton_holidays.payment_terms_apply"
+msgid "Payment terms apply"
+msgstr "Payment terms apply"
+
+msgctxt "Languages::novoton_holidays.cancellation_terms_apply"
+msgid "Cancellation terms apply"
+msgstr "Cancellation terms apply"
+
+msgctxt "Languages::novoton_holidays.payment_and_cancellation_terms_apply"
+msgid "Payment and cancellation terms apply"
+msgstr "Payment and cancellation terms apply"
+
+msgctxt "Languages::novoton_holidays.includes_taxes"
+msgid "Includes taxes and charges"
+msgstr "Includes taxes and charges"
+
+msgctxt "Languages::novoton_holidays.book"
+msgid "Book"
+msgstr "Book"
+
+msgctxt "Languages::novoton_holidays.request"
+msgid "Request"
+msgstr "Request"
+
+msgctxt "Languages::novoton_holidays.more_info"
+msgid "More info"
+msgstr "More info"
+
+msgctxt "Languages::novoton_holidays.where_going"
+msgid "Where are you going?"
+msgstr "Where are you going?"
+
+msgctxt "Languages::novoton_holidays.room_details"
+msgid "Room Details"
+msgstr "Room Details"
+
+msgctxt "Languages::novoton_holidays.find_your_next_stay"
+msgid "Find your next stay"
+msgstr "Find your next stay"
+
+msgctxt "Languages::novoton_holidays.check_in_date"
+msgid "Check-in date"
+msgstr "Check-in date"
+
+msgctxt "Languages::novoton_holidays.check_out_date"
+msgid "Check-out date"
+msgstr "Check-out date"
+
+msgctxt "Languages::novoton_holidays.select_dates_message"
+msgid "Select dates to see this property's availability and prices"
+msgstr "Select dates to see this property's availability and prices"
+
+msgctxt "Languages::novoton_holidays.apply_changes"
+msgid "Apply changes"
+msgstr "Apply changes"
+
+msgctxt "Languages::novoton_holidays.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Please select check-in and check-out dates"
+
+msgctxt "Languages::novoton_holidays.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Select age ([count] missing)"
+
+msgctxt "Languages::novoton_holidays.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Select age for 1 child (Room [rooms])."
+
+msgctxt "Languages::novoton_holidays.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Select age for [count] children (Room [rooms])."
+
+msgctxt "Languages::novoton_holidays.flexible_dates"
+msgid "Flexible dates"
+msgstr "Flexible dates"
+
+msgctxt "Languages::novoton_holidays.exact_dates"
+msgid "Exact dates"
+msgstr "Exact dates"
+
+msgctxt "Languages::novoton_holidays.days"
+msgid "days"
+msgstr "days"
+
+msgctxt "Languages::novoton_holidays.nights_stay"
+msgid "nights stay"
+msgstr "nights stay"
+
+msgctxt "Languages::novoton_holidays.night_stay"
+msgid "night stay"
+msgstr "night stay"
+
+msgctxt "Languages::novoton_holidays.flexible_dates_found"
+msgid "We found availability on nearby dates!"
+msgstr "We found availability on nearby dates!"
+
+msgctxt "Languages::novoton_holidays.alternative_dates_found"
+msgid "No availability on selected dates, but found on:"
+msgstr "No availability on selected dates, but found on:"
+
+msgctxt "Languages::novoton_holidays.view_availability"
+msgid "View availability for these dates"
+msgstr "View availability for these dates"
+
+msgctxt "Languages::novoton_holidays.no_availability_selected_dates"
+msgid "No availability for your selected dates"
+msgstr "No availability for your selected dates"
+
+msgctxt "Languages::novoton_holidays.no_rooms_available"
+msgid "No rooms available"
+msgstr "No rooms available for this configuration"
+
+msgctxt "Languages::novoton_holidays.available_rooms"
+msgid "available"
+msgstr "available"
+
+msgctxt "Languages::novoton_holidays.reservation_on_request"
+msgid "Reservation on request"
+msgstr "Reservation on request"
+
+msgctxt "Languages::novoton_holidays.cancellation_policy"
+msgid "Cancellation Policy"
+msgstr "Cancellation Policy"
+
+msgctxt "Languages::novoton_holidays.stay_nights"
+msgid "Stay: [nights] nights"
+msgstr "Stay: [nights] nights"
+
+msgctxt "Languages::novoton_holidays.stay_night"
+msgid "Stay: 1 night"
+msgstr "Stay: 1 night"
+
+msgctxt "Languages::novoton_holidays.childrens_ages"
+msgid "Children's ages"
+msgstr "Children's ages"
+
+msgctxt "Languages::novoton_holidays.adult_holder"
+msgid "Adult - Holder"
+msgstr "Adult - Holder"
+
+msgctxt "Languages::novoton_holidays.enter_booking_details"
+msgid "Enter your booking details"
+msgstr "Enter your booking details"
+
+msgctxt "Languages::novoton_holidays.room_lowercase"
+msgid "room"
+msgstr "room"
+
+msgctxt "Languages::novoton_holidays.x_available"
+msgid "[count] available"
+msgstr "[count] available"
+
+msgctxt "Languages::novoton_holidays.reservation_on_request_confirm"
+msgid "Reservation on request - confirmation within max 48 hours"
+msgstr "Reservation on request - confirmation within max 48 hours"
+
+msgctxt "Languages::novoton_holidays.available_rooms_offers"
+msgid "Available: [rooms] rooms, [offers] offers"
+msgstr "Available: [rooms] rooms, [offers] offers"
+
+msgctxt "Languages::novoton_holidays.room_type_double"
+msgid "Double Room"
+msgstr "Double Room"
+
+msgctxt "Languages::novoton_holidays.room_type_single"
+msgid "Single Room"
+msgstr "Single Room"
+
+msgctxt "Languages::novoton_holidays.room_type_apartment"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::novoton_holidays.room_type_studio"
+msgid "Studio"
+msgstr "Studio"
+
+msgctxt "Languages::novoton_holidays.room_type_maisonette"
+msgid "Maisonette"
+msgstr "Maisonette"
+
+msgctxt "Languages::novoton_holidays.room_type_family"
+msgid "Family Room"
+msgstr "Family Room"
+
+msgctxt "Languages::novoton_holidays.room_type_suite"
+msgid "Suite"
+msgstr "Suite"
+
+msgctxt "Languages::novoton_holidays.room_type_triple"
+msgid "Triple Room"
+msgstr "Triple Room"
+
+msgctxt "Languages::novoton_holidays.overnight"
+msgid "overnight"
+msgstr "night"
+
+msgctxt "Languages::novoton_holidays.confirmation_48h"
+msgid "confirmation within max 48 hours"
+msgstr "confirmation within max 48 hours"
+
+msgctxt "Languages::novoton_holidays.offer"
+msgid "offer"
+msgstr "offer"
+
+msgctxt "Languages::novoton_holidays.offers"
+msgid "offers"
+msgstr "offers"
+
+msgctxt "Languages::novoton_holidays.fill_all_fields"
+msgid "Please fill in all required fields"
+msgstr "Please fill in all required fields"
+
+msgctxt "Languages::novoton_holidays.your_booking_details"
+msgid "Your booking details"
+msgstr "Your booking details"
+
+msgctxt "Languages::novoton_holidays.total_stay"
+msgid "Total length of stay"
+msgstr "Total length of stay"
+
+msgctxt "Languages::novoton_holidays.no_guest_details"
+msgid "No guest details entered"
+msgstr "No guest details entered"
+
+msgctxt "Languages::novoton_holidays.left"
+msgid "left"
+msgstr "left"
+
+msgctxt "Languages::novoton_holidays.free_cancel"
+msgid "Free cancellation"
+msgstr "Free cancellation"
+
+msgctxt "Languages::novoton_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Free cancellation until"
+
+msgctxt "Languages::novoton_holidays.on_booking"
+msgid "on booking"
+msgstr "on booking"
+
+msgctxt "Languages::novoton_holidays.payment_terms_short"
+msgid "Payment terms"
+msgstr "Payment terms"
+
+msgctxt "Languages::novoton_holidays.details"
+msgid "Details"
+msgstr "Details"
+
+msgctxt "Languages::novoton_holidays.select_room"
+msgid "Select"
+msgstr "Select"
+
+msgctxt "Languages::novoton_holidays.booking_terms_conditions"
+msgid "Booking Terms & Conditions"
+msgstr "Booking Terms & Conditions"
+
+msgctxt "Languages::novoton_holidays.month_short"
+msgid "Mon"
+msgstr "Mon"
+
+msgctxt "Languages::novoton_holidays.dob_age_mismatch"
+msgid "Date of birth corresponds to age"
+msgstr "Date of birth corresponds to age"
+
+msgctxt "Languages::novoton_holidays.dob_age_mismatch_alert"
+msgid "Selected age does not match date of birth. Please check children data."
+msgstr "Selected age does not match date of birth. Please check children data."
+
+msgctxt "Languages::novoton_holidays.not"
+msgid "not"
+msgstr "not"
+
+msgctxt "Languages::novoton_holidays.date_of_birth"
+msgid "Date of birth"
+msgstr "Date of birth"
+
+msgctxt "Languages::novoton_holidays.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Alternative Requests"
+
+msgctxt "Languages::novoton_holidays.alternatives_info"
+msgid "Information"
+msgstr "Information"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_title"
+msgid "Can't find what you're looking for?"
+msgstr "Can't find what you're looking for?"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_desc"
+msgid "Leave your contact details and we'll notify you when alternatives become available for your dates."
+msgstr "Leave your contact details and we'll notify you when alternatives become available for your dates."
+
+msgctxt "Languages::novoton_holidays.request_alternatives_btn"
+msgid "Notify me when available"
+msgstr "Notify me when available"
+
+msgctxt "Languages::novoton_holidays.request_alternatives_privacy"
+msgid "We'll only use your contact info to notify you about availability."
+msgstr "We'll only use your contact info to notify you about availability."
+
+msgctxt "Languages::novoton_holidays.alternatives_notes_placeholder"
+msgid "Any specific requirements or preferences..."
+msgstr "Any specific requirements or preferences..."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_sent"
+msgid "Your request has been submitted! We'll notify you when alternatives become available."
+msgstr "Your request has been submitted! We'll notify you when alternatives become available."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_saved"
+msgid "Your request has been saved. Our team will contact you soon."
+msgstr "Your request has been saved. Our team will contact you soon."
+
+msgctxt "Languages::novoton_holidays.no_alternatives_yet"
+msgid "No alternatives available yet. Please check again later."
+msgstr "No alternatives available yet. Please check again later."
+
+msgctxt "Languages::novoton_holidays.no_novoton_request_id"
+msgid "No Novoton request ID available for this request."
+msgstr "No Novoton request ID available for this request."
+
+msgctxt "Languages::novoton_holidays.customer_notified"
+msgid "Customer has been notified via email."
+msgstr "Customer has been notified via email."
+
+msgctxt "Languages::novoton_holidays.request_deleted"
+msgid "Request has been deleted."
+msgstr "Request has been deleted."
+
+msgctxt "Languages::novoton_holidays.bulk_check_complete"
+msgid "Checked [checked] requests, found alternatives for [found]."
+msgstr "Checked [checked] requests, found alternatives for [found]."
+
+msgctxt "Languages::novoton_holidays.no_pending_requests"
+msgid "No pending requests to check."
+msgstr "No pending requests to check."
+
+msgctxt "Languages::novoton_holidays.menu.alternative_requests"
+msgid "Alternative Requests"
+msgstr "Alternative Requests"
+
+msgctxt "Languages::novoton_holidays.menu.check_active_prices"
+msgid "Check Active Prices"
+msgstr "Check Active Prices"
+
+msgctxt "Languages::novoton_holidays.menu.test_hotel_request"
+msgid "Test hotel_request"
+msgstr "Test hotel_request"
+
+msgctxt "Languages::novoton_holidays.menu.test_alternative_rs"
+msgid "Test alternative_RS"
+msgstr "Test alternative_RS"
+
+
+msgctxt "Languages::novoton_holidays.dob_placeholder"
+msgid "DD/MM/YYYY"
+msgstr "DD/MM/YYYY"
+
+msgctxt "Languages::novoton_holidays.dob_incomplete"
+msgid "Complete date of birth (DD/MM/YYYY)"
+msgstr "Complete date of birth (DD/MM/YYYY)"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_format"
+msgid "Invalid format"
+msgstr "Invalid format"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_date"
+msgid "Invalid date"
+msgstr "Invalid date"
+
+msgctxt "Languages::novoton_holidays.dob_year_invalid"
+msgid "Year must be between 1925 and"
+msgstr "Year must be between 1925 and"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_day"
+msgid "Invalid day (1-31)"
+msgstr "Invalid day (1-31)"
+
+msgctxt "Languages::novoton_holidays.dob_invalid_month"
+msgid "Invalid month (1-12)"
+msgstr "Invalid month (1-12)"
+
+msgctxt "Languages::novoton_holidays.age_label"
+msgid "Age"
+msgstr "years"
+
+msgctxt "Languages::novoton_holidays.age_label_singular"
+msgid "year"
+msgstr "year"
+
+msgctxt "Languages::novoton_holidays.age_format"
+msgid "Age {n}"
+msgstr "{n} years"
+
+msgctxt "Languages::novoton_holidays.dob_age_info"
+msgid "The date of birth corresponds to age"
+msgstr "The date of birth corresponds to age"
+
+msgctxt "Languages::novoton_holidays.age_accepted"
+msgid "You can proceed."
+msgstr "You can proceed."
+
+msgctxt "Languages::novoton_holidays.years_at_checkin"
+msgid "years old at check-in and is categorized as Adult."
+msgstr "years old at check-in and is categorized as Adult."
+
+msgctxt "Languages::novoton_holidays.price_will_update"
+msgid "The total price will be updated automatically."
+msgstr "The total price will be updated automatically."
+
+msgctxt "Languages::novoton_holidays.years_at_checkin_infant"
+msgid "years old at check-in and is categorized as Infant."
+msgstr "years old at check-in and is categorized as Infant."
+
+msgctxt "Languages::novoton_holidays.infant_policy"
+msgid "Check the hotel policy for infants."
+msgstr "Check the hotel policy for infants."
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded"
+msgid "Occupancy limit exceeded!"
+msgstr "Occupancy limit exceeded!"
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded_detail"
+msgid "The selected room allows a maximum of"
+msgstr "The selected room allows a maximum of"
+
+msgctxt "Languages::novoton_holidays.but_total_is"
+msgid "but the total is"
+msgstr "but the total is"
+
+msgctxt "Languages::novoton_holidays.change_room_selection"
+msgid "← Change your room selection"
+msgstr "← Change your room selection"
+
+msgctxt "Languages::novoton_holidays.price_updated"
+msgid "Price updated based on child age"
+msgstr "Price updated based on child age"
+
+msgctxt "Languages::novoton_holidays.occupancy_exceeded_alert"
+msgid "The selected room does not allow this number of adults. Please change your selection."
+msgstr "The selected room does not allow this number of adults. Please change your selection."
+
+msgctxt "Languages::novoton_holidays.dob_validation_error"
+msgid "Please check the dates of birth entered."
+msgstr "Please check the dates of birth entered."
+
+msgctxt "Languages::novoton_holidays.capacity_exceeded"
+msgid "Room capacity is"
+msgstr "Room capacity is"
+
+msgctxt "Languages::novoton_holidays.persons"
+msgid "persons"
+msgstr "persons"
+
+msgctxt "Languages::novoton_holidays.price_verify_on_submit"
+msgid "Price will be verified on submission."
+msgstr "Price will be verified on submission."
+
+msgctxt "Languages::novoton_holidays.price_not_found_for_combination"
+msgid "Price not found for this room/board combination."
+msgstr "Price not found for this room/board combination."
+
+msgctxt "Languages::novoton_holidays.price_calculation_error"
+msgid "Error calculating price. Price will be verified on submission."
+msgstr "Error calculating price. Price will be verified on submission."
+
+msgctxt "Languages::novoton_holidays.same_price_bracket"
+msgid "Same price bracket, you can proceed."
+msgstr "Same price bracket, you can proceed."
+
+msgctxt "Languages::novoton_holidays.category_label"
+msgid "Category:"
+msgstr "Category:"
+
+msgctxt "Languages::novoton_holidays.age_bracket_changed"
+msgid "Age corresponds to a different price category:"
+msgstr "Age corresponds to a different price category:"
+
+msgctxt "Languages::novoton_holidays.price_may_change"
+msgid "Price may differ for this category."
+msgstr "Price may differ for this category."
+
+msgctxt "SettingsOptions::novoton_holidays::delete_products_on_uninstall"
+msgid "Delete products on uninstall"
+msgstr "Delete products on uninstall"
+
+msgctxt "SettingsTooltips::novoton_holidays::delete_products_on_uninstall"
+msgid "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
+msgstr "If enabled, all products created by this addon will be deleted when the addon is uninstalled. Only products tracked in the addon database will be deleted - manually created products are not affected."
+
+msgctxt "SettingsOptions::novoton_holidays::country_category_map"
+msgid "Country → Category mapping"
+msgstr "Country → Category mapping"
+
+msgctxt "SettingsTooltips::novoton_holidays::country_category_map"
+msgid "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+msgstr "Map each country to an existing CS-Cart category ID. One per line: COUNTRY:category_id (e.g. BULGARIA:123). Countries without a mapping use auto-created categories."
+
+msgctxt "SettingsOptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts (JSON)"
+msgstr "Excluded Resorts"
+
+msgctxt "SettingsTooltips::novoton_holidays::excluded_resorts"
+msgid "JSON array of resort names to exclude when adding hotels as products. Use the checkbox selector below to configure this."
+msgstr "JSON array of resort names to exclude. Configured via the selector below."
+
+msgctxt "SettingsOptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions for Add Hotels"
+msgstr "Select Resorts to Exclude"
+
+msgctxt "SettingsTooltips::novoton_holidays::excluded_resorts_selector"
+msgid "Select resorts to exclude when adding hotels as products. These settings apply to both the admin interface and cron jobs."
+msgstr "Select resorts to exclude when adding hotels as products. These settings apply to both the admin interface and cron jobs."
+
+msgctxt "Languages::novoton_holidays.dob_cannot_be_future"
+msgid "Date of birth cannot be in the future"
+msgstr "Date of birth cannot be in the future"
+
+msgctxt "Languages::novoton_holidays.child_age_invalid"
+msgid "This person will be"
+msgstr "This person will be"
+
+msgctxt "Languages::novoton_holidays.years_at_checkin_adult"
+msgid "years old at check-in. A child must be under 18 years old."
+msgstr "years old at check-in. A child must be under 18 years old."
+
+msgctxt "Languages::novoton_holidays.please_modify_search"
+msgid "Please modify your search to include additional adults instead of children."
+msgstr "Please modify your search to include additional adults instead of children."
+
+msgctxt "Languages::novoton_holidays.child_must_be_under_18"
+msgid "Child must be under 18 years old at check-in"
+msgstr "Child must be under 18 years old at check-in"
+
+msgctxt "Languages::novoton_holidays.not_child"
+msgid "At check-in, the child will be"
+msgstr "At check-in, the child will be"
+
+msgctxt "Languages::novoton_holidays.must_be_under_18"
+msgid "Must be under 18 years old."
+msgstr "Must be under 18 years old."
+
+msgctxt "Languages::novoton_holidays.price_increased"
+msgid "Price increased"
+msgstr "Price increased"
+
+msgctxt "Languages::novoton_holidays.price_decreased"
+msgid "Price decreased"
+msgstr "Price decreased"
+
+msgctxt "Languages::novoton_holidays.price_recalculating"
+msgid "Recalculating price..."
+msgstr "Recalculating price..."
+
+msgctxt "Languages::novoton_holidays.age_at_checkin"
+msgid "Age at check-in"
+msgstr "Age at check-in"
+
+msgctxt "Languages::novoton_holidays.configuration_not_available"
+msgid "This room configuration is not available"
+msgstr "This room configuration is not available"
+
+msgctxt "Languages::novoton_holidays.no_rooms_for_configuration"
+msgid "We couldn't find rooms that match all your requirements:"
+msgstr "We couldn't find rooms that match all your requirements:"
+
+msgctxt "Languages::novoton_holidays.no_room_types_support"
+msgid "No room types available for this occupancy"
+msgstr "No room types available for this occupancy"
+
+msgctxt "Languages::novoton_holidays.suggestions"
+msgid "Suggestions"
+msgstr "Suggestions"
+
+msgctxt "Languages::novoton_holidays.suggestion_max_2_adults"
+msgid "Most rooms accommodate max 2 adults - try splitting into more rooms"
+msgstr "Most rooms accommodate max 2 adults - try splitting into more rooms"
+
+msgctxt "Languages::novoton_holidays.suggestion_different_dates"
+msgid "Try different dates when more room types may be available"
+msgstr "Try different dates when more room types may be available"
+
+msgctxt "Languages::novoton_holidays.suggestion_contact_us"
+msgid "Contact us for assistance with special arrangements"
+msgstr "Contact us for assistance with special arrangements"
+
+msgctxt "Languages::novoton_holidays.go_back"
+msgid "Go Back"
+msgstr "Go Back"
+
+msgctxt "Languages::novoton_holidays.hotel_max_capacity"
+msgid "Maximum room capacity at this hotel"
+msgstr "Maximum room capacity at this hotel"
+
+msgctxt "Languages::novoton_holidays.persons_per_room"
+msgid "persons per room"
+msgstr "persons per room"
+
+msgctxt "Languages::novoton_holidays.suggestion_split_rooms"
+msgid "Split your group into more rooms with fewer guests each"
+msgstr "Split your group into more rooms with fewer guests each"
+
+msgctxt "Languages::novoton_holidays.email_alternatives_title"
+msgid "Great news! We found alternatives for you!"
+msgstr "Great news! We found alternatives for you!"
+
+msgctxt "Languages::novoton_holidays.email_greeting"
+msgid "Hello"
+msgstr "Hello"
+
+msgctxt "Languages::novoton_holidays.email_alternatives_intro"
+msgid "We're happy to inform you that we found accommodation alternatives for your request"
+msgstr "We're happy to inform you that we found accommodation alternatives for your request"
+
+msgctxt "Languages::novoton_holidays.email_original_request"
+msgid "Original request"
+msgstr "Original request"
+
+msgctxt "Languages::novoton_holidays.email_available_alternatives"
+msgid "Available alternatives"
+msgstr "Available alternatives"
+
+msgctxt "Languages::novoton_holidays.email_availability_note"
+msgid "Availability may vary. We recommend booking as soon as possible to take advantage of these offers."
+msgstr "Availability may vary. We recommend booking as soon as possible to take advantage of these offers."
+
+msgctxt "Languages::novoton_holidays.email_regards"
+msgid "Best regards"
+msgstr "Best regards"
+
+msgctxt "Languages::novoton_holidays.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.price"
+msgid "Price"
+msgstr "Price"
+
+msgctxt "Languages::novoton_holidays.note"
+msgid "Note"
+msgstr "Note"
+
+msgctxt "Languages::novoton_holidays.checking_price"
+msgid "Checking price..."
+msgstr "Checking price..."
+
+msgctxt "Languages::novoton_holidays.room_changed_title"
+msgid "Room Changed"
+msgstr "Room Changed"
+
+msgctxt "Languages::novoton_holidays.room_changed_due_to_age"
+msgid "The selected room is not available for the entered child age."
+msgstr "The selected room is not available for the entered child age."
+
+msgctxt "Languages::novoton_holidays.original_room"
+msgid "Selected room"
+msgstr "Selected room"
+
+msgctxt "Languages::novoton_holidays.new_room"
+msgid "New room"
+msgstr "New room"
+
+msgctxt "Languages::novoton_holidays.price_change"
+msgid "Price change"
+msgstr "Price change"
+
+msgctxt "Languages::novoton_holidays.go_back_to_search"
+msgid "Back to search"
+msgstr "Back to search"
+
+msgctxt "Languages::novoton_holidays.continue_with_new_room"
+msgid "Continue with new room"
+msgstr "Continue with new room"
+
+msgctxt "Languages::novoton_holidays.room_updated"
+msgid "Room has been updated:"
+msgstr "Room has been updated:"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::_settingsoptions::novoton_holidays::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts:"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::settingsoptions::novoton_holidays::excluded_resorts_selector:"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::novoton_holidays.excluded_resorts"
+msgid "Excluded Resorts"
+msgstr "Excluded Resorts"
+
+msgctxt "Languages::novoton_holidays.excluded_resorts_selector"
+msgid "Resort Exclusions"
+msgstr "Resort Exclusions"
+
+msgctxt "Languages::novoton_holidays.invalid_log_file"
+msgid "Invalid log file specified"
+msgstr "Invalid log file specified"
+
+msgctxt "Languages::novoton_holidays.alternatives_available_subject"
+msgid "Alternative Hotels Available for Your Booking"
+msgstr "Alternative Hotels Available for Your Booking"
+
+msgctxt "Languages::novoton_holidays.alternatives_available_title"
+msgid "Alternative Hotels Are Now Available"
+msgstr "Alternative Hotels Are Now Available"
+
+msgctxt "Languages::novoton_holidays.dear_customer"
+msgid "Dear [name],"
+msgstr "Dear [name],"
+
+msgctxt "Languages::novoton_holidays.alternatives_available_body"
+msgid "We have found alternative options for your booking at [hotel] (Order #[order_id])."
+msgstr "We have found alternative options for your booking at [hotel] (Order #[order_id])."
+
+msgctxt "Languages::novoton_holidays.available_alternatives"
+msgid "Available Alternatives"
+msgstr "Available Alternatives"
+
+msgctxt "Languages::novoton_holidays.contact_us_alternatives"
+msgid "Please contact us if you would like to switch to one of these alternatives."
+msgstr "Please contact us if you would like to switch to one of these alternatives."
+
+msgctxt "Languages::novoton_holidays.alternatives_request_subject"
+msgid "Alternative Request Received - Your Booking"
+msgstr "Alternative Request Received - Your Booking"
+
+msgctxt "Languages::novoton_holidays.alternatives_request_title"
+msgid "Your Alternative Request Has Been Received"
+msgstr "Your Alternative Request Has Been Received"
+
+msgctxt "Languages::novoton_holidays.alternatives_request_body"
+msgid "We have received your request for alternative options for [hotel]."
+msgstr "We have received your request for alternative options for [hotel]."
+
+msgctxt "Languages::novoton_holidays.original_booking"
+msgid "Original Booking Details"
+msgstr "Original Booking Details"
+
+msgctxt "Languages::novoton_holidays.alternatives_request_waiting"
+msgid "We will notify you as soon as alternative options become available."
+msgstr "We will notify you as soon as alternative options become available."
+
+msgctxt "Languages::email_template.novoton_holidays_import_report"
+msgid "Novoton: Hotel Import Report"
+msgstr "Novoton: Hotel Import Report"
+
+msgctxt "Languages::email_template.novoton_holidays_alternatives_available"
+msgid "Novoton: Alternatives Available"
+msgstr "Novoton: Alternatives Available"
+
+msgctxt "Languages::email_template.novoton_holidays_alternatives_request"
+msgid "Novoton: Alternatives Request Confirmation"
+msgstr "Novoton: Alternatives Request Confirmation"
+
+msgctxt "Languages::novoton_holidays.cancel_free"
+msgid "Free cancellation"
+msgstr "Free cancellation"
+
+msgctxt "Languages::novoton_holidays.cancel_free_before"
+msgid "Free cancellation before [date]"
+msgstr "Free cancellation before [date]"
+
+msgctxt "Languages::novoton_holidays.cancel_no_show"
+msgid "No show: 100% penalty"
+msgstr "No show: 100% penalty"
+
+msgctxt "Languages::novoton_holidays.cancel_nights_penalty"
+msgid "[nights] night(s) penalty"
+msgstr "[nights] night(s) penalty"
+
+msgctxt "Languages::novoton_holidays.cancel_percent_penalty"
+msgid "[percent]% penalty"
+msgstr "[percent]% penalty"
+
+msgctxt "Languages::novoton_holidays.cancel_between_dates"
+msgid "Between [from] - [to]: [penalty]"
+msgstr "Between [from] - [to]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.cancel_until_date"
+msgid "Until [date]: [penalty]"
+msgstr "Until [date]: [penalty]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_until"
+msgid "[percent]% until [date]"
+msgstr "[percent]% until [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_on_booking"
+msgid "[percent]% on booking"
+msgstr "[percent]% on booking"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_until"
+msgid "[percent]% ([amount]) - due by [date]"
+msgstr "[percent]% ([amount]) - due by [date]"
+
+msgctxt "Languages::novoton_holidays.payment_percent_amount_on_booking"
+msgid "[percent]% ([amount]) on booking"
+msgstr "[percent]% ([amount]) on booking"
+
+msgctxt "Languages::theme_editor.novoton_primary_color"
+msgid "Novoton: Primary color"
+msgstr "Novoton: Primary color"
+
+msgctxt "Languages::theme_editor.novoton_accent_color"
+msgid "Novoton: Accent color"
+msgstr "Novoton: Accent color"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_color"
+msgid "Novoton: Search button"
+msgstr "Novoton: Search button"
+
+msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
+msgid "Novoton: Search button (hover)"
+msgstr "Novoton: Search button (hover)"
+
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_bg"
+msgid "Novoton: Calendar cheapest price background"
+msgstr "Novoton: Calendar cheapest price background"
+
+msgctxt "Languages::theme_editor.novoton_cal_cheapest_color"
+msgid "Novoton: Calendar cheapest price text"
+msgstr "Novoton: Calendar cheapest price text"
+
+msgctxt "Languages::theme_editor.novoton_cal_price_color"
+msgid "Novoton: Calendar price text"
+msgstr "Novoton: Calendar price text"
+
+msgctxt "Languages::novoton_holidays.nearby_dates_available"
+msgid "Available on nearby dates"
+msgstr "Available on nearby dates"
+
+msgctxt "Languages::novoton_holidays.rooms_short"
+msgid "rooms"
+msgstr "rooms"
+
+msgctxt "Languages::novoton_holidays.price_updated_child_age"
+msgid "Price updated based on child age"
+msgstr "Price updated based on child age"
+
+msgctxt "Languages::novoton_holidays.additional_guest"
+msgid "Additional Guest"
+msgstr "Additional Guest"
+
+msgctxt "Languages::novoton_holidays.adults_label"
+msgid "Adults"
+msgstr "Adults"
+
+msgctxt "Languages::novoton_holidays.ani"
+msgid "years old"
+msgstr "years old"
+
+msgctxt "Languages::novoton_holidays.april"
+msgid "April"
+msgstr "April"
+
+msgctxt "Languages::novoton_holidays.august"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::novoton_holidays.birth_date"
+msgid "Birth Date"
+msgstr "Birth Date"
+
+msgctxt "Languages::novoton_holidays.booking_added_to_cart"
+msgid "Booking added to cart"
+msgstr "Booking added to cart"
+
+msgctxt "Languages::novoton_holidays.booking_failed"
+msgid "Booking Failed"
+msgstr "Booking Failed"
+
+msgctxt "Languages::novoton_holidays.camera"
+msgid "Room"
+msgstr "Room"
+
+msgctxt "Languages::novoton_holidays.camere"
+msgid "Rooms"
+msgstr "Rooms"
+
+msgctxt "Languages::novoton_holidays.child_age"
+msgid "Child's age"
+msgstr "Child's age"
+
+msgctxt "Languages::novoton_holidays.child_n_age"
+msgid "Child [n] age"
+msgstr "Child [n] age"
+
+msgctxt "Languages::novoton_holidays.children_age"
+msgid "Children's age"
+msgstr "Children's age"
+
+msgctxt "Languages::novoton_holidays.children_ages_label"
+msgid "Children's ages:"
+msgstr "Children's ages:"
+
+msgctxt "Languages::novoton_holidays.children_label"
+msgid "Children"
+msgstr "Children"
+
+msgctxt "Languages::novoton_holidays.clear"
+msgid "Clear"
+msgstr "Clear"
+
+msgctxt "Languages::novoton_holidays.close"
+msgid "Close"
+msgstr "Close"
+
+msgctxt "Languages::novoton_holidays.continue_to_payment"
+msgid "Continue to Payment"
+msgstr "Continue to Payment"
+
+msgctxt "Languages::novoton_holidays.december"
+msgid "December"
+msgstr "December"
+
+msgctxt "Languages::novoton_holidays.enter_guest_details"
+msgid "Enter guest details"
+msgstr "Enter guest details"
+
+msgctxt "Languages::novoton_holidays.error_occurred"
+msgid "An error occurred"
+msgstr "An error occurred"
+
+msgctxt "Languages::novoton_holidays.february"
+msgid "February"
+msgstr "February"
+
+msgctxt "Languages::novoton_holidays.fri"
+msgid "Fri"
+msgstr "Fri"
+
+msgctxt "Languages::novoton_holidays.full_name"
+msgid "Full Name"
+msgstr "Full Name"
+
+msgctxt "Languages::novoton_holidays.guest_name"
+msgid "Guest Name"
+msgstr "Guest Name"
+
+msgctxt "Languages::novoton_holidays.january"
+msgid "January"
+msgstr "January"
+
+msgctxt "Languages::novoton_holidays.july"
+msgid "July"
+msgstr "July"
+
+msgctxt "Languages::novoton_holidays.june"
+msgid "June"
+msgstr "June"
+
+msgctxt "Languages::novoton_holidays.loading"
+msgid "Loading..."
+msgstr "Loading..."
+
+msgctxt "Languages::novoton_holidays.march"
+msgid "March"
+msgstr "March"
+
+msgctxt "Languages::novoton_holidays.modify_search"
+msgid "Modify Search"
+msgstr "Modify Search"
+
+msgctxt "Languages::novoton_holidays.mon"
+msgid "Mon"
+msgstr "Mon"
+
+msgctxt "Languages::novoton_holidays.nationality"
+msgid "Nationality"
+msgstr "Nationality"
+
+msgctxt "Languages::novoton_holidays.new_search"
+msgid "New Search"
+msgstr "New Search"
+
+msgctxt "Languages::novoton_holidays.november"
+msgid "November"
+msgstr "November"
+
+msgctxt "Languages::novoton_holidays.october"
+msgid "October"
+msgstr "October"
+
+msgctxt "Languages::novoton_holidays.per_room"
+msgid "per room"
+msgstr "per room"
+
+msgctxt "Languages::novoton_holidays.person"
+msgid "person"
+msgstr "person"
+
+msgctxt "Languages::novoton_holidays.please_wait"
+msgid "Please wait..."
+msgstr "Please wait..."
+
+msgctxt "Languages::novoton_holidays.plus_minus_days"
+msgid "± [days] days"
+msgstr "± [days] days"
+
+msgctxt "Languages::novoton_holidays.price_changed_on_submit"
+msgid "The price has changed. Please review the new price and try again."
+msgstr "The price has changed. Please review the new price and try again."
+
+msgctxt "Languages::novoton_holidays.price_verification_failed"
+msgid "Price verification failed. The booking cannot proceed."
+msgstr "Price verification failed. The booking cannot proceed."
+
+msgctxt "Languages::novoton_holidays.remove"
+msgid "Remove"
+msgstr "Remove"
+
+msgctxt "Languages::novoton_holidays.required_field"
+msgid "This field is required"
+msgstr "This field is required"
+
+msgctxt "Languages::novoton_holidays.sat"
+msgid "Sat"
+msgstr "Sat"
+
+msgctxt "Languages::novoton_holidays.select_ages"
+msgid "Select ages"
+msgstr "Select ages"
+
+msgctxt "Languages::novoton_holidays.select_check_in"
+msgid "Select check-in date"
+msgstr "Select check-in date"
+
+msgctxt "Languages::novoton_holidays.select_check_out"
+msgid "Select check-out date"
+msgstr "Select check-out date"
+
+msgctxt "Languages::novoton_holidays.select_room_for"
+msgid "Select room for"
+msgstr "Select room for"
+
+msgctxt "Languages::novoton_holidays.select_room_type"
+msgid "Select room type for each room"
+msgstr "Select room type for each room"
+
+msgctxt "Languages::novoton_holidays.selected_singular"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::novoton_holidays.september"
+msgid "September"
+msgstr "September"
+
+msgctxt "Languages::novoton_holidays.sun"
+msgid "Sun"
+msgstr "Sun"
+
+msgctxt "Languages::novoton_holidays.thu"
+msgid "Thu"
+msgstr "Thu"
+
+msgctxt "Languages::novoton_holidays.to"
+msgid "To"
+msgstr "To"
+
+msgctxt "Languages::novoton_holidays.today"
+msgid "Today"
+msgstr "Today"
+
+msgctxt "Languages::novoton_holidays.try_again"
+msgid "Try again"
+msgstr "Try again"
+
+msgctxt "Languages::novoton_holidays.tue"
+msgid "Tue"
+msgstr "Tue"
+
+msgctxt "Languages::novoton_holidays.wed"
+msgid "Wed"
+msgstr "Wed"
+
+msgctxt "Languages::novoton_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
+msgctxt "SettingsOptions::novoton_holidays::price_check_header"
+msgid "Price Discrepancy Check"
+msgstr "Price Discrepancy Check"
+
+msgctxt "SettingsOptions::novoton_holidays::enable_preorder_price_check"
+msgid "Enable pre-order price verification"
+msgstr "Enable pre-order price verification"
+
+msgctxt "SettingsTooltips::novoton_holidays::enable_preorder_price_check"
+msgid "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+msgstr "When enabled, the system verifies the current API price just before the order is placed. If the form price is lower than the API price, the order is blocked. This is the most important safety net against stale prices."
+
+msgctxt "SettingsOptions::novoton_holidays::price_higher_threshold"
+msgid "Price higher alert threshold (%)"
+msgstr "Price higher alert threshold (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_higher_threshold"
+msgid "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+msgstr "If the form price exceeds the API price by more than this percentage, the order is still allowed but an admin email notification is sent. Default: 55%."
+
+msgctxt "SettingsOptions::novoton_holidays::preorder_cache_ttl"
+msgid "Price check cache TTL (seconds)"
+msgstr "Price check cache TTL (seconds)"
+
+msgctxt "SettingsTooltips::novoton_holidays::preorder_cache_ttl"
+msgid "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+msgstr "How long (in seconds) to trust the price verified at add-to-cart before calling the API again at checkout. Set to 0 to always call the API. Default: 180 (3 minutes)."
+
+msgctxt "Languages::novoton_holidays.price_changed_please_refresh"
+msgid "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+msgstr "The price has changed since you added this item to your cart. Please go back and refresh the price before placing your order."
+
+msgctxt "Languages::novoton_holidays.price_updated_from_to"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_dropped_to"
+msgid "Good news! The price has dropped to [new_price]."
+msgstr "Good news! The price has dropped to [new_price]."
+
+msgctxt "Languages::novoton_holidays.price_updated_at_checkout"
+msgid "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+msgstr "The price has been updated from [old_price] to [new_price] based on real-time availability. Please review and place your order again."
+
+msgctxt "Languages::novoton_holidays.price_updated_badge"
+msgid "Price Updated"
+msgstr "Price Updated"
+
+msgctxt "Languages::novoton_holidays.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
+msgctxt "Languages::novoton_holidays.price_updated_explanation"
+msgid "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+msgstr "The current rate has been updated from [old_price] to [new_price] based on real-time availability."
+
+msgctxt "Languages::novoton_holidays.price_dropped_explanation"
+msgid "Good news! The price has decreased to [new_price]."
+msgstr "Good news! The price has decreased to [new_price]."
+
+msgctxt "SettingsOptions::novoton_holidays::price_change_tolerance_percent"
+msgid "Price change tolerance (%)"
+msgstr "Price change tolerance (%)"
+
+msgctxt "SettingsTooltips::novoton_holidays::price_change_tolerance_percent"
+msgid "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+msgstr "Price changes below this percentage threshold are applied silently without notifying the customer. Changes above it trigger a visible 'Old vs New' price comparison. Default: 1%."
+
+msgctxt "SettingsSections::novoton_holidays::feature_mapping"
+msgid "Feature IDs Mapping"
+msgstr "Feature IDs Mapping"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_mapping_header"
+msgid "CS-Cart Feature IDs"
+msgstr "CS-Cart Feature IDs"
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_property_rating"
+msgid "Property Rating feature ID"
+msgstr "Property Rating feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_rating"
+msgid "CS-Cart product feature ID for property rating (Select Box type). Set to 0 to disable. Find the ID in Products > Features."
+msgstr "CS-Cart product feature ID for property rating (Select Box type). Set to 0 to disable. Find the ID in Products > Features."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_meals"
+msgid "Meals feature ID"
+msgstr "Meals feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_meals"
+msgid "CS-Cart product feature ID for meal plan (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for meal plan (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_hotel_facility"
+msgid "Hotel Facilities feature ID"
+msgstr "Hotel Facilities feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_hotel_facility"
+msgid "CS-Cart product feature ID for hotel-level facilities like pool, spa, restaurant (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for hotel-level facilities like pool, spa, restaurant (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_room_facility"
+msgid "Room Facilities feature ID"
+msgstr "Room Facilities feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_room_facility"
+msgid "CS-Cart product feature ID for room-level facilities like WiFi, AC, minibar (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for room-level facilities like WiFi, AC, minibar (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_resort"
+msgid "Resort / City feature ID"
+msgstr "Resort / City feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_resort"
+msgid "CS-Cart product feature ID for resort/city location (Select Box type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for resort/city location (Select Box type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_property_type"
+msgid "Property Type feature ID"
+msgstr "Property Type feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_property_type"
+msgid "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for property type like hotel, villa, apartment (Select Box type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_travel_group"
+msgid "Travel Group feature ID"
+msgstr "Travel Group feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_travel_group"
+msgid "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+msgstr "CS-Cart product feature ID for travel group classification: adults only, pets allowed, family-friendly, disability-accessible (Multiple Checkboxes type). Set to 0 to disable."
+
+msgctxt "SettingsOptions::novoton_holidays::feature_id_beach_access"
+msgid "Beach Access feature ID"
+msgstr "Beach Access feature ID"
+
+msgctxt "SettingsTooltips::novoton_holidays::feature_id_beach_access"
+msgid "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+msgstr "CS-Cart product feature ID for beach access / distance to beach (Select Box type). Novoton facility 'First line' maps to 'Beachfront'. Set to 0 to disable."
+
+msgctxt "Languages::novoton_holidays.fm_variant_name"
+msgid "Variant Name"
+msgstr "Variant Name"
+
+msgctxt "Languages::novoton_holidays.feature_mappings"
+msgid "Feature Mappings"
+msgstr "Feature Mappings"
+
+msgctxt "Languages::novoton_holidays.feature_mapping_updated"
+msgid "Feature mapping updated successfully."
+msgstr "Feature mapping updated successfully."
+
+msgctxt "Languages::novoton_holidays.feature_mapping_not_found"
+msgid "Feature mapping not found."
+msgstr "Feature mapping not found."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_activated"
+msgid "[count] mapping(s) activated."
+msgstr "[count] mapping(s) activated."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deactivated"
+msgid "[count] mapping(s) deactivated."
+msgstr "[count] mapping(s) deactivated."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_deleted"
+msgid "[count] mapping(s) deleted."
+msgstr "[count] mapping(s) deleted."
+
+msgctxt "Languages::novoton_holidays.feature_mappings_reseeded"
+msgid "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+msgstr "Feature mappings reseeded: [seeded] rows updated, [skipped] skipped (not configured)."
+
+msgctxt "Languages::novoton_holidays.fm_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.fm_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::novoton_holidays.fm_auto_registered"
+msgid "Auto-registered"
+msgstr "Auto-registered"
+
+msgctxt "Languages::novoton_holidays.fm_unmapped"
+msgid "Unmapped"
+msgstr "Unmapped"
+
+msgctxt "Languages::novoton_holidays.fm_configured_features"
+msgid "Configured features"
+msgstr "Configured features"
+
+msgctxt "Languages::novoton_holidays.fm_not_set"
+msgid "not set"
+msgstr "not set"
+
+msgctxt "Languages::novoton_holidays.fm_configure"
+msgid "Configure"
+msgstr "Configure"
+
+msgctxt "Languages::novoton_holidays.fm_feature_type"
+msgid "Feature type"
+msgstr "Feature type"
+
+msgctxt "Languages::novoton_holidays.fm_source"
+msgid "Source"
+msgstr "Source"
+
+msgctxt "Languages::novoton_holidays.fm_source_seed"
+msgid "Seed"
+msgstr "Seed"
+
+msgctxt "Languages::novoton_holidays.fm_source_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::novoton_holidays.fm_source_manual"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "Languages::novoton_holidays.fm_reseed"
+msgid "Re-seed Mappings"
+msgstr "Re-seed Mappings"
+
+msgctxt "Languages::novoton_holidays.fm_reseed_confirm"
+msgid "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+msgstr "This will re-populate all seed mappings from addon settings and existing data. Continue?"
+
+msgctxt "Languages::novoton_holidays.fm_mappings"
+msgid "mappings"
+msgstr "mappings"
+
+msgctxt "Languages::novoton_holidays.fm_not_configured"
+msgid "Feature ID not configured"
+msgstr "Feature ID not configured"
+
+msgctxt "Languages::novoton_holidays.fm_provider_code"
+msgid "Provider Code"
+msgstr "Provider Code"
+
+msgctxt "Languages::novoton_holidays.fm_display_en"
+msgid "Display (EN)"
+msgstr "Display (EN)"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro"
+msgid "Display (RO)"
+msgstr "Display (RO)"
+
+msgctxt "Languages::novoton_holidays.fm_variant_id"
+msgid "Variant ID"
+msgstr "Variant ID"
+
+msgctxt "Languages::novoton_holidays.fm_cs_type"
+msgid "CS Type"
+msgstr "CS Type"
+
+msgctxt "Languages::novoton_holidays.fm_last_synced"
+msgid "Last Synced"
+msgstr "Last Synced"
+
+msgctxt "Languages::novoton_holidays.fm_none"
+msgid "none"
+msgstr "none"
+
+msgctxt "Languages::novoton_holidays.fm_with_selected"
+msgid "With selected"
+msgstr "With selected"
+
+msgctxt "Languages::novoton_holidays.fm_activate"
+msgid "Activate"
+msgstr "Activate"
+
+msgctxt "Languages::novoton_holidays.fm_deactivate"
+msgid "Deactivate"
+msgstr "Deactivate"
+
+msgctxt "Languages::novoton_holidays.fm_delete_confirm"
+msgid "Are you sure you want to delete the selected mappings?"
+msgstr "Are you sure you want to delete the selected mappings?"
+
+msgctxt "Languages::novoton_holidays.fm_edit_mapping"
+msgid "Edit Mapping"
+msgstr "Edit Mapping"
+
+msgctxt "Languages::novoton_holidays.fm_mapping_id"
+msgid "Mapping ID"
+msgstr "Mapping ID"
+
+msgctxt "Languages::novoton_holidays.fm_provider"
+msgid "Provider"
+msgstr "Provider"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature"
+msgid "CS-Cart Feature"
+msgstr "CS-Cart Feature"
+
+msgctxt "Languages::novoton_holidays.fm_cs_cart_feature_id"
+msgid "CS-Cart Feature ID"
+msgstr "CS-Cart Feature ID"
+
+msgctxt "Languages::novoton_holidays.fm_not_found_in_cscart"
+msgid "not found in CS-Cart"
+msgstr "not found in CS-Cart"
+
+msgctxt "Languages::novoton_holidays.fm_variant_missing"
+msgid "variant not found"
+msgstr "variant not found"
+
+msgctxt "Languages::novoton_holidays.fm_will_be_created"
+msgid "Will be auto-created on first sync"
+msgstr "Will be auto-created on first sync"
+
+msgctxt "Languages::novoton_holidays.fm_display_ro_hint"
+msgid "Leave empty to use English name as fallback."
+msgstr "Leave empty to use English name as fallback."
+
+msgctxt "Languages::novoton_holidays.fm_feature_id_hint"
+msgid "Override the addon setting for this specific mapping. Usually set via addon settings."
+msgstr "Override the addon setting for this specific mapping. Usually set via addon settings."
+
+msgctxt "Languages::novoton_holidays.fm_not_mapped"
+msgid "Not mapped"
+msgstr "Not mapped"
+
+msgctxt "Languages::novoton_holidays.fm_variant_hint"
+msgid "Select the CS-Cart variant that corresponds to this API value."
+msgstr "Select the CS-Cart variant that corresponds to this API value."
+
+msgctxt "Languages::novoton_holidays.fm_no_variants_exist"
+msgid "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+msgstr "No variants exist for this CS-Cart feature. Create them in Products > Features first."
+
+msgctxt "Languages::novoton_holidays.fm_configure_feature_first"
+msgid "Set a CS-Cart Feature ID first."
+msgstr "Set a CS-Cart Feature ID first."
+
+msgctxt "Languages::novoton_holidays.fm_created_at"
+msgid "Created"
+msgstr "Created"
+
+msgctxt "Languages::menu::feature_mappings"
+msgid "Feature Mappings"
+msgstr "Feature Mappings"
+
+msgctxt "Languages::novoton_holidays.actions.novoton_dashboard"
+msgid "Novoton Dashboard"
+msgstr "Novoton Dashboard"
+
+msgctxt "Languages::novoton_holidays.actions.import_facilities"
+msgid "Import All Facilities from API"
+msgstr "Import All Facilities from API"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_variants"
+msgid "Auto-resolve Variants"
+msgstr "Auto-resolve Variants"
+
+msgctxt "Languages::novoton_holidays.fm_resolve_confirm"
+msgid "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+msgstr "This will auto-resolve all unmapped variants by matching display names to existing CS-Cart variants, and create new variants where no match is found. Manually set variants will not be changed. Continue?"
+
+msgctxt "Languages::novoton_holidays.fm_variants_resolved"
+msgid "[resolved] matched, [created] created, [failed] failed"
+msgstr "[resolved] matched, [created] created, [failed] failed"
+
+msgctxt "Languages::novoton_holidays.fm_variant_source"
+msgid "Variant Set"
+msgstr "Variant Set"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual"
+msgid "manual"
+msgstr "manual"
+
+msgctxt "Languages::novoton_holidays.fm_variant_auto_hint"
+msgid "Variant was auto-resolved by name match or auto-created"
+msgstr "Variant was auto-resolved by name match or auto-created"
+
+msgctxt "Languages::novoton_holidays.fm_variant_manual_hint"
+msgid "Variant was manually set by admin — auto-resolve will not overwrite"
+msgstr "Variant was manually set by admin — auto-resolve will not overwrite"
+
+msgctxt "Languages::novoton_holidays.cleanup_confirm"
+msgid "This will delete all bookings without orders that are older than 24 hours. Continue?"
+msgstr "This will delete all bookings without orders that are older than 24 hours. Continue?"
+
+msgctxt "Languages::novoton_holidays.cleanup_orphan_bookings"
+msgid "Cleanup Orphan Bookings"
+msgstr "Cleanup Orphan Bookings"
+
+msgctxt "Languages::novoton_holidays.show_incomplete_bookings"
+msgid "Show incomplete bookings (no order)"
+msgstr "Show incomplete bookings (no order)"
+
+msgctxt "Languages::novoton_holidays.quick_actions"
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+msgctxt "Languages::novoton_holidays.open_dashboard"
+msgid "Open Novoton Dashboard"
+msgstr "Open Novoton Dashboard"
+
+msgctxt "Languages::novoton_holidays.cron_info_description"
+msgid "All tools and cron information are available in the Novoton Dashboard."
+msgstr "All tools and cron information are available in the Novoton Dashboard."
+
+msgctxt "Languages::novoton_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Cron Commands"
+
+msgctxt "Languages::novoton_holidays.cron_schedule_hint"
+msgid "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+msgstr "Schedule these via your server's crontab. Replace YOUR_KEY with the cron access key configured above."
+
+msgctxt "Languages::novoton_holidays.cron_mode"
+msgid "Mode"
+msgstr "Mode"
+
+msgctxt "Languages::novoton_holidays.cron_command"
+msgid "Command"
+msgstr "Command"
+
+msgctxt "Languages::novoton_holidays.cron_suggested_schedule"
+msgid "Suggested Schedule"
+msgstr "Suggested Schedule"
+
+msgctxt "Languages::novoton_holidays.book_x_pay_y"
+msgid "Book [book] nights, pay for [pay]"
+msgstr "Book [book] nights, pay for [pay]"
+
+msgctxt "Languages::novoton_holidays.off"
+msgid "off"
+msgstr "off"

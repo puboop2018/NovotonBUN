@@ -1,0 +1,743 @@
+<?php
+declare(strict_types=1);
+/**
+ * Novoton Holidays - Booking Repository
+ * 
+ * Centralized database access for booking data.
+ * 
+ * @package NovotonHolidays
+ * @since 2.8.0
+ */
+
+namespace Tygh\Addons\NovotonHolidays\Repository;
+
+use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
+use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+
+class BookingRepository implements BookingRepositoryInterface
+{
+    /**
+     * Request-scoped memo cache for hydrated bookings.
+     * Prevents the same booking's rooms_data/guests_data from being
+     * decoded 2-3 times within a single request cycle.
+     *
+     * @var array<int, array>
+     */
+    private static array $hydratedCache = [];
+
+    /**
+     * Find booking by ID (raw DB row, no JSON decoding).
+     */
+    public function findById(int $booking_id): ?array
+    {
+        $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+        return $booking ?: null;
+    }
+
+    /**
+     * Find booking by ID with JSON fields decoded and memo-cached.
+     *
+     * Decodes rooms_data and guests_data once per request. Subsequent
+     * calls for the same booking_id return the cached result.
+     *
+     * @param int  $booking_id
+     * @param bool $force  Bypass cache (e.g. after an update)
+     * @return array|null Hydrated booking or null
+     */
+    public function findByIdHydrated(int $booking_id, bool $force = false): ?array
+    {
+        if (!$force && isset(self::$hydratedCache[$booking_id])) {
+            return self::$hydratedCache[$booking_id];
+        }
+
+        $booking = $this->findById($booking_id);
+        if ($booking === null) {
+            return null;
+        }
+
+        $booking = self::hydrateJsonFields($booking);
+
+        // Prevent unbounded cache growth in long-running processes (cron)
+        if (count(self::$hydratedCache) > Constants::HYDRATED_CACHE_MAX) {
+            self::$hydratedCache = array_slice(self::$hydratedCache, -Constants::HYDRATED_CACHE_TRIM, null, true);
+        }
+        self::$hydratedCache[$booking_id] = $booking;
+
+        return $booking;
+    }
+
+    /**
+     * Decode JSON fields on a raw booking row in-place.
+     *
+     * Call this instead of scattered json_decode() calls to ensure
+     * each field is decoded exactly once.
+     *
+     * @param array $booking Raw DB row
+     * @return array Booking with rooms_data_parsed, guests_data_parsed
+     */
+    public static function hydrateJsonFields(array $booking): array
+    {
+        // rooms_data
+        $booking['rooms_data_parsed'] = JsonDecoder::decode($booking['rooms_data'] ?? '', 'rooms_data');
+
+        // guests_data — always normalize to canonical keyed format
+        if (!empty($booking['guests_data'])) {
+            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data']);
+        } else {
+            $booking['guests_data_parsed'] = [];
+        }
+
+        return $booking;
+    }
+
+    /**
+     * Invalidate the memo cache for a specific booking (e.g. after update).
+     */
+    public static function invalidateCache(int $booking_id = 0): void
+    {
+        if ($booking_id > 0) {
+            unset(self::$hydratedCache[$booking_id]);
+        } else {
+            self::$hydratedCache = [];
+        }
+    }
+    
+    /**
+     * Find bookings by order ID
+     */
+    public function findByOrderId(int $order_id): array
+    {
+        return db_get_array("SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id", $order_id);
+    }
+    
+    /**
+     * Find bookings by user ID
+     */
+    public function findByUserId(int $user_id, int $limit = 0): array
+    {
+        if ($limit > 0) {
+            return db_get_array(
+                "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i",
+                $user_id,
+                $limit
+            );
+        }
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC",
+            $user_id
+        );
+    }
+    
+    /**
+     * Find bookings by session ID
+     */
+    public function findBySessionId(string $session_id): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings WHERE session_id = ?s AND order_id = 0 ORDER BY created_at DESC",
+            $session_id
+        );
+    }
+    
+    /**
+     * Find bookings by hotel ID
+     */
+    public function findByHotelId(string $hotel_id): array
+    {
+        return db_get_array("SELECT * FROM ?:novoton_bookings WHERE hotel_id = ?s ORDER BY check_in DESC", $hotel_id);
+    }
+    
+    /**
+     * Find pending bookings
+     */
+    public function findPending(int $limit = 0): array
+    {
+        if ($limit > 0) {
+            return db_get_array(
+                "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC LIMIT ?i",
+                $limit
+            );
+        }
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC"
+        );
+    }
+    
+    /**
+     * Find bookings with Novoton reservation ID
+     */
+    public function findWithReservationId(): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings 
+             WHERE novoton_reservation_id IS NOT NULL AND novoton_reservation_id != ''
+             ORDER BY created_at DESC"
+        );
+    }
+    
+    /**
+     * Find existing booking (for duplicate prevention)
+     */
+    public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array
+    {
+        $booking = db_get_row(
+            "SELECT * FROM ?:novoton_bookings 
+             WHERE order_id = 0 
+               AND hotel_id = ?s 
+               AND check_in = ?s 
+               AND check_out = ?s 
+               AND holder_name = ?s
+               AND created_at > DATE_SUB(NOW(), INTERVAL ?i HOUR)
+             LIMIT 1",
+            $hotel_id, $check_in, $check_out, $holder_name, $hours
+        );
+        
+        return $booking ?: null;
+    }
+    
+    /**
+     * Count bookings with filters
+     */
+    public function count(array $filters = []): int
+    {
+        $where = $this->buildWhereClause($filters);
+        return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}");
+    }
+    
+    /**
+     * Create new booking
+     */
+    public function create(array $data): int
+    {
+        $data = self::filterNullValues($data);
+        $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $data);
+        return (int) $booking_id;
+    }
+
+    /**
+     * Update booking
+     */
+    public function update(int $booking_id, array $data): bool
+    {
+        $data = self::filterNullValues($data);
+        return (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
+    }
+    
+    /**
+     * Update booking status
+     */
+    public function updateStatus(int $booking_id, string $status, string $novoton_status = ''): bool
+    {
+        $data = ['status' => $status];
+        if (!empty($novoton_status)) {
+            $data['novoton_status'] = $novoton_status;
+        }
+        return $this->update($booking_id, $data);
+    }
+    
+    /**
+     * Link booking to order
+     */
+    public function linkToOrder(int $booking_id, int $order_id): bool
+    {
+        return $this->update($booking_id, ['order_id' => $order_id]);
+    }
+    
+    /**
+     * Set Novoton reservation ID
+     */
+    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool
+    {
+        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? Constants::STATUS_PENDING;
+
+        return $this->update($booking_id, [
+            'novoton_reservation_id' => $reservation_id,
+            'novoton_status' => $status,
+            'status' => $internal_status
+        ]);
+    }
+    
+    /**
+     * Store API request/response
+     */
+    public function storeApiData(int $booking_id, $request, $response): bool
+    {
+        return $this->update($booking_id, [
+            'api_request' => is_array($request) ? json_encode($request) : $request,
+            'api_response' => is_array($response) ? json_encode($response) : $response
+        ]);
+    }
+    
+    /**
+     * Delete booking
+     */
+    public function delete(int $booking_id): bool
+    {
+        return (bool) db_query("DELETE FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+    }
+    
+    /**
+     * Delete orphan bookings (not linked to orders, older than X hours)
+     */
+    public function deleteOrphans(int $hours = 24): int
+    {
+        // In CS-Cart, db_query returns affected rows count for DELETE
+        $affected = db_query(
+            "DELETE FROM ?:novoton_bookings 
+             WHERE order_id = 0 
+               AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
+            $hours
+        );
+        return (int) $affected;
+    }
+    
+    /**
+     * Get booking statistics
+     */
+    public function getStats(): array
+    {
+        return [
+            'total' => $this->count(),
+            'pending' => $this->count(['status' => Constants::STATUS_PENDING]),
+            'confirmed' => $this->count(['status' => Constants::STATUS_CONFIRMED]),
+            'cancelled' => $this->count(['status' => Constants::STATUS_CANCELLED]),
+            'with_orders' => $this->count(['has_order' => true]),
+            'orphans' => $this->count(['no_order' => true])
+        ];
+    }
+    
+    /**
+     * Get unified booking list - uses novoton_bookings as single source of truth
+     * Joins with orders table for order status information
+     *
+     * @param array $params Filter parameters
+     * @return array Unified bookings list
+     */
+    public function getUnifiedBookings(array $params = []): array
+    {
+        $bookings_raw = $this->queryUnifiedBookings($params);
+
+        $bookings = [];
+        foreach ($bookings_raw as $nb) {
+            $booking = $this->mapRawToUnified($nb);
+            $this->enrichWithRoomDisplay($booking, $nb);
+            $this->enrichWithGuestDisplay($booking, $nb);
+            $bookings[] = $booking;
+        }
+
+        return $bookings;
+    }
+
+    /**
+     * Execute the unified bookings query with filters.
+     */
+    private function queryUnifiedBookings(array $params): array
+    {
+        $conditions = [];
+
+        if (empty($params['show_orphans'])) {
+            $conditions[] = "nb.order_id > 0";
+        }
+        if (!empty($params['order_id'])) {
+            $conditions[] = db_quote("nb.order_id = ?i", $params['order_id']);
+        }
+        if (!empty($params['hotel_id'])) {
+            $conditions[] = db_quote("nb.hotel_id = ?s", $params['hotel_id']);
+        }
+        if (!empty($params['novoton_status'])) {
+            $conditions[] = db_quote("nb.novoton_status = ?s", $params['novoton_status']);
+        }
+        if (!empty($params['status'])) {
+            $conditions[] = db_quote("nb.status = ?s", $params['status']);
+        }
+        if (!empty($params['check_in_from'])) {
+            $conditions[] = db_quote("nb.check_in >= ?s", $params['check_in_from']);
+        }
+        if (!empty($params['check_in_to'])) {
+            $conditions[] = db_quote("nb.check_in <= ?s", $params['check_in_to']);
+        }
+
+        $where_clause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        return db_get_array(
+            "SELECT nb.*,
+                    nh.hotel_name, nh.city AS hotel_city, nh.region AS hotel_region, nh.country AS hotel_country,
+                    o.status AS order_status, o.timestamp AS order_timestamp,
+                    o.firstname AS order_firstname, o.lastname AS order_lastname,
+                    o.email AS order_email, o.phone AS order_phone
+             FROM ?:novoton_bookings nb
+             LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
+             LEFT JOIN ?:orders o ON nb.order_id = o.order_id
+             {$where_clause}
+             ORDER BY nb.order_id DESC, nb.booking_id DESC"
+        );
+    }
+
+    /**
+     * Map a raw joined DB row to the unified booking structure.
+     */
+    private function mapRawToUnified(array $nb): array
+    {
+        return [
+            'booking_id' => $nb['booking_id'],
+            'order_id' => $nb['order_id'],
+            'product_id' => $nb['product_id'] ?? 0,
+            'item_id' => $nb['item_id'] ?? '',
+            'hotel_id' => $nb['hotel_id'],
+            'hotel_name' => $nb['hotel_name'] ?? '',
+            'city' => $nb['hotel_city'] ?? $nb['city'] ?? '',
+            'hotel_city' => $nb['hotel_city'] ?? $nb['city'] ?? '',
+            'region' => $nb['hotel_region'] ?? $nb['region'] ?? '',
+            'hotel_region' => $nb['hotel_region'] ?? $nb['region'] ?? '',
+            'country' => $nb['hotel_country'] ?? $nb['country'] ?? '',
+            'package_id' => $nb['package_id'] ?? '',
+            'package_name' => $nb['package_name'] ?? '',
+            'room_id' => $nb['room_id'] ?? '',
+            'room_type' => $nb['room_type'] ?? '',
+            'board_id' => $nb['board_id'] ?? '',
+            'board_name' => $nb['board_name'] ?? '',
+            'check_in' => $nb['check_in'],
+            'check_out' => $nb['check_out'],
+            'nights' => $nb['nights'] ?? 0,
+            'adults' => $nb['adults'] ?? 0,
+            'children' => $nb['children'] ?? 0,
+            'children_ages' => $nb['children_ages'] ?? '',
+            'num_rooms' => $nb['num_rooms'] ?? 1,
+            'room_number' => $nb['room_number'] ?? 1,
+            'total_rooms' => $nb['total_rooms'] ?? 1,
+            'rooms_data' => $nb['rooms_data'] ?? null,
+            'guests_data' => $nb['guests_data'] ?? null,
+            'base_price' => $nb['base_price'] ?? 0,
+            'api_price' => $nb['api_price'] ?? $nb['base_price'] ?? 0,
+            'total_price' => $nb['total_price'] ?? 0,
+            'currency' => $nb['currency'] ?? 'EUR',
+            'holder_name' => $nb['holder_name'] ?? '',
+            'guest_name' => $nb['guest_name'] ?? $nb['holder_name'] ?? '',
+            'guest_email' => $nb['order_email'] ?? $nb['guest_email'] ?? '',
+            'guest_phone' => $nb['order_phone'] ?? $nb['guest_phone'] ?? '',
+            'status' => $nb['status'] ?? Constants::STATUS_PENDING,
+            'novoton_status' => $nb['novoton_status'] ?? '',
+            'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
+            'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
+            'novoton_reservation_id' => $nb['novoton_reservation_id'] ?? '',
+            'api_request' => $nb['api_request'] ?? null,
+            'api_response' => $nb['api_response'] ?? null,
+            'alternatives_data' => $nb['alternatives_data'] ?? null,
+            'order_status' => $nb['order_status'] ?? '',
+            'created_at' => $nb['created_at'] ?? (!empty($nb['order_timestamp']) ? date('Y-m-d H:i:s', (int)$nb['order_timestamp']) : ''),
+            '_source' => ($nb['order_id'] > 0) ? 'novoton_bookings' : 'orphan',
+        ];
+    }
+
+    /**
+     * Add room_types_list and board_display from rooms_data JSON.
+     */
+    private function enrichWithRoomDisplay(array &$booking, array $nb): void
+    {
+        $rooms_data = null;
+        if (!empty($nb['rooms_data'])) {
+            $rooms_data = is_string($nb['rooms_data']) ? json_decode($nb['rooms_data'], true) : $nb['rooms_data'];
+        }
+
+        if (!empty($rooms_data) && is_array($rooms_data)) {
+            $room_types = [];
+            $board_names = [];
+            foreach ($rooms_data as $room) {
+                $room_display = $room['room_type_display'] ?? $room['room_name'] ?? $room['room_id'] ?? 'Room';
+                $room_display = str_replace(['%2b', '%2B'], '+', $room_display);
+                $room_types[] = $room_display;
+                if (!empty($room['board_name'])) {
+                    $board_names[] = $room['board_name'];
+                }
+            }
+            $booking['room_types_list'] = implode(', ', $room_types);
+            $booking['board_display'] = !empty($board_names) ? $board_names[0] : $booking['board_name'];
+        } else {
+            $booking['room_types_list'] = $booking['room_type'] ?: RoomType::formatRoomLabel($booking['room_id']);
+            $booking['board_display'] = $booking['board_name'] ?: BoardType::toDisplayName($booking['board_id']);
+        }
+    }
+
+    /**
+     * Add guests_by_room from guests_data JSON.
+     */
+    private function enrichWithGuestDisplay(array &$booking, array $nb): void
+    {
+        if (empty($nb['guests_data'])) {
+            return;
+        }
+
+        $guests_data = GuestDataNormalizer::normalize($nb['guests_data']);
+        if (empty($guests_data) || !is_array($guests_data)) {
+            return;
+        }
+
+        $by_room = [];
+        foreach ($guests_data as $guest) {
+            $room_num = $guest['room'] ?? 1;
+            if (!isset($by_room[$room_num])) {
+                $by_room[$room_num] = [];
+            }
+            $by_room[$room_num][] = $guest['name'] ?? 'Guest';
+        }
+        $booking['guests_by_room'] = $by_room;
+    }
+
+    /**
+     * Link unassigned bookings to a user by session ID.
+     *
+     * Used after login to claim guest bookings from the current browser session.
+     *
+     * @return int Number of bookings linked
+     */
+    public function linkToUserBySession(int $user_id, string $session_id): int
+    {
+        return (int) db_query(
+            "UPDATE ?:novoton_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
+            $user_id,
+            $session_id
+        );
+    }
+
+    /**
+     * Link unassigned bookings to a user by email.
+     *
+     * Used after login/registration to claim bookings made with the same email.
+     *
+     * @return int Number of bookings linked
+     */
+    public function linkToUserByEmail(int $user_id, string $email): int
+    {
+        return (int) db_query(
+            "UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0",
+            $user_id,
+            $email
+        );
+    }
+
+    /**
+     * Find bookings by multiple product IDs (batch query for cart).
+     *
+     * @param array  $product_ids Product IDs
+     * @param array  $statuses    Optional status filter (default: pending + confirmed)
+     * @return array Booking rows
+     */
+    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
+    {
+        if (empty($product_ids)) {
+            return [];
+        }
+
+        // Safety: if no ownership context is provided, return nothing rather than
+        // leaking all users' bookings. Callers must provide session_id and/or user_id.
+        if ($user_id <= 0 && empty($session_id)) {
+            return [];
+        }
+
+        $select = "SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
+                    board_id, check_in, check_out, nights, adults, children, children_ages,
+                    num_rooms, rooms_data, total_price, currency, status, guests_data,
+                    package_name, session_id, holder_name, guest_name
+             FROM ?:novoton_bookings
+             WHERE product_id IN (?n) AND status IN (?a)";
+
+        // Scope to current user/session to prevent cross-user booking leakage
+        if ($user_id > 0 && !empty($session_id)) {
+            return db_get_array(
+                $select . " AND (session_id = ?s OR user_id = ?i) ORDER BY booking_id DESC",
+                $product_ids, $statuses, $session_id, $user_id
+            );
+        } elseif ($user_id > 0) {
+            return db_get_array(
+                $select . " AND user_id = ?i ORDER BY booking_id DESC",
+                $product_ids, $statuses, $user_id
+            );
+        }
+
+        return db_get_array(
+            $select . " AND session_id = ?s ORDER BY booking_id DESC",
+            $product_ids, $statuses, $session_id
+        );
+    }
+
+    /**
+     * Delete all bookings for a product (used when product is deleted).
+     *
+     * @return int Number of bookings deleted
+     */
+    public function deleteByProductId(int $product_id): int
+    {
+        return (int) db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
+    }
+
+    /**
+     * Get raw guests_data JSON for a booking.
+     */
+    public function getGuestsData(int $booking_id): ?string
+    {
+        $data = db_get_field("SELECT guests_data FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+        return $data ?: null;
+    }
+
+    /**
+     * Find the most recent unassigned pending booking matching hotel + dates.
+     *
+     * Used as a fallback to recover guests_data when cart data is stale.
+     */
+    public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array
+    {
+        $row = db_get_row(
+            "SELECT guests_data, holder_name FROM ?:novoton_bookings
+             WHERE hotel_id = ?s AND check_in = ?s AND check_out = ?s AND order_id = 0
+             ORDER BY booking_id DESC LIMIT 1",
+            $hotel_id,
+            $check_in,
+            $check_out
+        );
+        return $row ?: null;
+    }
+
+    /**
+     * Find bookings for multiple order IDs in a single batch query.
+     *
+     * @param array $order_ids
+     * @return array Booking summary rows
+     */
+    public function findByOrderIds(array $order_ids): array
+    {
+        if (empty($order_ids)) {
+            return [];
+        }
+        return db_get_array(
+            "SELECT booking_id, order_id, hotel_id, hotel_name, room_type, board_id,
+                    check_in, check_out, nights, adults, children, total_price,
+                    currency, status, novoton_status, novoton_confirm_id
+             FROM ?:novoton_bookings
+             WHERE order_id IN (?n)",
+            $order_ids
+        );
+    }
+
+    /**
+     * Get booking terms (payment + cancellation) for order display.
+     */
+    public function getTerms(int $booking_id): ?array
+    {
+        $terms = db_get_row(
+            "SELECT terms_of_payment_raw, terms_of_cancellation_raw,
+                    terms_of_payment_formatted, terms_of_cancellation_formatted
+             FROM ?:novoton_bookings WHERE booking_id = ?i",
+            $booking_id
+        );
+        return $terms ?: null;
+    }
+
+    /**
+     * Find existing booking ID by order + hotel + dates (for dedup).
+     */
+    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int
+    {
+        $id = db_get_field(
+            "SELECT booking_id FROM ?:novoton_bookings
+             WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
+             LIMIT 1",
+            $order_id,
+            $hotel_id,
+            $check_in,
+            $check_out
+        );
+        return $id ? (int) $id : null;
+    }
+
+    /**
+     * Find bookings by Novoton API status (e.g. ASK, RQ).
+     *
+     * @param string $novoton_status  API-level status (e.g. 'ASK')
+     * @param array  $statuses        Internal statuses to match
+     * @param int    $limit           Max rows
+     */
+    public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = ?s AND status IN (?a)
+             ORDER BY created_at DESC LIMIT ?i",
+            $novoton_status,
+            $statuses,
+            $limit
+        );
+    }
+
+    /**
+     * Find RQ bookings that haven't had alternatives requested yet.
+     */
+    public function findRqWithoutAlternatives(int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_bookings
+             WHERE novoton_status = ?s AND alternatives_requested = 0
+             ORDER BY created_at ASC LIMIT ?i",
+            Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
+            $limit
+        );
+    }
+
+    /**
+     * Count orphan bookings (no order, older than N hours).
+     */
+    public function countOrphans(int $hours = 48): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_bookings
+             WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
+            $hours
+        );
+    }
+
+    /**
+     * Filter null values from data array to prevent PHP 8.1+
+     * real_escape_string() deprecation when passed to ?e / ?u placeholders.
+     */
+    private static function filterNullValues(array $data): array
+    {
+        return array_filter($data, static fn($v) => $v !== null);
+    }
+
+    /**
+     * Build WHERE clause from filters
+     */
+    private function buildWhereClause(array $filters): string
+    {
+        $conditions = [];
+        
+        if (!empty($filters['status'])) {
+            $conditions[] = db_quote("status = ?s", $filters['status']);
+        }
+        if (!empty($filters['hotel_id'])) {
+            $conditions[] = db_quote("hotel_id = ?s", $filters['hotel_id']);
+        }
+        if (!empty($filters['order_id'])) {
+            $conditions[] = db_quote("order_id = ?i", $filters['order_id']);
+        }
+        if (!empty($filters['user_id'])) {
+            $conditions[] = db_quote("user_id = ?i", $filters['user_id']);
+        }
+        if (!empty($filters['has_order'])) {
+            $conditions[] = "order_id > 0";
+        }
+        if (!empty($filters['no_order'])) {
+            $conditions[] = "order_id = 0";
+        }
+        if (!empty($filters['check_in_from'])) {
+            $conditions[] = db_quote("check_in >= ?s", $filters['check_in_from']);
+        }
+        if (!empty($filters['check_in_to'])) {
+            $conditions[] = db_quote("check_in <= ?s", $filters['check_in_to']);
+        }
+        
+        return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+    }
+}
