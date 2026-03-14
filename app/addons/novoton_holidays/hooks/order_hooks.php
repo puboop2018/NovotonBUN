@@ -16,7 +16,6 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\TravelCore\Services\GuestDataService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -306,8 +305,12 @@ function _nvt_format_order_guests(array &$product): void
         return;
     }
 
+    if (!class_exists(\Tygh\Addons\TravelCore\Services\GuestDataService::class)) {
+        return;
+    }
+
     $holder_name = $product['extra']['holder_name'] ?? '';
-    $formatted = GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
+    $formatted = \Tygh\Addons\TravelCore\Services\GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
     if (!empty($formatted)) {
         $product['extra']['guests_data'] = $formatted;
     }

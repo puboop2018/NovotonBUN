@@ -9,7 +9,6 @@ declare(strict_types=1);
  ***************************************************************************/
 
 use Tygh\Registry;
-use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -36,8 +35,8 @@ spl_autoload_register(function ($class) {
 });
 
 // Register with shared travel provider registry (guard against travel_core not being loaded)
-if (class_exists(TravelProviderRegistry::class)) {
-    TravelProviderRegistry::register(
+if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
         'sphinx',
         'Sphinx / Christian Tour',
         new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()

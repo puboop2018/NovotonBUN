@@ -16,7 +16,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_travel_core_uninstall(): bool
 {
-    // Warn if provider addons are still active (they depend on travel_core tables)
+    // Block uninstall if provider addons are still active
     $active_providers = [];
     $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
     foreach ($provider_addons as $addon) {
@@ -27,10 +27,12 @@ function fn_travel_core_uninstall(): bool
     }
 
     if (!empty($active_providers)) {
-        fn_log_event('general', 'runtime', [
-            'message' => 'travel_core uninstall: WARNING — provider addons still active: ' . implode(', ', $active_providers)
-                       . '. They may lose access to shared feature mapping data.',
-        ]);
+        fn_set_notification('E', __('error'),
+            'Cannot disable travel_core: the following addons depend on it: '
+            . implode(', ', $active_providers)
+            . '. Please disable them first.'
+        );
+        return false;
     }
 
     // Drop shared tables (order matters: aliases reference feature_map)

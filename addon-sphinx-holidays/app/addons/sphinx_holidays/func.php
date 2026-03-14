@@ -8,8 +8,6 @@ declare(strict_types=1);
  *                                                                          *
  ***************************************************************************/
 
-use Tygh\Addons\TravelCore\Services\FeatureMapper;
-
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
@@ -60,6 +58,10 @@ function fn_sphinx_holidays_post_install(): bool
  */
 function fn_sphinx_holidays_seed_aliases(): void
 {
+    if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+        return;
+    }
+
     // Board/Meal aliases
     $boardAliases = [
         // Romanian free-text
@@ -114,7 +116,7 @@ function fn_sphinx_holidays_seed_aliases(): void
             $canonicalCode
         );
         if ($mapId > 0) {
-            FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
         }
     }
 
@@ -124,10 +126,10 @@ function fn_sphinx_holidays_seed_aliases(): void
             $canonicalCode
         );
         if ($mapId > 0) {
-            FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'prefix');
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'prefix');
         }
     }
 
     // Clear resolve cache after batch alias inserts
-    FeatureMapper::clearCache();
+    \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }

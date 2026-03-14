@@ -1,12 +1,12 @@
 {
   "addon": "travel_core",
   "version": "1.0.0",
-  "generated": "2026-03-14T08:10:25Z",
+  "generated": "2026-03-14T08:31:36Z",
   "files": {
     "addon.xml": "sha256:9a210a15850d3280f674bc0f997cd687f47b056ea97e3ba4cbc6537fe584704c",
     "controllers/backend/travel_bookings.php": "sha256:9cc83f5e5f55eb61b51800848f87562ece4f73443048a0faa3587b2c0b108110",
     "controllers/frontend/travel_booking.php": "sha256:5e2a0cd70b81880a4b35fdfb965741c3b4da912300bd3935b5ba32ccab5f9640",
-    "func.php": "sha256:214fcc21e432fc315c97f21dccf160c4c1418d6fb05a66d373fcef26b7eaa830",
+    "func.php": "sha256:7ec7dc57f016e58e49dfb5e3527fa26489d2419660c2b5eacffbc068b3dc725d",
     "hooks.php": "sha256:1c3f056436236c628c82af3543e5b557c7e4d41492e7578ce323c978102e46f4",
     "hooks/cart_hooks.php": "sha256:b0e3bb47d5c87f6a9ef8dc18b1b32194130696883591d07c52b1ac2342e4a308",
     "hooks/order_hooks.php": "sha256:072eea664195d0edac210e1da80139083b5e1609424a95acbcd2bf2e6fd57b28",

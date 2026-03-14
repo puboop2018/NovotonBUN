@@ -17,8 +17,6 @@ declare(strict_types=1);
  * @since   3.0.0
  */
 
-use Tygh\Addons\TravelCore\Services\BookingDisplayService;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
@@ -212,7 +210,9 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['children_ages']      = $booking['children_ages'] ?? '';
     $product['extra']['holder_name']        = $booking['holder_name'] ?? '';
     $product['extra']['guest_names']        = $booking['guest_name'] ?? '';
-    $product['extra']['guests_data']        = GuestDataNormalizer::toJson($booking['guests_data'] ?? '');
+    $product['extra']['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
+        ? \Tygh\Addons\TravelCore\Services\GuestDataNormalizer::toJson($booking['guests_data'] ?? '')
+        : ($booking['guests_data'] ?? '');
     $product['extra']['total_price']        = $booking['total_price'];
     $product['extra']['package_name']       = $booking['package_name'] ?? '';
     $product['extra']['num_rooms']          = (int)($booking['num_rooms'] ?? 1);
@@ -248,18 +248,20 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
     $product['extra']['room_name'] = $product['extra']['room_name']
         ?? str_replace(['%2b', '%2B'], '+', $room_id);
 
-    BookingDisplayService::addBookingDisplayData($product, $cart, [
-        'lang_prefix'          => 'novoton_holidays',
-        'json_decoder'         => [JsonDecoder::class, 'decode'],
-        'board_name_formatter' => 'fn_novoton_holidays_format_board_name',
-        'room_name_formatter'  => function (array $room) {
-            $name = $room['room_name'] ?? '';
-            if (empty($name)) {
-                $name = str_replace(['%2b', '%2B'], '+', $room['room_id'] ?? '');
-            }
-            return $name;
-        },
-    ]);
+    if (class_exists(\Tygh\Addons\TravelCore\Services\BookingDisplayService::class)) {
+        \Tygh\Addons\TravelCore\Services\BookingDisplayService::addBookingDisplayData($product, $cart, [
+            'lang_prefix'          => 'novoton_holidays',
+            'json_decoder'         => [JsonDecoder::class, 'decode'],
+            'board_name_formatter' => 'fn_novoton_holidays_format_board_name',
+            'room_name_formatter'  => function (array $room) {
+                $name = $room['room_name'] ?? '';
+                if (empty($name)) {
+                    $name = str_replace(['%2b', '%2B'], '+', $room['room_id'] ?? '');
+                }
+                return $name;
+            },
+        ]);
+    }
 }
 
 /**

@@ -1,11 +1,11 @@
 {
   "addon": "sphinx_holidays",
   "version": "1.0.0",
-  "generated": "2026-03-14T08:10:25Z",
+  "generated": "2026-03-14T08:31:36Z",
   "files": {
     "addon.xml": "sha256:c148737585b4d67812b7dce68f445de519a03caa83a73714e0049916e7f08ec6",
-    "func.php": "sha256:6216a13be9a821ac8297f4070deb1cd691eaaf6588d6345e68c9db5dff65ebbc",
-    "init.php": "sha256:9a7f31010b7063e4cf265a1bb81de1d199cb19cbebbe6afc08620aa41c225dbb",
+    "func.php": "sha256:61d2b76a2743a7091cfd0ef014caf40dc6e478926a7101d21863cd14aa883154",
+    "init.php": "sha256:3f259cbbbcce5ebf2f46851f08761fb502743c00587395805357db8fabec5c03",
     "schemas/permissions/admin.post.php": "sha256:d1980e8565d8c5a1fe84a7a1b845a2df4f48ff9f6b3af7670ead62f2c82e686c",
     "src/Api/SphinxHttpClient.php": "sha256:c1273f38b45208471b96b483c33a2e8b7dcba606b3687899335f0e04b77b1af6",
     "src/Api/SphinxNormalizer.php": "sha256:f7c884af56d5b08320e88b353a6f8eb9255547b66411e2b118b62707d4ed86dd",
