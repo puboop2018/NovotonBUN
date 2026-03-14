@@ -1,7 +1,7 @@
 {
   "addon": "novoton_holidays",
   "version": "3.2.0",
-  "generated": "2026-03-14T08:31:36Z",
+  "generated": "2026-03-14T08:53:45Z",
   "files": {
     "Constants.php": "sha256:4a289ae4160212a453207225846c1ffc2c77af814c94365538295e50feb0c967",
     "addon.xml": "sha256:94d48dd344720f2e4523c96042c483452e1c8163dbf6a3ea4a53bcc5d9c3a88e",
@@ -38,7 +38,7 @@
     "functions/install.php": "sha256:12d93a3949e62908c514579cbd31b5268f9b66c2a025c73baf71ed77f0df1878",
     "hooks.php": "sha256:d44d1e48514b37c1a450edc0bc99d5bae86f49020d36fb5e30c0521d50c0da9c",
     "hooks/auth_hooks.php": "sha256:410ff5d201430e013c0e6dce8433022c7f020c79ab6979e13b269fae21bfb610",
-    "hooks/cart_hooks.php": "sha256:b87970643c954e148ec406fe49bb68d5984343009e12a99571ef337f2905d516",
+    "hooks/cart_hooks.php": "sha256:e7e5ea32f7ed91c0f6160e7bf952b03991f96b6dd209e6440fc99dfffd59cf04",
     "hooks/order_hooks.php": "sha256:fe5b164ebf1d18bdd052ecb3e4e2d0fbf3f2a330af9ece16a746b92320577eb1",
     "hooks/product_hooks.php": "sha256:df55ea6f8aef398cbb813bd47bc2323a15044e94ca6f96d62606d02a47696dd6",
     "init.php": "sha256:df60c6ebbab7e29318e0cf2208d2305b6939fb2e7991707d7f1cfedd45a38311",

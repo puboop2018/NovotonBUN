@@ -1,11 +1,18 @@
 #!/bin/bash
 # Check for duplicate language keys in .po files
-# Usage: ./scripts/check-po-duplicates.sh [--fix]
+# Usage: ./scripts/check-po-duplicates.sh [--fix] [addon_name]
+#        ./scripts/check-po-duplicates.sh --fix novoton_holidays
+#        ./scripts/check-po-duplicates.sh              # checks all addons
 
 FIX_MODE=false
-if [[ "$1" == "--fix" ]]; then
-    FIX_MODE=true
-fi
+ADDON_FILTER=""
+for arg in "$@"; do
+    if [[ "$arg" == "--fix" ]]; then
+        FIX_MODE=true
+    elif [[ -n "$arg" ]]; then
+        ADDON_FILTER="$arg"
+    fi
+done
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -14,7 +21,14 @@ NC='\033[0m' # No Color
 
 ERRORS=0
 
-for file in var/langs/*/addons/novoton_holidays.po; do
+if [[ -n "$ADDON_FILTER" ]]; then
+    PO_PATTERN="var/langs/*/addons/${ADDON_FILTER}.po"
+else
+    PO_PATTERN="var/langs/*/addons/*.po"
+fi
+
+for file in $PO_PATTERN; do
+    [[ -f "$file" ]] || continue
     lang=$(echo "$file" | cut -d'/' -f3)
 
     # Find duplicate keys

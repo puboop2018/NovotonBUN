@@ -210,8 +210,8 @@ class SphinxHttpClient
             if (time() - $this->circuitOpenedAt < $this->cbTimeout) {
                 return true;
             }
-            // Half-open: allow one request through
-            $this->failureCount = $this->cbThreshold - 1;
+            // Half-open: reset and allow one request through
+            $this->failureCount = 0;
         }
         return false;
     }

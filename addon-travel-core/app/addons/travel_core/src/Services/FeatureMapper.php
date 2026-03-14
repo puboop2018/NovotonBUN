@@ -52,8 +52,7 @@ class FeatureMapper
             $apiValue, $apiValue, $apiValue, $apiValue
         );
 
-        $result = !empty($result) ? $result : null;
-        self::$cache[$cacheKey] = $result;
+        self::$cache[$cacheKey] = $result ?: null;
 
         return $result;
     }

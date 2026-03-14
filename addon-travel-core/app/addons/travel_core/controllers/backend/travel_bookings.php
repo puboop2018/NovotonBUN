@@ -46,7 +46,8 @@ if ($mode === 'manage') {
         $condition .= db_quote(" AND tb.order_id = ?i", $params['order_id']);
     }
     if (!empty($params['hotel_name'])) {
-        $condition .= db_quote(" AND tb.hotel_name LIKE ?l", '%' . $params['hotel_name'] . '%');
+        $escapedName = addcslashes($params['hotel_name'], '%_\\');
+        $condition .= db_quote(" AND tb.hotel_name LIKE ?l", '%' . $escapedName . '%');
     }
     if (!empty($params['date_from'])) {
         $condition .= db_quote(" AND tb.check_in >= ?s", $params['date_from']);

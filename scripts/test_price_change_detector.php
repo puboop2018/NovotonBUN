@@ -19,7 +19,12 @@ declare(strict_types=1);
 // ── Security: browser access requires a secret key ──
 $isCli = (PHP_SAPI === 'cli');
 if (!$isCli) {
-    $secretKey = 'novoton_test_2024'; // CHANGE THIS before deploying!
+    $secretKey = getenv('PRICE_DETECTOR_TEST_KEY') ?: '';
+    if (empty($secretKey)) {
+        http_response_code(500);
+        echo 'PRICE_DETECTOR_TEST_KEY environment variable is not set.';
+        exit(1);
+    }
     if (($_GET['key'] ?? '') !== $secretKey) {
         http_response_code(403);
         echo 'Forbidden. Append ?key=YOUR_SECRET_KEY to the URL.';

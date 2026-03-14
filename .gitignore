@@ -1,2 +1,34 @@
 # Auto-generated theme presets (created by addon install, cleaned on uninstall)
 design/themes/*/styles/data/novoton_default/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Logs
+*.log
+logs/
+var/logs/
+
+# CS-Cart System
+var/cache/
+var/compiled/
+var/sticky/
+var/tmp/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Package Managers
+vendor/
+node_modules/
+
+# OS Files
+.DS_Store
+Thumbs.db

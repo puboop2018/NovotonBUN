@@ -11,8 +11,12 @@
 declare(strict_types=1);
 
 // --- Configuration ---
-$apiBaseUrl = 'https://api.sphinx2.christiantour.dev.ploi.imementohub.com';
-$apiKey     = '51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857';
+$apiBaseUrl = getenv('SPHINX_API_BASE_URL') ?: 'https://api.sphinx2.christiantour.dev.ploi.imementohub.com';
+$apiKey     = getenv('SPHINX_API_KEY');
+if (empty($apiKey)) {
+    fwrite(STDERR, "Error: SPHINX_API_KEY environment variable is not set.\n");
+    exit(1);
+}
 
 // --- Functions ---
 

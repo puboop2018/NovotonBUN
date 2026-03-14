@@ -16,7 +16,7 @@ interface GuestValidatorInterface
      * @param array $guests_data Guests data
      * @param int $expected_adults Expected adult count
      * @param int $expected_children Expected children count
-     * @return array Validation result [valid, errors]
+     * @return array{valid: bool, errors: string[], adults: int, children: int}
      */
     public function validate(array $guests_data, int $expected_adults = 0, int $expected_children = 0): array;
 }

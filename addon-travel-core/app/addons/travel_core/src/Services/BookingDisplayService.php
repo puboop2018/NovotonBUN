@@ -153,10 +153,6 @@ class BookingDisplayService
         }
 
         $product['is_hotel_booking'] = true;
-
-        if (empty($product['product_options'])) {
-            $product['product_options'] = [];
-        }
     }
 
     /**

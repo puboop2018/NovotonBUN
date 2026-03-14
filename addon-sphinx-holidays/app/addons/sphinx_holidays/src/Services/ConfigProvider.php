@@ -110,7 +110,23 @@ class ConfigProvider
      */
     public static function isConfigured(): bool
     {
-        return !empty(self::getApiKey()) && !empty(self::getApiBaseUrl());
+        $key = self::getApiKey();
+        $url = self::getApiBaseUrl();
+
+        if (empty($key) || empty($url)) {
+            return false;
+        }
+
+        // Sphinx keys have format: digits|alphanumeric (e.g. 51|q3s6ZrK7...)
+        if (!preg_match('/^\d+\|[a-zA-Z0-9]+$/', $key)) {
+            return false;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !str_starts_with($url, 'https://')) {
+            return false;
+        }
+
+        return true;
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed

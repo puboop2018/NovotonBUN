@@ -107,7 +107,7 @@ function fn_travel_core_migrate_booking_flags(): int
 
     $updated = 0;
     foreach ($rows as $row) {
-        $extra = @unserialize($row['extra']);
+        $extra = unserialize($row['extra'], ['allowed_classes' => false]);
         if (!is_array($extra)) {
             continue;
         }
@@ -120,6 +120,10 @@ function fn_travel_core_migrate_booking_flags(): int
             );
             $updated++;
         }
+    }
+
+    if ($updated > 0) {
+        fn_log_event('general', 'runtime', "travel_core: migrated $updated cart session(s) from novoton_booking to travel_booking flag");
     }
 
     return $updated;
