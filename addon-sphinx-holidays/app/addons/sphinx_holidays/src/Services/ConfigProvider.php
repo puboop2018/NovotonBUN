@@ -105,6 +105,11 @@ class ConfigProvider
         return self::getSetting('debug_logging') === 'Y';
     }
 
+    public static function getCronAccessKey(): string
+    {
+        return (string) self::getSetting('cron_access_key');
+    }
+
     /**
      * Check if the addon is properly configured (has API key).
      */
