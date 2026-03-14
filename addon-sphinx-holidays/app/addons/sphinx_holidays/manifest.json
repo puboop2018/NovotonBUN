@@ -1,7 +1,7 @@
 {
   "addon": "sphinx_holidays",
   "version": "1.0.0",
-  "generated": "2026-03-14T07:50:47Z",
+  "generated": "2026-03-14T07:51:57Z",
   "files": {
     "addon.xml": "sha256:c148737585b4d67812b7dce68f445de519a03caa83a73714e0049916e7f08ec6",
     "func.php": "sha256:e30949d002d598095688f545e98ebed0e00325ce033a3b4c967089527169832d",

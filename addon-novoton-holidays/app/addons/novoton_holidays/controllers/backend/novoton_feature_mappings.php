@@ -165,6 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Clear FeatureMapper cache after batch variant resolution
+        \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+
         fn_set_notification('N', __('notice'), __('novoton_holidays.fm_variants_resolved', [
             '[resolved]' => $resolved,
             '[created]' => $created,

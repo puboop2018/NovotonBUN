@@ -152,6 +152,10 @@ class SphinxApi
     /**
      * Book a hotel offer.
      *
+     * NOTE: When building cart integration, set both 'travel_booking' => true
+     * and 'sphinx_booking' => true in the cart product extras. The travel_booking
+     * flag enables travel_core shared hooks (rooms_data decode, display formatting).
+     *
      * @param array $bookingData {offer_id, guests, contact, ...}
      */
     public function bookHotel(array $bookingData): ?array

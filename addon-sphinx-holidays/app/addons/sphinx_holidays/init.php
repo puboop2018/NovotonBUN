@@ -35,9 +35,11 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Register with shared travel provider registry
-TravelProviderRegistry::register(
-    'sphinx',
-    'Sphinx / Christian Tour',
-    new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
-);
+// Register with shared travel provider registry (guard against travel_core not being loaded)
+if (class_exists(TravelProviderRegistry::class)) {
+    TravelProviderRegistry::register(
+        'sphinx',
+        'Sphinx / Christian Tour',
+        new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
+    );
+}

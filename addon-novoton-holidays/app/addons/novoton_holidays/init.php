@@ -152,12 +152,14 @@ function fn_novoton_holidays_register_smarty_modifiers()
 // Try to register immediately if possible (may fail early in bootstrap — that's OK)
 fn_novoton_holidays_register_smarty_modifiers();
 
-// Register with shared travel provider registry
-\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
-    'novoton',
-    'Novoton Holidays',
-    new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer()
-);
+// Register with shared travel provider registry (guard against travel_core not being loaded)
+if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
+        'novoton',
+        'Novoton Holidays',
+        new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer()
+    );
+}
 
 // Register addon hooks
 fn_register_hooks(

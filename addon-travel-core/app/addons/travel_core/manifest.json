@@ -1,7 +1,7 @@
 {
   "addon": "travel_core",
   "version": "1.0.0",
-  "generated": "2026-03-14T07:50:47Z",
+  "generated": "2026-03-14T07:51:57Z",
   "files": {
     "addon.xml": "sha256:9a210a15850d3280f674bc0f997cd687f47b056ea97e3ba4cbc6537fe584704c",
     "controllers/backend/travel_bookings.php": "sha256:9cc83f5e5f55eb61b51800848f87562ece4f73443048a0faa3587b2c0b108110",

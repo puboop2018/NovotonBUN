@@ -21,6 +21,16 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_novoton_holidays_uninstall(): bool
 {
+    // Remove Novoton aliases from shared feature mapping (table may not exist if travel_core already uninstalled)
+    $tablePrefix = Registry::get('config.table_prefix');
+    $aliasTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'travel_api_alias'
+    );
+    if ($aliasTableExists) {
+        db_query("DELETE FROM ?:travel_api_alias WHERE api_source = 'novoton'");
+    }
+
     // Remove auto-generated Theme Editor preset files
     fn_novoton_holidays_remove_theme_presets();
 
@@ -230,6 +240,18 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         'STUDIO'  => 'STUDIO',
     ];
 
+    // Guard: travel_feature_map table may not exist if travel_core isn't installed yet
+    $tableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        Registry::get('config.table_prefix') . 'travel_feature_map'
+    );
+    if (!$tableExists) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton: Skipping alias seeding — travel_feature_map table not found (travel_core not installed?)',
+        ]);
+        return;
+    }
+
     foreach ($boardAliases as $apiValue => $canonicalCode) {
         $mapId = (int) db_get_field(
             "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'board' AND canonical_code = ?s",
@@ -249,6 +271,9 @@ function fn_novoton_holidays_seed_travel_aliases(): void
             $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
         }
     }
+
+    // Clear resolve cache after batch alias inserts
+    $featureMapper::clearCache();
 }
 
 /**

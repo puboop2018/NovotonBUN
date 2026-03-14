@@ -189,6 +189,9 @@ class AddProductsCommand extends AbstractCronCommand
             $grand_added += $added;
         }
 
+        // Clear FeatureMapper cache after batch import to free memory
+        \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+
         $this->output("=== TOTAL ===");
         $this->output("Added: {$grand_added} of {$grand_total}");
 

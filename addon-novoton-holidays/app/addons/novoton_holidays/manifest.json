@@ -1,7 +1,7 @@
 {
   "addon": "novoton_holidays",
   "version": "3.2.0",
-  "generated": "2026-03-14T07:50:47Z",
+  "generated": "2026-03-14T07:51:57Z",
   "files": {
     "Constants.php": "sha256:4a289ae4160212a453207225846c1ffc2c77af814c94365538295e50feb0c967",
     "addon.xml": "sha256:94d48dd344720f2e4523c96042c483452e1c8163dbf6a3ea4a53bcc5d9c3a88e",

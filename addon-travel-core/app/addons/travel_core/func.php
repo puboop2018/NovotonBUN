@@ -16,7 +16,24 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_travel_core_uninstall(): bool
 {
-    // Drop shared tables
+    // Warn if provider addons are still active (they depend on travel_core tables)
+    $active_providers = [];
+    $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
+    foreach ($provider_addons as $addon) {
+        $status = db_get_field("SELECT status FROM ?:addons WHERE addon = ?s", $addon);
+        if ($status === 'A') {
+            $active_providers[] = $addon;
+        }
+    }
+
+    if (!empty($active_providers)) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'travel_core uninstall: WARNING — provider addons still active: ' . implode(', ', $active_providers)
+                       . '. They may lose access to shared feature mapping data.',
+        ]);
+    }
+
+    // Drop shared tables (order matters: aliases reference feature_map)
     db_query("DROP TABLE IF EXISTS ?:travel_api_alias");
     db_query("DROP TABLE IF EXISTS ?:travel_bookings");
     db_query("DROP TABLE IF EXISTS ?:travel_feature_map");
@@ -65,6 +82,45 @@ function fn_travel_core_seed_lang_vars(): void
             );
         }
     }
+}
+
+/**
+ * Migrate existing cart sessions to include travel_booking flag.
+ *
+ * Existing novoton_booking products in active cart sessions won't have
+ * the travel_booking flag. This one-time migration patches them so
+ * travel_core hooks can process them uniformly.
+ *
+ * Safe to call multiple times (idempotent).
+ *
+ * @return int Number of cart sessions updated
+ */
+function fn_travel_core_migrate_booking_flags(): int
+{
+    // CS-Cart stores cart data serialized in ?:user_session_products
+    // We need to find sessions with novoton_booking but without travel_booking
+    $rows = db_get_array(
+        "SELECT item_id, extra FROM ?:user_session_products WHERE extra LIKE '%novoton_booking%'"
+    );
+
+    $updated = 0;
+    foreach ($rows as $row) {
+        $extra = @unserialize($row['extra']);
+        if (!is_array($extra)) {
+            continue;
+        }
+
+        if (!empty($extra['novoton_booking']) && empty($extra['travel_booking'])) {
+            $extra['travel_booking'] = true;
+            db_query(
+                "UPDATE ?:user_session_products SET extra = ?s WHERE item_id = ?i",
+                serialize($extra), $row['item_id']
+            );
+            $updated++;
+        }
+    }
+
+    return $updated;
 }
 
 /**

@@ -18,8 +18,15 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_sphinx_holidays_uninstall(): bool
 {
-    // Remove Sphinx aliases from shared feature mapping
-    db_query("DELETE FROM ?:travel_api_alias WHERE api_source = 'sphinx'");
+    // Remove Sphinx aliases from shared feature mapping (table may not exist if travel_core already uninstalled)
+    $tablePrefix = \Tygh\Registry::get('config.table_prefix');
+    $aliasTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'travel_api_alias'
+    );
+    if ($aliasTableExists) {
+        db_query("DELETE FROM ?:travel_api_alias WHERE api_source = 'sphinx'");
+    }
 
     // Remove language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'sphinx_holidays.%'");
@@ -87,6 +94,19 @@ function fn_sphinx_holidays_seed_aliases(): void
         'Family Room'  => 'DBL',
     ];
 
+    // Guard: travel_feature_map table may not exist if travel_core isn't installed yet
+    $tablePrefix = \Tygh\Registry::get('config.table_prefix');
+    $tableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'travel_feature_map'
+    );
+    if (!$tableExists) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx: Skipping alias seeding — travel_feature_map table not found (travel_core not installed?)',
+        ]);
+        return;
+    }
+
     // Resolve map_ids from canonical codes and insert aliases
     foreach ($boardAliases as $apiValue => $canonicalCode) {
         $mapId = (int) db_get_field(
@@ -107,4 +127,7 @@ function fn_sphinx_holidays_seed_aliases(): void
             FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'prefix');
         }
     }
+
+    // Clear resolve cache after batch alias inserts
+    FeatureMapper::clearCache();
 }
