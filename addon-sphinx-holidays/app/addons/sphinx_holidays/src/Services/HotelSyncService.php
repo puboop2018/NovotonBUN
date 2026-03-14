@@ -1,0 +1,344 @@
+<?php
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Services;
+
+use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+
+/**
+ * Fetches hotels from the Sphinx API and syncs them into the local DB.
+ *
+ * Strategy: instead of fetching all 100k+ hotels at once, we fetch
+ * per-destination — using the destination IDs from the selected countries
+ * in the synced sphinx_destinations table. This keeps API calls manageable.
+ *
+ * Flow:
+ *   1. Resolve selected country codes → destination IDs
+ *   2. For each destination, paginate through getHotels()
+ *   3. Normalize and filter each hotel
+ *   4. Batch upsert into sphinx_hotels
+ *   5. Mark stale hotels as inactive
+ */
+class HotelSyncService
+{
+    private SphinxApi $api;
+    private HotelRepository $hotelRepo;
+    private DestinationRepository $destRepo;
+    private SphinxNormalizer $normalizer;
+
+    /** @var callable|null */
+    private $outputCallback = null;
+
+    public function __construct(
+        SphinxApi $api,
+        HotelRepository $hotelRepo,
+        DestinationRepository $destRepo
+    ) {
+        $this->api = $api;
+        $this->hotelRepo = $hotelRepo;
+        $this->destRepo = $destRepo;
+        $this->normalizer = Container::getNormalizer();
+    }
+
+    public function setOutputCallback(callable $callback): void
+    {
+        $this->outputCallback = $callback;
+    }
+
+    /**
+     * Run hotel sync filtered by country codes.
+     *
+     * @param string[] $countryCodes Country codes to sync (e.g. ['GR', 'BG'])
+     * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string}
+     */
+    public function sync(array $countryCodes = []): array
+    {
+        $startMs = (int) (microtime(true) * 1000);
+        $logId = $this->logStart('hotels');
+
+        $stats = [
+            'success'     => false,
+            'total'       => 0,
+            'synced'      => 0,
+            'skipped'     => 0,
+            'failed'      => 0,
+            'duration_ms' => 0,
+            'error'       => '',
+        ];
+
+        try {
+            if (empty($countryCodes)) {
+                $countryCodes = ConfigProvider::getSelectedCountryCodes();
+            }
+
+            $this->output('Hotel sync starting for countries: ' . implode(', ', $countryCodes));
+
+            // Get destination IDs for selected countries (all types under those countries)
+            $destinationIds = $this->resolveDestinationIds($countryCodes);
+
+            if (empty($destinationIds)) {
+                $stats['error'] = 'No destinations found for selected countries. Sync destinations first.';
+                $this->output('ERROR: ' . $stats['error']);
+                $this->logComplete($logId, 'failed', $stats);
+                return $stats;
+            }
+
+            $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
+
+            // Fetch and sync hotels per country
+            foreach ($countryCodes as $countryCode) {
+                $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? []);
+                $stats['total'] += $countryStats['total'];
+                $stats['synced'] += $countryStats['synced'];
+                $stats['skipped'] += $countryStats['skipped'];
+                $stats['failed'] += $countryStats['failed'];
+
+                if (!empty($countryStats['error'])) {
+                    $stats['error'] .= ($stats['error'] ? '; ' : '') . $countryStats['error'];
+                }
+            }
+
+            $stats['success'] = ($stats['synced'] > 0 || $stats['total'] === 0);
+            $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped.");
+
+        } catch (\Throwable $e) {
+            $stats['error'] = $e->getMessage();
+            $this->output('EXCEPTION: ' . $e->getMessage());
+
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx hotel sync failed: ' . $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+        }
+
+        $stats['duration_ms'] = (int) (microtime(true) * 1000) - $startMs;
+        $this->logComplete($logId, $stats['success'] ? 'completed' : 'failed', $stats);
+
+        return $stats;
+    }
+
+    /**
+     * Sync hotels for a single country.
+     *
+     * @param string $countryCode
+     * @param int[] $destinationIds Destination IDs belonging to this country
+     */
+    private function syncCountry(string $countryCode, array $destinationIds): array
+    {
+        $stats = ['total' => 0, 'synced' => 0, 'skipped' => 0, 'failed' => 0, 'error' => ''];
+
+        if (empty($destinationIds)) {
+            $this->output("  {$countryCode}: no destinations, skipping");
+            return $stats;
+        }
+
+        $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
+
+        $allHotels = [];
+        $activeIds = [];
+
+        // Fetch all hotels paginated, then filter by country
+        $page = 1;
+        $perPage = 1000;
+
+        while (true) {
+            $response = $this->api->getHotels($page, $perPage);
+
+            if ($response === null) {
+                $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
+                $this->output('    ERROR: ' . $stats['error']);
+                break;
+            }
+
+            $items = $response['data'] ?? $response['items'] ?? $response;
+            if (isset($response[0]) && !isset($response['data'])) {
+                $items = $response;
+            }
+
+            if (!is_array($items) || empty($items)) {
+                break;
+            }
+
+            // Normalize and filter by country
+            foreach ($items as $raw) {
+                $normalized = $this->normalizeHotel($raw);
+                if ($normalized === null) {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                // Filter: only keep hotels matching our country's destinations
+                $hotelDestId = (int) $normalized['destination_id'];
+                $hotelCountry = strtoupper($normalized['country_code']);
+
+                if ($hotelCountry === $countryCode || in_array($hotelDestId, $destinationIds, true)) {
+                    $allHotels[] = $normalized;
+                    $activeIds[] = $normalized['hotel_id'];
+                    $stats['total']++;
+                } else {
+                    $stats['skipped']++;
+                }
+            }
+
+            // Pagination: check for more pages
+            $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
+            $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
+
+            if ($lastPage !== null && $page >= (int) $lastPage) {
+                break;
+            }
+            if ($totalItems !== null && ($stats['total'] + $stats['skipped']) >= (int) $totalItems) {
+                break;
+            }
+            if (count($items) < $perPage) {
+                break;
+            }
+
+            $page++;
+        }
+
+        if (empty($allHotels)) {
+            $this->output("    {$countryCode}: 0 hotels matched");
+            return $stats;
+        }
+
+        // Batch upsert
+        $this->output("    Upserting {$stats['total']} hotels...");
+        $batchSize = 100;
+        $batches = array_chunk($allHotels, $batchSize);
+
+        foreach ($batches as $i => $batch) {
+            $affected = $this->hotelRepo->upsertBatch($batch);
+            $stats['synced'] += $affected;
+        }
+
+        // Mark stale hotels as inactive
+        $inactive = $this->hotelRepo->markInactiveExcept($activeIds, $countryCode);
+        if ($inactive > 0) {
+            $this->output("    Marked {$inactive} stale hotel(s) as inactive");
+        }
+
+        $this->output("    {$countryCode}: {$stats['synced']}/{$stats['total']} hotels synced");
+
+        return $stats;
+    }
+
+    /**
+     * Resolve destination IDs grouped by country code.
+     *
+     * @param string[] $countryCodes
+     * @return array<string, int[]> Country code => [destination_id, ...]
+     */
+    private function resolveDestinationIds(array $countryCodes): array
+    {
+        $result = [];
+
+        foreach ($countryCodes as $code) {
+            $ids = db_get_fields(
+                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
+                $code
+            );
+
+            if (!empty($ids)) {
+                $result[$code] = array_map('intval', $ids);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Normalize a raw API hotel into the DB column format.
+     */
+    private function normalizeHotel(array $raw): ?array
+    {
+        $id = (string) ($raw['id'] ?? $raw['hotel_id'] ?? '');
+        if ($id === '') {
+            return null;
+        }
+
+        $name = (string) ($raw['name'] ?? $raw['title'] ?? $raw['hotel_name'] ?? '');
+        if ($name === '') {
+            return null;
+        }
+
+        $propertyType = $this->normalizer->normalizePropertyType(
+            $raw['property_type'] ?? $raw['type'] ?? 'hotel'
+        ) ?? 'hotel';
+
+        $classification = (int) ($raw['classification'] ?? $raw['stars'] ?? $raw['star_rating'] ?? 0);
+        if ($classification < 0 || $classification > 5) {
+            $classification = 0;
+        }
+
+        return [
+            'hotel_id'          => $id,
+            'name'              => $name,
+            'classification'    => $classification,
+            'property_type'     => $propertyType,
+            'destination_id'    => (int) ($raw['destination_id'] ?? $raw['destination'] ?? 0),
+            'destination_name'  => (string) ($raw['destination_name'] ?? $raw['destination_title'] ?? ''),
+            'region_id'         => (int) ($raw['region_id'] ?? $raw['region'] ?? 0),
+            'region_name'       => (string) ($raw['region_name'] ?? $raw['region_title'] ?? ''),
+            'country_code'      => strtoupper((string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? '')),
+            'country_name'      => (string) ($raw['country_name'] ?? $raw['country'] ?? ''),
+            'latitude'          => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
+            'longitude'         => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'description'       => (string) ($raw['description'] ?? ''),
+            'short_description' => (string) ($raw['short_description'] ?? $raw['summary'] ?? ''),
+            'image_url'         => (string) ($raw['image_url'] ?? $raw['main_image'] ?? $raw['thumbnail'] ?? ''),
+            'amenities_json'    => !empty($raw['amenities']) ? json_encode($raw['amenities']) : null,
+            'tags_json'         => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
+            'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : null,
+            'is_recommended'    => !empty($raw['is_recommended']) ? 'Y' : 'N',
+            'is_adults_only'    => !empty($raw['is_adults_only']) || !empty($raw['adults_only']) ? 'Y' : 'N',
+            'rating'            => (float) ($raw['rating'] ?? $raw['guest_rating'] ?? 0),
+            'rating_count'      => (int) ($raw['rating_count'] ?? $raw['reviews_count'] ?? 0),
+        ];
+    }
+
+    private function logStart(string $syncType): int
+    {
+        db_query(
+            "INSERT INTO ?:sphinx_sync_log (sync_type, status, started_at) VALUES (?s, 'started', NOW())",
+            $syncType
+        );
+        return (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    private function logComplete(int $logId, string $status, array $stats): void
+    {
+        if ($logId <= 0) {
+            return;
+        }
+
+        db_query(
+            "UPDATE ?:sphinx_sync_log SET
+                status = ?s,
+                items_total = ?i,
+                items_synced = ?i,
+                items_failed = ?i,
+                error_message = ?s,
+                duration_ms = ?i,
+                completed_at = NOW()
+             WHERE log_id = ?i",
+            $status,
+            $stats['total'] ?? 0,
+            $stats['synced'] ?? 0,
+            $stats['failed'] ?? 0,
+            $stats['error'] ?? '',
+            $stats['duration_ms'] ?? 0,
+            $logId
+        );
+    }
+
+    private function output(string $message): void
+    {
+        if ($this->outputCallback !== null) {
+            ($this->outputCallback)($message);
+        }
+    }
+}

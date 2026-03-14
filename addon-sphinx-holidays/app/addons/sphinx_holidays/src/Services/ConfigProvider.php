@@ -111,6 +111,37 @@ class ConfigProvider
     }
 
     /**
+     * Get selected country codes for hotel sync filtering.
+     *
+     * Parses comma-separated country codes from the admin setting.
+     * Fallback: if empty, returns all distinct country_codes from synced destinations.
+     *
+     * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
+     */
+    public static function getSelectedCountryCodes(): array
+    {
+        $val = (string) self::getSetting('selected_destinations', 'GR');
+
+        $codes = [];
+        if ($val !== '') {
+            $codes = array_filter(array_map(function ($c) {
+                return strtoupper(trim($c));
+            }, explode(',', $val)));
+        }
+
+        if (!empty($codes)) {
+            return array_values($codes);
+        }
+
+        // Fallback: all country codes from synced destinations
+        $rows = db_get_fields(
+            "SELECT DISTINCT country_code FROM ?:sphinx_destinations WHERE type = 'country' AND country_code != '' ORDER BY country_code"
+        );
+
+        return !empty($rows) ? $rows : ['GR'];
+    }
+
+    /**
      * Check if the addon is properly configured (has API key).
      */
     public static function isConfigured(): bool

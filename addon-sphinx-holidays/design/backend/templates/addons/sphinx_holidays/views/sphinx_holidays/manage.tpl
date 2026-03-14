@@ -10,9 +10,9 @@
         </div>
     {/if}
 
-    {* Sync Controls *}
+    {* ── Sync Controls ── *}
     <div class="travel-update-section">
-        <form action="{""|fn_url}" method="post">
+        <form action="{""|fn_url}" method="post" style="display:inline;">
             <input type="hidden" name="dispatch" value="sphinx_holidays.sync_destinations" />
             <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
                     onclick="return confirm('{__("sphinx_holidays.sync_destinations_confirm")|escape:javascript}');">
@@ -20,18 +20,23 @@
             </button>
         </form>
 
-        {if $last_synced}
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_hotels" />
+            <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.sync_hotels_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.sync_hotels")}
+            </button>
+        </form>
+
+        {if $selected_countries}
             <span class="muted">
-                {__("sphinx_holidays.last_synced")}: {$last_synced}
-            </span>
-        {else}
-            <span class="muted">
-                {__("sphinx_holidays.never_synced")}
+                {__("sphinx_holidays.countries")}: {', '|implode:$selected_countries}
             </span>
         {/if}
     </div>
 
-    {* Stats Cards *}
+    {* ── Destination Stats ── *}
+    <h4>{__("sphinx_holidays.destinations")}</h4>
     <div class="sync-stats">
         <div class="stat-card info">
             <div class="stat-value">{$total_destinations|default:0}</div>
@@ -55,16 +60,48 @@
         </div>
     </div>
 
-    {* Browse link *}
-    {if $total_destinations > 0}
-        <div class="travel-action-buttons">
-            <a href="{"sphinx_holidays.destinations"|fn_url}" class="btn">
-                <i class="icon-list"></i> {__("sphinx_holidays.destinations")}
-            </a>
-        </div>
+    {if $dest_last_synced}
+        <p class="muted">{__("sphinx_holidays.last_synced")}: {$dest_last_synced}</p>
     {/if}
 
-    {* Recent Sync Logs *}
+    {* ── Hotel Stats ── *}
+    <h4>{__("sphinx_holidays.hotels")}</h4>
+    <div class="sync-stats">
+        <div class="stat-card info">
+            <div class="stat-value">{$total_hotels|default:0}</div>
+            <div class="stat-label">{__("sphinx_holidays.total_hotels")}</div>
+        </div>
+        {foreach from=$hotels_by_country key=cc item=cnt name=hbc}
+            {if $smarty.foreach.hbc.index < 5}
+            <div class="stat-card">
+                <div class="stat-value">{$cnt}</div>
+                <div class="stat-label">{$cc}</div>
+            </div>
+            {/if}
+        {/foreach}
+    </div>
+
+    {if $hotel_last_synced}
+        <p class="muted">{__("sphinx_holidays.last_synced")}: {$hotel_last_synced}</p>
+    {else}
+        <p class="muted">{__("sphinx_holidays.never_synced")}</p>
+    {/if}
+
+    {* ── Browse Links ── *}
+    <div class="travel-action-buttons">
+        {if $total_destinations > 0}
+            <a href="{"sphinx_holidays.destinations"|fn_url}" class="btn">
+                <i class="icon-globe"></i> {__("sphinx_holidays.destinations")}
+            </a>
+        {/if}
+        {if $total_hotels > 0}
+            <a href="{"sphinx_holidays.hotels"|fn_url}" class="btn">
+                <i class="icon-building"></i> {__("sphinx_holidays.hotels")}
+            </a>
+        {/if}
+    </div>
+
+    {* ── Recent Sync Logs ── *}
     {if $sync_logs}
         <h4>{__("sphinx_holidays.sync_log")}</h4>
         {foreach from=$sync_logs item=log}
@@ -72,7 +109,7 @@
                 <div class="sync-log-header">
                     <span class="sync-log-date">{$log.started_at}</span>
                     <span class="status-badge status-{if $log.status == 'completed'}ok{elseif $log.status == 'failed'}cancelled{else}pending{/if}">
-                        {$log.status|escape:html}
+                        {$log.sync_type|escape:html}: {$log.status|escape:html}
                     </span>
                 </div>
                 <div class="sync-log-stats">
