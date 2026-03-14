@@ -27,7 +27,7 @@ function _nvt_booking_service() {
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\GuestDataServiceInterface
+ * @return \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface
  */
 function _nvt_guest_service() {
     return Container::getInstance()->guestDataService();

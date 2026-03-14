@@ -33,3 +33,14 @@ spl_autoload_register(function ($class) {
         require $file;
     }
 });
+
+// Load hook functions
+require_once __DIR__ . '/hooks.php';
+
+// Register addon hooks
+fn_register_hooks(
+    'get_cart_product_data_post',      // Format cart items for travel bookings
+    'calculate_cart_items_post',       // Ensure rooms_data preserved as array
+    'dispatch_before_display',         // CSS loading for booking pages
+    'get_order_info'                   // Format booking data in order view
+);

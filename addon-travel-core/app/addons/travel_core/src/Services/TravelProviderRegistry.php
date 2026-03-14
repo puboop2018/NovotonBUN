@@ -3,40 +3,54 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
-use Tygh\Addons\TravelCore\Contracts\TravelProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 
 /**
  * Registry of active travel providers.
  *
  * Each API addon (novoton_holidays, sphinx_holidays) registers its provider
  * here during init.php. The registry resolves which provider handles a given
- * hotel and delegates API calls accordingly.
+ * hotel and provides access to provider normalizers.
  */
 class TravelProviderRegistry
 {
-    /** @var array<string, TravelProviderInterface> */
+    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}> */
     private static array $providers = [];
 
     /**
      * Register a travel provider.
      */
-    public static function register(TravelProviderInterface $provider): void
+    public static function register(string $name, string $label, ProviderNormalizerInterface $normalizer): void
     {
-        self::$providers[$provider->getName()] = $provider;
+        self::$providers[$name] = [
+            'name' => $name,
+            'label' => $label,
+            'normalizer' => $normalizer,
+        ];
     }
 
     /**
-     * Get a provider by name.
+     * Get a provider entry by name.
+     *
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface}|null
      */
-    public static function get(string $name): ?TravelProviderInterface
+    public static function get(string $name): ?array
     {
         return self::$providers[$name] ?? null;
     }
 
     /**
+     * Get the normalizer for a provider.
+     */
+    public static function getNormalizer(string $name): ?ProviderNormalizerInterface
+    {
+        return isset(self::$providers[$name]) ? self::$providers[$name]['normalizer'] : null;
+    }
+
+    /**
      * Get all registered providers.
      *
-     * @return array<string, TravelProviderInterface>
+     * @return array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}>
      */
     public static function all(): array
     {
@@ -44,21 +58,13 @@ class TravelProviderRegistry
     }
 
     /**
-     * Get all active providers.
-     *
-     * @return array<string, TravelProviderInterface>
-     */
-    public static function active(): array
-    {
-        return array_filter(self::$providers, fn($p) => $p->isActive());
-    }
-
-    /**
      * Determine which provider handles a given hotel ID.
      *
      * Hotel IDs are prefixed with the provider name (e.g., "novoton_12345", "sphinx_s1-hotel-99").
+     *
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface}|null
      */
-    public static function getProviderForHotel(string $hotelId): ?TravelProviderInterface
+    public static function getProviderForHotel(string $hotelId): ?array
     {
         foreach (self::$providers as $name => $provider) {
             if (str_starts_with($hotelId, $name . '_')) {

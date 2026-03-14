@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;

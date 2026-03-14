@@ -9,7 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 

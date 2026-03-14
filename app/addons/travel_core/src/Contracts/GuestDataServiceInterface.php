@@ -1,23 +1,18 @@
 <?php
 declare(strict_types=1);
+
+namespace Tygh\Addons\TravelCore\Contracts;
+
 /**
  * Guest Data Service Interface
  *
  * Contract for guest data parsing, formatting, and validation.
- *
- * @package NovotonHolidays
- * @since 3.3.0
+ * Provider-agnostic — handles canonical guest data formats.
  */
-
-namespace Tygh\Addons\NovotonHolidays\Services;
-
 interface GuestDataServiceInterface
 {
     /**
      * Parse guests data from booking form.
-     *
-     * Accepts any supported format (keyed, indexed-array, or JSON string)
-     * and always returns canonical keyed format via GuestDataNormalizer.
      *
      * @param array $bookingData Booking form data
      * @return array Parsed guests data in canonical keyed format
@@ -64,15 +59,6 @@ interface GuestDataServiceInterface
      * @return array Room counts [room_num => [adults, children]]
      */
     public function getRoomCounts(array $guests_data): array;
-
-    /**
-     * Format guests for API request
-     *
-     * @param array $guests_data Guests data (keyed array)
-     * @param array $rooms_data Rooms configuration
-     * @return array API-formatted guests
-     */
-    public function formatForApi(array $guests_data, array $rooms_data = []): array;
 
     /**
      * Format guests for display

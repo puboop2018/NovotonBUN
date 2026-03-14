@@ -168,6 +168,9 @@ function fn_novoton_holidays_post_install(): bool
     // Setup database constraints and language variables
     fn_novoton_holidays_setup_db();
 
+    // Seed Novoton API aliases into shared travel_core feature mapping
+    fn_novoton_holidays_seed_travel_aliases();
+
     // Create novoton_reports directory for report storage
     $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
     if (!is_dir($reports_dir)) {
@@ -175,6 +178,77 @@ function fn_novoton_holidays_post_install(): bool
     }
 
     return true;
+}
+
+/**
+ * Seed Novoton API aliases into the shared travel_api_alias table.
+ * Maps Novoton API values to canonical feature codes.
+ *
+ * Idempotent — uses FeatureMapper::addAlias() which does INSERT ON DUPLICATE KEY UPDATE.
+ */
+function fn_novoton_holidays_seed_travel_aliases(): void
+{
+    if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+        return;
+    }
+
+    $featureMapper = \Tygh\Addons\TravelCore\Services\FeatureMapper::class;
+
+    // Board/Meal aliases (Novoton XML API values)
+    $boardAliases = [
+        'AI'                   => 'AI',
+        'ALL INCL'             => 'AI',
+        'ALL INCLUSIVE'        => 'AI',
+        'ALLINC'               => 'AI',
+        'UAI'                  => 'UAI',
+        'ULTRA ALL INCL'       => 'UAI',
+        'ULTRA ALL INCLUSIVE'   => 'UAI',
+        'FB'                   => 'FB',
+        'FULL BOARD'           => 'FB',
+        'FB+'                  => 'FB',
+        'HB'                   => 'HB',
+        'HALF BOARD'           => 'HB',
+        'HB+'                  => 'HB',
+        'BB'                   => 'BB',
+        'BED AND BREAKFAST'    => 'BB',
+        'B&B'                  => 'BB',
+        'RO'                   => 'RO',
+        'ROOM ONLY'            => 'RO',
+        'SC'                   => 'SC',
+        'SELF CATERING'        => 'SC',
+    ];
+
+    // Room type aliases (Novoton uses short codes)
+    $roomAliases = [
+        'SGL'     => 'SGL',
+        'DBL'     => 'DBL',
+        'TWIN'    => 'TWIN',
+        'TRP'     => 'TRP',
+        'QUAD'    => 'QUAD',
+        'SUITE'   => 'SUITE',
+        'APT'     => 'APT',
+        'STUDIO'  => 'STUDIO',
+    ];
+
+    foreach ($boardAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'board' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
+
+    foreach ($roomAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'room_type' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
 }
 
 /**

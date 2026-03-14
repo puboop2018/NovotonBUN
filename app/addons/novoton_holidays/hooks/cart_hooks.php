@@ -18,7 +18,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 

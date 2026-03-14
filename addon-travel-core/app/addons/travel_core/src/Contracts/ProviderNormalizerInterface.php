@@ -17,12 +17,12 @@ interface ProviderNormalizerInterface
     public function getProviderName(): string;
 
     /**
-     * Normalize a star/classification rating to an integer.
+     * Normalize a star/classification rating to a canonical string code.
      *
      * @param mixed $rawValue API-specific value (e.g., "4*", 5, "4 Stars")
-     * @return int|null Normalized star count (1-5) or null if unknown
+     * @return string|null Canonical star code ("1"-"5") or null if unknown
      */
-    public function normalizeStarRating(mixed $rawValue): ?int;
+    public function normalizeStarRating(mixed $rawValue): ?string;
 
     /**
      * Normalize a board/meal plan to a canonical code.
@@ -44,9 +44,9 @@ interface ProviderNormalizerInterface
      * Normalize a property type.
      *
      * @param mixed $rawValue API-specific value (e.g., "hotel", "4* Hotel", "apartment")
-     * @return string Canonical type (hotel, villa, apartment, resort, hostel, etc.)
+     * @return string|null Canonical type (hotel, villa, apartment, resort, hostel, etc.) or null
      */
-    public function normalizePropertyType(mixed $rawValue): string;
+    public function normalizePropertyType(mixed $rawValue): ?string;
 
     /**
      * Normalize a facility/amenity code.
@@ -55,4 +55,12 @@ interface ProviderNormalizerInterface
      * @return string|null Canonical facility code or null
      */
     public function normalizeFacilityCode(mixed $rawValue): ?string;
+
+    /**
+     * Normalize a resort/city/destination value.
+     *
+     * @param mixed $rawValue Raw resort name or destination from API
+     * @return string|null Normalized resort name or null if invalid
+     */
+    public function normalizeResort(mixed $rawValue): ?string;
 }

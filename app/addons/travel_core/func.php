@@ -34,7 +34,37 @@ function fn_travel_core_uninstall(): bool
 function fn_travel_core_post_install(): bool
 {
     fn_travel_core_seed_feature_map();
+    fn_travel_core_seed_lang_vars();
     return true;
+}
+
+/**
+ * Seed language variables used by shared templates and services.
+ */
+function fn_travel_core_seed_lang_vars(): void
+{
+    $lang_vars = [
+        'travel_core.package' => 'Package',
+        'travel_core.dates'   => 'Dates',
+        'travel_core.nights'  => 'nights',
+        'travel_core.room'    => 'Room',
+        'travel_core.board'   => 'Meal Plan',
+        'travel_core.guests'  => 'Guests',
+        'travel_core.holder'  => 'Booking Holder',
+        'travel_core.complete_booking' => 'Complete Booking',
+        'travel_core.search_results'   => 'Search Results',
+    ];
+
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+    foreach ($languages as $lang) {
+        foreach ($lang_vars as $name => $value) {
+            db_query(
+                "INSERT INTO ?:language_values (lang_code, name, value) VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = value",
+                $lang['lang_code'], $name, $value
+            );
+        }
+    }
 }
 
 /**

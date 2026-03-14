@@ -152,6 +152,13 @@ function fn_novoton_holidays_register_smarty_modifiers()
 // Try to register immediately if possible (may fail early in bootstrap — that's OK)
 fn_novoton_holidays_register_smarty_modifiers();
 
+// Register with shared travel provider registry
+\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
+    'novoton',
+    'Novoton Holidays',
+    new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer()
+);
+
 // Register addon hooks
 fn_register_hooks(
     'get_products_post',                       // Batch prefetch hotel data for product listings

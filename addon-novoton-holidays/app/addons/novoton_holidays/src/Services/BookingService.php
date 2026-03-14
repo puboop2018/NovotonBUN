@@ -15,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
@@ -28,7 +28,7 @@ class BookingService implements BookingServiceInterface
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
 
-    /** @var GuestDataServiceInterface */
+    /** @var \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface */
     private $guestService;
 
     /** @var RoomPriceServiceInterface */
@@ -49,7 +49,7 @@ class BookingService implements BookingServiceInterface
      * Use Container::bookingService() to get a properly wired instance.
      */
     public function __construct(
-        GuestDataServiceInterface $guestService,
+        \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService,
         RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
         \Tygh\Addons\NovotonHolidays\NovotonApi $api,

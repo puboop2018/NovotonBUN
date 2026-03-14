@@ -1,16 +1,15 @@
 <?php
 declare(strict_types=1);
+
+namespace Tygh\Addons\TravelCore\Contracts;
+
 /**
  * Guest Data Normalizer Interface
  *
  * Contract for standardizing guest data into canonical keyed format.
- *
- * @package NovotonHolidays
- * @since 3.3.0
+ * Used by all travel providers (Novoton, Sphinx, etc.) to normalize
+ * guest form submissions into a consistent internal format.
  */
-
-namespace Tygh\Addons\NovotonHolidays\Services;
-
 interface GuestDataNormalizerInterface
 {
     /**

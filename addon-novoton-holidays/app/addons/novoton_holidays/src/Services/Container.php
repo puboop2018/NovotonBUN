@@ -33,7 +33,7 @@ use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
-use Tygh\Addons\NovotonHolidays\Api\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelperInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
@@ -153,9 +153,9 @@ class Container
         ));
     }
 
-    public function guestDataService(): GuestDataServiceInterface
+    public function guestDataService(): \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface
     {
-        return $this->resolve('guestDataService', fn() => new GuestDataService());
+        return $this->resolve('guestDataService', fn() => new \Tygh\Addons\TravelCore\Services\GuestDataService());
     }
 
     public function searchService(): SearchServiceInterface

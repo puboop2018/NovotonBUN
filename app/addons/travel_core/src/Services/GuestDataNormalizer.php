@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
+
+namespace Tygh\Addons\TravelCore\Services;
+
+use Tygh\Addons\TravelCore\Contracts\GuestDataNormalizerInterface;
+
 /**
- * Novoton Guest Data Normalizer
+ * Guest Data Normalizer
  *
  * Standardizes guest data into the canonical keyed format
  * (e.g. "room1_adult_1", "room1_child_1") regardless of input format.
@@ -10,13 +15,7 @@ declare(strict_types=1);
  *   - Keyed: {"room1_adult_1": {...}, "room1_child_1": {...}}  (canonical)
  *   - Array: [{name, type, room, ...}, ...]                    (legacy)
  *   - JSON string of either format
- *
- * @package NovotonHolidays
- * @since 2.8.0
  */
-
-namespace Tygh\Addons\NovotonHolidays\Services;
-
 class GuestDataNormalizer implements GuestDataNormalizerInterface
 {
     /**

@@ -35,5 +35,9 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Register Sphinx as a travel provider (once Container is ready).
-// The provider will be registered lazily to avoid loading classes during bootstrap.
+// Register with shared travel provider registry
+TravelProviderRegistry::register(
+    'sphinx',
+    'Sphinx / Christian Tour',
+    new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
+);

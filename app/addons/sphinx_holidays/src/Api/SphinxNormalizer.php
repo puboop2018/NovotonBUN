@@ -53,14 +53,14 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return 'sphinx';
     }
 
-    public function normalizeStarRating(mixed $rawValue): ?int
+    public function normalizeStarRating(mixed $rawValue): ?string
     {
         if ($rawValue === null || $rawValue === '') {
             return null;
         }
 
         $stars = (int) $rawValue;
-        return ($stars >= 1 && $stars <= 5) ? $stars : null;
+        return ($stars >= 1 && $stars <= 5) ? (string) $stars : null;
     }
 
     public function normalizeBoardCode(mixed $rawValue): ?string
@@ -103,10 +103,10 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return null;
     }
 
-    public function normalizePropertyType(mixed $rawValue): string
+    public function normalizePropertyType(mixed $rawValue): ?string
     {
         if (empty($rawValue) || !is_string($rawValue)) {
-            return 'hotel';
+            return null;
         }
 
         $lower = mb_strtolower(trim($rawValue));
@@ -126,7 +126,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
             'motel'       => 'motel',
         ];
 
-        return $typeMap[$lower] ?? 'hotel';
+        return $typeMap[$lower] ?? null;
     }
 
     public function normalizeFacilityCode(mixed $rawValue): ?string
@@ -137,6 +137,16 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         }
 
         return is_string($rawValue) ? $rawValue : null;
+    }
+
+    public function normalizeResort(mixed $rawValue): ?string
+    {
+        if (empty($rawValue) || !is_string($rawValue)) {
+            return null;
+        }
+
+        $trimmed = trim($rawValue);
+        return $trimmed !== '' ? mb_convert_case($trimmed, MB_CASE_TITLE, 'UTF-8') : null;
     }
 
     /**
