@@ -31,7 +31,7 @@ function fn_travel_core_get_order_info(&$order, $additional_data): void
 
     foreach ($order['products'] as &$product) {
         // Support both new and legacy booking flags
-        if (empty($product['extra']['travel_booking']) && empty($product['extra']['novoton_booking'])) {
+        if (empty($product['extra']['travel_booking'])) {
             continue;
         }
 

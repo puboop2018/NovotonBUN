@@ -12,19 +12,17 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Hook: Format cart product info for travel bookings.
  *
- * Detects travel bookings (via 'travel_booking' or legacy 'novoton_booking' flag)
- * and adds formatted display data.
+ * Detects travel bookings (via 'travel_booking' flag) and adds formatted display data.
  */
 function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): void
 {
-    if (!empty($product['extra']['travel_booking']) || !empty($product['extra']['novoton_booking'])) {
+    if (!empty($product['extra']['travel_booking'])) {
         BookingDisplayService::addBookingDisplayData($product);
     }
 }
@@ -35,7 +33,7 @@ function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): voi
 function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
     foreach ($cart_products as $cart_id => &$product) {
-        if (empty($product['extra']['travel_booking']) && empty($product['extra']['novoton_booking'])) {
+        if (empty($product['extra']['travel_booking'])) {
             continue;
         }
 
@@ -58,7 +56,7 @@ function fn_travel_core_dispatch_before_display(): void
 {
     if (defined('AREA') && AREA === 'C') {
         $dispatch = $_REQUEST['dispatch'] ?? '';
-        $booking_pages = ['travel_', 'novoton_', 'sphinx_', 'products.', 'checkout', 'cart'];
+        $booking_pages = ['travel_', 'sphinx_', 'products.', 'checkout', 'cart'];
         $needs_css = false;
 
         foreach ($booking_pages as $prefix) {

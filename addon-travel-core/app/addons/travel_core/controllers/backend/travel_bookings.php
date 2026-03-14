@@ -87,7 +87,7 @@ if ($mode === 'manage') {
     }
 
     $booking = db_get_row(
-        "SELECT * FROM ?:travel_bookings WHERE travel_booking_id = ?i",
+        "SELECT * FROM ?:travel_bookings WHERE booking_id = ?i",
         $booking_id
     );
 
