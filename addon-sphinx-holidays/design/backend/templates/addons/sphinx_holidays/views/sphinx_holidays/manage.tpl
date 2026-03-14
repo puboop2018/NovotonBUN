@@ -30,8 +30,11 @@
 
         {if $selected_countries}
             <span class="muted">
-                {__("sphinx_holidays.countries")}: {', '|implode:$selected_countries}
+                {__("sphinx_holidays.sync_targets")}: <code>{', '|implode:$selected_countries}</code>
             </span>
+            <a href="{"addons.update&addon=sphinx_holidays"|fn_url}" class="btn btn-micro">
+                <i class="icon-cog"></i> {__("sphinx_holidays.change_settings")}
+            </a>
         {/if}
     </div>
 

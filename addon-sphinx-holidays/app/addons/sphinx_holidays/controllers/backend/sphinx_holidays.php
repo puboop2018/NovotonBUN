@@ -74,6 +74,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ─── AJAX JSON handlers ───
+
+if ($mode === 'get_regions') {
+    header('Content-Type: application/json; charset=utf-8');
+    $country_code = isset($_REQUEST['country_code']) ? (string) $_REQUEST['country_code'] : '';
+    if ($country_code === '') {
+        echo json_encode(['regions' => []]);
+        exit;
+    }
+    $destRepo = new DestinationRepository();
+    $regions = $destRepo->getRegionsByCountry($country_code);
+    echo json_encode(['regions' => $regions]);
+    exit;
+}
+
+if ($mode === 'get_cities') {
+    header('Content-Type: application/json; charset=utf-8');
+    $region_id = (int) ($_REQUEST['region_id'] ?? 0);
+    if ($region_id <= 0) {
+        echo json_encode(['cities' => []]);
+        exit;
+    }
+    $destRepo = new DestinationRepository();
+    $cities = $destRepo->getCitiesByParent($region_id);
+    echo json_encode(['cities' => $cities]);
+    exit;
+}
+
+if ($mode === 'get_destinations_tree') {
+    header('Content-Type: application/json; charset=utf-8');
+    $country_code = isset($_REQUEST['country_code']) ? (string) $_REQUEST['country_code'] : '';
+    if ($country_code === '') {
+        echo json_encode(['tree' => []]);
+        exit;
+    }
+    $destRepo = new DestinationRepository();
+    $regions = $destRepo->getRegionsByCountry($country_code);
+    $tree = [];
+    foreach ($regions as $region) {
+        $children = $destRepo->getCitiesByParent((int) $region['destination_id']);
+        $region['children'] = $children;
+        $tree[] = $region;
+    }
+    echo json_encode(['tree' => $tree]);
+    exit;
+}
+
 // ─── GET handlers ───
 
 if ($mode === 'manage') {
@@ -139,6 +186,7 @@ if ($mode === 'manage') {
     $params = [
         'country_code'   => $_REQUEST['country_code'] ?? '',
         'destination_id' => (int) ($_REQUEST['destination_id'] ?? 0),
+        'region_id'      => (int) ($_REQUEST['region_id'] ?? 0),
         'sync_status'    => $_REQUEST['sync_status'] ?? '',
         'q'              => $_REQUEST['q'] ?? '',
         'page'           => max(1, (int) ($_REQUEST['page'] ?? 1)),
@@ -148,6 +196,7 @@ if ($mode === 'manage') {
     $result = $hotelRepo->getFiltered(
         $params['country_code'],
         $params['destination_id'],
+        $params['region_id'],
         $params['sync_status'],
         $params['q'],
         $params['page'],

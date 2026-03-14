@@ -483,5 +483,23 @@
         <item lang="ro" id="sphinx_holidays.no_hotels"><![CDATA[Nu s-au găsit hoteluri. Rulați mai întâi o sincronizare hoteluri.]]></item>
         <item lang="en" id="sphinx_holidays.hotels_by_country"><![CDATA[Hotels by Country]]></item>
         <item lang="ro" id="sphinx_holidays.hotels_by_country"><![CDATA[Hoteluri pe Țară]]></item>
+
+        <!-- Resort/City Drill-Down Filtering -->
+        <item lang="en" id="sphinx_holidays.all_regions"><![CDATA[All regions]]></item>
+        <item lang="ro" id="sphinx_holidays.all_regions"><![CDATA[Toate regiunile]]></item>
+        <item lang="en" id="sphinx_holidays.all_cities"><![CDATA[All cities/resorts]]></item>
+        <item lang="ro" id="sphinx_holidays.all_cities"><![CDATA[Toate orașele/stațiunile]]></item>
+        <item lang="en" id="sphinx_holidays.region"><![CDATA[Region]]></item>
+        <item lang="ro" id="sphinx_holidays.region"><![CDATA[Regiune]]></item>
+        <item lang="en" id="sphinx_holidays.city_resort"><![CDATA[City/Resort]]></item>
+        <item lang="ro" id="sphinx_holidays.city_resort"><![CDATA[Oraș/Stațiune]]></item>
+        <item lang="en" id="sphinx_holidays.sync_targets"><![CDATA[Sync targets]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_targets"><![CDATA[Ținte sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.change_settings"><![CDATA[Change settings]]></item>
+        <item lang="ro" id="sphinx_holidays.change_settings"><![CDATA[Modifică setări]]></item>
+        <item lang="en" id="sphinx_holidays.select_region"><![CDATA[Select region]]></item>
+        <item lang="ro" id="sphinx_holidays.select_region"><![CDATA[Selectează regiunea]]></item>
+        <item lang="en" id="sphinx_holidays.select_city"><![CDATA[Select city]]></item>
+        <item lang="ro" id="sphinx_holidays.select_city"><![CDATA[Selectează orașul]]></item>
     </language_variables>
 </addon>

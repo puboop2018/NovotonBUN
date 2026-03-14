@@ -108,6 +108,7 @@ class HotelRepository
     public function getFiltered(
         string $countryCode = '',
         int $destinationId = 0,
+        int $regionId = 0,
         string $syncStatus = '',
         string $query = '',
         int $page = 1,
@@ -120,6 +121,9 @@ class HotelRepository
         }
         if ($destinationId > 0) {
             $condition .= db_quote(" AND h.destination_id = ?i", $destinationId);
+        }
+        if ($regionId > 0) {
+            $condition .= db_quote(" AND h.region_id = ?i", $regionId);
         }
         if ($syncStatus !== '') {
             $condition .= db_quote(" AND h.sync_status = ?s", $syncStatus);

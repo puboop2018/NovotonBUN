@@ -182,6 +182,45 @@ class DestinationRepository
     }
 
     /**
+     * Get regions for a country (direct children of the country destination).
+     *
+     * @param string $countryCode ISO country code (e.g. 'GR')
+     * @return array Regions with destination_id, name, type, hotel_count
+     */
+    public function getRegionsByCountry(string $countryCode): array
+    {
+        $countryId = db_get_field(
+            "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
+            $countryCode
+        );
+
+        if (!$countryId) {
+            return [];
+        }
+
+        return db_get_array(
+            "SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
+             WHERE parent_id = ?i ORDER BY name",
+            (int) $countryId
+        );
+    }
+
+    /**
+     * Get cities/resorts under a parent destination (region or country).
+     *
+     * @param int $parentId Parent destination ID
+     * @return array Cities with destination_id, name, type, hotel_count
+     */
+    public function getCitiesByParent(int $parentId): array
+    {
+        return db_get_array(
+            "SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
+             WHERE parent_id = ?i ORDER BY name",
+            $parentId
+        );
+    }
+
+    /**
      * Search destinations by name.
      *
      * @param string $query Search term

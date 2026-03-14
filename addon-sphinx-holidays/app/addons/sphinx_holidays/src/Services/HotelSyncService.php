@@ -49,12 +49,13 @@ class HotelSyncService
     }
 
     /**
-     * Run hotel sync filtered by country codes.
+     * Run hotel sync filtered by country codes and/or specific destination IDs.
      *
      * @param string[] $countryCodes Country codes to sync (e.g. ['GR', 'BG'])
+     * @param int[] $extraDestinationIds Specific destination IDs to include (region/city level targeting)
      * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string}
      */
-    public function sync(array $countryCodes = []): array
+    public function sync(array $countryCodes = [], array $extraDestinationIds = []): array
     {
         $startMs = (int) (microtime(true) * 1000);
         $logId = $this->logStart('hotels');
@@ -70,14 +71,23 @@ class HotelSyncService
         ];
 
         try {
-            if (empty($countryCodes)) {
-                $countryCodes = ConfigProvider::getSelectedCountryCodes();
+            if (empty($countryCodes) && empty($extraDestinationIds)) {
+                $targets = ConfigProvider::getSelectedSyncTargets();
+                $countryCodes = $targets['country_codes'];
+                $extraDestinationIds = $targets['destination_ids'];
             }
 
-            $this->output('Hotel sync starting for countries: ' . implode(', ', $countryCodes));
+            $labels = [];
+            if (!empty($countryCodes)) {
+                $labels[] = 'countries: ' . implode(', ', $countryCodes);
+            }
+            if (!empty($extraDestinationIds)) {
+                $labels[] = 'destination IDs: ' . implode(', ', $extraDestinationIds);
+            }
+            $this->output('Hotel sync starting for ' . implode('; ', $labels));
 
             // Get destination IDs for selected countries (all types under those countries)
-            $destinationIds = $this->resolveDestinationIds($countryCodes);
+            $destinationIds = $this->resolveDestinationIds($countryCodes, $extraDestinationIds);
 
             if (empty($destinationIds)) {
                 $stats['error'] = 'No destinations found for selected countries. Sync destinations first.';
@@ -230,12 +240,14 @@ class HotelSyncService
      * Resolve destination IDs grouped by country code.
      *
      * @param string[] $countryCodes
+     * @param int[] $extraDestIds Additional specific destination IDs (e.g. region/city)
      * @return array<string, int[]> Country code => [destination_id, ...]
      */
-    private function resolveDestinationIds(array $countryCodes): array
+    private function resolveDestinationIds(array $countryCodes, array $extraDestIds = []): array
     {
         $result = [];
 
+        // Resolve by country code
         foreach ($countryCodes as $code) {
             $ids = db_get_fields(
                 "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
@@ -244,6 +256,34 @@ class HotelSyncService
 
             if (!empty($ids)) {
                 $result[$code] = array_map('intval', $ids);
+            }
+        }
+
+        // Add specific destination IDs with their children
+        if (!empty($extraDestIds)) {
+            foreach ($extraDestIds as $destId) {
+                $row = db_get_row(
+                    "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
+                    $destId
+                );
+                if ($row) {
+                    $cc = $row['country_code'] ?: 'CUSTOM';
+                    if (!isset($result[$cc])) {
+                        $result[$cc] = [];
+                    }
+                    $result[$cc][] = (int) $row['destination_id'];
+
+                    // Also include all children of this destination
+                    $children = db_get_fields(
+                        "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id = ?i",
+                        $destId
+                    );
+                    foreach ($children as $childId) {
+                        $result[$cc][] = (int) $childId;
+                    }
+
+                    $result[$cc] = array_unique($result[$cc]);
+                }
             }
         }
 

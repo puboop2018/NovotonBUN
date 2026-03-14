@@ -111,26 +111,48 @@ class ConfigProvider
     }
 
     /**
+     * Get selected sync targets — country codes AND/OR destination IDs.
+     *
+     * Setting format: comma-separated, supports both country codes and numeric IDs.
+     * Examples: "GR" (country), "GR,BG" (countries), "1234,5678" (destination IDs),
+     *           "GR,1234" (mixed: all of Greece + specific destination 1234)
+     *
+     * @return array{country_codes: string[], destination_ids: int[]}
+     */
+    public static function getSelectedSyncTargets(): array
+    {
+        $val = (string) self::getSetting('selected_destinations', 'GR');
+        $countryCodes = [];
+        $destinationIds = [];
+
+        foreach (array_filter(array_map('trim', explode(',', $val))) as $token) {
+            if (ctype_digit($token)) {
+                $destinationIds[] = (int) $token;
+            } else {
+                $countryCodes[] = strtoupper($token);
+            }
+        }
+
+        if (empty($countryCodes) && empty($destinationIds)) {
+            $countryCodes = ['GR'];
+        }
+
+        return ['country_codes' => $countryCodes, 'destination_ids' => $destinationIds];
+    }
+
+    /**
      * Get selected country codes for hotel sync filtering.
      *
-     * Parses comma-separated country codes from the admin setting.
-     * Fallback: if empty, returns all distinct country_codes from synced destinations.
+     * Convenience wrapper over getSelectedSyncTargets().
      *
      * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
      */
     public static function getSelectedCountryCodes(): array
     {
-        $val = (string) self::getSetting('selected_destinations', 'GR');
+        $targets = self::getSelectedSyncTargets();
 
-        $codes = [];
-        if ($val !== '') {
-            $codes = array_filter(array_map(function ($c) {
-                return strtoupper(trim($c));
-            }, explode(',', $val)));
-        }
-
-        if (!empty($codes)) {
-            return array_values($codes);
+        if (!empty($targets['country_codes'])) {
+            return $targets['country_codes'];
         }
 
         // Fallback: all country codes from synced destinations

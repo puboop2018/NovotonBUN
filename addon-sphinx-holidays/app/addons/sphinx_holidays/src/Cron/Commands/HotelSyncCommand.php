@@ -19,6 +19,7 @@ use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
  *   php cron.php access_key=KEY mode=hotels
  *   php cron.php access_key=KEY mode=hotels country=GR
  *   php cron.php access_key=KEY mode=hotels country=GR,BG
+ *   php cron.php access_key=KEY mode=hotels destination_ids=1234,5678
  */
 class HotelSyncCommand
 {
@@ -59,11 +60,19 @@ class HotelSyncCommand
             }, explode(',', $params['country'])));
         }
 
-        if (empty($countryCodes)) {
-            $countryCodes = ConfigProvider::getSelectedCountryCodes();
+        // Allow CLI override: destination_ids=1234,5678
+        $destinationIds = [];
+        if (!empty($params['destination_ids'])) {
+            $destinationIds = array_map('intval', array_filter(explode(',', $params['destination_ids'])));
         }
 
-        $stats = $service->sync($countryCodes);
+        if (empty($countryCodes) && empty($destinationIds)) {
+            $targets = ConfigProvider::getSelectedSyncTargets();
+            $countryCodes = $targets['country_codes'];
+            $destinationIds = $targets['destination_ids'];
+        }
+
+        $stats = $service->sync($countryCodes, $destinationIds);
 
         return [
             'success' => $stats['success'],

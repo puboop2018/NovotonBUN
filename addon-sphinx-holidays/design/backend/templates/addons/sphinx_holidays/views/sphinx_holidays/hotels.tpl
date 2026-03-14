@@ -3,7 +3,7 @@
 {include file="common/pagination.tpl" save_current_url=true}
 
 {* Search/filter form *}
-<form action="{""|fn_url}" method="get" name="sphinx_hotels_search_form">
+<form action="{""|fn_url}" method="get" name="sphinx_hotels_search_form" id="sphinx_hotels_search_form">
     <input type="hidden" name="dispatch" value="sphinx_holidays.hotels" />
 
     <div class="sidebar-row">
@@ -11,11 +11,25 @@
 
         <div class="sidebar-field">
             <label>{__("sphinx_holidays.country_code")}:</label>
-            <select name="country_code">
+            <select name="country_code" id="sphinx_country_filter">
                 <option value="">--</option>
                 {foreach from=$distinct_countries item=cc}
                     <option value="{$cc}" {if $search.country_code == $cc}selected{/if}>{$cc}</option>
                 {/foreach}
+            </select>
+        </div>
+
+        <div class="sidebar-field">
+            <label>{__("sphinx_holidays.region")}:</label>
+            <select name="region_id" id="sphinx_region_filter">
+                <option value="">{__("sphinx_holidays.all_regions")}</option>
+            </select>
+        </div>
+
+        <div class="sidebar-field">
+            <label>{__("sphinx_holidays.city_resort")}:</label>
+            <select name="destination_id" id="sphinx_city_filter">
+                <option value="">{__("sphinx_holidays.all_cities")}</option>
             </select>
         </div>
 
@@ -48,6 +62,7 @@
             <th>{__("sphinx_holidays.destination_name")}</th>
             <th width="50">{__("sphinx_holidays.star_rating")}</th>
             <th width="80">{__("sphinx_holidays.country_code")}</th>
+            <th>{__("sphinx_holidays.region")}</th>
             <th>{__("sphinx_holidays.destination_type")}</th>
             <th width="90">{__("sphinx_holidays.property_type")}</th>
             <th width="70">{__("sphinx_holidays.sync_status")}</th>
@@ -72,6 +87,7 @@
                 {/if}
             </td>
             <td>{$hotel.country_code|escape:html}</td>
+            <td>{$hotel.region_name|escape:html}</td>
             <td>{$hotel.destination_name|escape:html}</td>
             <td>{$hotel.property_type|escape:html}</td>
             <td>
@@ -89,6 +105,83 @@
 {/if}
 
 {include file="common/pagination.tpl"}
+
+<script>
+(function() {
+    var countrySelect = document.getElementById('sphinx_country_filter');
+    var regionSelect = document.getElementById('sphinx_region_filter');
+    var citySelect = document.getElementById('sphinx_city_filter');
+
+    var savedRegionId = '{$search.region_id|escape:javascript}';
+    var savedDestinationId = '{$search.destination_id|escape:javascript}';
+
+    function resetSelect(sel, defaultText) {
+        sel.innerHTML = '<option value="">' + defaultText + '</option>';
+    }
+
+    function populateSelect(sel, items, idKey, nameKey, selectedVal, defaultText) {
+        resetSelect(sel, defaultText);
+        for (var i = 0; i < items.length; i++) {
+            var opt = document.createElement('option');
+            opt.value = items[i][idKey];
+            var label = items[i][nameKey];
+            if (items[i].hotel_count > 0) {
+                label += ' (' + items[i].hotel_count + ')';
+            }
+            opt.textContent = label;
+            if (String(items[i][idKey]) === String(selectedVal)) {
+                opt.selected = true;
+            }
+            sel.appendChild(opt);
+        }
+    }
+
+    function loadRegions(countryCode, preselect) {
+        resetSelect(regionSelect, '{__("sphinx_holidays.all_regions")|escape:javascript}');
+        resetSelect(citySelect, '{__("sphinx_holidays.all_cities")|escape:javascript}');
+        if (!countryCode) return;
+
+        fetch('{"sphinx_holidays.get_regions"|fn_url:"A"}&country_code=' + encodeURIComponent(countryCode))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.regions && data.regions.length > 0) {
+                    populateSelect(regionSelect, data.regions, 'destination_id', 'name',
+                        preselect || '', '{__("sphinx_holidays.all_regions")|escape:javascript}');
+                    if (preselect) {
+                        loadCities(preselect, savedDestinationId);
+                    }
+                }
+            });
+    }
+
+    function loadCities(regionId, preselect) {
+        resetSelect(citySelect, '{__("sphinx_holidays.all_cities")|escape:javascript}');
+        if (!regionId) return;
+
+        fetch('{"sphinx_holidays.get_cities"|fn_url:"A"}&region_id=' + encodeURIComponent(regionId))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.cities && data.cities.length > 0) {
+                    populateSelect(citySelect, data.cities, 'destination_id', 'name',
+                        preselect || '', '{__("sphinx_holidays.all_cities")|escape:javascript}');
+                }
+            });
+    }
+
+    countrySelect.addEventListener('change', function() {
+        loadRegions(this.value, '');
+    });
+
+    regionSelect.addEventListener('change', function() {
+        loadCities(this.value, '');
+    });
+
+    // Restore state on page load if country was selected
+    if (countrySelect.value) {
+        loadRegions(countrySelect.value, savedRegionId);
+    }
+})();
+</script>
 
 {/capture}
 
