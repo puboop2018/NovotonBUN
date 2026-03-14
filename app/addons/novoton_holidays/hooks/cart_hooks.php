@@ -17,8 +17,7 @@ declare(strict_types=1);
  * @since   3.0.0
  */
 
-use Tygh\Registry;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\BookingDisplayService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
@@ -103,27 +102,13 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
  */
 function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
+    // rooms_data decode is handled by travel_core's calculate_cart_items_post hook
+    // (novoton products now set travel_booking = true alongside novoton_booking)
     if (fn_novoton_holidays_is_debug()) {
         fn_log_event('general', 'runtime', [
             'message'             => 'Novoton calculate_cart_items_post',
             'cart_products_count' => count($cart_products),
         ]);
-    }
-
-    foreach ($cart_products as $cart_id => &$product) {
-        if (empty($product['extra']['novoton_booking'])) {
-            continue;
-        }
-
-        if (!empty($product['extra']['rooms_data']) && is_string($product['extra']['rooms_data'])) {
-            $decoded = json_decode($product['extra']['rooms_data'], true);
-            if (is_array($decoded)) {
-                $product['extra']['rooms_data'] = $decoded;
-                if (isset($cart['products'][$cart_id])) {
-                    $cart['products'][$cart_id]['extra']['rooms_data'] = $decoded;
-                }
-            }
-        }
     }
 }
 
@@ -210,6 +195,7 @@ function _nvt_inject_booking_into_cart_product(
     array &$cart,
     string $cart_id
 ): void {
+    $product['extra']['travel_booking']     = true;
     $product['extra']['novoton_booking']    = true;
     $product['extra']['novoton_booking_id'] = $booking['booking_id'];
     $product['extra']['hotel_id']           = $booking['hotel_id'];
@@ -246,190 +232,33 @@ function _nvt_inject_booking_into_cart_product(
 /**
  * Helper: Add booking display data to a product.
  *
- * Populates product_options_value[] with formatted booking details
- * for display in cart, checkout, and order pages.
+ * Delegates to BookingDisplayService::addBookingDisplayData() with
+ * Novoton-specific config (lang prefix, formatters, JSON decoder).
  */
 function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $cart = null): void
 {
-    $date_format = Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
-
-    // Format dates
-    $check_in_ts  = !empty($product['extra']['check_in'])  ? strtotime($product['extra']['check_in'])  : false;
-    $check_out_ts = !empty($product['extra']['check_out']) ? strtotime($product['extra']['check_out']) : false;
-    $check_in_fmt  = ($check_in_ts  !== false) ? fn_date_format($check_in_ts, $date_format)  : '';
-    $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
-
-    $num_rooms  = (int)($product['extra']['num_rooms'] ?? 1);
-    $rooms_data = $product['extra']['rooms_data'] ?? [];
-    if (is_string($rooms_data)) {
-        $rooms_data = JsonDecoder::decode($rooms_data, 'rooms_data');
-    }
-
-    // Build guests string
-    $adults   = (int)($product['extra']['adults']   ?? 2);
-    $children = (int)($product['extra']['children'] ?? 0);
-
-    $guests_str = '';
-    if ($num_rooms > 1) {
-        $guests_str .= $num_rooms . ' rooms, ';
-    }
-    $guests_str .= $adults . ' adult' . ($adults > 1 ? 's' : '');
-
-    if ($children > 0) {
-        $guests_str .= ', ' . $children . ' child' . ($children > 1 ? 'ren' : '');
-
-        if (!empty($product['extra']['children_ages'])) {
-            $ages_str = $product['extra']['children_ages'];
-            if (is_array($ages_str)) {
-                $ages_str = implode(', ', $ages_str);
-            }
-            $ages_arr = array_map('trim', explode(',', $ages_str));
-            $ages_arr = array_filter($ages_arr, function ($a) { return $a !== '' && $a !== 'age_needed'; });
-            if (!empty($ages_arr)) {
-                $guests_str .= ' (' . implode(' and ', array_map(function ($a) { return $a . ' y/o'; }, $ages_arr)) . ')';
-            }
-        }
-    }
-
-    // Board + room name
-    $board_id   = $product['extra']['board_id'] ?? '';
-    $board_name = fn_novoton_holidays_format_board_name($board_id);
-    $product['extra']['board_name'] = $board_name;
+    // Pre-set board/room display names using Novoton formatters
+    $board_id = $product['extra']['board_id'] ?? '';
+    $product['extra']['board_name'] = fn_novoton_holidays_format_board_name($board_id);
 
     $room_id   = $product['extra']['room_id']   ?? '';
     $room_type = $product['extra']['room_type'] ?? '';
     $product['extra']['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
+    $product['extra']['room_name'] = $product['extra']['room_name']
+        ?? str_replace(['%2b', '%2B'], '+', $room_id);
 
-    // Build product_options_value for display
-    $product['product_options_value'] = [];
-
-    // Package
-    if (!empty($product['extra']['package_name'])) {
-        $product['product_options_value'][] = [
-            'option_name' => __('novoton_holidays.package'),
-            'value'       => $product['extra']['package_name'],
-        ];
-    }
-
-    // Dates
-    $product['product_options_value'][] = [
-        'option_name' => __('novoton_holidays.dates'),
-        'value'       => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . ($product['extra']['nights'] ?? 7) . ' ' . __('novoton_holidays.nights') . ')',
-    ];
-
-    // Room info
-    $room_name = _nvt_build_room_display($product, $num_rooms, $rooms_data);
-    $product['product_options_value'][] = [
-        'option_name' => __('novoton_holidays.room'),
-        'value'       => $room_name,
-    ];
-
-    // Board/Meal plan
-    $board_display = _nvt_build_board_display($board_name, $num_rooms, $rooms_data);
-    $product['product_options_value'][] = [
-        'option_name' => __('novoton_holidays.board'),
-        'value'       => $board_display,
-    ];
-
-    // Guests
-    $product['product_options_value'][] = [
-        'option_name' => __('novoton_holidays.guests'),
-        'value'       => $guests_str,
-    ];
-
-    // Per-room breakdown
-    if ($num_rooms > 1 && !empty($rooms_data)) {
-        foreach ($rooms_data as $idx => $room) {
-            $room_num    = $idx + 1;
-            $room_guests = (int)($room['adults'] ?? 2) . ' adults';
-            if (!empty($room['children']) && $room['children'] > 0) {
-                $room_guests .= ', ' . $room['children'] . ' children';
-                if (!empty($room['childrenAges'])) {
-                    $ages = array_filter($room['childrenAges'], function ($a) { return $a !== null && $a !== ''; });
-                    if (!empty($ages)) {
-                        $room_guests .= ' (' . implode(', ', $ages) . ' y/o)';
-                    }
-                }
+    BookingDisplayService::addBookingDisplayData($product, $cart, [
+        'lang_prefix'          => 'novoton_holidays',
+        'json_decoder'         => [JsonDecoder::class, 'decode'],
+        'board_name_formatter' => 'fn_novoton_holidays_format_board_name',
+        'room_name_formatter'  => function (array $room) {
+            $name = $room['room_name'] ?? '';
+            if (empty($name)) {
+                $name = str_replace(['%2b', '%2B'], '+', $room['room_id'] ?? '');
             }
-            $product['product_options_value'][] = [
-                'option_name' => 'Room ' . $room_num,
-                'value'       => $room_guests,
-            ];
-        }
-    }
-
-    // Holder name
-    if (!empty($product['extra']['holder_name']) || !empty($product['extra']['guest_names'])) {
-        $product['product_options_value'][] = [
-            'option_name' => __('novoton_holidays.holder'),
-            'value'       => $product['extra']['holder_name'] ?? $product['extra']['guest_names'],
-        ];
-    }
-
-    $product['is_hotel_booking'] = true;
-
-    if (empty($product['product_options'])) {
-        $product['product_options'] = [];
-    }
-}
-
-/**
- * Build room display string, handling multi-room with different types.
- */
-function _nvt_build_room_display(array $product, int $num_rooms, array $rooms_data): string
-{
-    $room_name = $product['extra']['room_name']
-        ?? str_replace(['%2b', '%2B'], '+', $product['extra']['room_id'] ?? '');
-
-    if ($num_rooms <= 1 || empty($rooms_data)) {
-        return $room_name;
-    }
-
-    $room_types = [];
-    $has_different = false;
-    $first = null;
-
-    foreach ($rooms_data as $room) {
-        $id = $room['room_id'] ?? $room['room_name'] ?? '';
-        if ($first === null) {
-            $first = $id;
-        } elseif ($id !== $first) {
-            $has_different = true;
-        }
-        $room_types[] = $room['room_name'] ?? str_replace(['%2b', '%2B'], '+', $room['room_id'] ?? $room_name);
-    }
-
-    return $has_different
-        ? implode(', ', $room_types)
-        : $num_rooms . 'x ' . $room_name;
-}
-
-/**
- * Build board display string, handling multi-room with different boards.
- */
-function _nvt_build_board_display(string $board_name, int $num_rooms, array $rooms_data): string
-{
-    if ($num_rooms <= 1 || empty($rooms_data)) {
-        return $board_name;
-    }
-
-    $boards = [];
-    $has_different = false;
-    $first = null;
-
-    foreach ($rooms_data as $room) {
-        $board = $room['board_name'] ?? fn_novoton_holidays_format_board_name($room['board_id'] ?? '');
-        if (!empty($board)) {
-            if ($first === null) {
-                $first = $board;
-            } elseif ($board !== $first) {
-                $has_different = true;
-            }
-            $boards[] = $board;
-        }
-    }
-
-    return $has_different ? implode(', ', $boards) : $board_name;
+            return $name;
+        },
+    ]);
 }
 
 /**

@@ -505,6 +505,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
         'product_id' => $product_id,
         'amount' => 1,
         'extra' => [
+            'travel_booking' => true,
             'novoton_booking' => true,
             'novoton_booking_id' => $booking_id,
             'hotel_id' => $bookingData['hotel_id'],

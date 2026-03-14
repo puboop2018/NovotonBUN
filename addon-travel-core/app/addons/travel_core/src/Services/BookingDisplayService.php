@@ -17,12 +17,23 @@ class BookingDisplayService
      * Populates product_options_value[] with formatted booking details
      * for display in cart, checkout, and order pages.
      *
+     * Provider addons can pass a $config array to customize behavior:
+     *   - 'lang_prefix'         (string)   Lang key prefix (default: 'travel_core')
+     *   - 'json_decoder'        (callable) JSON decode function: fn(string, string): array (default: json_decode)
+     *   - 'board_name_formatter' (callable) Board name formatter: fn(string): string (default: null)
+     *   - 'room_name_formatter'  (callable) Room name formatter: fn(array room_data): string (default: null)
+     *
      * @param array $product Cart product (by reference)
      * @param array|null $cart Cart data
+     * @param array $config Provider-specific configuration overrides
      */
-    public static function addBookingDisplayData(array &$product, ?array $cart = null): void
+    public static function addBookingDisplayData(array &$product, ?array $cart = null, array $config = []): void
     {
         $extra = $product['extra'] ?? [];
+        $langPrefix = $config['lang_prefix'] ?? 'travel_core';
+        $jsonDecoder = $config['json_decoder'] ?? null;
+        $boardFormatter = $config['board_name_formatter'] ?? null;
+        $roomFormatter = $config['room_name_formatter'] ?? null;
 
         // Format dates
         $date_format = \Tygh\Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
@@ -34,8 +45,12 @@ class BookingDisplayService
         $num_rooms  = (int)($extra['num_rooms'] ?? 1);
         $rooms_data = $extra['rooms_data'] ?? [];
         if (is_string($rooms_data)) {
-            $decoded = json_decode($rooms_data, true);
-            $rooms_data = is_array($decoded) ? $decoded : [];
+            if ($jsonDecoder !== null) {
+                $rooms_data = call_user_func($jsonDecoder, $rooms_data, 'rooms_data');
+            } else {
+                $decoded = json_decode($rooms_data, true);
+                $rooms_data = is_array($decoded) ? $decoded : [];
+            }
         }
 
         // Build guests string
@@ -70,7 +85,7 @@ class BookingDisplayService
         // Package
         if (!empty($extra['package_name'])) {
             $product['product_options_value'][] = [
-                'option_name' => __('travel_core.package'),
+                'option_name' => __($langPrefix . '.package'),
                 'value'       => $extra['package_name'],
             ];
         }
@@ -78,33 +93,33 @@ class BookingDisplayService
         // Dates
         $nights = $extra['nights'] ?? 7;
         $product['product_options_value'][] = [
-            'option_name' => __('travel_core.dates'),
-            'value'       => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __('travel_core.nights') . ')',
+            'option_name' => __($langPrefix . '.dates'),
+            'value'       => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __($langPrefix . '.nights') . ')',
         ];
 
         // Room info
         $room_name = $extra['room_name'] ?? $extra['room_id'] ?? '';
         if ($num_rooms > 1 && !empty($rooms_data)) {
-            $room_name = self::buildMultiRoomDisplay($room_name, $rooms_data);
+            $room_name = self::buildMultiRoomDisplay($room_name, $rooms_data, $roomFormatter);
         }
         $product['product_options_value'][] = [
-            'option_name' => __('travel_core.room'),
+            'option_name' => __($langPrefix . '.room'),
             'value'       => $room_name,
         ];
 
         // Board/Meal plan
         $board_name = $extra['board_name'] ?? $extra['board_id'] ?? '';
         if ($num_rooms > 1 && !empty($rooms_data)) {
-            $board_name = self::buildMultiBoardDisplay($board_name, $rooms_data);
+            $board_name = self::buildMultiBoardDisplay($board_name, $rooms_data, $boardFormatter);
         }
         $product['product_options_value'][] = [
-            'option_name' => __('travel_core.board'),
+            'option_name' => __($langPrefix . '.board'),
             'value'       => $board_name,
         ];
 
         // Guests
         $product['product_options_value'][] = [
-            'option_name' => __('travel_core.guests'),
+            'option_name' => __($langPrefix . '.guests'),
             'value'       => $guests_str,
         ];
 
@@ -132,7 +147,7 @@ class BookingDisplayService
         // Holder name
         if (!empty($extra['holder_name']) || !empty($extra['guest_names'])) {
             $product['product_options_value'][] = [
-                'option_name' => __('travel_core.holder'),
+                'option_name' => __($langPrefix . '.holder'),
                 'value'       => $extra['holder_name'] ?? $extra['guest_names'],
             ];
         }
@@ -146,8 +161,12 @@ class BookingDisplayService
 
     /**
      * Build room display string for multi-room bookings.
+     *
+     * @param string $defaultName Default room name
+     * @param array $rooms_data Per-room data
+     * @param callable|null $formatter Optional formatter: fn(array $room): string
      */
-    private static function buildMultiRoomDisplay(string $defaultName, array $rooms_data): string
+    private static function buildMultiRoomDisplay(string $defaultName, array $rooms_data, ?callable $formatter = null): string
     {
         $room_types = [];
         $has_different = false;
@@ -160,7 +179,11 @@ class BookingDisplayService
             } elseif ($id !== $first) {
                 $has_different = true;
             }
-            $room_types[] = $room['room_name'] ?? $room['room_id'] ?? $defaultName;
+            if ($formatter !== null) {
+                $room_types[] = $formatter($room);
+            } else {
+                $room_types[] = $room['room_name'] ?? $room['room_id'] ?? $defaultName;
+            }
         }
 
         return $has_different
@@ -170,15 +193,20 @@ class BookingDisplayService
 
     /**
      * Build board display string for multi-room bookings.
+     *
+     * @param string $defaultBoard Default board name
+     * @param array $rooms_data Per-room data
+     * @param callable|null $formatter Optional formatter: fn(string $boardId): string
      */
-    private static function buildMultiBoardDisplay(string $defaultBoard, array $rooms_data): string
+    private static function buildMultiBoardDisplay(string $defaultBoard, array $rooms_data, ?callable $formatter = null): string
     {
         $boards = [];
         $has_different = false;
         $first = null;
 
         foreach ($rooms_data as $room) {
-            $board = $room['board_name'] ?? $room['board_id'] ?? '';
+            $boardId = $room['board_id'] ?? '';
+            $board = $room['board_name'] ?? ($formatter !== null && !empty($boardId) ? $formatter($boardId) : $boardId);
             if (!empty($board)) {
                 if ($first === null) {
                     $first = $board;

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\Services\GuestDataService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -51,48 +51,9 @@ function fn_travel_core_get_order_info(&$order, $additional_data): void
         // Format guests_data for display
         $guests_data = $product['extra']['guests_data'] ?? null;
         if (!empty($guests_data)) {
-            $guests_data = GuestDataNormalizer::normalize($guests_data);
-            if (!empty($guests_data)) {
-                $formatted = [];
-                $holder_name = $product['extra']['holder_name'] ?? '';
-                $is_first = true;
-
-                foreach ($guests_data as $key => $guest) {
-                    if (!is_array($guest)) {
-                        continue;
-                    }
-
-                    $display_name = $guest['display_name'] ?? $guest['name'] ?? '';
-                    $api_name     = $guest['api_name'] ?? '';
-
-                    if (empty($display_name) && !empty($api_name)) {
-                        $parts = explode(' ', trim($api_name), 2);
-                        $display_name = count($parts) === 2
-                            ? $parts[1] . ', ' . $parts[0]
-                            : $api_name;
-                    }
-
-                    $guest_type = $guest['type'] ?? 'adult';
-                    $is_holder = false;
-
-                    if ($is_first && $guest_type === 'adult') {
-                        $is_holder = true;
-                        $is_first = false;
-                    } elseif (!empty($holder_name) && stripos($display_name, $holder_name) !== false) {
-                        $is_holder = true;
-                    }
-
-                    $formatted[$key] = [
-                        'display_name' => $display_name,
-                        'name'         => $guest['name'] ?? $display_name,
-                        'type'         => $guest_type,
-                        'age'          => (int)($guest['age'] ?? 0),
-                        'is_holder'    => $is_holder,
-                        'birthday'     => $guest['birthday'] ?? '',
-                        'room'         => $guest['room'] ?? 1,
-                    ];
-                }
-
+            $holder_name = $product['extra']['holder_name'] ?? '';
+            $formatted = GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
+            if (!empty($formatted)) {
                 $product['extra']['guests_data'] = $formatted;
             }
         }

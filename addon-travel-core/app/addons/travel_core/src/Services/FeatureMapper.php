@@ -11,8 +11,14 @@ namespace Tygh\Addons\TravelCore\Services;
  */
 class FeatureMapper
 {
+    /** @var array Per-request in-memory cache for resolve() results */
+    private static array $cache = [];
+
     /**
      * Resolve an API value to a canonical mapping.
+     *
+     * Uses a single combined query with priority ordering (exact > prefix > contains)
+     * and caches results in memory for the duration of the request.
      *
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', etc.)
@@ -21,49 +27,44 @@ class FeatureMapper
      */
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array
     {
-        // Try exact match first
-        $result = db_get_row(
-            "SELECT m.map_id, m.canonical_code, m.display_name_en, m.display_name_ro, m.cscart_variant_id
-             FROM ?:travel_api_alias a
-             JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND a.api_value = ?s AND m.feature_type = ?s AND m.status = 'A'",
-            $apiSource, $apiValue, $featureType
-        );
+        $cacheKey = $apiSource . '|' . $featureType . '|' . $apiValue;
 
-        if (!empty($result)) {
-            return $result;
+        if (array_key_exists($cacheKey, self::$cache)) {
+            return self::$cache[$cacheKey];
         }
 
-        // Try prefix match
         $result = db_get_row(
             "SELECT m.map_id, m.canonical_code, m.display_name_en, m.display_name_ro, m.cscart_variant_id
              FROM ?:travel_api_alias a
              JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND a.match_type = 'prefix'
-               AND ?s LIKE CONCAT(a.api_value, '%')
-               AND m.feature_type = ?s AND m.status = 'A'
-             ORDER BY LENGTH(a.api_value) DESC
+             WHERE a.api_source = ?s AND m.feature_type = ?s AND m.status = 'A'
+               AND (
+                   a.api_value = ?s
+                   OR (a.match_type = 'prefix' AND ?s LIKE CONCAT(a.api_value, '%'))
+                   OR (a.match_type = 'contains' AND ?s LIKE CONCAT('%', a.api_value, '%'))
+               )
+             ORDER BY FIELD(
+                 CASE WHEN a.api_value = ?s THEN 'exact' ELSE a.match_type END,
+                 'exact', 'prefix', 'contains'
+             ), LENGTH(a.api_value) DESC
              LIMIT 1",
-            $apiSource, $apiValue, $featureType
+            $apiSource, $featureType,
+            $apiValue, $apiValue, $apiValue, $apiValue
         );
 
-        if (!empty($result)) {
-            return $result;
-        }
+        $result = !empty($result) ? $result : null;
+        self::$cache[$cacheKey] = $result;
 
-        // Try contains match
-        $result = db_get_row(
-            "SELECT m.map_id, m.canonical_code, m.display_name_en, m.display_name_ro, m.cscart_variant_id
-             FROM ?:travel_api_alias a
-             JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND a.match_type = 'contains'
-               AND ?s LIKE CONCAT('%', a.api_value, '%')
-               AND m.feature_type = ?s AND m.status = 'A'
-             LIMIT 1",
-            $apiSource, $apiValue, $featureType
-        );
+        return $result;
+    }
 
-        return !empty($result) ? $result : null;
+    /**
+     * Clear the in-memory resolve cache.
+     * Call after import/sync operations to free memory.
+     */
+    public static function clearCache(): void
+    {
+        self::$cache = [];
     }
 
     /**

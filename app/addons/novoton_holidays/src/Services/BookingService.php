@@ -263,6 +263,7 @@ class BookingService implements BookingServiceInterface
     private function buildCartExtra(array $booking, array $bookingData): array
     {
         return [
+            'travel_booking' => true,
             'novoton_booking' => true,
             'novoton_booking_id' => $booking['booking_id'],
             'hotel_id' => $booking['hotel_id'],
@@ -603,6 +604,7 @@ class BookingService implements BookingServiceInterface
             'original_price' => $totalPrice,
             'stored_price' => 'Y',
             'extra' => [
+                'travel_booking' => true,
                 'novoton_booking' => true,
                 'novoton_booking_id' => $bookingId,
                 'hotel_id' => $bookingData['hotel_id'],

@@ -47,14 +47,8 @@ if ($provider === null) {
 if ($provider !== null) {
     $providerName = $provider['name'];
 
-    // Map provider name to addon controller dispatch
-    // Each provider addon has its own booking controller (e.g., novoton_booking, sphinx_booking)
-    $controllerMap = [
-        'novoton' => 'novoton_booking',
-        'sphinx'  => 'sphinx_booking',
-    ];
-
-    $targetController = $controllerMap[$providerName] ?? $providerName . '_booking';
+    // Each provider addon has its own booking controller following the convention: {name}_booking
+    $targetController = $providerName . '_booking';
 
     // Redirect to provider-specific controller with all parameters preserved
     $params = $_REQUEST;

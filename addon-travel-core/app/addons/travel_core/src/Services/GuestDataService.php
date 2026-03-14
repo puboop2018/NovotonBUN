@@ -282,6 +282,69 @@ class GuestDataService implements GuestDataServiceInterface
     }
 
     /**
+     * Format guests data for order display (email/admin/frontend).
+     *
+     * Converts api_name (First Last) to display format (Last, First)
+     * and marks the holder guest. Shared by travel_core and provider hooks.
+     *
+     * @param mixed $guests_data Raw guests data (array or JSON string)
+     * @param string $holder_name Holder name for matching
+     * @return array Formatted guests array, or empty array if input is empty
+     */
+    public static function formatGuestsForOrderDisplay($guests_data, string $holder_name = ''): array
+    {
+        if (empty($guests_data)) {
+            return [];
+        }
+
+        $guests_data = GuestDataNormalizer::normalize($guests_data);
+        if (empty($guests_data)) {
+            return [];
+        }
+
+        $formatted = [];
+        $is_first = true;
+
+        foreach ($guests_data as $key => $guest) {
+            if (!is_array($guest)) {
+                continue;
+            }
+
+            $display_name = $guest['display_name'] ?? $guest['name'] ?? '';
+            $api_name     = $guest['api_name'] ?? '';
+
+            if (empty($display_name) && !empty($api_name)) {
+                $parts = explode(' ', trim($api_name), 2);
+                $display_name = count($parts) === 2
+                    ? $parts[1] . ', ' . $parts[0]
+                    : $api_name;
+            }
+
+            $guest_type = $guest['type'] ?? 'adult';
+            $is_holder  = false;
+
+            if ($is_first && $guest_type === 'adult') {
+                $is_holder = true;
+                $is_first  = false;
+            } elseif (!empty($holder_name) && stripos($display_name, $holder_name) !== false) {
+                $is_holder = true;
+            }
+
+            $formatted[$key] = [
+                'display_name' => $display_name,
+                'name'         => $guest['name'] ?? $display_name,
+                'type'         => $guest_type,
+                'age'          => (int)($guest['age'] ?? 0),
+                'is_holder'    => $is_holder,
+                'birthday'     => $guest['birthday'] ?? '',
+                'room'         => $guest['room'] ?? 1,
+            ];
+        }
+
+        return $formatted;
+    }
+
+    /**
      * Merge guest data from multiple sources
      *
      * @param array $sources Array of guest data sources
