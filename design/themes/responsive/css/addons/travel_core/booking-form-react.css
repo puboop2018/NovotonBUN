@@ -1,0 +1,493 @@
+/**
+ * Novoton Booking Form - React Component Styles
+ * Version: 2.0 — theme-aware via CSS custom properties (--nvt-*)
+ *
+ * Brand colors (--nvt-primary, --nvt-primary-light) are addon-specific.
+ * Chrome colors (--nvt-text, --nvt-text-light, --nvt-border, --nvt-bg)
+ * are inherited from the active CS-Cart theme, so the booking widget
+ * adapts automatically when the merchant switches presets.
+ */
+
+/* Main Container */
+.novoton-booking-react {
+    background: transparent;
+    padding: 0;
+    border-radius: var(--nvt-radius, 8px);
+    margin-bottom: 20px;
+    font-family: var(--nvt-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif);
+}
+
+.novoton-booking-react .booking-title {
+    color: var(--nvt-primary, #003580);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    text-align: center;
+    display: none; /* Hide title on search results page */
+}
+
+/* Form Row */
+.novoton-booking-react .booking-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+    background: var(--nvt-bg, #fff);
+    padding: 4px;
+    border-radius: var(--nvt-radius, 8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Form Fields */
+.novoton-booking-react .form-field {
+    flex: 1;
+    min-width: 120px;
+    position: relative;
+}
+
+.novoton-booking-react .form-field.date-field {
+    min-width: 200px;
+    flex: 2;
+}
+
+.novoton-booking-react .form-field.guests-field {
+    min-width: 180px;
+    flex: 1.5;
+}
+
+.novoton-booking-react .form-field label {
+    display: block;
+    font-size: 11px;
+    color: var(--nvt-text-light, #6b6b6b);
+    font-weight: 500;
+    padding: 8px 12px 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.novoton-booking-react .form-field input,
+.novoton-booking-react .form-field select {
+    width: 100%;
+    border: none;
+    padding: 8px 12px 12px;
+    font-size: 14px;
+    color: var(--nvt-text, #333);
+    background: transparent;
+    cursor: pointer;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.novoton-booking-react .form-field input:focus,
+.novoton-booking-react .form-field select:focus {
+    background: var(--nvt-bg-light, #f7f7f7);
+    border-radius: var(--nvt-radius-sm, 4px);
+}
+
+.novoton-booking-react .form-field:not(:last-child):not(.btn-field) {
+    border-right: 1px solid var(--nvt-border, #e0e0e0);
+}
+
+/* Search Button */
+.novoton-booking-react .btn-field {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+}
+
+.novoton-booking-react .btn-search {
+    background: var(--nvt-primary-light, #0071c2);
+    color: #fff;
+    border: none;
+    padding: 16px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.novoton-booking-react .btn-search:hover {
+    background: var(--nvt-search-btn-hover, #0057b8);
+}
+
+/* Calendar Popup */
+.novoton-booking-react .calendar-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: var(--nvt-z-modal, 1050);
+    background: var(--nvt-bg, #fff);
+    border-radius: var(--nvt-radius, 8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    padding: 16px;
+    min-width: 580px;
+    margin-top: 4px;
+}
+
+.novoton-booking-react .calendar-container {
+    display: flex;
+    gap: 24px;
+}
+
+.novoton-booking-react .calendar-month {
+    flex: 1;
+}
+
+.novoton-booking-react .calendar-month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.novoton-booking-react .calendar-month-header .month-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nvt-text, #333);
+}
+
+.novoton-booking-react .calendar-month-header button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 10px;
+    color: var(--nvt-primary-light, #0071c2);
+    border-radius: var(--nvt-radius-sm, 4px);
+}
+
+.novoton-booking-react .calendar-month-header button:hover {
+    background: transparent;
+}
+
+.novoton-booking-react .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.novoton-booking-react .day-header {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nvt-text-light, #6b6b6b);
+    padding: 8px 4px;
+}
+
+.novoton-booking-react .calendar-day {
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.15s;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.novoton-booking-react .calendar-day:hover:not(.disabled):not(.empty) {
+    background: transparent;
+}
+
+.novoton-booking-react .calendar-day.disabled {
+    color: var(--nvt-text-disabled, #ccc);
+    cursor: not-allowed;
+}
+
+.novoton-booking-react .calendar-day.empty {
+    cursor: default;
+}
+
+.novoton-booking-react .calendar-day.today {
+    font-weight: 700;
+    color: var(--nvt-primary-light, #0071c2);
+}
+
+.novoton-booking-react .calendar-day.selected {
+    background: var(--nvt-primary-light, #0071c2);
+    color: #fff;
+}
+
+.novoton-booking-react .calendar-day.range-start {
+    border-radius: 50% 0 0 50%;
+}
+
+.novoton-booking-react .calendar-day.range-end {
+    border-radius: 0 50% 50% 0;
+}
+
+.novoton-booking-react .calendar-day.in-range {
+    background: var(--nvt-primary-tint, #e6f2ff);
+    border-radius: 0;
+}
+
+.novoton-booking-react .calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--nvt-border, #e0e0e0);
+}
+
+.novoton-booking-react .nights-info {
+    font-size: 14px;
+    color: var(--nvt-text, #333);
+}
+
+.novoton-booking-react .nights-info strong {
+    color: var(--nvt-primary-light, #0071c2);
+}
+
+/* Guests Dropdown */
+.novoton-booking-react .guests-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: var(--nvt-z-modal, 1050);
+    background: var(--nvt-bg, #fff);
+    border-radius: var(--nvt-radius, 8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    padding: 16px;
+    min-width: 320px;
+    max-width: 400px;
+    margin-top: 4px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Room Section */
+.novoton-booking-react .room-section {
+    border: 2px solid var(--nvt-primary, #003580);
+    border-radius: var(--nvt-radius, 8px);
+    margin-bottom: 12px;
+    background: var(--nvt-bg-light, #f8fafc);
+    overflow: hidden;
+}
+
+.novoton-booking-react .room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--nvt-bg-light, #f8f9fa);
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--nvt-primary, #003580);
+}
+
+.novoton-booking-react .room-title {
+    font-weight: 600;
+    color: var(--nvt-primary, #003580);
+    font-size: 14px;
+}
+
+.novoton-booking-react .room-remove {
+    background: var(--nvt-primary, #003580);
+    border: none;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.novoton-booking-react .room-remove:hover {
+    background: var(--nvt-primary-dark, #00264d);
+}
+
+/* Guest Row */
+.novoton-booking-react .guest-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+}
+
+.novoton-booking-react .guest-row:last-of-type {
+    border-bottom: none;
+}
+
+.novoton-booking-react .guest-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.novoton-booking-react .guest-label span {
+    font-size: 14px;
+    color: var(--nvt-text, #333);
+    font-weight: 500;
+}
+
+.novoton-booking-react .guest-label small {
+    font-size: 12px;
+    color: var(--nvt-text-light, #6b6b6b);
+}
+
+.novoton-booking-react .guest-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.novoton-booking-react .guest-controls button {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--nvt-primary-light, #0071c2);
+    background: var(--nvt-bg, #fff);
+    color: var(--nvt-primary-light, #0071c2);
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.novoton-booking-react .guest-controls button:hover:not(:disabled) {
+    background: var(--nvt-bg, #fff);
+    color: var(--nvt-primary-light, #0071c2);
+}
+
+.novoton-booking-react .guest-controls button:disabled {
+    border-color: var(--nvt-text-disabled, #ccc);
+    color: var(--nvt-text-disabled, #ccc);
+    cursor: not-allowed;
+}
+
+.novoton-booking-react .guest-count {
+    min-width: 24px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nvt-text, #333);
+}
+
+/* Children Ages */
+.novoton-booking-react .children-ages {
+    padding: 12px;
+    background: var(--nvt-primary-tint, #f0f7ff);
+    border-top: 1px solid var(--nvt-border, #e0e0e0);
+}
+
+.novoton-booking-react .children-ages label {
+    display: block;
+    font-size: 12px;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.novoton-booking-react .children-ages select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--nvt-border, #ddd);
+    border-radius: var(--nvt-radius-sm, 4px);
+    font-size: 14px;
+    margin-bottom: 8px;
+    background: var(--nvt-bg, #fff);
+    cursor: pointer;
+}
+
+.novoton-booking-react .children-ages select:last-child {
+    margin-bottom: 0;
+}
+
+/* Add Room Button */
+.novoton-booking-react .add-room-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--nvt-primary-tint, #e8f4fc);
+    border: 2px dashed var(--nvt-primary-light, #0071c2);
+    color: var(--nvt-primary-light, #0071c2);
+    border-radius: var(--nvt-radius, 8px);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.novoton-booking-react .add-room-btn:hover {
+    background: var(--nvt-primary-tint, #e8f4fc);
+    border-style: dashed;
+}
+
+/* Done Button */
+.novoton-booking-react .btn-done {
+    width: 100%;
+    padding: 12px;
+    background: var(--nvt-primary-light, #0071c2);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.novoton-booking-react .btn-done:hover {
+    background: var(--nvt-primary, #003580);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .novoton-booking-react .calendar-popup {
+        min-width: 290px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .novoton-booking-react .calendar-container {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .novoton-booking-react .booking-form-row {
+        flex-direction: column;
+    }
+
+    .novoton-booking-react .form-field {
+        min-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+    }
+
+    .novoton-booking-react .form-field:last-of-type {
+        border-bottom: none;
+    }
+
+    .novoton-booking-react .btn-field {
+        width: 100%;
+    }
+
+    .novoton-booking-react .btn-search {
+        width: 100%;
+    }
+
+    .novoton-booking-react .guests-dropdown {
+        left: 0;
+        right: 0;
+        min-width: auto;
+    }
+
+    .novoton-booking-react .calendar-popup {
+        left: 0;
+        right: 0;
+        transform: none;
+        min-width: auto;
+    }
+}

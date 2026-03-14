@@ -1,0 +1,70 @@
+{*
+ * Travel Core - Shared Booking Engine React Mount Point
+ *
+ * Usage from provider addon:
+ *   {$travel_provider = 'sphinx'}
+ *   {$travel_search_dispatch = 'sphinx_booking.search'}
+ *   {include file="addons/travel_core/blocks/booking_engine.tpl"}
+ *
+ * Variables set by provider wrapper:
+ *   $travel_provider        - 'novoton' or 'sphinx'
+ *   $travel_search_dispatch - e.g. 'novoton_booking.search' or 'sphinx_booking.search'
+ *   $current_hotel_id       - Hotel ID
+ *   $current_product_id     - CS-Cart product ID
+ *   $calendar_prices_json   - Optional JSON with per-day prices
+ *   $calendar_prices_currency - Currency code for calendar prices
+ *
+ * @package TravelCore
+ * @since 1.0.0
+ *}
+
+{if !$travel_provider}{$travel_provider = 'novoton'}{/if}
+{if !$travel_search_dispatch}{$travel_search_dispatch = 'novoton_booking.search'}{/if}
+
+{* Get product_id from context - try multiple sources *}
+{if !$current_product_id}
+    {if $product.product_id}
+        {$current_product_id = $product.product_id}
+    {elseif $product_id}
+        {$current_product_id = $product_id}
+    {elseif $smarty.request.product_id}
+        {$current_product_id = $smarty.request.product_id}
+    {else}
+        {$current_product_id = ''}
+    {/if}
+{/if}
+
+{* Get hotel_id - try direct variable first, then from product data *}
+{if !$current_hotel_id}
+    {if $hotel_id}
+        {$current_hotel_id = $hotel_id}
+    {elseif $product.hotel_id}
+        {$current_hotel_id = $product.hotel_id}
+    {else}
+        {$current_hotel_id = ''}
+    {/if}
+{/if}
+
+{* Container for React component *}
+<div id="travel-booking-root"
+     data-travel-booking
+     data-search-dispatch="{$travel_search_dispatch}"
+     data-provider="{$travel_provider}"
+     data-hotel-id="{$current_hotel_id|default:''}"
+     data-product-id="{$current_product_id|default:''}"
+     data-debug="false"
+     data-mode="product"
+     data-lang="{$smarty.const.CART_LANGUAGE|default:'en'}"
+     {if $show_calendar_prices == 'Y' && $calendar_prices_json != '{}'}data-calendar-prices='{$calendar_prices_json nofilter}'
+     data-calendar-prices-currency="{$calendar_prices_currency|escape:'html'}"
+     {/if}
+     data-translations='{ldelim}"availability":"{__("travel_core.availability")|default:__("novoton_holidays.availability")}","checkInDate":"{__("travel_core.check_in_date")|default:__("novoton_holidays.check_in_date")}","checkOutDate":"{__("travel_core.check_out_date")|default:__("novoton_holidays.check_out_date")}","checkIn":"{__("travel_core.check_in")|default:__("novoton_holidays.check_in")}","checkOut":"{__("travel_core.check_out")|default:__("novoton_holidays.check_out")}","selectDatesMessage":"{__("travel_core.select_dates_message")|default:__("novoton_holidays.select_dates_message")}","search":"{__("travel_core.search")|default:__("novoton_holidays.search")}","changeSearch":"{__("travel_core.change_search")|default:__("novoton_holidays.change_search")}","applyChanges":"{__("travel_core.apply_changes")|default:__("novoton_holidays.apply_changes")}","adult":"{__("travel_core.adult")|default:__("novoton_holidays.adult")}","adults":"{__("travel_core.adults")|default:__("novoton_holidays.adults")}","child":"{__("travel_core.child")|default:__("novoton_holidays.child")}","children":"{__("travel_core.children")|default:__("novoton_holidays.children")}","rooms":"{__("travel_core.rooms")|default:__("novoton_holidays.rooms")}","room":"{__("travel_core.room")|default:__("novoton_holidays.room")}","done":"{__("travel_core.done")|default:__("novoton_holidays.done")}","addRoom":"{__("travel_core.add_room")|default:__("novoton_holidays.add_room")}","adultsLabel":"{__("travel_core.adults_label")|default:__("novoton_holidays.adults_label")}","childrenLabel":"{__("travel_core.children_label")|default:__("novoton_holidays.children_label")}","nightsStay":"{__("travel_core.nights_stay")|default:__("novoton_holidays.nights_stay")}","nightStay":"{__("travel_core.night_stay")|default:__("novoton_holidays.night_stay")}","night":"{__("travel_core.night")|default:__("novoton_holidays.night")}","nights":"{__("travel_core.nights")|default:__("novoton_holidays.nights")}","childrenAges":"{__("travel_core.childrens_ages")|default:__("novoton_holidays.childrens_ages")}","childAge":"{__("travel_core.child_age")|default:__("novoton_holidays.child_age")}","selectAge":"{__("travel_core.select_age")|default:__("novoton_holidays.select_age")}","yearsOld":"{__("travel_core.years_old")|default:__("novoton_holidays.years_old")}","yearOld":"{__("travel_core.year_old")|default:__("novoton_holidays.year_old")}","selected":"{__("travel_core.selected")|default:__("novoton_holidays.selected")}","selectedSingular":"{__("travel_core.selected_singular")|default:__("novoton_holidays.selected_singular")}","selectCheckOut":"{__("travel_core.select_check_out")|default:__("novoton_holidays.select_check_out")}","january":"{__("travel_core.january")|default:__("novoton_holidays.january")}","february":"{__("travel_core.february")|default:__("novoton_holidays.february")}","march":"{__("travel_core.march")|default:__("novoton_holidays.march")}","april":"{__("travel_core.april")|default:__("novoton_holidays.april")}","may":"{__("travel_core.may")|default:__("novoton_holidays.may")}","june":"{__("travel_core.june")|default:__("novoton_holidays.june")}","july":"{__("travel_core.july")|default:__("novoton_holidays.july")}","august":"{__("travel_core.august")|default:__("novoton_holidays.august")}","september":"{__("travel_core.september")|default:__("novoton_holidays.september")}","october":"{__("travel_core.october")|default:__("novoton_holidays.october")}","november":"{__("travel_core.november")|default:__("novoton_holidays.november")}","december":"{__("travel_core.december")|default:__("novoton_holidays.december")}","mon":"{__("travel_core.mon")|default:__("novoton_holidays.mon")}","tue":"{__("travel_core.tue")|default:__("novoton_holidays.tue")}","wed":"{__("travel_core.wed")|default:__("novoton_holidays.wed")}","thu":"{__("travel_core.thu")|default:__("novoton_holidays.thu")}","fri":"{__("travel_core.fri")|default:__("novoton_holidays.fri")}","sat":"{__("travel_core.sat")|default:__("novoton_holidays.sat")}","sun":"{__("travel_core.sun")|default:__("novoton_holidays.sun")}","remove":"{__("travel_core.remove")|default:__("novoton_holidays.remove")}","pleaseEnterDates":"{__("travel_core.please_enter_dates")|default:__("novoton_holidays.please_enter_dates")}","selectCheckIn":"{__("travel_core.select_check_in")|default:__("novoton_holidays.select_check_in")}","selectMissingAges":"{__("travel_core.select_missing_ages")|default:__("novoton_holidays.select_missing_ages")}","selectAgeForOneChild":"{__("travel_core.select_age_for_one_child")|default:__("novoton_holidays.select_age_for_one_child")}","selectAgeForChildren":"{__("travel_core.select_age_for_children")|default:__("novoton_holidays.select_age_for_children")}","calendarPriceFooter":"{__("travel_core.calendar_price_footer")|default:__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}"{rdelim}'>
+    <div class="travel-loading-state">
+        <span>{__("travel_core.loading_booking_form")|default:"Loading booking form..."}</span>
+    </div>
+</div>
+
+{* Load React 19 vendor (cached separately) then app bundle *}
+{$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
+<script src="{$config.current_location}/js/addons/travel_core/react-vendor.js?v={$cache_ver}" defer></script>
+<script src="{$config.current_location}/js/addons/travel_core/react19-bundle.js?v={$cache_ver}" defer></script>

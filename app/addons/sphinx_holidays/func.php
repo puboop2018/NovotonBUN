@@ -133,3 +133,176 @@ function fn_sphinx_holidays_seed_aliases(): void
     // Clear resolve cache after batch alias inserts
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }
+
+// =========================================================================
+// HOOK FUNCTIONS
+// =========================================================================
+
+/**
+ * Hook: place_order_post
+ * After an order is placed, submit the booking to the Sphinx API.
+ */
+function fn_sphinx_holidays_place_order(&$cart, &$auth, $action, $order_id, &$order_status)
+{
+    if (empty($order_id) || empty($cart['products'])) {
+        return;
+    }
+
+    foreach ($cart['products'] as $cart_id => $product) {
+        if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
+            continue;
+        }
+
+        $booking_id = (int)$product['extra']['travel_booking_id'];
+        $offer_id = $product['extra']['offer_id'] ?? '';
+
+        // Update sphinx_bookings with order_id
+        db_query(
+            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = 'confirmed' WHERE booking_id = ?i",
+            $order_id, $booking_id
+        );
+
+        // Update travel_bookings
+        db_query(
+            "UPDATE ?:travel_bookings SET order_id = ?i, status = 'confirmed' WHERE provider = 'sphinx' AND provider_booking_id = ?i",
+            $order_id, $booking_id
+        );
+
+        // Submit booking to Sphinx API
+        if (!empty($offer_id)) {
+            try {
+                $api = \Tygh\Addons\SphinxHolidays\Services\Container::getApi();
+                $guests_data = [];
+                if (!empty($product['extra']['guests_data'])) {
+                    $guests_data = is_string($product['extra']['guests_data'])
+                        ? json_decode($product['extra']['guests_data'], true)
+                        : $product['extra']['guests_data'];
+                }
+
+                $bookResult = $api->bookHotel([
+                    'offer_id' => $offer_id,
+                    'guests' => $guests_data ?: [],
+                    'contact' => [
+                        'email' => $product['extra']['contact_email'] ?? '',
+                        'phone' => $product['extra']['contact_phone'] ?? '',
+                    ],
+                ]);
+
+                if (!empty($bookResult['booking_reference'])) {
+                    db_query(
+                        "UPDATE ?:sphinx_bookings SET api_booking_ref = ?s, api_response = ?s WHERE booking_id = ?i",
+                        $bookResult['booking_reference'],
+                        json_encode($bookResult),
+                        $booking_id
+                    );
+                }
+            } catch (\Throwable $e) {
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
+                    'booking_id' => $booking_id,
+                    'order_id' => $order_id,
+                ]);
+            }
+        }
+    }
+}
+
+/**
+ * Hook: calculate_cart_items
+ * Preserve stored price for Sphinx bookings.
+ */
+function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth)
+{
+    if (empty($cart['products'])) {
+        return;
+    }
+
+    foreach ($cart['products'] as $cart_id => &$product) {
+        if (!empty($product['extra']['sphinx_booking']) && !empty($product['stored_price'])) {
+            $product['price'] = $product['base_price'] ?? $product['price'];
+        }
+    }
+    unset($product);
+}
+
+/**
+ * Hook: get_product_data_post
+ * Attach booking engine config to Sphinx hotel products.
+ */
+function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code)
+{
+    if (empty($product_data['product_code'])) {
+        return;
+    }
+
+    if (strpos($product_data['product_code'], 'SPH_') !== 0) {
+        return;
+    }
+
+    $hotel_id = substr($product_data['product_code'], 4);
+    $hotel = db_get_row(
+        "SELECT hotel_id, hotel_name, star_rating, city, country, main_image_url
+         FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+        $hotel_id
+    );
+
+    if (!empty($hotel)) {
+        $product_data['hotel_id'] = $hotel['hotel_id'];
+        $product_data['hotel_name'] = $hotel['hotel_name'];
+        $product_data['star_rating'] = $hotel['star_rating'];
+        $product_data['travel_provider'] = 'sphinx';
+        $product_data['sphinx_hotel'] = $hotel;
+    }
+}
+
+/**
+ * Hook: user_login_post
+ * Link session-based sphinx bookings to the logged-in user.
+ */
+function fn_sphinx_holidays_user_login_post($user_data, &$auth)
+{
+    if (empty($auth['user_id'])) {
+        return;
+    }
+
+    $session_id = session_id();
+    if (empty($session_id)) {
+        return;
+    }
+
+    db_query(
+        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
+        (int)$auth['user_id'], $session_id
+    );
+
+    db_query(
+        "UPDATE ?:travel_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND provider = 'sphinx'",
+        (int)$auth['user_id'], $session_id
+    );
+}
+
+/**
+ * Hook: create_user_post
+ * Link session-based sphinx bookings to the newly created user.
+ */
+function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth)
+{
+    if (empty($user_id)) {
+        return;
+    }
+
+    $session_id = session_id();
+    if (empty($session_id)) {
+        return;
+    }
+
+    db_query(
+        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
+        (int)$user_id, $session_id
+    );
+
+    db_query(
+        "UPDATE ?:travel_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND provider = 'sphinx'",
+        (int)$user_id, $session_id
+    );
+}

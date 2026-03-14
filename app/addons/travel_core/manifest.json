@@ -1,7 +1,7 @@
 {
   "addon": "travel_core",
   "version": "1.0.0",
-  "generated": "2026-03-14T08:53:45Z",
+  "generated": "2026-03-14T13:12:47Z",
   "files": {
     "addon.xml": "sha256:9a210a15850d3280f674bc0f997cd687f47b056ea97e3ba4cbc6537fe584704c",
     "controllers/backend/travel_bookings.php": "sha256:2e8bf8cb31bd55f85a61177e8da7fa156b8449b0f7d566f1f27739d858042c1e",
@@ -12,16 +12,33 @@
     "hooks/order_hooks.php": "sha256:072eea664195d0edac210e1da80139083b5e1609424a95acbcd2bf2e6fd57b28",
     "init.php": "sha256:aa0ceddeb37ae85f338a695b32621ce5232908edc1e52394521a986f8e2fcfe3",
     "schemas/permissions/admin.post.php": "sha256:d1ab3713bdb8d7b0beefa25ccc7dbb16c0e3f20152c801db7dc4bd966f090957",
+    "src/Contracts/CommissionCalculatorInterface.php": "sha256:73e12c19aebe50a167e99c3f92b0fc19a09972e9e5676743324f2ab167de26b3",
     "src/Contracts/GuestDataNormalizerInterface.php": "sha256:8b866cc833c0cb14902d34f8a84916b8d9a1d8d67e62ec31e8b1acb7cda983e0",
     "src/Contracts/GuestDataServiceInterface.php": "sha256:ff6c090fed989a55cd5ad91e7e627e132cf37cc110e45e612948bdd4fc557578",
     "src/Contracts/GuestDisplayInterface.php": "sha256:93a20726aa15a1d57d36fb138785733b9407765ee900bf296f5064b06793eec3",
     "src/Contracts/GuestParserInterface.php": "sha256:40a249aa197c31feb86238d4b12621055eb41d7dda0f4cd29c0eb7b1f2e04dc6",
     "src/Contracts/GuestValidatorInterface.php": "sha256:5b9537ec98d20db61d2a234bc78fb61fb5e524a14215a35a51b06c09ac90dab6",
+    "src/Contracts/PreOrderPriceVerifierInterface.php": "sha256:e671343e2ececd62b894051c37daee5b35a49143a2051684fa5ae258b5239c5d",
     "src/Contracts/ProviderNormalizerInterface.php": "sha256:4be3e413d0e4fd2e58a34ce774f4a0ae9d18438944e8faf51b983c2f820e5b5f",
+    "src/Contracts/SecurityServiceInterface.php": "sha256:9e26d50db06af3a80b4a7da99761e3354d23065e2f3db4e6929e0f110b5e7360",
+    "src/Exceptions/InvalidArgumentException.php": "sha256:c0fcb6f4d01848ea230f063f135120a9f569614257723306f0ff0a56c44c8729",
+    "src/Exceptions/TravelException.php": "sha256:00581c362dfa27e1434d374719bc756b25f5e368e0967bf08687c548b90d46a0",
+    "src/Helpers/DebugLogger.php": "sha256:9a898279675d69aa90523891098079f6a18ecdb228306389fb2bb1f4a2430f99",
     "src/Services/BookingDisplayService.php": "sha256:d93351e25a4dee6e3289f2ea5a6150c879520513eba1007cf5039ab5ffb3797c",
+    "src/Services/CommissionCalculator.php": "sha256:c5149c2b000d433cc95bf3769e934d65dd4e701035fff20d23427ecfe15dd61d",
+    "src/Services/CurrencyService.php": "sha256:f8292fe63dec6df27807102c348fab8e8ba543c0a43d70e701742a84c03260ec",
+    "src/Services/DateHelper.php": "sha256:feea7923a83c34e43d657efa7a12ce492a98245a9771c6d63f8ba5c6bc1740d9",
     "src/Services/FeatureMapper.php": "sha256:392d41c76e31e54ca305b5199d8c254c3792eb803aefa04353e996a929fe4806",
     "src/Services/GuestDataNormalizer.php": "sha256:6c759445eee70d77c19370b48318b6e1620500fb726ecdd4663eb9828420d3ee",
     "src/Services/GuestDataService.php": "sha256:c78b3255319067e8f54203867f8c5657610af5417cb6b9543a7b0a4c21cfe609",
-    "src/Services/TravelProviderRegistry.php": "sha256:f97b6865bdffdb0ea7f9850b533c7e6bdf1eebcbfeb4b910251047e2fc4f9788"
+    "src/Services/PriceChangeDetector.php": "sha256:532aa1db8a7aed6ff79bd9016a5065435376a863053304fb7f11dfe74ce5508a",
+    "src/Services/TravelProviderRegistry.php": "sha256:f97b6865bdffdb0ea7f9850b533c7e6bdf1eebcbfeb4b910251047e2fc4f9788",
+    "src/Services/ValidationHelper.php": "sha256:198907d4e3680dd7ccec66307f570ce0e203df400a95990c8f105bd0db01260f",
+    "src/TravelConstants.php": "sha256:0b2e570bd378a36a9151cf0c0c40a9429d2a1f995ac8ea193419affc256f0929",
+    "src/ValueObjects/BoardType.php": "sha256:4aa3ad8a8c456806f130b484229923db7b65ad19b1a3cbd9905ed8b11b802029",
+    "src/ValueObjects/DateRange.php": "sha256:c02c6edbba06a08c0e6f36defcaa73827a8faa7eefa47fdcf92cafd67a15e6b4",
+    "src/ValueObjects/HotelId.php": "sha256:5bdda19e6b7ef0b9be8855c6fdbda517ac83da58679f9319c4fcb95589d5bd09",
+    "src/ValueObjects/Occupancy.php": "sha256:18cfd4ec34016d1a46c3a170652229b3e089717d9734d10bbc4ad5ae194e46f3",
+    "src/ValueObjects/RoomType.php": "sha256:16a9094ee3f19dcff34214025048b8031f7c7f99c66911742e64c32a1642719a"
   }
 }
