@@ -84,5 +84,6 @@ window.NovotonTranslations = {
     sun: "{__('novoton_holidays.sun')|default:'Su'}"
 };
 </script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react-vendor.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/react19-bundle.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+{$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
+<script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$cache_ver}" defer></script>
+<script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$cache_ver}" defer></script>

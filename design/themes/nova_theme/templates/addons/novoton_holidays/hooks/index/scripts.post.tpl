@@ -1,30 +1,22 @@
 {**
  * Novoton Holidays - JavaScript Connection Hook
  *
- * This hook properly connects addon JS files following CS-Cart conventions.
- * Location: design/themes/nova_theme/templates/addons/novoton_holidays/hooks/index/scripts.post.tpl
- *
- * All scripts are loaded from js/addons/novoton_holidays/ directory.
- * CS-Cart will automatically include this when rendering pages.
- *
- * Uses NOVOTON_CACHE_VER for cache-busting: changes automatically when
- * JS files are modified, so browser caches are busted on every deploy.
+ * Sets provider-specific config for the shared travel_core JS.
+ * Shared JS (utils, multiroom, dob-validation, booking-form-validation)
+ * is loaded by travel_core's hooks/index/scripts.post.tpl.
  *}
 
-{* Pass addon settings to frontend JS *}
+{* Pass addon settings to frontend JS — provider-specific config *}
 <script>
-window.NovotonConfig = window.NovotonConfig || {};
-window.NovotonConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true{else}false{/if};
-window.NovotonConfig.ajaxRecalcUrl = '{"novoton_booking.ajax_recalculate_price"|fn_url:"C"}';
+window.TravelBookingConfig = window.TravelBookingConfig || {};
+window.TravelBookingConfig.provider = 'novoton';
+window.TravelBookingConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true{else}false{/if};
+window.TravelBookingConfig.ajaxRecalcUrl = '{"novoton_booking.ajax_recalculate_price"|fn_url:"C"}';
+window.TravelBookingConfig.ajaxRecalcDispatch = 'novoton_booking.ajax_recalculate_price';
+window.TravelBookingConfig.searchDispatch = 'novoton_booking.search';
+{* Backwards compatibility *}
+window.NovotonConfig = window.TravelBookingConfig;
 </script>
 
-{* Core booking functionality - always load *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/utils.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+{* Legacy jQuery booking engine (novoton-only, uses $.ceEvent / $.ceAjax) *}
 <script src="{$config.current_location}/js/addons/novoton_holidays/booking_engine.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
-
-{* Multi-room booking *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/multiroom-booking.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
-
-{* Form validation scripts *}
-<script src="{$config.current_location}/js/addons/novoton_holidays/dob-validation.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
-<script src="{$config.current_location}/js/addons/novoton_holidays/booking-form-validation.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
