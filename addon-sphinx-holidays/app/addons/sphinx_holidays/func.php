@@ -130,6 +130,60 @@ function fn_sphinx_holidays_seed_aliases(): void
         }
     }
 
+    // Star rating aliases (feature_type='stars'): canonical codes '1' through '5'
+    $starAliases = [
+        '1' => '1',
+        '2' => '2',
+        '3' => '3',
+        '4' => '4',
+        '5' => '5',
+        '1 star'  => '1',
+        '2 star'  => '2',
+        '2 stars' => '2',
+        '3 star'  => '3',
+        '3 stars' => '3',
+        '4 star'  => '4',
+        '4 stars' => '4',
+        '5 star'  => '5',
+        '5 stars' => '5',
+    ];
+
+    foreach ($starAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $apiValue, $mapId, 'exact');
+        }
+    }
+
+    // Property type aliases (feature_type='property_type')
+    $propertyTypeAliases = [
+        'hotel'       => 'hotel',
+        'villa'       => 'villa',
+        'apartment'   => 'apartment',
+        'resort'      => 'resort',
+        'hostel'      => 'hostel',
+        'guest_house' => 'guest_house',
+        'guesthouse'  => 'guest_house',
+        'pension'     => 'guest_house',
+        'pensiune'    => 'guest_house',
+        'chalet'      => 'chalet',
+        'cabana'      => 'chalet',
+        'motel'       => 'motel',
+    ];
+
+    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
+        }
+    }
+
     // Clear resolve cache after batch alias inserts
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }
@@ -235,21 +289,25 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
         return;
     }
 
-    if (strpos($product_data['product_code'], 'SPH_') !== 0) {
+    // Support both legacy SPH_ and new SPX product code prefixes
+    $code = $product_data['product_code'];
+    if (strpos($code, 'SPX') === 0) {
+        $hotel_id = substr($code, 3);
+    } elseif (strpos($code, 'SPH_') === 0) {
+        $hotel_id = substr($code, 4);
+    } else {
         return;
     }
 
-    $hotel_id = substr($product_data['product_code'], 4);
     $hotel = db_get_row(
-        "SELECT hotel_id, hotel_name, star_rating, city, country, main_image_url
-         FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+        "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
 
     if (!empty($hotel)) {
         $product_data['hotel_id'] = $hotel['hotel_id'];
-        $product_data['hotel_name'] = $hotel['hotel_name'];
-        $product_data['star_rating'] = $hotel['star_rating'];
+        $product_data['hotel_name'] = $hotel['name'];
+        $product_data['star_rating'] = $hotel['classification'];
         $product_data['travel_provider'] = 'sphinx';
         $product_data['sphinx_hotel'] = $hotel;
     }

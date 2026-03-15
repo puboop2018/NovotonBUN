@@ -238,6 +238,49 @@ class HotelRepository
     }
 
     /**
+     * Link a hotel to a CS-Cart product.
+     */
+    public function linkToProduct(string $hotelId, int $productId): void
+    {
+        db_query(
+            "UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s",
+            $productId, $hotelId
+        );
+    }
+
+    /**
+     * Get unlinked hotels (no product_id) with optional country filter.
+     *
+     * @return array List of hotel rows without linked products
+     */
+    public function findUnlinked(string $countryCode = '', int $limit = 0): array
+    {
+        $condition = '';
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        }
+
+        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+
+        return db_get_array(
+            "SELECT h.* FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' AND (h.product_id IS NULL OR h.product_id = 0) ?p
+             ORDER BY h.country_code ASC, h.name ASC ?p",
+            $condition, $limitClause
+        );
+    }
+
+    /**
+     * Count hotels that have a linked CS-Cart product.
+     */
+    public function countLinked(): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'"
+        );
+    }
+
+    /**
      * Mark hotels as inactive if not in the provided ID list (for a given country).
      * Used after sync to detect hotels removed from the API.
      *

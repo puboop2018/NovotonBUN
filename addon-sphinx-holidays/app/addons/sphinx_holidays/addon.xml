@@ -134,6 +134,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="product_category_template">
+                        <type>input</type>
+                        <default_value>Hotels/{country}/{region}/{city}</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -521,5 +526,27 @@
         <item lang="ro" id="sphinx_holidays.all_continents"><![CDATA[Toate continentele]]></item>
         <item lang="en" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
         <item lang="ro" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
+
+        <!-- Phase 2: Product Integration -->
+        <item lang="en" id="sphinx_holidays.products"><![CDATA[Products]]></item>
+        <item lang="ro" id="sphinx_holidays.products"><![CDATA[Produse]]></item>
+        <item lang="en" id="sphinx_holidays.linked_products"><![CDATA[Linked Products]]></item>
+        <item lang="ro" id="sphinx_holidays.linked_products"><![CDATA[Produse Asociate]]></item>
+        <item lang="en" id="sphinx_holidays.unlinked_hotels"><![CDATA[Unlinked Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.unlinked_hotels"><![CDATA[Hoteluri Neasociate]]></item>
+        <item lang="en" id="sphinx_holidays.create_products"><![CDATA[Create Products]]></item>
+        <item lang="ro" id="sphinx_holidays.create_products"><![CDATA[Creare Produse]]></item>
+        <item lang="en" id="sphinx_holidays.create_products_confirm"><![CDATA[This will create CS-Cart products for all unlinked Sphinx hotels. Continue?]]></item>
+        <item lang="ro" id="sphinx_holidays.create_products_confirm"><![CDATA[Se vor crea produse CS-Cart pentru toate hotelurile Sphinx neasociate. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.products_created"><![CDATA[Products created]]></item>
+        <item lang="ro" id="sphinx_holidays.products_created"><![CDATA[Produse create]]></item>
+        <item lang="en" id="sphinx_holidays.products_creation_failed"><![CDATA[Product creation failed]]></item>
+        <item lang="ro" id="sphinx_holidays.products_creation_failed"><![CDATA[Crearea produselor a eșuat]]></item>
+        <item lang="en" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[No unlinked hotels found. All hotels already have products.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[Nu s-au găsit hoteluri neasociate. Toate hotelurile au deja produse.]]></item>
+        <item lang="en" id="sphinx_holidays.skipped_invalid_country"><![CDATA[skipped — invalid country code]]></item>
+        <item lang="ro" id="sphinx_holidays.skipped_invalid_country"><![CDATA[omise — cod de țară invalid]]></item>
+        <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template ({country}, {region}, {city} placeholders)]]></item>
+        <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie ({country}, {region}, {city})]]></item>
     </language_variables>
 </addon>

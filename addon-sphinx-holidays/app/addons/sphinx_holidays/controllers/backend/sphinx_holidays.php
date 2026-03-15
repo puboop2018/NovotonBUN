@@ -21,6 +21,7 @@ use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -68,6 +69,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.hotel_sync_completed') . ': ' . $result['synced'] . '/' . $result['total']);
         } else {
             fn_set_notification('E', __('error'), __('sphinx_holidays.hotel_sync_failed') . ': ' . ($result['error'] ?: 'Unknown error'));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+    }
+
+    if ($mode === 'add_products') {
+        $hotelRepo = new HotelRepository();
+        $unlinked = $hotelRepo->findUnlinked('', 1);
+
+        if (empty($unlinked)) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_unlinked_hotels'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+        }
+
+        $command = new AddProductsCommand();
+        $command->setOutputCallback(function($msg) {}); // silent in web context
+        $result = $command->execute();
+
+        if ($result['success']) {
+            $added = $result['stats']['added'] ?? 0;
+            $invalid = $result['stats']['invalid_country'] ?? 0;
+            $msg = __('sphinx_holidays.products_created') . ': ' . $added;
+            if ($invalid > 0) {
+                $msg .= ' (' . $invalid . ' ' . __('sphinx_holidays.skipped_invalid_country') . ')';
+            }
+            fn_set_notification('N', __('notice'), $msg);
+        } else {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.products_creation_failed'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -137,6 +166,10 @@ if ($mode === 'manage') {
     $hotelsByCountry = $hotelRepo->getCountsByCountry();
     $hotelLastSynced = $hotelRepo->getLastSyncedAt();
 
+    // Product stats
+    $linkedCount = $hotelRepo->countLinked();
+    $unlinkedCount = $totalHotels - $linkedCount;
+
     // API status
     $isConfigured = ConfigProvider::isConfigured();
     $selectedCountries = ConfigProvider::getSelectedCountryCodes();
@@ -152,6 +185,8 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('total_hotels', $totalHotels);
     Tygh::$app['view']->assign('hotels_by_country', $hotelsByCountry);
     Tygh::$app['view']->assign('hotel_last_synced', $hotelLastSynced);
+    Tygh::$app['view']->assign('linked_products', $linkedCount);
+    Tygh::$app['view']->assign('unlinked_hotels', $unlinkedCount);
     Tygh::$app['view']->assign('selected_countries', $selectedCountries);
     Tygh::$app['view']->assign('is_configured', $isConfigured);
     Tygh::$app['view']->assign('sync_logs', $syncLogs);

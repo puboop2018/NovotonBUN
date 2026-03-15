@@ -112,6 +112,17 @@ class ConfigProvider
     }
 
     /**
+     * Get the category path template for product creation.
+     *
+     * Supports placeholders: {country}, {region}, {city}
+     * Default: "Hotels/{country}/{region}/{city}"
+     */
+    public static function getProductCategoryTemplate(): string
+    {
+        return (string) self::getSetting('product_category_template', 'Hotels/{country}/{region}/{city}');
+    }
+
+    /**
      * Get selected sync targets — country codes, destination names, and/or destination IDs.
      *
      * Setting format: comma-separated, supports three token types:

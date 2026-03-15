@@ -90,6 +90,29 @@
         <p class="muted">{__("sphinx_holidays.never_synced")}</p>
     {/if}
 
+    {* ── Product Stats ── *}
+    <h4>{__("sphinx_holidays.products")}</h4>
+    <div class="sync-stats">
+        <div class="stat-card success">
+            <div class="stat-value">{$linked_products|default:0}</div>
+            <div class="stat-label">{__("sphinx_holidays.linked_products")}</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{$unlinked_hotels|default:0}</div>
+            <div class="stat-label">{__("sphinx_holidays.unlinked_hotels")}</div>
+        </div>
+    </div>
+
+    {if $unlinked_hotels > 0}
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.add_products" />
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('{__("sphinx_holidays.create_products_confirm")|escape:javascript}');">
+                <i class="icon-plus"></i> {__("sphinx_holidays.create_products")}
+            </button>
+        </form>
+    {/if}
+
     {* ── Browse Links ── *}
     <div class="travel-action-buttons">
         {if $total_destinations > 0}
