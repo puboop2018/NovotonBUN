@@ -327,6 +327,7 @@
                 `items_failed`  INT UNSIGNED DEFAULT 0,
                 `error_message` TEXT DEFAULT NULL,
                 `rate_limit_hits` INT UNSIGNED DEFAULT 0,
+                `sync_mode`     VARCHAR(20) DEFAULT 'full' COMMENT 'full or incremental',
                 `duration_ms`   INT UNSIGNED DEFAULT NULL,
                 `started_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `completed_at`  DATETIME DEFAULT NULL,
@@ -358,6 +359,11 @@
         <item for="upgrade">
             ALTER TABLE `?:sphinx_sync_log`
                 ADD COLUMN IF NOT EXISTS `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`;
+        </item>
+        <!-- Upgrade: add sync_mode column to sphinx_sync_log -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_sync_log`
+                ADD COLUMN IF NOT EXISTS `sync_mode` VARCHAR(20) DEFAULT 'full' AFTER `rate_limit_hits`;
         </item>
     </queries>
 
@@ -558,5 +564,13 @@
         <!-- Rate Limiting -->
         <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>
         <item lang="ro" id="sphinx_holidays.rate_limited_requests"><![CDATA[Cereri limitate de rată]]></item>
+
+        <!-- Sync Mode + Caching -->
+        <item lang="en" id="sphinx_holidays.sync_mode_incremental"><![CDATA[Incremental]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_mode_incremental"><![CDATA[Incremental]]></item>
+        <item lang="en" id="sphinx_holidays.sync_mode_full"><![CDATA[Full sync]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_mode_full"><![CDATA[Sincronizare completă]]></item>
+        <item lang="en" id="sphinx_holidays.cached_result"><![CDATA[Cached result]]></item>
+        <item lang="ro" id="sphinx_holidays.cached_result"><![CDATA[Rezultat din cache]]></item>
     </language_variables>
 </addon>

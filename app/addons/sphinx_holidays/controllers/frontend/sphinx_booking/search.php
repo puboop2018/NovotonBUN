@@ -15,6 +15,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\TravelCore\Services\ValidationHelper;
 
 try {
@@ -70,46 +71,73 @@ try {
         $searchParams['ignore_domains'] = $ignoreDomains;
     }
 
-    $searchResponse = $api->searchHotels($searchParams);
+    // Check cache for identical search (short-lived, for UX — not a cache database)
+    $cacheEnabled = ConfigProvider::isApiCacheEnabled();
+    $cacheTtl = ConfigProvider::getCacheTtlSearch();
+    $cacheKey = '';
+    $allResults = [];
+    $searchId = '';
+    $fromCache = false;
 
-    if (empty($searchResponse['search_id'])) {
-        fn_set_notification('E', __('error'),
-            __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
-        $view->assign('sphinx_search_results', []);
-        return;
+    if ($cacheEnabled && $cacheTtl > 0) {
+        $cacheKey = CacheService::buildSearchKey($searchParams);
+        $cached = CacheService::get($cacheKey);
+        if ($cached !== null) {
+            $allResults = $cached['results'] ?? [];
+            $searchId = $cached['search_id'] ?? '';
+            $fromCache = true;
+        }
     }
 
-    $searchId = $searchResponse['search_id'];
+    if (!$fromCache) {
+        $searchResponse = $api->searchHotels($searchParams);
 
-    // Poll for results
-    $pollInterval = ConfigProvider::getSearchPollInterval();
-    $maxPolls = ConfigProvider::getSearchMaxPolls();
-    $allResults = [];
-    $cursor = null;
-    $pollCount = 0;
-
-    do {
-        if ($pollCount > 0) {
-            sleep($pollInterval);
+        if (empty($searchResponse['search_id'])) {
+            fn_set_notification('E', __('error'),
+                __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
+            $view->assign('sphinx_search_results', []);
+            return;
         }
-        $pollCount++;
 
-        $pollResponse = $api->getHotelResults($searchId, $cursor);
-        if ($pollResponse === null) break;
+        $searchId = $searchResponse['search_id'];
 
-        if (!empty($pollResponse['results'])) {
-            foreach ($pollResponse['results'] as $result) {
-                $allResults[] = $result;
+        // Poll for results
+        $pollInterval = ConfigProvider::getSearchPollInterval();
+        $maxPolls = ConfigProvider::getSearchMaxPolls();
+        $cursor = null;
+        $pollCount = 0;
+
+        do {
+            if ($pollCount > 0) {
+                sleep($pollInterval);
             }
+            $pollCount++;
+
+            $pollResponse = $api->getHotelResults($searchId, $cursor);
+            if ($pollResponse === null) break;
+
+            if (!empty($pollResponse['results'])) {
+                foreach ($pollResponse['results'] as $result) {
+                    $allResults[] = $result;
+                }
+            }
+
+            $status = $pollResponse['status'] ?? 'completed';
+            if ($status === 'completed') break;
+
+            $cursor = $pollResponse['next_cursor'] ?? null;
+            if ($cursor === null) break;
+
+        } while ($pollCount < $maxPolls);
+
+        // Cache raw results (before commission) for identical future searches
+        if ($cacheEnabled && $cacheTtl > 0 && !empty($allResults)) {
+            CacheService::set($cacheKey, [
+                'results' => $allResults,
+                'search_id' => $searchId,
+            ], $cacheTtl);
         }
-
-        $status = $pollResponse['status'] ?? 'completed';
-        if ($status === 'completed') break;
-
-        $cursor = $pollResponse['next_cursor'] ?? null;
-        if ($cursor === null) break;
-
-    } while ($pollCount < $maxPolls);
+    }
 
     // Apply commission
     $commission = ConfigProvider::getCommission();

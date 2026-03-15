@@ -42,13 +42,16 @@ class SphinxApi
 
     /**
      * Get all destinations (paginated).
+     *
+     * @param string|null $updatedSince Only return destinations updated since this ISO 8601 datetime
      */
-    public function getDestinations(int $page = 1, int $perPage = 1000): ?array
+    public function getDestinations(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
     {
-        return $this->client->get('/api/v1/static/destinations', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        return $this->client->get('/api/v1/static/destinations', $query);
     }
 
     /**
@@ -61,13 +64,20 @@ class SphinxApi
 
     /**
      * Get all hotels (paginated).
+     *
+     * @param string|null $updatedSince Only return hotels updated since this ISO 8601 datetime
+     * @param int[] $destinationIds Only return hotels belonging to these destination IDs
      */
-    public function getHotels(int $page = 1, int $perPage = 1000): ?array
+    public function getHotels(int $page = 1, int $perPage = 1000, ?string $updatedSince = null, array $destinationIds = []): ?array
     {
-        return $this->client->get('/api/v1/static/hotels', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        if (!empty($destinationIds)) {
+            $query['destination_ids'] = $destinationIds;
+        }
+        return $this->client->get('/api/v1/static/hotels', $query);
     }
 
     /**
