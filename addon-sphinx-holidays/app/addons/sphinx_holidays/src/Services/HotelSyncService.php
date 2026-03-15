@@ -125,6 +125,12 @@ class HotelSyncService
         }
 
         $stats['duration_ms'] = (int) (microtime(true) * 1000) - $startMs;
+
+        // Capture rate limit info from the HTTP client
+        $httpClient = $this->api->getHttpClient();
+        $stats['rate_limit'] = $httpClient->getRateLimitState();
+        $stats['rate_limit_hits'] = $httpClient->getRateLimitHitCount();
+
         $this->logComplete($logId, $stats['success'] ? 'completed' : 'failed', $stats);
 
         return $stats;
@@ -363,6 +369,7 @@ class HotelSyncService
                 items_failed = ?i,
                 error_message = ?s,
                 duration_ms = ?i,
+                rate_limit_hits = ?i,
                 completed_at = NOW()
              WHERE log_id = ?i",
             $status,
@@ -371,6 +378,7 @@ class HotelSyncService
             $stats['failed'] ?? 0,
             $stats['error'] ?? '',
             $stats['duration_ms'] ?? 0,
+            $stats['rate_limit_hits'] ?? 0,
             $logId
         );
     }

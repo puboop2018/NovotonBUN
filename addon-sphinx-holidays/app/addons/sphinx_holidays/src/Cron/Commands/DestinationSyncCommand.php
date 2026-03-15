@@ -31,6 +31,23 @@ class DestinationSyncCommand
         $this->outputCallback = $callback;
     }
 
+    private function outputRateLimitSummary(array $stats): void
+    {
+        if ($this->outputCallback === null) {
+            return;
+        }
+
+        $rlHits = $stats['rate_limit_hits'] ?? 0;
+        if ($rlHits > 0) {
+            ($this->outputCallback)("Rate limit: {$rlHits} request(s) were throttled (HTTP 429).");
+        }
+
+        $rl = $stats['rate_limit'] ?? [];
+        if (isset($rl['remaining'], $rl['limit'])) {
+            ($this->outputCallback)("Rate limit: {$rl['remaining']}/{$rl['limit']} requests remaining.");
+        }
+    }
+
     /**
      * Execute the destination sync.
      *
@@ -48,6 +65,9 @@ class DestinationSyncCommand
         }
 
         $stats = $service->sync();
+
+        // Output rate limit summary
+        $this->outputRateLimitSummary($stats);
 
         return [
             'success' => $stats['success'],

@@ -143,6 +143,9 @@
                     {if $log.duration_ms}
                         <span>{__("sphinx_holidays.duration")}: {($log.duration_ms/1000)|string_format:"%.1f"}s</span>
                     {/if}
+                    {if $log.rate_limit_hits > 0}
+                        <span class="text-warning">{__("sphinx_holidays.rate_limited_requests")}: {$log.rate_limit_hits}</span>
+                    {/if}
                     {if $log.error_message}
                         <span class="text-error">{$log.error_message|escape:html|truncate:100}</span>
                     {/if}

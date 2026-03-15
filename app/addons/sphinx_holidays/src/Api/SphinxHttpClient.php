@@ -26,8 +26,11 @@ class SphinxHttpClient
     private int $lastHttpCode = 0;
     private string $lastError = '';
     private ?string $lastResponseRaw = null;
+    private ?int $rateLimitLimit = null;
     private ?int $rateLimitRemaining = null;
     private ?int $rateLimitReset = null;
+    private ?int $retryAfter = null;
+    private int $rateLimitHitCount = 0;
 
     public function __construct(
         string $baseUrl,
@@ -94,6 +97,21 @@ class SphinxHttpClient
         $delayMs = $this->retryDelayMs;
 
         while ($attempt <= $this->maxRetries) {
+            // Proactive throttle: pause when approaching rate limit
+            if ($this->rateLimitRemaining !== null && $this->rateLimitRemaining <= 2 && $this->rateLimitRemaining > 0) {
+                $pauseSeconds = ($this->rateLimitReset !== null)
+                    ? max(1, min(30, $this->rateLimitReset - time()))
+                    : 5;
+                $this->log("Approaching rate limit (remaining={$this->rateLimitRemaining}). Pausing {$pauseSeconds}s.");
+                sleep($pauseSeconds);
+            }
+
+            // Reset per-attempt header state
+            $this->rateLimitLimit = null;
+            $this->rateLimitRemaining = null;
+            $this->rateLimitReset = null;
+            $this->retryAfter = null;
+
             $ch = curl_init($url);
 
             $headers = [
@@ -141,12 +159,20 @@ class SphinxHttpClient
 
             // Rate limited — wait and retry
             if ($this->lastHttpCode === 429) {
-                $waitSeconds = $this->rateLimitReset ? max(1, $this->rateLimitReset - time()) : 60;
-                $this->lastError = "Rate limited. Waiting {$waitSeconds}s.";
-                if ($this->debugLogging) {
-                    $this->log("Rate limited on {$method} {$url}. Waiting {$waitSeconds}s.");
+                $this->rateLimitHitCount++;
+                // Priority: Retry-After (seconds) > X-RateLimit-Reset (timestamp) > fallback 60s
+                if ($this->retryAfter !== null && $this->retryAfter > 0) {
+                    $waitSeconds = $this->retryAfter;
+                } elseif ($this->rateLimitReset !== null) {
+                    $waitSeconds = max(1, $this->rateLimitReset - time());
+                } else {
+                    $waitSeconds = 60;
                 }
-                sleep(min($waitSeconds, 120));
+                $waitSeconds = min($waitSeconds, 120);
+                $this->lastError = "Rate limited. Waiting {$waitSeconds}s.";
+                // Always log rate limit events (operationally important)
+                error_log("[SphinxHttpClient] Rate limited on {$method} {$url}. Waiting {$waitSeconds}s. Remaining: {$this->rateLimitRemaining}, Limit: {$this->rateLimitLimit}");
+                sleep($waitSeconds);
                 $attempt++;
                 continue;
             }
@@ -195,10 +221,14 @@ class SphinxHttpClient
             $name = strtolower(trim($parts[0]));
             $value = trim($parts[1]);
 
-            if ($name === 'x-ratelimit-remaining') {
+            if ($name === 'x-ratelimit-limit') {
+                $this->rateLimitLimit = (int) $value;
+            } elseif ($name === 'x-ratelimit-remaining') {
                 $this->rateLimitRemaining = (int) $value;
             } elseif ($name === 'x-ratelimit-reset') {
                 $this->rateLimitReset = (int) $value;
+            } elseif ($name === 'retry-after') {
+                $this->retryAfter = (int) $value;
             }
         }
         return $len;
@@ -240,5 +270,21 @@ class SphinxHttpClient
     public function getLastHttpCode(): int { return $this->lastHttpCode; }
     public function getLastError(): string { return $this->lastError; }
     public function getLastResponseRaw(): ?string { return $this->lastResponseRaw; }
+    public function getRateLimitLimit(): ?int { return $this->rateLimitLimit; }
     public function getRateLimitRemaining(): ?int { return $this->rateLimitRemaining; }
+    public function getRateLimitReset(): ?int { return $this->rateLimitReset; }
+    public function getRateLimitHitCount(): int { return $this->rateLimitHitCount; }
+
+    /**
+     * Get full rate limit state for monitoring/logging.
+     */
+    public function getRateLimitState(): array
+    {
+        return [
+            'limit'     => $this->rateLimitLimit,
+            'remaining' => $this->rateLimitRemaining,
+            'reset'     => $this->rateLimitReset,
+            'reset_in'  => $this->rateLimitReset !== null ? max(0, $this->rateLimitReset - time()) : null,
+        ];
+    }
 }

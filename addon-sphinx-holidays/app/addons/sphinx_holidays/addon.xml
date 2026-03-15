@@ -326,6 +326,7 @@
                 `items_synced`  INT UNSIGNED DEFAULT 0,
                 `items_failed`  INT UNSIGNED DEFAULT 0,
                 `error_message` TEXT DEFAULT NULL,
+                `rate_limit_hits` INT UNSIGNED DEFAULT 0,
                 `duration_ms`   INT UNSIGNED DEFAULT NULL,
                 `started_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `completed_at`  DATETIME DEFAULT NULL,
@@ -352,6 +353,11 @@
         <item for="upgrade">
             ALTER TABLE `?:sphinx_destinations`
                 ADD KEY `idx_full_path` (`full_path`(100));
+        </item>
+        <!-- Upgrade: add rate_limit_hits column to sphinx_sync_log -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_sync_log`
+                ADD COLUMN IF NOT EXISTS `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`;
         </item>
     </queries>
 
@@ -548,5 +554,9 @@
         <item lang="ro" id="sphinx_holidays.skipped_invalid_country"><![CDATA[omise — cod de țară invalid]]></item>
         <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template ({country}, {region}, {city} placeholders)]]></item>
         <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie ({country}, {region}, {city})]]></item>
+
+        <!-- Rate Limiting -->
+        <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>
+        <item lang="ro" id="sphinx_holidays.rate_limited_requests"><![CDATA[Cereri limitate de rată]]></item>
     </language_variables>
 </addon>

@@ -134,6 +134,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="product_category_template">
+                        <type>input</type>
+                        <default_value>Hotels/{country}/{region}/{city}</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -163,6 +168,28 @@
                     <item id="circuit_breaker_timeout">
                         <type>input</type>
                         <default_value>60</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Hotel Sync Header -->
+                    <item id="hotel_sync_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="selected_destinations">
+                        <type>textarea</type>
+                        <default_value>GR</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Cron Header -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="cron_access_key">
+                        <type>password</type>
+                        <default_value></default_value>
                         <variants/>
                     </item>
 
@@ -229,6 +256,7 @@
                 `type`              VARCHAR(30) NOT NULL COMMENT 'continent, country, region, city, destination',
                 `parent_id`         INT UNSIGNED DEFAULT NULL,
                 `country_code`      VARCHAR(5) DEFAULT NULL,
+                `full_path`         VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent',
                 `geoname_id`        INT UNSIGNED DEFAULT NULL,
                 `latitude`          DECIMAL(10,7) DEFAULT NULL,
                 `longitude`         DECIMAL(10,7) DEFAULT NULL,
@@ -237,6 +265,7 @@
                 KEY `idx_type` (`type`),
                 KEY `idx_parent` (`parent_id`),
                 KEY `idx_country` (`country_code`),
+                KEY `idx_full_path` (`full_path`(100)),
                 KEY `idx_geoname` (`geoname_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
@@ -297,6 +326,7 @@
                 `items_synced`  INT UNSIGNED DEFAULT 0,
                 `items_failed`  INT UNSIGNED DEFAULT 0,
                 `error_message` TEXT DEFAULT NULL,
+                `rate_limit_hits` INT UNSIGNED DEFAULT 0,
                 `duration_ms`   INT UNSIGNED DEFAULT NULL,
                 `started_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `completed_at`  DATETIME DEFAULT NULL,
@@ -313,6 +343,21 @@
                 `expires_at`    INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- Upgrade: add full_path column to existing sphinx_destinations -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                ADD COLUMN IF NOT EXISTS `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent'
+                AFTER `country_code`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                ADD KEY `idx_full_path` (`full_path`(100));
+        </item>
+        <!-- Upgrade: add rate_limit_hits column to sphinx_sync_log -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_sync_log`
+                ADD COLUMN IF NOT EXISTS `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`;
         </item>
     </queries>
 
@@ -363,9 +408,155 @@
         <item lang="ro" id="sphinx_holidays.circuit_breaker_threshold"><![CDATA[Prag circuit breaker (eșecuri înainte de deschidere)]]></item>
         <item lang="en" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Circuit breaker timeout (seconds)]]></item>
         <item lang="ro" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Timeout circuit breaker (secunde)]]></item>
+        <item lang="en" id="sphinx_holidays.hotel_sync_header"><![CDATA[Hotel Sync Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.hotel_sync_header"><![CDATA[Setări Sincronizare Hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.selected_destinations"><![CDATA[Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)]]></item>
+        <item lang="ro" id="sphinx_holidays.selected_destinations"><![CDATA[Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații (Crete, Rhodes), sau ID-uri destinații (1234)]]></item>
+
+        <item lang="en" id="sphinx_holidays.cron_header"><![CDATA[Cron Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_header"><![CDATA[Setări Cron]]></item>
+        <item lang="en" id="sphinx_holidays.cron_access_key"><![CDATA[Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_access_key"><![CDATA[Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
+
         <item lang="en" id="sphinx_holidays.debug_header"><![CDATA[Debug]]></item>
         <item lang="ro" id="sphinx_holidays.debug_header"><![CDATA[Depanare]]></item>
         <item lang="en" id="sphinx_holidays.debug_logging"><![CDATA[Enable debug logging]]></item>
         <item lang="ro" id="sphinx_holidays.debug_logging"><![CDATA[Activează logare depanare]]></item>
+
+        <!-- Destinations & Sync -->
+        <item lang="en" id="sphinx_holidays.destinations"><![CDATA[Destinations]]></item>
+        <item lang="ro" id="sphinx_holidays.destinations"><![CDATA[Destinații]]></item>
+        <item lang="en" id="sphinx_holidays.sphinx_dashboard"><![CDATA[Sphinx Dashboard]]></item>
+        <item lang="ro" id="sphinx_holidays.sphinx_dashboard"><![CDATA[Panou Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.sync_destinations"><![CDATA[Sync Destinations]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_destinations"><![CDATA[Sincronizare Destinații]]></item>
+        <item lang="en" id="sphinx_holidays.sync_destinations_confirm"><![CDATA[This will fetch all destinations from the Sphinx API. Continue?]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_destinations_confirm"><![CDATA[Se vor descărca toate destinațiile din API-ul Sphinx. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.sync_started"><![CDATA[Destination sync started]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_started"><![CDATA[Sincronizarea destinațiilor a început]]></item>
+        <item lang="en" id="sphinx_holidays.sync_completed"><![CDATA[Destination sync completed]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_completed"><![CDATA[Sincronizarea destinațiilor s-a finalizat]]></item>
+        <item lang="en" id="sphinx_holidays.sync_failed"><![CDATA[Destination sync failed]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_failed"><![CDATA[Sincronizarea destinațiilor a eșuat]]></item>
+        <item lang="en" id="sphinx_holidays.total_destinations"><![CDATA[Total Destinations]]></item>
+        <item lang="ro" id="sphinx_holidays.total_destinations"><![CDATA[Total Destinații]]></item>
+        <item lang="en" id="sphinx_holidays.continents"><![CDATA[Continents]]></item>
+        <item lang="ro" id="sphinx_holidays.continents"><![CDATA[Continente]]></item>
+        <item lang="en" id="sphinx_holidays.countries"><![CDATA[Countries]]></item>
+        <item lang="ro" id="sphinx_holidays.countries"><![CDATA[Țări]]></item>
+        <item lang="en" id="sphinx_holidays.regions"><![CDATA[Regions]]></item>
+        <item lang="ro" id="sphinx_holidays.regions"><![CDATA[Regiuni]]></item>
+        <item lang="en" id="sphinx_holidays.cities"><![CDATA[Cities]]></item>
+        <item lang="ro" id="sphinx_holidays.cities"><![CDATA[Orașe]]></item>
+        <item lang="en" id="sphinx_holidays.last_synced"><![CDATA[Last Synced]]></item>
+        <item lang="ro" id="sphinx_holidays.last_synced"><![CDATA[Ultima Sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.never_synced"><![CDATA[Never synced]]></item>
+        <item lang="ro" id="sphinx_holidays.never_synced"><![CDATA[Niciodată sincronizat]]></item>
+        <item lang="en" id="sphinx_holidays.destination_name"><![CDATA[Name]]></item>
+        <item lang="ro" id="sphinx_holidays.destination_name"><![CDATA[Nume]]></item>
+        <item lang="en" id="sphinx_holidays.destination_type"><![CDATA[Type]]></item>
+        <item lang="ro" id="sphinx_holidays.destination_type"><![CDATA[Tip]]></item>
+        <item lang="en" id="sphinx_holidays.country_code"><![CDATA[Country Code]]></item>
+        <item lang="ro" id="sphinx_holidays.country_code"><![CDATA[Cod Țară]]></item>
+        <item lang="en" id="sphinx_holidays.hotel_count"><![CDATA[Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.hotel_count"><![CDATA[Hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.all_types"><![CDATA[All types]]></item>
+        <item lang="ro" id="sphinx_holidays.all_types"><![CDATA[Toate tipurile]]></item>
+        <item lang="en" id="sphinx_holidays.search_destinations"><![CDATA[Search destinations]]></item>
+        <item lang="ro" id="sphinx_holidays.search_destinations"><![CDATA[Caută destinații]]></item>
+        <item lang="en" id="sphinx_holidays.no_destinations"><![CDATA[No destinations found. Run a sync first.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_destinations"><![CDATA[Nu s-au găsit destinații. Rulați mai întâi o sincronizare.]]></item>
+        <item lang="en" id="sphinx_holidays.api_not_configured"><![CDATA[Sphinx API is not configured. Please set the API key in addon settings.]]></item>
+        <item lang="ro" id="sphinx_holidays.api_not_configured"><![CDATA[API-ul Sphinx nu este configurat. Setați cheia API în setările addon-ului.]]></item>
+        <item lang="en" id="sphinx_holidays.sync_log"><![CDATA[Sync Log]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_log"><![CDATA[Jurnal Sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.items_synced"><![CDATA[Items Synced]]></item>
+        <item lang="ro" id="sphinx_holidays.items_synced"><![CDATA[Elemente Sincronizate]]></item>
+        <item lang="en" id="sphinx_holidays.duration"><![CDATA[Duration]]></item>
+        <item lang="ro" id="sphinx_holidays.duration"><![CDATA[Durată]]></item>
+
+        <!-- Hotels & Hotel Sync -->
+        <item lang="en" id="sphinx_holidays.hotels"><![CDATA[Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels"><![CDATA[Hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.sync_hotels"><![CDATA[Sync Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_hotels"><![CDATA[Sincronizare Hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.sync_hotels_confirm"><![CDATA[This will fetch hotels for the selected countries from the Sphinx API. Continue?]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_hotels_confirm"><![CDATA[Se vor descărca hotelurile pentru țările selectate din API-ul Sphinx. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.hotel_sync_completed"><![CDATA[Hotel sync completed]]></item>
+        <item lang="ro" id="sphinx_holidays.hotel_sync_completed"><![CDATA[Sincronizarea hotelurilor s-a finalizat]]></item>
+        <item lang="en" id="sphinx_holidays.hotel_sync_failed"><![CDATA[Hotel sync failed]]></item>
+        <item lang="ro" id="sphinx_holidays.hotel_sync_failed"><![CDATA[Sincronizarea hotelurilor a eșuat]]></item>
+        <item lang="en" id="sphinx_holidays.total_hotels"><![CDATA[Total Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.total_hotels"><![CDATA[Total Hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.star_rating"><![CDATA[Stars]]></item>
+        <item lang="ro" id="sphinx_holidays.star_rating"><![CDATA[Stele]]></item>
+        <item lang="en" id="sphinx_holidays.property_type"><![CDATA[Type]]></item>
+        <item lang="ro" id="sphinx_holidays.property_type"><![CDATA[Tip]]></item>
+        <item lang="en" id="sphinx_holidays.sync_status"><![CDATA[Status]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_status"><![CDATA[Stare]]></item>
+        <item lang="en" id="sphinx_holidays.active"><![CDATA[Active]]></item>
+        <item lang="ro" id="sphinx_holidays.active"><![CDATA[Activ]]></item>
+        <item lang="en" id="sphinx_holidays.inactive"><![CDATA[Inactive]]></item>
+        <item lang="ro" id="sphinx_holidays.inactive"><![CDATA[Inactiv]]></item>
+        <item lang="en" id="sphinx_holidays.all_statuses"><![CDATA[All statuses]]></item>
+        <item lang="ro" id="sphinx_holidays.all_statuses"><![CDATA[Toate stările]]></item>
+        <item lang="en" id="sphinx_holidays.search_hotels"><![CDATA[Search hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.search_hotels"><![CDATA[Caută hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.no_hotels"><![CDATA[No hotels found. Run a hotel sync first.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_hotels"><![CDATA[Nu s-au găsit hoteluri. Rulați mai întâi o sincronizare hoteluri.]]></item>
+        <item lang="en" id="sphinx_holidays.hotels_by_country"><![CDATA[Hotels by Country]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels_by_country"><![CDATA[Hoteluri pe Țară]]></item>
+
+        <!-- Resort/City Drill-Down Filtering -->
+        <item lang="en" id="sphinx_holidays.all_regions"><![CDATA[All regions]]></item>
+        <item lang="ro" id="sphinx_holidays.all_regions"><![CDATA[Toate regiunile]]></item>
+        <item lang="en" id="sphinx_holidays.all_cities"><![CDATA[All cities/resorts]]></item>
+        <item lang="ro" id="sphinx_holidays.all_cities"><![CDATA[Toate orașele/stațiunile]]></item>
+        <item lang="en" id="sphinx_holidays.region"><![CDATA[Region]]></item>
+        <item lang="ro" id="sphinx_holidays.region"><![CDATA[Regiune]]></item>
+        <item lang="en" id="sphinx_holidays.city_resort"><![CDATA[City/Resort]]></item>
+        <item lang="ro" id="sphinx_holidays.city_resort"><![CDATA[Oraș/Stațiune]]></item>
+        <item lang="en" id="sphinx_holidays.sync_targets"><![CDATA[Sync targets]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_targets"><![CDATA[Ținte sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.change_settings"><![CDATA[Change settings]]></item>
+        <item lang="ro" id="sphinx_holidays.change_settings"><![CDATA[Modifică setări]]></item>
+        <item lang="en" id="sphinx_holidays.select_region"><![CDATA[Select region]]></item>
+        <item lang="ro" id="sphinx_holidays.select_region"><![CDATA[Selectează regiunea]]></item>
+        <item lang="en" id="sphinx_holidays.select_city"><![CDATA[Select city]]></item>
+        <item lang="ro" id="sphinx_holidays.select_city"><![CDATA[Selectează orașul]]></item>
+
+        <!-- Destination Hierarchy / Breadcrumbs -->
+        <item lang="en" id="sphinx_holidays.destination_path"><![CDATA[Destination Path]]></item>
+        <item lang="ro" id="sphinx_holidays.destination_path"><![CDATA[Cale Destinație]]></item>
+        <item lang="en" id="sphinx_holidays.all_continents"><![CDATA[All continents]]></item>
+        <item lang="ro" id="sphinx_holidays.all_continents"><![CDATA[Toate continentele]]></item>
+        <item lang="en" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
+        <item lang="ro" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
+
+        <!-- Phase 2: Product Integration -->
+        <item lang="en" id="sphinx_holidays.products"><![CDATA[Products]]></item>
+        <item lang="ro" id="sphinx_holidays.products"><![CDATA[Produse]]></item>
+        <item lang="en" id="sphinx_holidays.linked_products"><![CDATA[Linked Products]]></item>
+        <item lang="ro" id="sphinx_holidays.linked_products"><![CDATA[Produse Asociate]]></item>
+        <item lang="en" id="sphinx_holidays.unlinked_hotels"><![CDATA[Unlinked Hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.unlinked_hotels"><![CDATA[Hoteluri Neasociate]]></item>
+        <item lang="en" id="sphinx_holidays.create_products"><![CDATA[Create Products]]></item>
+        <item lang="ro" id="sphinx_holidays.create_products"><![CDATA[Creare Produse]]></item>
+        <item lang="en" id="sphinx_holidays.create_products_confirm"><![CDATA[This will create CS-Cart products for all unlinked Sphinx hotels. Continue?]]></item>
+        <item lang="ro" id="sphinx_holidays.create_products_confirm"><![CDATA[Se vor crea produse CS-Cart pentru toate hotelurile Sphinx neasociate. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.products_created"><![CDATA[Products created]]></item>
+        <item lang="ro" id="sphinx_holidays.products_created"><![CDATA[Produse create]]></item>
+        <item lang="en" id="sphinx_holidays.products_creation_failed"><![CDATA[Product creation failed]]></item>
+        <item lang="ro" id="sphinx_holidays.products_creation_failed"><![CDATA[Crearea produselor a eșuat]]></item>
+        <item lang="en" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[No unlinked hotels found. All hotels already have products.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[Nu s-au găsit hoteluri neasociate. Toate hotelurile au deja produse.]]></item>
+        <item lang="en" id="sphinx_holidays.skipped_invalid_country"><![CDATA[skipped — invalid country code]]></item>
+        <item lang="ro" id="sphinx_holidays.skipped_invalid_country"><![CDATA[omise — cod de țară invalid]]></item>
+        <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template ({country}, {region}, {city} placeholders)]]></item>
+        <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie ({country}, {region}, {city})]]></item>
+
+        <!-- Rate Limiting -->
+        <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>
+        <item lang="ro" id="sphinx_holidays.rate_limited_requests"><![CDATA[Cereri limitate de rată]]></item>
     </language_variables>
 </addon>
