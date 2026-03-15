@@ -20,6 +20,8 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\TravelCore\TravelConstants;
+
 // ============================================================================
 // HOOK: pre_place_order
 // ============================================================================
@@ -165,7 +167,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     $date_format   = Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
-    $currency_code = $order['secondary_currency'] ?? Constants::CURRENCY_EUR;
+    $currency_code = $order['secondary_currency'] ?? TravelConstants::CURRENCY_EUR;
 
     // Pre-fetch hotel locations in single query (avoid N+1)
     $hotel_ids = [];

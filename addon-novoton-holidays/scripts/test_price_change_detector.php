@@ -30,26 +30,15 @@ if (!$isCli) {
 
 // ── Minimal stubs so PriceChangeDetector can run outside CS-Cart ──
 
-namespace Tygh\Addons\NovotonHolidays\Services {
-    // Stub ConfigProvider::get() to return a controllable tolerance value.
-    // The real class is loaded from src/ — we define it here FIRST so PHP uses our stub.
-    class ConfigProvider
+namespace Tygh\Addons\TravelCore\Services {
+    // Empty stub — we'll define PriceChangeDetector after loading the real file
+}
+
+namespace TravelCoreTestHelper {
+    // Helper to create PriceChangeDetector with custom tolerance
+    function createDetector(float $tolerance = 1.0): \Tygh\Addons\TravelCore\Services\PriceChangeDetector
     {
-        private static float $tolerance = 1.0;
-
-        public static function setTolerance(float $pct): void
-        {
-            self::$tolerance = $pct;
-        }
-
-        /** @return mixed */
-        public static function get(string $key, $default = null)
-        {
-            if ($key === 'price_change_tolerance_percent') {
-                return self::$tolerance;
-            }
-            return $default;
-        }
+        return new \Tygh\Addons\TravelCore\Services\PriceChangeDetector($tolerance);
     }
 }
 
@@ -64,11 +53,10 @@ namespace Tygh {
 }
 
 namespace {
-    // Now load the real PriceChangeDetector (it will see our stubs above).
-    require_once __DIR__ . '/../app/addons/novoton_holidays/src/Services/PriceChangeDetector.php';
+    // Load the shared travel_core PriceChangeDetector.
+    require_once __DIR__ . '/../../addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php';
 
-    use Tygh\Addons\NovotonHolidays\Services\PriceChangeDetector;
-    use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+    use Tygh\Addons\TravelCore\Services\PriceChangeDetector;
     use Tygh\Tygh;
 
     // ═══════════════════════════════════════════════════════════════
@@ -115,8 +103,7 @@ namespace {
     // ═══════════════════════════════════════════════════════════════
 
     section('SCENARIO 1: Significant Price Increase ($100 -> $110, +10%)');
-    ConfigProvider::setTolerance(1.0);
-    $d = new PriceChangeDetector();
+    $d = new PriceChangeDetector(1.0);
     $result = $d->analyse(100.0, 110.0, 'EUR', 'add_to_cart', ['hotel_name' => 'Test Hotel']);
 
     assert_true('significant = true',                $result['significant']);
@@ -207,16 +194,13 @@ namespace {
     // ═══════════════════════════════════════════════════════════════
 
     section('SCENARIO 8: Custom 5% Tolerance');
-    ConfigProvider::setTolerance(5.0);
-    $d2 = new PriceChangeDetector();
+    $d2 = new PriceChangeDetector(5.0);
 
     $result = $d2->analyse(100.0, 103.0, 'EUR');
     assert_false('3% change silent at 5% tol', $result['significant']);
 
     $result = $d2->analyse(100.0, 106.0, 'EUR');
     assert_true('6% change significant at 5% tol', $result['significant']);
-
-    ConfigProvider::setTolerance(1.0); // restore
 
     // ═══════════════════════════════════════════════════════════════
     // SCENARIO 9: Session alert storage (store → peek → consume)

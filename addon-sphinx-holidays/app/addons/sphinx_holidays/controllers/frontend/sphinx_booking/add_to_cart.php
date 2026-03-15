@@ -16,6 +16,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\TravelConstants;
 
     $bookingData = $_REQUEST;
     $offer_id = trim($bookingData['offer_id'] ?? '');
@@ -138,7 +139,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
         'guests_data' => json_encode($guests_data),
         'base_price' => $basePrice, 'total_price' => $total_price,
-        'currency' => $currency, 'status' => 'pending',
+        'currency' => $currency, 'status' => TravelConstants::STATUS_PENDING,
         'api_response' => json_encode($verifyResult),
     ];
 
@@ -159,7 +160,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'total_price' => $total_price, 'currency' => $currency,
-        'holder_name' => $holder_name, 'status' => 'pending',
+        'holder_name' => $holder_name, 'status' => TravelConstants::STATUS_PENDING,
     ];
 
     $existing_travel_id = (int)db_get_field(

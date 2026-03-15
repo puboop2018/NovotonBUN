@@ -14,6 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class SecurityService implements SecurityServiceInterface
@@ -64,15 +65,15 @@ class SecurityService implements SecurityServiceInterface
         // Validate adults/children
         if (isset($data['adults'])) {
             $adults = (int) $data['adults'];
-            if ($adults < 1 || $adults > Constants::MAX_ADULTS) {
-                $errors[] = 'Adults must be between 1 and ' . Constants::MAX_ADULTS;
+            if ($adults < 1 || $adults > TravelConstants::MAX_ADULTS) {
+                $errors[] = 'Adults must be between 1 and ' . TravelConstants::MAX_ADULTS;
             }
         }
         
         if (isset($data['children'])) {
             $children = (int) $data['children'];
-            if ($children < 0 || $children > Constants::MAX_CHILDREN) {
-                $errors[] = 'Children must be between 0 and ' . Constants::MAX_CHILDREN;
+            if ($children < 0 || $children > TravelConstants::MAX_CHILDREN) {
+                $errors[] = 'Children must be between 0 and ' . TravelConstants::MAX_CHILDREN;
             }
         }
         
@@ -84,8 +85,8 @@ class SecurityService implements SecurityServiceInterface
             
             foreach ($ages as $age) {
                 $age = (float) $age;
-                if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
-                    $errors[] = 'Child age must be between ' . Constants::MIN_CHILD_AGE . ' and ' . Constants::MAX_CHILD_AGE;
+                if ($age < TravelConstants::MIN_CHILD_AGE || $age > TravelConstants::MAX_CHILD_AGE) {
+                    $errors[] = 'Child age must be between ' . TravelConstants::MIN_CHILD_AGE . ' and ' . TravelConstants::MAX_CHILD_AGE;
                     break;
                 }
             }
@@ -138,16 +139,16 @@ class SecurityService implements SecurityServiceInterface
         }
 
         // Sanitize nights
-        $sanitized['nights'] = max(1, min(Constants::MAX_NIGHTS, (int) ($params['nights'] ?? Constants::DEFAULT_NIGHTS)));
+        $sanitized['nights'] = max(1, min(TravelConstants::MAX_NIGHTS, (int) ($params['nights'] ?? TravelConstants::DEFAULT_NIGHTS)));
 
         // Sanitize adults
-        $sanitized['adults'] = max(1, min(Constants::MAX_ADULTS, (int) ($params['adults'] ?? Constants::DEFAULT_ADULTS)));
+        $sanitized['adults'] = max(1, min(TravelConstants::MAX_ADULTS, (int) ($params['adults'] ?? TravelConstants::DEFAULT_ADULTS)));
 
         // Sanitize children
-        $sanitized['children'] = max(0, min(Constants::MAX_CHILDREN, (int) ($params['children'] ?? Constants::DEFAULT_CHILDREN)));
+        $sanitized['children'] = max(0, min(TravelConstants::MAX_CHILDREN, (int) ($params['children'] ?? TravelConstants::DEFAULT_CHILDREN)));
 
         // Sanitize rooms
-        $sanitized['rooms'] = max(1, min(Constants::MAX_ROOMS, (int) ($params['rooms'] ?? Constants::DEFAULT_ROOMS)));
+        $sanitized['rooms'] = max(1, min(TravelConstants::MAX_ROOMS, (int) ($params['rooms'] ?? TravelConstants::DEFAULT_ROOMS)));
 
         // Sanitize destination (alphanumeric, spaces, common punctuation)
         if (!empty($params['destination'])) {

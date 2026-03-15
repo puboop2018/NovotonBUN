@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 

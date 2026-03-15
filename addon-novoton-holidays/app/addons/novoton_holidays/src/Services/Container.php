@@ -180,9 +180,9 @@ class Container
         return $this->resolve('cacheService', fn() => new CacheService());
     }
 
-    public function validationHelper(): ValidationHelper
+    public function validationHelper(): \Tygh\Addons\TravelCore\Services\ValidationHelper
     {
-        return $this->resolve('validationHelper', fn() => new ValidationHelper());
+        return $this->resolve('validationHelper', fn() => new \Tygh\Addons\TravelCore\Services\ValidationHelper());
     }
 
     public function priceInfoService(): PriceInfoServiceInterface
@@ -190,9 +190,9 @@ class Container
         return $this->resolve('priceInfoService', fn() => new PriceInfoService());
     }
 
-    public function dateHelper(): DateHelper
+    public function dateHelper(): \Tygh\Addons\TravelCore\Services\DateHelper
     {
-        return $this->resolve('dateHelper', fn() => new DateHelper());
+        return $this->resolve('dateHelper', fn() => new \Tygh\Addons\TravelCore\Services\DateHelper());
     }
 
     public function configProvider(): ConfigProvider
@@ -235,14 +235,23 @@ class Container
         ));
     }
 
+    public function currencyService(): \Tygh\Addons\TravelCore\Services\CurrencyService
+    {
+        return $this->resolve('currencyService', fn() => new \Tygh\Addons\TravelCore\Services\CurrencyService(
+            ConfigProvider::getApiCurrency()
+        ));
+    }
+
     public function preOrderPriceVerifier(): PreOrderPriceVerifier
     {
         return $this->resolve('preOrderPriceVerifier', fn() => new PreOrderPriceVerifier());
     }
 
-    public function priceChangeDetector(): PriceChangeDetector
+    public function priceChangeDetector(): \Tygh\Addons\TravelCore\Services\PriceChangeDetector
     {
-        return $this->resolve('priceChangeDetector', fn() => new PriceChangeDetector());
+        return $this->resolve('priceChangeDetector', fn() => new \Tygh\Addons\TravelCore\Services\PriceChangeDetector(
+            (float) ConfigProvider::get('price_change_tolerance_percent', 1.0)
+        ));
     }
 
     public function featureMapper(): FeatureMapper

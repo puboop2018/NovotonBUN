@@ -211,15 +211,16 @@ function fn_sphinx_holidays_place_order(&$cart, &$auth, $action, $order_id, &$or
         $offer_id = $product['extra']['offer_id'] ?? '';
 
         // Update sphinx_bookings with order_id
+        $confirmed = \Tygh\Addons\TravelCore\TravelConstants::STATUS_CONFIRMED;
         db_query(
-            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = 'confirmed' WHERE booking_id = ?i",
-            $order_id, $booking_id
+            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = ?s WHERE booking_id = ?i",
+            $order_id, $confirmed, $booking_id
         );
 
         // Update travel_bookings
         db_query(
-            "UPDATE ?:travel_bookings SET order_id = ?i, status = 'confirmed' WHERE provider = 'sphinx' AND provider_booking_id = ?i",
-            $order_id, $booking_id
+            "UPDATE ?:travel_bookings SET order_id = ?i, status = ?s WHERE provider = 'sphinx' AND provider_booking_id = ?i",
+            $order_id, $confirmed, $booking_id
         );
 
         // Submit booking to Sphinx API

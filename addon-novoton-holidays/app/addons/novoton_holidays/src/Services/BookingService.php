@@ -15,6 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
@@ -120,9 +121,9 @@ class BookingService implements BookingServiceInterface
             'api_price' => (float) ($bookingData['api_price'] ?? 0),
             'total_price' => (float) ($bookingData['total_price'] ?? 0),
             'currency' => ConfigProvider::getApiCurrency(),
-            'status' => Constants::STATUS_PENDING,
+            'status' => TravelConstants::STATUS_PENDING,
         ];
-        
+
         // Check for duplicate booking
         $existing_id = $this->findDuplicateBooking($booking_record);
         

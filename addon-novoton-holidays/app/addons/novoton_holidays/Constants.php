@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\TravelCore\TravelConstants;
+
 /**
  * Addon-wide constants
  */
@@ -20,15 +22,9 @@ final class Constants
     public const ADDON_ID = 'novoton_holidays';
     public const VERSION = '3.2.0';
     
-    // ========== Booking Status (internal) ==========
-
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_CONFIRMED = 'confirmed';
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_FAILED = 'failed';
-    public const STATUS_ASK = 'ask';             // On-request (waiting for hotel confirmation)
-    public const STATUS_WAITING = 'waiting';      // Waitlist
+    // ========== Booking Status ==========
+    // Shared statuses are in TravelConstants (STATUS_PENDING, STATUS_CONFIRMED, etc.)
+    // Use \Tygh\Addons\TravelCore\TravelConstants::STATUS_* for those.
 
     // ========== Novoton API Status Codes ==========
     //
@@ -60,12 +56,12 @@ final class Constants
     // Maps internal status codes (after wire normalization) to internal statuses.
 
     public const NOVOTON_STATUS_TO_INTERNAL = [
-        'OK'                                       => self::STATUS_CONFIRMED,  // API wire format (legacy/direct)
-        self::NOVOTON_STATUS_CONFIRMED             => self::STATUS_CONFIRMED,  // Good -> confirmed
-        self::NOVOTON_STATUS_ON_REQUEST            => self::STATUS_ASK,        // ASK  -> ask (poll via resinfo)
-        self::NOVOTON_STATUS_CANCELLED             => self::STATUS_CANCELLED,  // ST   -> cancelled
-        self::NOVOTON_STATUS_WAITLIST              => self::STATUS_WAITING,    // WT   -> waiting
-        self::NOVOTON_STATUS_ALTERNATIVES_PENDING  => self::STATUS_PENDING,    // RQ   -> pending (check alternative_RS)
+        'OK'                                       => TravelConstants::STATUS_CONFIRMED,  // API wire format (legacy/direct)
+        self::NOVOTON_STATUS_CONFIRMED             => TravelConstants::STATUS_CONFIRMED,  // Good -> confirmed
+        self::NOVOTON_STATUS_ON_REQUEST            => TravelConstants::STATUS_ASK,        // ASK  -> ask (poll via resinfo)
+        self::NOVOTON_STATUS_CANCELLED             => TravelConstants::STATUS_CANCELLED,  // ST   -> cancelled
+        self::NOVOTON_STATUS_WAITLIST              => TravelConstants::STATUS_WAITING,    // WT   -> waiting
+        self::NOVOTON_STATUS_ALTERNATIVES_PENDING  => TravelConstants::STATUS_PENDING,    // RQ   -> pending (check alternative_RS)
     ];
 
     /**
@@ -97,15 +93,7 @@ final class Constants
     public const ACC_EXTRA_BED = 'EXTRA_BED';
     
     // ========== Currency ==========
-    
-    public const CURRENCY_EUR = 'EUR';
-    public const CURRENCY_USD = 'USD';
-    public const CURRENCY_BGN = 'BGN';
-    public const CURRENCY_RON = 'RON';
-    
-    // Currency symbols and formatting are taken from CS-Cart currency settings
-    // See: Administration → Currencies in CS-Cart admin panel
-    // Default currency uses CART_PRIMARY_CURRENCY constant from CS-Cart
+    // Shared currency constants are in TravelConstants (CURRENCY_EUR, CURRENCY_USD, etc.)
     
     // ========== External URLs ==========
 
@@ -113,13 +101,7 @@ final class Constants
     public const BNR_RATES_URL  = 'https://curs.bnr.ro/nbrfxrates.xml';
 
     // ========== Limits ==========
-    
-    public const MAX_ADULTS = 10;
-    public const MAX_CHILDREN = 6;
-    public const MAX_ROOMS = 5;
-    public const MAX_NIGHTS = 30;
-    public const MAX_CHILD_AGE = 17;
-    public const MIN_CHILD_AGE = 0;
+    // Shared limits are in TravelConstants (MAX_ADULTS, MAX_CHILDREN, etc.)
     
     // ========== Cache TTL (seconds) ==========
     // ONLY for live API calls - static data uses database storage
@@ -307,11 +289,8 @@ final class Constants
     ];
 
     // ========== Default Values ==========
+    // Shared defaults are in TravelConstants (DEFAULT_ADULTS, DEFAULT_CHILDREN, etc.)
 
-    public const DEFAULT_ADULTS = 2;
-    public const DEFAULT_CHILDREN = 0;
-    public const DEFAULT_NIGHTS = 7;
-    public const DEFAULT_ROOMS = 1;
     public const DEFAULT_COMMISSION = 0;
     public const DEFAULT_ADULT_AGE = 33;
     public const DEFAULT_ISO_NATIONAL = 'RO';
@@ -393,9 +372,7 @@ final class Constants
     public const PRICE_CHECK_OFFSET_DAYS = 30;
 
     // ========== Date Formats ==========
-
-    public const DATETIME_FORMAT = 'Y-m-d H:i:s';
-    public const DATE_FORMAT     = 'Y-m-d';
+    // Shared date formats are in TravelConstants (DATETIME_FORMAT, DATE_FORMAT)
 
     // ========== File Paths ==========
 

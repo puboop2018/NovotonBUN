@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\ValueObjects;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Exceptions\InvalidArgumentException;
 
 final class Occupancy
@@ -44,14 +45,14 @@ final class Occupancy
      */
     public static function create(int $adults, int $children = 0, array $childrenAges = []): self
     {
-        if ($adults < 1 || $adults > Constants::MAX_ADULTS) {
+        if ($adults < 1 || $adults > TravelConstants::MAX_ADULTS) {
             throw new InvalidArgumentException(
-                "Adults must be between 1 and " . Constants::MAX_ADULTS . ", got: {$adults}"
+                "Adults must be between 1 and " . TravelConstants::MAX_ADULTS . ", got: {$adults}"
             );
         }
-        if ($children < 0 || $children > Constants::MAX_CHILDREN) {
+        if ($children < 0 || $children > TravelConstants::MAX_CHILDREN) {
             throw new InvalidArgumentException(
-                "Children must be between 0 and " . Constants::MAX_CHILDREN . ", got: {$children}"
+                "Children must be between 0 and " . TravelConstants::MAX_CHILDREN . ", got: {$children}"
             );
         }
 
@@ -59,8 +60,8 @@ final class Occupancy
         $ages = [];
         for ($i = 0; $i < $children; $i++) {
             $age = isset($childrenAges[$i]) ? (int)($childrenAges[$i]) : 0;
-            if ($age < Constants::MIN_CHILD_AGE || $age > Constants::MAX_CHILD_AGE) {
-                $age = max(Constants::MIN_CHILD_AGE, min(Constants::MAX_CHILD_AGE, $age));
+            if ($age < TravelConstants::MIN_CHILD_AGE || $age > TravelConstants::MAX_CHILD_AGE) {
+                $age = max(TravelConstants::MIN_CHILD_AGE, min(TravelConstants::MAX_CHILD_AGE, $age));
             }
             $ages[] = $age;
         }
@@ -73,7 +74,7 @@ final class Occupancy
      */
     public static function defaults(): self
     {
-        return new self(Constants::DEFAULT_ADULTS, Constants::DEFAULT_CHILDREN, []);
+        return new self(TravelConstants::DEFAULT_ADULTS, TravelConstants::DEFAULT_CHILDREN, []);
     }
 
     public function adults(): int

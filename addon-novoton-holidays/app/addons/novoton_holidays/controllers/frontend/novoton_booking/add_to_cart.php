@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
     // --- Security: Rate limiting ---
@@ -218,7 +218,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
                 $changeInfo = $detector->analyse(
                     $customer_visible_price,
                     $total_price,
-                    CurrencyService::getApiCurrency(),
+                    ConfigProvider::getApiCurrency(),
                     'add_to_cart',
                     [
                         'hotel_name' => $hotel_info['hotel_name'] ?? '',
@@ -487,7 +487,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
             'guests_data' => GuestDataNormalizer::toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'currency' => CurrencyService::getApiCurrency(),
+            'currency' => ConfigProvider::getApiCurrency(),
             'status' => 'pending',
             'api_request' => json_encode([
                 'guests' => $guests_data,
@@ -539,7 +539,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,
-            'currency' => CurrencyService::getApiCurrency(),
+            'currency' => ConfigProvider::getApiCurrency(),
         ]
     ];
     
@@ -563,7 +563,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
     // display-currency coefficients when rendering. Storing EUR directly would cause
     // the coefficient to be applied on top, resulting in a wrong price on the cart page.
     $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
-    $cart_price = CurrencyService::convertFromApiCurrency($total_price, $primaryCurrency);
+    $cart_price = _nvt_currency_service()->convertFromApiCurrency($total_price, $primaryCurrency);
 
     // Add product to cart
     $cart['products'][$cart_id] = [

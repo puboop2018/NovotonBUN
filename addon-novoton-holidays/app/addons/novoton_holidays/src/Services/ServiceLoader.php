@@ -62,10 +62,17 @@ function _nvt_cache_service() {
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\ValidationHelper
+ * @return \Tygh\Addons\TravelCore\Services\ValidationHelper
  */
 function _nvt_validation_helper() {
     return Container::getInstance()->validationHelper();
+}
+
+/**
+ * @return \Tygh\Addons\TravelCore\Services\CurrencyService
+ */
+function _nvt_currency_service() {
+    return Container::getInstance()->currencyService();
 }
 
 /**
@@ -76,7 +83,7 @@ function _nvt_price_info_service() {
 }
 
 /**
- * @return \Tygh\Addons\NovotonHolidays\Services\DateHelper
+ * @return \Tygh\Addons\TravelCore\Services\DateHelper
  */
 function _nvt_date_helper() {
     return Container::getInstance()->dateHelper();
