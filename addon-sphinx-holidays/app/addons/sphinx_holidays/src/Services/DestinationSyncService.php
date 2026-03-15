@@ -134,6 +134,11 @@ class DestinationSyncService
             $stats['failed'] = $stats['total'] - $stats['synced'];
             $stats['success'] = true;
 
+            // Build full_path breadcrumbs for disambiguation
+            $this->output('Building destination breadcrumb paths...');
+            $pathsUpdated = $this->repository->buildFullPaths();
+            $this->output("Updated {$pathsUpdated} full_path breadcrumbs.");
+
             $this->output("Sync complete: {$stats['synced']}/{$stats['total']} destinations synced.");
         } catch (\Throwable $e) {
             $stats['error'] = $e->getMessage();

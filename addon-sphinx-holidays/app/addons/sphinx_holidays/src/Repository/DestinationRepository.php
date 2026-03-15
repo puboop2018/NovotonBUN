@@ -255,4 +255,97 @@ class DestinationRepository
             $limit
         );
     }
+
+    /**
+     * Build full_path breadcrumbs for all destinations by walking parent_id chains.
+     *
+     * Generates paths like "Athens, Attica, Greece, Europe" for disambiguation.
+     * Called after destination sync completes.
+     *
+     * @return int Number of paths updated
+     */
+    public function buildFullPaths(): int
+    {
+        // Load all destinations into memory for fast parent_id traversal
+        $rows = db_get_hash_array(
+            "SELECT destination_id, name, parent_id FROM ?:sphinx_destinations",
+            'destination_id'
+        );
+
+        if (empty($rows)) {
+            return 0;
+        }
+
+        $updates = [];
+
+        foreach ($rows as $id => $row) {
+            $segments = [$row['name']];
+            $currentId = (int) $row['parent_id'];
+            $visited = [$id => true]; // cycle protection
+
+            // Walk up the parent chain (max depth 5)
+            while ($currentId > 0 && isset($rows[$currentId]) && !isset($visited[$currentId])) {
+                $visited[$currentId] = true;
+                $segments[] = $rows[$currentId]['name'];
+                $currentId = (int) $rows[$currentId]['parent_id'];
+            }
+
+            $updates[$id] = implode(', ', $segments);
+        }
+
+        // Batch update in chunks
+        $updated = 0;
+        $chunks = array_chunk($updates, 100, true);
+
+        foreach ($chunks as $chunk) {
+            foreach ($chunk as $destId => $fullPath) {
+                db_query(
+                    "UPDATE ?:sphinx_destinations SET full_path = ?s WHERE destination_id = ?i",
+                    $fullPath,
+                    $destId
+                );
+                $updated++;
+            }
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Get all continents with country count.
+     *
+     * @return array Continents with destination_id, name, type, country_count
+     */
+    public function getContinents(): array
+    {
+        return db_get_array(
+            "SELECT d.destination_id, d.name, d.type,
+                    (SELECT COUNT(*) FROM ?:sphinx_destinations c WHERE c.parent_id = d.destination_id) AS country_count
+             FROM ?:sphinx_destinations d
+             WHERE d.type = 'continent'
+             ORDER BY d.name ASC"
+        );
+    }
+
+    /**
+     * Find destinations by name or full_path prefix.
+     *
+     * "Athens" matches by name. "Athens, Greece" matches via full_path prefix,
+     * enabling unambiguous disambiguation (the "Athens Problem").
+     *
+     * @param string $query Destination name or partial full_path
+     * @return array Matching destination rows, ordered by hierarchy level
+     */
+    public function findByNameOrPath(string $query): array
+    {
+        $lower = mb_strtolower(trim($query));
+
+        return db_get_array(
+            "SELECT * FROM ?:sphinx_destinations
+             WHERE LOWER(name) = ?s OR LOWER(full_path) LIKE ?l
+             ORDER BY FIELD(type, 'continent', 'country', 'region', 'city', 'destination') ASC",
+            $lower,
+            $lower . '%'
+        );
+    }
 }

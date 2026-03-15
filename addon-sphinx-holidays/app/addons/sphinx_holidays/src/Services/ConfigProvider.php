@@ -157,11 +157,16 @@ class ConfigProvider
     /**
      * Resolve destination name tokens to destination IDs via DB lookup.
      *
+     * Supports both plain names and full_path queries for disambiguation:
+     *   - "Crete" → name match (unambiguous if unique)
+     *   - "Athens, Greece" → full_path prefix match (resolves "Athens Problem")
+     *
      * Disambiguation strategy:
-     *   1. Exact case-insensitive match on sphinx_destinations.name
-     *   2. If multiple matches, prefer those in already-selected countries
-     *   3. Among remaining, prefer higher hierarchy (region > city > destination)
-     *   4. If still ambiguous, include all and log a warning
+     *   1. If token contains ", " → treat as full_path query (unambiguous match)
+     *   2. Match via findByNameOrPath() (name exact OR full_path prefix)
+     *   3. If multiple matches, prefer those in already-selected countries
+     *   4. Among remaining, prefer higher hierarchy (region > city > destination)
+     *   5. If still ambiguous, include ALL matches and log warning with full_path breadcrumbs
      *
      * @param string[] $nameTokens Destination names to resolve
      * @param string[] $contextCountryCodes Country codes already selected (for disambiguation)
@@ -173,11 +178,11 @@ class ConfigProvider
         $resolvedIds = [];
 
         foreach ($nameTokens as $name) {
-            $matches = $repo->findByExactName($name);
+            $matches = $repo->findByNameOrPath($name);
 
             if (empty($matches)) {
                 fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx sync: destination name '{$name}' not found in synced destinations. Skipping.",
+                    'message' => "Sphinx sync: destination '{$name}' not found in synced destinations. Skipping.",
                 ]);
                 continue;
             }
@@ -187,7 +192,16 @@ class ConfigProvider
                 continue;
             }
 
-            // Multiple matches — disambiguate
+            // Full_path query (contains ", ") should already be narrow — if still multiple,
+            // use all matches since the admin explicitly provided a path prefix
+            if (str_contains($name, ', ')) {
+                foreach ($matches as $m) {
+                    $resolvedIds[] = (int) $m['destination_id'];
+                }
+                continue;
+            }
+
+            // Multiple matches from plain name — disambiguate
             // Step 1: prefer matches in context countries
             if (!empty($contextCountryCodes)) {
                 $contextMatches = array_filter($matches, function ($m) use ($contextCountryCodes) {
@@ -203,19 +217,25 @@ class ConfigProvider
                 continue;
             }
 
-            // Step 2: already ordered by hierarchy (findByExactName uses FIELD ordering)
-            // Take the first (highest hierarchy) match
-            $resolvedIds[] = (int) $matches[0]['destination_id'];
-
-            if (count($matches) > 1) {
-                $ids = array_map(fn($m) => $m['destination_id'] . ' (' . $m['type'] . ', ' . $m['country_code'] . ')', $matches);
-                fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx sync: destination name '{$name}' matched multiple destinations: " . implode(', ', $ids) . ". Using first match (ID {$matches[0]['destination_id']}).",
-                ]);
+            // Step 2: include ALL matches (not just first) — let the sync be inclusive
+            foreach ($matches as $m) {
+                $resolvedIds[] = (int) $m['destination_id'];
             }
+
+            // Log warning with full_path breadcrumbs for admin to refine
+            $labels = array_map(
+                fn($m) => $m['destination_id'] . ' (' . ($m['full_path'] ?? $m['type'] . ', ' . $m['country_code']) . ')',
+                $matches
+            );
+            fn_log_event('general', 'runtime', [
+                'message' => "Sphinx sync: '{$name}' matched " . count($matches) . " destinations: "
+                    . implode('; ', $labels)
+                    . ". To disambiguate, use full path in settings (e.g. \"{$name}, "
+                    . ($matches[0]['country_code'] ?? '') . "\").",
+            ]);
         }
 
-        return $resolvedIds;
+        return array_unique($resolvedIds);
     }
 
     /**

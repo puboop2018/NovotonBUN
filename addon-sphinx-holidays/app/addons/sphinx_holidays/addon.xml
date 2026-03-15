@@ -251,6 +251,7 @@
                 `type`              VARCHAR(30) NOT NULL COMMENT 'continent, country, region, city, destination',
                 `parent_id`         INT UNSIGNED DEFAULT NULL,
                 `country_code`      VARCHAR(5) DEFAULT NULL,
+                `full_path`         VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent',
                 `geoname_id`        INT UNSIGNED DEFAULT NULL,
                 `latitude`          DECIMAL(10,7) DEFAULT NULL,
                 `longitude`         DECIMAL(10,7) DEFAULT NULL,
@@ -259,6 +260,7 @@
                 KEY `idx_type` (`type`),
                 KEY `idx_parent` (`parent_id`),
                 KEY `idx_country` (`country_code`),
+                KEY `idx_full_path` (`full_path`(100)),
                 KEY `idx_geoname` (`geoname_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
@@ -335,6 +337,16 @@
                 `expires_at`    INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- Upgrade: add full_path column to existing sphinx_destinations -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                ADD COLUMN IF NOT EXISTS `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent'
+                AFTER `country_code`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                ADD KEY `idx_full_path` (`full_path`(100));
         </item>
     </queries>
 
@@ -501,5 +513,13 @@
         <item lang="ro" id="sphinx_holidays.select_region"><![CDATA[Selectează regiunea]]></item>
         <item lang="en" id="sphinx_holidays.select_city"><![CDATA[Select city]]></item>
         <item lang="ro" id="sphinx_holidays.select_city"><![CDATA[Selectează orașul]]></item>
+
+        <!-- Destination Hierarchy / Breadcrumbs -->
+        <item lang="en" id="sphinx_holidays.destination_path"><![CDATA[Destination Path]]></item>
+        <item lang="ro" id="sphinx_holidays.destination_path"><![CDATA[Cale Destinație]]></item>
+        <item lang="en" id="sphinx_holidays.all_continents"><![CDATA[All continents]]></item>
+        <item lang="ro" id="sphinx_holidays.all_continents"><![CDATA[Toate continentele]]></item>
+        <item lang="en" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
+        <item lang="ro" id="sphinx_holidays.continent"><![CDATA[Continent]]></item>
     </language_variables>
 </addon>
