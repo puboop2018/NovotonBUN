@@ -63,7 +63,7 @@ function fn_novoton_holidays_format_date($date): string
  */
 function fn_novoton_holidays_format_board_name($boardId): string
 {
-    return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardId);
+    return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($boardId);
 }
 
 /**
@@ -82,7 +82,7 @@ function fn_novoton_holidays_format_board_name($boardId): string
  */
 function fn_novoton_holidays_format_room_type($roomId, $roomType = ''): string
 {
-    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
+    return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
 }
 
 /**
@@ -96,7 +96,7 @@ function fn_novoton_holidays_format_room_type($roomId, $roomType = ''): string
  */
 function fn_novoton_holidays_normalize_room_code($roomCode): string
 {
-    return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::normalizeRoomCode($roomCode);
+    return \Tygh\Addons\TravelCore\ValueObjects\RoomType::normalizeRoomCode($roomCode);
 }
 
 /**

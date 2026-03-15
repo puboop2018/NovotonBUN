@@ -20,6 +20,8 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\TravelCore\TravelConstants;
+
 // ============================================================================
 // HOOK: pre_place_order
 // ============================================================================
@@ -96,6 +98,20 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
 function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
     Container::getInstance()->bookingSubmissionService()->submitOrder($order_id, $cart);
+
+    // Update shared travel_bookings with order_id and confirmed status
+    if (!empty($order_id) && !empty($cart['products'])) {
+        foreach ($cart['products'] as $product) {
+            if (empty($product['extra']['novoton_booking']) || empty($product['extra']['novoton_booking_id'])) {
+                continue;
+            }
+            $booking_id = (int)$product['extra']['novoton_booking_id'];
+            db_query(
+                "UPDATE ?:travel_bookings SET order_id = ?i, status = ?s WHERE provider = 'novoton' AND provider_booking_id = ?s",
+                $order_id, TravelConstants::STATUS_CONFIRMED, (string)$booking_id
+            );
+        }
+    }
 }
 
 // ============================================================================
@@ -165,7 +181,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     $date_format   = Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
-    $currency_code = $order['secondary_currency'] ?? Constants::CURRENCY_EUR;
+    $currency_code = $order['secondary_currency'] ?? TravelConstants::CURRENCY_EUR;
 
     // Pre-fetch hotel locations in single query (avoid N+1)
     $hotel_ids = [];

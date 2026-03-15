@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
-use Tygh\Addons\NovotonHolidays\CommissionCalculator;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
@@ -251,7 +251,7 @@ class AvailabilityApiClient extends ApiClientBase
                 'room_id' => $roomType,
                 'room_name' => $roomType,
                 'board_id' => $boardCode,
-                'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
+                'board_name' => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($boardCode),
                 'check_in' => $params['check_in'],
                 'check_out' => $params['check_out'],
                 'nights' => $nights,
@@ -285,7 +285,7 @@ class AvailabilityApiClient extends ApiClientBase
                     'room_id' => $data['IdRoom'] ?? $data['Room'] ?? 'ROOM',
                     'room_name' => $data['Room'] ?? $data['IdRoom'] ?? 'Room',
                     'board_id' => $boardCode,
-                    'board_name' => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($boardCode),
+                    'board_name' => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($boardCode),
                     'check_in' => $params['check_in'] ?? '',
                     'check_out' => $params['check_out'] ?? '',
                     'nights' => $nights,

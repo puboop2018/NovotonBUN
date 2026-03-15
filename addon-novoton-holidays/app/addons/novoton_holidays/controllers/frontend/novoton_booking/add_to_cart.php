@@ -12,6 +12,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\TravelConstants;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
@@ -500,6 +501,29 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
         $booking_id = _nvt_booking_repo()->create($booking_record);
     }
     
+    // Create/update shared travel_bookings record for unified admin display
+    $travel_record = [
+        'provider' => 'novoton', 'provider_booking_id' => (string)$booking_id,
+        'order_id' => 0, 'user_id' => $user_id ?? 0,
+        'hotel_id' => $bookingData['hotel_id'], 'hotel_name' => $hotel_info['hotel_name'] ?? '',
+        'check_in' => $bookingData['check_in'], 'check_out' => $bookingData['check_out'],
+        'nights' => $nights, 'room_name' => $room_type_column, 'board_code' => $board_id,
+        'adults' => $total_adults, 'children' => $total_children,
+        'children_ages' => $children_ages,
+        'total_price' => $total_price, 'currency' => ConfigProvider::getApiCurrency(),
+        'status' => TravelConstants::STATUS_PENDING,
+        'guests_json' => json_encode(['holder_name' => $holder_name, 'guests' => $guests_data]),
+    ];
+    $existing_travel_id = (int)db_get_field(
+        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
+        (string)$booking_id
+    );
+    if ($existing_travel_id > 0) {
+        db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing_travel_id);
+    } else {
+        db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
+    }
+
     // Add to cart with booking details
     $product = [
         'product_id' => $product_id,

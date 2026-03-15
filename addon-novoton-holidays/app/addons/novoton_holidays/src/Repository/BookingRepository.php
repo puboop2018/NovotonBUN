@@ -15,8 +15,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingRepository implements BookingRepositoryInterface
 {

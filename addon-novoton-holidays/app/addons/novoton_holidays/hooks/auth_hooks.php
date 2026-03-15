@@ -64,6 +64,20 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
             ]);
         }
     }
+
+    // Also update travel_bookings for unified admin display
+    if (!empty($session_id)) {
+        $novoton_booking_ids = db_get_fields(
+            "SELECT booking_id FROM ?:novoton_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
+            $session_id, $user_id
+        );
+        foreach ($novoton_booking_ids as $bid) {
+            db_query(
+                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
+                $user_id, (string)$bid
+            );
+        }
+    }
 }
 
 /**
@@ -100,5 +114,19 @@ function fn_novoton_holidays_create_user_post($user_id, $user_data, $auth): void
             'email'           => $user_data['email'],
             'bookings_linked' => $updated,
         ]);
+    }
+
+    // Also update travel_bookings for unified admin display
+    if (!empty($session_id)) {
+        $novoton_booking_ids = db_get_fields(
+            "SELECT booking_id FROM ?:novoton_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
+            $session_id, $user_id
+        );
+        foreach ($novoton_booking_ids as $bid) {
+            db_query(
+                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
+                $user_id, (string)$bid
+            );
+        }
     }
 }

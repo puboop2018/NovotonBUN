@@ -34,6 +34,10 @@ spl_autoload_register(function ($class) {
     }
 });
 
+// Load shared function libraries
+require_once __DIR__ . '/functions/exchange_rates.php';
+require_once __DIR__ . '/functions/hotels.php';
+
 // Load hook functions
 require_once __DIR__ . '/hooks.php';
 

@@ -47,6 +47,10 @@ final class TravelConstants
     public const CURRENCY_BGN = 'BGN';
     public const CURRENCY_RON = 'RON';
 
+    // ========== External URLs ==========
+
+    public const BNR_RATES_URL = 'https://curs.bnr.ro/nbrfxrates.xml';
+
     // ========== Date Formats ==========
 
     public const DATETIME_FORMAT = 'Y-m-d H:i:s';

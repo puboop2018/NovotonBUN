@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\NovotonHolidays\CommissionCalculator;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 /**
  * @covers \Tygh\Addons\NovotonHolidays\CommissionCalculator

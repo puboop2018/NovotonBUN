@@ -10,7 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
-use Tygh\Addons\NovotonHolidays\CommissionCalculator;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;

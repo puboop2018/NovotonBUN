@@ -23,6 +23,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
@@ -628,7 +629,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'base_price'       => $totalApiPrice,
             'total_price'      => $totalGroupPrice,
             'currency'         => ConfigProvider::getApiCurrency(),
-            'status'           => Constants::STATUS_PENDING,
+            'status'           => TravelConstants::STATUS_PENDING,
             'api_request'      => json_encode($apiData),
             'notes'                          => $disableApi ? 'API submission disabled - test mode' : '',
             'user_id'                        => $orderUserId,

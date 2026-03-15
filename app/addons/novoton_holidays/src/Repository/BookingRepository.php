@@ -13,9 +13,10 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingRepository implements BookingRepositoryInterface
 {
@@ -251,7 +252,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool
     {
-        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? Constants::STATUS_PENDING;
+        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? TravelConstants::STATUS_PENDING;
 
         return $this->update($booking_id, [
             'novoton_reservation_id' => $reservation_id,
@@ -301,9 +302,9 @@ class BookingRepository implements BookingRepositoryInterface
     {
         return [
             'total' => $this->count(),
-            'pending' => $this->count(['status' => Constants::STATUS_PENDING]),
-            'confirmed' => $this->count(['status' => Constants::STATUS_CONFIRMED]),
-            'cancelled' => $this->count(['status' => Constants::STATUS_CANCELLED]),
+            'pending' => $this->count(['status' => TravelConstants::STATUS_PENDING]),
+            'confirmed' => $this->count(['status' => TravelConstants::STATUS_CONFIRMED]),
+            'cancelled' => $this->count(['status' => TravelConstants::STATUS_CANCELLED]),
             'with_orders' => $this->count(['has_order' => true]),
             'orphans' => $this->count(['no_order' => true])
         ];
@@ -418,7 +419,7 @@ class BookingRepository implements BookingRepositoryInterface
             'guest_name' => $nb['guest_name'] ?? $nb['holder_name'] ?? '',
             'guest_email' => $nb['order_email'] ?? $nb['guest_email'] ?? '',
             'guest_phone' => $nb['order_phone'] ?? $nb['guest_phone'] ?? '',
-            'status' => $nb['status'] ?? Constants::STATUS_PENDING,
+            'status' => $nb['status'] ?? TravelConstants::STATUS_PENDING,
             'novoton_status' => $nb['novoton_status'] ?? '',
             'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
             'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
@@ -525,7 +526,7 @@ class BookingRepository implements BookingRepositoryInterface
      * @param array  $statuses    Optional status filter (default: pending + confirmed)
      * @return array Booking rows
      */
-    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
+    public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
     {
         if (empty($product_ids)) {
             return [];

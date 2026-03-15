@@ -9,7 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
     // This replaces the old blanket error_reporting(0) — real errors are still
@@ -341,7 +341,7 @@ use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
             $price_change = $detector->analyse(
                 $original_price,
                 $new_price,
-                \Tygh\Addons\NovotonHolidays\Services\CurrencyService::getApiCurrency(),
+                \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getApiCurrency(),
                 'recalculate'
             );
         }

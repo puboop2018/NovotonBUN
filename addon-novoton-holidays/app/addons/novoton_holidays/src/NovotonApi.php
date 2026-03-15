@@ -33,7 +33,8 @@ use Tygh\Addons\NovotonHolidays\Api\ReservationApiClient;
 use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RequestDebugInfo;
+use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 class NovotonApi implements NovotonApiInterface
 {

@@ -143,6 +143,7 @@
                 `provider`          VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx',
                 `provider_booking_id` VARCHAR(100) DEFAULT NULL COMMENT 'Provider-specific booking ID',
                 `order_id`          INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:orders',
+                `user_id`           INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:users',
                 `hotel_id`          VARCHAR(100) NOT NULL,
                 `hotel_name`        VARCHAR(255) DEFAULT NULL,
                 `destination`       VARCHAR(255) DEFAULT NULL,

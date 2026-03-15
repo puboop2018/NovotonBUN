@@ -14,8 +14,8 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class SearchService implements SearchServiceInterface
 {
@@ -417,7 +417,7 @@ class SearchService implements SearchServiceInterface
      */
     public function getBoardName(string $board_id): string
     {
-        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
     }
     
     /**

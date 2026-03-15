@@ -21,8 +21,8 @@ use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingService implements BookingServiceInterface
 {
@@ -476,7 +476,7 @@ class BookingService implements BookingServiceInterface
      */
     private function getBoardName(string $board_id): string
     {
-        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
     }
     
     /**

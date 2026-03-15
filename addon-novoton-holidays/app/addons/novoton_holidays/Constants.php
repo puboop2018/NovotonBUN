@@ -98,7 +98,6 @@ final class Constants
     // ========== External URLs ==========
 
     public const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
-    public const BNR_RATES_URL  = 'https://curs.bnr.ro/nbrfxrates.xml';
 
     // ========== Limits ==========
     // Shared limits are in TravelConstants (MAX_ADULTS, MAX_CHILDREN, etc.)

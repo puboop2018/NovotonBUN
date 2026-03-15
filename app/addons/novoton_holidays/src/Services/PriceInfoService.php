@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Services\CurrencyService;
+
 class PriceInfoService implements PriceInfoServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
@@ -309,6 +311,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array
     {
         $currency = $targetCurrency ?? CurrencyService::getDisplayCurrency();
+        $currencyService = _nvt_currency_service();
 
         // 1. Read precomputed raw prices (written by sync cron).
         // The calendar_prices_raw column is added by setup_db() on addon install/upgrade.
@@ -340,7 +343,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
             $price = $rawPrice * (1 + $commission / 100);
-            $price = CurrencyService::convertFromApiCurrency((float) $price, $currency);
+            $price = $currencyService->convertFromApiCurrency((float) $price, $currency);
             if ($roundPrices) {
                 $price = round($price);
             }
