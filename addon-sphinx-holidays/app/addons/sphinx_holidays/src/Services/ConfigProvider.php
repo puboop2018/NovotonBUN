@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 
 /**
  * Sphinx Holidays configuration provider.
@@ -111,11 +112,15 @@ class ConfigProvider
     }
 
     /**
-     * Get selected sync targets — country codes AND/OR destination IDs.
+     * Get selected sync targets — country codes, destination names, and/or destination IDs.
      *
-     * Setting format: comma-separated, supports both country codes and numeric IDs.
-     * Examples: "GR" (country), "GR,BG" (countries), "1234,5678" (destination IDs),
-     *           "GR,1234" (mixed: all of Greece + specific destination 1234)
+     * Setting format: comma-separated, supports three token types:
+     *   - 2-letter alpha codes → country codes (e.g. "GR", "BG")
+     *   - Numeric strings → destination IDs (e.g. "1234")
+     *   - Anything else → destination names resolved from DB (e.g. "Crete", "Rhodes")
+     *
+     * Examples: "GR,Crete" → sync all Greece + Crete region specifically
+     *           "GR,BG,Rhodes" → sync Greece, Bulgaria, + Rhodes by name
      *
      * @return array{country_codes: string[], destination_ids: int[]}
      */
@@ -124,13 +129,22 @@ class ConfigProvider
         $val = (string) self::getSetting('selected_destinations', 'GR');
         $countryCodes = [];
         $destinationIds = [];
+        $nameTokens = [];
 
         foreach (array_filter(array_map('trim', explode(',', $val))) as $token) {
             if (ctype_digit($token)) {
                 $destinationIds[] = (int) $token;
-            } else {
+            } elseif (strlen($token) === 2 && ctype_alpha($token)) {
                 $countryCodes[] = strtoupper($token);
+            } else {
+                $nameTokens[] = $token;
             }
+        }
+
+        // Resolve destination names to IDs via DB lookup
+        if (!empty($nameTokens)) {
+            $resolvedIds = self::resolveNameTokens($nameTokens, $countryCodes);
+            $destinationIds = array_merge($destinationIds, $resolvedIds);
         }
 
         if (empty($countryCodes) && empty($destinationIds)) {
@@ -138,6 +152,70 @@ class ConfigProvider
         }
 
         return ['country_codes' => $countryCodes, 'destination_ids' => $destinationIds];
+    }
+
+    /**
+     * Resolve destination name tokens to destination IDs via DB lookup.
+     *
+     * Disambiguation strategy:
+     *   1. Exact case-insensitive match on sphinx_destinations.name
+     *   2. If multiple matches, prefer those in already-selected countries
+     *   3. Among remaining, prefer higher hierarchy (region > city > destination)
+     *   4. If still ambiguous, include all and log a warning
+     *
+     * @param string[] $nameTokens Destination names to resolve
+     * @param string[] $contextCountryCodes Country codes already selected (for disambiguation)
+     * @return int[] Resolved destination IDs
+     */
+    private static function resolveNameTokens(array $nameTokens, array $contextCountryCodes): array
+    {
+        $repo = new DestinationRepository();
+        $resolvedIds = [];
+
+        foreach ($nameTokens as $name) {
+            $matches = $repo->findByExactName($name);
+
+            if (empty($matches)) {
+                fn_log_event('general', 'runtime', [
+                    'message' => "Sphinx sync: destination name '{$name}' not found in synced destinations. Skipping.",
+                ]);
+                continue;
+            }
+
+            if (count($matches) === 1) {
+                $resolvedIds[] = (int) $matches[0]['destination_id'];
+                continue;
+            }
+
+            // Multiple matches — disambiguate
+            // Step 1: prefer matches in context countries
+            if (!empty($contextCountryCodes)) {
+                $contextMatches = array_filter($matches, function ($m) use ($contextCountryCodes) {
+                    return in_array(strtoupper($m['country_code'] ?? ''), $contextCountryCodes, true);
+                });
+                if (!empty($contextMatches)) {
+                    $matches = array_values($contextMatches);
+                }
+            }
+
+            if (count($matches) === 1) {
+                $resolvedIds[] = (int) $matches[0]['destination_id'];
+                continue;
+            }
+
+            // Step 2: already ordered by hierarchy (findByExactName uses FIELD ordering)
+            // Take the first (highest hierarchy) match
+            $resolvedIds[] = (int) $matches[0]['destination_id'];
+
+            if (count($matches) > 1) {
+                $ids = array_map(fn($m) => $m['destination_id'] . ' (' . $m['type'] . ', ' . $m['country_code'] . ')', $matches);
+                fn_log_event('general', 'runtime', [
+                    'message' => "Sphinx sync: destination name '{$name}' matched multiple destinations: " . implode(', ', $ids) . ". Using first match (ID {$matches[0]['destination_id']}).",
+                ]);
+            }
+        }
+
+        return $resolvedIds;
     }
 
     /**

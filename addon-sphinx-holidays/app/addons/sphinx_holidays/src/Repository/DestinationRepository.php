@@ -221,6 +221,25 @@ class DestinationRepository
     }
 
     /**
+     * Find destinations by exact name (case-insensitive).
+     *
+     * Returns all matches ordered by hierarchy (region > city > destination)
+     * so the caller can pick the most relevant one for disambiguation.
+     *
+     * @param string $name Destination name (e.g. "Crete", "Athens")
+     * @return array All matching destination rows
+     */
+    public function findByExactName(string $name): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:sphinx_destinations
+             WHERE LOWER(name) = ?s
+             ORDER BY FIELD(type, 'continent', 'country', 'region', 'city', 'destination') ASC",
+            mb_strtolower($name)
+        );
+    }
+
+    /**
      * Search destinations by name.
      *
      * @param string $query Search term
