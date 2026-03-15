@@ -236,6 +236,35 @@ Added granular filtering at region/city level for both admin browsing and sync t
    - `all_regions` / `all_cities` / `region` / `city_resort`
    - `sync_targets` / `change_settings` / `select_region` / `select_city`
 
+### Phase 2: Destination Names + Frontend Cron (P2)
+
+**Commit**: `66bf451` - Destination name support in sync targets + frontend cron endpoint
+
+Two enhancements for improved usability and automation:
+
+**Part A — Destination Name Resolution:**
+- `DestinationRepository::findByExactName()` — Case-insensitive exact match with hierarchy ordering via `FIELD(type, ...)`
+- `ConfigProvider::getSelectedSyncTargets()` — 3-way token classification: 2-letter alpha → country code, numeric → destination ID, anything else → name lookup
+- `ConfigProvider::resolveNameTokens()` — Disambiguation strategy: prefer matches in already-selected countries, then prefer higher hierarchy (region > city > destination), log warnings for ambiguous matches
+- Setting now accepts: `"GR,Crete,Rhodes"` → syncs all Greece + Crete region + Rhodes by name
+- Updated setting description in addon.xml (EN/RO)
+
+**Part B — Frontend Cron Controller:**
+- `controllers/frontend/sphinx_cron.php` — URL-accessible cron endpoint for external services
+- URL: `index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels`
+- Auth: `hash_equals()` with stored cron access key (no admin login needed)
+- Supports all modes: `destinations`, `hotels` with parameter pass-through
+- Status check: `&status=1` returns last sync info without triggering a new sync
+- Plain text output with timestamps, stats summary, error reporting
+- Updated cron_access_key setting description to show URL format
+
+**Key design decisions:**
+- Name resolution happens at `getSelectedSyncTargets()` level so all callers (admin sync, CLI, frontend cron) benefit automatically
+- Exact match only (not LIKE) prevents false positives on partial names
+- 2-letter alpha tokens are always country codes — avoids treating "GR" as a destination name
+- Frontend controller uses `exit;` to prevent CS-Cart HTML layout rendering
+- No admin permissions needed — frontend controllers authenticate via access key only
+
 ---
 
 ## Admin Interface
@@ -268,6 +297,8 @@ Added granular filtering at region/city level for both admin browsing and sync t
 
 ## Cron Commands
 
+### CLI (via cron.php)
+
 ```bash
 # Sync all destinations from API
 php cron.php access_key=KEY mode=destinations
@@ -280,6 +311,22 @@ php cron.php access_key=KEY mode=hotels country=GR,BG
 
 # Sync hotels for specific destinations (region/city IDs)
 php cron.php access_key=KEY mode=hotels destination_ids=1234,5678
+```
+
+### Frontend URL (via CS-Cart dispatcher)
+
+```bash
+# Sync destinations (for external cron services like cron-job.org)
+curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=destinations"
+
+# Sync hotels
+curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels"
+
+# Sync hotels for specific countries
+curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels&country=GR,BG"
+
+# Check last sync status without triggering a new sync
+curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels&status=1"
 ```
 
 ---
