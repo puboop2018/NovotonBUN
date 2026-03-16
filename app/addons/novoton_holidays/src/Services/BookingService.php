@@ -41,6 +41,9 @@ class BookingService implements BookingServiceInterface
     /** @var HotelRepositoryInterface */
     private $hotelRepo;
 
+    /** @var GuestDataNormalizer */
+    private $guestDataNormalizer;
+
     /** @var bool */
     private $debug = false;
 
@@ -54,13 +57,15 @@ class BookingService implements BookingServiceInterface
         RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
         \Tygh\Addons\NovotonHolidays\NovotonApi $api,
-        ?HotelRepositoryInterface $hotelRepo = null
+        ?HotelRepositoryInterface $hotelRepo = null,
+        ?GuestDataNormalizer $guestDataNormalizer = null
     ) {
         $this->api = $api;
         $this->guestService = $guestService;
         $this->priceService = $priceService;
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -116,7 +121,7 @@ class BookingService implements BookingServiceInterface
             'holder_name' => $this->guestService->getHolderName($guests_data, $bookingData),
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
-            'guests_data' => GuestDataNormalizer::toJson($guests_data),
+            'guests_data' => $this->guestDataNormalizer->toJson($guests_data),
             'base_price' => (float) ($bookingData['base_price'] ?? 0),
             'api_price' => (float) ($bookingData['api_price'] ?? 0),
             'total_price' => (float) ($bookingData['total_price'] ?? 0),

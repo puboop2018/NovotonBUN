@@ -27,16 +27,19 @@ use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
 class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
     private BookingRepositoryInterface $bookingRepo;
     private NovotonApiInterface $api;
+    private GuestDataNormalizer $guestDataNormalizer;
 
-    public function __construct(BookingRepositoryInterface $bookingRepo, NovotonApiInterface $api)
+    public function __construct(BookingRepositoryInterface $bookingRepo, NovotonApiInterface $api, ?GuestDataNormalizer $guestDataNormalizer = null)
     {
         $this->bookingRepo = $bookingRepo;
         $this->api = $api;
+        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
     }
 
     /**
@@ -319,7 +322,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     {
         // Primary: normalize from cart/DB data (handles both keyed and legacy array formats)
         if (!empty($bookingData['guests_data'])) {
-            $guestsData = GuestDataNormalizer::normalize($bookingData['guests_data']);
+            $guestsData = $this->guestDataNormalizer->normalize($bookingData['guests_data']);
             if (!empty($guestsData)) {
                 return $guestsData;
             }
@@ -330,7 +333,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         if ($bookingId > 0) {
             $dbGuests = $this->bookingRepo->getGuestsData($bookingId);
             if (!empty($dbGuests)) {
-                $guestsData = GuestDataNormalizer::normalize($dbGuests);
+                $guestsData = $this->guestDataNormalizer->normalize($dbGuests);
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
                         'message'      => 'Novoton - Fetched guests_data from database (cart was empty)',
@@ -351,7 +354,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $bookingData['check_out'] ?? ''
         );
         if (!empty($existing['guests_data'])) {
-            $guestsData = GuestDataNormalizer::normalize($existing['guests_data']);
+            $guestsData = $this->guestDataNormalizer->normalize($existing['guests_data']);
             if ($debug) {
                 fn_log_event('general', 'runtime', [
                     'message'      => 'Novoton - Fetched guests_data from pending booking record',

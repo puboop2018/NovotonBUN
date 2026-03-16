@@ -14,6 +14,12 @@ use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
  */
 class TravelProviderRegistry
 {
+    /**
+     * Known provider addon names.
+     * Used by travel_core to check dependencies at uninstall time.
+     */
+    public const KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
+
     /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}> */
     private static array $providers = [];
 

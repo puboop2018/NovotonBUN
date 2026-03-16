@@ -207,8 +207,8 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
         $old_coefficient = $currency['coefficient'];
 
         db_query(
-            "UPDATE ?:currencies SET coefficient = ?s WHERE currency_code = ?s",
-            (string) round($coefficient, 5),
+            "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
+            round($coefficient, 5),
             $currency_code
         );
 

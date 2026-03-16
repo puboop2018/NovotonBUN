@@ -214,7 +214,7 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra']['holder_name']        = $booking['holder_name'] ?? '';
     $product['extra']['guest_names']        = $booking['guest_name'] ?? '';
     $product['extra']['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
-        ? \Tygh\Addons\TravelCore\Services\GuestDataNormalizer::toJson($booking['guests_data'] ?? '')
+        ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson($booking['guests_data'] ?? '')
         : ($booking['guests_data'] ?? '');
     $product['extra']['total_price']        = $booking['total_price'];
     $product['extra']['package_name']       = $booking['package_name'] ?? '';

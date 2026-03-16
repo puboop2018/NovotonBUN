@@ -29,6 +29,13 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
+    private GuestDataNormalizer $guestDataNormalizer;
+
+    public function __construct(?GuestDataNormalizer $guestDataNormalizer = null)
+    {
+        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
+    }
+
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
      */
@@ -86,7 +93,7 @@ class BookingRepository implements BookingRepositoryInterface
 
         // guests_data — always normalize to canonical keyed format
         if (!empty($booking['guests_data'])) {
-            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data']);
+            $booking['guests_data_parsed'] = (new GuestDataNormalizer())->normalize($booking['guests_data']);
         } else {
             $booking['guests_data_parsed'] = [];
         }
@@ -521,7 +528,7 @@ class BookingRepository implements BookingRepositoryInterface
             return;
         }
 
-        $guests_data = GuestDataNormalizer::normalize($nb['guests_data']);
+        $guests_data = $this->guestDataNormalizer->normalize($nb['guests_data']);
         if (empty($guests_data) || !is_array($guests_data)) {
             return;
         }

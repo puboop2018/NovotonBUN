@@ -191,7 +191,7 @@ if ($mode === 'manage') {
         if ($booking) {
             // Parse JSON fields
             if (!empty($booking['guests_data'])) {
-                $booking['guests'] = GuestDataNormalizer::normalize($booking['guests_data']);
+                $booking['guests'] = (new GuestDataNormalizer())->normalize($booking['guests_data']);
             }
             if (!empty($booking['alternatives_data'])) {
                 $booking['alternatives'] = json_decode($booking['alternatives_data'], true);
@@ -249,7 +249,7 @@ if ($mode === 'manage') {
         
         foreach ($bookings as &$booking) {
             if (!empty($booking['guests_data'])) {
-                $booking['guests'] = GuestDataNormalizer::normalize($booking['guests_data']);
+                $booking['guests'] = (new GuestDataNormalizer())->normalize($booking['guests_data']);
             }
             if (!empty($booking['alternatives_data'])) {
                 $booking['alternatives'] = json_decode($booking['alternatives_data'], true);

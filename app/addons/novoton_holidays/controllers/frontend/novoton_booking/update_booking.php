@@ -129,7 +129,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '',
         'guest_phone' => $contact['phone'] ?? '',
-        'guests_data' => GuestDataNormalizer::toJson($guests_data),
+        'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
         'api_request' => json_encode($api_request),
     ]);
 
@@ -139,7 +139,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         if (isset($cart['products'][$cart_id])) {
             $cart['products'][$cart_id]['extra']['guest_names'] = $guest_list;
             $cart['products'][$cart_id]['extra']['holder_name'] = $holder_name;
-            $cart['products'][$cart_id]['extra']['guests_data'] = GuestDataNormalizer::toJson($guests_data);
+            $cart['products'][$cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
             $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
             $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
             // Recalculate and save cart
