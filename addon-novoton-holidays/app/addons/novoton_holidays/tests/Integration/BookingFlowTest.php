@@ -5,7 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer;
-use Tygh\Addons\NovotonHolidays\CommissionCalculator;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 
 /**

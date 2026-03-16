@@ -177,7 +177,7 @@ class AlternativeDateSearcher
                             'room_id'         => $rd['id'],
                             'room_name'       => $rd['name'] ?: str_replace(['%2b', '%2B'], '+', $rd['id']),
                             'board_id'        => $meta['boardId'],
-                            'board_name'      => \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($meta['boardId']),
+                            'board_name'      => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($meta['boardId']),
                             'price_data'      => $priceData,
                             'nights'          => $nights,
                             'total_price'     => $altPrice,

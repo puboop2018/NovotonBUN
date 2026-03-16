@@ -4,9 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\PriceChangeDetector;
-use Tygh\Registry;
+use Tygh\Addons\TravelCore\Services\PriceChangeDetector;
 use Tygh\Tygh;
 
 /**
@@ -20,7 +18,7 @@ use Tygh\Tygh;
  *   - Session alert storage lifecycle (store → peek → consume)
  *   - Custom tolerance configuration
  *
- * @covers \Tygh\Addons\NovotonHolidays\Services\PriceChangeDetector
+ * @covers \Tygh\Addons\TravelCore\Services\PriceChangeDetector
  */
 class PriceChangeDetectorTest extends TestCase
 {
@@ -28,26 +26,19 @@ class PriceChangeDetectorTest extends TestCase
 
     protected function setUp(): void
     {
-        // Set default 1% tolerance via Registry (ConfigProvider reads from here)
-        Registry::set('addons.novoton_holidays', [
-            'price_change_tolerance_percent' => 1.0,
-        ]);
-        ConfigProvider::reset(); // flush any cached settings from prior tests
-
         // Ensure session is clean
         if (!isset(Tygh::$app['session'])) {
             Tygh::$app['session'] = [];
         }
-        unset(Tygh::$app['session']['novoton_price_change_alerts']);
+        unset(Tygh::$app['session']['travel_price_change_alerts']);
 
-        $this->sut = new PriceChangeDetector();
+        // Default 1% tolerance via constructor
+        $this->sut = new PriceChangeDetector(1.0);
     }
 
     protected function tearDown(): void
     {
-        // Clean up session and settings cache
-        unset(Tygh::$app['session']['novoton_price_change_alerts']);
-        ConfigProvider::reset();
+        unset(Tygh::$app['session']['travel_price_change_alerts']);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -189,12 +180,8 @@ class PriceChangeDetectorTest extends TestCase
 
     public function testCustomToleranceSilencesSmallerChanges(): void
     {
-        // Admin sets tolerance to 5%
-        Registry::set('addons.novoton_holidays', [
-            'price_change_tolerance_percent' => 5.0,
-        ]);
-        ConfigProvider::reset(); // flush cached settings
-        $detector = new PriceChangeDetector();
+        // 5% tolerance via constructor
+        $detector = new PriceChangeDetector(5.0);
 
         // 3% change should be silent at 5% tolerance
         $result = $detector->analyse(100.0, 103.0, 'EUR');
@@ -207,11 +194,8 @@ class PriceChangeDetectorTest extends TestCase
 
     public function testZeroToleranceTriggersOnAnyChange(): void
     {
-        Registry::set('addons.novoton_holidays', [
-            'price_change_tolerance_percent' => 0.0,
-        ]);
-        ConfigProvider::reset(); // flush cached settings
-        $detector = new PriceChangeDetector();
+        // Zero tolerance — any change triggers
+        $detector = new PriceChangeDetector(0.01);
 
         // Even $0.02 change on $100 = 0.02% should trigger
         $result = $detector->analyse(100.0, 100.02, 'EUR');

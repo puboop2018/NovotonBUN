@@ -130,6 +130,60 @@ function fn_sphinx_holidays_seed_aliases(): void
         }
     }
 
+    // Star rating aliases (feature_type='stars'): canonical codes '1' through '5'
+    $starAliases = [
+        '1' => '1',
+        '2' => '2',
+        '3' => '3',
+        '4' => '4',
+        '5' => '5',
+        '1 star'  => '1',
+        '2 star'  => '2',
+        '2 stars' => '2',
+        '3 star'  => '3',
+        '3 stars' => '3',
+        '4 star'  => '4',
+        '4 stars' => '4',
+        '5 star'  => '5',
+        '5 stars' => '5',
+    ];
+
+    foreach ($starAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $apiValue, $mapId, 'exact');
+        }
+    }
+
+    // Property type aliases (feature_type='property_type')
+    $propertyTypeAliases = [
+        'hotel'       => 'hotel',
+        'villa'       => 'villa',
+        'apartment'   => 'apartment',
+        'resort'      => 'resort',
+        'hostel'      => 'hostel',
+        'guest_house' => 'guest_house',
+        'guesthouse'  => 'guest_house',
+        'pension'     => 'guest_house',
+        'pensiune'    => 'guest_house',
+        'chalet'      => 'chalet',
+        'cabana'      => 'chalet',
+        'motel'       => 'motel',
+    ];
+
+    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
+        }
+    }
+
     // Clear resolve cache after batch alias inserts
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }
@@ -139,10 +193,38 @@ function fn_sphinx_holidays_seed_aliases(): void
 // =========================================================================
 
 /**
+ * Hook: pre_place_order
+ * Re-verify Sphinx offer prices before order is placed.
+ */
+function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
+{
+    $verifier = \Tygh\Addons\SphinxHolidays\Services\Container::getPreOrderPriceVerifier();
+    $result = $verifier->verify($cart);
+
+    if (!$result['allow']) {
+        $allow = false;
+        return;
+    }
+
+    if (!empty($result['corrections'])) {
+        foreach ($result['corrections'] as $cartId => $correction) {
+            if (!isset($cart['products'][$cartId])) {
+                continue;
+            }
+            $newPrice = (float)$correction['api_price'];
+            $cart['products'][$cartId]['price'] = $newPrice;
+            $cart['products'][$cartId]['base_price'] = $newPrice;
+            $cart['products'][$cartId]['original_price'] = $newPrice;
+            $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
+        }
+    }
+}
+
+/**
  * Hook: place_order_post
  * After an order is placed, submit the booking to the Sphinx API.
  */
-function fn_sphinx_holidays_place_order(&$cart, &$auth, $action, $order_id, &$order_status)
+function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth)
 {
     if (empty($order_id) || empty($cart['products'])) {
         return;
@@ -157,15 +239,16 @@ function fn_sphinx_holidays_place_order(&$cart, &$auth, $action, $order_id, &$or
         $offer_id = $product['extra']['offer_id'] ?? '';
 
         // Update sphinx_bookings with order_id
+        $confirmed = \Tygh\Addons\TravelCore\TravelConstants::STATUS_CONFIRMED;
         db_query(
-            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = 'confirmed' WHERE booking_id = ?i",
-            $order_id, $booking_id
+            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = ?s WHERE booking_id = ?i",
+            $order_id, $confirmed, $booking_id
         );
 
         // Update travel_bookings
         db_query(
-            "UPDATE ?:travel_bookings SET order_id = ?i, status = 'confirmed' WHERE provider = 'sphinx' AND provider_booking_id = ?i",
-            $order_id, $booking_id
+            "UPDATE ?:travel_bookings SET order_id = ?i, status = ?s WHERE provider = 'sphinx' AND provider_booking_id = ?s",
+            $order_id, $confirmed, (string)$booking_id
         );
 
         // Submit booking to Sphinx API
@@ -235,21 +318,25 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
         return;
     }
 
-    if (strpos($product_data['product_code'], 'SPH_') !== 0) {
+    // Support both legacy SPH_ and new SPX product code prefixes
+    $code = $product_data['product_code'];
+    if (strpos($code, 'SPX') === 0) {
+        $hotel_id = substr($code, 3);
+    } elseif (strpos($code, 'SPH_') === 0) {
+        $hotel_id = substr($code, 4);
+    } else {
         return;
     }
 
-    $hotel_id = substr($product_data['product_code'], 4);
     $hotel = db_get_row(
-        "SELECT hotel_id, hotel_name, star_rating, city, country, main_image_url
-         FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+        "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
 
     if (!empty($hotel)) {
         $product_data['hotel_id'] = $hotel['hotel_id'];
-        $product_data['hotel_name'] = $hotel['hotel_name'];
-        $product_data['star_rating'] = $hotel['star_rating'];
+        $product_data['hotel_name'] = $hotel['name'];
+        $product_data['star_rating'] = $hotel['classification'];
         $product_data['travel_provider'] = 'sphinx';
         $product_data['sphinx_hotel'] = $hotel;
     }
@@ -275,10 +362,19 @@ function fn_sphinx_holidays_user_login_post($user_data, &$auth)
         (int)$auth['user_id'], $session_id
     );
 
-    db_query(
-        "UPDATE ?:travel_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND provider = 'sphinx'",
-        (int)$auth['user_id'], $session_id
+    // Update travel_bookings via provider_booking_id link
+    $sphinx_booking_ids = db_get_fields(
+        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
+        $session_id, (int)$auth['user_id']
     );
+    if (!empty($sphinx_booking_ids)) {
+        foreach ($sphinx_booking_ids as $bid) {
+            db_query(
+                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
+                (int)$auth['user_id'], (string)$bid
+            );
+        }
+    }
 }
 
 /**
@@ -301,8 +397,17 @@ function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth)
         (int)$user_id, $session_id
     );
 
-    db_query(
-        "UPDATE ?:travel_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND provider = 'sphinx'",
-        (int)$user_id, $session_id
+    // Update travel_bookings via provider_booking_id link
+    $sphinx_booking_ids = db_get_fields(
+        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
+        $session_id, (int)$user_id
     );
+    if (!empty($sphinx_booking_ids)) {
+        foreach ($sphinx_booking_ids as $bid) {
+            db_query(
+                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
+                (int)$user_id, (string)$bid
+            );
+        }
+    }
 }

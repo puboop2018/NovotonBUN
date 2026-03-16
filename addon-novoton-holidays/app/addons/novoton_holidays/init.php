@@ -90,7 +90,7 @@ function smarty_modifier_novoton_format_room_type($room_id)
         if (preg_match('/[ăîâșț]/iu', $room_id)) {
             return $room_id;
         }
-        return \Tygh\Addons\NovotonHolidays\ValueObjects\RoomType::formatRoomLabel($room_id);
+        return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($room_id);
     } catch (\Throwable $e) {
         return is_string($room_id) ? $room_id : '';
     }
@@ -105,7 +105,7 @@ function smarty_modifier_novoton_format_board($board_id)
         if (empty($board_id) || !is_string($board_id)) {
             return is_string($board_id) ? $board_id : '';
         }
-        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
     } catch (\Throwable $e) {
         return is_string($board_id) ? $board_id : '';
     }

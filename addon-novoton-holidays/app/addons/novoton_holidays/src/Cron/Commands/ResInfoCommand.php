@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
@@ -24,7 +25,7 @@ class ResInfoCommand extends AbstractCronCommand
         $this->output("");
 
         $repo = Container::getInstance()->bookingRepository();
-        $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [Constants::STATUS_PENDING, Constants::STATUS_ASK]);
+        $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]);
 
         $checked = count($ask_bookings);
         $updated = 0;
@@ -54,18 +55,18 @@ class ResInfoCommand extends AbstractCronCommand
 
                 $new_status = strtolower(Constants::normalizeApiStatus((string)$response->Status));
 
-                if ($new_status === Constants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
+                if ($new_status === TravelConstants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
                     $repo->update((int) $booking['booking_id'], [
-                        'status'            => Constants::STATUS_CONFIRMED,
+                        'status'            => TravelConstants::STATUS_CONFIRMED,
                         'novoton_status'    => Constants::NOVOTON_STATUS_CONFIRMED,
                         'last_status_check' => date('Y-m-d H:i:s'),
                         'updated_at'        => date('Y-m-d H:i:s'),
                     ]);
                     $this->output("  -> Updated to CONFIRMED");
                     $updated++;
-                } elseif ($new_status === Constants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
+                } elseif ($new_status === TravelConstants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
                     $repo->update((int) $booking['booking_id'], [
-                        'status'            => Constants::STATUS_CANCELLED,
+                        'status'            => TravelConstants::STATUS_CANCELLED,
                         'novoton_status'    => Constants::NOVOTON_STATUS_CANCELLED,
                         'last_status_check' => date('Y-m-d H:i:s'),
                         'updated_at'        => date('Y-m-d H:i:s'),

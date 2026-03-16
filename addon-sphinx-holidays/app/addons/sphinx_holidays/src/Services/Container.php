@@ -65,6 +65,27 @@ class Container
         return self::$featureAssigner;
     }
 
+    private static ?SecurityService $securityService = null;
+    private static ?PreOrderPriceVerifier $preOrderPriceVerifier = null;
+
+    public static function getSecurityService(): SecurityService
+    {
+        if (self::$securityService === null) {
+            self::$securityService = new SecurityService();
+        }
+
+        return self::$securityService;
+    }
+
+    public static function getPreOrderPriceVerifier(): PreOrderPriceVerifier
+    {
+        if (self::$preOrderPriceVerifier === null) {
+            self::$preOrderPriceVerifier = new PreOrderPriceVerifier();
+        }
+
+        return self::$preOrderPriceVerifier;
+    }
+
     /**
      * Reset all cached instances (for testing).
      */
@@ -74,5 +95,7 @@ class Container
         self::$api = null;
         self::$normalizer = null;
         self::$featureAssigner = null;
+        self::$securityService = null;
+        self::$preOrderPriceVerifier = null;
     }
 }

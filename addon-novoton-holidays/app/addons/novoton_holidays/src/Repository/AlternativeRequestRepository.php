@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestRepository implements AlternativeRequestRepositoryInterface
 {
@@ -35,7 +36,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
              AND novoton_request_id IS NOT NULL AND novoton_request_id != ''
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)
              ORDER BY created_at ASC LIMIT ?i",
-            Constants::STATUS_PENDING,
+            TravelConstants::STATUS_PENDING,
             $hours,
             $limit
         );

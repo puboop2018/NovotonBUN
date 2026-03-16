@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class CronService implements CronServiceInterface
@@ -49,7 +50,7 @@ class CronService implements CronServiceInterface
              WHERE novoton_status = ?s AND status IN (?a)
              ORDER BY created_at DESC LIMIT 50",
             Constants::NOVOTON_STATUS_ON_REQUEST,
-            [Constants::STATUS_PENDING, Constants::STATUS_ASK]
+            [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]
         );
 
         foreach ($bookings as $booking) {
@@ -135,7 +136,7 @@ class CronService implements CronServiceInterface
              WHERE status = ?s
                AND novoton_request_id != ''
                AND novoton_request_id IS NOT NULL",
-            Constants::STATUS_PENDING
+            TravelConstants::STATUS_PENDING
         );
         // Decrypt encrypted PII (contact_email) for email sending
         $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
@@ -199,7 +200,7 @@ class CronService implements CronServiceInterface
      */
     private function mapNovotonStatus(string $novotonStatus): string
     {
-        return Constants::NOVOTON_STATUS_TO_INTERNAL[$novotonStatus] ?? Constants::STATUS_PENDING;
+        return Constants::NOVOTON_STATUS_TO_INTERNAL[$novotonStatus] ?? TravelConstants::STATUS_PENDING;
     }
 
     /**

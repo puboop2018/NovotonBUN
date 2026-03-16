@@ -13,9 +13,10 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingRepository implements BookingRepositoryInterface
 {
@@ -214,7 +215,13 @@ class BookingRepository implements BookingRepositoryInterface
     {
         $data = self::filterNullValues($data);
         $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $data);
-        return (int) $booking_id;
+        $booking_id = (int) $booking_id;
+
+        if ($booking_id > 0) {
+            $this->syncToTravelBookings($booking_id, $data);
+        }
+
+        return $booking_id;
     }
 
     /**
@@ -223,7 +230,13 @@ class BookingRepository implements BookingRepositoryInterface
     public function update(int $booking_id, array $data): bool
     {
         $data = self::filterNullValues($data);
-        return (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
+        $result = (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
+
+        if ($result) {
+            $this->syncUpdateToTravelBookings($booking_id, $data);
+        }
+
+        return $result;
     }
     
     /**
@@ -251,7 +264,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool
     {
-        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? Constants::STATUS_PENDING;
+        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? TravelConstants::STATUS_PENDING;
 
         return $this->update($booking_id, [
             'novoton_reservation_id' => $reservation_id,
@@ -276,6 +289,10 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function delete(int $booking_id): bool
     {
+        db_query(
+            "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+            (string) $booking_id
+        );
         return (bool) db_query("DELETE FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
     }
     
@@ -284,10 +301,18 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function deleteOrphans(int $hours = 24): int
     {
-        // In CS-Cart, db_query returns affected rows count for DELETE
+        // Clean up matching travel_bookings first
+        db_query(
+            "DELETE tb FROM ?:travel_bookings tb
+             INNER JOIN ?:novoton_bookings nb ON tb.provider_booking_id = CAST(nb.booking_id AS CHAR)
+             WHERE tb.provider = 'novoton' AND nb.order_id = 0
+               AND nb.created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
+            $hours
+        );
+
         $affected = db_query(
-            "DELETE FROM ?:novoton_bookings 
-             WHERE order_id = 0 
+            "DELETE FROM ?:novoton_bookings
+             WHERE order_id = 0
                AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
             $hours
         );
@@ -301,9 +326,9 @@ class BookingRepository implements BookingRepositoryInterface
     {
         return [
             'total' => $this->count(),
-            'pending' => $this->count(['status' => Constants::STATUS_PENDING]),
-            'confirmed' => $this->count(['status' => Constants::STATUS_CONFIRMED]),
-            'cancelled' => $this->count(['status' => Constants::STATUS_CANCELLED]),
+            'pending' => $this->count(['status' => TravelConstants::STATUS_PENDING]),
+            'confirmed' => $this->count(['status' => TravelConstants::STATUS_CONFIRMED]),
+            'cancelled' => $this->count(['status' => TravelConstants::STATUS_CANCELLED]),
             'with_orders' => $this->count(['has_order' => true]),
             'orphans' => $this->count(['no_order' => true])
         ];
@@ -418,7 +443,7 @@ class BookingRepository implements BookingRepositoryInterface
             'guest_name' => $nb['guest_name'] ?? $nb['holder_name'] ?? '',
             'guest_email' => $nb['order_email'] ?? $nb['guest_email'] ?? '',
             'guest_phone' => $nb['order_phone'] ?? $nb['guest_phone'] ?? '',
-            'status' => $nb['status'] ?? Constants::STATUS_PENDING,
+            'status' => $nb['status'] ?? TravelConstants::STATUS_PENDING,
             'novoton_status' => $nb['novoton_status'] ?? '',
             'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
             'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
@@ -495,11 +520,28 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
-        return (int) db_query(
+        $affected = (int) db_query(
             "UPDATE ?:novoton_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
             $user_id,
             $session_id
         );
+
+        if ($affected > 0) {
+            // Sync user_id to travel_bookings for these bookings
+            $booking_ids = db_get_fields(
+                "SELECT booking_id FROM ?:novoton_bookings WHERE session_id = ?s AND user_id = ?i",
+                $session_id, $user_id
+            );
+            if (!empty($booking_ids)) {
+                $id_strings = array_map('strval', $booking_ids);
+                db_query(
+                    "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
+                    $user_id, $id_strings
+                );
+            }
+        }
+
+        return $affected;
     }
 
     /**
@@ -511,11 +553,27 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function linkToUserByEmail(int $user_id, string $email): int
     {
-        return (int) db_query(
+        // Get affected booking IDs before the update
+        $booking_ids = db_get_fields(
+            "SELECT booking_id FROM ?:novoton_bookings WHERE guest_email = ?s AND user_id = 0",
+            $email
+        );
+
+        $affected = (int) db_query(
             "UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0",
             $user_id,
             $email
         );
+
+        if ($affected > 0 && !empty($booking_ids)) {
+            $id_strings = array_map('strval', $booking_ids);
+            db_query(
+                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
+                $user_id, $id_strings
+            );
+        }
+
+        return $affected;
     }
 
     /**
@@ -525,7 +583,7 @@ class BookingRepository implements BookingRepositoryInterface
      * @param array  $statuses    Optional status filter (default: pending + confirmed)
      * @return array Booking rows
      */
-    public function findByProductIds(array $product_ids, array $statuses = [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
+    public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
     {
         if (empty($product_ids)) {
             return [];
@@ -570,6 +628,18 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function deleteByProductId(int $product_id): int
     {
+        // Clean up travel_bookings for these bookings
+        $booking_ids = db_get_fields(
+            "SELECT booking_id FROM ?:novoton_bookings WHERE product_id = ?i", $product_id
+        );
+        if (!empty($booking_ids)) {
+            $id_strings = array_map('strval', $booking_ids);
+            db_query(
+                "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
+                $id_strings
+            );
+        }
+
         return (int) db_query("DELETE FROM ?:novoton_bookings WHERE product_id = ?i", $product_id);
     }
 
@@ -694,6 +764,92 @@ class BookingRepository implements BookingRepositoryInterface
             "SELECT COUNT(*) FROM ?:novoton_bookings
              WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
             $hours
+        );
+    }
+
+    /**
+     * Sync a novoton booking to the shared travel_bookings table.
+     *
+     * Maps novoton-specific fields to the provider-agnostic schema.
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE for idempotency.
+     */
+    private function syncToTravelBookings(int $booking_id, array $data): void
+    {
+        $travel_record = [
+            'provider' => 'novoton',
+            'provider_booking_id' => (string) $booking_id,
+            'order_id' => (int) ($data['order_id'] ?? 0),
+            'user_id' => (int) ($data['user_id'] ?? 0),
+            'hotel_id' => $data['hotel_id'] ?? '',
+            'hotel_name' => $data['hotel_name'] ?? '',
+            'room_name' => $data['room_type'] ?? '',
+            'board_code' => $data['board_id'] ?? '',
+            'check_in' => $data['check_in'] ?? '',
+            'check_out' => $data['check_out'] ?? '',
+            'nights' => (int) ($data['nights'] ?? 0),
+            'adults' => (int) ($data['adults'] ?? 2),
+            'children' => (int) ($data['children'] ?? 0),
+            'children_ages' => $data['children_ages'] ?? '',
+            'total_price' => (float) ($data['total_price'] ?? 0),
+            'currency' => $data['currency'] ?? 'EUR',
+            'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
+            'guests_json' => $data['guests_data'] ?? '{}',
+        ];
+
+        $existing = (int) db_get_field(
+            "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
+            (string) $booking_id
+        );
+
+        if ($existing > 0) {
+            db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing);
+        } else {
+            db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
+        }
+    }
+
+    /**
+     * Sync partial updates from novoton_bookings to travel_bookings.
+     *
+     * Only syncs fields that travel_bookings actually stores.
+     * Skips the sync if no travel_bookings-relevant fields were changed.
+     */
+    private function syncUpdateToTravelBookings(int $booking_id, array $data): void
+    {
+        // Map novoton field names → travel_bookings field names
+        static $fieldMap = [
+            'order_id' => 'order_id',
+            'user_id' => 'user_id',
+            'hotel_id' => 'hotel_id',
+            'hotel_name' => 'hotel_name',
+            'room_type' => 'room_name',
+            'board_id' => 'board_code',
+            'check_in' => 'check_in',
+            'check_out' => 'check_out',
+            'nights' => 'nights',
+            'adults' => 'adults',
+            'children' => 'children',
+            'children_ages' => 'children_ages',
+            'total_price' => 'total_price',
+            'currency' => 'currency',
+            'status' => 'status',
+            'guests_data' => 'guests_json',
+        ];
+
+        $travelUpdate = [];
+        foreach ($fieldMap as $novotonField => $travelField) {
+            if (array_key_exists($novotonField, $data)) {
+                $travelUpdate[$travelField] = $data[$novotonField];
+            }
+        }
+
+        if (empty($travelUpdate)) {
+            return;
+        }
+
+        db_query(
+            "UPDATE ?:travel_bookings SET ?u WHERE provider = 'novoton' AND provider_booking_id = ?s",
+            $travelUpdate, (string) $booking_id
         );
     }
 

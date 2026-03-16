@@ -16,6 +16,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\TravelConstants;
 
     $bookingData = $_REQUEST;
     $offer_id = trim($bookingData['offer_id'] ?? '');
@@ -138,7 +139,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
         'guests_data' => json_encode($guests_data),
         'base_price' => $basePrice, 'total_price' => $total_price,
-        'currency' => $currency, 'status' => 'pending',
+        'currency' => $currency, 'status' => TravelConstants::STATUS_PENDING,
         'api_response' => json_encode($verifyResult),
     ];
 
@@ -150,25 +151,25 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         $booking_id = (int)db_query("INSERT INTO ?:sphinx_bookings ?e", $booking_record);
     }
 
-    // Also create/update travel_bookings for shared display
+    // Also create/update travel_bookings for shared admin display
     $travel_record = [
-        'provider' => 'sphinx', 'provider_booking_id' => $booking_id,
-        'order_id' => 0, 'user_id' => $user_id, 'session_id' => $session_id,
-        'product_id' => $product_id, 'hotel_id' => $hotel_id, 'hotel_name' => $hotelName,
-        'room_type' => $roomName, 'board_type' => $boardName,
+        'provider' => 'sphinx', 'provider_booking_id' => (string)$booking_id,
+        'order_id' => 0, 'user_id' => $user_id,
+        'hotel_id' => $hotel_id, 'hotel_name' => $hotelName,
+        'room_name' => $roomName, 'board_code' => $boardId,
         'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'total_price' => $total_price, 'currency' => $currency,
-        'holder_name' => $holder_name, 'status' => 'pending',
+        'status' => TravelConstants::STATUS_PENDING,
+        'guests_json' => json_encode(['holder_name' => $holder_name, 'guests' => $guests_data]),
     ];
 
     $existing_travel_id = (int)db_get_field(
-        "SELECT id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?i LIMIT 1", $booking_id
+        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s LIMIT 1", (string)$booking_id
     );
     if ($existing_travel_id > 0) {
-        db_query("UPDATE ?:travel_bookings SET ?u WHERE id = ?i", $travel_record, $existing_travel_id);
+        db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing_travel_id);
     } else {
-        $travel_record['created_at'] = date('Y-m-d H:i:s');
         db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
     }
 

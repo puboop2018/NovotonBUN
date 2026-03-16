@@ -15,13 +15,14 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RoomType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingService implements BookingServiceInterface
 {
@@ -120,9 +121,9 @@ class BookingService implements BookingServiceInterface
             'api_price' => (float) ($bookingData['api_price'] ?? 0),
             'total_price' => (float) ($bookingData['total_price'] ?? 0),
             'currency' => ConfigProvider::getApiCurrency(),
-            'status' => Constants::STATUS_PENDING,
+            'status' => TravelConstants::STATUS_PENDING,
         ];
-        
+
         // Check for duplicate booking
         $existing_id = $this->findDuplicateBooking($booking_record);
         
@@ -475,7 +476,7 @@ class BookingService implements BookingServiceInterface
      */
     private function getBoardName(string $board_id): string
     {
-        return \Tygh\Addons\NovotonHolidays\ValueObjects\BoardType::toDisplayName($board_id);
+        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
     }
     
     /**

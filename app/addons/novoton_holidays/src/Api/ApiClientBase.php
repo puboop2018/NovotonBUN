@@ -8,8 +8,8 @@ use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
-use Tygh\Addons\NovotonHolidays\ValueObjects\Occupancy;
-use Tygh\Addons\NovotonHolidays\ValueObjects\RequestDebugInfo;
+use Tygh\Addons\TravelCore\ValueObjects\Occupancy;
+use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 
 abstract class ApiClientBase
 {

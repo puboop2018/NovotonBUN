@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 /**
- * Security Service Interface
+ * Novoton Security Service Interface
  *
- * Contract for input validation, CSRF protection, rate limiting,
- * encryption, and secure data handling.
+ * Extends the travel_core SecurityServiceInterface with Novoton-specific
+ * security features: CSRF protection, encryption, rate limiting,
+ * HTML escaping, and event logging.
  *
  * @package NovotonHolidays
  * @since 3.5.0
@@ -12,32 +13,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-interface SecurityServiceInterface
+use Tygh\Addons\TravelCore\Contracts\SecurityServiceInterface as BaseSecurityServiceInterface;
+
+interface SecurityServiceInterface extends BaseSecurityServiceInterface
 {
-    /**
-     * Validate booking data.
-     *
-     * @param array $data Booking data
-     * @return array{valid: bool, errors: array}
-     */
-    public function validateBookingData(array $data): array;
-
-    /**
-     * Validate and sanitize search parameters.
-     *
-     * @param array $params Search parameters
-     * @return array Sanitized parameters
-     */
-    public function validateSearchParams(array $params): array;
-
-    /**
-     * Validate and sanitize guest data.
-     *
-     * @param array $guests Guest data
-     * @return array Sanitized guest data
-     */
-    public function sanitizeGuestData(array $guests): array;
-
     /**
      * Verify CSRF token.
      *
@@ -62,14 +41,6 @@ interface SecurityServiceInterface
      * @return array{allowed: bool, remaining: int, reset: int}
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array;
-
-    /**
-     * Check booking rate limit (stricter).
-     *
-     * @param string $identifier User ID or session ID
-     * @return bool Is allowed
-     */
-    public function checkBookingRateLimit(string $identifier): bool;
 
     /**
      * Encrypt sensitive data.

@@ -3,7 +3,11 @@ declare(strict_types=1);
 /**
  * Security Service Interface
  *
- * Contract for booking-related security validation.
+ * Core contract for booking-related security validation, rate limiting,
+ * and data sanitization. All travel providers should implement this.
+ *
+ * Provider addons may extend this interface with additional methods
+ * (e.g. CSRF, encryption) specific to their security needs.
  *
  * @package TravelCore
  * @since   1.0.0
@@ -17,25 +21,25 @@ interface SecurityServiceInterface
      * Validate booking data before submission.
      *
      * @param array $data Booking data
-     * @return array Validation errors (empty if valid)
+     * @return array{valid: bool, errors: array} Validation result
      */
     public function validateBookingData(array $data): array;
 
     /**
-     * Validate search parameters.
+     * Validate and sanitize search parameters.
      *
-     * @param array $params Search parameters
-     * @return array Validation errors (empty if valid)
+     * @param array $params Raw search parameters
+     * @return array Sanitized parameters (provider decides format)
      */
     public function validateSearchParams(array $params): array;
 
     /**
-     * Check booking rate limit for the current session/user.
+     * Check booking rate limit for the given identifier.
      *
-     * @param string $action Action type (e.g. 'search', 'book')
-     * @return bool True if within limits
+     * @param string $identifier Rate limit key (user ID, session ID, or action type)
+     * @return bool True if within limits, false if rate-limited
      */
-    public function checkBookingRateLimit(string $action): bool;
+    public function checkBookingRateLimit(string $identifier): bool;
 
     /**
      * Sanitize guest data for safe storage.

@@ -11,7 +11,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 
     $bookingData = $_REQUEST;
     

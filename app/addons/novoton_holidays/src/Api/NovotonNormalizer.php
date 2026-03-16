@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
-use Tygh\Addons\NovotonHolidays\ValueObjects\BoardType;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 
 class NovotonNormalizer implements ProviderNormalizerInterface
 {

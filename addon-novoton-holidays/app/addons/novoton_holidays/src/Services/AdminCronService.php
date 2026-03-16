@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
@@ -97,16 +98,16 @@ class AdminCronService
         $with_prices = 0;
 
         foreach ($hotels as $hotel) {
-            $check_in  = date(Constants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
-            $check_out = date(Constants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + Constants::DEFAULT_NIGHTS) . ' days'));
+            $check_in  = date(TravelConstants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
+            $check_out = date(TravelConstants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + TravelConstants::DEFAULT_NIGHTS) . ' days'));
 
             $response = $this->api->getRoomPrice([
                 'hotel_id'  => $hotel['hotel_id'],
                 'check_in'  => $check_in,
                 'check_out' => $check_out,
-                'adults'    => Constants::DEFAULT_ADULTS,
-                'children'  => Constants::DEFAULT_CHILDREN,
-                'rooms'     => Constants::DEFAULT_ROOMS,
+                'adults'    => TravelConstants::DEFAULT_ADULTS,
+                'children'  => TravelConstants::DEFAULT_CHILDREN,
+                'rooms'     => TravelConstants::DEFAULT_ROOMS,
             ]);
             $has_room_price = ($response && isset($response->hotel)) ? 'Y' : 'N';
 
@@ -280,7 +281,7 @@ class AdminCronService
             $bookingRepo = $this->container->bookingRepository();
             $items = $bookingRepo->findByNovotonStatus(
                 Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
-                [Constants::STATUS_PENDING, Constants::STATUS_CONFIRMED],
+                [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED],
                 50
             );
         }

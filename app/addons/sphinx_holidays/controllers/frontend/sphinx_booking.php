@@ -17,11 +17,6 @@ declare(strict_types=1);
  * @since   1.0.0
  */
 
-use Tygh\Registry;
-use Tygh\Tygh;
-use Tygh\Addons\SphinxHolidays\Services\Container;
-use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 //=============================================================================

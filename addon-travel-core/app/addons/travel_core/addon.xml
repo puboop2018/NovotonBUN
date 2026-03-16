@@ -129,7 +129,7 @@
                 `alias_id`   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 `map_id`     INT UNSIGNED NOT NULL COMMENT 'FK to travel_feature_map',
                 `api_source` VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx, eurosite',
-                `api_value`  VARCHAR(255) NOT NULL COMMENT 'AI, Mic dejun, ALL INCLUSIVE PLUS',
+                `api_value`  VARCHAR(191) NOT NULL COMMENT 'AI, Mic dejun, ALL INCLUSIVE PLUS',
                 `match_type` ENUM('exact','prefix','contains','regex') DEFAULT 'exact',
                 UNIQUE KEY `uq_source_value` (`api_source`, `api_value`),
                 KEY `idx_map` (`map_id`)
@@ -143,6 +143,7 @@
                 `provider`          VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx',
                 `provider_booking_id` VARCHAR(100) DEFAULT NULL COMMENT 'Provider-specific booking ID',
                 `order_id`          INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:orders',
+                `user_id`           INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:users',
                 `hotel_id`          VARCHAR(100) NOT NULL,
                 `hotel_name`        VARCHAR(255) DEFAULT NULL,
                 `destination`       VARCHAR(255) DEFAULT NULL,

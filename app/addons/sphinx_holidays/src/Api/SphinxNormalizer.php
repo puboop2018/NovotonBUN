@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Api;
 
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
  * Sphinx API data normalizer.
@@ -158,11 +159,11 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     public function normalizeBookingStatus(string $sphinxStatus): string
     {
         return match (strtolower($sphinxStatus)) {
-            'confirmed'           => 'confirmed',
-            'pending', 'on_hold'  => 'pending',
-            'cancelled', 'canceled' => 'cancelled',
-            'rejected', 'failed'  => 'failed',
-            default               => 'pending',
+            'confirmed'             => TravelConstants::STATUS_CONFIRMED,
+            'pending', 'on_hold'    => TravelConstants::STATUS_PENDING,
+            'cancelled', 'canceled' => TravelConstants::STATUS_CANCELLED,
+            'rejected', 'failed'    => TravelConstants::STATUS_FAILED,
+            default                 => TravelConstants::STATUS_PENDING,
         };
     }
 }

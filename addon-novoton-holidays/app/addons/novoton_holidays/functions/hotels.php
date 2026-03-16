@@ -475,51 +475,7 @@ function fn_novoton_holidays_get_hotel_id_by_product($product_id): ?string
  */
 function fn_novoton_holidays_get_or_create_category($path): int
 {
-    $parts = explode('/', $path);
-    $parent_id = 0;
-    
-    foreach ($parts as $part) {
-        $part = trim($part);
-        if (empty($part)) continue;
-        
-        // Check if category exists
-        $category_id = (int) db_get_field(
-            "SELECT c.category_id FROM ?:categories c
-             LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
-             WHERE c.parent_id = ?i AND cd.category = ?s",
-            CART_LANGUAGE, $parent_id, $part
-        );
-
-        if ($category_id) {
-            $parent_id = $category_id;
-        } else {
-            // Create category
-            $category_data = [
-                'category' => $part,
-                'parent_id' => $parent_id,
-                'status' => 'A'
-            ];
-
-            $category_id = (int) fn_update_category($category_data, 0);
-
-            if ($category_id) {
-                // Add descriptions for all languages
-                $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-                foreach ($languages as $lang_code) {
-                    db_query(
-                        "INSERT INTO ?:category_descriptions (category_id, lang_code, category)
-                         VALUES (?i, ?s, ?s)
-                         ON DUPLICATE KEY UPDATE category = ?s",
-                        $category_id, $lang_code, $part, $part
-                    );
-                }
-                
-                $parent_id = $category_id;
-            }
-        }
-    }
-    
-    return $parent_id;
+    return fn_travel_core_get_or_create_category($path);
 }
 
 /**

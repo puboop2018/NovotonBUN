@@ -16,8 +16,6 @@ use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
-use Tygh\Addons\TravelCore\Services\ValidationHelper;
-
 try {
     $api = Container::getApi();
     $view = Tygh::$app['view'];

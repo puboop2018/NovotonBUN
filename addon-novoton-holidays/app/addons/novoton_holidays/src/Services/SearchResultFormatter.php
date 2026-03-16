@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Registry;
 use Tygh\Tygh;
