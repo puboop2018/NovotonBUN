@@ -290,29 +290,45 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
-        <!-- Sphinx bookings (provider-specific booking data) -->
+        <!-- Sphinx bookings (provider-specific booking data, mirrors novoton_bookings pattern) -->
         <item>
             CREATE TABLE IF NOT EXISTS `?:sphinx_bookings` (
-                `id`                    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `travel_booking_id`     INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:travel_bookings',
-                `sphinx_order_id`       VARCHAR(100) DEFAULT NULL COMMENT 'Order ID from Sphinx API',
-                `offer_id`              VARCHAR(255) DEFAULT NULL COMMENT 'Original offer ID',
-                `offer_type`            VARCHAR(20) DEFAULT 'hotel' COMMENT 'hotel, package, circuit, experience',
-                `hotel_id`              VARCHAR(100) DEFAULT NULL,
-                `flight_hash`           VARCHAR(100) DEFAULT NULL COMMENT 'Flight hash for packages',
-                `bus_id`                VARCHAR(100) DEFAULT NULL COMMENT 'Bus ID for bus packages',
-                `raw_response_json`     JSON DEFAULT NULL COMMENT 'Full API booking response',
-                `verification_json`     JSON DEFAULT NULL COMMENT 'Verification response (terms, cancellation)',
-                `sphinx_status`         VARCHAR(30) DEFAULT NULL COMMENT 'confirmed, pending, cancelled',
-                `has_transfer`          ENUM('Y','N') DEFAULT 'N',
-                `has_cancellation`      ENUM('Y','N') DEFAULT 'N',
-                `free_cancellation_until` DATE DEFAULT NULL,
-                `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                KEY `idx_travel_booking` (`travel_booking_id`),
-                KEY `idx_sphinx_order` (`sphinx_order_id`),
+                `booking_id`        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `order_id`          INT UNSIGNED NOT NULL DEFAULT 0,
+                `user_id`           INT UNSIGNED NOT NULL DEFAULT 0,
+                `session_id`        VARCHAR(64) DEFAULT NULL,
+                `product_id`        INT UNSIGNED NOT NULL DEFAULT 0,
+                `hotel_id`          VARCHAR(100) DEFAULT NULL,
+                `hotel_name`        VARCHAR(255) DEFAULT NULL,
+                `offer_id`          VARCHAR(255) DEFAULT NULL COMMENT 'Original offer ID',
+                `room_id`           VARCHAR(100) DEFAULT NULL,
+                `room_type`         VARCHAR(255) DEFAULT NULL,
+                `board_id`          VARCHAR(100) DEFAULT NULL,
+                `check_in`          DATE DEFAULT NULL,
+                `check_out`         DATE DEFAULT NULL,
+                `nights`            SMALLINT UNSIGNED DEFAULT 0,
+                `adults`            TINYINT UNSIGNED DEFAULT 2,
+                `children`          TINYINT UNSIGNED DEFAULT 0,
+                `children_ages`     VARCHAR(100) DEFAULT NULL,
+                `num_rooms`         TINYINT UNSIGNED DEFAULT 1,
+                `rooms_data`        JSON DEFAULT NULL,
+                `guest_name`        VARCHAR(500) DEFAULT NULL,
+                `holder_name`       VARCHAR(255) DEFAULT NULL,
+                `guest_email`       VARCHAR(255) DEFAULT NULL,
+                `guest_phone`       VARCHAR(100) DEFAULT NULL,
+                `guests_data`       JSON DEFAULT NULL,
+                `base_price`        DECIMAL(10,2) DEFAULT 0.00,
+                `total_price`       DECIMAL(10,2) DEFAULT 0.00,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `status`            VARCHAR(30) DEFAULT 'pending',
+                `api_booking_ref`   VARCHAR(100) DEFAULT NULL COMMENT 'Booking reference from Sphinx API',
+                `api_response`      JSON DEFAULT NULL COMMENT 'Full API response JSON',
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_order_id` (`order_id`),
+                KEY `idx_user_session` (`user_id`, `session_id`),
                 KEY `idx_hotel` (`hotel_id`),
-                KEY `idx_status` (`sphinx_status`)
+                KEY `idx_status` (`status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 

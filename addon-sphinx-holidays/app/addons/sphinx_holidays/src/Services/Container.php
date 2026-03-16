@@ -7,6 +7,7 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
+use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 
 /**
  * Sphinx Holidays dependency injection container.
@@ -65,8 +66,18 @@ class Container
         return self::$featureAssigner;
     }
 
+    private static ?SphinxBookingRepository $bookingRepo = null;
     private static ?SecurityService $securityService = null;
     private static ?PreOrderPriceVerifier $preOrderPriceVerifier = null;
+
+    public static function getBookingRepository(): SphinxBookingRepository
+    {
+        if (self::$bookingRepo === null) {
+            self::$bookingRepo = new SphinxBookingRepository();
+        }
+
+        return self::$bookingRepo;
+    }
 
     public static function getSecurityService(): SecurityService
     {
@@ -95,6 +106,7 @@ class Container
         self::$api = null;
         self::$normalizer = null;
         self::$featureAssigner = null;
+        self::$bookingRepo = null;
         self::$securityService = null;
         self::$preOrderPriceVerifier = null;
     }

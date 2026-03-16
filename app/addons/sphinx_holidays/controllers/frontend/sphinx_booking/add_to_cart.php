@@ -122,10 +122,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'price' => $total_price,
     ]];
 
-    $existing_booking_id = (int)db_get_field(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE order_id = 0 AND hotel_id = ?s AND check_in = ?s AND check_out = ?s AND holder_name = ?s AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) LIMIT 1",
-        $hotel_id, $check_in, $check_out, $holder_name
-    );
+    $repo = Container::getBookingRepository();
+    $existing_booking_id = $repo->findRecentUnassigned($hotel_id, $check_in, $check_out, $holder_name);
 
     $booking_record = [
         'order_id' => 0, 'user_id' => $user_id, 'session_id' => $session_id,
@@ -143,34 +141,12 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'api_response' => json_encode($verifyResult),
     ];
 
-    if ($existing_booking_id > 0) {
-        db_query("UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i", $booking_record, $existing_booking_id);
+    if ($existing_booking_id !== null) {
+        $repo->update($existing_booking_id, $booking_record);
         $booking_id = $existing_booking_id;
     } else {
         $booking_record['created_at'] = date('Y-m-d H:i:s');
-        $booking_id = (int)db_query("INSERT INTO ?:sphinx_bookings ?e", $booking_record);
-    }
-
-    // Also create/update travel_bookings for shared admin display
-    $travel_record = [
-        'provider' => 'sphinx', 'provider_booking_id' => (string)$booking_id,
-        'order_id' => 0, 'user_id' => $user_id,
-        'hotel_id' => $hotel_id, 'hotel_name' => $hotelName,
-        'room_name' => $roomName, 'board_code' => $boardId,
-        'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
-        'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
-        'total_price' => $total_price, 'currency' => $currency,
-        'status' => TravelConstants::STATUS_PENDING,
-        'guests_json' => json_encode(['holder_name' => $holder_name, 'guests' => $guests_data]),
-    ];
-
-    $existing_travel_id = (int)db_get_field(
-        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s LIMIT 1", (string)$booking_id
-    );
-    if ($existing_travel_id > 0) {
-        db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing_travel_id);
-    } else {
-        db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
+        $booking_id = $repo->create($booking_record);
     }
 
     // Add to CS-Cart cart

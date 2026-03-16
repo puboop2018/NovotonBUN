@@ -134,11 +134,20 @@ function _sphinx_parse_and_validate_guests(array $guests, string $check_in = '',
         }
     }
 
+    // Resolve holder: prefer guest with is_holder flag, fallback to first guest
+    $holder_name = $guest_names[0] ?? '';
+    foreach ($guests_data as $g) {
+        if (!empty($g['is_holder']) && !empty($g['name'])) {
+            $holder_name = $g['name'];
+            break;
+        }
+    }
+
     return [
         'guests_data' => $guests_data,
         'guest_names' => $guest_names,
         'guest_list' => implode(', ', $guest_names),
-        'holder_name' => $guest_names[0] ?? ''
+        'holder_name' => $holder_name,
     ];
 }
 }

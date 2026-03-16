@@ -230,6 +230,8 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         return;
     }
 
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+
     foreach ($cart['products'] as $cart_id => $product) {
         if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
             continue;
@@ -238,18 +240,9 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         $booking_id = (int)$product['extra']['travel_booking_id'];
         $offer_id = $product['extra']['offer_id'] ?? '';
 
-        // Update sphinx_bookings with order_id
+        // Link booking to order (syncs to travel_bookings via repository)
         $confirmed = \Tygh\Addons\TravelCore\TravelConstants::STATUS_CONFIRMED;
-        db_query(
-            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = ?s WHERE booking_id = ?i",
-            $order_id, $confirmed, $booking_id
-        );
-
-        // Update travel_bookings
-        db_query(
-            "UPDATE ?:travel_bookings SET order_id = ?i, status = ?s WHERE provider = 'sphinx' AND provider_booking_id = ?s",
-            $order_id, $confirmed, (string)$booking_id
-        );
+        $repo->linkToOrder($booking_id, $order_id, $confirmed);
 
         // Submit booking to Sphinx API
         if (!empty($offer_id)) {
@@ -272,11 +265,10 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 ]);
 
                 if (!empty($bookResult['booking_reference'])) {
-                    db_query(
-                        "UPDATE ?:sphinx_bookings SET api_booking_ref = ?s, api_response = ?s WHERE booking_id = ?i",
+                    $repo->updateApiResponse(
+                        $booking_id,
                         $bookResult['booking_reference'],
-                        json_encode($bookResult),
-                        $booking_id
+                        json_encode($bookResult)
                     );
                 }
             } catch (\Throwable $e) {
@@ -357,24 +349,8 @@ function fn_sphinx_holidays_user_login_post($user_data, &$auth)
         return;
     }
 
-    db_query(
-        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
-        (int)$auth['user_id'], $session_id
-    );
-
-    // Update travel_bookings via provider_booking_id link
-    $sphinx_booking_ids = db_get_fields(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
-        $session_id, (int)$auth['user_id']
-    );
-    if (!empty($sphinx_booking_ids)) {
-        foreach ($sphinx_booking_ids as $bid) {
-            db_query(
-                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
-                (int)$auth['user_id'], (string)$bid
-            );
-        }
-    }
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $repo->linkToUserBySession((int)$auth['user_id'], $session_id);
 }
 
 /**
@@ -392,22 +368,6 @@ function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth)
         return;
     }
 
-    db_query(
-        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
-        (int)$user_id, $session_id
-    );
-
-    // Update travel_bookings via provider_booking_id link
-    $sphinx_booking_ids = db_get_fields(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
-        $session_id, (int)$user_id
-    );
-    if (!empty($sphinx_booking_ids)) {
-        foreach ($sphinx_booking_ids as $bid) {
-            db_query(
-                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
-                (int)$user_id, (string)$bid
-            );
-        }
-    }
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $repo->linkToUserBySession((int)$user_id, $session_id);
 }

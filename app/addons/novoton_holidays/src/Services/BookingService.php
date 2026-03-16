@@ -184,10 +184,7 @@ class BookingService implements BookingServiceInterface
      */
     public function getBookingsForOrder(int $order_id): array
     {
-        return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
-            $order_id
-        );
+        return $this->bookingRepo->findByOrderId($order_id);
     }
     
     /**
