@@ -198,6 +198,67 @@ function fn_travel_core_seed_lang_vars(): void
         }
     }
 
+    // Populate ?:settings_descriptions for programmatically registered settings
+    fn_travel_core_sync_settings_descriptions();
+}
+
+/**
+ * Sync settings descriptions into ?:settings_descriptions.
+ * Required because travel_core registers settings programmatically
+ * (no <settings> in addon.xml), so CS-Cart won't populate descriptions automatically.
+ */
+function fn_travel_core_sync_settings_descriptions(): void
+{
+    $section_id = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = ?s",
+        'travel_core'
+    );
+
+    if (!$section_id) {
+        return;
+    }
+
+    $settings = db_get_array(
+        "SELECT object_id, name, type FROM ?:settings_objects WHERE section_id = ?i",
+        $section_id
+    );
+
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+
+    foreach ($settings as $setting) {
+        $lang_var_name = 'travel_core.' . $setting['name'];
+        $object_type = ($setting['type'] === 'H') ? 'H' : 'O';
+        foreach ($languages as $lang) {
+            $desc = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($desc)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
+                     VALUES (?i, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE value = ?s",
+                    $setting['object_id'], $object_type, $desc, $lang['lang_code'], $desc
+                );
+            }
+        }
+    }
+
+    // Section description
+    foreach ($languages as $lang) {
+        $desc = db_get_field(
+            "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+            'travel_core', $lang['lang_code']
+        );
+        if (!empty($desc)) {
+            db_query(
+                "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
+                 VALUES (?i, 'SECTION', ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $section_id, $desc, $lang['lang_code'], $desc
+            );
+        }
+    }
 }
 
 /**
