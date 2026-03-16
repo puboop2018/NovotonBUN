@@ -83,9 +83,9 @@ function fn_sphinx_holidays_sync_settings_descriptions(): void
             );
             if (!empty($value)) {
                 db_query(
-                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
                      VALUES (?i, ?s, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE description = ?s",
+                     ON DUPLICATE KEY UPDATE value = ?s",
                     $setting['object_id'], $object_type, $value, $lang['lang_code'], $value
                 );
             }
@@ -100,9 +100,9 @@ function fn_sphinx_holidays_sync_settings_descriptions(): void
         );
         if (!empty($value)) {
             db_query(
-                "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
                  VALUES (?i, 'SECTION', ?s, ?s)
-                 ON DUPLICATE KEY UPDATE description = ?s",
+                 ON DUPLICATE KEY UPDATE value = ?s",
                 $section_id, $value, $lang['lang_code'], $value
             );
         }
