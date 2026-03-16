@@ -114,7 +114,6 @@ function fn_travel_core_register_settings(): void
 
 /**
  * Seed language variables used by settings, shared templates, and services.
- * Also populates ?:settings_descriptions for addon settings.
  */
 function fn_travel_core_seed_lang_vars(): void
 {
@@ -199,70 +198,6 @@ function fn_travel_core_seed_lang_vars(): void
         }
     }
 
-    // Populate ?:settings_descriptions for addon settings
-    fn_travel_core_sync_settings_descriptions();
-}
-
-/**
- * Sync settings descriptions from ?:language_values into ?:settings_descriptions.
- * Uses compatible queries that don't rely on object_type/addon columns.
- */
-function fn_travel_core_sync_settings_descriptions(): void
-{
-    // Get the section for this addon by name (compatible with all CS-Cart versions)
-    $section_id = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = ?s",
-        'travel_core'
-    );
-
-    if (!$section_id) {
-        return;
-    }
-
-    // Get all settings objects for this section
-    $settings = db_get_array(
-        "SELECT object_id, name, type FROM ?:settings_objects WHERE section_id = ?i",
-        $section_id
-    );
-
-    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-
-    // Update descriptions for settings items
-    foreach ($settings as $setting) {
-        $lang_var_name = 'travel_core.' . $setting['name'];
-        // Map CS-Cart type column to object_type for descriptions
-        $object_type = ($setting['type'] === 'H') ? 'H' : 'O';
-        foreach ($languages as $lang) {
-            $value = db_get_field(
-                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-                $lang_var_name, $lang['lang_code']
-            );
-            if (!empty($value)) {
-                db_query(
-                    "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
-                     VALUES (?i, ?s, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE value = ?s",
-                    $setting['object_id'], $object_type, $value, $lang['lang_code'], $value
-                );
-            }
-        }
-    }
-
-    // Update description for the section itself
-    foreach ($languages as $lang) {
-        $value = db_get_field(
-            "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-            'travel_core', $lang['lang_code']
-        );
-        if (!empty($value)) {
-            db_query(
-                "INSERT INTO ?:settings_descriptions (object_id, object_type, value, lang_code)
-                 VALUES (?i, 'SECTION', ?s, ?s)
-                 ON DUPLICATE KEY UPDATE value = ?s",
-                $section_id, $value, $lang['lang_code'], $value
-            );
-        }
-    }
 }
 
 /**
