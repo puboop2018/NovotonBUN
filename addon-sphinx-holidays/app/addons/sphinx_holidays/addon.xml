@@ -118,6 +118,11 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <item id="no_surprises_threshold">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Product Mapping Header -->
                     <item id="product_header">
@@ -323,6 +328,9 @@
                 `status`            VARCHAR(30) DEFAULT 'pending',
                 `api_booking_ref`   VARCHAR(100) DEFAULT NULL COMMENT 'Booking reference from Sphinx API',
                 `api_response`      JSON DEFAULT NULL COMMENT 'Full API response JSON',
+                `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from Orders API',
+                `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from Orders API',
+                `last_status_check` DATETIME DEFAULT NULL COMMENT 'Last time status was polled from API',
                 `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 KEY `idx_order_id` (`order_id`),
@@ -412,6 +420,10 @@
         <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
         <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
         <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
+        <item lang="en" id="sphinx_holidays.no_surprises_threshold"><![CDATA["No Surprises" price threshold (%). 0 = disabled. Customer is warned if price increases by more than this %.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_surprises_threshold"><![CDATA[Prag "Fără Surprize" (%). 0 = dezactivat. Clientul este avertizat dacă prețul crește cu mai mult de acest %.]]></item>
+        <item lang="en" id="sphinx_holidays.price_changed_warning"><![CDATA[The price for "[hotel]" has changed from [old_price] to [new_price] [currency]. Your cart has been updated with the new price.]]></item>
+        <item lang="ro" id="sphinx_holidays.price_changed_warning"><![CDATA[Prețul pentru "[hotel]" s-a modificat de la [old_price] la [new_price] [currency]. Coșul a fost actualizat cu noul preț.]]></item>
         <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>

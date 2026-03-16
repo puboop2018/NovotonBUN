@@ -224,14 +224,25 @@ class SphinxApi
     // ── Orders ──
 
     /**
-     * Get all orders (paginated).
+     * Get all orders (paginated, with optional filters).
+     *
+     * @param int $page Page number
+     * @param int $perPage Items per page (1-50)
+     * @param array $filters Optional filters: reference_code, type, created_after
      */
-    public function getOrders(int $page = 1, int $perPage = 50): ?array
+    public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
-        return $this->client->get('/api/v1/orders', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if (!empty($filters['reference_code'])) {
+            $query['reference_code'] = $filters['reference_code'];
+        }
+        if (!empty($filters['type'])) {
+            $query['type'] = $filters['type'];
+        }
+        if (!empty($filters['created_after'])) {
+            $query['created_after'] = $filters['created_after'];
+        }
+        return $this->client->get('/api/v1/orders', $query);
     }
 
     /**

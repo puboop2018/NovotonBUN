@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 
 /**
@@ -22,6 +23,9 @@ class TravelProviderRegistry
 
     /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}> */
     private static array $providers = [];
+
+    /** @var array<string, BookingAdminProviderInterface> */
+    private static array $adminProviders = [];
 
     /**
      * Register a travel provider.
@@ -90,10 +94,27 @@ class TravelProviderRegistry
     }
 
     /**
+     * Register an admin provider for booking management.
+     */
+    public static function registerAdminProvider(string $name, BookingAdminProviderInterface $provider): void
+    {
+        self::$adminProviders[$name] = $provider;
+    }
+
+    /**
+     * Get the admin provider for a given provider name.
+     */
+    public static function getAdminProvider(string $name): ?BookingAdminProviderInterface
+    {
+        return self::$adminProviders[$name] ?? null;
+    }
+
+    /**
      * Reset registry (for testing).
      */
     public static function reset(): void
     {
         self::$providers = [];
+        self::$adminProviders = [];
     }
 }

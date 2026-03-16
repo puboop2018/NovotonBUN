@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 
 /**
  * Dispatches cron jobs by mode name.
@@ -18,9 +19,10 @@ class CronDispatcher
      * Map of mode => command class.
      */
     private static array $modes = [
-        'destinations'  => DestinationSyncCommand::class,
-        'hotels'        => HotelSyncCommand::class,
-        'add_products'  => AddProductsCommand::class,
+        'destinations'   => DestinationSyncCommand::class,
+        'hotels'         => HotelSyncCommand::class,
+        'add_products'   => AddProductsCommand::class,
+        'order_status'   => OrderStatusSyncCommand::class,
     ];
 
     /**

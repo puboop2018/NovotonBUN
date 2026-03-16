@@ -47,6 +47,19 @@ function fn_sphinx_holidays_uninstall(): bool
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
+
+    // Add columns for order status sync (safe for existing installs)
+    $columns = db_get_fields("SHOW COLUMNS FROM ?:sphinx_bookings");
+    if (!in_array('payment_terms_json', $columns, true)) {
+        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from Orders API' AFTER `api_response`");
+    }
+    if (!in_array('cancellation_fees_json', $columns, true)) {
+        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from Orders API' AFTER `payment_terms_json`");
+    }
+    if (!in_array('last_status_check', $columns, true)) {
+        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `last_status_check` DATETIME DEFAULT NULL COMMENT 'Last time status was polled from API' AFTER `cancellation_fees_json`");
+    }
+
     return true;
 }
 
@@ -320,11 +333,17 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                     'status' => \Tygh\Addons\TravelCore\TravelConstants::STATUS_FAILED,
                 ]);
 
+                $hotelName = $product['extra']['hotel_name'] ?? $product['product'] ?? '';
+                $errorMsg = $e->getMessage();
+
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
+                    'message' => 'Sphinx bookHotel API call failed: ' . $errorMsg,
                     'booking_id' => $booking_id,
                     'order_id' => $order_id,
                 ]);
+
+                // Send admin email alert for booking failure
+                fn_sphinx_holidays_send_booking_failure_email($order_id, $booking_id, $hotelName, $errorMsg);
             }
         }
     }
@@ -450,4 +469,41 @@ function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
             break; // One notification per order is enough
         }
     }
+}
+
+/**
+ * Send admin email alert when a Sphinx booking fails.
+ *
+ * Uses CS-Cart's fn_send_mail() to notify the orders department.
+ *
+ * @param int $order_id CS-Cart order ID
+ * @param int $booking_id Sphinx booking ID
+ * @param string $hotel_name Hotel name for context
+ * @param string $error Error message from the API
+ */
+function fn_sphinx_holidays_send_booking_failure_email(int $order_id, int $booking_id, string $hotel_name, string $error): void
+{
+    $adminEmail = db_get_field(
+        "SELECT value FROM ?:settings_objects WHERE name = 'company_orders_department'"
+    );
+
+    if (empty($adminEmail) || !is_string($adminEmail)) {
+        return;
+    }
+
+    $subject = "Sphinx Booking FAILED - Order #{$order_id}";
+    $body = "A Sphinx hotel booking has failed and requires attention.\n\n"
+        . "Order ID: #{$order_id}\n"
+        . "Booking ID: #{$booking_id}\n"
+        . "Hotel: {$hotel_name}\n"
+        . "Error: {$error}\n\n"
+        . "The booking has been marked as 'failed'. Please review in the admin panel\n"
+        . "and retry the booking if appropriate.";
+
+    @fn_send_mail([
+        'to'      => $adminEmail,
+        'from'    => 'default_company_orders_department',
+        'subject' => $subject,
+        'body'    => $body,
+    ], 'A');
 }

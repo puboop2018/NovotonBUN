@@ -103,11 +103,16 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             // Compare prices
             $diff = abs($formPrice - $apiPrice);
-            $threshold = $formPrice > 0 ? ($diff / $formPrice) * 100 : 0;
+            $pctChange = $formPrice > 0 ? ($diff / $formPrice) * 100 : 0;
 
             if ($diff < 0.01) {
                 continue; // Prices match
             }
+
+            // "No Surprises" threshold: if price increased by more than X%,
+            // warn the customer instead of silently correcting.
+            // Price decreases are always silently applied (customer benefit).
+            $noSurprisesThreshold = self::getNoSurprisesThreshold();
 
             $notificationData = [
                 'hotel_id' => $extra['hotel_id'] ?? '',
@@ -116,36 +121,87 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 'form_price' => $formPrice,
                 'api_price' => $apiPrice,
                 'cart_id' => (string)$cartId,
-                'type' => $formPrice < $apiPrice ? 'price_lower' : 'price_higher',
+                'type' => $formPrice < $apiPrice ? 'price_increase' : 'price_decrease',
+                'pct_change' => round($pctChange, 1),
             ];
 
-            // If form price is lower than API, correct upward
             if ($formPrice < $apiPrice) {
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: correcting price upward',
-                    'offer_id' => $offerId,
-                    'form_price' => $formPrice,
-                    'api_price' => $apiPrice,
-                ]);
+                // Price went UP since add-to-cart
+                if ($noSurprisesThreshold > 0 && $pctChange > $noSurprisesThreshold) {
+                    // "No Surprises": warn customer about significant price increase
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: price increased by ' . round($pctChange, 1) . '% — notifying customer',
+                        'offer_id' => $offerId,
+                        'form_price' => $formPrice,
+                        'api_price' => $apiPrice,
+                    ]);
 
+                    $result['corrections'][$cartId] = [
+                        'api_price' => $apiPrice,
+                        'api_price_raw' => (float)($verifyResult['price'] ?? 0),
+                    ];
+                    $result['notifications'][] = $notificationData;
+
+                    // Show customer-facing notification about price change
+                    $hotelName = $extra['hotel_name'] ?? 'your hotel';
+                    fn_set_notification('W', __('warning'),
+                        __('sphinx_holidays.price_changed_warning', [
+                            '[hotel]' => $hotelName,
+                            '[old_price]' => number_format($formPrice, 2),
+                            '[new_price]' => number_format($apiPrice, 2),
+                            '[currency]' => $extra['currency'] ?? 'EUR',
+                            '[default]' => "The price for \"{$hotelName}\" has changed from "
+                                . number_format($formPrice, 2) . ' to ' . number_format($apiPrice, 2)
+                                . ' ' . ($extra['currency'] ?? 'EUR')
+                                . '. Your cart has been updated with the new price.',
+                        ])
+                    );
+                } else {
+                    // Small increase or threshold disabled: silently correct upward
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: correcting price upward',
+                        'offer_id' => $offerId,
+                        'form_price' => $formPrice,
+                        'api_price' => $apiPrice,
+                    ]);
+
+                    $result['corrections'][$cartId] = [
+                        'api_price' => $apiPrice,
+                        'api_price_raw' => (float)($verifyResult['price'] ?? 0),
+                    ];
+                    $result['notifications'][] = $notificationData;
+                }
+            } elseif ($formPrice > $apiPrice) {
+                // Price went DOWN — always apply silently (customer benefit)
                 $result['corrections'][$cartId] = [
                     'api_price' => $apiPrice,
                     'api_price_raw' => (float)($verifyResult['price'] ?? 0),
                 ];
-                $result['notifications'][] = $notificationData;
-            } elseif ($threshold > 20) {
-                // Form price significantly higher — notify admin but allow
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: form price above API by ' . round($threshold, 1) . '%',
-                    'offer_id' => $offerId,
-                    'form_price' => $formPrice,
-                    'api_price' => $apiPrice,
-                ]);
 
-                $result['notifications'][] = $notificationData;
+                if ($pctChange > 20) {
+                    // Significant decrease — log for admin awareness
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: form price above API by ' . round($pctChange, 1) . '% — applying lower price',
+                        'offer_id' => $offerId,
+                        'form_price' => $formPrice,
+                        'api_price' => $apiPrice,
+                    ]);
+                    $result['notifications'][] = $notificationData;
+                }
             }
         }
 
         return $result;
+    }
+
+    /**
+     * Get the "No Surprises" price change threshold percentage.
+     *
+     * 0 = disabled (all price changes are silently applied).
+     * Default: 2% — any increase > 2% triggers a customer warning.
+     */
+    private static function getNoSurprisesThreshold(): float
+    {
+        return ConfigProvider::getNoSurprisesThreshold();
     }
 }
