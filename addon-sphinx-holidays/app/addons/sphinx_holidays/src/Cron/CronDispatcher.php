@@ -8,6 +8,8 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
 
 /**
  * Dispatches cron jobs by mode name.
@@ -25,6 +27,8 @@ class CronDispatcher
         'add_products'   => AddProductsCommand::class,
         'order_status'   => OrderStatusSyncCommand::class,
         'cache_refresh'  => CacheRefreshCommand::class,
+        'circuits'       => CircuitSyncCommand::class,
+        'experiences'    => ExperienceSyncCommand::class,
     ];
 
     /**

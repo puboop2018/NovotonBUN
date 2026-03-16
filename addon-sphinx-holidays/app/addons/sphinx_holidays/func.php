@@ -36,6 +36,8 @@ function fn_sphinx_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:sphinx_package_routes");
     db_query("DROP TABLE IF EXISTS ?:sphinx_destinations");
     db_query("DROP TABLE IF EXISTS ?:sphinx_hotels");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_circuits");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_experiences");
 
     return true;
 }
@@ -498,6 +500,25 @@ function fn_sphinx_holidays_submit_booking($api, string $booking_type, string $o
                 $payload['reference_code'] = (string)$order_id;
             }
             $result = $api->bookCircuit($payload);
+            break;
+
+        case 'package':
+            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
+            $payload = [
+                'offer_id' => $offer_id,
+                'price' => $price,
+                'currency' => $currency,
+                'occupancy' => $occupancy,
+            ];
+            if (!empty($order_id)) {
+                $payload['reference_code'] = (string)$order_id;
+            }
+            // Include additional services if selected during customize step
+            $additional_services = $extra['additional_services'] ?? [];
+            if (!empty($additional_services)) {
+                $payload['additional_services'] = $additional_services;
+            }
+            $result = $api->bookPackage($payload);
             break;
 
         case 'experience':

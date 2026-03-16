@@ -398,6 +398,59 @@
             ALTER TABLE `?:sphinx_sync_log`
                 ADD COLUMN IF NOT EXISTS `sync_mode` VARCHAR(20) DEFAULT 'full' AFTER `rate_limit_hits`;
         </item>
+        <!-- Sphinx circuits (local cache of static circuit data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_circuits` (
+                `circuit_id`        INT UNSIGNED NOT NULL PRIMARY KEY COMMENT 'Sphinx circuit ID',
+                `name`              VARCHAR(255) NOT NULL,
+                `summary`           TEXT DEFAULT NULL,
+                `description`       TEXT DEFAULT NULL,
+                `duration_days`     SMALLINT UNSIGNED DEFAULT 0,
+                `duration_nights`   SMALLINT UNSIGNED DEFAULT 0,
+                `transport_type`    VARCHAR(30) DEFAULT NULL COMMENT 'flight, bus, etc',
+                `destination_ids`   JSON DEFAULT NULL COMMENT 'Array of destination IDs',
+                `destination_names` VARCHAR(500) DEFAULT NULL,
+                `departure_ids`     JSON DEFAULT NULL COMMENT 'Array of departure point IDs',
+                `departure_names`   VARCHAR(500) DEFAULT NULL,
+                `image_url`         VARCHAR(500) DEFAULT NULL,
+                `itinerary_json`    JSON DEFAULT NULL COMMENT 'Array of itinerary days',
+                `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
+                `min_price`         DECIMAL(10,2) DEFAULT NULL,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_transport` (`transport_type`),
+                KEY `idx_sync_status` (`sync_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx experiences (local cache of static experience data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_experiences` (
+                `experience_id`     INT UNSIGNED NOT NULL PRIMARY KEY COMMENT 'Sphinx experience ID',
+                `name`              VARCHAR(255) NOT NULL,
+                `summary`           TEXT DEFAULT NULL,
+                `description`       TEXT DEFAULT NULL,
+                `duration_hours`    SMALLINT UNSIGNED DEFAULT 0,
+                `duration_days`     SMALLINT UNSIGNED DEFAULT 0,
+                `destination_ids`   JSON DEFAULT NULL COMMENT 'Array of destination IDs',
+                `destination_names` VARCHAR(500) DEFAULT NULL,
+                `pickup_points_json` JSON DEFAULT NULL COMMENT 'Array of pickup point objects',
+                `image_url`         VARCHAR(500) DEFAULT NULL,
+                `highlights_json`   JSON DEFAULT NULL COMMENT 'Array of highlight strings',
+                `features_json`     JSON DEFAULT NULL COMMENT 'Array of feature objects',
+                `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
+                `min_price`         DECIMAL(10,2) DEFAULT NULL,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_sync_status` (`sync_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
     </queries>
 
     <language_variables>
@@ -691,5 +744,29 @@
         <item lang="ro" id="sphinx_holidays.experience_booking_title"><![CDATA[Rezervare Experiență]]></item>
         <item lang="en" id="sphinx_holidays.experience_added_to_cart"><![CDATA[Experience booking added to cart.]]></item>
         <item lang="ro" id="sphinx_holidays.experience_added_to_cart"><![CDATA[Rezervarea experienței a fost adăugată în coș.]]></item>
+
+        <!-- Packages -->
+        <item lang="en" id="sphinx_holidays.package_search_title"><![CDATA[Package Search Results]]></item>
+        <item lang="ro" id="sphinx_holidays.package_search_title"><![CDATA[Rezultate Căutare Pachete]]></item>
+        <item lang="en" id="sphinx_holidays.packages_found"><![CDATA[[count] packages found]]></item>
+        <item lang="ro" id="sphinx_holidays.packages_found"><![CDATA[[count] pachete găsite]]></item>
+        <item lang="en" id="sphinx_holidays.no_packages_found"><![CDATA[No packages found for your search criteria. Please try different dates or destination.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_packages_found"><![CDATA[Nu s-au găsit pachete. Încercați alte date sau destinație.]]></item>
+        <item lang="en" id="sphinx_holidays.package_booking_title"><![CDATA[Package Booking]]></item>
+        <item lang="ro" id="sphinx_holidays.package_booking_title"><![CDATA[Rezervare Pachet]]></item>
+        <item lang="en" id="sphinx_holidays.package_added_to_cart"><![CDATA[Package booking added to cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.package_added_to_cart"><![CDATA[Rezervarea pachetului a fost adăugată în coș.]]></item>
+        <item lang="en" id="sphinx_holidays.check_availability"><![CDATA[Check Availability]]></item>
+        <item lang="ro" id="sphinx_holidays.check_availability"><![CDATA[Verifică Disponibilitatea]]></item>
+        <item lang="en" id="sphinx_holidays.instant_confirmation"><![CDATA[Instant confirmation]]></item>
+        <item lang="ro" id="sphinx_holidays.instant_confirmation"><![CDATA[Confirmare instantanee]]></item>
+        <item lang="en" id="sphinx_holidays.bus_transport"><![CDATA[Bus transport]]></item>
+        <item lang="ro" id="sphinx_holidays.bus_transport"><![CDATA[Transport autocar]]></item>
+        <item lang="en" id="sphinx_holidays.transfers"><![CDATA[Transfers]]></item>
+        <item lang="ro" id="sphinx_holidays.transfers"><![CDATA[Transferuri]]></item>
+        <item lang="en" id="sphinx_holidays.included"><![CDATA[Included]]></item>
+        <item lang="ro" id="sphinx_holidays.included"><![CDATA[Incluse]]></item>
+        <item lang="en" id="sphinx_holidays.not_included"><![CDATA[Not Included]]></item>
+        <item lang="ro" id="sphinx_holidays.not_included"><![CDATA[Neincluse]]></item>
     </language_variables>
 </addon>

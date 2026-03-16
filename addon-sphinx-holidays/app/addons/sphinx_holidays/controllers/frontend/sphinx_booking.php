@@ -19,6 +19,9 @@ declare(strict_types=1);
  *   sphinx_booking/experience_search.php   - Experience/activity search
  *   sphinx_booking/experience_booking_form.php - Experience quote & participant form
  *   sphinx_booking/experience_add_to_cart.php  - Experience booking, add to cart
+ *   sphinx_booking/package_search.php         - Package search (polling)
+ *   sphinx_booking/package_booking_form.php   - Verify package, show guest form
+ *   sphinx_booking/package_add_to_cart.php    - Package booking, add to cart
  *
  * @package SphinxHolidays
  * @since   1.0.0
@@ -242,5 +245,17 @@ if ($mode == 'search') {
 
 } elseif ($mode == 'experience_add_to_cart') {
     $__sphinx_result = include($_sphinx_mode_dir . '/experience_add_to_cart.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'package_search') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/package_search.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'package_booking_form') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/package_booking_form.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'package_add_to_cart') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/package_add_to_cart.php');
     if ($__sphinx_result !== 1) return $__sphinx_result;
 }

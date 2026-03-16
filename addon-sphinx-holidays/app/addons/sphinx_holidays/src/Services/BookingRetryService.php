@@ -50,15 +50,23 @@ class BookingRetryService
         }
 
         $bookingType = $booking['room_type'] ?? 'hotel';
-        // Normalize: room_type stores 'circuit' or 'experience' for non-hotel bookings
-        if (!in_array($bookingType, ['circuit', 'experience'], true)) {
+        // Normalize: room_type stores 'circuit', 'experience', or 'package' for non-hotel bookings
+        if (!in_array($bookingType, ['circuit', 'experience', 'package'], true)) {
             $bookingType = 'hotel';
         }
 
-        // Step 1: Re-verify the offer (only hotels have a verify endpoint)
-        if ($bookingType === 'hotel') {
+        // Step 1: Re-verify the offer (hotels and packages have verify endpoints)
+        if ($bookingType === 'hotel' || $bookingType === 'package') {
             try {
-                $verifyResult = $this->api->verifyHotelOffer($offerId);
+                if ($bookingType === 'package') {
+                    $verifyResult = $this->api->verifyPackageOffer($offerId);
+                    // Normalize package verify response
+                    if (!empty($verifyResult['data'])) {
+                        $verifyResult = ['available' => true];
+                    }
+                } else {
+                    $verifyResult = $this->api->verifyHotelOffer($offerId);
+                }
             } catch (\Throwable $e) {
                 return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage(), 'booking_ref' => null];
             }
@@ -139,6 +147,19 @@ class BookingRetryService
                     $payload['reference_code'] = (string)$booking['order_id'];
                 }
                 return $this->api->bookCircuit($payload) ?: [];
+
+            case 'package':
+                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
+                $payload = [
+                    'offer_id' => $offerId,
+                    'price' => $price,
+                    'currency' => $currency,
+                    'occupancy' => $occupancy,
+                ];
+                if (!empty($booking['order_id'])) {
+                    $payload['reference_code'] = (string)$booking['order_id'];
+                }
+                return $this->api->bookPackage($payload) ?: [];
 
             case 'experience':
                 $occupancy = \fn_sphinx_holidays_build_flat_occupancy($guestsData);

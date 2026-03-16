@@ -70,7 +70,19 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             }
 
             try {
-                $verifyResult = $api->verifyHotelOffer($offerId);
+                // Hotels and packages both have verify endpoints
+                if ($bookingType === 'package') {
+                    $verifyResult = $api->verifyPackageOffer($offerId);
+                    // Package verify returns {data: {pricing: {selling_price}, ...}}
+                    if (!empty($verifyResult['data'])) {
+                        $verifyResult = [
+                            'available' => true,
+                            'price' => $verifyResult['data']['pricing']['selling_price'] ?? 0,
+                        ];
+                    }
+                } else {
+                    $verifyResult = $api->verifyHotelOffer($offerId);
+                }
             } catch (\Throwable $e) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: offer verify failed',
