@@ -95,19 +95,15 @@ try {
             return;
         }
 
-        // Poll for results using cursor
-        $pollInterval = ConfigProvider::getSearchPollInterval();
+        // Poll for results using cursor (API does long-polling, no client-side delay needed)
         $maxPolls = ConfigProvider::getSearchMaxPolls();
         $cursor = $searchResponse['cursor'];
         $pollCount = 0;
 
         do {
-            if ($pollCount > 0) {
-                sleep($pollInterval);
-            }
             $pollCount++;
 
-            $pollResponse = $api->getPackageResults('', $cursor);
+            $pollResponse = $api->getPackageResults($cursor);
             if ($pollResponse === null) break;
 
             if (!empty($pollResponse['data'])) {

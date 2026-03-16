@@ -59,7 +59,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $verifyResult = null;
     }
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    // API verify returns {data: {must_verify, pricing: {selling_price, currency}, ...}}
+    $verifyData = $verifyResult['data'] ?? $verifyResult;
+
+    if (empty($verifyResult) || ($verifyData['must_verify'] ?? true)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
@@ -68,7 +71,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // Calculate final price with commission
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
-    $apiPrice = (float)($verifyResult['price'] ?? 0);
+    $apiPrice = (float)($verifyData['pricing']['selling_price'] ?? 0);
     $basePrice = $apiPrice;
 
     if ($commission > 0 && $apiPrice > 0) {
@@ -97,7 +100,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // Parse guest data — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
+    $check_in = $verifyData['check_in'] ?? $bookingData['check_in'] ?? '';
     $parsed_guests = _sphinx_parse_and_validate_guests($guests, $check_in);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.booking_form?' . http_build_query([
@@ -117,15 +120,16 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
     $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : ($bookingData['children_ages'] ?? '');
 
-    // Extract offer details
-    $hotelName = $verifyResult['hotel_name'] ?? '';
-    $roomName = $verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '';
-    $boardName = $verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '';
-    $boardId = $verifyResult['board_code'] ?? $boardName;
-    $roomId = $verifyResult['room_code'] ?? $roomName;
-    $check_out = $verifyResult['check_out'] ?? $bookingData['check_out'] ?? '';
-    $adults = (int)($verifyResult['adults'] ?? $bookingData['adults'] ?? 2);
-    $children = (int)($verifyResult['children'] ?? $bookingData['children'] ?? 0);
+    // Extract offer details from verified API response
+    $hotelName = $verifyData['hotel_name'] ?? '';
+    $firstRoom = $verifyData['rooms'][0] ?? [];
+    $roomName = $firstRoom['name'] ?? $bookingData['room_name'] ?? '';
+    $roomId = (string)($firstRoom['code'] ?? $roomName);
+    $boardName = $verifyData['meal_type_name'] ?? $bookingData['board_name'] ?? '';
+    $boardId = $boardName;
+    $check_out = $verifyData['check_out'] ?? $bookingData['check_out'] ?? '';
+    $adults = (int)($firstRoom['adults'] ?? $bookingData['adults'] ?? 2);
+    $children = count($firstRoom['children_ages'] ?? []) ?: (int)($bookingData['children'] ?? 0);
     $nights = 0;
     if (!empty($check_in) && !empty($check_out)) {
         $nights = (int)round((strtotime($check_out) - strtotime($check_in)) / 86400);

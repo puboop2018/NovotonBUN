@@ -82,6 +82,14 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     }
                 } else {
                     $verifyResult = $api->verifyHotelOffer($offerId);
+                    // Hotel verify returns {data: {must_verify, pricing: {selling_price}, ...}}
+                    if (!empty($verifyResult['data'])) {
+                        $verifyData = $verifyResult['data'];
+                        $verifyResult = [
+                            'available' => !($verifyData['must_verify'] ?? true),
+                            'price' => $verifyData['pricing']['selling_price'] ?? 0,
+                        ];
+                    }
                 }
             } catch (\Throwable $e) {
                 fn_log_event('general', 'runtime', [

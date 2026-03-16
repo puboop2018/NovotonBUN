@@ -62,10 +62,14 @@ class BookingRetryService
                     $verifyResult = $this->api->verifyPackageOffer($offerId);
                     // Normalize package verify response
                     if (!empty($verifyResult['data'])) {
-                        $verifyResult = ['available' => true];
+                        $verifyResult = ['available' => !($verifyResult['data']['must_verify'] ?? true)];
                     }
                 } else {
                     $verifyResult = $this->api->verifyHotelOffer($offerId);
+                    // Normalize hotel verify response: {data: {must_verify, pricing: {selling_price}}}
+                    if (!empty($verifyResult['data'])) {
+                        $verifyResult = ['available' => !($verifyResult['data']['must_verify'] ?? true)];
+                    }
                 }
             } catch (\Throwable $e) {
                 return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage(), 'booking_ref' => null];
@@ -175,14 +179,17 @@ class BookingRetryService
                 return $this->api->bookExperience($payload) ?: [];
 
             default: // hotel
-                return $this->api->bookHotel([
+                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
+                $payload = [
                     'offer_id' => $offerId,
-                    'guests' => $guestsData ?: [],
-                    'contact' => [
-                        'email' => $booking['guest_email'] ?? '',
-                        'phone' => $booking['guest_phone'] ?? '',
-                    ],
-                ]) ?: [];
+                    'price' => $price,
+                    'currency' => $currency,
+                    'occupancy' => $occupancy,
+                ];
+                if (!empty($booking['order_id'])) {
+                    $payload['reference_code'] = (string)$booking['order_id'];
+                }
+                return $this->api->bookHotel($payload) ?: [];
         }
     }
 }

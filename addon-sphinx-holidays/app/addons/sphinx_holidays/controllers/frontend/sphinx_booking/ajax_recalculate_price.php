@@ -48,13 +48,16 @@ try {
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    // API verify returns {data: {must_verify, pricing: {selling_price, currency}, ...}}
+    $verifyData = $verifyResult['data'] ?? $verifyResult ?? [];
+
+    if (empty($verifyResult) || ($verifyData['must_verify'] ?? true)) {
         echo json_encode(['success' => false, 'message' => 'Offer no longer available. Please search again.']);
         restore_error_handler();
         exit;
     }
 
-    $newPrice = (float)($verifyResult['price'] ?? 0);
+    $newPrice = (float)($verifyData['pricing']['selling_price'] ?? 0);
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
 

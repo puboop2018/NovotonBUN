@@ -89,36 +89,53 @@ class SphinxApi
     }
 
     /**
-     * Get all package routes.
+     * Get all package routes (paginated, with optional filters).
+     *
+     * @param array $departureIds Filter by departure IDs
+     * @param array $destinationIds Filter by destination IDs
+     * @param string|null $updatedSince Only return routes updated since this ISO 8601 datetime
      */
-    public function getPackageRoutes(int $page = 1, int $perPage = 1000): ?array
+    public function getPackageRoutes(int $page = 1, int $perPage = 1000, array $departureIds = [], array $destinationIds = [], ?string $updatedSince = null): ?array
     {
-        return $this->client->get('/api/v1/static/package-routes', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if (!empty($departureIds)) {
+            $query['departure_ids'] = $departureIds;
+        }
+        if (!empty($destinationIds)) {
+            $query['destination_ids'] = $destinationIds;
+        }
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        return $this->client->get('/api/v1/static/package-routes', $query);
     }
 
     /**
      * Get all circuits (paginated).
+     *
+     * @param string|null $updatedSince Only return circuits updated since this ISO 8601 datetime
      */
-    public function getCircuits(int $page = 1, int $perPage = 1000): ?array
+    public function getCircuits(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
     {
-        return $this->client->get('/api/v1/static/circuits', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        return $this->client->get('/api/v1/static/circuits', $query);
     }
 
     /**
      * Get all experiences (paginated).
+     *
+     * @param string|null $updatedSince Only return experiences updated since this ISO 8601 datetime
      */
-    public function getExperiences(int $page = 1, int $perPage = 1000): ?array
+    public function getExperiences(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
     {
-        return $this->client->get('/api/v1/static/experiences', [
-            'page'     => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        return $this->client->get('/api/v1/static/experiences', $query);
     }
 
     // ── Hotel Search & Booking ──
@@ -127,7 +144,7 @@ class SphinxApi
      * Initiate a hotel search.
      *
      * @param array $params {destination_id, check_in, check_out, occupancy, currency, ...}
-     * @return array|null {search_id, ...}
+     * @return array|null {cursor: string} — cursor used to poll results
      */
     public function searchHotels(array $params): ?array
     {
@@ -137,16 +154,14 @@ class SphinxApi
     /**
      * Get hotel search results (cursor-based polling).
      *
-     * @param string $searchId Search ID from searchHotels()
-     * @param string|null $cursor Cursor for pagination
+     * API returns {data: [...], cursor: string|null}. Poll until cursor is null.
+     *
+     * @param string $cursor Cursor from searchHotels() or previous getHotelResults()
+     * @return array|null {data: array, cursor: string|null}
      */
-    public function getHotelResults(string $searchId, ?string $cursor = null): ?array
+    public function getHotelResults(string $cursor): ?array
     {
-        $query = ['search_id' => $searchId];
-        if ($cursor !== null) {
-            $query['cursor'] = $cursor;
-        }
-        return $this->client->get('/api/v1/hotels/results', $query);
+        return $this->client->get('/api/v1/hotels/results', ['cursor' => $cursor]);
     }
 
     /**
@@ -166,7 +181,7 @@ class SphinxApi
      * and 'sphinx_booking' => true in the cart product extras. The travel_booking
      * flag enables travel_core shared hooks (rooms_data decode, display formatting).
      *
-     * @param array $bookingData {offer_id, guests, contact, ...}
+     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy: [{room_code, guests: [{first_name, last_name, birth_date, gender}]}]}
      */
     public function bookHotel(array $bookingData): ?array
     {
@@ -187,14 +202,15 @@ class SphinxApi
 
     /**
      * Get package search results (cursor-based polling).
+     *
+     * API returns {data: [...], cursor: string|null}. Poll until cursor is null.
+     *
+     * @param string $cursor Cursor from searchPackages() or previous getPackageResults()
+     * @return array|null {data: array, cursor: string|null}
      */
-    public function getPackageResults(string $searchId, ?string $cursor = null): ?array
+    public function getPackageResults(string $cursor): ?array
     {
-        $query = ['search_id' => $searchId];
-        if ($cursor !== null) {
-            $query['cursor'] = $cursor;
-        }
-        return $this->client->get('/api/v1/packages/results', $query);
+        return $this->client->get('/api/v1/packages/results', ['cursor' => $cursor]);
     }
 
     /**

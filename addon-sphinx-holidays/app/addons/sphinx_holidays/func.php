@@ -536,14 +536,17 @@ function fn_sphinx_holidays_submit_booking($api, string $booking_type, string $o
             break;
 
         default: // hotel
-            $result = $api->bookHotel([
+            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
+            $payload = [
                 'offer_id' => $offer_id,
-                'guests' => $guests_data ?: [],
-                'contact' => [
-                    'email' => $extra['contact_email'] ?? '',
-                    'phone' => $extra['contact_phone'] ?? '',
-                ],
-            ]);
+                'price' => $price,
+                'currency' => $currency,
+                'occupancy' => $occupancy,
+            ];
+            if (!empty($order_id)) {
+                $payload['reference_code'] = (string)$order_id;
+            }
+            $result = $api->bookHotel($payload);
             break;
     }
 
