@@ -451,3 +451,32 @@ function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
         }
     }
 }
+
+/**
+ * Hook: travel_core_exchange_rates_updated
+ *
+ * Logs the exchange rate update result from travel_core to sphinx_sync_log
+ * so the admin panel can display "last updated" timestamps.
+ *
+ * @param array $result Full result from fn_travel_core_update_exchange_rates()
+ */
+function fn_sphinx_holidays_travel_core_exchange_rates_updated(array &$result): void
+{
+    if (empty($result['success'])) {
+        return;
+    }
+
+    $updates = $result['updates'] ?? [];
+    $total = count($updates);
+    $synced = count(array_filter($updates, fn($u) => $u['success'] ?? false));
+
+    db_query(
+        "INSERT INTO ?:sphinx_sync_log (sync_type, status, items_total, items_synced, items_failed, error_message, started_at, completed_at) VALUES (?s, ?s, ?i, ?i, ?i, ?s, NOW(), NOW())",
+        'exchange_rates',
+        'completed',
+        $total,
+        $synced,
+        $total - $synced,
+        ''
+    );
+}

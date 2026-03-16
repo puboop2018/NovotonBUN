@@ -9,7 +9,9 @@ use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
  * Cron command: run all sync modes in sequence.
  *
  * Executes the complete sync pipeline:
- *   destinations → hotels → package_routes → circuits → experiences → order_status → cache_refresh → exchange_rates → cleanup
+ *   destinations → hotels → package_routes → circuits → experiences → order_status → cache_refresh → cleanup
+ *
+ * Note: exchange_rates is handled by travel_core's centralized cron.
  *
  * Usage: php cron.php access_key=KEY mode=full
  */
@@ -31,7 +33,6 @@ class FullSyncCommand
         'experiences',
         'order_status',
         'cache_refresh',
-        'exchange_rates',
         'cleanup',
     ];
 

@@ -8,7 +8,6 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\ExchangeRatesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
@@ -34,7 +33,6 @@ class CronDispatcher
         'experiences'     => ExperienceSyncCommand::class,
         'order_status'    => OrderStatusSyncCommand::class,
         'cache_refresh'   => CacheRefreshCommand::class,
-        'exchange_rates'  => ExchangeRatesCommand::class,
         'add_products'    => AddProductsCommand::class,
         'cleanup'         => CleanupCommand::class,
         'full'            => FullSyncCommand::class,
