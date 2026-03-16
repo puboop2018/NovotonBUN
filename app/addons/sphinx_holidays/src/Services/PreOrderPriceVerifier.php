@@ -27,6 +27,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'allow' => true,
             'corrections' => [],
             'notifications' => [],
+            'unavailable' => [],  // Cart IDs of unavailable Sphinx offers (to be removed by caller)
         ];
 
         if (empty($cart['products'])) {
@@ -71,19 +72,20 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            // If offer is no longer available, block the order
+            // If offer is no longer available, mark for removal instead of blocking the entire order.
+            // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
             if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable',
+                    'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
                     'offer_id' => $offerId,
+                    'hotel_name' => $extra['hotel_name'] ?? '',
                 ]);
 
-                fn_set_notification('E', __('error'),
-                    __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available.'])
-                );
-
-                $result['allow'] = false;
-                return $result;
+                $result['unavailable'][$cartId] = [
+                    'offer_id' => $offerId,
+                    'hotel_name' => $extra['hotel_name'] ?? '',
+                ];
+                continue;
             }
 
             // Re-calculate price with commission

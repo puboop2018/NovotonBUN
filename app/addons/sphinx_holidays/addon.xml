@@ -588,5 +588,13 @@
         <item lang="ro" id="sphinx_holidays.sync_mode_full"><![CDATA[Sincronizare completă]]></item>
         <item lang="en" id="sphinx_holidays.cached_result"><![CDATA[Cached result]]></item>
         <item lang="ro" id="sphinx_holidays.cached_result"><![CDATA[Rezultat din cache]]></item>
+
+        <!-- Booking failure notifications -->
+        <item lang="en" id="sphinx_holidays.booking_api_failed"><![CDATA[Sphinx booking failed for hotel "[hotel]" in order #[order_id]. Please verify and resubmit.]]></item>
+        <item lang="ro" id="sphinx_holidays.booking_api_failed"><![CDATA[Rezervarea Sphinx a eșuat pentru hotelul „[hotel]" în comanda #[order_id]. Verificați și retrimiteți.]]></item>
+        <item lang="en" id="sphinx_holidays.offer_removed_from_order"><![CDATA[The Sphinx offer for "[hotel]" is no longer available and has been removed from your order.]]></item>
+        <item lang="ro" id="sphinx_holidays.offer_removed_from_order"><![CDATA[Oferta Sphinx pentru „[hotel]" nu mai este disponibilă și a fost eliminată din comanda dvs.]]></item>
+        <item lang="en" id="sphinx_holidays.all_offers_unavailable"><![CDATA[All hotel offers in your cart are no longer available. Please search again.]]></item>
+        <item lang="ro" id="sphinx_holidays.all_offers_unavailable"><![CDATA[Toate ofertele de hotel din coș nu mai sunt disponibile. Vă rugăm căutați din nou.]]></item>
     </language_variables>
 </addon>

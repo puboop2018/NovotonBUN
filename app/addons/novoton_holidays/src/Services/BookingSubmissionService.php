@@ -156,6 +156,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             } catch (ApiException $e) {
                 db_query("ROLLBACK");
+
+                // ROLLBACK undoes the failed status set inside submitAndRecordBooking().
+                // Re-apply failed status OUTSIDE the transaction so it persists.
+                if ($originalBookingId > 0) {
+                    $this->bookingRepo->update($originalBookingId, [
+                        'status'   => TravelConstants::STATUS_FAILED,
+                        'order_id' => $orderId,
+                        'notes'    => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                    ]);
+                }
+
                 fn_log_event('general', 'runtime', [
                     'message'      => 'Novoton Booking transaction rolled back (API error)',
                     'order_id'     => $orderId,
@@ -165,6 +176,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]);
             } catch (NovotonException $e) {
                 db_query("ROLLBACK");
+
+                if ($originalBookingId > 0) {
+                    $this->bookingRepo->update($originalBookingId, [
+                        'status'   => TravelConstants::STATUS_FAILED,
+                        'order_id' => $orderId,
+                        'notes'    => 'Booking error (' . $e->getContext() . '): ' . $e->getMessage(),
+                    ]);
+                }
+
                 fn_log_event('general', 'runtime', [
                     'message'  => 'Novoton Booking transaction rolled back',
                     'order_id' => $orderId,
@@ -173,6 +193,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]);
             } catch (\Throwable $e) {
                 db_query("ROLLBACK");
+
+                if ($originalBookingId > 0) {
+                    $this->bookingRepo->update($originalBookingId, [
+                        'status'   => TravelConstants::STATUS_FAILED,
+                        'order_id' => $orderId,
+                        'notes'    => 'Unexpected error: ' . $e->getMessage(),
+                    ]);
+                }
+
                 fn_log_event('general', 'runtime', [
                     'message'  => 'Novoton Booking transaction rolled back (unexpected)',
                     'order_id' => $orderId,

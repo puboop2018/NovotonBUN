@@ -3384,3 +3384,7 @@ msgstr "Book [book] nights, pay for [pay]"
 msgctxt "Languages::novoton_holidays.off"
 msgid "off"
 msgstr "off"
+
+msgctxt "Languages::novoton_holidays.booking_api_failed"
+msgid "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
+msgstr "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
