@@ -49,10 +49,11 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 $hooks_dir = __DIR__ . '/hooks/';
 
 $hook_files = [
-    'product_hooks.php',    // Product data enrichment, tabs, deletion
-    'order_hooks.php',      // pre_place_order, place_order, get_orders_post, get_order_info
-    'cart_hooks.php',       // Cart calculation, checkout display, meta, CSS
-    'auth_hooks.php',       // user_login_post, create_user_post
+    'product_hooks.php',        // Product data enrichment, tabs, deletion
+    'order_hooks.php',          // pre_place_order, place_order, get_orders_post, get_order_info
+    'cart_hooks.php',           // Cart calculation, checkout display, meta, CSS
+    'auth_hooks.php',           // user_login_post, create_user_post
+    'exchange_rate_hooks.php',  // travel_core_exchange_rates_updated -> novoton_sync_log
 ];
 
 foreach ($hook_files as $file) {

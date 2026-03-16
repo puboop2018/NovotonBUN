@@ -173,6 +173,8 @@
     <language_variables>
         <item lang="en" id="travel_core"><![CDATA[Travel Core]]></item>
         <item lang="ro" id="travel_core"><![CDATA[Travel Core]]></item>
+        <item lang="en" id="travel_core_description"><![CDATA[Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Zero API-specific code — only interfaces and generic travel concepts.]]></item>
+        <item lang="ro" id="travel_core_description"><![CDATA[Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Fără cod specific API — doar interfețe și concepte generice de turism.]]></item>
         <item lang="en" id="travel_core.feature_mapping_header"><![CDATA[Feature Mapping]]></item>
         <item lang="ro" id="travel_core.feature_mapping_header"><![CDATA[Mapare Caracteristici]]></item>
         <item lang="en" id="travel_core.feature_id_property_rating"><![CDATA[CS-Cart Feature ID: Stars/Classification]]></item>
@@ -218,4 +220,10 @@
         <item lang="en" id="travel_core.dates"><![CDATA[Dates]]></item>
         <item lang="ro" id="travel_core.dates"><![CDATA[Date]]></item>
     </language_variables>
+
+    <!-- Functions to run on install/uninstall -->
+    <functions>
+        <item for="install">fn_travel_core_post_install</item>
+        <item for="uninstall">fn_travel_core_uninstall</item>
+    </functions>
 </addon>

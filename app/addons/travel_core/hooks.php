@@ -16,6 +16,7 @@ $hooks_dir = __DIR__ . '/hooks/';
 $hook_files = [
     'cart_hooks.php',
     'order_hooks.php',
+    'exchange_rate_hooks.php',
 ];
 
 foreach ($hook_files as $file) {

@@ -98,6 +98,22 @@
                         <default_value>EUR</default_value>
                         <variants/>
                     </item>
+                    <item id="currency_risk_commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Cron Header -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="cron_access_key">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -173,6 +189,8 @@
     <language_variables>
         <item lang="en" id="travel_core"><![CDATA[Travel Core]]></item>
         <item lang="ro" id="travel_core"><![CDATA[Travel Core]]></item>
+        <item lang="en" id="travel_core_description"><![CDATA[Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Zero API-specific code — only interfaces and generic travel concepts.]]></item>
+        <item lang="ro" id="travel_core_description"><![CDATA[Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Fără cod specific API — doar interfețe și concepte generice de turism.]]></item>
         <item lang="en" id="travel_core.feature_mapping_header"><![CDATA[Feature Mapping]]></item>
         <item lang="ro" id="travel_core.feature_mapping_header"><![CDATA[Mapare Caracteristici]]></item>
         <item lang="en" id="travel_core.feature_id_property_rating"><![CDATA[CS-Cart Feature ID: Stars/Classification]]></item>
@@ -193,6 +211,12 @@
         <item lang="ro" id="travel_core.currency_header"><![CDATA[Monedă]]></item>
         <item lang="en" id="travel_core.default_currency"><![CDATA[Default currency]]></item>
         <item lang="ro" id="travel_core.default_currency"><![CDATA[Monedă implicită]]></item>
+        <item lang="en" id="travel_core.currency_risk_commission"><![CDATA[Currency risk commission (%)]]></item>
+        <item lang="ro" id="travel_core.currency_risk_commission"><![CDATA[Comision risc valutar (%)]]></item>
+        <item lang="en" id="travel_core.cron_header"><![CDATA[Cron Settings]]></item>
+        <item lang="ro" id="travel_core.cron_header"><![CDATA[Setări Cron]]></item>
+        <item lang="en" id="travel_core.cron_access_key"><![CDATA[Cron access key]]></item>
+        <item lang="ro" id="travel_core.cron_access_key"><![CDATA[Cheie acces cron]]></item>
         <item lang="en" id="travel_core.until"><![CDATA[until]]></item>
         <item lang="ro" id="travel_core.until"><![CDATA[până la]]></item>
         <item lang="en" id="travel_core.free_cancellation"><![CDATA[Free Cancellation]]></item>
@@ -201,5 +225,27 @@
         <item lang="ro" id="travel_core.free_cancellation_until"><![CDATA[Anulare gratuită până la]]></item>
         <item lang="en" id="travel_core.on_booking"><![CDATA[on booking]]></item>
         <item lang="ro" id="travel_core.on_booking"><![CDATA[la rezervare]]></item>
+        <item lang="en" id="travel_core.manage_bookings"><![CDATA[Travel Bookings]]></item>
+        <item lang="ro" id="travel_core.manage_bookings"><![CDATA[Rezervări Turism]]></item>
+        <item lang="en" id="travel_core.complete_booking"><![CDATA[Booking Details]]></item>
+        <item lang="ro" id="travel_core.complete_booking"><![CDATA[Detalii Rezervare]]></item>
+        <item lang="en" id="travel_core.check_in"><![CDATA[Check-in]]></item>
+        <item lang="ro" id="travel_core.check_in"><![CDATA[Check-in]]></item>
+        <item lang="en" id="travel_core.check_out"><![CDATA[Check-out]]></item>
+        <item lang="ro" id="travel_core.check_out"><![CDATA[Check-out]]></item>
+        <item lang="en" id="travel_core.nights"><![CDATA[Nights]]></item>
+        <item lang="ro" id="travel_core.nights"><![CDATA[Nopți]]></item>
+        <item lang="en" id="travel_core.room"><![CDATA[Room]]></item>
+        <item lang="ro" id="travel_core.room"><![CDATA[Cameră]]></item>
+        <item lang="en" id="travel_core.guests"><![CDATA[Guests]]></item>
+        <item lang="ro" id="travel_core.guests"><![CDATA[Oaspeți]]></item>
+        <item lang="en" id="travel_core.dates"><![CDATA[Dates]]></item>
+        <item lang="ro" id="travel_core.dates"><![CDATA[Date]]></item>
     </language_variables>
+
+    <!-- Functions to run on install/uninstall -->
+    <functions>
+        <item for="install">fn_travel_core_post_install</item>
+        <item for="uninstall">fn_travel_core_uninstall</item>
+    </functions>
 </addon>

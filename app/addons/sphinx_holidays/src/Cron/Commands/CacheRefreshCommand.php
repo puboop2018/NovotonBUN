@@ -1,0 +1,59 @@
+<?php
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
+
+use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
+
+/**
+ * Cron command: refresh cached hotel/package deals from Sphinx cache endpoints.
+ *
+ * Fetches fresh data from the Sphinx cache API and stores it locally
+ * so frontend widgets (best_deals block) have up-to-date prices.
+ *
+ * Usage:
+ *   php cron.php access_key=KEY mode=cache_refresh
+ */
+class CacheRefreshCommand
+{
+    /** @var callable|null */
+    private $outputCallback = null;
+
+    public static function getDescription(): string
+    {
+        return 'Refresh cached hotel & package deals from Sphinx cache endpoints';
+    }
+
+    public function setOutputCallback(callable $callback): void
+    {
+        $this->outputCallback = $callback;
+    }
+
+    public function execute(array $params = []): array
+    {
+        $this->output('Starting cache refresh...');
+
+        $api = Container::getApi();
+        $commission = ConfigProvider::getCommission();
+        $roundPrices = ConfigProvider::shouldRoundPrices();
+
+        $service = new CacheEndpointService($api, $commission, $roundPrices);
+        $stats = $service->refreshAll();
+
+        $this->output("Cache refresh complete: {$stats['hotels_count']} hotels, {$stats['packages_count']} packages, {$stats['errors']} errors");
+
+        return [
+            'success' => $stats['errors'] === 0,
+            'stats'   => $stats,
+        ];
+    }
+
+    private function output(string $message): void
+    {
+        if ($this->outputCallback !== null) {
+            ($this->outputCallback)($message);
+        }
+    }
+}

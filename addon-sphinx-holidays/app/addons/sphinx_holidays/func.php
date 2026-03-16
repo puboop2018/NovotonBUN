@@ -44,11 +44,12 @@ function fn_sphinx_holidays_uninstall(): bool
 
 /**
  * Post-install function.
- * Seeds Sphinx-specific aliases into the shared feature mapping.
+ * Seeds Sphinx-specific aliases, language variables, and settings descriptions.
  */
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
+    fn_sphinx_holidays_seed_lang_vars();
 
     // Add columns for order status sync (safe for existing installs)
     $columns = db_get_fields("SHOW COLUMNS FROM ?:sphinx_bookings");
@@ -63,6 +64,159 @@ function fn_sphinx_holidays_post_install(): bool
     }
 
     return true;
+}
+
+/**
+ * Seed settings language variables and sync ?:settings_descriptions.
+ * Ensures all settings labels display correctly in the admin panel.
+ */
+function fn_sphinx_holidays_seed_lang_vars(): void
+{
+    // Settings labels: English
+    $lang_vars_en = [
+        // Section headers
+        'sphinx_holidays.api_header'          => 'Sphinx API Settings',
+        'sphinx_holidays.search_header'       => 'Search Settings',
+        'sphinx_holidays.pricing_header'      => 'Pricing',
+        'sphinx_holidays.product_header'      => 'Product Mapping',
+        'sphinx_holidays.resilience_header'   => 'API Resilience',
+        'sphinx_holidays.hotel_sync_header'   => 'Hotel Sync Settings',
+        'sphinx_holidays.cron_header'         => 'Cron Settings',
+        'sphinx_holidays.debug_header'        => 'Debug',
+        // Field labels
+        'sphinx_holidays.api_base_url'          => 'API Base URL',
+        'sphinx_holidays.api_key'               => 'API Key (Bearer Token)',
+        'sphinx_holidays.enable_api_cache'      => 'Enable API response caching',
+        'sphinx_holidays.cache_ttl_search'      => 'Search cache TTL (seconds)',
+        'sphinx_holidays.default_currency'      => 'Default search currency',
+        'sphinx_holidays.ignore_domains'        => 'Ignore domains (comma-separated supplier IDs to skip)',
+        'sphinx_holidays.search_poll_interval'  => 'Search poll interval (seconds)',
+        'sphinx_holidays.search_max_polls'      => 'Maximum search polls before timeout',
+        'sphinx_holidays.commission'            => 'Commission percentage',
+        'sphinx_holidays.round_prices'          => 'Round prices to whole numbers',
+        'sphinx_holidays.no_surprises_threshold' => '"No Surprises" price threshold (%). 0 = disabled.',
+        'sphinx_holidays.enable_alternative_dates' => 'Suggest alternative dates when no results found',
+        'sphinx_holidays.hotels_category_id'    => 'CS-Cart category ID for Sphinx hotels',
+        'sphinx_holidays.packages_category_id'  => 'CS-Cart category ID for Sphinx packages',
+        'sphinx_holidays.product_category_template' => 'Category path template ({country}, {region}, {city} placeholders)',
+        'sphinx_holidays.api_max_retries'       => 'Maximum retries on failure',
+        'sphinx_holidays.api_retry_delay_ms'    => 'Initial retry delay (ms)',
+        'sphinx_holidays.api_retry_multiplier'  => 'Retry delay multiplier',
+        'sphinx_holidays.circuit_breaker_threshold' => 'Circuit breaker threshold (failures before open)',
+        'sphinx_holidays.circuit_breaker_timeout'   => 'Circuit breaker timeout (seconds)',
+        'sphinx_holidays.selected_destinations' => 'Sync targets (comma-separated). Supports: country codes (GR, BG), destination names, or destination IDs',
+        'sphinx_holidays.cron_access_key'       => 'Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)',
+        'sphinx_holidays.debug_logging'         => 'Enable debug logging',
+    ];
+
+    // Settings labels: Romanian
+    $lang_vars_ro = [
+        // Section headers
+        'sphinx_holidays.api_header'          => 'Setări API Sphinx',
+        'sphinx_holidays.search_header'       => 'Setări Căutare',
+        'sphinx_holidays.pricing_header'      => 'Prețuri',
+        'sphinx_holidays.product_header'      => 'Mapare Produse',
+        'sphinx_holidays.resilience_header'   => 'Reziliență API',
+        'sphinx_holidays.hotel_sync_header'   => 'Setări Sincronizare Hoteluri',
+        'sphinx_holidays.cron_header'         => 'Setări Cron',
+        'sphinx_holidays.debug_header'        => 'Depanare',
+        // Field labels
+        'sphinx_holidays.api_base_url'          => 'URL bază API',
+        'sphinx_holidays.api_key'               => 'Cheie API (Bearer Token)',
+        'sphinx_holidays.enable_api_cache'      => 'Activează cache-ul răspunsurilor API',
+        'sphinx_holidays.cache_ttl_search'      => 'TTL cache căutare (secunde)',
+        'sphinx_holidays.default_currency'      => 'Monedă implicită căutare',
+        'sphinx_holidays.ignore_domains'        => 'Domenii ignorate (ID-uri furnizori separați prin virgulă)',
+        'sphinx_holidays.search_poll_interval'  => 'Interval verificare căutare (secunde)',
+        'sphinx_holidays.search_max_polls'      => 'Număr maxim de verificări înainte de timeout',
+        'sphinx_holidays.commission'            => 'Procentaj comision',
+        'sphinx_holidays.round_prices'          => 'Rotunjește prețurile la numere întregi',
+        'sphinx_holidays.no_surprises_threshold' => 'Prag "Fără Surprize" (%). 0 = dezactivat.',
+        'sphinx_holidays.enable_alternative_dates' => 'Sugerează date alternative când nu sunt rezultate',
+        'sphinx_holidays.hotels_category_id'    => 'ID categorie CS-Cart pentru hoteluri Sphinx',
+        'sphinx_holidays.packages_category_id'  => 'ID categorie CS-Cart pentru pachete Sphinx',
+        'sphinx_holidays.product_category_template' => 'Șablon cale categorie ({country}, {region}, {city})',
+        'sphinx_holidays.api_max_retries'       => 'Număr maxim de reîncercări',
+        'sphinx_holidays.api_retry_delay_ms'    => 'Întârziere inițială reîncercare (ms)',
+        'sphinx_holidays.api_retry_multiplier'  => 'Multiplicator întârziere reîncercare',
+        'sphinx_holidays.circuit_breaker_threshold' => 'Prag circuit breaker (eșecuri înainte de deschidere)',
+        'sphinx_holidays.circuit_breaker_timeout'   => 'Timeout circuit breaker (secunde)',
+        'sphinx_holidays.selected_destinations' => 'Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații, sau ID-uri destinații',
+        'sphinx_holidays.cron_access_key'       => 'Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)',
+        'sphinx_holidays.debug_logging'         => 'Activează logare depanare',
+    ];
+
+    $translations = ['en' => $lang_vars_en, 'ro' => $lang_vars_ro];
+
+    // Insert into ?:language_values
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+    foreach ($languages as $lang) {
+        $code = $lang['lang_code'];
+        $vars = $translations[$code] ?? $lang_vars_en;
+        foreach ($vars as $name => $value) {
+            db_query(
+                "INSERT INTO ?:language_values (lang_code, name, value) VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $code, $name, $value, $value
+            );
+        }
+    }
+
+    // Sync ?:settings_descriptions from language values
+    fn_sphinx_holidays_sync_settings_descriptions();
+}
+
+/**
+ * Populate ?:settings_descriptions from ?:language_values for all Sphinx settings.
+ * Ensures the admin settings page displays proper labels.
+ */
+function fn_sphinx_holidays_sync_settings_descriptions(): void
+{
+    $settings = db_get_array(
+        "SELECT object_id, name, object_type FROM ?:settings_objects WHERE addon = 'sphinx_holidays'"
+    );
+
+    $sections = db_get_array(
+        "SELECT section_id, name FROM ?:settings_sections WHERE addon = 'sphinx_holidays'"
+    );
+
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+
+    foreach ($settings as $setting) {
+        $lang_var_name = 'sphinx_holidays.' . $setting['name'];
+        foreach ($languages as $lang) {
+            $value = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($value)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                     VALUES (?i, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE description = ?s",
+                    $setting['object_id'], $setting['object_type'], $value, $lang['lang_code'], $value
+                );
+            }
+        }
+    }
+
+    foreach ($sections as $section) {
+        $lang_var_name = 'sphinx_holidays.' . $section['name'];
+        foreach ($languages as $lang) {
+            $value = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($value)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                     VALUES (?i, 'SECTION', ?s, ?s)
+                     ON DUPLICATE KEY UPDATE description = ?s",
+                    $section['section_id'], $value, $lang['lang_code'], $value
+                );
+            }
+        }
+    }
 }
 
 /**
@@ -685,4 +839,33 @@ function fn_sphinx_holidays_send_booking_failure_email(int $order_id, int $booki
         'subject' => $subject,
         'body'    => $body,
     ], 'A');
+}
+
+/**
+ * Hook: travel_core_exchange_rates_updated
+ *
+ * Logs the exchange rate update result from travel_core to sphinx_sync_log
+ * so the admin panel can display "last updated" timestamps.
+ *
+ * @param array $result Full result from fn_travel_core_update_exchange_rates()
+ */
+function fn_sphinx_holidays_travel_core_exchange_rates_updated(array &$result): void
+{
+    if (empty($result['success'])) {
+        return;
+    }
+
+    $updates = $result['updates'] ?? [];
+    $total = count($updates);
+    $synced = count(array_filter($updates, fn($u) => $u['success'] ?? false));
+
+    db_query(
+        "INSERT INTO ?:sphinx_sync_log (sync_type, status, items_total, items_synced, items_failed, error_message, started_at, completed_at) VALUES (?s, ?s, ?i, ?i, ?i, ?s, NOW(), NOW())",
+        'exchange_rates',
+        'completed',
+        $total,
+        $synced,
+        $total - $synced,
+        ''
+    );
 }
