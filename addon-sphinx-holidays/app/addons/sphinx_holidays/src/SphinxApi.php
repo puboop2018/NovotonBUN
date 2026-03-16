@@ -221,6 +221,82 @@ class SphinxApi
         return $this->client->post('/api/v1/packages/book', $bookingData);
     }
 
+    // ── Circuit Search & Booking ──
+    // Flow: rates → quote → customize (optional) → book
+
+    /**
+     * Get circuit rates (paginated catalog with pricing for 2 adults).
+     *
+     * @param array $params {circuit_ids?, transport_types?, durations?, departures?, destinatons?, months?, tags?, pagination?}
+     */
+    public function getCircuitRates(array $params = []): ?array
+    {
+        return $this->client->post('/api/v1/circuits/rates', $params);
+    }
+
+    /**
+     * Get a quote for a specific circuit departure.
+     *
+     * @param array $params {circuit_id, departure_date, occupancy, departure_id}
+     */
+    public function getCircuitQuote(array $params): ?array
+    {
+        return $this->client->post('/api/v1/circuits/quote', $params);
+    }
+
+    /**
+     * Customize a circuit offer (add optional services).
+     *
+     * @param array $data {offer_id, service_codes}
+     */
+    public function customizeCircuit(array $data): ?array
+    {
+        return $this->client->post('/api/v1/circuits/customize', $data);
+    }
+
+    /**
+     * Book a circuit offer.
+     *
+     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy}
+     */
+    public function bookCircuit(array $bookingData): ?array
+    {
+        return $this->client->post('/api/v1/circuits/book', $bookingData);
+    }
+
+    // ── Experience Search & Booking ──
+    // Flow: rates → quote → book (no customize step)
+
+    /**
+     * Get experience rates (paginated catalog with pricing for 1 adult).
+     *
+     * @param array $params {experience_ids?, durations?, destinatons?, pickup_points?, months?, from?, to?, tags?, pagination?}
+     */
+    public function getExperienceRates(array $params = []): ?array
+    {
+        return $this->client->post('/api/v1/experiences/rates', $params);
+    }
+
+    /**
+     * Get a quote for a specific experience.
+     *
+     * @param array $params {experience_id, departure_date, occupancy, pickup_point_code?, pickup_point_time?}
+     */
+    public function getExperienceQuote(array $params): ?array
+    {
+        return $this->client->post('/api/v1/experiences/quote', $params);
+    }
+
+    /**
+     * Book an experience offer.
+     *
+     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy}
+     */
+    public function bookExperience(array $bookingData): ?array
+    {
+        return $this->client->post('/api/v1/experiences/book', $bookingData);
+    }
+
     // ── Orders ──
 
     /**

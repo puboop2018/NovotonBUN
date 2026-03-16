@@ -12,6 +12,13 @@ declare(strict_types=1);
  *   sphinx_booking/booking_form.php        - Verify offer, show guest form
  *   sphinx_booking/add_to_cart.php         - Create booking, add to cart
  *   sphinx_booking/ajax_recalculate_price.php - AJAX price re-verification
+ *   sphinx_booking/cache_deals.php         - AJAX cached deals for widgets
+ *   sphinx_booking/circuit_search.php      - Circuit tour search
+ *   sphinx_booking/circuit_booking_form.php - Circuit quote & guest form
+ *   sphinx_booking/circuit_add_to_cart.php  - Circuit booking, add to cart
+ *   sphinx_booking/experience_search.php   - Experience/activity search
+ *   sphinx_booking/experience_booking_form.php - Experience quote & participant form
+ *   sphinx_booking/experience_add_to_cart.php  - Experience booking, add to cart
  *
  * @package SphinxHolidays
  * @since   1.0.0
@@ -209,4 +216,31 @@ if ($mode == 'search') {
 
 } elseif ($mode == 'ajax_recalculate_price') {
     include($_sphinx_mode_dir . '/ajax_recalculate_price.php');
+
+} elseif ($mode == 'cache_deals') {
+    include($_sphinx_mode_dir . '/cache_deals.php');
+
+} elseif ($mode == 'circuit_search') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/circuit_search.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'circuit_booking_form') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/circuit_booking_form.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'circuit_add_to_cart') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/circuit_add_to_cart.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'experience_search') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/experience_search.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'experience_booking_form') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/experience_booking_form.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
+
+} elseif ($mode == 'experience_add_to_cart') {
+    $__sphinx_result = include($_sphinx_mode_dir . '/experience_add_to_cart.php');
+    if ($__sphinx_result !== 1) return $__sphinx_result;
 }
