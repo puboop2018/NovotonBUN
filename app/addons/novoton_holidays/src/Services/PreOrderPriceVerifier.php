@@ -26,9 +26,10 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
-class PreOrderPriceVerifier
+class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /** Default session-cache TTL in seconds */
     private const DEFAULT_CACHE_TTL = 180;

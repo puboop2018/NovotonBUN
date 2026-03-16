@@ -193,6 +193,34 @@ function fn_sphinx_holidays_seed_aliases(): void
 // =========================================================================
 
 /**
+ * Hook: pre_place_order
+ * Re-verify Sphinx offer prices before order is placed.
+ */
+function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
+{
+    $verifier = \Tygh\Addons\SphinxHolidays\Services\Container::getPreOrderPriceVerifier();
+    $result = $verifier->verify($cart);
+
+    if (!$result['allow']) {
+        $allow = false;
+        return;
+    }
+
+    if (!empty($result['corrections'])) {
+        foreach ($result['corrections'] as $cartId => $correction) {
+            if (!isset($cart['products'][$cartId])) {
+                continue;
+            }
+            $newPrice = (float)$correction['api_price'];
+            $cart['products'][$cartId]['price'] = $newPrice;
+            $cart['products'][$cartId]['base_price'] = $newPrice;
+            $cart['products'][$cartId]['original_price'] = $newPrice;
+            $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
+        }
+    }
+}
+
+/**
  * Hook: place_order_post
  * After an order is placed, submit the booking to the Sphinx API.
  */

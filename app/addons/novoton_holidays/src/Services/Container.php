@@ -242,7 +242,7 @@ class Container
         ));
     }
 
-    public function preOrderPriceVerifier(): PreOrderPriceVerifier
+    public function preOrderPriceVerifier(): \Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface
     {
         return $this->resolve('preOrderPriceVerifier', fn() => new PreOrderPriceVerifier());
     }
