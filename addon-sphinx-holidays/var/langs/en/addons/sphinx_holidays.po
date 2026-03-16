@@ -1,0 +1,153 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US"
+
+msgctxt "Addons::name::sphinx_holidays"
+msgid "Sphinx Holidays"
+msgstr "Sphinx Holidays"
+
+msgctxt "Addons::description::sphinx_holidays"
+msgid "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
+msgstr "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
+
+msgctxt "SettingsSections::sphinx_holidays::general"
+msgid "General Settings"
+msgstr "General Settings"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_header"
+msgid "Sphinx API Settings"
+msgstr "Sphinx API Settings"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_base_url"
+msgid "API Base URL"
+msgstr "API Base URL"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_key"
+msgid "API Key (Bearer Token)"
+msgstr "API Key (Bearer Token)"
+
+msgctxt "SettingsOptions::sphinx_holidays::enable_api_cache"
+msgid "Enable API response caching"
+msgstr "Enable API response caching"
+
+msgctxt "SettingsOptions::sphinx_holidays::cache_ttl_search"
+msgid "Search cache TTL (seconds)"
+msgstr "Search cache TTL (seconds)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_header"
+msgid "Search Settings"
+msgstr "Search Settings"
+
+msgctxt "SettingsOptions::sphinx_holidays::default_currency"
+msgid "Default search currency"
+msgstr "Default search currency"
+
+msgctxt "SettingsOptions::sphinx_holidays::ignore_domains"
+msgid "Ignore domains (comma-separated supplier IDs to skip)"
+msgstr "Ignore domains (comma-separated supplier IDs to skip)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_poll_interval"
+msgid "Search poll interval (seconds)"
+msgstr "Search poll interval (seconds)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_max_polls"
+msgid "Maximum search polls before timeout"
+msgstr "Maximum search polls before timeout"
+
+msgctxt "SettingsOptions::sphinx_holidays::pricing_header"
+msgid "Pricing"
+msgstr "Pricing"
+
+msgctxt "SettingsOptions::sphinx_holidays::commission"
+msgid "Commission percentage"
+msgstr "Commission percentage"
+
+msgctxt "SettingsOptions::sphinx_holidays::round_prices"
+msgid "Round prices to whole numbers"
+msgstr "Round prices to whole numbers"
+
+msgctxt "SettingsOptions::sphinx_holidays::product_header"
+msgid "Product Mapping"
+msgstr "Product Mapping"
+
+msgctxt "SettingsOptions::sphinx_holidays::hotels_category_id"
+msgid "CS-Cart category ID for Sphinx hotels"
+msgstr "CS-Cart category ID for Sphinx hotels"
+
+msgctxt "SettingsOptions::sphinx_holidays::packages_category_id"
+msgid "CS-Cart category ID for Sphinx packages"
+msgstr "CS-Cart category ID for Sphinx packages"
+
+msgctxt "SettingsOptions::sphinx_holidays::product_category_template"
+msgid "Category path template ({country}, {region}, {city} placeholders)"
+msgstr "Category path template ({country}, {region}, {city} placeholders)"
+
+msgctxt "SettingsOptions::sphinx_holidays::resilience_header"
+msgid "API Resilience"
+msgstr "API Resilience"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_max_retries"
+msgid "Maximum retries on failure"
+msgstr "Maximum retries on failure"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_max_retries"
+msgid "Number of retry attempts for failed API calls (recommended: 3)"
+msgstr "Number of retry attempts for failed API calls (recommended: 3)"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_retry_delay_ms"
+msgid "Initial retry delay (ms)"
+msgstr "Initial retry delay (ms)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_retry_delay_ms"
+msgid "Initial delay in milliseconds before first retry (recommended: 500)"
+msgstr "Initial delay in milliseconds before first retry (recommended: 500)"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_retry_multiplier"
+msgid "Retry delay multiplier"
+msgstr "Retry delay multiplier"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_retry_multiplier"
+msgid "Exponential backoff multiplier for retries (recommended: 2)"
+msgstr "Exponential backoff multiplier for retries (recommended: 2)"
+
+msgctxt "SettingsOptions::sphinx_holidays::circuit_breaker_threshold"
+msgid "Circuit breaker threshold (failures before open)"
+msgstr "Circuit breaker threshold (failures before open)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuit_breaker_threshold"
+msgid "Number of consecutive failures before circuit opens and stops API calls"
+msgstr "Number of consecutive failures before circuit opens and stops API calls"
+
+msgctxt "SettingsOptions::sphinx_holidays::circuit_breaker_timeout"
+msgid "Circuit breaker timeout (seconds)"
+msgstr "Circuit breaker timeout (seconds)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuit_breaker_timeout"
+msgid "Seconds to wait before retrying after circuit opens"
+msgstr "Seconds to wait before retrying after circuit opens"
+
+msgctxt "SettingsOptions::sphinx_holidays::hotel_sync_header"
+msgid "Hotel Sync Settings"
+msgstr "Hotel Sync Settings"
+
+msgctxt "SettingsOptions::sphinx_holidays::selected_destinations"
+msgid "Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)"
+msgstr "Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)"
+
+msgctxt "SettingsOptions::sphinx_holidays::cron_header"
+msgid "Cron Settings"
+msgstr "Cron Settings"
+
+msgctxt "SettingsOptions::sphinx_holidays::cron_access_key"
+msgid "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+msgstr "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+
+msgctxt "SettingsOptions::sphinx_holidays::debug_header"
+msgid "Debug"
+msgstr "Debug"
+
+msgctxt "SettingsOptions::sphinx_holidays::debug_logging"
+msgid "Enable debug logging"
+msgstr "Enable debug logging"

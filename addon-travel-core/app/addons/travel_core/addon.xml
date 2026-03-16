@@ -42,6 +42,76 @@
         </php_extensions>
     </compatibility>
 
+    <settings layout="separate">
+        <sections>
+            <section id="general">
+                <items>
+                    <item id="feature_mapping_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_property_rating">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_meals">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_room_type">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_property_type">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_location">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="providers_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="active_providers">
+                        <type>input</type>
+                        <default_value>novoton</default_value>
+                        <variants/>
+                    </item>
+                    <item id="currency_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="default_currency">
+                        <type>input</type>
+                        <default_value>EUR</default_value>
+                        <variants/>
+                    </item>
+                    <item id="currency_risk_commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="cron_access_key">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
     <queries>
         <!-- Shared feature mapping table: canonical definitions -->
         <item>
@@ -114,32 +184,6 @@
         <item lang="ro" id="travel_core"><![CDATA[Travel Core]]></item>
         <item lang="en" id="travel_core_description"><![CDATA[Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Zero API-specific code — only interfaces and generic travel concepts.]]></item>
         <item lang="ro" id="travel_core_description"><![CDATA[Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Fără cod specific API — doar interfețe și concepte generice de turism.]]></item>
-        <item lang="en" id="travel_core.feature_mapping_header"><![CDATA[Feature Mapping]]></item>
-        <item lang="ro" id="travel_core.feature_mapping_header"><![CDATA[Mapare Caracteristici]]></item>
-        <item lang="en" id="travel_core.feature_id_property_rating"><![CDATA[CS-Cart Feature ID: Stars/Classification]]></item>
-        <item lang="ro" id="travel_core.feature_id_property_rating"><![CDATA[ID Caracteristică CS-Cart: Stele/Clasificare]]></item>
-        <item lang="en" id="travel_core.feature_id_meals"><![CDATA[CS-Cart Feature ID: Meal Plan]]></item>
-        <item lang="ro" id="travel_core.feature_id_meals"><![CDATA[ID Caracteristică CS-Cart: Masă]]></item>
-        <item lang="en" id="travel_core.feature_id_room_type"><![CDATA[CS-Cart Feature ID: Room Type]]></item>
-        <item lang="ro" id="travel_core.feature_id_room_type"><![CDATA[ID Caracteristică CS-Cart: Tip Cameră]]></item>
-        <item lang="en" id="travel_core.feature_id_property_type"><![CDATA[CS-Cart Feature ID: Property Type]]></item>
-        <item lang="ro" id="travel_core.feature_id_property_type"><![CDATA[ID Caracteristică CS-Cart: Tip Proprietate]]></item>
-        <item lang="en" id="travel_core.feature_id_location"><![CDATA[CS-Cart Feature ID: Location]]></item>
-        <item lang="ro" id="travel_core.feature_id_location"><![CDATA[ID Caracteristică CS-Cart: Locație]]></item>
-        <item lang="en" id="travel_core.providers_header"><![CDATA[Active Providers]]></item>
-        <item lang="ro" id="travel_core.providers_header"><![CDATA[Furnizori Activi]]></item>
-        <item lang="en" id="travel_core.active_providers"><![CDATA[Active providers (comma-separated)]]></item>
-        <item lang="ro" id="travel_core.active_providers"><![CDATA[Furnizori activi (separați prin virgulă)]]></item>
-        <item lang="en" id="travel_core.currency_header"><![CDATA[Currency]]></item>
-        <item lang="ro" id="travel_core.currency_header"><![CDATA[Monedă]]></item>
-        <item lang="en" id="travel_core.default_currency"><![CDATA[Default currency]]></item>
-        <item lang="ro" id="travel_core.default_currency"><![CDATA[Monedă implicită]]></item>
-        <item lang="en" id="travel_core.currency_risk_commission"><![CDATA[Currency risk commission (%)]]></item>
-        <item lang="ro" id="travel_core.currency_risk_commission"><![CDATA[Comision risc valutar (%)]]></item>
-        <item lang="en" id="travel_core.cron_header"><![CDATA[Cron Settings]]></item>
-        <item lang="ro" id="travel_core.cron_header"><![CDATA[Setări Cron]]></item>
-        <item lang="en" id="travel_core.cron_access_key"><![CDATA[Cron access key]]></item>
-        <item lang="ro" id="travel_core.cron_access_key"><![CDATA[Cheie acces cron]]></item>
         <item lang="en" id="travel_core.until"><![CDATA[until]]></item>
         <item lang="ro" id="travel_core.until"><![CDATA[până la]]></item>
         <item lang="en" id="travel_core.free_cancellation"><![CDATA[Free Cancellation]]></item>

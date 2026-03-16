@@ -1,0 +1,153 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO"
+
+msgctxt "Addons::name::sphinx_holidays"
+msgid "Sphinx Holidays"
+msgstr "Sphinx Holidays"
+
+msgctxt "Addons::description::sphinx_holidays"
+msgid "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
+msgstr "Integrare API REST Sphinx pentru rezervări de hoteluri, pachete, circuite și experiențe. Oferă căutare, disponibilitate, prețuri, rezervări și sincronizare destinații prin platforma de turism Sphinx."
+
+msgctxt "SettingsSections::sphinx_holidays::general"
+msgid "General Settings"
+msgstr "Setări Generale"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_header"
+msgid "Sphinx API Settings"
+msgstr "Setări API Sphinx"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_base_url"
+msgid "API Base URL"
+msgstr "URL bază API"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_key"
+msgid "API Key (Bearer Token)"
+msgstr "Cheie API (Bearer Token)"
+
+msgctxt "SettingsOptions::sphinx_holidays::enable_api_cache"
+msgid "Enable API response caching"
+msgstr "Activează cache-ul răspunsurilor API"
+
+msgctxt "SettingsOptions::sphinx_holidays::cache_ttl_search"
+msgid "Search cache TTL (seconds)"
+msgstr "TTL cache căutare (secunde)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_header"
+msgid "Search Settings"
+msgstr "Setări Căutare"
+
+msgctxt "SettingsOptions::sphinx_holidays::default_currency"
+msgid "Default search currency"
+msgstr "Monedă implicită căutare"
+
+msgctxt "SettingsOptions::sphinx_holidays::ignore_domains"
+msgid "Ignore domains (comma-separated supplier IDs to skip)"
+msgstr "Domenii ignorate (ID-uri furnizori separați prin virgulă)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_poll_interval"
+msgid "Search poll interval (seconds)"
+msgstr "Interval verificare căutare (secunde)"
+
+msgctxt "SettingsOptions::sphinx_holidays::search_max_polls"
+msgid "Maximum search polls before timeout"
+msgstr "Număr maxim de verificări înainte de timeout"
+
+msgctxt "SettingsOptions::sphinx_holidays::pricing_header"
+msgid "Pricing"
+msgstr "Prețuri"
+
+msgctxt "SettingsOptions::sphinx_holidays::commission"
+msgid "Commission percentage"
+msgstr "Procentaj comision"
+
+msgctxt "SettingsOptions::sphinx_holidays::round_prices"
+msgid "Round prices to whole numbers"
+msgstr "Rotunjește prețurile la numere întregi"
+
+msgctxt "SettingsOptions::sphinx_holidays::product_header"
+msgid "Product Mapping"
+msgstr "Mapare Produse"
+
+msgctxt "SettingsOptions::sphinx_holidays::hotels_category_id"
+msgid "CS-Cart category ID for Sphinx hotels"
+msgstr "ID categorie CS-Cart pentru hoteluri Sphinx"
+
+msgctxt "SettingsOptions::sphinx_holidays::packages_category_id"
+msgid "CS-Cart category ID for Sphinx packages"
+msgstr "ID categorie CS-Cart pentru pachete Sphinx"
+
+msgctxt "SettingsOptions::sphinx_holidays::product_category_template"
+msgid "Category path template ({country}, {region}, {city} placeholders)"
+msgstr "Șablon cale categorie ({country}, {region}, {city})"
+
+msgctxt "SettingsOptions::sphinx_holidays::resilience_header"
+msgid "API Resilience"
+msgstr "Reziliență API"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_max_retries"
+msgid "Maximum retries on failure"
+msgstr "Număr maxim de reîncercări"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_max_retries"
+msgid "Number of retry attempts for failed API calls (recommended: 3)"
+msgstr "Numărul de reîncercări pentru apeluri API eșuate (recomandat: 3)"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_retry_delay_ms"
+msgid "Initial retry delay (ms)"
+msgstr "Întârziere inițială reîncercare (ms)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_retry_delay_ms"
+msgid "Initial delay in milliseconds before first retry (recommended: 500)"
+msgstr "Întârzierea inițială în milisecunde înainte de prima reîncercare (recomandat: 500)"
+
+msgctxt "SettingsOptions::sphinx_holidays::api_retry_multiplier"
+msgid "Retry delay multiplier"
+msgstr "Multiplicator întârziere reîncercare"
+
+msgctxt "SettingsTooltips::sphinx_holidays::api_retry_multiplier"
+msgid "Exponential backoff multiplier for retries (recommended: 2)"
+msgstr "Multiplicator exponențial pentru reîncercări (recomandat: 2)"
+
+msgctxt "SettingsOptions::sphinx_holidays::circuit_breaker_threshold"
+msgid "Circuit breaker threshold (failures before open)"
+msgstr "Prag circuit breaker (eșecuri înainte de deschidere)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuit_breaker_threshold"
+msgid "Number of consecutive failures before circuit opens and stops API calls"
+msgstr "Numărul de eșecuri consecutive înainte de deschiderea circuitului și oprirea apelurilor API"
+
+msgctxt "SettingsOptions::sphinx_holidays::circuit_breaker_timeout"
+msgid "Circuit breaker timeout (seconds)"
+msgstr "Timeout circuit breaker (secunde)"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuit_breaker_timeout"
+msgid "Seconds to wait before retrying after circuit opens"
+msgstr "Secunde de așteptare înainte de reîncercare după deschiderea circuitului"
+
+msgctxt "SettingsOptions::sphinx_holidays::hotel_sync_header"
+msgid "Hotel Sync Settings"
+msgstr "Setări Sincronizare Hoteluri"
+
+msgctxt "SettingsOptions::sphinx_holidays::selected_destinations"
+msgid "Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)"
+msgstr "Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații (Crete, Rhodes), sau ID-uri destinații (1234)"
+
+msgctxt "SettingsOptions::sphinx_holidays::cron_header"
+msgid "Cron Settings"
+msgstr "Setări Cron"
+
+msgctxt "SettingsOptions::sphinx_holidays::cron_access_key"
+msgid "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+msgstr "Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+
+msgctxt "SettingsOptions::sphinx_holidays::debug_header"
+msgid "Debug"
+msgstr "Depanare"
+
+msgctxt "SettingsOptions::sphinx_holidays::debug_logging"
+msgid "Enable debug logging"
+msgstr "Activează logare depanare"

@@ -1,0 +1,105 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US"
+
+msgctxt "Addons::name::travel_core"
+msgid "Travel Core"
+msgstr "Travel Core"
+
+msgctxt "Addons::description::travel_core"
+msgid "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel."
+msgstr "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel."
+
+msgctxt "SettingsSections::travel_core::general"
+msgid "General Settings"
+msgstr "General Settings"
+
+msgctxt "SettingsOptions::travel_core::feature_mapping_header"
+msgid "Feature Mapping"
+msgstr "Feature Mapping"
+
+msgctxt "SettingsOptions::travel_core::feature_id_property_rating"
+msgid "CS-Cart Feature ID: Stars/Classification"
+msgstr "CS-Cart Feature ID: Stars/Classification"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_property_rating"
+msgid "Product feature ID used for hotel star rating"
+msgstr "Product feature ID used for hotel star rating"
+
+msgctxt "SettingsOptions::travel_core::feature_id_meals"
+msgid "CS-Cart Feature ID: Meal Plan"
+msgstr "CS-Cart Feature ID: Meal Plan"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_meals"
+msgid "Product feature ID used for meal plan / board type"
+msgstr "Product feature ID used for meal plan / board type"
+
+msgctxt "SettingsOptions::travel_core::feature_id_room_type"
+msgid "CS-Cart Feature ID: Room Type"
+msgstr "CS-Cart Feature ID: Room Type"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_room_type"
+msgid "Product feature ID used for room type"
+msgstr "Product feature ID used for room type"
+
+msgctxt "SettingsOptions::travel_core::feature_id_property_type"
+msgid "CS-Cart Feature ID: Property Type"
+msgstr "CS-Cart Feature ID: Property Type"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_property_type"
+msgid "Product feature ID used for property type (hotel, villa, etc.)"
+msgstr "Product feature ID used for property type (hotel, villa, etc.)"
+
+msgctxt "SettingsOptions::travel_core::feature_id_location"
+msgid "CS-Cart Feature ID: Location"
+msgstr "CS-Cart Feature ID: Location"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_location"
+msgid "Product feature ID used for location/destination"
+msgstr "Product feature ID used for location/destination"
+
+msgctxt "SettingsOptions::travel_core::providers_header"
+msgid "Active Providers"
+msgstr "Active Providers"
+
+msgctxt "SettingsOptions::travel_core::active_providers"
+msgid "Active providers (comma-separated)"
+msgstr "Active providers (comma-separated)"
+
+msgctxt "SettingsTooltips::travel_core::active_providers"
+msgid "Comma-separated list of active travel provider addon names (e.g. novoton,sphinx)"
+msgstr "Comma-separated list of active travel provider addon names (e.g. novoton,sphinx)"
+
+msgctxt "SettingsOptions::travel_core::currency_header"
+msgid "Currency"
+msgstr "Currency"
+
+msgctxt "SettingsOptions::travel_core::default_currency"
+msgid "Default currency"
+msgstr "Default currency"
+
+msgctxt "SettingsTooltips::travel_core::default_currency"
+msgid "Default currency for travel pricing (e.g. EUR, RON)"
+msgstr "Default currency for travel pricing (e.g. EUR, RON)"
+
+msgctxt "SettingsOptions::travel_core::currency_risk_commission"
+msgid "Currency risk commission (%)"
+msgstr "Currency risk commission (%)"
+
+msgctxt "SettingsTooltips::travel_core::currency_risk_commission"
+msgid "Percentage added to cover currency exchange rate fluctuations"
+msgstr "Percentage added to cover currency exchange rate fluctuations"
+
+msgctxt "SettingsOptions::travel_core::cron_header"
+msgid "Cron Settings"
+msgstr "Cron Settings"
+
+msgctxt "SettingsOptions::travel_core::cron_access_key"
+msgid "Cron access key"
+msgstr "Cron access key"
+
+msgctxt "SettingsTooltips::travel_core::cron_access_key"
+msgid "Secret key for authenticating automated cron job requests"
+msgstr "Secret key for authenticating automated cron job requests"
