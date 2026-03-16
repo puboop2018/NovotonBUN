@@ -600,4 +600,9 @@
         <item lang="en" id="sphinx_holidays.all_offers_unavailable"><![CDATA[All hotel offers in your cart are no longer available. Please search again.]]></item>
         <item lang="ro" id="sphinx_holidays.all_offers_unavailable"><![CDATA[Toate ofertele de hotel din coș nu mai sunt disponibile. Vă rugăm căutați din nou.]]></item>
     </language_variables>
+
+    <functions>
+        <item for="install">fn_sphinx_holidays_post_install</item>
+        <item for="uninstall">fn_sphinx_holidays_uninstall</item>
+    </functions>
 </addon>

@@ -46,8 +46,67 @@ function fn_sphinx_holidays_uninstall(): bool
  */
 function fn_sphinx_holidays_post_install(): bool
 {
+    fn_sphinx_holidays_sync_settings_descriptions();
     fn_sphinx_holidays_seed_aliases();
     return true;
+}
+
+/**
+ * Populate ?:settings_descriptions for sphinx_holidays settings.
+ * Uses compatible queries (section_id lookup, no addon/object_type columns).
+ */
+function fn_sphinx_holidays_sync_settings_descriptions(): void
+{
+    $section_id = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = ?s",
+        'sphinx_holidays'
+    );
+
+    if (!$section_id) {
+        return;
+    }
+
+    $settings = db_get_array(
+        "SELECT object_id, name, type FROM ?:settings_objects WHERE section_id = ?i",
+        $section_id
+    );
+
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+
+    foreach ($settings as $setting) {
+        $lang_var_name = 'sphinx_holidays.' . $setting['name'];
+        $object_type = ($setting['type'] === 'H') ? 'H' : 'O';
+        foreach ($languages as $lang) {
+            $value = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($value)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                     VALUES (?i, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE description = ?s",
+                    $setting['object_id'], $object_type, $value, $lang['lang_code'], $value
+                );
+            }
+        }
+    }
+
+    // Section description
+    foreach ($languages as $lang) {
+        $value = db_get_field(
+            "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+            'sphinx_holidays', $lang['lang_code']
+        );
+        if (!empty($value)) {
+            db_query(
+                "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                 VALUES (?i, 'SECTION', ?s, ?s)
+                 ON DUPLICATE KEY UPDATE description = ?s",
+                $section_id, $value, $lang['lang_code'], $value
+            );
+        }
+    }
 }
 
 /**
