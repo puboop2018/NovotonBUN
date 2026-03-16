@@ -89,53 +89,36 @@ class SphinxApi
     }
 
     /**
-     * Get all package routes (paginated, with optional filters).
-     *
-     * @param array $departureIds Filter by departure IDs
-     * @param array $destinationIds Filter by destination IDs
-     * @param string|null $updatedSince Only return routes updated since this ISO 8601 datetime
+     * Get all package routes.
      */
-    public function getPackageRoutes(int $page = 1, int $perPage = 1000, array $departureIds = [], array $destinationIds = [], ?string $updatedSince = null): ?array
+    public function getPackageRoutes(int $page = 1, int $perPage = 1000): ?array
     {
-        $query = ['page' => $page, 'per_page' => $perPage];
-        if (!empty($departureIds)) {
-            $query['departure_ids'] = $departureIds;
-        }
-        if (!empty($destinationIds)) {
-            $query['destination_ids'] = $destinationIds;
-        }
-        if ($updatedSince !== null) {
-            $query['updated_since'] = $updatedSince;
-        }
-        return $this->client->get('/api/v1/static/package-routes', $query);
+        return $this->client->get('/api/v1/static/package-routes', [
+            'page'     => $page,
+            'per_page' => $perPage,
+        ]);
     }
 
     /**
      * Get all circuits (paginated).
-     *
-     * @param string|null $updatedSince Only return circuits updated since this ISO 8601 datetime
      */
-    public function getCircuits(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
+    public function getCircuits(int $page = 1, int $perPage = 1000): ?array
     {
-        $query = ['page' => $page, 'per_page' => $perPage];
-        if ($updatedSince !== null) {
-            $query['updated_since'] = $updatedSince;
-        }
-        return $this->client->get('/api/v1/static/circuits', $query);
+        return $this->client->get('/api/v1/static/circuits', [
+            'page'     => $page,
+            'per_page' => $perPage,
+        ]);
     }
 
     /**
      * Get all experiences (paginated).
-     *
-     * @param string|null $updatedSince Only return experiences updated since this ISO 8601 datetime
      */
-    public function getExperiences(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
+    public function getExperiences(int $page = 1, int $perPage = 1000): ?array
     {
-        $query = ['page' => $page, 'per_page' => $perPage];
-        if ($updatedSince !== null) {
-            $query['updated_since'] = $updatedSince;
-        }
-        return $this->client->get('/api/v1/static/experiences', $query);
+        return $this->client->get('/api/v1/static/experiences', [
+            'page'     => $page,
+            'per_page' => $perPage,
+        ]);
     }
 
     // ── Hotel Search & Booking ──
@@ -144,7 +127,7 @@ class SphinxApi
      * Initiate a hotel search.
      *
      * @param array $params {destination_id, check_in, check_out, occupancy, currency, ...}
-     * @return array|null {cursor: string} — cursor used to poll results
+     * @return array|null {search_id, ...}
      */
     public function searchHotels(array $params): ?array
     {
@@ -154,14 +137,16 @@ class SphinxApi
     /**
      * Get hotel search results (cursor-based polling).
      *
-     * API returns {data: [...], cursor: string|null}. Poll until cursor is null.
-     *
-     * @param string $cursor Cursor from searchHotels() or previous getHotelResults()
-     * @return array|null {data: array, cursor: string|null}
+     * @param string $searchId Search ID from searchHotels()
+     * @param string|null $cursor Cursor for pagination
      */
-    public function getHotelResults(string $cursor): ?array
+    public function getHotelResults(string $searchId, ?string $cursor = null): ?array
     {
-        return $this->client->get('/api/v1/hotels/results', ['cursor' => $cursor]);
+        $query = ['search_id' => $searchId];
+        if ($cursor !== null) {
+            $query['cursor'] = $cursor;
+        }
+        return $this->client->get('/api/v1/hotels/results', $query);
     }
 
     /**
@@ -181,7 +166,7 @@ class SphinxApi
      * and 'sphinx_booking' => true in the cart product extras. The travel_booking
      * flag enables travel_core shared hooks (rooms_data decode, display formatting).
      *
-     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy: [{room_code, guests: [{first_name, last_name, birth_date, gender}]}]}
+     * @param array $bookingData {offer_id, guests, contact, ...}
      */
     public function bookHotel(array $bookingData): ?array
     {
@@ -202,15 +187,14 @@ class SphinxApi
 
     /**
      * Get package search results (cursor-based polling).
-     *
-     * API returns {data: [...], cursor: string|null}. Poll until cursor is null.
-     *
-     * @param string $cursor Cursor from searchPackages() or previous getPackageResults()
-     * @return array|null {data: array, cursor: string|null}
      */
-    public function getPackageResults(string $cursor): ?array
+    public function getPackageResults(string $searchId, ?string $cursor = null): ?array
     {
-        return $this->client->get('/api/v1/packages/results', ['cursor' => $cursor]);
+        $query = ['search_id' => $searchId];
+        if ($cursor !== null) {
+            $query['cursor'] = $cursor;
+        }
+        return $this->client->get('/api/v1/packages/results', $query);
     }
 
     /**
@@ -237,104 +221,17 @@ class SphinxApi
         return $this->client->post('/api/v1/packages/book', $bookingData);
     }
 
-    // ── Circuit Search & Booking ──
-    // Flow: rates → quote → customize (optional) → book
-
-    /**
-     * Get circuit rates (paginated catalog with pricing for 2 adults).
-     *
-     * @param array $params {circuit_ids?, transport_types?, durations?, departures?, destinatons?, months?, tags?, pagination?}
-     */
-    public function getCircuitRates(array $params = []): ?array
-    {
-        return $this->client->post('/api/v1/circuits/rates', $params);
-    }
-
-    /**
-     * Get a quote for a specific circuit departure.
-     *
-     * @param array $params {circuit_id, departure_date, occupancy, departure_id}
-     */
-    public function getCircuitQuote(array $params): ?array
-    {
-        return $this->client->post('/api/v1/circuits/quote', $params);
-    }
-
-    /**
-     * Customize a circuit offer (add optional services).
-     *
-     * @param array $data {offer_id, service_codes}
-     */
-    public function customizeCircuit(array $data): ?array
-    {
-        return $this->client->post('/api/v1/circuits/customize', $data);
-    }
-
-    /**
-     * Book a circuit offer.
-     *
-     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy}
-     */
-    public function bookCircuit(array $bookingData): ?array
-    {
-        return $this->client->post('/api/v1/circuits/book', $bookingData);
-    }
-
-    // ── Experience Search & Booking ──
-    // Flow: rates → quote → book (no customize step)
-
-    /**
-     * Get experience rates (paginated catalog with pricing for 1 adult).
-     *
-     * @param array $params {experience_ids?, durations?, destinatons?, pickup_points?, months?, from?, to?, tags?, pagination?}
-     */
-    public function getExperienceRates(array $params = []): ?array
-    {
-        return $this->client->post('/api/v1/experiences/rates', $params);
-    }
-
-    /**
-     * Get a quote for a specific experience.
-     *
-     * @param array $params {experience_id, departure_date, occupancy, pickup_point_code?, pickup_point_time?}
-     */
-    public function getExperienceQuote(array $params): ?array
-    {
-        return $this->client->post('/api/v1/experiences/quote', $params);
-    }
-
-    /**
-     * Book an experience offer.
-     *
-     * @param array $bookingData {offer_id, reference_code?, price, currency, occupancy}
-     */
-    public function bookExperience(array $bookingData): ?array
-    {
-        return $this->client->post('/api/v1/experiences/book', $bookingData);
-    }
-
     // ── Orders ──
 
     /**
-     * Get all orders (paginated, with optional filters).
-     *
-     * @param int $page Page number
-     * @param int $perPage Items per page (1-50)
-     * @param array $filters Optional filters: reference_code, type, created_after
+     * Get all orders (paginated).
      */
-    public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
+    public function getOrders(int $page = 1, int $perPage = 50): ?array
     {
-        $query = ['page' => $page, 'per_page' => $perPage];
-        if (!empty($filters['reference_code'])) {
-            $query['reference_code'] = $filters['reference_code'];
-        }
-        if (!empty($filters['type'])) {
-            $query['type'] = $filters['type'];
-        }
-        if (!empty($filters['created_after'])) {
-            $query['created_after'] = $filters['created_after'];
-        }
-        return $this->client->get('/api/v1/orders', $query);
+        return $this->client->get('/api/v1/orders', [
+            'page'     => $page,
+            'per_page' => $perPage,
+        ]);
     }
 
     /**

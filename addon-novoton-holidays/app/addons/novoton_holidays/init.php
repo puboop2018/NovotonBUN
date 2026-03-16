@@ -159,14 +159,6 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'Novoton Holidays',
         new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer()
     );
-
-    // Register admin provider for unified booking management
-    if (class_exists(\Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface::class)) {
-        \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::registerAdminProvider(
-            'novoton',
-            new \Tygh\Addons\NovotonHolidays\Services\BookingAdminProvider()
-        );
-    }
 }
 
 // Register addon hooks

@@ -32,32 +32,16 @@ try {
         exit;
     }
 
-    // --- Input validation ---
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $offer_id)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid offer ID format']);
-        restore_error_handler();
-        exit;
-    }
-
-    if ($original_price < 0 || $original_price > 999999) {
-        echo json_encode(['success' => false, 'message' => 'Invalid price value']);
-        restore_error_handler();
-        exit;
-    }
-
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    // API verify returns {data: {must_verify, pricing: {selling_price, currency}, ...}}
-    $verifyData = $verifyResult['data'] ?? $verifyResult ?? [];
-
-    if (empty($verifyResult) || ($verifyData['must_verify'] ?? true)) {
+    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
         echo json_encode(['success' => false, 'message' => 'Offer no longer available. Please search again.']);
         restore_error_handler();
         exit;
     }
 
-    $newPrice = (float)($verifyData['pricing']['selling_price'] ?? 0);
+    $newPrice = (float)($verifyResult['price'] ?? 0);
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
 

@@ -98,6 +98,22 @@
                         <default_value>EUR</default_value>
                         <variants/>
                     </item>
+                    <item id="currency_risk_commission">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Cron Header -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="cron_access_key">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -195,6 +211,12 @@
         <item lang="ro" id="travel_core.currency_header"><![CDATA[Monedă]]></item>
         <item lang="en" id="travel_core.default_currency"><![CDATA[Default currency]]></item>
         <item lang="ro" id="travel_core.default_currency"><![CDATA[Monedă implicită]]></item>
+        <item lang="en" id="travel_core.currency_risk_commission"><![CDATA[Currency risk commission (%)]]></item>
+        <item lang="ro" id="travel_core.currency_risk_commission"><![CDATA[Comision risc valutar (%)]]></item>
+        <item lang="en" id="travel_core.cron_header"><![CDATA[Cron Settings]]></item>
+        <item lang="ro" id="travel_core.cron_header"><![CDATA[Setări Cron]]></item>
+        <item lang="en" id="travel_core.cron_access_key"><![CDATA[Cron access key]]></item>
+        <item lang="ro" id="travel_core.cron_access_key"><![CDATA[Cheie acces cron]]></item>
         <item lang="en" id="travel_core.until"><![CDATA[until]]></item>
         <item lang="ro" id="travel_core.until"><![CDATA[până la]]></item>
         <item lang="en" id="travel_core.free_cancellation"><![CDATA[Free Cancellation]]></item>
