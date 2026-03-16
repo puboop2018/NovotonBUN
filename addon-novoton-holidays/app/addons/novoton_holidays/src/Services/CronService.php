@@ -15,16 +15,19 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
 class CronService implements CronServiceInterface
 {
     private $api;
+    private BookingRepositoryInterface $bookingRepo;
     private $countries;
     private $output = [];
 
-    public function __construct()
+    public function __construct(?BookingRepositoryInterface $bookingRepo = null)
     {
         $this->api = new NovotonApi();
+        $this->bookingRepo = $bookingRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
         $this->countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
     }
 
@@ -73,16 +76,16 @@ class CronService implements CronServiceInterface
                 $newStatus = (string)($resInfo->Status ?? '');
 
                 if (!empty($newStatus) && $newStatus !== $booking['novoton_status']) {
-                    // Status changed
+                    // Status changed — route through repository to sync travel_bookings
                     $csStatus = $this->mapNovotonStatus($newStatus);
 
-                    db_query(
-                        "UPDATE ?:novoton_bookings SET
-                         novoton_status = ?s,
-                         status = ?s,
-                         last_status_check = NOW()
-                         WHERE booking_id = ?i",
-                        $newStatus, $csStatus, $booking['booking_id']
+                    $this->bookingRepo->updateStatus(
+                        (int) $booking['booking_id'], $csStatus, $newStatus
+                    );
+                    // last_status_check is novoton-specific, update directly
+                    $this->bookingRepo->update(
+                        (int) $booking['booking_id'],
+                        ['last_status_check' => date('Y-m-d H:i:s')]
                     );
 
                     $results['updated']++;
@@ -93,9 +96,9 @@ class CronService implements CronServiceInterface
                         'new_status' => $newStatus
                     ];
                 } else {
-                    db_query(
-                        "UPDATE ?:novoton_bookings SET last_status_check = NOW() WHERE booking_id = ?i",
-                        $booking['booking_id']
+                    $this->bookingRepo->update(
+                        (int) $booking['booking_id'],
+                        ['last_status_check' => date('Y-m-d H:i:s')]
                     );
                     $results['unchanged']++;
                 }

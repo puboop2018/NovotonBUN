@@ -29,6 +29,13 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
+    private GuestDataNormalizer $guestDataNormalizer;
+
+    public function __construct(?GuestDataNormalizer $guestDataNormalizer = null)
+    {
+        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
+    }
+
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
      */
@@ -86,7 +93,7 @@ class BookingRepository implements BookingRepositoryInterface
 
         // guests_data — always normalize to canonical keyed format
         if (!empty($booking['guests_data'])) {
-            $booking['guests_data_parsed'] = GuestDataNormalizer::normalize($booking['guests_data']);
+            $booking['guests_data_parsed'] = (new GuestDataNormalizer())->normalize($booking['guests_data']);
         } else {
             $booking['guests_data_parsed'] = [];
         }
@@ -214,11 +221,19 @@ class BookingRepository implements BookingRepositoryInterface
     public function create(array $data): int
     {
         $data = self::filterNullValues($data);
-        $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $data);
-        $booking_id = (int) $booking_id;
 
-        if ($booking_id > 0) {
-            $this->syncToTravelBookings($booking_id, $data);
+        db_query("START TRANSACTION");
+        try {
+            $booking_id = (int) db_query("INSERT INTO ?:novoton_bookings ?e", $data);
+
+            if ($booking_id > 0) {
+                $this->syncToTravelBookings($booking_id, $data);
+            }
+
+            db_query("COMMIT");
+        } catch (\Throwable $e) {
+            db_query("ROLLBACK");
+            throw $e;
         }
 
         return $booking_id;
@@ -230,10 +245,19 @@ class BookingRepository implements BookingRepositoryInterface
     public function update(int $booking_id, array $data): bool
     {
         $data = self::filterNullValues($data);
-        $result = (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
 
-        if ($result) {
-            $this->syncUpdateToTravelBookings($booking_id, $data);
+        db_query("START TRANSACTION");
+        try {
+            $result = (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
+
+            if ($result) {
+                $this->syncUpdateToTravelBookings($booking_id, $data);
+            }
+
+            db_query("COMMIT");
+        } catch (\Throwable $e) {
+            db_query("ROLLBACK");
+            throw $e;
         }
 
         return $result;
@@ -289,11 +313,20 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function delete(int $booking_id): bool
     {
-        db_query(
-            "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
-            (string) $booking_id
-        );
-        return (bool) db_query("DELETE FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+        db_query("START TRANSACTION");
+        try {
+            db_query(
+                "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+                (string) $booking_id
+            );
+            $result = (bool) db_query("DELETE FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
+            db_query("COMMIT");
+        } catch (\Throwable $e) {
+            db_query("ROLLBACK");
+            throw $e;
+        }
+
+        return $result;
     }
     
     /**
@@ -495,7 +528,7 @@ class BookingRepository implements BookingRepositoryInterface
             return;
         }
 
-        $guests_data = GuestDataNormalizer::normalize($nb['guests_data']);
+        $guests_data = $this->guestDataNormalizer->normalize($nb['guests_data']);
         if (empty($guests_data) || !is_array($guests_data)) {
             return;
         }
@@ -796,16 +829,12 @@ class BookingRepository implements BookingRepositoryInterface
             'guests_json' => $data['guests_data'] ?? '{}',
         ];
 
-        $existing = (int) db_get_field(
-            "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
-            (string) $booking_id
+        // Atomic upsert — relies on UNIQUE KEY uq_provider_booking(provider, provider_booking_id)
+        // Prevents race conditions and eliminates the SELECT round-trip
+        db_query(
+            "INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u",
+            $travel_record, $travel_record
         );
-
-        if ($existing > 0) {
-            db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing);
-        } else {
-            db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
-        }
     }
 
     /**

@@ -273,6 +273,17 @@ class ConfigProvider
     }
 
     /**
+     * "No Surprises" price change threshold (percentage).
+     *
+     * If a hotel price increases by more than this % between add-to-cart and checkout,
+     * the customer is shown a visible warning. 0 = disabled.
+     */
+    public static function getNoSurprisesThreshold(): float
+    {
+        return max(0.0, (float) self::getSetting('no_surprises_threshold', 2));
+    }
+
+    /**
      * Check if the addon is properly configured (has API key).
      */
     public static function isConfigured(): bool
@@ -294,6 +305,11 @@ class ConfigProvider
         }
 
         return true;
+    }
+
+    public static function isAlternativeDatesEnabled(): bool
+    {
+        return self::getSetting('enable_alternative_dates', 'Y') === 'Y';
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed

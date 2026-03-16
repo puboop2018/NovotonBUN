@@ -59,7 +59,7 @@ try {
     ];
 
     if (!empty($hotel_id)) {
-        $searchParams['hotel_id'] = $hotel_id;
+        $searchParams['hotel_ids'] = [(int)$hotel_id];
     } elseif ($destination_id > 0) {
         $searchParams['destination_id'] = $destination_id;
     }
@@ -90,40 +90,33 @@ try {
     if (!$fromCache) {
         $searchResponse = $api->searchHotels($searchParams);
 
-        if (empty($searchResponse['search_id'])) {
+        if (empty($searchResponse['cursor'])) {
             fn_set_notification('E', __('error'),
                 __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
             $view->assign('sphinx_search_results', []);
             return;
         }
 
-        $searchId = $searchResponse['search_id'];
+        $cursor = $searchResponse['cursor'];
+        $searchId = $cursor; // Store initial cursor as search identifier for cache
 
-        // Poll for results
-        $pollInterval = ConfigProvider::getSearchPollInterval();
+        // Poll for results (API does long-polling, minimal client-side delay needed)
         $maxPolls = ConfigProvider::getSearchMaxPolls();
-        $cursor = null;
         $pollCount = 0;
 
         do {
-            if ($pollCount > 0) {
-                sleep($pollInterval);
-            }
             $pollCount++;
 
-            $pollResponse = $api->getHotelResults($searchId, $cursor);
+            $pollResponse = $api->getHotelResults($cursor);
             if ($pollResponse === null) break;
 
-            if (!empty($pollResponse['results'])) {
-                foreach ($pollResponse['results'] as $result) {
+            if (!empty($pollResponse['data'])) {
+                foreach ($pollResponse['data'] as $result) {
                     $allResults[] = $result;
                 }
             }
 
-            $status = $pollResponse['status'] ?? 'completed';
-            if ($status === 'completed') break;
-
-            $cursor = $pollResponse['next_cursor'] ?? null;
+            $cursor = $pollResponse['cursor'] ?? null;
             if ($cursor === null) break;
 
         } while ($pollCount < $maxPolls);
@@ -137,6 +130,43 @@ try {
         }
     }
 
+    // Alternative date fallback: if no results, suggest nearby dates (+/- 3 days)
+    $alternativeDates = [];
+    if (empty($allResults) && !empty($check_in) && ConfigProvider::isAlternativeDatesEnabled()) {
+        for ($offset = -3; $offset <= 3; $offset++) {
+            if ($offset === 0) continue;
+
+            $altCheckIn = date('Y-m-d', strtotime($check_in . " {$offset} days"));
+            $altCheckOut = date('Y-m-d', strtotime($check_out . " {$offset} days"));
+
+            // Skip past dates
+            if (strtotime($altCheckIn) < strtotime('today')) continue;
+
+            $altParams = $searchParams;
+            $altParams['check_in'] = $altCheckIn;
+            $altParams['check_out'] = $altCheckOut;
+
+            try {
+                $altResponse = $api->searchHotels($altParams);
+                if (!empty($altResponse['cursor'])) {
+                    $altPoll = $api->getHotelResults($altResponse['cursor']);
+                    if (!empty($altPoll['data'])) {
+                        $alternativeDates[] = [
+                            'check_in' => $altCheckIn,
+                            'check_out' => $altCheckOut,
+                            'offset' => $offset,
+                            'count' => count($altPoll['data']),
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Skip failed alternative date lookups silently
+                continue;
+            }
+        }
+        $view->assign('sphinx_alternative_dates', $alternativeDates);
+    }
+
     // Apply commission
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
@@ -144,18 +174,13 @@ try {
     if ($commission > 0) {
         $calculator = new \Tygh\Addons\TravelCore\Services\CommissionCalculator($commission, $roundPrices);
         foreach ($allResults as &$result) {
-            if (isset($result['price'])) {
+            // API returns pricing.selling_price — apply commission and add a flat 'price' key for templates
+            if (isset($result['pricing']['selling_price'])) {
+                $result['original_price'] = $result['pricing']['selling_price'];
+                $result['price'] = $calculator->apply((float)$result['pricing']['selling_price']);
+            } elseif (isset($result['price'])) {
                 $result['original_price'] = $result['price'];
                 $result['price'] = $calculator->apply((float)$result['price']);
-            }
-            if (!empty($result['offers'])) {
-                foreach ($result['offers'] as &$offer) {
-                    if (isset($offer['price'])) {
-                        $offer['original_price'] = $offer['price'];
-                        $offer['price'] = $calculator->apply((float)$offer['price']);
-                    }
-                }
-                unset($offer);
             }
         }
         unset($result);

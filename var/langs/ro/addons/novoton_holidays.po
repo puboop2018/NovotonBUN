@@ -3384,3 +3384,7 @@ msgstr "Rezervă [book] nopți, plătești [pay]"
 msgctxt "Languages::novoton_holidays.off"
 msgid "off"
 msgstr "reducere"
+
+msgctxt "Languages::novoton_holidays.booking_api_failed"
+msgid "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
+msgstr "Rezervarea Novoton a eșuat pentru hotelul „[hotel]" în comanda #[order_id]. Transmiterea către API nu a reușit. Verificați și retrimiteți manual."

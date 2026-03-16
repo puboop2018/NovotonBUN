@@ -14,6 +14,13 @@ use Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface;
  */
 class GuestDataService implements GuestDataServiceInterface
 {
+    private GuestDataNormalizer $normalizer;
+
+    public function __construct(?GuestDataNormalizer $normalizer = null)
+    {
+        $this->normalizer = $normalizer ?? new GuestDataNormalizer();
+    }
+
     /**
      * Parse guests data from booking form.
      *
@@ -27,7 +34,7 @@ class GuestDataService implements GuestDataServiceInterface
     {
         // Primary source: guests_data field
         if (!empty($bookingData['guests_data'])) {
-            $normalized = GuestDataNormalizer::normalize($bookingData['guests_data']);
+            $normalized = $this->normalizer->normalize($bookingData['guests_data']);
             if (!empty($normalized)) {
                 return $normalized;
             }
@@ -35,7 +42,7 @@ class GuestDataService implements GuestDataServiceInterface
 
         // Fallback: guests array (legacy format)
         if (!empty($bookingData['guests'])) {
-            return GuestDataNormalizer::normalize($bookingData['guests']);
+            return $this->normalizer->normalize($bookingData['guests']);
         }
 
         return [];
@@ -297,7 +304,7 @@ class GuestDataService implements GuestDataServiceInterface
             return [];
         }
 
-        $guests_data = GuestDataNormalizer::normalize($guests_data);
+        $guests_data = (new GuestDataNormalizer())->normalize($guests_data);
         if (empty($guests_data)) {
             return [];
         }

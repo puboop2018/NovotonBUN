@@ -21,21 +21,21 @@
 {* Statistics *}
 <div class="row-fluid" style="margin-bottom: 20px;">
     <div class="span4">
-        <div class="well well-small" style="text-align: center;">
-            <h2 style="margin: 0; color: #f0ad4e;">{$hotels|@count}</h2>
-            <p class="muted" style="margin: 0;">Hotels to Add (API)</p>
+        <div class="well well-small center">
+            <h2 class="no-margin" style="color: #f0ad4e;">{$hotels|@count}</h2>
+            <p class="muted no-margin">Hotels to Add (API)</p>
         </div>
     </div>
     <div class="span4">
-        <div class="well well-small" style="text-align: center;">
-            <h2 style="margin: 0; color: #5cb85c;">{$in_cart_count}</h2>
-            <p class="muted" style="margin: 0;">Already in Database</p>
+        <div class="well well-small center">
+            <h2 class="no-margin" style="color: #5cb85c;">{$in_cart_count}</h2>
+            <p class="muted no-margin">Already in Database</p>
         </div>
     </div>
     <div class="span4">
-        <div class="well well-small" style="text-align: center;">
-            <h2 style="margin: 0; color: #5bc0de;">{$hotels|@count + $in_cart_count}</h2>
-            <p class="muted" style="margin: 0;">Total with Prices</p>
+        <div class="well well-small center">
+            <h2 class="no-margin" style="color: #5bc0de;">{$hotels|@count + $in_cart_count}</h2>
+            <p class="muted no-margin">Total with Prices</p>
         </div>
     </div>
 </div>

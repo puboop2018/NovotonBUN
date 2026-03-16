@@ -74,8 +74,8 @@
 
     {* Show orphans toggle *}
     <form action="{"novoton_bookings.manage"|fn_url}" method="get" class="form-inline" style="display: inline-block; margin-left: 20px;">
-        <label style="cursor: pointer;">
-            <input type="checkbox" name="show_orphans" value="1" {if $search.show_orphans}checked{/if} onchange="this.form.submit()">
+        <label class="hand">
+            <input type="checkbox" class="checkbox" name="show_orphans" value="1" {if $search.show_orphans}checked{/if} onchange="this.form.submit()">
             {__("novoton_holidays.show_incomplete_bookings")}
         </label>
     </form>

@@ -77,10 +77,10 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     
     if ($cart_item && !empty($cart_item['extra']['guests_data'])) {
-        $guests_data = GuestDataNormalizer::normalize($cart_item['extra']['guests_data']);
+        $guests_data = (new GuestDataNormalizer())->normalize($cart_item['extra']['guests_data']);
     }
     if (empty($guests_data)) {
-        $guests_data = GuestDataNormalizer::normalize($booking_record['guests_data'] ?? '');
+        $guests_data = (new GuestDataNormalizer())->normalize($booking_record['guests_data'] ?? '');
     }
     
     // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)

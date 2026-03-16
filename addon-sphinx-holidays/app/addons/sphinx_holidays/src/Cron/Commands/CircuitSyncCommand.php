@@ -1,0 +1,40 @@
+<?php
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
+
+use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
+
+/**
+ * Cron command: sync circuits from Sphinx static API.
+ *
+ * Usage: php cron.php access_key=KEY mode=circuits
+ */
+class CircuitSyncCommand
+{
+    /** @var callable|null */
+    private $outputCallback = null;
+
+    public static function getDescription(): string
+    {
+        return 'Sync circuit catalog from Sphinx static API';
+    }
+
+    public function setOutputCallback(callable $callback): void
+    {
+        $this->outputCallback = $callback;
+    }
+
+    public function execute(array $params = []): array
+    {
+        $api = Container::getApi();
+        $service = new CircuitSyncService($api);
+
+        if ($this->outputCallback !== null) {
+            $service->setOutputCallback($this->outputCallback);
+        }
+
+        return $service->sync();
+    }
+}

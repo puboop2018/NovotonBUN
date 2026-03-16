@@ -40,24 +40,24 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
      * @return array Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
-    public static function normalize($raw): array
+    public function normalize($raw): array
     {
-        $data = self::decode($raw);
+        $data = $this->decode($raw);
 
         if (empty($data) || !is_array($data)) {
             return [];
         }
 
-        if (self::isKeyedFormat($data)) {
-            return self::ensureFields($data);
+        if ($this->isKeyedFormat($data)) {
+            return $this->ensureFields($data);
         }
 
-        if (self::isArrayFormat($data)) {
-            return self::convertArrayToKeyed($data);
+        if ($this->isArrayFormat($data)) {
+            return $this->convertArrayToKeyed($data);
         }
 
         // Unknown structure — return with field defaults applied
-        return self::ensureFields($data);
+        return $this->ensureFields($data);
     }
 
     /**
@@ -66,7 +66,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $raw
      * @return array
      */
-    public static function decode($raw): array
+    public function decode($raw): array
     {
         if (is_string($raw)) {
             $decoded = json_decode($raw, true);
@@ -84,9 +84,9 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $data Guest data in any format
      * @return string JSON string in canonical keyed format
      */
-    public static function toJson($data): string
+    public function toJson($data): string
     {
-        $normalized = self::normalize($data);
+        $normalized = $this->normalize($data);
         return !empty($normalized) ? json_encode($normalized) : '{}';
     }
 
@@ -98,7 +98,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $data
      * @return bool
      */
-    public static function isKeyedFormat(array $data): bool
+    public function isKeyedFormat(array $data): bool
     {
         if (empty($data)) {
             return false;
@@ -125,7 +125,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $data
      * @return bool
      */
-    public static function isArrayFormat(array $data): bool
+    public function isArrayFormat(array $data): bool
     {
         if (empty($data)) {
             return false;
@@ -151,7 +151,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $guests Indexed array of guest entries
      * @return array Canonical keyed array
      */
-    private static function convertArrayToKeyed(array $guests): array
+    private function convertArrayToKeyed(array $guests): array
     {
         $keyed = [];
 
@@ -209,7 +209,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $data Keyed guest data
      * @return array Keyed guest data with all fields populated
      */
-    private static function ensureFields(array $data): array
+    private function ensureFields(array $data): array
     {
         foreach ($data as $key => &$guest) {
             if (!is_array($guest)) {

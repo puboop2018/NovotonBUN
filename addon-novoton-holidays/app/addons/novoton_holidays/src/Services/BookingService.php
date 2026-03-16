@@ -41,6 +41,9 @@ class BookingService implements BookingServiceInterface
     /** @var HotelRepositoryInterface */
     private $hotelRepo;
 
+    /** @var GuestDataNormalizer */
+    private $guestDataNormalizer;
+
     /** @var bool */
     private $debug = false;
 
@@ -54,13 +57,15 @@ class BookingService implements BookingServiceInterface
         RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
         \Tygh\Addons\NovotonHolidays\NovotonApi $api,
-        ?HotelRepositoryInterface $hotelRepo = null
+        ?HotelRepositoryInterface $hotelRepo = null,
+        ?GuestDataNormalizer $guestDataNormalizer = null
     ) {
         $this->api = $api;
         $this->guestService = $guestService;
         $this->priceService = $priceService;
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
+        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -116,7 +121,7 @@ class BookingService implements BookingServiceInterface
             'holder_name' => $this->guestService->getHolderName($guests_data, $bookingData),
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
-            'guests_data' => GuestDataNormalizer::toJson($guests_data),
+            'guests_data' => $this->guestDataNormalizer->toJson($guests_data),
             'base_price' => (float) ($bookingData['base_price'] ?? 0),
             'api_price' => (float) ($bookingData['api_price'] ?? 0),
             'total_price' => (float) ($bookingData['total_price'] ?? 0),
@@ -126,22 +131,22 @@ class BookingService implements BookingServiceInterface
 
         // Check for duplicate booking
         $existing_id = $this->findDuplicateBooking($booking_record);
-        
+
         if ($existing_id) {
-            // Update existing
+            // Update existing (routes through repository → syncs to travel_bookings)
             $this->updateBooking($existing_id, $booking_record);
             return $existing_id;
         }
-        
-        // Create new
-        $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $booking_record);
-        
+
+        // Create new (routes through repository → syncs to travel_bookings)
+        $booking_id = $this->bookingRepo->create($booking_record);
+
         $this->log('Booking created', [
             'booking_id' => $booking_id,
             'hotel_id' => $bookingData['hotel_id'],
             'rooms' => count($rooms_data)
         ]);
-        
+
         return $booking_id;
     }
     
@@ -156,16 +161,13 @@ class BookingService implements BookingServiceInterface
     {
         // Remove fields that shouldn't be updated
         unset($data['booking_id'], $data['created_at']);
-        
-        $result = db_query(
-            "UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
-            $data,
-            $booking_id
-        );
-        
+
+        // Route through repository → syncs to travel_bookings
+        $result = $this->bookingRepo->update($booking_id, $data);
+
         $this->log('Booking updated', ['booking_id' => $booking_id]);
-        
-        return $result > 0;
+
+        return $result;
     }
     
     /**
@@ -187,10 +189,7 @@ class BookingService implements BookingServiceInterface
      */
     public function getBookingsForOrder(int $order_id): array
     {
-        return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id",
-            $order_id
-        );
+        return $this->bookingRepo->findByOrderId($order_id);
     }
     
     /**

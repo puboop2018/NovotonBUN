@@ -118,6 +118,20 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <item id="no_surprises_threshold">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+
+                    <item id="enable_alternative_dates">
+                        <type>selectbox</type>
+                        <default_value>Y</default_value>
+                        <variants>
+                            <item id="Y"></item>
+                            <item id="N"></item>
+                        </variants>
+                    </item>
 
                     <!-- Product Mapping Header -->
                     <item id="product_header">
@@ -290,29 +304,48 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
-        <!-- Sphinx bookings (provider-specific booking data) -->
+        <!-- Sphinx bookings (provider-specific booking data, mirrors novoton_bookings pattern) -->
         <item>
             CREATE TABLE IF NOT EXISTS `?:sphinx_bookings` (
-                `id`                    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `travel_booking_id`     INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:travel_bookings',
-                `sphinx_order_id`       VARCHAR(100) DEFAULT NULL COMMENT 'Order ID from Sphinx API',
-                `offer_id`              VARCHAR(255) DEFAULT NULL COMMENT 'Original offer ID',
-                `offer_type`            VARCHAR(20) DEFAULT 'hotel' COMMENT 'hotel, package, circuit, experience',
-                `hotel_id`              VARCHAR(100) DEFAULT NULL,
-                `flight_hash`           VARCHAR(100) DEFAULT NULL COMMENT 'Flight hash for packages',
-                `bus_id`                VARCHAR(100) DEFAULT NULL COMMENT 'Bus ID for bus packages',
-                `raw_response_json`     JSON DEFAULT NULL COMMENT 'Full API booking response',
-                `verification_json`     JSON DEFAULT NULL COMMENT 'Verification response (terms, cancellation)',
-                `sphinx_status`         VARCHAR(30) DEFAULT NULL COMMENT 'confirmed, pending, cancelled',
-                `has_transfer`          ENUM('Y','N') DEFAULT 'N',
-                `has_cancellation`      ENUM('Y','N') DEFAULT 'N',
-                `free_cancellation_until` DATE DEFAULT NULL,
-                `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                KEY `idx_travel_booking` (`travel_booking_id`),
-                KEY `idx_sphinx_order` (`sphinx_order_id`),
+                `booking_id`        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `order_id`          INT UNSIGNED NOT NULL DEFAULT 0,
+                `user_id`           INT UNSIGNED NOT NULL DEFAULT 0,
+                `session_id`        VARCHAR(64) DEFAULT NULL,
+                `product_id`        INT UNSIGNED NOT NULL DEFAULT 0,
+                `hotel_id`          VARCHAR(100) DEFAULT NULL,
+                `hotel_name`        VARCHAR(255) DEFAULT NULL,
+                `offer_id`          VARCHAR(255) DEFAULT NULL COMMENT 'Original offer ID',
+                `room_id`           VARCHAR(100) DEFAULT NULL,
+                `room_type`         VARCHAR(255) DEFAULT NULL,
+                `board_id`          VARCHAR(100) DEFAULT NULL,
+                `check_in`          DATE DEFAULT NULL,
+                `check_out`         DATE DEFAULT NULL,
+                `nights`            SMALLINT UNSIGNED DEFAULT 0,
+                `adults`            TINYINT UNSIGNED DEFAULT 2,
+                `children`          TINYINT UNSIGNED DEFAULT 0,
+                `children_ages`     VARCHAR(100) DEFAULT NULL,
+                `num_rooms`         TINYINT UNSIGNED DEFAULT 1,
+                `rooms_data`        JSON DEFAULT NULL,
+                `guest_name`        VARCHAR(500) DEFAULT NULL,
+                `holder_name`       VARCHAR(255) DEFAULT NULL,
+                `guest_email`       VARCHAR(255) DEFAULT NULL,
+                `guest_phone`       VARCHAR(100) DEFAULT NULL,
+                `guests_data`       JSON DEFAULT NULL,
+                `base_price`        DECIMAL(10,2) DEFAULT 0.00,
+                `total_price`       DECIMAL(10,2) DEFAULT 0.00,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `status`            VARCHAR(30) DEFAULT 'pending',
+                `api_booking_ref`   VARCHAR(100) DEFAULT NULL COMMENT 'Booking reference from Sphinx API',
+                `api_response`      JSON DEFAULT NULL COMMENT 'Full API response JSON',
+                `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from Orders API',
+                `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from Orders API',
+                `last_status_check` DATETIME DEFAULT NULL COMMENT 'Last time status was polled from API',
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_order_id` (`order_id`),
+                KEY `idx_user_session` (`user_id`, `session_id`),
                 KEY `idx_hotel` (`hotel_id`),
-                KEY `idx_status` (`sphinx_status`)
+                KEY `idx_status` (`status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
@@ -365,6 +398,59 @@
             ALTER TABLE `?:sphinx_sync_log`
                 ADD COLUMN IF NOT EXISTS `sync_mode` VARCHAR(20) DEFAULT 'full' AFTER `rate_limit_hits`;
         </item>
+        <!-- Sphinx circuits (local cache of static circuit data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_circuits` (
+                `circuit_id`        INT UNSIGNED NOT NULL PRIMARY KEY COMMENT 'Sphinx circuit ID',
+                `name`              VARCHAR(255) NOT NULL,
+                `summary`           TEXT DEFAULT NULL,
+                `description`       TEXT DEFAULT NULL,
+                `duration_days`     SMALLINT UNSIGNED DEFAULT 0,
+                `duration_nights`   SMALLINT UNSIGNED DEFAULT 0,
+                `transport_type`    VARCHAR(30) DEFAULT NULL COMMENT 'flight, bus, etc',
+                `destination_ids`   JSON DEFAULT NULL COMMENT 'Array of destination IDs',
+                `destination_names` VARCHAR(500) DEFAULT NULL,
+                `departure_ids`     JSON DEFAULT NULL COMMENT 'Array of departure point IDs',
+                `departure_names`   VARCHAR(500) DEFAULT NULL,
+                `image_url`         VARCHAR(500) DEFAULT NULL,
+                `itinerary_json`    JSON DEFAULT NULL COMMENT 'Array of itinerary days',
+                `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
+                `min_price`         DECIMAL(10,2) DEFAULT NULL,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_transport` (`transport_type`),
+                KEY `idx_sync_status` (`sync_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Sphinx experiences (local cache of static experience data) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_experiences` (
+                `experience_id`     INT UNSIGNED NOT NULL PRIMARY KEY COMMENT 'Sphinx experience ID',
+                `name`              VARCHAR(255) NOT NULL,
+                `summary`           TEXT DEFAULT NULL,
+                `description`       TEXT DEFAULT NULL,
+                `duration_hours`    SMALLINT UNSIGNED DEFAULT 0,
+                `duration_days`     SMALLINT UNSIGNED DEFAULT 0,
+                `destination_ids`   JSON DEFAULT NULL COMMENT 'Array of destination IDs',
+                `destination_names` VARCHAR(500) DEFAULT NULL,
+                `pickup_points_json` JSON DEFAULT NULL COMMENT 'Array of pickup point objects',
+                `image_url`         VARCHAR(500) DEFAULT NULL,
+                `highlights_json`   JSON DEFAULT NULL COMMENT 'Array of highlight strings',
+                `features_json`     JSON DEFAULT NULL COMMENT 'Array of feature objects',
+                `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
+                `min_price`         DECIMAL(10,2) DEFAULT NULL,
+                `currency`          VARCHAR(3) DEFAULT 'EUR',
+                `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `last_synced_at`    DATETIME DEFAULT NULL,
+                `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_sync_status` (`sync_status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
     </queries>
 
     <language_variables>
@@ -396,6 +482,26 @@
         <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
         <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
         <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
+        <item lang="en" id="sphinx_holidays.no_surprises_threshold"><![CDATA["No Surprises" price threshold (%). 0 = disabled. Customer is warned if price increases by more than this %.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_surprises_threshold"><![CDATA[Prag "Fără Surprize" (%). 0 = dezactivat. Clientul este avertizat dacă prețul crește cu mai mult de acest %.]]></item>
+        <item lang="en" id="sphinx_holidays.price_changed_warning"><![CDATA[The price for "[hotel]" has changed from [old_price] to [new_price] [currency]. Your cart has been updated with the new price.]]></item>
+        <item lang="ro" id="sphinx_holidays.price_changed_warning"><![CDATA[Prețul pentru "[hotel]" s-a modificat de la [old_price] la [new_price] [currency]. Coșul a fost actualizat cu noul preț.]]></item>
+        <item lang="en" id="sphinx_holidays.rate_limit_exceeded"><![CDATA[Too many booking requests. Please try again later.]]></item>
+        <item lang="ro" id="sphinx_holidays.rate_limit_exceeded"><![CDATA[Prea multe cereri de rezervare. Vă rugăm să încercați din nou mai târziu.]]></item>
+        <item lang="en" id="sphinx_holidays.invalid_booking_data"><![CDATA[Invalid booking data. Please check your input and try again.]]></item>
+        <item lang="ro" id="sphinx_holidays.invalid_booking_data"><![CDATA[Date de rezervare invalide. Verificați datele introduse și încercați din nou.]]></item>
+        <item lang="en" id="sphinx_holidays.duplicate_booking"><![CDATA[A booking for this offer is already pending. Please check your cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.duplicate_booking"><![CDATA[O rezervare pentru această ofertă este deja în așteptare. Verificați coșul dumneavoastră.]]></item>
+        <item lang="en" id="sphinx_holidays.enable_alternative_dates"><![CDATA[Suggest alternative dates when no results found]]></item>
+        <item lang="ro" id="sphinx_holidays.enable_alternative_dates"><![CDATA[Sugerează date alternative când nu sunt rezultate]]></item>
+        <item lang="en" id="sphinx_holidays.alternative_dates_title"><![CDATA[Availability found on nearby dates:]]></item>
+        <item lang="ro" id="sphinx_holidays.alternative_dates_title"><![CDATA[Disponibilitate găsită pe date apropiate:]]></item>
+        <item lang="en" id="sphinx_holidays.results_found"><![CDATA[results]]></item>
+        <item lang="ro" id="sphinx_holidays.results_found"><![CDATA[rezultate]]></item>
+        <item lang="en" id="sphinx_holidays.loading_deals"><![CDATA[Loading deals...]]></item>
+        <item lang="ro" id="sphinx_holidays.loading_deals"><![CDATA[Se încarcă ofertele...]]></item>
+        <item lang="en" id="sphinx_holidays.no_deals_available"><![CDATA[No deals available at this time.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_deals_available"><![CDATA[Nu sunt oferte disponibile momentan.]]></item>
         <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
@@ -572,5 +678,95 @@
         <item lang="ro" id="sphinx_holidays.sync_mode_full"><![CDATA[Sincronizare completă]]></item>
         <item lang="en" id="sphinx_holidays.cached_result"><![CDATA[Cached result]]></item>
         <item lang="ro" id="sphinx_holidays.cached_result"><![CDATA[Rezultat din cache]]></item>
+
+        <!-- Booking failure notifications -->
+        <item lang="en" id="sphinx_holidays.booking_api_failed"><![CDATA[Sphinx booking failed for hotel "[hotel]" in order #[order_id]. Please verify and resubmit.]]></item>
+        <item lang="ro" id="sphinx_holidays.booking_api_failed"><![CDATA[Rezervarea Sphinx a eșuat pentru hotelul „[hotel]" în comanda #[order_id]. Verificați și retrimiteți.]]></item>
+        <item lang="en" id="sphinx_holidays.offer_removed_from_order"><![CDATA[The Sphinx offer for "[hotel]" is no longer available and has been removed from your order.]]></item>
+        <item lang="ro" id="sphinx_holidays.offer_removed_from_order"><![CDATA[Oferta Sphinx pentru „[hotel]" nu mai este disponibilă și a fost eliminată din comanda dvs.]]></item>
+        <item lang="en" id="sphinx_holidays.all_offers_unavailable"><![CDATA[All hotel offers in your cart are no longer available. Please search again.]]></item>
+        <item lang="ro" id="sphinx_holidays.all_offers_unavailable"><![CDATA[Toate ofertele de hotel din coș nu mai sunt disponibile. Vă rugăm căutați din nou.]]></item>
+
+        <!-- Circuit Tours -->
+        <item lang="en" id="sphinx_holidays.circuit_search_title"><![CDATA[Circuit Tours]]></item>
+        <item lang="ro" id="sphinx_holidays.circuit_search_title"><![CDATA[Circuite Turistice]]></item>
+        <item lang="en" id="sphinx_holidays.circuits_found"><![CDATA[[count] circuits found]]></item>
+        <item lang="ro" id="sphinx_holidays.circuits_found"><![CDATA[[count] circuite găsite]]></item>
+        <item lang="en" id="sphinx_holidays.no_circuits_found"><![CDATA[No circuits found. Please try different filters.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_circuits_found"><![CDATA[Nu s-au găsit circuite. Încercați alte filtre.]]></item>
+        <item lang="en" id="sphinx_holidays.departure_from"><![CDATA[Departure from]]></item>
+        <item lang="ro" id="sphinx_holidays.departure_from"><![CDATA[Plecare din]]></item>
+        <item lang="en" id="sphinx_holidays.get_quote"><![CDATA[Get Quote]]></item>
+        <item lang="ro" id="sphinx_holidays.get_quote"><![CDATA[Solicită Ofertă]]></item>
+        <item lang="en" id="sphinx_holidays.circuit_booking_title"><![CDATA[Circuit Booking]]></item>
+        <item lang="ro" id="sphinx_holidays.circuit_booking_title"><![CDATA[Rezervare Circuit]]></item>
+        <item lang="en" id="sphinx_holidays.circuit_added_to_cart"><![CDATA[Circuit booking added to cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.circuit_added_to_cart"><![CDATA[Rezervarea circuitului a fost adăugată în coș.]]></item>
+        <item lang="en" id="sphinx_holidays.additional_services"><![CDATA[Additional Services]]></item>
+        <item lang="ro" id="sphinx_holidays.additional_services"><![CDATA[Servicii Suplimentare]]></item>
+        <item lang="en" id="sphinx_holidays.mandatory"><![CDATA[mandatory]]></item>
+        <item lang="ro" id="sphinx_holidays.mandatory"><![CDATA[obligatoriu]]></item>
+        <item lang="en" id="sphinx_holidays.flight_info"><![CDATA[Flight Information]]></item>
+        <item lang="ro" id="sphinx_holidays.flight_info"><![CDATA[Informații Zbor]]></item>
+        <item lang="en" id="sphinx_holidays.outbound"><![CDATA[Outbound]]></item>
+        <item lang="ro" id="sphinx_holidays.outbound"><![CDATA[Tur]]></item>
+        <item lang="en" id="sphinx_holidays.return"><![CDATA[Return]]></item>
+        <item lang="ro" id="sphinx_holidays.return"><![CDATA[Retur]]></item>
+        <item lang="en" id="sphinx_holidays.total_price"><![CDATA[Total price]]></item>
+        <item lang="ro" id="sphinx_holidays.total_price"><![CDATA[Preț total]]></item>
+        <item lang="en" id="sphinx_holidays.per_person"><![CDATA[per person]]></item>
+        <item lang="ro" id="sphinx_holidays.per_person"><![CDATA[per persoană]]></item>
+        <item lang="en" id="sphinx_holidays.date"><![CDATA[Date]]></item>
+        <item lang="ro" id="sphinx_holidays.date"><![CDATA[Data]]></item>
+        <item lang="en" id="sphinx_holidays.transport"><![CDATA[Transport]]></item>
+        <item lang="ro" id="sphinx_holidays.transport"><![CDATA[Transport]]></item>
+        <item lang="en" id="sphinx_holidays.participants"><![CDATA[Participants]]></item>
+        <item lang="ro" id="sphinx_holidays.participants"><![CDATA[Participanți]]></item>
+        <item lang="en" id="sphinx_holidays.participant_details"><![CDATA[Participant Details]]></item>
+        <item lang="ro" id="sphinx_holidays.participant_details"><![CDATA[Detalii Participanți]]></item>
+        <item lang="en" id="sphinx_holidays.from"><![CDATA[from]]></item>
+        <item lang="ro" id="sphinx_holidays.from"><![CDATA[de la]]></item>
+        <item lang="en" id="sphinx_holidays.hours"><![CDATA[hours]]></item>
+        <item lang="ro" id="sphinx_holidays.hours"><![CDATA[ore]]></item>
+        <item lang="en" id="sphinx_holidays.next_dates"><![CDATA[Next dates]]></item>
+        <item lang="ro" id="sphinx_holidays.next_dates"><![CDATA[Următoarele date]]></item>
+        <item lang="en" id="sphinx_holidays.add_to_cart_btn"><![CDATA[Add to Cart]]></item>
+        <item lang="ro" id="sphinx_holidays.add_to_cart_btn"><![CDATA[Adaugă în Coș]]></item>
+
+        <!-- Experiences & Activities -->
+        <item lang="en" id="sphinx_holidays.experience_search_title"><![CDATA[Experiences & Activities]]></item>
+        <item lang="ro" id="sphinx_holidays.experience_search_title"><![CDATA[Experiențe & Activități]]></item>
+        <item lang="en" id="sphinx_holidays.experiences_found"><![CDATA[[count] experiences found]]></item>
+        <item lang="ro" id="sphinx_holidays.experiences_found"><![CDATA[[count] experiențe găsite]]></item>
+        <item lang="en" id="sphinx_holidays.no_experiences_found"><![CDATA[No experiences found. Please try different filters.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_experiences_found"><![CDATA[Nu s-au găsit experiențe. Încercați alte filtre.]]></item>
+        <item lang="en" id="sphinx_holidays.experience_booking_title"><![CDATA[Experience Booking]]></item>
+        <item lang="ro" id="sphinx_holidays.experience_booking_title"><![CDATA[Rezervare Experiență]]></item>
+        <item lang="en" id="sphinx_holidays.experience_added_to_cart"><![CDATA[Experience booking added to cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.experience_added_to_cart"><![CDATA[Rezervarea experienței a fost adăugată în coș.]]></item>
+
+        <!-- Packages -->
+        <item lang="en" id="sphinx_holidays.package_search_title"><![CDATA[Package Search Results]]></item>
+        <item lang="ro" id="sphinx_holidays.package_search_title"><![CDATA[Rezultate Căutare Pachete]]></item>
+        <item lang="en" id="sphinx_holidays.packages_found"><![CDATA[[count] packages found]]></item>
+        <item lang="ro" id="sphinx_holidays.packages_found"><![CDATA[[count] pachete găsite]]></item>
+        <item lang="en" id="sphinx_holidays.no_packages_found"><![CDATA[No packages found for your search criteria. Please try different dates or destination.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_packages_found"><![CDATA[Nu s-au găsit pachete. Încercați alte date sau destinație.]]></item>
+        <item lang="en" id="sphinx_holidays.package_booking_title"><![CDATA[Package Booking]]></item>
+        <item lang="ro" id="sphinx_holidays.package_booking_title"><![CDATA[Rezervare Pachet]]></item>
+        <item lang="en" id="sphinx_holidays.package_added_to_cart"><![CDATA[Package booking added to cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.package_added_to_cart"><![CDATA[Rezervarea pachetului a fost adăugată în coș.]]></item>
+        <item lang="en" id="sphinx_holidays.check_availability"><![CDATA[Check Availability]]></item>
+        <item lang="ro" id="sphinx_holidays.check_availability"><![CDATA[Verifică Disponibilitatea]]></item>
+        <item lang="en" id="sphinx_holidays.instant_confirmation"><![CDATA[Instant confirmation]]></item>
+        <item lang="ro" id="sphinx_holidays.instant_confirmation"><![CDATA[Confirmare instantanee]]></item>
+        <item lang="en" id="sphinx_holidays.bus_transport"><![CDATA[Bus transport]]></item>
+        <item lang="ro" id="sphinx_holidays.bus_transport"><![CDATA[Transport autocar]]></item>
+        <item lang="en" id="sphinx_holidays.transfers"><![CDATA[Transfers]]></item>
+        <item lang="ro" id="sphinx_holidays.transfers"><![CDATA[Transferuri]]></item>
+        <item lang="en" id="sphinx_holidays.included"><![CDATA[Included]]></item>
+        <item lang="ro" id="sphinx_holidays.included"><![CDATA[Incluse]]></item>
+        <item lang="en" id="sphinx_holidays.not_included"><![CDATA[Not Included]]></item>
+        <item lang="ro" id="sphinx_holidays.not_included"><![CDATA[Neincluse]]></item>
     </language_variables>
 </addon>

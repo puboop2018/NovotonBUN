@@ -234,6 +234,29 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, with_amounts: {$payment_amounts}, cancellation: {$cancel_set}");
         }
     }
+    unset($product);
+
+    // ── Admin panel notification for failed bookings ──
+    // When an admin views an order with failed Novoton bookings, show a warning
+    // notification banner so they know immediate attention is required.
+    if (defined('AREA') && AREA === 'A' && !empty($order['order_id'])) {
+        $repo = Container::getInstance()->bookingRepository();
+        $bookings = $repo->findByOrderId((int) $order['order_id']);
+
+        foreach ($bookings as $booking) {
+            if (($booking['status'] ?? '') === TravelConstants::STATUS_FAILED) {
+                $hotelName = $booking['hotel_name'] ?? '';
+                fn_set_notification('W', __('warning'),
+                    __('novoton_holidays.booking_api_failed', [
+                        '[hotel]' => $hotelName,
+                        '[order_id]' => $order['order_id'],
+                        '[default]' => 'Novoton booking failed for hotel "' . $hotelName . '" in order #' . $order['order_id'] . '. The API submission did not succeed. Please check and resubmit manually.',
+                    ])
+                );
+                break; // One notification per order is enough
+            }
+        }
+    }
 }
 
 // ============================================================================

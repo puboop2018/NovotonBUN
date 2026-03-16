@@ -44,4 +44,12 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'Sphinx / Christian Tour',
         new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
     );
+
+    // Register admin provider for unified booking management
+    if (class_exists(\Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface::class)) {
+        \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::registerAdminProvider(
+            'sphinx',
+            new \Tygh\Addons\SphinxHolidays\Services\BookingAdminProvider()
+        );
+    }
 }

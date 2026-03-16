@@ -1,90 +1,284 @@
+{*
+ * Unified Travel Bookings Management Page
+ * Shows bookings from ALL providers (Novoton, Sphinx, etc.)
+ *}
+
 {capture name="mainbox"}
 
-{include file="common/pagination.tpl" save_current_url=true}
+<div class="travel-bookings-manage">
+    {* Search/Filter Form *}
+    <form action="{""|fn_url}" method="get" class="form-horizontal form-inline search-form">
+        <input type="hidden" name="dispatch" value="travel_bookings.manage" />
 
-{* Search/filter form *}
-<form action="{""|fn_url}" method="get" name="travel_bookings_search_form">
-    <input type="hidden" name="dispatch" value="travel_bookings.manage" />
+        <div class="control-group">
+            <label class="control-label" for="search_provider">{__("provider")}:</label>
+            <div class="controls">
+                <select name="provider" id="search_provider">
+                    <option value="">{__("all")}</option>
+                    {foreach from=$providers key=code item=provider}
+                        <option value="{$code}" {if $search.provider == $code}selected{/if}>{$provider.label|default:$provider.name|escape:html}</option>
+                    {/foreach}
+                </select>
+            </div>
+        </div>
 
-    <div class="sidebar-row">
-        <h6>{__("search")}</h6>
-        <div class="sidebar-field">
-            <label>{__("provider")}:</label>
-            <select name="provider">
-                <option value="">--</option>
-                {foreach from=$providers key=code item=provider}
-                    <option value="{$code}" {if $search.provider == $code}selected{/if}>{$provider.name|escape:html}</option>
-                {/foreach}
-            </select>
+        <div class="control-group">
+            <label class="control-label" for="search_status">{__("status")}:</label>
+            <div class="controls">
+                <select name="status" id="search_status">
+                    <option value="">{__("all")}</option>
+                    {foreach from=$statuses item=st}
+                        <option value="{$st}" {if $search.status == $st}selected{/if}>{$st|capitalize}</option>
+                    {/foreach}
+                </select>
+            </div>
         </div>
-        <div class="sidebar-field">
-            <label>{__("status")}:</label>
-            <select name="status">
-                <option value="">--</option>
-                <option value="confirmed" {if $search.status == "confirmed"}selected{/if}>{__("confirmed")}</option>
-                <option value="pending" {if $search.status == "pending"}selected{/if}>{__("pending")}</option>
-                <option value="cancelled" {if $search.status == "cancelled"}selected{/if}>{__("cancelled")}</option>
-            </select>
-        </div>
-        <div class="sidebar-field">
-            <label>{__("order_id")}:</label>
-            <input type="text" name="order_id" value="{$search.order_id}" size="10" />
-        </div>
-        <div class="sidebar-field">
-            <label>{__("hotel_name")}:</label>
-            <input type="text" name="hotel_name" value="{$search.hotel_name|escape:html}" size="20" />
-        </div>
-        <div class="sidebar-field">
-            <label>{__("date_from")}:</label>
-            <input type="text" name="date_from" value="{$search.date_from}" class="cm-calendar" size="10" />
-        </div>
-        <div class="sidebar-field">
-            <label>{__("date_to")}:</label>
-            <input type="text" name="date_to" value="{$search.date_to}" class="cm-calendar" size="10" />
-        </div>
-        <div class="sidebar-field">
-            <input type="submit" class="btn" value="{__("search")}" />
-        </div>
-    </div>
-</form>
 
-{if $bookings}
-<table class="table table-middle">
-    <thead>
-        <tr>
-            <th>{__("id")}</th>
-            <th>{__("order_id")}</th>
-            <th>{__("provider")}</th>
-            <th>{__("hotel_name")}</th>
-            <th>{__("check_in")}</th>
-            <th>{__("check_out")}</th>
-            <th>{__("status")}</th>
-            <th>{__("created_at")}</th>
-            <th>&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
-        {foreach from=$bookings item=booking}
-        <tr>
-            <td>{$booking.booking_id}</td>
-            <td><a href="{"orders.details?order_id=`$booking.order_id`"|fn_url}">{$booking.order_id}</a></td>
-            <td>{$booking.provider|escape:html}</td>
-            <td>{$booking.hotel_name|escape:html}</td>
-            <td>{$booking.check_in}</td>
-            <td>{$booking.check_out}</td>
-            <td>{$booking.status|escape:html}</td>
-            <td>{$booking.created_at}</td>
-            <td><a href="{"travel_bookings.view?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-primary btn-micro">{__("view")}</a></td>
-        </tr>
+        <div class="control-group">
+            <label class="control-label" for="search_order_id">{__("order_id")}:</label>
+            <div class="controls">
+                <input type="text" name="order_id" id="search_order_id" value="{$search.order_id}" size="10" />
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="search_hotel_name">{__("hotel_name")}:</label>
+            <div class="controls">
+                <input type="text" name="hotel_name" id="search_hotel_name" value="{$search.hotel_name|escape:html}" size="20" />
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{__("travel_core.dates")}:</label>
+            <div class="controls">
+                {include file="common/calendar.tpl" date_id="date_from" date_name="date_from" date_val=$search.date_from extra="placeholder='From'"}
+                {include file="common/calendar.tpl" date_id="date_to" date_name="date_to" date_val=$search.date_to extra="placeholder='To'"}
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="search_sort_by">{__("sort_by")}:</label>
+            <div class="controls">
+                <select name="sort_by" id="search_sort_by">
+                    <option value="created_at" {if $search.sort_by == 'created_at'}selected{/if}>{__("date")}</option>
+                    <option value="order_id" {if $search.sort_by == 'order_id'}selected{/if}>{__("order_id")}</option>
+                    <option value="check_in" {if $search.sort_by == 'check_in'}selected{/if}>{__("travel_core.check_in")}</option>
+                    <option value="total_price" {if $search.sort_by == 'total_price'}selected{/if}>{__("price")}</option>
+                </select>
+                <select name="sort_order">
+                    <option value="desc" {if $search.sort_order == 'desc'}selected{/if}>v {__("descending")}</option>
+                    <option value="asc" {if $search.sort_order == 'asc'}selected{/if}>^ {__("ascending")}</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{__("search")}</button>
+    </form>
+
+    {* Bulk Actions *}
+    {if $providers}
+    <div style="margin-bottom: 15px;">
+        {foreach from=$providers key=code item=provider}
+        <form action="{"travel_bookings.bulk_check_status"|fn_url}" method="post" class="form-inline" style="display: inline-block; margin-right: 10px;">
+            <input type="hidden" name="security_hash" value="{$security_hash}">
+            <input type="hidden" name="provider" value="{$code}" />
+            <button type="submit" class="btn btn-default btn-sm">
+                <i class="icon-refresh"></i> Check All {$provider.label|default:$provider.name|escape:html} Statuses
+            </button>
+        </form>
         {/foreach}
-    </tbody>
-</table>
-{else}
-    <p class="no-items">{__("no_data")}</p>
-{/if}
+    </div>
+    {/if}
 
-{include file="common/pagination.tpl"}
+    {* Bookings Table *}
+    {if $bookings}
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th width="80">
+                    <a href="{"travel_bookings.manage?sort_by=order_id&sort_order=`$sort_order_toggle`"|fn_url}">
+                        {__("order_id")}
+                        {if $search.sort_by == 'order_id'}
+                            {if $search.sort_order == 'asc'}^{else}v{/if}
+                        {/if}
+                    </a>
+                </th>
+                <th width="80">{__("provider")}</th>
+                <th>{__("hotel")}</th>
+                <th>{__("travel_core.room")}</th>
+                <th>
+                    <a href="{"travel_bookings.manage?sort_by=check_in&sort_order=`$sort_order_toggle`"|fn_url}">
+                        {__("travel_core.check_in")}
+                        {if $search.sort_by == 'check_in'}
+                            {if $search.sort_order == 'asc'}^{else}v{/if}
+                        {/if}
+                    </a>
+                </th>
+                <th>{__("travel_core.nights")}</th>
+                <th>{__("travel_core.guests")}</th>
+                <th>
+                    <a href="{"travel_bookings.manage?sort_by=total_price&sort_order=`$sort_order_toggle`"|fn_url}">
+                        {__("price")}
+                        {if $search.sort_by == 'total_price'}
+                            {if $search.sort_order == 'asc'}^{else}v{/if}
+                        {/if}
+                    </a>
+                </th>
+                <th width="100">Provider Ref</th>
+                <th width="80">{__("status")}</th>
+                <th width="100">{__("tools")}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {foreach from=$bookings item=booking}
+            <tr>
+                {* Order ID *}
+                <td>
+                    {if $booking.order_id > 0}
+                    <a href="{"orders.details?order_id=`$booking.order_id`"|fn_url}">{$booking.order_id}</a>
+                    {else}
+                    <span class="muted">-</span>
+                    {/if}
+                </td>
+
+                {* Provider Badge *}
+                <td>
+                    {if $booking.provider == 'novoton'}
+                        <span class="label label-info">Novoton</span>
+                    {elseif $booking.provider == 'sphinx'}
+                        <span class="label label-success">Sphinx</span>
+                    {else}
+                        <span class="label">{$booking.provider|escape:html}</span>
+                    {/if}
+                </td>
+
+                {* Hotel *}
+                <td>
+                    {if $booking.hotel_name}
+                        <strong>{$booking.hotel_name|escape:html}</strong>
+                    {else}
+                        <strong>Hotel #{$booking.hotel_id|escape:html}</strong>
+                    {/if}
+                    {if $booking.destination}
+                        <br><small class="muted">{$booking.destination|escape:html}</small>
+                    {/if}
+                </td>
+
+                {* Room / Board *}
+                <td>
+                    {if $booking.room_name}
+                        {$booking.room_name|escape:html}
+                    {else}
+                        <span class="muted">-</span>
+                    {/if}
+                    {if $booking.board_code}
+                        <br><small class="muted">{$booking.board_code|escape:html}</small>
+                    {/if}
+                </td>
+
+                {* Dates *}
+                <td>
+                    {if $booking.check_in}
+                        {$booking.check_in|date_format:"%d.%m.%Y"}
+                        <br><small class="muted">→ {$booking.check_out|date_format:"%d.%m.%Y"}</small>
+                    {/if}
+                </td>
+
+                {* Nights *}
+                <td>{$booking.nights|default:'-'}</td>
+
+                {* Guests *}
+                <td>
+                    {$booking.adults|default:0} A{if $booking.children > 0} + {$booking.children} C{/if}
+                </td>
+
+                {* Price *}
+                <td>
+                    {if $booking.total_price > 0}
+                        <strong>{$booking.total_price|number_format:2} {$booking.currency|default:'EUR'}</strong>
+                    {else}
+                        <span class="muted">-</span>
+                    {/if}
+                </td>
+
+                {* Provider Reference *}
+                <td>
+                    {if $booking.provider_display.provider_ref}
+                        <small>{$booking.provider_display.provider_ref|escape:html}</small>
+                    {elseif $booking.provider_booking_id}
+                        <small class="muted">#{$booking.provider_booking_id|escape:html}</small>
+                    {else}
+                        <span class="muted">-</span>
+                    {/if}
+                </td>
+
+                {* Status *}
+                <td>
+                    {* Use provider-specific status label if available *}
+                    {if $booking.provider_display.status_label}
+                        {$booking.provider_display.status_label nofilter}
+                    {elseif $booking.status == 'confirmed'}
+                        <span class="label label-success">Confirmed</span>
+                    {elseif $booking.status == 'pending'}
+                        <span class="label label-warning">Pending</span>
+                    {elseif $booking.status == 'cancelled'}
+                        <span class="label label-danger">Cancelled</span>
+                    {elseif $booking.status == 'failed'}
+                        <span class="label label-danger">Failed</span>
+                    {else}
+                        <span class="label">{$booking.status|escape:html}</span>
+                    {/if}
+                </td>
+
+                {* Tools *}
+                <td>
+                    <div class="btn-group">
+                        <a href="{"travel_bookings.view?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-xs btn-default" title="View">
+                            <i class="icon-eye-open"></i>
+                        </a>
+                        {* Provider-specific action buttons *}
+                        {if $booking.provider_actions}
+                            {foreach from=$booking.provider_actions item=action}
+                                {if $action.method == 'POST'}
+                                <form action="{$action.url|fn_url}" method="post" style="display: inline;">
+                                    <input type="hidden" name="security_hash" value="{$security_hash}">
+                                    {if $action.booking_id}
+                                    <input type="hidden" name="booking_id" value="{$action.booking_id}" />
+                                    {/if}
+                                    <button type="submit" class="btn btn-xs {$action.css_class|default:'btn-default'}" title="{$action.label|escape:html}">
+                                        <i class="{$action.icon|default:'icon-cog'}"></i>
+                                    </button>
+                                </form>
+                                {else}
+                                <a href="{$action.url|fn_url}" class="btn btn-xs {$action.css_class|default:'btn-default'}" title="{$action.label|escape:html}">
+                                    <i class="{$action.icon|default:'icon-cog'}"></i>
+                                </a>
+                                {/if}
+                            {/foreach}
+                        {/if}
+                        {* Link to provider-specific view *}
+                        {if $booking.provider_view_url}
+                        <a href="{$booking.provider_view_url|fn_url}" class="btn btn-xs btn-default" title="View in {$booking.provider|capitalize}">
+                            <i class="icon-share-alt"></i>
+                        </a>
+                        {/if}
+                    </div>
+                </td>
+            </tr>
+            {/foreach}
+        </tbody>
+    </table>
+
+    {include file="common/pagination.tpl"}
+
+    {else}
+    <p class="no-items">{__("no_data")}</p>
+    {/if}
+</div>
 
 {/capture}
 
-{include file="common/mainbox.tpl" title="{__("travel_core.complete_booking")}" content=$smarty.capture.mainbox}
+{include file="common/mainbox.tpl"
+    title="{__('travel_core.manage_bookings')}"
+    content=$smarty.capture.mainbox
+}

@@ -123,14 +123,15 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         }
     }
     
-    db_query(
-        "UPDATE ?:novoton_bookings SET 
-         guest_name = ?s, holder_name = ?s, guest_email = ?s, guest_phone = ?s,
-         guests_data = ?s, api_request = ?s
-         WHERE booking_id = ?i",
-        $guest_list, $holder_name, $contact['email'] ?? '', $contact['phone'] ?? '',
-        GuestDataNormalizer::toJson($guests_data), json_encode($api_request), $booking_id
-    );
+    // Route through repository to sync travel_bookings
+    _nvt_booking_repo()->update($booking_id, [
+        'guest_name' => $guest_list,
+        'holder_name' => $holder_name,
+        'guest_email' => $contact['email'] ?? '',
+        'guest_phone' => $contact['phone'] ?? '',
+        'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
+        'api_request' => json_encode($api_request),
+    ]);
 
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {
@@ -138,7 +139,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         if (isset($cart['products'][$cart_id])) {
             $cart['products'][$cart_id]['extra']['guest_names'] = $guest_list;
             $cart['products'][$cart_id]['extra']['holder_name'] = $holder_name;
-            $cart['products'][$cart_id]['extra']['guests_data'] = GuestDataNormalizer::toJson($guests_data);
+            $cart['products'][$cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
             $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
             $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
             // Recalculate and save cart

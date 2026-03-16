@@ -1,5 +1,56 @@
 # Novoton Holidays - Changelog
 
+## A96 — Refactor: CS-Cart Special CSS Classes in Admin Templates
+
+- **REFACTORED:** Backend admin templates to use CS-Cart special utility classes instead of inline styles
+- `center` class replaces `style="text-align: center;"` in stats cards (view_hotels_to_add.tpl)
+- `no-margin` class replaces `style="margin: 0;"` on headings/paragraphs (view_hotels_to_add.tpl, alternatives.tpl)
+- `hand` class replaces `style="cursor: pointer;"` on checkbox label (manage.tpl)
+- `checkbox` class added for proper checkbox alignment in forms (manage.tpl)
+- **SCOPE:** Backend admin templates only — frontend theme templates intentionally unchanged (they follow theme-specific CSS, not admin utility classes)
+
+### Files Changed
+
+- `design/backend/templates/.../views/novoton_holidays/view_hotels_to_add.tpl` — `center`, `no-margin` (8 edits)
+- `design/backend/templates/.../views/novoton_bookings/alternatives.tpl` — `no-margin` (3 edits)
+- `design/backend/templates/.../views/novoton_bookings/manage.tpl` — `hand`, `checkbox` (2 edits)
+
+---
+
+## A95 — Fix: Cross-Provider Order Placement + Admin Failure Notifications
+
+### Problem
+
+Mixed-provider orders (Novoton + Sphinx hotels in one cart) had two critical issues:
+
+1. **Sphinx `pre_place_order` blocked entire order:** If any Sphinx offer became unavailable, `$allow = false` was set, blocking valid Novoton bookings too
+2. **Failed booking status lost after ROLLBACK:** `BookingSubmissionService` set `status = 'failed'` inside a DB transaction, but the outer catch blocks did `ROLLBACK` — undoing the failed status. Bookings silently reverted to `pending` on API failure.
+
+### Fix 1: Novoton BookingSubmissionService — failed status survives ROLLBACK
+
+- **FIXED:** All 3 catch blocks (`ApiException`, `NovotonException`, `\Throwable`) now re-apply `STATUS_FAILED` + `order_id` + error notes **after** the `ROLLBACK`, so the failure status persists in DB
+- The `bookingRepo->update()` call outside the transaction ensures both `novoton_bookings` and `travel_bookings` (via dual-write) record the failure
+
+### Fix 2: Admin panel notification via `fn_set_notification('W', ...)`
+
+- **NEW:** `fn_novoton_holidays_get_order_info()` now checks for failed bookings when `AREA === 'A'` (admin panel)
+- Queries `novoton_bookings` by `order_id`, and if any booking has `status = 'failed'`, shows an **orange warning notification** via `fn_set_notification('W', __('warning'), ...)`
+- Notification displays hotel name and order ID, appears every time admin opens the order
+- Guarded by `AREA === 'A'` — customers never see this notification
+
+### Language Variables
+
+- **NEW:** `novoton_holidays.booking_api_failed` (en + ro) — admin warning message for failed API submissions
+
+### Files Changed
+
+- `hooks/order_hooks.php` — admin notification in `fn_novoton_holidays_get_order_info()`
+- `src/Services/BookingSubmissionService.php` — re-apply failed status after ROLLBACK in all catch blocks
+- `var/langs/en/addons/novoton_holidays.po` — new language variable
+- `var/langs/ro/addons/novoton_holidays.po` — new language variable (Romanian)
+
+---
+
 ## A94 — Fix: Child Pricing Discrepancy (Exact Age Matching + Descending Sort)
 
 ### Bug Fix: 2nd+ child priced at wrong percentage (hotel 476 FAM 3+2 DELUXE)

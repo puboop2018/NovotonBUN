@@ -195,15 +195,50 @@ function fn_sphinx_holidays_seed_aliases(): void
 /**
  * Hook: pre_place_order
  * Re-verify Sphinx offer prices before order is placed.
+ *
+ * If a Sphinx offer is no longer available, the item is removed from the cart
+ * instead of blocking the entire order. This allows mixed-provider orders
+ * (e.g. Novoton + Sphinx) to proceed with the available items.
+ *
+ * The order is only blocked if ALL remaining cart items become unavailable
+ * (i.e. the cart would be empty after removals).
  */
 function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
 {
     $verifier = \Tygh\Addons\SphinxHolidays\Services\Container::getPreOrderPriceVerifier();
     $result = $verifier->verify($cart);
 
-    if (!$result['allow']) {
-        $allow = false;
-        return;
+    // Remove unavailable Sphinx offers from cart instead of blocking the entire order
+    if (!empty($result['unavailable'])) {
+        foreach ($result['unavailable'] as $cartId => $info) {
+            $hotelName = $info['hotel_name'] ?: $info['offer_id'];
+
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.offer_removed_from_order', [
+                    '[hotel]' => $hotelName,
+                    '[default]' => 'The Sphinx offer for "' . $hotelName . '" is no longer available and has been removed from your order.',
+                ])
+            );
+
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx pre_place_order: removed unavailable item from cart',
+                'cart_id' => $cartId,
+                'hotel_name' => $hotelName,
+            ]);
+
+            unset($cart['products'][$cartId]);
+        }
+
+        // If the cart is now empty (all items were Sphinx and all unavailable), block the order
+        if (empty($cart['products'])) {
+            fn_set_notification('E', __('error'),
+                __('sphinx_holidays.all_offers_unavailable', [
+                    '[default]' => 'All hotel offers in your cart are no longer available. Please search again.',
+                ])
+            );
+            $allow = false;
+            return;
+        }
     }
 
     if (!empty($result['corrections'])) {
@@ -223,12 +258,17 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
 /**
  * Hook: place_order_post
  * After an order is placed, submit the booking to the Sphinx API.
+ *
+ * Status flow: pending → (API call) → confirmed on success, failed on error.
+ * On API failure: marks booking as STATUS_FAILED and logs the error.
  */
 function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth)
 {
     if (empty($order_id) || empty($cart['products'])) {
         return;
     }
+
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
 
     foreach ($cart['products'] as $cart_id => $product) {
         if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
@@ -238,18 +278,8 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         $booking_id = (int)$product['extra']['travel_booking_id'];
         $offer_id = $product['extra']['offer_id'] ?? '';
 
-        // Update sphinx_bookings with order_id
-        $confirmed = \Tygh\Addons\TravelCore\TravelConstants::STATUS_CONFIRMED;
-        db_query(
-            "UPDATE ?:sphinx_bookings SET order_id = ?i, status = ?s WHERE booking_id = ?i",
-            $order_id, $confirmed, $booking_id
-        );
-
-        // Update travel_bookings
-        db_query(
-            "UPDATE ?:travel_bookings SET order_id = ?i, status = ?s WHERE provider = 'sphinx' AND provider_booking_id = ?s",
-            $order_id, $confirmed, (string)$booking_id
-        );
+        // Link booking to order with PENDING status (not confirmed yet — API call hasn't happened)
+        $repo->linkToOrder($booking_id, $order_id, \Tygh\Addons\TravelCore\TravelConstants::STATUS_PENDING);
 
         // Submit booking to Sphinx API
         if (!empty($offer_id)) {
@@ -272,14 +302,24 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 ]);
 
                 if (!empty($bookResult['booking_reference'])) {
-                    db_query(
-                        "UPDATE ?:sphinx_bookings SET api_booking_ref = ?s, api_response = ?s WHERE booking_id = ?i",
+                    $repo->updateApiResponse(
+                        $booking_id,
                         $bookResult['booking_reference'],
-                        json_encode($bookResult),
-                        $booking_id
+                        json_encode($bookResult)
                     );
                 }
+
+                // API call succeeded — now set confirmed status
+                $repo->update($booking_id, [
+                    'status' => \Tygh\Addons\TravelCore\TravelConstants::STATUS_CONFIRMED,
+                ]);
+
             } catch (\Throwable $e) {
+                // Mark booking as failed in both sphinx_bookings and travel_bookings
+                $repo->update($booking_id, [
+                    'status' => \Tygh\Addons\TravelCore\TravelConstants::STATUS_FAILED,
+                ]);
+
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
                     'booking_id' => $booking_id,
@@ -357,24 +397,8 @@ function fn_sphinx_holidays_user_login_post($user_data, &$auth)
         return;
     }
 
-    db_query(
-        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
-        (int)$auth['user_id'], $session_id
-    );
-
-    // Update travel_bookings via provider_booking_id link
-    $sphinx_booking_ids = db_get_fields(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
-        $session_id, (int)$auth['user_id']
-    );
-    if (!empty($sphinx_booking_ids)) {
-        foreach ($sphinx_booking_ids as $bid) {
-            db_query(
-                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
-                (int)$auth['user_id'], (string)$bid
-            );
-        }
-    }
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $repo->linkToUserBySession((int)$auth['user_id'], $session_id);
 }
 
 /**
@@ -392,22 +416,38 @@ function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth)
         return;
     }
 
-    db_query(
-        "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
-        (int)$user_id, $session_id
-    );
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $repo->linkToUserBySession((int)$user_id, $session_id);
+}
 
-    // Update travel_bookings via provider_booking_id link
-    $sphinx_booking_ids = db_get_fields(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i AND order_id = 0",
-        $session_id, (int)$user_id
-    );
-    if (!empty($sphinx_booking_ids)) {
-        foreach ($sphinx_booking_ids as $bid) {
-            db_query(
-                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id = ?s AND (user_id IS NULL OR user_id = 0)",
-                (int)$user_id, (string)$bid
+/**
+ * Hook: get_order_info
+ * Admin panel notification for failed Sphinx bookings.
+ *
+ * When an admin views an order that contains failed Sphinx bookings,
+ * shows an orange warning notification via fn_set_notification('W', ...).
+ */
+function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
+{
+    // Only show notification in admin panel
+    if (!defined('AREA') || AREA !== 'A' || empty($order['order_id'])) {
+        return;
+    }
+
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $bookings = $repo->findByOrderId((int) $order['order_id']);
+
+    foreach ($bookings as $booking) {
+        if (($booking['status'] ?? '') === \Tygh\Addons\TravelCore\TravelConstants::STATUS_FAILED) {
+            $hotelName = $booking['hotel_name'] ?? '';
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.booking_api_failed', [
+                    '[hotel]' => $hotelName,
+                    '[order_id]' => $order['order_id'],
+                    '[default]' => 'Sphinx booking failed for hotel "' . $hotelName . '" in order #' . $order['order_id'] . '. Please verify and resubmit.',
+                ])
             );
+            break; // One notification per order is enough
         }
     }
 }

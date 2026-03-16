@@ -12,7 +12,7 @@
     <div style="background: #dc3545; color: #fff; padding: 15px 20px; border-radius: 4px 4px 0 0;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h4 style="margin: 0;">Original Booking (Cancelled/Rejected)</h4>
+                <h4 class="no-margin">Original Booking (Cancelled/Rejected)</h4>
                 <p style="margin: 5px 0 0; opacity: 0.9;">
                     {$booking.hotel_name} | {$booking.room_id|replace:'%2b':'+'} | {$booking.board_id}
                 </p>
@@ -61,7 +61,7 @@
     {* Alternatives List *}
     {if $alternatives && count($alternatives) > 0}
     <div style="background: #003580; color: #fff; padding: 15px 20px; border-radius: 4px 4px 0 0;">
-        <h4 style="margin: 0;"><i class="icon-list-alt"></i> Alternative Hotels ({$alternatives|count})</h4>
+        <h4 class="no-margin"><i class="icon-list-alt"></i> Alternative Hotels ({$alternatives|count})</h4>
     </div>
     
     <table class="table table-striped" style="border: 1px solid #ddd; border-top: none;">
@@ -129,7 +129,7 @@
     </table>
     
     <div style="padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px;">
-        <p style="margin: 0; color: #666;">
+        <p class="no-margin" style="color: #666;">
             <i class="icon-info-sign"></i> 
             <strong>Note:</strong> Green highlighted rows are exact matches to the original request.
             Contact the customer to confirm an alternative before rebooking.

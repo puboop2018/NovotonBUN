@@ -120,7 +120,7 @@
                 UNIQUE KEY `uq_type_code` (`feature_type`, `canonical_code`),
                 KEY `idx_feature_type` (`feature_type`),
                 KEY `idx_cscart_variant` (`cscart_variant_id`)
-            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
         <!-- Per-API alias translations -->
@@ -133,7 +133,7 @@
                 `match_type` ENUM('exact','prefix','contains','regex') DEFAULT 'exact',
                 UNIQUE KEY `uq_source_value` (`api_source`, `api_value`),
                 KEY `idx_map` (`map_id`)
-            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
         <!-- Shared bookings table (provider-agnostic view) -->
@@ -162,7 +162,7 @@
                 `guests_json`       JSON         DEFAULT NULL COMMENT 'Structured guest data',
                 `created_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                KEY `idx_provider` (`provider`),
+                UNIQUE KEY `uq_provider_booking` (`provider`, `provider_booking_id`),
                 KEY `idx_order_id` (`order_id`),
                 KEY `idx_status` (`status`),
                 KEY `idx_check_in` (`check_in`)

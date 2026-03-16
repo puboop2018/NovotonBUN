@@ -18,10 +18,32 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\TravelConstants;
 
+    // --- Security: Rate limiting ---
+    $security = Container::getSecurityService();
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : session_id();
+    if (!$security->checkBookingRateLimit($rate_limit_id)) {
+        fn_log_event('general', 'runtime', ['message' => 'Sphinx add_to_cart: rate limit exceeded', 'identifier' => $rate_limit_id]);
+        fn_set_notification('E', __('error'), __('sphinx_holidays.rate_limit_exceeded', ['[default]' => 'Too many booking requests. Please try again later.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
     $bookingData = $_REQUEST;
     $offer_id = trim($bookingData['offer_id'] ?? '');
     $hotel_id = trim($bookingData['hotel_id'] ?? '');
     $product_id = (int)($bookingData['product_id'] ?? 0);
+
+    // --- Security: Validate booking data ---
+    $validation = $security->validateBookingData($bookingData);
+    if (!$validation['valid']) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx add_to_cart: booking validation failed',
+            'errors' => $validation['errors'],
+            'offer_id' => $bookingData['offer_id'] ?? '',
+        ]);
+        fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_booking_data', ['[default]' => 'Invalid booking data.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
 
     if (empty($offer_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
@@ -37,7 +59,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $verifyResult = null;
     }
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    // API verify returns {data: {must_verify, pricing: {selling_price, currency}, ...}}
+    $verifyData = $verifyResult['data'] ?? $verifyResult;
+
+    if (empty($verifyResult) || ($verifyData['must_verify'] ?? true)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
@@ -46,7 +71,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // Calculate final price with commission
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
-    $apiPrice = (float)($verifyResult['price'] ?? 0);
+    $apiPrice = (float)($verifyData['pricing']['selling_price'] ?? 0);
     $basePrice = $apiPrice;
 
     if ($commission > 0 && $apiPrice > 0) {
@@ -72,10 +97,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
-    // Parse guest data
-    $guests = is_array($bookingData['guests'] ?? null) ? $bookingData['guests'] : [];
+    // Parse guest data — sanitize via SecurityService
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
-    $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
+    $check_in = $verifyData['check_in'] ?? $bookingData['check_in'] ?? '';
     $parsed_guests = _sphinx_parse_and_validate_guests($guests, $check_in);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.booking_form?' . http_build_query([
@@ -95,15 +120,16 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
     $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : ($bookingData['children_ages'] ?? '');
 
-    // Extract offer details
-    $hotelName = $verifyResult['hotel_name'] ?? '';
-    $roomName = $verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '';
-    $boardName = $verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '';
-    $boardId = $verifyResult['board_code'] ?? $boardName;
-    $roomId = $verifyResult['room_code'] ?? $roomName;
-    $check_out = $verifyResult['check_out'] ?? $bookingData['check_out'] ?? '';
-    $adults = (int)($verifyResult['adults'] ?? $bookingData['adults'] ?? 2);
-    $children = (int)($verifyResult['children'] ?? $bookingData['children'] ?? 0);
+    // Extract offer details from verified API response
+    $hotelName = $verifyData['hotel_name'] ?? '';
+    $firstRoom = $verifyData['rooms'][0] ?? [];
+    $roomName = $firstRoom['name'] ?? $bookingData['room_name'] ?? '';
+    $roomId = (string)($firstRoom['code'] ?? $roomName);
+    $boardName = $verifyData['meal_type_name'] ?? $bookingData['board_name'] ?? '';
+    $boardId = $boardName;
+    $check_out = $verifyData['check_out'] ?? $bookingData['check_out'] ?? '';
+    $adults = (int)($firstRoom['adults'] ?? $bookingData['adults'] ?? 2);
+    $children = count($firstRoom['children_ages'] ?? []) ?: (int)($bookingData['children'] ?? 0);
     $nights = 0;
     if (!empty($check_in) && !empty($check_out)) {
         $nights = (int)round((strtotime($check_out) - strtotime($check_in)) / 86400);
@@ -115,17 +141,63 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $session_id = session_id();
     $currency = ConfigProvider::getDefaultCurrency();
 
-    $rooms_data = [[
-        'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
-        'board_id' => $boardId, 'board_name' => $boardName,
-        'adults' => $adults, 'children' => $children, 'childrenAges' => $all_child_ages,
-        'price' => $total_price,
-    ]];
+    // Parse rooms_data from form (multi-room support)
+    $num_rooms = max(1, (int)($bookingData['num_rooms'] ?? 1));
+    $incoming_rooms_data = [];
+    if (!empty($bookingData['rooms_data'])) {
+        $incoming_rooms_data = is_string($bookingData['rooms_data'])
+            ? json_decode($bookingData['rooms_data'], true)
+            : $bookingData['rooms_data'];
+        if (!is_array($incoming_rooms_data)) {
+            $incoming_rooms_data = [];
+        }
+    }
 
-    $existing_booking_id = (int)db_get_field(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE order_id = 0 AND hotel_id = ?s AND check_in = ?s AND check_out = ?s AND holder_name = ?s AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) LIMIT 1",
-        $hotel_id, $check_in, $check_out, $holder_name
+    if (!empty($incoming_rooms_data)) {
+        // Use rooms_data from form, aggregate adults/children across rooms
+        $rooms_data = $incoming_rooms_data;
+        $num_rooms = count($rooms_data);
+        $total_adults = 0;
+        $total_children = 0;
+        foreach ($rooms_data as &$rd) {
+            $rd['room_id'] = $rd['room_id'] ?? $roomId;
+            $rd['room_name'] = $rd['room_name'] ?? $roomName;
+            $rd['room_type_display'] = $rd['room_type_display'] ?? $rd['room_name'];
+            $rd['board_id'] = $rd['board_id'] ?? $boardId;
+            $rd['board_name'] = $rd['board_name'] ?? $boardName;
+            $total_adults += (int)($rd['adults'] ?? 0);
+            $total_children += (int)($rd['children'] ?? 0);
+        }
+        unset($rd);
+        // Update totals from rooms_data if multi-room
+        if ($num_rooms > 1) {
+            $adults = $total_adults;
+            $children = $total_children;
+        }
+    } else {
+        // Default single-room
+        $rooms_data = [[
+            'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
+            'board_id' => $boardId, 'board_name' => $boardName,
+            'adults' => $adults, 'children' => $children, 'childrenAges' => $all_child_ages,
+            'price' => $total_price,
+        ]];
+    }
+
+    // --- Security: Duplicate booking prevention ---
+    // Block if the same offer_id already has a pending order (prevents double-charges from form resubmission)
+    $pendingDuplicate = db_get_field(
+        "SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1",
+        $offer_id, TravelConstants::STATUS_PENDING
     );
+    if ($pendingDuplicate) {
+        fn_set_notification('W', __('warning'),
+            __('sphinx_holidays.duplicate_booking', ['[default]' => 'A booking for this offer is already pending.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
+
+    $repo = Container::getBookingRepository();
+    $existing_booking_id = $repo->findRecentUnassigned($hotel_id, $check_in, $check_out, $holder_name);
 
     $booking_record = [
         'order_id' => 0, 'user_id' => $user_id, 'session_id' => $session_id,
@@ -133,7 +205,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'offer_id' => $offer_id, 'room_id' => $roomId, 'room_type' => $roomName,
         'board_id' => $boardId, 'check_in' => $check_in, 'check_out' => $check_out,
         'nights' => $nights, 'adults' => $adults, 'children' => $children,
-        'children_ages' => $children_ages, 'num_rooms' => 1,
+        'children_ages' => $children_ages, 'num_rooms' => $num_rooms,
         'rooms_data' => json_encode($rooms_data),
         'guest_name' => $guest_list, 'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
@@ -143,34 +215,12 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'api_response' => json_encode($verifyResult),
     ];
 
-    if ($existing_booking_id > 0) {
-        db_query("UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i", $booking_record, $existing_booking_id);
+    if ($existing_booking_id !== null) {
+        $repo->update($existing_booking_id, $booking_record);
         $booking_id = $existing_booking_id;
     } else {
         $booking_record['created_at'] = date('Y-m-d H:i:s');
-        $booking_id = (int)db_query("INSERT INTO ?:sphinx_bookings ?e", $booking_record);
-    }
-
-    // Also create/update travel_bookings for shared admin display
-    $travel_record = [
-        'provider' => 'sphinx', 'provider_booking_id' => (string)$booking_id,
-        'order_id' => 0, 'user_id' => $user_id,
-        'hotel_id' => $hotel_id, 'hotel_name' => $hotelName,
-        'room_name' => $roomName, 'board_code' => $boardId,
-        'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
-        'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
-        'total_price' => $total_price, 'currency' => $currency,
-        'status' => TravelConstants::STATUS_PENDING,
-        'guests_json' => json_encode(['holder_name' => $holder_name, 'guests' => $guests_data]),
-    ];
-
-    $existing_travel_id = (int)db_get_field(
-        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s LIMIT 1", (string)$booking_id
-    );
-    if ($existing_travel_id > 0) {
-        db_query("UPDATE ?:travel_bookings SET ?u WHERE booking_id = ?i", $travel_record, $existing_travel_id);
-    } else {
-        db_query("INSERT INTO ?:travel_bookings ?e", $travel_record);
+        $booking_id = $repo->create($booking_record);
     }
 
     // Add to CS-Cart cart
@@ -181,12 +231,13 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $product_extra = [
         'travel_booking' => true, 'sphinx_booking' => true,
         'travel_booking_id' => $booking_id, 'travel_provider' => 'sphinx',
+        'booking_type' => 'hotel',
         'hotel_id' => $hotel_id, 'hotel_name' => $hotelName, 'offer_id' => $offer_id,
         'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
         'board_id' => $boardId, 'board_name' => $boardName,
         'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
-        'num_rooms' => 1, 'rooms_data' => $rooms_data,
+        'num_rooms' => $num_rooms, 'rooms_data' => $rooms_data,
         'guest_names' => $guest_list, 'holder_name' => $holder_name,
         'guests_data' => json_encode($guests_data),
         'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
