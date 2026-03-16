@@ -305,14 +305,8 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                         : $product['extra']['guests_data'];
                 }
 
-                $bookResult = $api->bookHotel([
-                    'offer_id' => $offer_id,
-                    'guests' => $guests_data ?: [],
-                    'contact' => [
-                        'email' => $product['extra']['contact_email'] ?? '',
-                        'phone' => $product['extra']['contact_phone'] ?? '',
-                    ],
-                ]);
+                $booking_type = $product['extra']['booking_type'] ?? 'hotel';
+                $bookResult = fn_sphinx_holidays_submit_booking($api, $booking_type, $offer_id, $product, $guests_data);
 
                 if (!empty($bookResult['booking_reference'])) {
                     $repo->updateApiResponse(
@@ -337,7 +331,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 $errorMsg = $e->getMessage();
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx bookHotel API call failed: ' . $errorMsg,
+                    'message' => "Sphinx book ({$booking_type}) API call failed: " . $errorMsg,
                     'booking_id' => $booking_id,
                     'order_id' => $order_id,
                 ]);
@@ -469,6 +463,167 @@ function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
             break; // One notification per order is enough
         }
     }
+}
+
+/**
+ * Submit a booking to the Sphinx API based on booking type.
+ *
+ * Dispatches to the correct API method (bookHotel, bookCircuit, bookExperience)
+ * and builds the appropriate payload shape for each type.
+ *
+ * @param \Tygh\Addons\SphinxHolidays\SphinxApi $api
+ * @param string $booking_type 'hotel', 'circuit', or 'experience'
+ * @param string $offer_id
+ * @param array $product Cart product data with extra fields
+ * @param array $guests_data Parsed guest data
+ * @return array API response
+ */
+function fn_sphinx_holidays_submit_booking($api, string $booking_type, string $offer_id, array $product, array $guests_data): array
+{
+    $extra = $product['extra'] ?? [];
+    $price = (float)($extra['total_price'] ?? $product['price'] ?? 0);
+    $currency = $extra['currency'] ?? 'EUR';
+    $order_id = $extra['order_id'] ?? '';
+
+    switch ($booking_type) {
+        case 'circuit':
+            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
+            $payload = [
+                'offer_id' => $offer_id,
+                'price' => $price,
+                'currency' => $currency,
+                'occupancy' => $occupancy,
+            ];
+            if (!empty($order_id)) {
+                $payload['reference_code'] = (string)$order_id;
+            }
+            $result = $api->bookCircuit($payload);
+            break;
+
+        case 'experience':
+            $occupancy = fn_sphinx_holidays_build_flat_occupancy($guests_data);
+            $payload = [
+                'offer_id' => $offer_id,
+                'price' => $price,
+                'currency' => $currency,
+                'occupancy' => $occupancy,
+            ];
+            if (!empty($order_id)) {
+                $payload['reference_code'] = (string)$order_id;
+            }
+            $result = $api->bookExperience($payload);
+            break;
+
+        default: // hotel
+            $result = $api->bookHotel([
+                'offer_id' => $offer_id,
+                'guests' => $guests_data ?: [],
+                'contact' => [
+                    'email' => $extra['contact_email'] ?? '',
+                    'phone' => $extra['contact_phone'] ?? '',
+                ],
+            ]);
+            break;
+    }
+
+    return $result ?: [];
+}
+
+/**
+ * Build room-based occupancy array for circuit/package bookings.
+ *
+ * API expects: [{room_code: string, guests: [{first_name, last_name, birth_date, gender}]}]
+ *
+ * @param array $guests_data Parsed guests grouped by room
+ * @param array $extra Cart extra data containing rooms_data
+ * @return array Occupancy array for API
+ */
+function fn_sphinx_holidays_build_room_occupancy(array $guests_data, array $extra): array
+{
+    $rooms_data = $extra['rooms_data'] ?? [];
+    if (is_string($rooms_data)) {
+        $rooms_data = json_decode($rooms_data, true) ?: [];
+    }
+
+    // If guests_data is already structured with room groupings
+    if (!empty($guests_data) && isset($guests_data[0]['room_code'])) {
+        return $guests_data;
+    }
+
+    // Build occupancy from rooms_data + flat guest list
+    $occupancy = [];
+    if (!empty($rooms_data)) {
+        foreach ($rooms_data as $idx => $room) {
+            $room_code = $room['room_id'] ?? $room['code'] ?? 'room-' . ($idx + 1);
+            $room_guests = [];
+
+            // Collect guests for this room from flat list
+            $room_adults = (int)($room['adults'] ?? 2);
+            $room_children = (int)($room['children'] ?? 0);
+            $total_in_room = $room_adults + $room_children;
+
+            $offset = 0;
+            for ($i = 0; $i < $idx; $i++) {
+                $offset += (int)($rooms_data[$i]['adults'] ?? 2) + (int)($rooms_data[$i]['children'] ?? 0);
+            }
+
+            for ($g = 0; $g < $total_in_room; $g++) {
+                $guest = $guests_data[$offset + $g] ?? null;
+                if ($guest) {
+                    $room_guests[] = [
+                        'first_name' => $guest['first_name'] ?? '',
+                        'last_name'  => $guest['last_name'] ?? '',
+                        'birth_date' => $guest['birth_date'] ?? '',
+                        'gender'     => $guest['gender'] ?? 'm',
+                    ];
+                }
+            }
+
+            $occupancy[] = [
+                'room_code' => $room_code,
+                'guests'    => $room_guests,
+            ];
+        }
+    } elseif (!empty($guests_data)) {
+        // Fallback: single room with all guests
+        $room_guests = [];
+        foreach ($guests_data as $guest) {
+            $room_guests[] = [
+                'first_name' => $guest['first_name'] ?? '',
+                'last_name'  => $guest['last_name'] ?? '',
+                'birth_date' => $guest['birth_date'] ?? '',
+                'gender'     => $guest['gender'] ?? 'm',
+            ];
+        }
+        $occupancy[] = [
+            'room_code' => 'standard',
+            'guests'    => $room_guests,
+        ];
+    }
+
+    return $occupancy;
+}
+
+/**
+ * Build flat occupancy array for experience bookings.
+ *
+ * API expects: [{first_name, last_name, birth_date, gender}] — no room grouping.
+ *
+ * @param array $guests_data Parsed guests
+ * @return array Flat participant array for API
+ */
+function fn_sphinx_holidays_build_flat_occupancy(array $guests_data): array
+{
+    $occupancy = [];
+    foreach ($guests_data as $guest) {
+        $occupancy[] = [
+            'first_name' => $guest['first_name'] ?? '',
+            'last_name'  => $guest['last_name'] ?? '',
+            'birth_date' => $guest['birth_date'] ?? '',
+            'gender'     => $guest['gender'] ?? 'm',
+        ];
+    }
+    return $occupancy;
 }
 
 /**

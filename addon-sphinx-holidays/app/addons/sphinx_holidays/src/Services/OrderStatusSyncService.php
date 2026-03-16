@@ -166,21 +166,41 @@ class OrderStatusSyncService
             return 0;
         }
 
-        // For now, match by position (typically 1 booking per order for hotels)
-        // Future: match by hotel_id + check_in for more precise correlation
-        $apiBooking = $apiBookings[0];
-        $apiStatus = $apiBooking['status'] ?? '';
-        $internalStatus = self::STATUS_MAP[$apiStatus] ?? '';
-
-        if (empty($internalStatus)) {
-            return 0;
-        }
-
+        // Match API bookings to local bookings.
+        // For single-booking orders (most common), match by position.
+        // For multi-booking orders, attempt matching by api_booking_ref first.
         foreach ($localBookings as $local) {
             $localStatus = $local['status'] ?? '';
             $bookingId = (int) $local['booking_id'];
+            $bookingType = $local['room_type'] ?? 'hotel';
 
-            if ($localStatus === $internalStatus) {
+            // Try to find the matching API booking
+            $apiBooking = null;
+            $localRef = $local['api_booking_ref'] ?? '';
+
+            // Match by booking reference if available
+            if (!empty($localRef)) {
+                foreach ($apiBookings as $ab) {
+                    if (($ab['booking_confirmation_number'] ?? '') === $localRef) {
+                        $apiBooking = $ab;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback: match by position (single booking per order)
+            if ($apiBooking === null && count($apiBookings) === 1) {
+                $apiBooking = $apiBookings[0];
+            }
+
+            if ($apiBooking === null) {
+                continue;
+            }
+
+            $apiStatus = $apiBooking['status'] ?? '';
+            $internalStatus = self::STATUS_MAP[$apiStatus] ?? '';
+
+            if (empty($internalStatus) || $localStatus === $internalStatus) {
                 continue;
             }
 
@@ -190,10 +210,10 @@ class OrderStatusSyncService
             $orderId = (int) ($local['order_id'] ?? 0);
             $hotelName = $local['hotel_name'] ?? '';
 
-            $this->output("  Booking #{$bookingId} (Order #{$orderId}): {$localStatus} → {$internalStatus}");
+            $this->output("  Booking #{$bookingId} [{$bookingType}] (Order #{$orderId}): {$localStatus} → {$internalStatus}");
 
             fn_log_event('general', 'runtime', [
-                'message' => "Sphinx OrderStatusSync: booking #{$bookingId} status changed: {$localStatus} → {$internalStatus}",
+                'message' => "Sphinx OrderStatusSync: booking #{$bookingId} [{$bookingType}] status changed: {$localStatus} → {$internalStatus}",
                 'order_id' => $orderId,
                 'api_status' => $apiStatus,
             ]);
@@ -269,7 +289,7 @@ class OrderStatusSyncService
     private function getBookingsToCheck(): array
     {
         return db_get_array(
-            "SELECT booking_id, order_id, hotel_name, status, api_booking_ref
+            "SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
              FROM ?:sphinx_bookings
              WHERE order_id > 0
                AND status NOT IN (?a)

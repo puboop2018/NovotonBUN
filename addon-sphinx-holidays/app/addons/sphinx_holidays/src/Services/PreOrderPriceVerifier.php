@@ -44,8 +44,16 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $extra = $product['extra'];
             $offerId = $extra['offer_id'] ?? '';
             $formPrice = (float)($extra['total_price'] ?? $product['price'] ?? 0);
+            $bookingType = $extra['booking_type'] ?? 'hotel';
 
             if (empty($offerId) || $formPrice <= 0) {
+                continue;
+            }
+
+            // Circuit and experience bookings have no verify endpoint in the Sphinx API.
+            // We skip pre-order price verification for these types — the price was locked
+            // at quote time and will be validated by the API during the book call.
+            if ($bookingType === 'circuit' || $bookingType === 'experience') {
                 continue;
             }
 

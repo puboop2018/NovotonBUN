@@ -49,21 +49,29 @@ class BookingRetryService
             return ['success' => false, 'message' => 'No offer ID stored — cannot retry', 'booking_ref' => null];
         }
 
-        // Step 1: Re-verify the offer
-        try {
-            $verifyResult = $this->api->verifyHotelOffer($offerId);
-        } catch (\Throwable $e) {
-            return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage(), 'booking_ref' => null];
+        $bookingType = $booking['room_type'] ?? 'hotel';
+        // Normalize: room_type stores 'circuit' or 'experience' for non-hotel bookings
+        if (!in_array($bookingType, ['circuit', 'experience'], true)) {
+            $bookingType = 'hotel';
         }
 
-        if (empty($verifyResult)) {
-            return ['success' => false, 'message' => 'Offer no longer available', 'booking_ref' => null];
+        // Step 1: Re-verify the offer (only hotels have a verify endpoint)
+        if ($bookingType === 'hotel') {
+            try {
+                $verifyResult = $this->api->verifyHotelOffer($offerId);
+            } catch (\Throwable $e) {
+                return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage(), 'booking_ref' => null];
+            }
+
+            if (empty($verifyResult)) {
+                return ['success' => false, 'message' => 'Offer no longer available', 'booking_ref' => null];
+            }
         }
 
         // Mark as pending before retry
         $this->repo->update($bookingId, ['status' => TravelConstants::STATUS_PENDING]);
 
-        // Step 2: Re-attempt booking
+        // Step 2: Re-attempt booking using type-aware dispatch
         try {
             $guestsData = [];
             if (!empty($booking['guests_data'])) {
@@ -72,14 +80,10 @@ class BookingRetryService
                     : $booking['guests_data'];
             }
 
-            $bookResult = $this->api->bookHotel([
-                'offer_id' => $offerId,
-                'guests' => $guestsData ?: [],
-                'contact' => [
-                    'email' => $booking['guest_email'] ?? '',
-                    'phone' => $booking['guest_phone'] ?? '',
-                ],
-            ]);
+            $price = (float)($booking['total_price'] ?? 0);
+            $currency = $booking['currency'] ?? 'EUR';
+
+            $bookResult = $this->submitBooking($bookingType, $offerId, $price, $currency, $booking, $guestsData);
 
             if (!empty($bookResult['booking_reference'])) {
                 $this->repo->updateApiResponse(
@@ -114,6 +118,50 @@ class BookingRetryService
             ]);
 
             return ['success' => false, 'message' => 'Retry failed: ' . $e->getMessage(), 'booking_ref' => null];
+        }
+    }
+
+    /**
+     * Dispatch booking to the correct API method based on type.
+     */
+    private function submitBooking(string $type, string $offerId, float $price, string $currency, array $booking, array $guestsData): array
+    {
+        switch ($type) {
+            case 'circuit':
+                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
+                $payload = [
+                    'offer_id' => $offerId,
+                    'price' => $price,
+                    'currency' => $currency,
+                    'occupancy' => $occupancy,
+                ];
+                if (!empty($booking['order_id'])) {
+                    $payload['reference_code'] = (string)$booking['order_id'];
+                }
+                return $this->api->bookCircuit($payload) ?: [];
+
+            case 'experience':
+                $occupancy = \fn_sphinx_holidays_build_flat_occupancy($guestsData);
+                $payload = [
+                    'offer_id' => $offerId,
+                    'price' => $price,
+                    'currency' => $currency,
+                    'occupancy' => $occupancy,
+                ];
+                if (!empty($booking['order_id'])) {
+                    $payload['reference_code'] = (string)$booking['order_id'];
+                }
+                return $this->api->bookExperience($payload) ?: [];
+
+            default: // hotel
+                return $this->api->bookHotel([
+                    'offer_id' => $offerId,
+                    'guests' => $guestsData ?: [],
+                    'contact' => [
+                        'email' => $booking['guest_email'] ?? '',
+                        'phone' => $booking['guest_phone'] ?? '',
+                    ],
+                ]) ?: [];
         }
     }
 }

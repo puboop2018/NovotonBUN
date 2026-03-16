@@ -227,6 +227,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $product_extra = [
         'travel_booking' => true, 'sphinx_booking' => true,
         'travel_booking_id' => $booking_id, 'travel_provider' => 'sphinx',
+        'booking_type' => 'hotel',
         'hotel_id' => $hotel_id, 'hotel_name' => $hotelName, 'offer_id' => $offer_id,
         'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
         'board_id' => $boardId, 'board_name' => $boardName,
