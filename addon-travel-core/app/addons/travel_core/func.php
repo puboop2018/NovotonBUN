@@ -8,8 +8,6 @@ declare(strict_types=1);
  *                                                                          *
  ***************************************************************************/
 
-use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
-
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
@@ -19,8 +17,9 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 function fn_travel_core_uninstall(): bool
 {
     // Block uninstall if provider addons are still active
+    // Hardcoded to avoid autoloader dependency (init.php may not have run)
     $active_providers = [];
-    $provider_addons = TravelProviderRegistry::KNOWN_PROVIDER_ADDONS;
+    $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
     foreach ($provider_addons as $addon) {
         $status = db_get_field("SELECT status FROM ?:addons WHERE addon = ?s", $addon);
         if ($status === 'A') {
