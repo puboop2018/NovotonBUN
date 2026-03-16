@@ -126,22 +126,22 @@ class BookingService implements BookingServiceInterface
 
         // Check for duplicate booking
         $existing_id = $this->findDuplicateBooking($booking_record);
-        
+
         if ($existing_id) {
-            // Update existing
+            // Update existing (routes through repository → syncs to travel_bookings)
             $this->updateBooking($existing_id, $booking_record);
             return $existing_id;
         }
-        
-        // Create new
-        $booking_id = db_query("INSERT INTO ?:novoton_bookings ?e", $booking_record);
-        
+
+        // Create new (routes through repository → syncs to travel_bookings)
+        $booking_id = $this->bookingRepo->create($booking_record);
+
         $this->log('Booking created', [
             'booking_id' => $booking_id,
             'hotel_id' => $bookingData['hotel_id'],
             'rooms' => count($rooms_data)
         ]);
-        
+
         return $booking_id;
     }
     
@@ -156,16 +156,13 @@ class BookingService implements BookingServiceInterface
     {
         // Remove fields that shouldn't be updated
         unset($data['booking_id'], $data['created_at']);
-        
-        $result = db_query(
-            "UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i",
-            $data,
-            $booking_id
-        );
-        
+
+        // Route through repository → syncs to travel_bookings
+        $result = $this->bookingRepo->update($booking_id, $data);
+
         $this->log('Booking updated', ['booking_id' => $booking_id]);
-        
-        return $result > 0;
+
+        return $result;
     }
     
     /**

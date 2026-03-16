@@ -162,7 +162,7 @@
                 `guests_json`       JSON         DEFAULT NULL COMMENT 'Structured guest data',
                 `created_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                KEY `idx_provider` (`provider`),
+                UNIQUE KEY `uq_provider_booking` (`provider`, `provider_booking_id`),
                 KEY `idx_order_id` (`order_id`),
                 KEY `idx_status` (`status`),
                 KEY `idx_check_in` (`check_in`)
