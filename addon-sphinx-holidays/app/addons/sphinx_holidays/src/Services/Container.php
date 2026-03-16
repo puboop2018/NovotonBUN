@@ -69,6 +69,7 @@ class Container
     private static ?SphinxBookingRepository $bookingRepo = null;
     private static ?SecurityService $securityService = null;
     private static ?PreOrderPriceVerifier $preOrderPriceVerifier = null;
+    private static ?CacheEndpointService $cacheEndpointService = null;
 
     public static function getBookingRepository(): SphinxBookingRepository
     {
@@ -97,6 +98,19 @@ class Container
         return self::$preOrderPriceVerifier;
     }
 
+    public static function getCacheEndpointService(): CacheEndpointService
+    {
+        if (self::$cacheEndpointService === null) {
+            self::$cacheEndpointService = new CacheEndpointService(
+                self::getApi(),
+                ConfigProvider::getCommission(),
+                ConfigProvider::shouldRoundPrices()
+            );
+        }
+
+        return self::$cacheEndpointService;
+    }
+
     /**
      * Reset all cached instances (for testing).
      */
@@ -109,5 +123,6 @@ class Container
         self::$bookingRepo = null;
         self::$securityService = null;
         self::$preOrderPriceVerifier = null;
+        self::$cacheEndpointService = null;
     }
 }

@@ -124,6 +124,15 @@
                         <variants/>
                     </item>
 
+                    <item id="enable_alternative_dates">
+                        <type>selectbox</type>
+                        <default_value>Y</default_value>
+                        <variants>
+                            <item id="Y"></item>
+                            <item id="N"></item>
+                        </variants>
+                    </item>
+
                     <!-- Product Mapping Header -->
                     <item id="product_header">
                         <type>header</type>
@@ -430,6 +439,16 @@
         <item lang="ro" id="sphinx_holidays.invalid_booking_data"><![CDATA[Date de rezervare invalide. Verificați datele introduse și încercați din nou.]]></item>
         <item lang="en" id="sphinx_holidays.duplicate_booking"><![CDATA[A booking for this offer is already pending. Please check your cart.]]></item>
         <item lang="ro" id="sphinx_holidays.duplicate_booking"><![CDATA[O rezervare pentru această ofertă este deja în așteptare. Verificați coșul dumneavoastră.]]></item>
+        <item lang="en" id="sphinx_holidays.enable_alternative_dates"><![CDATA[Suggest alternative dates when no results found]]></item>
+        <item lang="ro" id="sphinx_holidays.enable_alternative_dates"><![CDATA[Sugerează date alternative când nu sunt rezultate]]></item>
+        <item lang="en" id="sphinx_holidays.alternative_dates_title"><![CDATA[Availability found on nearby dates:]]></item>
+        <item lang="ro" id="sphinx_holidays.alternative_dates_title"><![CDATA[Disponibilitate găsită pe date apropiate:]]></item>
+        <item lang="en" id="sphinx_holidays.results_found"><![CDATA[results]]></item>
+        <item lang="ro" id="sphinx_holidays.results_found"><![CDATA[rezultate]]></item>
+        <item lang="en" id="sphinx_holidays.loading_deals"><![CDATA[Loading deals...]]></item>
+        <item lang="ro" id="sphinx_holidays.loading_deals"><![CDATA[Se încarcă ofertele...]]></item>
+        <item lang="en" id="sphinx_holidays.no_deals_available"><![CDATA[No deals available at this time.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_deals_available"><![CDATA[Nu sunt oferte disponibile momentan.]]></item>
         <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>

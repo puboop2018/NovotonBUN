@@ -63,7 +63,7 @@
                             <span class="sphinx-price-amount">{$result.price|number_format:2:",":"."}</span>
                             <span class="sphinx-price-currency">{$sphinx_search_params.currency|default:'EUR'}</span>
                         </div>
-                        <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`"|fn_url}"
+                        <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`"|fn_url}"
                            class="sphinx-offer-book-btn">
                             {__("sphinx_holidays.book_now")|default:"Book now"}
                         </a>
@@ -76,6 +76,21 @@
     {else}
         <div class="sphinx-no-results">
             <p>{__("sphinx_holidays.no_results")|default:"No hotels found for your search criteria. Please try different dates or destination."}</p>
+
+            {if $sphinx_alternative_dates}
+                <div class="sphinx-alternative-dates" style="margin-top: 20px; padding: 15px; background: #f5f9fc; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px; color: #003580;">{__("sphinx_holidays.alternative_dates_title")|default:"Availability found on nearby dates:"}</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        {foreach $sphinx_alternative_dates as $alt}
+                            <a href="{"sphinx_booking.search?hotel_id=`$sphinx_search_params.hotel_id`&destination_id=`$sphinx_search_params.destination_id`&check_in=`$alt.check_in`&check_out=`$alt.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`"|fn_url}"
+                               class="sphinx-alt-date-link" style="display: inline-block; padding: 8px 16px; background: #fff; border: 1px solid #c5d5ea; border-radius: 6px; text-decoration: none; color: #003580;">
+                                <strong>{$alt.check_in|date_format:"%d.%m.%Y"}</strong> &ndash; {$alt.check_out|date_format:"%d.%m.%Y"}
+                                <span style="font-size: 12px; color: #666;">({$alt.count} {__("sphinx_holidays.results_found")|default:"results"})</span>
+                            </a>
+                        {/foreach}
+                    </div>
+                </div>
+            {/if}
         </div>
     {/if}
 

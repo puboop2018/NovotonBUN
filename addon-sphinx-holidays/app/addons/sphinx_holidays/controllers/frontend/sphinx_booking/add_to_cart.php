@@ -137,12 +137,48 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $session_id = session_id();
     $currency = ConfigProvider::getDefaultCurrency();
 
-    $rooms_data = [[
-        'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
-        'board_id' => $boardId, 'board_name' => $boardName,
-        'adults' => $adults, 'children' => $children, 'childrenAges' => $all_child_ages,
-        'price' => $total_price,
-    ]];
+    // Parse rooms_data from form (multi-room support)
+    $num_rooms = max(1, (int)($bookingData['num_rooms'] ?? 1));
+    $incoming_rooms_data = [];
+    if (!empty($bookingData['rooms_data'])) {
+        $incoming_rooms_data = is_string($bookingData['rooms_data'])
+            ? json_decode($bookingData['rooms_data'], true)
+            : $bookingData['rooms_data'];
+        if (!is_array($incoming_rooms_data)) {
+            $incoming_rooms_data = [];
+        }
+    }
+
+    if (!empty($incoming_rooms_data)) {
+        // Use rooms_data from form, aggregate adults/children across rooms
+        $rooms_data = $incoming_rooms_data;
+        $num_rooms = count($rooms_data);
+        $total_adults = 0;
+        $total_children = 0;
+        foreach ($rooms_data as &$rd) {
+            $rd['room_id'] = $rd['room_id'] ?? $roomId;
+            $rd['room_name'] = $rd['room_name'] ?? $roomName;
+            $rd['room_type_display'] = $rd['room_type_display'] ?? $rd['room_name'];
+            $rd['board_id'] = $rd['board_id'] ?? $boardId;
+            $rd['board_name'] = $rd['board_name'] ?? $boardName;
+            $total_adults += (int)($rd['adults'] ?? 0);
+            $total_children += (int)($rd['children'] ?? 0);
+        }
+        unset($rd);
+        // Update totals from rooms_data if multi-room
+        if ($num_rooms > 1) {
+            $adults = $total_adults;
+            $children = $total_children;
+        }
+    } else {
+        // Default single-room
+        $rooms_data = [[
+            'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
+            'board_id' => $boardId, 'board_name' => $boardName,
+            'adults' => $adults, 'children' => $children, 'childrenAges' => $all_child_ages,
+            'price' => $total_price,
+        ]];
+    }
 
     // --- Security: Duplicate booking prevention ---
     // Block if the same offer_id already has a pending order (prevents double-charges from form resubmission)
@@ -165,7 +201,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'offer_id' => $offer_id, 'room_id' => $roomId, 'room_type' => $roomName,
         'board_id' => $boardId, 'check_in' => $check_in, 'check_out' => $check_out,
         'nights' => $nights, 'adults' => $adults, 'children' => $children,
-        'children_ages' => $children_ages, 'num_rooms' => 1,
+        'children_ages' => $children_ages, 'num_rooms' => $num_rooms,
         'rooms_data' => json_encode($rooms_data),
         'guest_name' => $guest_list, 'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
@@ -196,7 +232,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'board_id' => $boardId, 'board_name' => $boardName,
         'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
-        'num_rooms' => 1, 'rooms_data' => $rooms_data,
+        'num_rooms' => $num_rooms, 'rooms_data' => $rooms_data,
         'guest_names' => $guest_list, 'holder_name' => $holder_name,
         'guests_data' => json_encode($guests_data),
         'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',

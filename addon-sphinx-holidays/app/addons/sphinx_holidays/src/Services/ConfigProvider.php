@@ -307,6 +307,11 @@ class ConfigProvider
         return true;
     }
 
+    public static function isAlternativeDatesEnabled(): bool
+    {
+        return self::getSetting('enable_alternative_dates', 'Y') === 'Y';
+    }
+
     private static function getSetting(string $key, mixed $default = ''): mixed
     {
         $value = Registry::get('addons.' . self::ADDON_ID . '.' . $key);

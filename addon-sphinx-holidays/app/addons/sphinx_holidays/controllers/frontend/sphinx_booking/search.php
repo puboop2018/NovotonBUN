@@ -137,6 +137,43 @@ try {
         }
     }
 
+    // Alternative date fallback: if no results, suggest nearby dates (+/- 3 days)
+    $alternativeDates = [];
+    if (empty($allResults) && !empty($check_in) && ConfigProvider::isAlternativeDatesEnabled()) {
+        for ($offset = -3; $offset <= 3; $offset++) {
+            if ($offset === 0) continue;
+
+            $altCheckIn = date('Y-m-d', strtotime($check_in . " {$offset} days"));
+            $altCheckOut = date('Y-m-d', strtotime($check_out . " {$offset} days"));
+
+            // Skip past dates
+            if (strtotime($altCheckIn) < strtotime('today')) continue;
+
+            $altParams = $searchParams;
+            $altParams['check_in'] = $altCheckIn;
+            $altParams['check_out'] = $altCheckOut;
+
+            try {
+                $altResponse = $api->searchHotels($altParams);
+                if (!empty($altResponse['search_id'])) {
+                    $altPoll = $api->getHotelResults($altResponse['search_id']);
+                    if (!empty($altPoll['results'])) {
+                        $alternativeDates[] = [
+                            'check_in' => $altCheckIn,
+                            'check_out' => $altCheckOut,
+                            'offset' => $offset,
+                            'count' => count($altPoll['results']),
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Skip failed alternative date lookups silently
+                continue;
+            }
+        }
+        $view->assign('sphinx_alternative_dates', $alternativeDates);
+    }
+
     // Apply commission
     $commission = ConfigProvider::getCommission();
     $roundPrices = ConfigProvider::shouldRoundPrices();
