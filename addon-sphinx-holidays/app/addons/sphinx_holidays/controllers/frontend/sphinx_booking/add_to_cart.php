@@ -18,10 +18,32 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\TravelConstants;
 
+    // --- Security: Rate limiting ---
+    $security = Container::getSecurityService();
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : session_id();
+    if (!$security->checkBookingRateLimit($rate_limit_id)) {
+        fn_log_event('general', 'runtime', ['message' => 'Sphinx add_to_cart: rate limit exceeded', 'identifier' => $rate_limit_id]);
+        fn_set_notification('E', __('error'), __('sphinx_holidays.rate_limit_exceeded', ['[default]' => 'Too many booking requests. Please try again later.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
     $bookingData = $_REQUEST;
     $offer_id = trim($bookingData['offer_id'] ?? '');
     $hotel_id = trim($bookingData['hotel_id'] ?? '');
     $product_id = (int)($bookingData['product_id'] ?? 0);
+
+    // --- Security: Validate booking data ---
+    $validation = $security->validateBookingData($bookingData);
+    if (!$validation['valid']) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx add_to_cart: booking validation failed',
+            'errors' => $validation['errors'],
+            'offer_id' => $bookingData['offer_id'] ?? '',
+        ]);
+        fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_booking_data', ['[default]' => 'Invalid booking data.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
 
     if (empty($offer_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
@@ -72,8 +94,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
-    // Parse guest data
-    $guests = is_array($bookingData['guests'] ?? null) ? $bookingData['guests'] : [];
+    // Parse guest data — sanitize via SecurityService
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
     $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
     $parsed_guests = _sphinx_parse_and_validate_guests($guests, $check_in);
@@ -121,6 +143,18 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'adults' => $adults, 'children' => $children, 'childrenAges' => $all_child_ages,
         'price' => $total_price,
     ]];
+
+    // --- Security: Duplicate booking prevention ---
+    // Block if the same offer_id already has a pending order (prevents double-charges from form resubmission)
+    $pendingDuplicate = db_get_field(
+        "SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1",
+        $offer_id, TravelConstants::STATUS_PENDING
+    );
+    if ($pendingDuplicate) {
+        fn_set_notification('W', __('warning'),
+            __('sphinx_holidays.duplicate_booking', ['[default]' => 'A booking for this offer is already pending.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
 
     $repo = Container::getBookingRepository();
     $existing_booking_id = $repo->findRecentUnassigned($hotel_id, $check_in, $check_out, $holder_name);

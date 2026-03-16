@@ -424,6 +424,12 @@
         <item lang="ro" id="sphinx_holidays.no_surprises_threshold"><![CDATA[Prag "Fără Surprize" (%). 0 = dezactivat. Clientul este avertizat dacă prețul crește cu mai mult de acest %.]]></item>
         <item lang="en" id="sphinx_holidays.price_changed_warning"><![CDATA[The price for "[hotel]" has changed from [old_price] to [new_price] [currency]. Your cart has been updated with the new price.]]></item>
         <item lang="ro" id="sphinx_holidays.price_changed_warning"><![CDATA[Prețul pentru "[hotel]" s-a modificat de la [old_price] la [new_price] [currency]. Coșul a fost actualizat cu noul preț.]]></item>
+        <item lang="en" id="sphinx_holidays.rate_limit_exceeded"><![CDATA[Too many booking requests. Please try again later.]]></item>
+        <item lang="ro" id="sphinx_holidays.rate_limit_exceeded"><![CDATA[Prea multe cereri de rezervare. Vă rugăm să încercați din nou mai târziu.]]></item>
+        <item lang="en" id="sphinx_holidays.invalid_booking_data"><![CDATA[Invalid booking data. Please check your input and try again.]]></item>
+        <item lang="ro" id="sphinx_holidays.invalid_booking_data"><![CDATA[Date de rezervare invalide. Verificați datele introduse și încercați din nou.]]></item>
+        <item lang="en" id="sphinx_holidays.duplicate_booking"><![CDATA[A booking for this offer is already pending. Please check your cart.]]></item>
+        <item lang="ro" id="sphinx_holidays.duplicate_booking"><![CDATA[O rezervare pentru această ofertă este deja în așteptare. Verificați coșul dumneavoastră.]]></item>
         <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>

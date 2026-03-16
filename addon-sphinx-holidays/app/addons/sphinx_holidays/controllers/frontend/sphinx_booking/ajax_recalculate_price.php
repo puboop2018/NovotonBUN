@@ -32,6 +32,19 @@ try {
         exit;
     }
 
+    // --- Input validation ---
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $offer_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid offer ID format']);
+        restore_error_handler();
+        exit;
+    }
+
+    if ($original_price < 0 || $original_price > 999999) {
+        echo json_encode(['success' => false, 'message' => 'Invalid price value']);
+        restore_error_handler();
+        exit;
+    }
+
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
