@@ -201,5 +201,27 @@
         <item lang="ro" id="travel_core.free_cancellation_until"><![CDATA[Anulare gratuită până la]]></item>
         <item lang="en" id="travel_core.on_booking"><![CDATA[on booking]]></item>
         <item lang="ro" id="travel_core.on_booking"><![CDATA[la rezervare]]></item>
+        <item lang="en" id="travel_core.manage_bookings"><![CDATA[Travel Bookings]]></item>
+        <item lang="ro" id="travel_core.manage_bookings"><![CDATA[Rezervări Turism]]></item>
+        <item lang="en" id="travel_core.complete_booking"><![CDATA[Booking Details]]></item>
+        <item lang="ro" id="travel_core.complete_booking"><![CDATA[Detalii Rezervare]]></item>
+        <item lang="en" id="travel_core.check_in"><![CDATA[Check-in]]></item>
+        <item lang="ro" id="travel_core.check_in"><![CDATA[Check-in]]></item>
+        <item lang="en" id="travel_core.check_out"><![CDATA[Check-out]]></item>
+        <item lang="ro" id="travel_core.check_out"><![CDATA[Check-out]]></item>
+        <item lang="en" id="travel_core.nights"><![CDATA[Nights]]></item>
+        <item lang="ro" id="travel_core.nights"><![CDATA[Nopți]]></item>
+        <item lang="en" id="travel_core.room"><![CDATA[Room]]></item>
+        <item lang="ro" id="travel_core.room"><![CDATA[Cameră]]></item>
+        <item lang="en" id="travel_core.guests"><![CDATA[Guests]]></item>
+        <item lang="ro" id="travel_core.guests"><![CDATA[Oaspeți]]></item>
+        <item lang="en" id="travel_core.dates"><![CDATA[Dates]]></item>
+        <item lang="ro" id="travel_core.dates"><![CDATA[Date]]></item>
     </language_variables>
+
+    <!-- Functions to run on install/uninstall -->
+    <functions>
+        <item for="install">fn_travel_core_post_install</item>
+        <item for="uninstall">fn_travel_core_uninstall</item>
+    </functions>
 </addon>

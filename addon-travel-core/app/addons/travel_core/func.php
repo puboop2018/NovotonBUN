@@ -60,30 +60,149 @@ function fn_travel_core_post_install(): bool
 }
 
 /**
- * Seed language variables used by shared templates and services.
+ * Seed language variables used by settings, shared templates, and services.
+ * Also populates ?:settings_descriptions for addon settings.
  */
 function fn_travel_core_seed_lang_vars(): void
 {
-    $lang_vars = [
-        'travel_core.package' => 'Package',
-        'travel_core.dates'   => 'Dates',
-        'travel_core.nights'  => 'nights',
-        'travel_core.room'    => 'Room',
-        'travel_core.board'   => 'Meal Plan',
-        'travel_core.guests'  => 'Guests',
-        'travel_core.holder'  => 'Booking Holder',
-        'travel_core.complete_booking' => 'Complete Booking',
-        'travel_core.search_results'   => 'Search Results',
+    // English language variables (settings labels + template vars)
+    $lang_vars_en = [
+        // Settings: section headers
+        'travel_core.feature_mapping_header' => 'Feature Mapping',
+        'travel_core.providers_header'       => 'Active Providers',
+        'travel_core.currency_header'        => 'Currency',
+        // Settings: field labels
+        'travel_core.feature_id_property_rating' => 'CS-Cart Feature ID: Stars/Classification',
+        'travel_core.feature_id_meals'           => 'CS-Cart Feature ID: Meal Plan',
+        'travel_core.feature_id_room_type'       => 'CS-Cart Feature ID: Room Type',
+        'travel_core.feature_id_property_type'   => 'CS-Cart Feature ID: Property Type',
+        'travel_core.feature_id_location'        => 'CS-Cart Feature ID: Location',
+        'travel_core.active_providers'           => 'Active providers (comma-separated)',
+        'travel_core.default_currency'           => 'Default currency',
+        // Template/service language vars
+        'travel_core.package'           => 'Package',
+        'travel_core.dates'             => 'Dates',
+        'travel_core.nights'            => 'Nights',
+        'travel_core.room'              => 'Room',
+        'travel_core.board'             => 'Meal Plan',
+        'travel_core.guests'            => 'Guests',
+        'travel_core.holder'            => 'Booking Holder',
+        'travel_core.complete_booking'  => 'Booking Details',
+        'travel_core.search_results'    => 'Search Results',
+        'travel_core.manage_bookings'   => 'Travel Bookings',
+        'travel_core.check_in'          => 'Check-in',
+        'travel_core.check_out'         => 'Check-out',
+        'travel_core.until'             => 'until',
+        'travel_core.free_cancellation' => 'Free Cancellation',
+        'travel_core.free_cancellation_until' => 'Free cancellation until',
+        'travel_core.on_booking'        => 'on booking',
     ];
 
+    $lang_vars_ro = [
+        // Settings: section headers
+        'travel_core.feature_mapping_header' => 'Mapare Caracteristici',
+        'travel_core.providers_header'       => 'Furnizori Activi',
+        'travel_core.currency_header'        => 'Monedă',
+        // Settings: field labels
+        'travel_core.feature_id_property_rating' => 'ID Caracteristică CS-Cart: Stele/Clasificare',
+        'travel_core.feature_id_meals'           => 'ID Caracteristică CS-Cart: Masă',
+        'travel_core.feature_id_room_type'       => 'ID Caracteristică CS-Cart: Tip Cameră',
+        'travel_core.feature_id_property_type'   => 'ID Caracteristică CS-Cart: Tip Proprietate',
+        'travel_core.feature_id_location'        => 'ID Caracteristică CS-Cart: Locație',
+        'travel_core.active_providers'           => 'Furnizori activi (separați prin virgulă)',
+        'travel_core.default_currency'           => 'Monedă implicită',
+        // Template/service language vars
+        'travel_core.package'           => 'Pachet',
+        'travel_core.dates'             => 'Date',
+        'travel_core.nights'            => 'Nopți',
+        'travel_core.room'              => 'Cameră',
+        'travel_core.board'             => 'Masă',
+        'travel_core.guests'            => 'Oaspeți',
+        'travel_core.holder'            => 'Titular Rezervare',
+        'travel_core.complete_booking'  => 'Detalii Rezervare',
+        'travel_core.search_results'    => 'Rezultate Căutare',
+        'travel_core.manage_bookings'   => 'Rezervări Turism',
+        'travel_core.check_in'          => 'Check-in',
+        'travel_core.check_out'         => 'Check-out',
+        'travel_core.until'             => 'până la',
+        'travel_core.free_cancellation' => 'Anulare gratuită',
+        'travel_core.free_cancellation_until' => 'Anulare gratuită până la',
+        'travel_core.on_booking'        => 'la rezervare',
+    ];
+
+    $translations = ['en' => $lang_vars_en, 'ro' => $lang_vars_ro];
+
+    // Insert language variables into ?:language_values
     $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
     foreach ($languages as $lang) {
-        foreach ($lang_vars as $name => $value) {
+        $code = $lang['lang_code'];
+        $vars = $translations[$code] ?? $lang_vars_en; // Fall back to English
+        foreach ($vars as $name => $value) {
             db_query(
                 "INSERT INTO ?:language_values (lang_code, name, value) VALUES (?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE value = value",
-                $lang['lang_code'], $name, $value
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $code, $name, $value, $value
             );
+        }
+    }
+
+    // Populate ?:settings_descriptions for addon settings
+    fn_travel_core_sync_settings_descriptions();
+}
+
+/**
+ * Sync settings descriptions from ?:language_values into ?:settings_descriptions.
+ * This ensures settings labels display correctly in the admin panel.
+ */
+function fn_travel_core_sync_settings_descriptions(): void
+{
+    // Get all settings objects for this addon
+    $settings = db_get_array(
+        "SELECT object_id, name, object_type FROM ?:settings_objects WHERE addon = 'travel_core'"
+    );
+
+    // Get all sections for this addon
+    $sections = db_get_array(
+        "SELECT section_id, name FROM ?:settings_sections WHERE addon = 'travel_core'"
+    );
+
+    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+
+    // Update descriptions for settings items (type 'S' for settings, 'H' for headers)
+    foreach ($settings as $setting) {
+        $lang_var_name = 'travel_core.' . $setting['name'];
+        foreach ($languages as $lang) {
+            $value = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($value)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                     VALUES (?i, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE description = ?s",
+                    $setting['object_id'], $setting['object_type'], $value, $lang['lang_code'], $value
+                );
+            }
+        }
+    }
+
+    // Update descriptions for sections
+    foreach ($sections as $section) {
+        $lang_var_name = 'travel_core.' . $section['name'];
+        foreach ($languages as $lang) {
+            $value = db_get_field(
+                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $lang_var_name, $lang['lang_code']
+            );
+            if (!empty($value)) {
+                db_query(
+                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
+                     VALUES (?i, 'SECTION', ?s, ?s)
+                     ON DUPLICATE KEY UPDATE description = ?s",
+                    $section['section_id'], $value, $lang['lang_code'], $value
+                );
+            }
         }
     }
 }
