@@ -374,6 +374,53 @@ curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=
 
 ---
 
+## Cross-Provider Order Placement Fixes (2026-03-16)
+
+### Problem: Sphinx blocks mixed-provider orders
+
+When a cart contained both Novoton and Sphinx hotels, and a Sphinx offer became unavailable at checkout, `PreOrderPriceVerifier` set `$allow = false` which blocked the **entire** order — including valid Novoton bookings.
+
+### Fixes Applied
+
+**1. `PreOrderPriceVerifier.php` — graceful removal instead of blocking**
+- Returns `unavailable[]` array instead of setting `$allow = false`
+- Caller (`fn_sphinx_holidays_pre_place_order`) removes unavailable items from cart with customer notification
+- Order only blocked if ALL remaining cart items become unavailable
+
+**2. `func.php` — `fn_sphinx_holidays_pre_place_order` rewritten**
+- Iterates `$result['unavailable']`, calls `unset($cart['products'][$cartId])` for each
+- Shows `fn_set_notification('W', ...)` per removed item with hotel name
+- Falls through to `$allow = false` only when `empty($cart['products'])`
+
+**3. `func.php` — `fn_sphinx_holidays_place_order_post` status flow fixed**
+- **Before:** `linkToOrder()` set `STATUS_CONFIRMED` before API call → API failure left booking as "confirmed"
+- **After:** Sets `STATUS_PENDING` → API call → `STATUS_CONFIRMED` on success, `STATUS_FAILED` on error
+- Failed bookings now properly recorded in both `sphinx_bookings` and `travel_bookings` (via dual-write)
+
+**4. `func.php` — new `fn_sphinx_holidays_get_order_info()` hook**
+- When `AREA === 'A'` (admin panel), queries `sphinx_bookings` for the order
+- If any booking has `status = 'failed'`, shows orange warning notification via `fn_set_notification('W', ...)`
+- Notification shows hotel name and order ID
+
+**5. Language variables added (`addon.xml`)**
+- `sphinx_holidays.booking_api_failed` — admin warning for failed bookings
+- `sphinx_holidays.offer_removed_from_order` — customer notification when offer removed from cart
+- `sphinx_holidays.all_offers_unavailable` — customer notification when all offers unavailable
+
+### Status Flow (after fix)
+
+```
+add_to_cart → pending
+    │
+place_order_post → linkToOrder(pending)
+    │
+    ├─ API success → confirmed
+    │
+    └─ API failure → failed  (admin sees orange warning on order view)
+```
+
+---
+
 ## Patterns & Conventions
 
 ### AJAX JSON Endpoints

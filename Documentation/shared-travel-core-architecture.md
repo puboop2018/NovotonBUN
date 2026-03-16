@@ -677,6 +677,116 @@ class PreOrderPriceVerifier
 }
 ```
 
+### 8.5 Cross-Provider Failure Handling & Status Flow
+
+When an order contains hotels from multiple providers (e.g., Novoton + Sphinx in one cart), each provider's `place_order_post` hook fires sequentially (Novoton priority 111, then Sphinx priority 112). Provider API failures must not corrupt the booking status or silently lose data.
+
+#### 8.5.1 Booking Status Flow
+
+Each provider follows this status progression during order placement:
+
+```
+Cart → add_to_cart → DB: status = 'pending'
+                          │
+                          ▼
+              place_order_post hook fires
+                          │
+                          ▼
+              DB: status = 'pending' (confirmed before API call)
+                          │
+                    ┌──────┴──────┐
+                    ▼             ▼
+              API Success     API Failure
+                    │             │
+                    ▼             ▼
+            status = 'confirmed'  status = 'failed'
+            provider_booking_id   notes = error details
+            saved                 admin notified
+```
+
+**Critical rule:** Status must be `pending` before the API call, NOT `confirmed`. Only set `confirmed` after a successful API response. This prevents the window where a booking appears confirmed but the API hasn't actually accepted it.
+
+#### 8.5.2 ROLLBACK-Safe Status Persistence
+
+When using DB transactions around the API call (as Novoton does), a `ROLLBACK` undoes all writes made inside the transaction — including status updates to `failed`. The fix is to re-apply the failed status **after** the ROLLBACK:
+
+```php
+try {
+    db_query("START TRANSACTION");
+    // ... update status, call API, save response ...
+    db_query("COMMIT");
+} catch (\Throwable $e) {
+    db_query("ROLLBACK");
+    // ROLLBACK undid our status='failed' write inside the transaction.
+    // Re-apply it OUTSIDE the transaction so it persists:
+    $repo->update($bookingId, [
+        'status' => TravelConstants::STATUS_FAILED,
+        'order_id' => $orderId,
+        'notes' => 'API error: ' . $e->getMessage(),
+    ]);
+}
+```
+
+This pattern is used in Novoton's `BookingSubmissionService` across all three catch blocks (`ApiException`, `NovotonException`, `\Throwable`).
+
+#### 8.5.3 Pre-Order Price Verification — Mixed-Provider Carts
+
+When a cart contains items from multiple providers, the `pre_place_order` hook must **never block the entire order** due to one provider's unavailable item. Instead:
+
+1. Check availability for provider-specific items only
+2. If an item is unavailable, **remove it from the cart** with a customer notification
+3. Only block the order (`$allow = false`) if the cart becomes completely empty after removals
+
+```php
+// Pattern for pre_place_order in each provider:
+$result = $verifier->verify($cart);
+
+if (!empty($result['unavailable'])) {
+    foreach ($result['unavailable'] as $cartId => $info) {
+        fn_set_notification('W', __('warning'),
+            __('provider.offer_removed_unavailable', ['[hotel]' => $info['hotel_name']]));
+        unset($cart['products'][$cartId]);
+    }
+}
+
+// Only block if cart is now empty
+if (empty($cart['products'])) {
+    $allow = false;
+    fn_set_notification('E', __('error'), __('provider.all_offers_unavailable'));
+}
+```
+
+#### 8.5.4 Admin Panel Notification for Failed Bookings
+
+Each provider's `get_order_info` hook checks for failed bookings and displays an orange warning banner in the admin panel via `fn_set_notification('W', ...)`:
+
+```php
+// In fn_{provider}_get_order_info():
+if (defined('AREA') && AREA === 'A' && !empty($order['order_id'])) {
+    $bookings = $repo->findByOrderId((int) $order['order_id']);
+    foreach ($bookings as $booking) {
+        if (($booking['status'] ?? '') === TravelConstants::STATUS_FAILED) {
+            fn_set_notification('W', __('warning'),
+                __('provider.booking_api_failed', [
+                    '[hotel]' => $booking['hotel_name'] ?? '',
+                    '[order_id]' => $order['order_id'],
+                ]));
+            break; // One notification per order per provider
+        }
+    }
+}
+```
+
+The `AREA === 'A'` guard ensures this notification only appears in the admin panel, not on the customer-facing storefront.
+
+**Notification types reference (CS-Cart):**
+| Type | Color | Usage |
+|------|-------|-------|
+| `'N'` | Green | Success — booking confirmed |
+| `'W'` | Orange | Warning — booking failed, needs attention |
+| `'E'` | Red | Error — order blocked |
+| `'I'` | Popup | Informational dialog |
+
 ---
 
 ## 9. Shared Admin Panel
