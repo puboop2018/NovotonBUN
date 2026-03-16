@@ -36,187 +36,18 @@ function fn_sphinx_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:sphinx_package_routes");
     db_query("DROP TABLE IF EXISTS ?:sphinx_destinations");
     db_query("DROP TABLE IF EXISTS ?:sphinx_hotels");
-    db_query("DROP TABLE IF EXISTS ?:sphinx_circuits");
-    db_query("DROP TABLE IF EXISTS ?:sphinx_experiences");
 
     return true;
 }
 
 /**
  * Post-install function.
- * Seeds Sphinx-specific aliases, language variables, and settings descriptions.
+ * Seeds Sphinx-specific aliases into the shared feature mapping.
  */
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
-    fn_sphinx_holidays_seed_lang_vars();
-
-    // Add columns for order status sync (safe for existing installs)
-    $columns = db_get_fields("SHOW COLUMNS FROM ?:sphinx_bookings");
-    if (!in_array('payment_terms_json', $columns, true)) {
-        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from Orders API' AFTER `api_response`");
-    }
-    if (!in_array('cancellation_fees_json', $columns, true)) {
-        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from Orders API' AFTER `payment_terms_json`");
-    }
-    if (!in_array('last_status_check', $columns, true)) {
-        db_query("ALTER TABLE ?:sphinx_bookings ADD COLUMN `last_status_check` DATETIME DEFAULT NULL COMMENT 'Last time status was polled from API' AFTER `cancellation_fees_json`");
-    }
-
     return true;
-}
-
-/**
- * Seed settings language variables and sync ?:settings_descriptions.
- * Ensures all settings labels display correctly in the admin panel.
- */
-function fn_sphinx_holidays_seed_lang_vars(): void
-{
-    // Settings labels: English
-    $lang_vars_en = [
-        // Section headers
-        'sphinx_holidays.api_header'          => 'Sphinx API Settings',
-        'sphinx_holidays.search_header'       => 'Search Settings',
-        'sphinx_holidays.pricing_header'      => 'Pricing',
-        'sphinx_holidays.product_header'      => 'Product Mapping',
-        'sphinx_holidays.resilience_header'   => 'API Resilience',
-        'sphinx_holidays.hotel_sync_header'   => 'Hotel Sync Settings',
-        'sphinx_holidays.cron_header'         => 'Cron Settings',
-        'sphinx_holidays.debug_header'        => 'Debug',
-        // Field labels
-        'sphinx_holidays.api_base_url'          => 'API Base URL',
-        'sphinx_holidays.api_key'               => 'API Key (Bearer Token)',
-        'sphinx_holidays.enable_api_cache'      => 'Enable API response caching',
-        'sphinx_holidays.cache_ttl_search'      => 'Search cache TTL (seconds)',
-        'sphinx_holidays.default_currency'      => 'Default search currency',
-        'sphinx_holidays.ignore_domains'        => 'Ignore domains (comma-separated supplier IDs to skip)',
-        'sphinx_holidays.search_poll_interval'  => 'Search poll interval (seconds)',
-        'sphinx_holidays.search_max_polls'      => 'Maximum search polls before timeout',
-        'sphinx_holidays.commission'            => 'Commission percentage',
-        'sphinx_holidays.round_prices'          => 'Round prices to whole numbers',
-        'sphinx_holidays.no_surprises_threshold' => '"No Surprises" price threshold (%). 0 = disabled.',
-        'sphinx_holidays.enable_alternative_dates' => 'Suggest alternative dates when no results found',
-        'sphinx_holidays.hotels_category_id'    => 'CS-Cart category ID for Sphinx hotels',
-        'sphinx_holidays.packages_category_id'  => 'CS-Cart category ID for Sphinx packages',
-        'sphinx_holidays.product_category_template' => 'Category path template ({country}, {region}, {city} placeholders)',
-        'sphinx_holidays.api_max_retries'       => 'Maximum retries on failure',
-        'sphinx_holidays.api_retry_delay_ms'    => 'Initial retry delay (ms)',
-        'sphinx_holidays.api_retry_multiplier'  => 'Retry delay multiplier',
-        'sphinx_holidays.circuit_breaker_threshold' => 'Circuit breaker threshold (failures before open)',
-        'sphinx_holidays.circuit_breaker_timeout'   => 'Circuit breaker timeout (seconds)',
-        'sphinx_holidays.selected_destinations' => 'Sync targets (comma-separated). Supports: country codes (GR, BG), destination names, or destination IDs',
-        'sphinx_holidays.cron_access_key'       => 'Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)',
-        'sphinx_holidays.debug_logging'         => 'Enable debug logging',
-    ];
-
-    // Settings labels: Romanian
-    $lang_vars_ro = [
-        // Section headers
-        'sphinx_holidays.api_header'          => 'Setări API Sphinx',
-        'sphinx_holidays.search_header'       => 'Setări Căutare',
-        'sphinx_holidays.pricing_header'      => 'Prețuri',
-        'sphinx_holidays.product_header'      => 'Mapare Produse',
-        'sphinx_holidays.resilience_header'   => 'Reziliență API',
-        'sphinx_holidays.hotel_sync_header'   => 'Setări Sincronizare Hoteluri',
-        'sphinx_holidays.cron_header'         => 'Setări Cron',
-        'sphinx_holidays.debug_header'        => 'Depanare',
-        // Field labels
-        'sphinx_holidays.api_base_url'          => 'URL bază API',
-        'sphinx_holidays.api_key'               => 'Cheie API (Bearer Token)',
-        'sphinx_holidays.enable_api_cache'      => 'Activează cache-ul răspunsurilor API',
-        'sphinx_holidays.cache_ttl_search'      => 'TTL cache căutare (secunde)',
-        'sphinx_holidays.default_currency'      => 'Monedă implicită căutare',
-        'sphinx_holidays.ignore_domains'        => 'Domenii ignorate (ID-uri furnizori separați prin virgulă)',
-        'sphinx_holidays.search_poll_interval'  => 'Interval verificare căutare (secunde)',
-        'sphinx_holidays.search_max_polls'      => 'Număr maxim de verificări înainte de timeout',
-        'sphinx_holidays.commission'            => 'Procentaj comision',
-        'sphinx_holidays.round_prices'          => 'Rotunjește prețurile la numere întregi',
-        'sphinx_holidays.no_surprises_threshold' => 'Prag "Fără Surprize" (%). 0 = dezactivat.',
-        'sphinx_holidays.enable_alternative_dates' => 'Sugerează date alternative când nu sunt rezultate',
-        'sphinx_holidays.hotels_category_id'    => 'ID categorie CS-Cart pentru hoteluri Sphinx',
-        'sphinx_holidays.packages_category_id'  => 'ID categorie CS-Cart pentru pachete Sphinx',
-        'sphinx_holidays.product_category_template' => 'Șablon cale categorie ({country}, {region}, {city})',
-        'sphinx_holidays.api_max_retries'       => 'Număr maxim de reîncercări',
-        'sphinx_holidays.api_retry_delay_ms'    => 'Întârziere inițială reîncercare (ms)',
-        'sphinx_holidays.api_retry_multiplier'  => 'Multiplicator întârziere reîncercare',
-        'sphinx_holidays.circuit_breaker_threshold' => 'Prag circuit breaker (eșecuri înainte de deschidere)',
-        'sphinx_holidays.circuit_breaker_timeout'   => 'Timeout circuit breaker (secunde)',
-        'sphinx_holidays.selected_destinations' => 'Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații, sau ID-uri destinații',
-        'sphinx_holidays.cron_access_key'       => 'Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)',
-        'sphinx_holidays.debug_logging'         => 'Activează logare depanare',
-    ];
-
-    $translations = ['en' => $lang_vars_en, 'ro' => $lang_vars_ro];
-
-    // Insert into ?:language_values
-    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-    foreach ($languages as $lang) {
-        $code = $lang['lang_code'];
-        $vars = $translations[$code] ?? $lang_vars_en;
-        foreach ($vars as $name => $value) {
-            db_query(
-                "INSERT INTO ?:language_values (lang_code, name, value) VALUES (?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE value = ?s",
-                $code, $name, $value, $value
-            );
-        }
-    }
-
-    // Sync ?:settings_descriptions from language values
-    fn_sphinx_holidays_sync_settings_descriptions();
-}
-
-/**
- * Populate ?:settings_descriptions from ?:language_values for all Sphinx settings.
- * Ensures the admin settings page displays proper labels.
- */
-function fn_sphinx_holidays_sync_settings_descriptions(): void
-{
-    $settings = db_get_array(
-        "SELECT object_id, name, object_type FROM ?:settings_objects WHERE addon = 'sphinx_holidays'"
-    );
-
-    $sections = db_get_array(
-        "SELECT section_id, name FROM ?:settings_sections WHERE addon = 'sphinx_holidays'"
-    );
-
-    $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-
-    foreach ($settings as $setting) {
-        $lang_var_name = 'sphinx_holidays.' . $setting['name'];
-        foreach ($languages as $lang) {
-            $value = db_get_field(
-                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-                $lang_var_name, $lang['lang_code']
-            );
-            if (!empty($value)) {
-                db_query(
-                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
-                     VALUES (?i, ?s, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE description = ?s",
-                    $setting['object_id'], $setting['object_type'], $value, $lang['lang_code'], $value
-                );
-            }
-        }
-    }
-
-    foreach ($sections as $section) {
-        $lang_var_name = 'sphinx_holidays.' . $section['name'];
-        foreach ($languages as $lang) {
-            $value = db_get_field(
-                "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-                $lang_var_name, $lang['lang_code']
-            );
-            if (!empty($value)) {
-                db_query(
-                    "INSERT INTO ?:settings_descriptions (object_id, object_type, description, lang_code)
-                     VALUES (?i, 'SECTION', ?s, ?s)
-                     ON DUPLICATE KEY UPDATE description = ?s",
-                    $section['section_id'], $value, $lang['lang_code'], $value
-                );
-            }
-        }
-    }
 }
 
 /**
@@ -461,8 +292,14 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                         : $product['extra']['guests_data'];
                 }
 
-                $booking_type = $product['extra']['booking_type'] ?? 'hotel';
-                $bookResult = fn_sphinx_holidays_submit_booking($api, $booking_type, $offer_id, $product, $guests_data);
+                $bookResult = $api->bookHotel([
+                    'offer_id' => $offer_id,
+                    'guests' => $guests_data ?: [],
+                    'contact' => [
+                        'email' => $product['extra']['contact_email'] ?? '',
+                        'phone' => $product['extra']['contact_phone'] ?? '',
+                    ],
+                ]);
 
                 if (!empty($bookResult['booking_reference'])) {
                     $repo->updateApiResponse(
@@ -483,17 +320,11 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                     'status' => \Tygh\Addons\TravelCore\TravelConstants::STATUS_FAILED,
                 ]);
 
-                $hotelName = $product['extra']['hotel_name'] ?? $product['product'] ?? '';
-                $errorMsg = $e->getMessage();
-
                 fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx book ({$booking_type}) API call failed: " . $errorMsg,
+                    'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
                     'booking_id' => $booking_id,
                     'order_id' => $order_id,
                 ]);
-
-                // Send admin email alert for booking failure
-                fn_sphinx_holidays_send_booking_failure_email($order_id, $booking_id, $hotelName, $errorMsg);
             }
         }
     }
@@ -619,226 +450,6 @@ function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
             break; // One notification per order is enough
         }
     }
-}
-
-/**
- * Submit a booking to the Sphinx API based on booking type.
- *
- * Dispatches to the correct API method (bookHotel, bookCircuit, bookExperience)
- * and builds the appropriate payload shape for each type.
- *
- * @param \Tygh\Addons\SphinxHolidays\SphinxApi $api
- * @param string $booking_type 'hotel', 'circuit', or 'experience'
- * @param string $offer_id
- * @param array $product Cart product data with extra fields
- * @param array $guests_data Parsed guest data
- * @return array API response
- */
-function fn_sphinx_holidays_submit_booking($api, string $booking_type, string $offer_id, array $product, array $guests_data): array
-{
-    $extra = $product['extra'] ?? [];
-    $price = (float)($extra['total_price'] ?? $product['price'] ?? 0);
-    $currency = $extra['currency'] ?? 'EUR';
-    $order_id = $extra['order_id'] ?? '';
-
-    switch ($booking_type) {
-        case 'circuit':
-            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
-            $payload = [
-                'offer_id' => $offer_id,
-                'price' => $price,
-                'currency' => $currency,
-                'occupancy' => $occupancy,
-            ];
-            if (!empty($order_id)) {
-                $payload['reference_code'] = (string)$order_id;
-            }
-            $result = $api->bookCircuit($payload);
-            break;
-
-        case 'package':
-            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
-            $payload = [
-                'offer_id' => $offer_id,
-                'price' => $price,
-                'currency' => $currency,
-                'occupancy' => $occupancy,
-            ];
-            if (!empty($order_id)) {
-                $payload['reference_code'] = (string)$order_id;
-            }
-            // Include additional services if selected during customize step
-            $additional_services = $extra['additional_services'] ?? [];
-            if (!empty($additional_services)) {
-                $payload['additional_services'] = $additional_services;
-            }
-            $result = $api->bookPackage($payload);
-            break;
-
-        case 'experience':
-            $occupancy = fn_sphinx_holidays_build_flat_occupancy($guests_data);
-            $payload = [
-                'offer_id' => $offer_id,
-                'price' => $price,
-                'currency' => $currency,
-                'occupancy' => $occupancy,
-            ];
-            if (!empty($order_id)) {
-                $payload['reference_code'] = (string)$order_id;
-            }
-            $result = $api->bookExperience($payload);
-            break;
-
-        default: // hotel
-            $occupancy = fn_sphinx_holidays_build_room_occupancy($guests_data, $extra);
-            $payload = [
-                'offer_id' => $offer_id,
-                'price' => $price,
-                'currency' => $currency,
-                'occupancy' => $occupancy,
-            ];
-            if (!empty($order_id)) {
-                $payload['reference_code'] = (string)$order_id;
-            }
-            $result = $api->bookHotel($payload);
-            break;
-    }
-
-    return $result ?: [];
-}
-
-/**
- * Build room-based occupancy array for circuit/package bookings.
- *
- * API expects: [{room_code: string, guests: [{first_name, last_name, birth_date, gender}]}]
- *
- * @param array $guests_data Parsed guests grouped by room
- * @param array $extra Cart extra data containing rooms_data
- * @return array Occupancy array for API
- */
-function fn_sphinx_holidays_build_room_occupancy(array $guests_data, array $extra): array
-{
-    $rooms_data = $extra['rooms_data'] ?? [];
-    if (is_string($rooms_data)) {
-        $rooms_data = json_decode($rooms_data, true) ?: [];
-    }
-
-    // If guests_data is already structured with room groupings
-    if (!empty($guests_data) && isset($guests_data[0]['room_code'])) {
-        return $guests_data;
-    }
-
-    // Build occupancy from rooms_data + flat guest list
-    $occupancy = [];
-    if (!empty($rooms_data)) {
-        foreach ($rooms_data as $idx => $room) {
-            $room_code = $room['room_id'] ?? $room['code'] ?? 'room-' . ($idx + 1);
-            $room_guests = [];
-
-            // Collect guests for this room from flat list
-            $room_adults = (int)($room['adults'] ?? 2);
-            $room_children = (int)($room['children'] ?? 0);
-            $total_in_room = $room_adults + $room_children;
-
-            $offset = 0;
-            for ($i = 0; $i < $idx; $i++) {
-                $offset += (int)($rooms_data[$i]['adults'] ?? 2) + (int)($rooms_data[$i]['children'] ?? 0);
-            }
-
-            for ($g = 0; $g < $total_in_room; $g++) {
-                $guest = $guests_data[$offset + $g] ?? null;
-                if ($guest) {
-                    $room_guests[] = [
-                        'first_name' => $guest['first_name'] ?? '',
-                        'last_name'  => $guest['last_name'] ?? '',
-                        'birth_date' => $guest['birth_date'] ?? '',
-                        'gender'     => $guest['gender'] ?? 'm',
-                    ];
-                }
-            }
-
-            $occupancy[] = [
-                'room_code' => $room_code,
-                'guests'    => $room_guests,
-            ];
-        }
-    } elseif (!empty($guests_data)) {
-        // Fallback: single room with all guests
-        $room_guests = [];
-        foreach ($guests_data as $guest) {
-            $room_guests[] = [
-                'first_name' => $guest['first_name'] ?? '',
-                'last_name'  => $guest['last_name'] ?? '',
-                'birth_date' => $guest['birth_date'] ?? '',
-                'gender'     => $guest['gender'] ?? 'm',
-            ];
-        }
-        $occupancy[] = [
-            'room_code' => 'standard',
-            'guests'    => $room_guests,
-        ];
-    }
-
-    return $occupancy;
-}
-
-/**
- * Build flat occupancy array for experience bookings.
- *
- * API expects: [{first_name, last_name, birth_date, gender}] — no room grouping.
- *
- * @param array $guests_data Parsed guests
- * @return array Flat participant array for API
- */
-function fn_sphinx_holidays_build_flat_occupancy(array $guests_data): array
-{
-    $occupancy = [];
-    foreach ($guests_data as $guest) {
-        $occupancy[] = [
-            'first_name' => $guest['first_name'] ?? '',
-            'last_name'  => $guest['last_name'] ?? '',
-            'birth_date' => $guest['birth_date'] ?? '',
-            'gender'     => $guest['gender'] ?? 'm',
-        ];
-    }
-    return $occupancy;
-}
-
-/**
- * Send admin email alert when a Sphinx booking fails.
- *
- * Uses CS-Cart's fn_send_mail() to notify the orders department.
- *
- * @param int $order_id CS-Cart order ID
- * @param int $booking_id Sphinx booking ID
- * @param string $hotel_name Hotel name for context
- * @param string $error Error message from the API
- */
-function fn_sphinx_holidays_send_booking_failure_email(int $order_id, int $booking_id, string $hotel_name, string $error): void
-{
-    $adminEmail = db_get_field(
-        "SELECT value FROM ?:settings_objects WHERE name = 'company_orders_department'"
-    );
-
-    if (empty($adminEmail) || !is_string($adminEmail)) {
-        return;
-    }
-
-    $subject = "Sphinx Booking FAILED - Order #{$order_id}";
-    $body = "A Sphinx hotel booking has failed and requires attention.\n\n"
-        . "Order ID: #{$order_id}\n"
-        . "Booking ID: #{$booking_id}\n"
-        . "Hotel: {$hotel_name}\n"
-        . "Error: {$error}\n\n"
-        . "The booking has been marked as 'failed'. Please review in the admin panel\n"
-        . "and retry the booking if appropriate.";
-
-    @fn_send_mail([
-        'to'      => $adminEmail,
-        'from'    => 'default_company_orders_department',
-        'subject' => $subject,
-        'body'    => $body,
-    ], 'A');
 }
 
 /**

@@ -318,5 +318,8 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
         )
     ]);
 
+    // Notify provider addons so they can log to their own sync tables
+    fn_set_hook('travel_core_exchange_rates_updated', $result);
+
     return $return_details ? $result : true;
 }
