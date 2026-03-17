@@ -10,6 +10,28 @@ declare(strict_types=1);
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Registry;
+
+/**
+ * Variants function for the default_currency addon setting.
+ * Pulls currencies from CS-Cart's configured currencies.
+ */
+function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
+{
+    $currencies = Registry::get('currencies');
+    $result = [];
+
+    if (empty($currencies) || !is_array($currencies)) {
+        return $result;
+    }
+
+    foreach ($currencies as $code => $currency) {
+        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+    }
+
+    return $result;
+}
+
 /**
  * Addon uninstall function.
  * Drops Sphinx-specific tables and cleans up.

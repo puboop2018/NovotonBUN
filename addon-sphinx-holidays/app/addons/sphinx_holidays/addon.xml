@@ -81,12 +81,7 @@
                     <item id="default_currency">
                         <type>selectbox</type>
                         <default_value>EUR</default_value>
-                        <variants>
-                            <item id="EUR">EUR</item>
-                            <item id="RON">RON</item>
-                            <item id="USD">USD</item>
-                            <item id="GBP">GBP</item>
-                        </variants>
+                        <variants/>
                     </item>
                     <item id="ignore_domains">
                         <type>input</type>

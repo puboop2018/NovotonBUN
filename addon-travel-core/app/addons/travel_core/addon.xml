@@ -98,6 +98,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="round_prices">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                     <item id="cron_header">
                         <type>header</type>
                         <variants/>
@@ -327,6 +332,11 @@
         <!-- Cart/checkout -->
         <item lang="en" id="travel_core.edit_guest_details"><![CDATA[Edit Guest Details]]></item>
         <item lang="ro" id="travel_core.edit_guest_details"><![CDATA[Editează detalii turiști]]></item>
+        <!-- Exchange rates -->
+        <item lang="en" id="travel_core.exchange_rates"><![CDATA[Exchange Rates]]></item>
+        <item lang="ro" id="travel_core.exchange_rates"><![CDATA[Cursuri Valutare]]></item>
+        <item lang="en" id="travel_core.exchange_rates_updated"><![CDATA[Exchange rates updated successfully]]></item>
+        <item lang="ro" id="travel_core.exchange_rates_updated"><![CDATA[Cursurile valutare au fost actualizate cu succes]]></item>
     </language_variables>
 
     <!-- Functions to run on install/uninstall -->

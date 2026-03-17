@@ -92,6 +92,14 @@ msgctxt "SettingsTooltips::travel_core::currency_risk_commission"
 msgid "Percentage added to cover currency exchange rate fluctuations"
 msgstr "Percentage added to cover currency exchange rate fluctuations"
 
+msgctxt "SettingsOptions::travel_core::round_prices"
+msgid "Round hotel prices"
+msgstr "Round hotel prices"
+
+msgctxt "SettingsTooltips::travel_core::round_prices"
+msgid "Round all travel prices to whole numbers"
+msgstr "Round all travel prices to whole numbers"
+
 msgctxt "SettingsOptions::travel_core::cron_header"
 msgid "Cron Settings"
 msgstr "Cron Settings"
@@ -371,3 +379,11 @@ msgstr "Sat"
 msgctxt "Languages::travel_core.sun"
 msgid "Sun"
 msgstr "Sun"
+
+msgctxt "Languages::travel_core.exchange_rates"
+msgid "Exchange Rates"
+msgstr "Exchange Rates"
+
+msgctxt "Languages::travel_core.exchange_rates_updated"
+msgid "Exchange rates updated successfully"
+msgstr "Exchange rates updated successfully"
