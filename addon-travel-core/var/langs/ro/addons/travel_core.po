@@ -1,0 +1,105 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO"
+
+msgctxt "Addons::name::travel_core"
+msgid "Travel Core"
+msgstr "Travel Core"
+
+msgctxt "Addons::description::travel_core"
+msgid "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel."
+msgstr "Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare."
+
+msgctxt "SettingsSections::travel_core::general"
+msgid "General Settings"
+msgstr "Setări Generale"
+
+msgctxt "SettingsOptions::travel_core::feature_mapping_header"
+msgid "Feature Mapping"
+msgstr "Mapare Caracteristici"
+
+msgctxt "SettingsOptions::travel_core::feature_id_property_rating"
+msgid "CS-Cart Feature ID: Stars/Classification"
+msgstr "ID Caracteristică CS-Cart: Stele/Clasificare"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_property_rating"
+msgid "Product feature ID used for hotel star rating"
+msgstr "ID-ul caracteristicii de produs folosit pentru clasificarea pe stele a hotelului"
+
+msgctxt "SettingsOptions::travel_core::feature_id_meals"
+msgid "CS-Cart Feature ID: Meal Plan"
+msgstr "ID Caracteristică CS-Cart: Masă"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_meals"
+msgid "Product feature ID used for meal plan / board type"
+msgstr "ID-ul caracteristicii de produs folosit pentru tipul de masă"
+
+msgctxt "SettingsOptions::travel_core::feature_id_room_type"
+msgid "CS-Cart Feature ID: Room Type"
+msgstr "ID Caracteristică CS-Cart: Tip Cameră"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_room_type"
+msgid "Product feature ID used for room type"
+msgstr "ID-ul caracteristicii de produs folosit pentru tipul de cameră"
+
+msgctxt "SettingsOptions::travel_core::feature_id_property_type"
+msgid "CS-Cart Feature ID: Property Type"
+msgstr "ID Caracteristică CS-Cart: Tip Proprietate"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_property_type"
+msgid "Product feature ID used for property type (hotel, villa, etc.)"
+msgstr "ID-ul caracteristicii de produs folosit pentru tipul de proprietate (hotel, vilă, etc.)"
+
+msgctxt "SettingsOptions::travel_core::feature_id_location"
+msgid "CS-Cart Feature ID: Location"
+msgstr "ID Caracteristică CS-Cart: Locație"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_location"
+msgid "Product feature ID used for location/destination"
+msgstr "ID-ul caracteristicii de produs folosit pentru locație/destinație"
+
+msgctxt "SettingsOptions::travel_core::providers_header"
+msgid "Active Providers"
+msgstr "Furnizori Activi"
+
+msgctxt "SettingsOptions::travel_core::active_providers"
+msgid "Active providers (comma-separated)"
+msgstr "Furnizori activi (separați prin virgulă)"
+
+msgctxt "SettingsTooltips::travel_core::active_providers"
+msgid "Comma-separated list of active travel provider addon names (e.g. novoton,sphinx)"
+msgstr "Lista de furnizori activi, separați prin virgulă (ex. novoton,sphinx)"
+
+msgctxt "SettingsOptions::travel_core::currency_header"
+msgid "Currency"
+msgstr "Monedă"
+
+msgctxt "SettingsOptions::travel_core::default_currency"
+msgid "Default currency"
+msgstr "Monedă implicită"
+
+msgctxt "SettingsTooltips::travel_core::default_currency"
+msgid "Default currency for travel pricing (e.g. EUR, RON)"
+msgstr "Moneda implicită pentru prețurile de turism (ex. EUR, RON)"
+
+msgctxt "SettingsOptions::travel_core::currency_risk_commission"
+msgid "Currency risk commission (%)"
+msgstr "Comision risc valutar (%)"
+
+msgctxt "SettingsTooltips::travel_core::currency_risk_commission"
+msgid "Percentage added to cover currency exchange rate fluctuations"
+msgstr "Procent adăugat pentru acoperirea fluctuațiilor cursului valutar"
+
+msgctxt "SettingsOptions::travel_core::cron_header"
+msgid "Cron Settings"
+msgstr "Setări Cron"
+
+msgctxt "SettingsOptions::travel_core::cron_access_key"
+msgid "Cron access key"
+msgstr "Cheie acces cron"
+
+msgctxt "SettingsTooltips::travel_core::cron_access_key"
+msgid "Secret key for authenticating automated cron job requests"
+msgstr "Cheie secretă pentru autentificarea cererilor cron automate"
