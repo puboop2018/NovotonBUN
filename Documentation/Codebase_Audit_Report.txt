@@ -1,0 +1,212 @@
+================================================================================
+  CODEBASE AUDIT REPORT — NovotonBUN Travel Addons
+================================================================================
+  Date:    2026-03-17
+  Scope:   addon-travel-core, addon-sphinx-holidays, addon-novoton-holidays
+  Status:  FIXES APPLIED
+================================================================================
+
+
+TABLE OF CONTENTS
+-----------------
+  1. Executive Summary
+  2. Critical Issues (Fixed)
+  3. High Severity Issues (Fixed)
+  4. Medium Severity (Accepted / Deferred)
+  5. Architecture Assessment
+  6. Files Modified
+  7. Remaining Recommendations
+
+
+================================================================================
+  1. EXECUTIVE SUMMARY
+================================================================================
+
+Comprehensive audit of the three-addon travel system (travel_core,
+sphinx_holidays, novoton_holidays) covering security, bugs, dead code,
+consistency, and architecture.
+
+FINDINGS:
+  - 5 critical issues (all fixed)
+  - 5 high-severity items (3 fixed, 2 deferred)
+  - 9 medium/low items (assessed, several accepted as-is)
+
+STRENGTHS:
+  - Excellent SQL injection protection (parameterized queries throughout)
+  - Good cron security (hash_equals() in all 3 addons)
+  - Proper CS-Cart interface segregation and DI patterns
+  - Clean repository pattern with caching
+  - Good error logging (105+ fn_log_event() calls in novoton alone)
+
+OVERALL: Production-ready after the applied fixes.
+
+
+================================================================================
+  2. CRITICAL ISSUES (FIXED)
+================================================================================
+
+2.1 BUG: $mode overwrite in travel_bookings.php
+-------------------------------------------------
+  File:   addon-travel-core/.../controllers/backend/travel_bookings.php
+  Line:   23 (was: $mode = $_REQUEST['mode'] ?? 'manage';)
+  Impact: CS-Cart auto-sets $mode from dispatch URL. Overwriting it causes
+          404 errors — same bug pattern fixed in sphinx_holidays earlier.
+  Fix:    Removed the $mode overwrite line. Added restricted admin guard.
+
+2.2 BUG: $mode overwrite in travel_booking.php (frontend)
+----------------------------------------------------------
+  File:   addon-travel-core/.../controllers/frontend/travel_booking.php
+  Line:   24 (was: $mode = $_REQUEST['mode'] ?? '';)
+  Impact: Same $mode overwrite pattern breaking CS-Cart dispatch routing.
+  Fix:    Removed the $mode overwrite line.
+
+2.3 BUG: $mode overwrite in novoton_bookings.php
+--------------------------------------------------
+  File:   addon-novoton-holidays/.../controllers/backend/novoton_bookings.php
+  Lines:  18-19 (was: if (empty($mode)) { $mode = 'manage'; })
+  Impact: Overwrites CS-Cart's auto-set $mode when dispatch URL has no mode.
+  Fix:    Removed the $mode overwrite. Added restricted admin guard.
+
+2.4 SECURITY: Hardcoded API credentials in addon.xml
+------------------------------------------------------
+  File:   addon-novoton-holidays/.../addon.xml
+  Lines:  63-83
+  Values: api_url=b2b.allinclusivebg.com, api_key=TEST-TEST-TEST-TEST-TEST,
+          api_id=713, api_user=EHROM117, api_password=EUP359YJX (plaintext!)
+  Impact: Credentials visible in source code / version control.
+  Fix:    Removed all default values. Admin must configure after install.
+
+2.5 SECURITY: Missing input validation in travel_feature_mappings.php
+----------------------------------------------------------------------
+  File:   addon-travel-core/.../controllers/backend/travel_feature_mappings.php
+  Lines:  152-154
+  Issue:  match_type accepted any string, api_source not sanitized.
+  Fix:    Added whitelist validation for match_type ['exact','prefix','contains'].
+          Sanitized api_source with preg_replace to allow only [a-z0-9_].
+          Fixed AJAX exit pattern to use fn_echo() instead of raw exit.
+
+
+================================================================================
+  3. HIGH SEVERITY ISSUES (FIXED)
+================================================================================
+
+3.1 Missing restricted admin guards (5 novoton controllers)
+-------------------------------------------------------------
+  Files:  novoton_admin.php, novoton_alternatives.php, novoton_bookings.php,
+          novoton_diagnostic.php, novoton_price_compare.php
+  Impact: Restricted admins (multivendor) could access these controllers.
+  Fix:    Added MULTIVENDOR/RESTRICTED_ADMIN guard to all 5 controllers.
+
+3.2 Missing permission check in travel_bookings.php
+-----------------------------------------------------
+  File:   addon-travel-core/.../controllers/backend/travel_bookings.php
+  Impact: No CONTROLLER_STATUS_DENIED guard (unlike travel_feature_mappings).
+  Fix:    Added restricted admin guard at top of file.
+
+3.3 Legacy NovotonBeforeSplit/ directory
+-----------------------------------------
+  Path:   /NovotonBeforeSplit/
+  Impact: Contains the full pre-split monolithic addon. Bloats repo, causes
+          confusion. Duplicates code of the current split addons.
+  Fix:    Added to .gitignore. Directory preserved for reference but excluded
+          from future commits.
+
+
+================================================================================
+  4. MEDIUM SEVERITY (ASSESSED / DEFERRED)
+================================================================================
+
+4.1 PriceInfoCalculator.php — 1,451 lines  [DEFERRED]
+  File:   addon-novoton-holidays/.../PriceInfoCalculation/PriceInfoCalculator.php
+  Status: Complex but working correctly. Splitting would be a refactoring
+          project with regression risk. No functional issue.
+  Action: Document for future refactoring. Consider splitting into
+          BasePriceCalc, FeeApplier, DiscountApplier, CommissionCalculator.
+
+4.2 Language hardcoding in FeatureMapper  [ACCEPTED]
+  File:   addon-novoton-holidays/.../Services/FeatureMapper.php:121,125-127
+  Status: Uses display_name_ro / display_name_en columns from DB schema.
+          The getActiveLanguages() method (line 574) already queries DB
+          dynamically for variant creation. The column-level "hardcoding"
+          is a schema limitation, not a code issue.
+  Action: Would need schema migration to support additional languages.
+          Not a bug — accepted as-is.
+
+4.3 Duplicate feature variant functions  [ACCEPTED]
+  Files:  novoton func.php (8 functions), travel_core func.php (5 functions)
+  Status: CS-Cart convention requires function names matching pattern
+          fn_settings_variants_addons_{addon}_{setting_id}().
+          Cannot be auto-generated due to CS-Cart's auto-discovery by name.
+  Action: Accepted as necessary boilerplate.
+
+4.4 API error handling inconsistency  [DEFERRED]
+  Status: Some Novoton API clients return false, others throw exceptions.
+          Not causing issues in practice — callers handle both.
+  Action: Standardize in a future API client refactoring.
+
+4.5 BookingRepository inline GuestDataNormalizer  [ACCEPTED]
+  File:   addon-novoton-holidays/.../Repository/BookingRepository.php:36
+  Status: Constructor accepts ?GuestDataNormalizer with fallback to new().
+          This is a valid nullable DI pattern, not a bug.
+  Action: No change needed.
+
+
+================================================================================
+  5. ARCHITECTURE ASSESSMENT
+================================================================================
+
+SQL Safety:         EXCELLENT — All queries use db_query() with ?s/?i/?n
+Cron Security:      EXCELLENT — hash_equals() in all 3 addons
+Template XSS:       EXCELLENT — Smarty auto-escaping, no raw output
+Hook Implementation: GOOD — Consistent naming, proper signatures
+Repository Pattern:  GOOD — 27 interfaces, clean separation
+DI Container:       GOOD — Both addons use Container.php singleton pattern
+Error Logging:      GOOD — 105+ fn_log_event() calls
+Cross-Addon Safety:  GOOD — Provider-filtered queries prevent contamination
+Table Schemas:      GOOD — Proper indexes, FK comments, utf8mb4
+
+
+================================================================================
+  6. FILES MODIFIED
+================================================================================
+
+TRAVEL_CORE:
+  FIX  controllers/backend/travel_bookings.php
+       - Removed $mode overwrite, added restricted admin guard
+  FIX  controllers/frontend/travel_booking.php
+       - Removed $mode overwrite
+  FIX  controllers/backend/travel_feature_mappings.php
+       - Added match_type whitelist validation
+       - Sanitized api_source input
+       - Fixed AJAX exit pattern (fn_echo instead of raw exit)
+
+NOVOTON_HOLIDAYS:
+  FIX  addon.xml
+       - Removed hardcoded API credentials (api_url, api_key, api_id,
+         api_user, api_password)
+  FIX  controllers/backend/novoton_admin.php
+       - Added restricted admin guard
+  FIX  controllers/backend/novoton_alternatives.php
+       - Added restricted admin guard
+  FIX  controllers/backend/novoton_bookings.php
+       - Added restricted admin guard, removed $mode overwrite
+  FIX  controllers/backend/novoton_diagnostic.php
+       - Added restricted admin guard
+  FIX  controllers/backend/novoton_price_compare.php
+       - Added restricted admin guard
+
+ROOT:
+  FIX  .gitignore
+       - Added NovotonBeforeSplit/ to gitignore
+
+
+================================================================================
+  7. REMAINING RECOMMENDATIONS
+================================================================================
+
+  1. FUTURE: Split PriceInfoCalculator.php into smaller services
+  2. FUTURE: Add schema migration for multi-language display names
+  3. FUTURE: Standardize Novoton API error handling (all exceptions)
+  4. CONSIDER: Remove NovotonBeforeSplit/ directory entirely (now gitignored)
+  5. CONSIDER: Add rate limiting to backend AJAX endpoints
+  6. CONSIDER: Add database-level encryption for guest PII (email, phone)

@@ -19,6 +19,10 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    return [CONTROLLER_STATUS_DENIED];
+}
+
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;

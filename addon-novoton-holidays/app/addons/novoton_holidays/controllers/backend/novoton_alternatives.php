@@ -10,6 +10,10 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    return [CONTROLLER_STATUS_DENIED];
+}
+
 $altRequestRepo = _nvt_alternative_request_repo();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

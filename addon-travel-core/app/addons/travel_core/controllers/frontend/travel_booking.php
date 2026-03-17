@@ -21,7 +21,8 @@ use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-$mode = $_REQUEST['mode'] ?? '';
+// CS-Cart auto-sets $mode from dispatch URL (e.g., dispatch=travel_booking.booking_form → $mode = 'booking_form')
+// Do NOT overwrite $mode from $_REQUEST — that causes routing issues.
 $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
 // Resolve the provider for this hotel

@@ -149,9 +149,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Add alias
     if ($mode == 'add_alias') {
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
-        $apiSource = (string) ($_REQUEST['api_source'] ?? '');
+        $apiSource = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['api_source'] ?? '')));
         $apiValue = (string) ($_REQUEST['api_value'] ?? '');
+        $validMatchTypes = ['exact', 'prefix', 'contains'];
         $matchType = (string) ($_REQUEST['match_type'] ?? 'exact');
+        if (!in_array($matchType, $validMatchTypes, true)) {
+            $matchType = 'exact';
+        }
 
         if ($mapId > 0 && $apiSource !== '' && $apiValue !== '') {
             FeatureMapper::addAlias($apiSource, $apiValue, $mapId, $matchType);
@@ -332,7 +336,11 @@ if ($mode == 'get_variants') {
         );
     }
 
-    header('Content-Type: application/json');
-    echo json_encode($variants);
-    exit;
+    if (defined('AJAX_REQUEST')) {
+        Tygh::$app['ajax']->assign('variants', $variants);
+    } else {
+        header('Content-Type: application/json');
+        fn_echo(json_encode($variants));
+        exit;
+    }
 }

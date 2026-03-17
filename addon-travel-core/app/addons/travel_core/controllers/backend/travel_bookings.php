@@ -20,7 +20,12 @@ use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-$mode = $_REQUEST['mode'] ?? 'manage';
+if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    return [CONTROLLER_STATUS_DENIED];
+}
+
+// CS-Cart auto-sets $mode from dispatch URL (e.g., dispatch=travel_bookings.manage → $mode = 'manage')
+// Do NOT overwrite $mode from $_REQUEST — that causes 404 errors.
 
 if ($mode === 'manage') {
     // Filters
