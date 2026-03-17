@@ -98,6 +98,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="round_prices">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                     <item id="cron_header">
                         <type>header</type>
                         <variants/>
@@ -208,6 +213,130 @@
         <item lang="ro" id="travel_core.guests"><![CDATA[Oaspeți]]></item>
         <item lang="en" id="travel_core.dates"><![CDATA[Dates]]></item>
         <item lang="ro" id="travel_core.dates"><![CDATA[Date]]></item>
+        <!-- Booking engine: availability & search -->
+        <item lang="en" id="travel_core.availability"><![CDATA[Availability]]></item>
+        <item lang="ro" id="travel_core.availability"><![CDATA[Disponibilitate]]></item>
+        <item lang="en" id="travel_core.search"><![CDATA[Search]]></item>
+        <item lang="ro" id="travel_core.search"><![CDATA[Caută]]></item>
+        <item lang="en" id="travel_core.change_search"><![CDATA[Change Search]]></item>
+        <item lang="ro" id="travel_core.change_search"><![CDATA[Modifică căutarea]]></item>
+        <item lang="en" id="travel_core.apply_changes"><![CDATA[Apply changes]]></item>
+        <item lang="ro" id="travel_core.apply_changes"><![CDATA[Aplică modificări]]></item>
+        <item lang="en" id="travel_core.select_dates_message"><![CDATA[Select dates to see this property's availability and prices]]></item>
+        <item lang="ro" id="travel_core.select_dates_message"><![CDATA[Selectați datele pentru a vedea disponibilitatea și prețurile]]></item>
+        <item lang="en" id="travel_core.please_enter_dates"><![CDATA[Please select check-in and check-out dates]]></item>
+        <item lang="ro" id="travel_core.please_enter_dates"><![CDATA[Vă rugăm selectați datele de check-in și check-out]]></item>
+        <item lang="en" id="travel_core.loading_booking_form"><![CDATA[Loading booking form...]]></item>
+        <item lang="ro" id="travel_core.loading_booking_form"><![CDATA[Se încarcă formularul de rezervare...]]></item>
+        <!-- Booking engine: dates -->
+        <item lang="en" id="travel_core.check_in_date"><![CDATA[Check-in date]]></item>
+        <item lang="ro" id="travel_core.check_in_date"><![CDATA[Data check-in]]></item>
+        <item lang="en" id="travel_core.check_out_date"><![CDATA[Check-out date]]></item>
+        <item lang="ro" id="travel_core.check_out_date"><![CDATA[Data check-out]]></item>
+        <item lang="en" id="travel_core.select_check_in"><![CDATA[Select check-in date]]></item>
+        <item lang="ro" id="travel_core.select_check_in"><![CDATA[Selectează data de check-in]]></item>
+        <item lang="en" id="travel_core.select_check_out"><![CDATA[Select check-out date]]></item>
+        <item lang="ro" id="travel_core.select_check_out"><![CDATA[Selectează data check-out]]></item>
+        <item lang="en" id="travel_core.night"><![CDATA[night]]></item>
+        <item lang="ro" id="travel_core.night"><![CDATA[noapte]]></item>
+        <item lang="en" id="travel_core.night_stay"><![CDATA[night stay]]></item>
+        <item lang="ro" id="travel_core.night_stay"><![CDATA[noapte]]></item>
+        <item lang="en" id="travel_core.nights_stay"><![CDATA[nights stay]]></item>
+        <item lang="ro" id="travel_core.nights_stay"><![CDATA[nopți]]></item>
+        <!-- Booking engine: guests -->
+        <item lang="en" id="travel_core.adult"><![CDATA[adult]]></item>
+        <item lang="ro" id="travel_core.adult"><![CDATA[adult]]></item>
+        <item lang="en" id="travel_core.adults"><![CDATA[Adults]]></item>
+        <item lang="ro" id="travel_core.adults"><![CDATA[Adulți]]></item>
+        <item lang="en" id="travel_core.adults_label"><![CDATA[Adults]]></item>
+        <item lang="ro" id="travel_core.adults_label"><![CDATA[Adulți]]></item>
+        <item lang="en" id="travel_core.child"><![CDATA[child]]></item>
+        <item lang="ro" id="travel_core.child"><![CDATA[copil]]></item>
+        <item lang="en" id="travel_core.children"><![CDATA[Children]]></item>
+        <item lang="ro" id="travel_core.children"><![CDATA[Copii]]></item>
+        <item lang="en" id="travel_core.children_label"><![CDATA[Children]]></item>
+        <item lang="ro" id="travel_core.children_label"><![CDATA[Copii]]></item>
+        <item lang="en" id="travel_core.childrens_ages"><![CDATA[Children's ages]]></item>
+        <item lang="ro" id="travel_core.childrens_ages"><![CDATA[Vârstele copiilor]]></item>
+        <item lang="en" id="travel_core.child_age"><![CDATA[Child's age]]></item>
+        <item lang="ro" id="travel_core.child_age"><![CDATA[Vârsta copilului]]></item>
+        <item lang="en" id="travel_core.select_age"><![CDATA[Select age]]></item>
+        <item lang="ro" id="travel_core.select_age"><![CDATA[Selectează vârsta]]></item>
+        <item lang="en" id="travel_core.select_missing_ages"><![CDATA[Select age ([count] missing)]]></item>
+        <item lang="ro" id="travel_core.select_missing_ages"><![CDATA[Selectează vârsta ([count] lipsă)]]></item>
+        <item lang="en" id="travel_core.select_age_for_one_child"><![CDATA[Select age for 1 child (Room [rooms]).]]></item>
+        <item lang="ro" id="travel_core.select_age_for_one_child"><![CDATA[Selectează vârsta pentru 1 copil (Cameră [rooms]).]]></item>
+        <item lang="en" id="travel_core.select_age_for_children"><![CDATA[Select age for [count] children (Room [rooms]).]]></item>
+        <item lang="ro" id="travel_core.select_age_for_children"><![CDATA[Selectează vârsta pentru [count] copii (Cameră [rooms]).]]></item>
+        <item lang="en" id="travel_core.years_old"><![CDATA[years old]]></item>
+        <item lang="ro" id="travel_core.years_old"><![CDATA[ani]]></item>
+        <item lang="en" id="travel_core.year_old"><![CDATA[year old]]></item>
+        <item lang="ro" id="travel_core.year_old"><![CDATA[an]]></item>
+        <!-- Booking engine: rooms -->
+        <item lang="en" id="travel_core.rooms"><![CDATA[rooms]]></item>
+        <item lang="ro" id="travel_core.rooms"><![CDATA[camere]]></item>
+        <item lang="en" id="travel_core.add_room"><![CDATA[Add Room]]></item>
+        <item lang="ro" id="travel_core.add_room"><![CDATA[Adaugă cameră]]></item>
+        <item lang="en" id="travel_core.remove"><![CDATA[Remove]]></item>
+        <item lang="ro" id="travel_core.remove"><![CDATA[Șterge]]></item>
+        <item lang="en" id="travel_core.done"><![CDATA[Done]]></item>
+        <item lang="ro" id="travel_core.done"><![CDATA[Gata]]></item>
+        <!-- Booking engine: selection -->
+        <item lang="en" id="travel_core.selected"><![CDATA[selected]]></item>
+        <item lang="ro" id="travel_core.selected"><![CDATA[selectate]]></item>
+        <item lang="en" id="travel_core.selected_singular"><![CDATA[selected]]></item>
+        <item lang="ro" id="travel_core.selected_singular"><![CDATA[selectată]]></item>
+        <!-- Booking engine: calendar -->
+        <item lang="en" id="travel_core.calendar_price_footer"><![CDATA[Approximate prices in %s for a 1-night stay]]></item>
+        <item lang="ro" id="travel_core.calendar_price_footer"><![CDATA[Prețuri aproximative în %s pentru un sejur de 1 noapte]]></item>
+        <!-- Booking engine: month names -->
+        <item lang="en" id="travel_core.january"><![CDATA[January]]></item>
+        <item lang="ro" id="travel_core.january"><![CDATA[Ianuarie]]></item>
+        <item lang="en" id="travel_core.february"><![CDATA[February]]></item>
+        <item lang="ro" id="travel_core.february"><![CDATA[Februarie]]></item>
+        <item lang="en" id="travel_core.march"><![CDATA[March]]></item>
+        <item lang="ro" id="travel_core.march"><![CDATA[Martie]]></item>
+        <item lang="en" id="travel_core.april"><![CDATA[April]]></item>
+        <item lang="ro" id="travel_core.april"><![CDATA[Aprilie]]></item>
+        <item lang="en" id="travel_core.may"><![CDATA[May]]></item>
+        <item lang="ro" id="travel_core.may"><![CDATA[Mai]]></item>
+        <item lang="en" id="travel_core.june"><![CDATA[June]]></item>
+        <item lang="ro" id="travel_core.june"><![CDATA[Iunie]]></item>
+        <item lang="en" id="travel_core.july"><![CDATA[July]]></item>
+        <item lang="ro" id="travel_core.july"><![CDATA[Iulie]]></item>
+        <item lang="en" id="travel_core.august"><![CDATA[August]]></item>
+        <item lang="ro" id="travel_core.august"><![CDATA[August]]></item>
+        <item lang="en" id="travel_core.september"><![CDATA[September]]></item>
+        <item lang="ro" id="travel_core.september"><![CDATA[Septembrie]]></item>
+        <item lang="en" id="travel_core.october"><![CDATA[October]]></item>
+        <item lang="ro" id="travel_core.october"><![CDATA[Octombrie]]></item>
+        <item lang="en" id="travel_core.november"><![CDATA[November]]></item>
+        <item lang="ro" id="travel_core.november"><![CDATA[Noiembrie]]></item>
+        <item lang="en" id="travel_core.december"><![CDATA[December]]></item>
+        <item lang="ro" id="travel_core.december"><![CDATA[Decembrie]]></item>
+        <!-- Booking engine: day abbreviations -->
+        <item lang="en" id="travel_core.mon"><![CDATA[Mon]]></item>
+        <item lang="ro" id="travel_core.mon"><![CDATA[Lun]]></item>
+        <item lang="en" id="travel_core.tue"><![CDATA[Tue]]></item>
+        <item lang="ro" id="travel_core.tue"><![CDATA[Mar]]></item>
+        <item lang="en" id="travel_core.wed"><![CDATA[Wed]]></item>
+        <item lang="ro" id="travel_core.wed"><![CDATA[Mie]]></item>
+        <item lang="en" id="travel_core.thu"><![CDATA[Thu]]></item>
+        <item lang="ro" id="travel_core.thu"><![CDATA[Joi]]></item>
+        <item lang="en" id="travel_core.fri"><![CDATA[Fri]]></item>
+        <item lang="ro" id="travel_core.fri"><![CDATA[Vin]]></item>
+        <item lang="en" id="travel_core.sat"><![CDATA[Sat]]></item>
+        <item lang="ro" id="travel_core.sat"><![CDATA[Sâm]]></item>
+        <item lang="en" id="travel_core.sun"><![CDATA[Sun]]></item>
+        <item lang="ro" id="travel_core.sun"><![CDATA[Dum]]></item>
+        <!-- Cart/checkout -->
+        <item lang="en" id="travel_core.edit_guest_details"><![CDATA[Edit Guest Details]]></item>
+        <item lang="ro" id="travel_core.edit_guest_details"><![CDATA[Editează detalii turiști]]></item>
+        <!-- Exchange rates -->
+        <item lang="en" id="travel_core.exchange_rates"><![CDATA[Exchange Rates]]></item>
+        <item lang="ro" id="travel_core.exchange_rates"><![CDATA[Cursuri Valutare]]></item>
+        <item lang="en" id="travel_core.exchange_rates_updated"><![CDATA[Exchange rates updated successfully]]></item>
+        <item lang="ro" id="travel_core.exchange_rates_updated"><![CDATA[Cursurile valutare au fost actualizate cu succes]]></item>
     </language_variables>
 
     <!-- Functions to run on install/uninstall -->

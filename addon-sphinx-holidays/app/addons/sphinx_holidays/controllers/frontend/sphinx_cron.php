@@ -7,11 +7,14 @@ declare(strict_types=1);
  * Authentication via access_key parameter (no admin login required).
  *
  * Usage:
- *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&mode=hotels
- *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&mode=destinations
- *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&mode=hotels&country=GR
- *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&mode=hotels&destination_ids=1234,5678
- *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&mode=hotels&status=1
+ *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=hotels
+ *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=destinations
+ *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=hotels&country=GR
+ *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=hotels&destination_ids=1234,5678
+ *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=hotels&status=1
+ *
+ * Note: uses 'cron_mode' parameter (not 'mode') because CS-Cart reserves 'mode'
+ * for the dispatch system. 'mode' is kept as fallback for backward compatibility.
  *
  * All modes are handled by Command classes via CronDispatcher.
  * See CronDispatcher::getAvailableModes() for the full list.
@@ -43,7 +46,7 @@ if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
 
 // ── Parse mode ──
 
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['mode'] ?? 'destinations'));
+$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? $_REQUEST['mode'] ?? 'destinations'));
 
 // ── Status check (non-destructive) ──
 
