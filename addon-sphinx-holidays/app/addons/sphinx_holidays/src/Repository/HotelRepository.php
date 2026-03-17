@@ -35,15 +35,13 @@ class HotelRepository
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      description, short_description, image_url,
-                     amenities_json, tags_json, facilities_json,
-                     is_recommended, is_adults_only, rating, rating_count,
+                     facilities_json,
                      sync_status, last_synced_at)
                  VALUES (?s, ?s, ?i, ?s,
                      ?i, ?s, ?i, ?s,
                      ?s, ?s, ?d, ?d,
                      ?s, ?s, ?s,
-                     ?s, ?s, ?s,
-                     ?s, ?s, ?d, ?i,
+                     ?s,
                      'active', ?s)
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),
@@ -60,13 +58,7 @@ class HotelRepository
                     description = VALUES(description),
                     short_description = VALUES(short_description),
                     image_url = VALUES(image_url),
-                    amenities_json = VALUES(amenities_json),
-                    tags_json = VALUES(tags_json),
                     facilities_json = VALUES(facilities_json),
-                    is_recommended = VALUES(is_recommended),
-                    is_adults_only = VALUES(is_adults_only),
-                    rating = VALUES(rating),
-                    rating_count = VALUES(rating_count),
                     sync_status = 'active',
                     last_synced_at = VALUES(last_synced_at)",
                 $hotelId,
@@ -84,13 +76,7 @@ class HotelRepository
                 (string) ($hotel['description'] ?? ''),
                 (string) ($hotel['short_description'] ?? ''),
                 (string) ($hotel['image_url'] ?? ''),
-                $hotel['amenities_json'] ?? null,
-                $hotel['tags_json'] ?? null,
                 $hotel['facilities_json'] ?? null,
-                (string) ($hotel['is_recommended'] ?? 'N'),
-                (string) ($hotel['is_adults_only'] ?? 'N'),
-                (float) ($hotel['rating'] ?? 0),
-                (int) ($hotel['rating_count'] ?? 0),
                 date('Y-m-d H:i:s')
             );
 

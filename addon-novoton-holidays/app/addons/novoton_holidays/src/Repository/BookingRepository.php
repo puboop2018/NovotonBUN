@@ -165,12 +165,14 @@ class BookingRepository implements BookingRepositoryInterface
     {
         if ($limit > 0) {
             return db_get_array(
-                "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC LIMIT ?i",
+                "SELECT * FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC LIMIT ?i",
+                TravelConstants::STATUS_PENDING,
                 $limit
             );
         }
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE status = 'pending' ORDER BY created_at DESC"
+            "SELECT * FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC",
+            TravelConstants::STATUS_PENDING
         );
     }
     

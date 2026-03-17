@@ -27,7 +27,6 @@ class SphinxFeatureAssigner
     private const FEATURE_SETTINGS = [
         'stars'         => 'feature_id_property_rating',
         'property_type' => 'feature_id_property_type',
-        'board'         => 'feature_id_meals',
         'resort'        => 'feature_id_location',
     ];
 
@@ -45,10 +44,6 @@ class SphinxFeatureAssigner
         $this->assignPropertyType($productId, $hotel);
         $this->assignResort($productId, $hotel);
         $this->assignFacilities($productId, $hotel);
-        // NOTE: assignBoardTypes() is intentionally NOT called here.
-        // Board/meal data is per-offer (from search results), not per-hotel (from static API).
-        // The static API never populates amenities_json, so this method would always no-op.
-        // Board types are handled at booking time via SphinxNormalizer + travel_api_alias.
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -160,46 +155,6 @@ class SphinxFeatureAssigner
             }
 
             $this->assignCheckboxValue($productId, $featureId, $variantId);
-        }
-    }
-
-    /**
-     * @deprecated Board types are per-offer, not per-hotel. The static API never populates
-     * amenities_json. Kept for reference in case the API adds amenities in the future.
-     */
-    private function assignBoardTypes(int $productId, array $hotel): void
-    {
-        $amenitiesJson = $hotel['amenities_json'] ?? null;
-        if (empty($amenitiesJson)) {
-            return;
-        }
-
-        $amenities = is_string($amenitiesJson) ? json_decode($amenitiesJson, true) : $amenitiesJson;
-        if (!is_array($amenities)) {
-            return;
-        }
-
-        $featureId = $this->getFeatureId('board');
-        if (!$featureId) {
-            return;
-        }
-
-        foreach ($amenities as $amenity) {
-            $name = is_array($amenity) ? ($amenity['name'] ?? '') : (string) $amenity;
-            $boardCode = $this->normalizer->normalizeBoardCode($name);
-            if ($boardCode === null) {
-                continue;
-            }
-
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'board', $name);
-            $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
-
-            if ($variantId <= 0 && $mapping) {
-                $variantId = $this->autoCreateVariant($featureId, $mapping);
-            }
-            if ($variantId > 0) {
-                $this->assignCheckboxValue($productId, $featureId, $variantId);
-            }
         }
     }
 

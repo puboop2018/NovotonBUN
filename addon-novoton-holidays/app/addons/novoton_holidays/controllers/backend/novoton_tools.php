@@ -502,7 +502,11 @@ if ($mode == 'test_product') {
 
     header('Content-Type: text/plain; charset=utf-8');
 
-    $product_code = $_REQUEST['product_code'] ?? 'NVT1603';
+    $product_code = $_REQUEST['product_code'] ?? '';
+    if ($product_code === '') {
+        echo "ERROR: product_code parameter is required.\n";
+        exit;
+    }
 
     echo "========================================\n";
     echo "TEST SINGLE PRODUCT: $product_code\n";

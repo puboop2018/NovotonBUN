@@ -225,13 +225,15 @@ class SphinxApi
 
     /**
      * Get all orders (paginated).
+     *
+     * @param array $filters Optional filters (e.g. ['reference_code' => '123'])
      */
-    public function getOrders(int $page = 1, int $perPage = 50): ?array
+    public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
-        return $this->client->get('/api/v1/orders', [
+        return $this->client->get('/api/v1/orders', array_merge([
             'page'     => $page,
             'per_page' => $perPage,
-        ]);
+        ], $filters));
     }
 
     /**

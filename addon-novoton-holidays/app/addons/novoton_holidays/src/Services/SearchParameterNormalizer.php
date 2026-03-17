@@ -47,11 +47,6 @@ class SearchParameterNormalizer
             ? date('Y-m-d', strtotime($checkIn . ' +' . $nights . ' days'))
             : '';
 
-        // ── Legacy child_age_N fallback ──────────────────────────────
-        if (empty($allChildrenAges) && !empty($searchParams['children']) && (int) $searchParams['children'] > 0) {
-            $allChildrenAges = $this->parseLegacyChildAges($searchParams);
-        }
-
         // ── Meal plan ────────────────────────────────────────────────
         $mealPlan = !empty($searchParams['meal_plan']) ? $searchParams['meal_plan'] : '';
 
@@ -238,21 +233,6 @@ class SearchParameterNormalizer
         }
 
         return [$totalAdults, $totalChildren, $allAges];
-    }
-
-    private function parseLegacyChildAges(array $params): array
-    {
-        $ages  = [];
-        $count = (int) ($params['children'] ?? 0);
-        for ($i = 1; $i <= $count; $i++) {
-            if (isset($params['child_age_' . $i])) {
-                $age = $params['child_age_' . $i];
-                if ($age !== '' && $age !== 'age_needed') {
-                    $ages[] = (int) $age;
-                }
-            }
-        }
-        return $ages;
     }
 
     private function parseCommaAges(string $raw): array

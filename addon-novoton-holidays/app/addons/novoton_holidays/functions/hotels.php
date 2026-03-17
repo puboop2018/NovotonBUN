@@ -761,115 +761,32 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
 }
 
 /**
- * Assign star rating feature to product
- * 
+ * Assign star rating feature to product via FeatureMapper.
+ *
  * @param int $product_id Product ID
  * @param int $star_rating Star rating (1-5)
- * @param int $feature_id Feature ID for stars
  * @return bool Success
  */
-function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating, $feature_id = 4): bool
+function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating): bool
 {
     if ($star_rating < 1 || $star_rating > 5) {
         return false;
     }
 
-    // Delegate to FeatureMapper if mapping table is populated
-    try {
-        $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
-        $featureMapper = $container->featureMapper();
-        $normalizer = $container->novotonNormalizer();
+    $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
+    $featureMapper = $container->featureMapper();
+    $normalizer = $container->novotonNormalizer();
 
-        $code = $normalizer->normalizeStarRating((string) $star_rating);
-        if ($code !== null) {
-            $result = $featureMapper->assignFeatureToProduct(
-                (int) $product_id,
-                \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                $code
-            );
-            if ($result) {
-                return true;
-            }
-        }
-    } catch (\Exception $e) {
-        // Fall through to legacy logic
-    }
-
-    // ── Legacy fallback (mapping table empty or not yet seeded) ──
-
-    $variant_names = [
-        1 => ['ro' => '1 stea', 'en' => '1 star'],
-        2 => ['ro' => '2 stele', 'en' => '2 stars'],
-        3 => ['ro' => '3 stele', 'en' => '3 stars'],
-        4 => ['ro' => '4 stele', 'en' => '4 stars'],
-        5 => ['ro' => '5 stele', 'en' => '5 stars'],
-    ];
-
-    $ro_name = $variant_names[$star_rating]['ro'];
-    $en_name = $variant_names[$star_rating]['en'];
-
-    $feature_exists = db_get_field("SELECT feature_id FROM ?:product_features WHERE feature_id = ?i", $feature_id);
-    if (!$feature_exists) {
-        fn_log_event('novoton', 'warning', "Star rating feature (ID: {$feature_id}) not found");
+    $code = $normalizer->normalizeStarRating((string) $star_rating);
+    if ($code === null) {
         return false;
     }
 
-    $variant_id = db_get_field(
-        "SELECT variant_id FROM ?:product_feature_variant_descriptions
-         WHERE (variant = ?s OR variant = ?s)
-         AND variant_id IN (SELECT variant_id FROM ?:product_feature_variants WHERE feature_id = ?i)
-         LIMIT 1",
-        $ro_name, $en_name, $feature_id
+    return $featureMapper->assignFeatureToProduct(
+        (int) $product_id,
+        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
+        $code
     );
-
-    if (empty($variant_id)) {
-        $variant_data = [
-            'feature_id' => $feature_id,
-            'position' => $star_rating * 10,
-        ];
-        $variant_id = db_query("INSERT INTO ?:product_feature_variants ?e", $variant_data);
-
-        if ($variant_id) {
-            $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-            foreach ($languages as $lang_code) {
-                $variant_name = ($lang_code == 'ro') ? $ro_name : $en_name;
-                db_query(
-                    "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
-                     VALUES (?i, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE variant = ?s",
-                    $variant_id, $lang_code, $variant_name, $variant_name
-                );
-            }
-        }
-    }
-
-    if (empty($variant_id)) {
-        return false;
-    }
-
-    db_query("DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i", $feature_id, $product_id);
-
-    $value_data = [
-        'feature_id' => $feature_id,
-        'product_id' => $product_id,
-        'variant_id' => $variant_id,
-        'value' => '',
-        'value_int' => $variant_id,
-        'lang_code' => 'en',
-    ];
-
-    db_query("INSERT INTO ?:product_features_values ?e", $value_data);
-
-    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A' AND lang_code != 'en'");
-    foreach ($languages as $lang_code) {
-        $value_data['lang_code'] = $lang_code;
-        db_query(
-            "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i, value_int = ?i",
-            $value_data, $variant_id, $variant_id
-        );
-    }
-
-    return true;
 }
 
 /**
