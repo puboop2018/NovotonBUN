@@ -44,7 +44,11 @@ class SphinxFeatureAssigner
         $this->assignStarRating($productId, $hotel);
         $this->assignPropertyType($productId, $hotel);
         $this->assignResort($productId, $hotel);
-        $this->assignBoardTypes($productId, $hotel);
+        $this->assignFacilities($productId, $hotel);
+        // NOTE: assignBoardTypes() is intentionally NOT called here.
+        // Board/meal data is per-offer (from search results), not per-hotel (from static API).
+        // The static API never populates amenities_json, so this method would always no-op.
+        // Board types are handled at booking time via SphinxNormalizer + travel_api_alias.
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -117,6 +121,52 @@ class SphinxFeatureAssigner
         // If no mapping, skip — resort feature is optional
     }
 
+    /**
+     * Assign facility features from facilities_json.
+     *
+     * Each facility canonical code in travel_feature_map carries its own cscart_feature_id,
+     * so different facilities can map to different CS-Cart features (e.g., "Hotel Facilities",
+     * "Room Amenities", "Accessibility"). The admin controls this via the travel_feature_mappings UI.
+     */
+    private function assignFacilities(int $productId, array $hotel): void
+    {
+        $facilitiesJson = $hotel['facilities_json'] ?? null;
+        if (empty($facilitiesJson)) {
+            return;
+        }
+
+        $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
+        if (!is_array($facilities)) {
+            return;
+        }
+
+        foreach ($facilities as $facility) {
+            $facilityId = (string) ($facility['id'] ?? '');
+            if ($facilityId === '') {
+                continue;
+            }
+
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            if (!$mapping) {
+                continue;
+            }
+
+            // Each facility row has its own cscart_feature_id — not from addon settings
+            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+            if ($featureId <= 0 || $variantId <= 0) {
+                continue;
+            }
+
+            $this->assignCheckboxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * @deprecated Board types are per-offer, not per-hotel. The static API never populates
+     * amenities_json. Kept for reference in case the API adds amenities in the future.
+     */
     private function assignBoardTypes(int $productId, array $hotel): void
     {
         $amenitiesJson = $hotel['amenities_json'] ?? null;

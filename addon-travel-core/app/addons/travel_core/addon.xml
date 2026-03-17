@@ -51,27 +51,27 @@
                         <variants/>
                     </item>
                     <item id="feature_id_property_rating">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="feature_id_meals">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="feature_id_room_type">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="feature_id_property_type">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="feature_id_location">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>
@@ -337,6 +337,85 @@
         <item lang="ro" id="travel_core.exchange_rates"><![CDATA[Cursuri Valutare]]></item>
         <item lang="en" id="travel_core.exchange_rates_updated"><![CDATA[Exchange rates updated successfully]]></item>
         <item lang="ro" id="travel_core.exchange_rates_updated"><![CDATA[Cursurile valutare au fost actualizate cu succes]]></item>
+        <!-- Feature Mappings Admin UI -->
+        <item lang="en" id="travel_core.feature_mappings"><![CDATA[Feature Mappings]]></item>
+        <item lang="ro" id="travel_core.feature_mappings"><![CDATA[Mapare Caracteristici]]></item>
+        <item lang="en" id="travel_core.fm_total"><![CDATA[Total]]></item>
+        <item lang="ro" id="travel_core.fm_total"><![CDATA[Total]]></item>
+        <item lang="en" id="travel_core.fm_active"><![CDATA[Active]]></item>
+        <item lang="ro" id="travel_core.fm_active"><![CDATA[Active]]></item>
+        <item lang="en" id="travel_core.fm_unmapped"><![CDATA[Unmapped]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped"><![CDATA[Nemapate]]></item>
+        <item lang="en" id="travel_core.fm_aliases"><![CDATA[Aliases]]></item>
+        <item lang="ro" id="travel_core.fm_aliases"><![CDATA[Alias-uri]]></item>
+        <item lang="en" id="travel_core.fm_entries"><![CDATA[entries]]></item>
+        <item lang="ro" id="travel_core.fm_entries"><![CDATA[înregistrări]]></item>
+        <item lang="en" id="travel_core.fm_feature_type"><![CDATA[Feature Type]]></item>
+        <item lang="ro" id="travel_core.fm_feature_type"><![CDATA[Tip Caracteristică]]></item>
+        <item lang="en" id="travel_core.fm_canonical_code"><![CDATA[Canonical Code]]></item>
+        <item lang="ro" id="travel_core.fm_canonical_code"><![CDATA[Cod Canonic]]></item>
+        <item lang="en" id="travel_core.fm_display_en"><![CDATA[Name (EN)]]></item>
+        <item lang="ro" id="travel_core.fm_display_en"><![CDATA[Nume (EN)]]></item>
+        <item lang="en" id="travel_core.fm_display_ro"><![CDATA[Name (RO)]]></item>
+        <item lang="ro" id="travel_core.fm_display_ro"><![CDATA[Nume (RO)]]></item>
+        <item lang="en" id="travel_core.fm_cs_feature"><![CDATA[CS-Cart Feature]]></item>
+        <item lang="ro" id="travel_core.fm_cs_feature"><![CDATA[Caracteristică CS-Cart]]></item>
+        <item lang="en" id="travel_core.fm_variant"><![CDATA[Variant]]></item>
+        <item lang="ro" id="travel_core.fm_variant"><![CDATA[Variantă]]></item>
+        <item lang="en" id="travel_core.fm_map_id"><![CDATA[Mapping ID]]></item>
+        <item lang="ro" id="travel_core.fm_map_id"><![CDATA[ID Mapare]]></item>
+        <item lang="en" id="travel_core.fm_not_mapped"><![CDATA[Not mapped]]></item>
+        <item lang="ro" id="travel_core.fm_not_mapped"><![CDATA[Nemapat]]></item>
+        <item lang="en" id="travel_core.fm_feature_hint"><![CDATA[Select the CS-Cart product feature this mapping should assign to. For facilities, each entry can target a different feature.]]></item>
+        <item lang="ro" id="travel_core.fm_feature_hint"><![CDATA[Selectați caracteristica CS-Cart pentru această mapare. Pentru facilități, fiecare intrare poate viza o caracteristică diferită.]]></item>
+        <item lang="en" id="travel_core.fm_variant_hint"><![CDATA[Select the CS-Cart variant to assign. Changes when you select a different feature above.]]></item>
+        <item lang="ro" id="travel_core.fm_variant_hint"><![CDATA[Selectați varianta CS-Cart. Se modifică când selectați o altă caracteristică.]]></item>
+        <item lang="en" id="travel_core.fm_edit_mapping"><![CDATA[Edit Mapping]]></item>
+        <item lang="ro" id="travel_core.fm_edit_mapping"><![CDATA[Editare Mapare]]></item>
+        <item lang="en" id="travel_core.fm_mapping_updated"><![CDATA[Mapping updated successfully]]></item>
+        <item lang="ro" id="travel_core.fm_mapping_updated"><![CDATA[Maparea a fost actualizată cu succes]]></item>
+        <item lang="en" id="travel_core.fm_mapping_not_found"><![CDATA[Mapping not found]]></item>
+        <item lang="ro" id="travel_core.fm_mapping_not_found"><![CDATA[Maparea nu a fost găsită]]></item>
+        <item lang="en" id="travel_core.fm_mappings_activated"><![CDATA[[count] mapping(s) activated]]></item>
+        <item lang="ro" id="travel_core.fm_mappings_activated"><![CDATA[[count] mapare/mapări activate]]></item>
+        <item lang="en" id="travel_core.fm_mappings_deactivated"><![CDATA[[count] mapping(s) deactivated]]></item>
+        <item lang="ro" id="travel_core.fm_mappings_deactivated"><![CDATA[[count] mapare/mapări dezactivate]]></item>
+        <item lang="en" id="travel_core.fm_mappings_deleted"><![CDATA[[count] mapping(s) deleted]]></item>
+        <item lang="ro" id="travel_core.fm_mappings_deleted"><![CDATA[[count] mapare/mapări șterse]]></item>
+        <item lang="en" id="travel_core.fm_reseeded"><![CDATA[Canonical codes re-seeded successfully]]></item>
+        <item lang="ro" id="travel_core.fm_reseeded"><![CDATA[Codurile canonice au fost re-populate cu succes]]></item>
+        <item lang="en" id="travel_core.fm_reseed"><![CDATA[Re-seed Codes]]></item>
+        <item lang="ro" id="travel_core.fm_reseed"><![CDATA[Re-populare Coduri]]></item>
+        <item lang="en" id="travel_core.fm_reseed_confirm"><![CDATA[Re-seed canonical codes? This will add any missing entries without affecting existing ones.]]></item>
+        <item lang="ro" id="travel_core.fm_reseed_confirm"><![CDATA[Re-populare coduri canonice? Se adaugă intrările lipsă fără a afecta cele existente.]]></item>
+        <item lang="en" id="travel_core.fm_resolve_variants"><![CDATA[Auto-resolve Variants]]></item>
+        <item lang="ro" id="travel_core.fm_resolve_variants"><![CDATA[Rezolvare automată variante]]></item>
+        <item lang="en" id="travel_core.fm_resolve_confirm"><![CDATA[Auto-match unmapped entries to CS-Cart variants by name?]]></item>
+        <item lang="ro" id="travel_core.fm_resolve_confirm"><![CDATA[Potrivire automată a intrărilor nemapate cu variantele CS-Cart după nume?]]></item>
+        <item lang="en" id="travel_core.fm_variants_resolved"><![CDATA[Variants resolved: [resolved], failed: [failed]]]></item>
+        <item lang="ro" id="travel_core.fm_variants_resolved"><![CDATA[Variante rezolvate: [resolved], eșuate: [failed]]]></item>
+        <item lang="en" id="travel_core.fm_with_selected"><![CDATA[With selected:]]></item>
+        <item lang="ro" id="travel_core.fm_with_selected"><![CDATA[Cu cele selectate:]]></item>
+        <item lang="en" id="travel_core.fm_activate"><![CDATA[Activate]]></item>
+        <item lang="ro" id="travel_core.fm_activate"><![CDATA[Activare]]></item>
+        <item lang="en" id="travel_core.fm_deactivate"><![CDATA[Deactivate]]></item>
+        <item lang="ro" id="travel_core.fm_deactivate"><![CDATA[Dezactivare]]></item>
+        <item lang="en" id="travel_core.fm_delete_confirm"><![CDATA[Delete selected mappings and their aliases? This cannot be undone.]]></item>
+        <item lang="ro" id="travel_core.fm_delete_confirm"><![CDATA[Ștergeți mapările selectate și alias-urile lor? Această acțiune nu poate fi anulată.]]></item>
+        <item lang="en" id="travel_core.fm_api_source"><![CDATA[API Source]]></item>
+        <item lang="ro" id="travel_core.fm_api_source"><![CDATA[Sursă API]]></item>
+        <item lang="en" id="travel_core.fm_api_value"><![CDATA[API Value]]></item>
+        <item lang="ro" id="travel_core.fm_api_value"><![CDATA[Valoare API]]></item>
+        <item lang="en" id="travel_core.fm_match_type"><![CDATA[Match Type]]></item>
+        <item lang="ro" id="travel_core.fm_match_type"><![CDATA[Tip Potrivire]]></item>
+        <item lang="en" id="travel_core.fm_no_aliases"><![CDATA[No aliases registered for this mapping.]]></item>
+        <item lang="ro" id="travel_core.fm_no_aliases"><![CDATA[Niciun alias înregistrat pentru această mapare.]]></item>
+        <item lang="en" id="travel_core.fm_add_alias"><![CDATA[Add Alias]]></item>
+        <item lang="ro" id="travel_core.fm_add_alias"><![CDATA[Adaugă Alias]]></item>
+        <item lang="en" id="travel_core.fm_alias_added"><![CDATA[Alias added successfully]]></item>
+        <item lang="ro" id="travel_core.fm_alias_added"><![CDATA[Alias-ul a fost adăugat cu succes]]></item>
+        <item lang="en" id="travel_core.fm_alias_deleted"><![CDATA[Alias deleted]]></item>
+        <item lang="ro" id="travel_core.fm_alias_deleted"><![CDATA[Alias-ul a fost șters]]></item>
     </language_variables>
 
     <!-- Functions to run on install/uninstall -->

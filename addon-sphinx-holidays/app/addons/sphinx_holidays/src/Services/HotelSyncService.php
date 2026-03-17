@@ -356,7 +356,10 @@ class HotelSyncService
             'longitude'         => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
             'description'       => (string) ($raw['description'] ?? ''),
             'short_description' => (string) ($raw['short_description'] ?? $raw['summary'] ?? ''),
-            'image_url'         => (string) ($raw['image_url'] ?? $raw['main_image'] ?? $raw['thumbnail'] ?? ''),
+            // API returns images as [{url: "..."}, ...] — extract first image URL
+            'image_url'         => (string) ($raw['images'][0]['url'] ?? $raw['image_url'] ?? $raw['main_image'] ?? ''),
+            // NOTE: amenities_json and tags_json are never populated by the current Sphinx static API.
+            // Kept defensively in case the API adds these fields in the future.
             'amenities_json'    => !empty($raw['amenities']) ? json_encode($raw['amenities']) : null,
             'tags_json'         => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : null,
