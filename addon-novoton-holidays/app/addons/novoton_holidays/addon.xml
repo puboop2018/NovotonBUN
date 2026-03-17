@@ -60,27 +60,27 @@
                     </item>
                     <item id="api_url">
                         <type>input</type>
-                        <default_value></default_value>
+                        <default_value>b2b.allinclusivebg.com</default_value>
                         <variants/>
                     </item>
                     <item id="api_key">
                         <type>input</type>
-                        <default_value></default_value>
+                        <default_value>TEST-TEST-TEST-TEST-TEST</default_value>
                         <variants/>
                     </item>
                     <item id="api_id">
                         <type>input</type>
-                        <default_value></default_value>
+                        <default_value>713</default_value>
                         <variants/>
                     </item>
                     <item id="api_user">
                         <type>input</type>
-                        <default_value></default_value>
+                        <default_value>EHROM117</default_value>
                         <variants/>
                     </item>
                     <item id="api_password">
                         <type>password</type>
-                        <default_value></default_value>
+                        <default_value>EUP359YJX</default_value>
                         <variants/>
                     </item>
                     <item id="enable_api_cache">
