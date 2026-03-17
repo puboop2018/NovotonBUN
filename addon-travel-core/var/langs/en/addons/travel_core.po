@@ -103,3 +103,271 @@ msgstr "Cron access key"
 msgctxt "SettingsTooltips::travel_core::cron_access_key"
 msgid "Secret key for authenticating automated cron job requests"
 msgstr "Secret key for authenticating automated cron job requests"
+
+msgctxt "Languages::travel_core.availability"
+msgid "Availability"
+msgstr "Availability"
+
+msgctxt "Languages::travel_core.check_in"
+msgid "Check-in"
+msgstr "Check-in"
+
+msgctxt "Languages::travel_core.check_out"
+msgid "Check-out"
+msgstr "Check-out"
+
+msgctxt "Languages::travel_core.check_in_date"
+msgid "Check-in date"
+msgstr "Check-in date"
+
+msgctxt "Languages::travel_core.check_out_date"
+msgid "Check-out date"
+msgstr "Check-out date"
+
+msgctxt "Languages::travel_core.select_dates_message"
+msgid "Select dates to see this property's availability and prices"
+msgstr "Select dates to see this property's availability and prices"
+
+msgctxt "Languages::travel_core.search"
+msgid "Search"
+msgstr "Search"
+
+msgctxt "Languages::travel_core.change_search"
+msgid "Change Search"
+msgstr "Change Search"
+
+msgctxt "Languages::travel_core.apply_changes"
+msgid "Apply changes"
+msgstr "Apply changes"
+
+msgctxt "Languages::travel_core.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::travel_core.adults"
+msgid "Adults"
+msgstr "Adults"
+
+msgctxt "Languages::travel_core.child"
+msgid "child"
+msgstr "child"
+
+msgctxt "Languages::travel_core.children"
+msgid "Children"
+msgstr "Children"
+
+msgctxt "Languages::travel_core.rooms"
+msgid "rooms"
+msgstr "rooms"
+
+msgctxt "Languages::travel_core.room"
+msgid "Room"
+msgstr "Room"
+
+msgctxt "Languages::travel_core.done"
+msgid "Done"
+msgstr "Done"
+
+msgctxt "Languages::travel_core.add_room"
+msgid "Add Room"
+msgstr "Add Room"
+
+msgctxt "Languages::travel_core.remove"
+msgid "Remove"
+msgstr "Remove"
+
+msgctxt "Languages::travel_core.adults_label"
+msgid "Adults"
+msgstr "Adults"
+
+msgctxt "Languages::travel_core.children_label"
+msgid "Children"
+msgstr "Children"
+
+msgctxt "Languages::travel_core.night"
+msgid "night"
+msgstr "night"
+
+msgctxt "Languages::travel_core.nights"
+msgid "Nights"
+msgstr "Nights"
+
+msgctxt "Languages::travel_core.night_stay"
+msgid "night stay"
+msgstr "night stay"
+
+msgctxt "Languages::travel_core.nights_stay"
+msgid "nights stay"
+msgstr "nights stay"
+
+msgctxt "Languages::travel_core.childrens_ages"
+msgid "Children's ages"
+msgstr "Children's ages"
+
+msgctxt "Languages::travel_core.child_age"
+msgid "Child's age"
+msgstr "Child's age"
+
+msgctxt "Languages::travel_core.select_age"
+msgid "Select age"
+msgstr "Select age"
+
+msgctxt "Languages::travel_core.years_old"
+msgid "years old"
+msgstr "years old"
+
+msgctxt "Languages::travel_core.year_old"
+msgid "year old"
+msgstr "year old"
+
+msgctxt "Languages::travel_core.selected"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::travel_core.selected_singular"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::travel_core.select_check_in"
+msgid "Select check-in date"
+msgstr "Select check-in date"
+
+msgctxt "Languages::travel_core.select_check_out"
+msgid "Select check-out date"
+msgstr "Select check-out date"
+
+msgctxt "Languages::travel_core.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Please select check-in and check-out dates"
+
+msgctxt "Languages::travel_core.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Select age ([count] missing)"
+
+msgctxt "Languages::travel_core.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Select age for 1 child (Room [rooms])."
+
+msgctxt "Languages::travel_core.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Select age for [count] children (Room [rooms])."
+
+msgctxt "Languages::travel_core.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Approximate prices in %s for a 1-night stay"
+
+msgctxt "Languages::travel_core.loading_booking_form"
+msgid "Loading booking form..."
+msgstr "Loading booking form..."
+
+msgctxt "Languages::travel_core.edit_guest_details"
+msgid "Edit Guest Details"
+msgstr "Edit Guest Details"
+
+msgctxt "Languages::travel_core.dates"
+msgid "Dates"
+msgstr "Dates"
+
+msgctxt "Languages::travel_core.guests"
+msgid "Guests"
+msgstr "Guests"
+
+msgctxt "Languages::travel_core.manage_bookings"
+msgid "Travel Bookings"
+msgstr "Travel Bookings"
+
+msgctxt "Languages::travel_core.complete_booking"
+msgid "Booking Details"
+msgstr "Booking Details"
+
+msgctxt "Languages::travel_core.until"
+msgid "until"
+msgstr "until"
+
+msgctxt "Languages::travel_core.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Free Cancellation"
+
+msgctxt "Languages::travel_core.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Free cancellation until"
+
+msgctxt "Languages::travel_core.on_booking"
+msgid "on booking"
+msgstr "on booking"
+
+msgctxt "Languages::travel_core.january"
+msgid "January"
+msgstr "January"
+
+msgctxt "Languages::travel_core.february"
+msgid "February"
+msgstr "February"
+
+msgctxt "Languages::travel_core.march"
+msgid "March"
+msgstr "March"
+
+msgctxt "Languages::travel_core.april"
+msgid "April"
+msgstr "April"
+
+msgctxt "Languages::travel_core.may"
+msgid "May"
+msgstr "May"
+
+msgctxt "Languages::travel_core.june"
+msgid "June"
+msgstr "June"
+
+msgctxt "Languages::travel_core.july"
+msgid "July"
+msgstr "July"
+
+msgctxt "Languages::travel_core.august"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::travel_core.september"
+msgid "September"
+msgstr "September"
+
+msgctxt "Languages::travel_core.october"
+msgid "October"
+msgstr "October"
+
+msgctxt "Languages::travel_core.november"
+msgid "November"
+msgstr "November"
+
+msgctxt "Languages::travel_core.december"
+msgid "December"
+msgstr "December"
+
+msgctxt "Languages::travel_core.mon"
+msgid "Mon"
+msgstr "Mon"
+
+msgctxt "Languages::travel_core.tue"
+msgid "Tue"
+msgstr "Tue"
+
+msgctxt "Languages::travel_core.wed"
+msgid "Wed"
+msgstr "Wed"
+
+msgctxt "Languages::travel_core.thu"
+msgid "Thu"
+msgstr "Thu"
+
+msgctxt "Languages::travel_core.fri"
+msgid "Fri"
+msgstr "Fri"
+
+msgctxt "Languages::travel_core.sat"
+msgid "Sat"
+msgstr "Sat"
+
+msgctxt "Languages::travel_core.sun"
+msgid "Sun"
+msgstr "Sun"

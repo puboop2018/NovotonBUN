@@ -103,3 +103,271 @@ msgstr "Cheie acces cron"
 msgctxt "SettingsTooltips::travel_core::cron_access_key"
 msgid "Secret key for authenticating automated cron job requests"
 msgstr "Cheie secretă pentru autentificarea cererilor cron automate"
+
+msgctxt "Languages::travel_core.availability"
+msgid "Availability"
+msgstr "Disponibilitate"
+
+msgctxt "Languages::travel_core.check_in"
+msgid "Check-in"
+msgstr "Check-in"
+
+msgctxt "Languages::travel_core.check_out"
+msgid "Check-out"
+msgstr "Check-out"
+
+msgctxt "Languages::travel_core.check_in_date"
+msgid "Check-in date"
+msgstr "Data check-in"
+
+msgctxt "Languages::travel_core.check_out_date"
+msgid "Check-out date"
+msgstr "Data check-out"
+
+msgctxt "Languages::travel_core.select_dates_message"
+msgid "Select dates to see this property's availability and prices"
+msgstr "Selectați datele pentru a vedea disponibilitatea și prețurile"
+
+msgctxt "Languages::travel_core.search"
+msgid "Search"
+msgstr "Caută"
+
+msgctxt "Languages::travel_core.change_search"
+msgid "Change Search"
+msgstr "Modifică căutarea"
+
+msgctxt "Languages::travel_core.apply_changes"
+msgid "Apply changes"
+msgstr "Aplică modificări"
+
+msgctxt "Languages::travel_core.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::travel_core.adults"
+msgid "Adults"
+msgstr "Adulți"
+
+msgctxt "Languages::travel_core.child"
+msgid "child"
+msgstr "copil"
+
+msgctxt "Languages::travel_core.children"
+msgid "Children"
+msgstr "Copii"
+
+msgctxt "Languages::travel_core.rooms"
+msgid "rooms"
+msgstr "camere"
+
+msgctxt "Languages::travel_core.room"
+msgid "Room"
+msgstr "Cameră"
+
+msgctxt "Languages::travel_core.done"
+msgid "Done"
+msgstr "Gata"
+
+msgctxt "Languages::travel_core.add_room"
+msgid "Add Room"
+msgstr "Adaugă cameră"
+
+msgctxt "Languages::travel_core.remove"
+msgid "Remove"
+msgstr "Șterge"
+
+msgctxt "Languages::travel_core.adults_label"
+msgid "Adults"
+msgstr "Adulți"
+
+msgctxt "Languages::travel_core.children_label"
+msgid "Children"
+msgstr "Copii"
+
+msgctxt "Languages::travel_core.night"
+msgid "night"
+msgstr "noapte"
+
+msgctxt "Languages::travel_core.nights"
+msgid "Nights"
+msgstr "Nopți"
+
+msgctxt "Languages::travel_core.night_stay"
+msgid "night stay"
+msgstr "noapte"
+
+msgctxt "Languages::travel_core.nights_stay"
+msgid "nights stay"
+msgstr "nopți"
+
+msgctxt "Languages::travel_core.childrens_ages"
+msgid "Children's ages"
+msgstr "Vârstele copiilor"
+
+msgctxt "Languages::travel_core.child_age"
+msgid "Child's age"
+msgstr "Vârsta copilului"
+
+msgctxt "Languages::travel_core.select_age"
+msgid "Select age"
+msgstr "Selectează vârsta"
+
+msgctxt "Languages::travel_core.years_old"
+msgid "years old"
+msgstr "ani"
+
+msgctxt "Languages::travel_core.year_old"
+msgid "year old"
+msgstr "an"
+
+msgctxt "Languages::travel_core.selected"
+msgid "selected"
+msgstr "selectate"
+
+msgctxt "Languages::travel_core.selected_singular"
+msgid "selected"
+msgstr "selectată"
+
+msgctxt "Languages::travel_core.select_check_in"
+msgid "Select check-in date"
+msgstr "Selectează data de check-in"
+
+msgctxt "Languages::travel_core.select_check_out"
+msgid "Select check-out date"
+msgstr "Selectează data check-out"
+
+msgctxt "Languages::travel_core.please_enter_dates"
+msgid "Please select check-in and check-out dates"
+msgstr "Vă rugăm selectați datele de check-in și check-out"
+
+msgctxt "Languages::travel_core.select_missing_ages"
+msgid "Select age ([count] missing)"
+msgstr "Selectează vârsta ([count] lipsă)"
+
+msgctxt "Languages::travel_core.select_age_for_one_child"
+msgid "Select age for 1 child (Room [rooms])."
+msgstr "Selectează vârsta pentru 1 copil (Cameră [rooms])."
+
+msgctxt "Languages::travel_core.select_age_for_children"
+msgid "Select age for [count] children (Room [rooms])."
+msgstr "Selectează vârsta pentru [count] copii (Cameră [rooms])."
+
+msgctxt "Languages::travel_core.calendar_price_footer"
+msgid "Approximate prices in %s for a 1-night stay"
+msgstr "Prețuri aproximative în %s pentru un sejur de 1 noapte"
+
+msgctxt "Languages::travel_core.loading_booking_form"
+msgid "Loading booking form..."
+msgstr "Se încarcă formularul de rezervare..."
+
+msgctxt "Languages::travel_core.edit_guest_details"
+msgid "Edit Guest Details"
+msgstr "Editează detalii turiști"
+
+msgctxt "Languages::travel_core.dates"
+msgid "Dates"
+msgstr "Date"
+
+msgctxt "Languages::travel_core.guests"
+msgid "Guests"
+msgstr "Oaspeți"
+
+msgctxt "Languages::travel_core.manage_bookings"
+msgid "Travel Bookings"
+msgstr "Rezervări Turism"
+
+msgctxt "Languages::travel_core.complete_booking"
+msgid "Booking Details"
+msgstr "Detalii Rezervare"
+
+msgctxt "Languages::travel_core.until"
+msgid "until"
+msgstr "până la"
+
+msgctxt "Languages::travel_core.free_cancellation"
+msgid "Free Cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::travel_core.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Anulare gratuită până la"
+
+msgctxt "Languages::travel_core.on_booking"
+msgid "on booking"
+msgstr "la rezervare"
+
+msgctxt "Languages::travel_core.january"
+msgid "January"
+msgstr "Ianuarie"
+
+msgctxt "Languages::travel_core.february"
+msgid "February"
+msgstr "Februarie"
+
+msgctxt "Languages::travel_core.march"
+msgid "March"
+msgstr "Martie"
+
+msgctxt "Languages::travel_core.april"
+msgid "April"
+msgstr "Aprilie"
+
+msgctxt "Languages::travel_core.may"
+msgid "May"
+msgstr "Mai"
+
+msgctxt "Languages::travel_core.june"
+msgid "June"
+msgstr "Iunie"
+
+msgctxt "Languages::travel_core.july"
+msgid "July"
+msgstr "Iulie"
+
+msgctxt "Languages::travel_core.august"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::travel_core.september"
+msgid "September"
+msgstr "Septembrie"
+
+msgctxt "Languages::travel_core.october"
+msgid "October"
+msgstr "Octombrie"
+
+msgctxt "Languages::travel_core.november"
+msgid "November"
+msgstr "Noiembrie"
+
+msgctxt "Languages::travel_core.december"
+msgid "December"
+msgstr "Decembrie"
+
+msgctxt "Languages::travel_core.mon"
+msgid "Mon"
+msgstr "Lun"
+
+msgctxt "Languages::travel_core.tue"
+msgid "Tue"
+msgstr "Mar"
+
+msgctxt "Languages::travel_core.wed"
+msgid "Wed"
+msgstr "Mie"
+
+msgctxt "Languages::travel_core.thu"
+msgid "Thu"
+msgstr "Joi"
+
+msgctxt "Languages::travel_core.fri"
+msgid "Fri"
+msgstr "Vin"
+
+msgctxt "Languages::travel_core.sat"
+msgid "Sat"
+msgstr "Sâm"
+
+msgctxt "Languages::travel_core.sun"
+msgid "Sun"
+msgstr "Dum"
