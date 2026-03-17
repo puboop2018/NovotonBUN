@@ -25,7 +25,8 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-$mode = $_REQUEST['mode'] ?? 'manage';
+// $mode is set automatically by CS-Cart from the dispatch parameter
+// e.g. dispatch=sphinx_holidays.sync_destinations sets $mode = 'sync_destinations'
 
 // ─── POST handlers ───
 
@@ -190,6 +191,24 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('selected_countries', $selectedCountries);
     Tygh::$app['view']->assign('is_configured', $isConfigured);
     Tygh::$app['view']->assign('sync_logs', $syncLogs);
+
+    // Cron URLs for the dashboard
+    $cron_key = ConfigProvider::getCronAccessKey();
+    $base_url = fn_url('', 'C');
+    $cron_urls = [
+        'destinations'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
+        'hotels'          => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",
+        'add_products'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=add_products",
+        'package_routes'  => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=package_routes",
+        'circuits'        => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=circuits",
+        'experiences'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=experiences",
+        'order_status'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=order_status",
+        'cache_refresh'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cache_refresh",
+        'cleanup'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
+        'exchange_rates'  => $base_url . "index.php?dispatch=travel_cron.run&access_key=" . \Tygh\Registry::get('addons.travel_core.cron_access_key') . "&cron_mode=exchange_rates",
+    ];
+    Tygh::$app['view']->assign('cron_urls', $cron_urls);
+    Tygh::$app['view']->assign('cron_key', $cron_key);
 
 } elseif ($mode === 'destinations') {
     $repository = new DestinationRepository();
