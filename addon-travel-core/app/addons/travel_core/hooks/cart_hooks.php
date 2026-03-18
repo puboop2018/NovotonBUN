@@ -56,7 +56,7 @@ function fn_travel_core_dispatch_before_display(): void
 {
     if (defined('AREA') && AREA === 'C') {
         $dispatch = $_REQUEST['dispatch'] ?? '';
-        $booking_pages = ['travel_', 'sphinx_', 'products.', 'checkout', 'cart'];
+        $booking_pages = ['travel_', 'novoton_', 'sphinx_', 'products.', 'checkout', 'cart'];
         $needs_css = false;
 
         foreach ($booking_pages as $prefix) {
