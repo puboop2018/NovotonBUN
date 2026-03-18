@@ -50,10 +50,8 @@
             <td>{$dest.destination_id}</td>
             <td>
                 {$dest.name|escape:html}
-                {if $dest.parent_id > 0}
-                    <a href="{"sphinx_holidays.destinations?parent_id=`$dest.destination_id`"|fn_url}" class="btn btn-micro" title="View children">
-                        <i class="icon-sitemap"></i>
-                    </a>
+                {if $dest.type == "continent" || $dest.type == "country" || $dest.type == "region"}
+                    <a href="{"sphinx_holidays.destinations?parent_id=`$dest.destination_id`"|fn_url}" class="btn btn-micro" title="View children">&darr;</a>
                 {/if}
             </td>
             <td>
