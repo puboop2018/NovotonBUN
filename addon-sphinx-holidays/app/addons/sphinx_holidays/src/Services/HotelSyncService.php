@@ -171,80 +171,87 @@ class HotelSyncService
         $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
 
         $activeIds = [];
-        $batchSize = 100;
-
-        $page = 1;
+        $upsertBatchSize = 100;
         $perPage = 1000;
 
-        // Stream-and-upsert: fetch each page and upsert immediately
-        // instead of accumulating all hotels in memory.
-        while (true) {
-            // Server-side filtering: pass destination_ids and updated_since to API
-            $response = $this->api->getHotels($page, $perPage, $updatedSince, $destinationIds);
+        // Chunk destination IDs to avoid URL length overflow.
+        // 1887 IDs × ~25 chars each ≈ 47KB query string, which exceeds HTTP/2
+        // frame limits (~16KB) and causes "Error in the HTTP2 framing layer".
+        $destIdChunks = array_chunk($destinationIds, 200);
 
-            if ($response === null) {
-                $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
-                $this->output('    ERROR: ' . $stats['error']);
-                break;
+        foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
+            if (count($destIdChunks) > 1) {
+                $this->output("    Destination chunk " . ($chunkIdx + 1) . '/' . count($destIdChunks) . ' (' . count($destIdChunk) . ' IDs)');
             }
 
-            $items = $response['data'] ?? $response['items'] ?? $response;
-            if (isset($response[0]) && !isset($response['data'])) {
-                $items = $response;
-            }
+            $page = 1;
 
-            if (!is_array($items) || empty($items)) {
-                break;
-            }
+            // Stream-and-upsert: fetch each page and upsert immediately
+            while (true) {
+                $response = $this->api->getHotels($page, $perPage, $updatedSince, $destIdChunk);
 
-            $pageBatch = [];
-            foreach ($items as $raw) {
-                $normalized = $this->normalizeHotel($raw);
-                if ($normalized === null) {
-                    $stats['skipped']++;
-                    continue;
+                if ($response === null) {
+                    $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
+                    $this->output('    ERROR: ' . $stats['error']);
+                    break;
                 }
 
-                // Safety filter: verify country_code matches (API already filtered by destination_ids)
-                $hotelCountry = strtoupper($normalized['country_code']);
-                if ($hotelCountry !== '' && $hotelCountry !== $countryCode) {
-                    $stats['skipped']++;
-                    continue;
+                $items = $response['data'] ?? $response['items'] ?? $response;
+                if (isset($response[0]) && !isset($response['data'])) {
+                    $items = $response;
                 }
 
-                $pageBatch[] = $normalized;
-                $activeIds[] = $normalized['hotel_id'];
-                $stats['total']++;
+                if (!is_array($items) || empty($items)) {
+                    break;
+                }
 
-                // Flush batch when full
-                if (count($pageBatch) >= $batchSize) {
+                $pageBatch = [];
+                foreach ($items as $raw) {
+                    $normalized = $this->normalizeHotel($raw);
+                    if ($normalized === null) {
+                        $stats['skipped']++;
+                        continue;
+                    }
+
+                    // Safety filter: verify country_code matches
+                    $hotelCountry = strtoupper($normalized['country_code']);
+                    if ($hotelCountry !== '' && $hotelCountry !== $countryCode) {
+                        $stats['skipped']++;
+                        continue;
+                    }
+
+                    $pageBatch[] = $normalized;
+                    $activeIds[] = $normalized['hotel_id'];
+                    $stats['total']++;
+
+                    if (count($pageBatch) >= $upsertBatchSize) {
+                        $affected = $this->hotelRepo->upsertBatch($pageBatch);
+                        $stats['synced'] += $affected;
+                        $pageBatch = [];
+                    }
+                }
+
+                if (!empty($pageBatch)) {
                     $affected = $this->hotelRepo->upsertBatch($pageBatch);
                     $stats['synced'] += $affected;
-                    $pageBatch = [];
                 }
-            }
 
-            // Flush remaining items from this page
-            if (!empty($pageBatch)) {
-                $affected = $this->hotelRepo->upsertBatch($pageBatch);
-                $stats['synced'] += $affected;
-            }
+                // Pagination: check for more pages
+                $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
+                $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
 
-            // Pagination: check for more pages
-            $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
-            $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
+                if ($lastPage !== null && $page >= (int) $lastPage) {
+                    break;
+                }
+                if ($totalItems !== null && ($stats['total'] + $stats['skipped']) >= (int) $totalItems) {
+                    break;
+                }
+                if (count($items) < $perPage) {
+                    break;
+                }
 
-            if ($lastPage !== null && $page >= (int) $lastPage) {
-                break;
+                $page++;
             }
-            if ($totalItems !== null && ($stats['total'] + $stats['skipped']) >= (int) $totalItems) {
-                break;
-            }
-            if (count($items) < $perPage) {
-                break;
-            }
-
-            $page++;
         }
 
         if ($stats['total'] === 0) {
