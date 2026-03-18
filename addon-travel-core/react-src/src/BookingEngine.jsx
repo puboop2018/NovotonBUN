@@ -187,11 +187,11 @@ export default function BookingEngine({ config }) {
             params.set('dispatch', 'products.search');
             params.set('q', searchQuery);
         } else {
-            // Use provider-specific dispatch from config, with fallback
-            const dispatch = searchDispatch
-                || (window.TravelBookingConfig && window.TravelBookingConfig.searchDispatch)
-                || 'novoton_booking.search';
-            params.set('dispatch', dispatch);
+            // Provider dispatch must be set via data-search-dispatch on the mount element
+            if (!searchDispatch) {
+                console.error('[TravelBooking] data-search-dispatch not set on mount element');
+            }
+            params.set('dispatch', searchDispatch || 'novoton_booking.search');
             if (hotelId) params.set('hotel_id', hotelId);
             if (productId) params.set('product_id', productId);
         }

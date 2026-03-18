@@ -107,25 +107,10 @@
     </div>
     {/if}
     
-    {* ===== BOOKING FORM - React Component ===== *}
+    {* ===== BOOKING FORM - React Component (shared travel_core mount) ===== *}
     <div class="novoton-search-form-wrapper" style="margin-bottom: 20px;">
-        <div id="novoton-search-form-root" 
-             data-novoton-booking
-             data-hotel-id="{$novoton_params.hotel_id|default:''}" 
-             data-product-id="{$novoton_params.product_id|default:''}"
-             data-check-in="{$novoton_params.check_in|default:''}"
-             data-check-out="{$novoton_params.check_out|default:''}"
-             data-adults="{$novoton_params.adults|default:2}"
-             data-children="{$novoton_params.children_count|default:0}"
-             data-children-ages="{$novoton_params.children_ages|default:''}"
-             data-rooms="{$novoton_params.num_rooms|default:1}"
-             data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
-             data-mode="search"
-             data-lang="{$smarty.const.CART_LANGUAGE|default:'en'}"
-             {if $show_calendar_prices == 'Y' && $calendar_prices_json != '{}'}data-calendar-prices='{$calendar_prices_json nofilter}'
-             data-calendar-prices-currency="{$calendar_prices_currency|escape:'html'}"
-             {/if}>
-        </div>
+        {$travel_search_params = $novoton_params}
+        {include file="addons/novoton_holidays/blocks/booking_engine.tpl" travel_mode="search"}
     </div>
 
     {if $novoton_results && $novoton_results|@count > 0}
@@ -1108,9 +1093,8 @@ window.NovotonTranslations = {
     selectAgeForChildren: "{__('novoton_holidays.select_age_for_children')|default:'Select age for [count] children (Room [rooms]).'}"
 };
 </script>
+{* React scripts loaded by shared booking_engine.tpl include above *}
 {$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
-<script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$cache_ver}" defer></script>
-<script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$cache_ver}" defer></script>
 <script src="{$config.current_location}/js/addons/addon-travel-core/dob-validation.js?v={$cache_ver}" defer></script>
 
 {* A73: JavaScript fallback to fix desktop/mobile display if CSS fails *}

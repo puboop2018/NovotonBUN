@@ -13,7 +13,6 @@ window.TravelBookingConfig.provider = 'novoton';
 window.TravelBookingConfig.debug = {if $addons.novoton_holidays.debug_mode == "Y"}true{else}false{/if};
 window.TravelBookingConfig.ajaxRecalcUrl = '{"novoton_booking.ajax_recalculate_price"|fn_url:"C"}';
 window.TravelBookingConfig.ajaxRecalcDispatch = 'novoton_booking.ajax_recalculate_price';
-window.TravelBookingConfig.searchDispatch = 'novoton_booking.search';
 {* Backwards compatibility *}
 window.NovotonConfig = window.TravelBookingConfig;
 </script>
