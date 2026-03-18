@@ -27,7 +27,6 @@ class SphinxFeatureAssigner
     private const FEATURE_SETTINGS = [
         'stars'         => 'feature_id_property_rating',
         'property_type' => 'feature_id_property_type',
-        'board'         => 'feature_id_meals',
         'resort'        => 'feature_id_location',
     ];
 
@@ -44,7 +43,7 @@ class SphinxFeatureAssigner
         $this->assignStarRating($productId, $hotel);
         $this->assignPropertyType($productId, $hotel);
         $this->assignResort($productId, $hotel);
-        $this->assignBoardTypes($productId, $hotel);
+        $this->assignFacilities($productId, $hotel);
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -117,39 +116,45 @@ class SphinxFeatureAssigner
         // If no mapping, skip — resort feature is optional
     }
 
-    private function assignBoardTypes(int $productId, array $hotel): void
+    /**
+     * Assign facility features from facilities_json.
+     *
+     * Each facility canonical code in travel_feature_map carries its own cscart_feature_id,
+     * so different facilities can map to different CS-Cart features (e.g., "Hotel Facilities",
+     * "Room Amenities", "Accessibility"). The admin controls this via the travel_feature_mappings UI.
+     */
+    private function assignFacilities(int $productId, array $hotel): void
     {
-        $amenitiesJson = $hotel['amenities_json'] ?? null;
-        if (empty($amenitiesJson)) {
+        $facilitiesJson = $hotel['facilities_json'] ?? null;
+        if (empty($facilitiesJson)) {
             return;
         }
 
-        $amenities = is_string($amenitiesJson) ? json_decode($amenitiesJson, true) : $amenitiesJson;
-        if (!is_array($amenities)) {
+        $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
+        if (!is_array($facilities)) {
             return;
         }
 
-        $featureId = $this->getFeatureId('board');
-        if (!$featureId) {
-            return;
-        }
-
-        foreach ($amenities as $amenity) {
-            $name = is_array($amenity) ? ($amenity['name'] ?? '') : (string) $amenity;
-            $boardCode = $this->normalizer->normalizeBoardCode($name);
-            if ($boardCode === null) {
+        foreach ($facilities as $facility) {
+            $facilityId = (string) ($facility['id'] ?? '');
+            if ($facilityId === '') {
                 continue;
             }
 
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'board', $name);
-            $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            if (!$mapping) {
+                continue;
+            }
 
-            if ($variantId <= 0 && $mapping) {
-                $variantId = $this->autoCreateVariant($featureId, $mapping);
+            // Each facility row has its own cscart_feature_id — not from addon settings
+            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+            if ($featureId <= 0 || $variantId <= 0) {
+                continue;
             }
-            if ($variantId > 0) {
-                $this->assignCheckboxValue($productId, $featureId, $variantId);
-            }
+
+            $this->assignCheckboxValue($productId, $featureId, $variantId);
         }
     }
 

@@ -111,17 +111,6 @@ function smarty_modifier_novoton_format_board($board_id)
     }
 }
 
-// Legacy aliases — keep for any code that references the old names
-function fn_novoton_holidays_smarty_format_room_type($room_id)
-{
-    return smarty_modifier_novoton_format_room_type($room_id);
-}
-
-function fn_novoton_holidays_smarty_format_board($board_id)
-{
-    return smarty_modifier_novoton_format_board($board_id);
-}
-
 /**
  * Register Smarty modifiers explicitly as backup.
  * The smarty_modifier_{name} naming convention handles auto-discovery,

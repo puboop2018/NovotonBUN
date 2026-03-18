@@ -14,10 +14,11 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-// Default mode - redirect to manage
-if (empty($mode)) {
-    $mode = 'manage';
+if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    return [CONTROLLER_STATUS_DENIED];
 }
+
+// CS-Cart auto-sets $mode from dispatch URL. Do not overwrite it.
 
 /**
  * Validate return_url to prevent open redirects.

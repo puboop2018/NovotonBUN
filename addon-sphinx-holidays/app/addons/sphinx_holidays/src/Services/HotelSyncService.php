@@ -319,24 +319,27 @@ class HotelSyncService
 
     /**
      * Normalize a raw API hotel into the DB column format.
+     *
+     * Sphinx static API returns: {id, destination_id, name, type, classification,
+     * latitude, longitude, description, address, images, facilities, external_ids}
      */
     private function normalizeHotel(array $raw): ?array
     {
-        $id = (string) ($raw['id'] ?? $raw['hotel_id'] ?? '');
+        $id = (string) ($raw['id'] ?? '');
         if ($id === '') {
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? $raw['title'] ?? $raw['hotel_name'] ?? '');
+        $name = (string) ($raw['name'] ?? '');
         if ($name === '') {
             return null;
         }
 
         $propertyType = $this->normalizer->normalizePropertyType(
-            $raw['property_type'] ?? $raw['type'] ?? 'hotel'
+            $raw['type'] ?? 'hotel'
         ) ?? 'hotel';
 
-        $classification = (int) ($raw['classification'] ?? $raw['stars'] ?? $raw['star_rating'] ?? 0);
+        $classification = (int) ($raw['classification'] ?? 0);
         if ($classification < 0 || $classification > 5) {
             $classification = 0;
         }
@@ -346,24 +349,18 @@ class HotelSyncService
             'name'              => $name,
             'classification'    => $classification,
             'property_type'     => $propertyType,
-            'destination_id'    => (int) ($raw['destination_id'] ?? $raw['destination'] ?? 0),
-            'destination_name'  => (string) ($raw['destination_name'] ?? $raw['destination_title'] ?? ''),
-            'region_id'         => (int) ($raw['region_id'] ?? $raw['region'] ?? 0),
-            'region_name'       => (string) ($raw['region_name'] ?? $raw['region_title'] ?? ''),
-            'country_code'      => strtoupper((string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? '')),
-            'country_name'      => (string) ($raw['country_name'] ?? $raw['country'] ?? ''),
-            'latitude'          => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
-            'longitude'         => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'destination_id'    => (int) ($raw['destination_id'] ?? 0),
+            'destination_name'  => (string) ($raw['destination_name'] ?? ''),
+            'region_id'         => (int) ($raw['region_id'] ?? 0),
+            'region_name'       => (string) ($raw['region_name'] ?? ''),
+            'country_code'      => strtoupper((string) ($raw['country_code'] ?? '')),
+            'country_name'      => (string) ($raw['country_name'] ?? ''),
+            'latitude'          => (float) ($raw['latitude'] ?? 0),
+            'longitude'         => (float) ($raw['longitude'] ?? 0),
             'description'       => (string) ($raw['description'] ?? ''),
-            'short_description' => (string) ($raw['short_description'] ?? $raw['summary'] ?? ''),
-            'image_url'         => (string) ($raw['image_url'] ?? $raw['main_image'] ?? $raw['thumbnail'] ?? ''),
-            'amenities_json'    => !empty($raw['amenities']) ? json_encode($raw['amenities']) : null,
-            'tags_json'         => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
+            'short_description' => (string) ($raw['short_description'] ?? ''),
+            'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : null,
-            'is_recommended'    => !empty($raw['is_recommended']) ? 'Y' : 'N',
-            'is_adults_only'    => !empty($raw['is_adults_only']) || !empty($raw['adults_only']) ? 'Y' : 'N',
-            'rating'            => (float) ($raw['rating'] ?? $raw['guest_rating'] ?? 0),
-            'rating_count'      => (int) ($raw['rating_count'] ?? $raw['reviews_count'] ?? 0),
         ];
     }
 

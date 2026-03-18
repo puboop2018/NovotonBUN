@@ -59,47 +59,44 @@ function fn_travel_core_post_install(): bool
 }
 
 /**
- * Migrate existing cart sessions to include travel_booking flag.
+ * Build a dropdown list of all CS-Cart product features for addon settings.
+ * Used by fn_settings_variants_addons_travel_core_feature_id_*() functions.
  *
- * Existing novoton_booking products in active cart sessions won't have
- * the travel_booking flag. This one-time migration patches them so
- * travel_core hooks can process them uniformly.
- *
- * Safe to call multiple times (idempotent).
- *
- * @return int Number of cart sessions updated
+ * @return array<int, string> feature_id => "Description #id (Type)"
  */
-function fn_travel_core_migrate_booking_flags(): int
+function fn_travel_core_get_feature_variants(): array
 {
-    // CS-Cart stores cart data serialized in ?:user_session_products
-    // We need to find sessions with novoton_booking but without travel_booking
-    $rows = db_get_array(
-        "SELECT item_id, extra FROM ?:user_session_products WHERE extra LIKE '%novoton_booking%'"
+    $features = db_get_array(
+        "SELECT f.feature_id, f.feature_type, fd.description
+         FROM ?:product_features f
+         LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
+         ORDER BY fd.description",
+        DESCR_SL
     );
 
-    $updated = 0;
-    foreach ($rows as $row) {
-        $extra = unserialize($row['extra'], ['allowed_classes' => false]);
-        if (!is_array($extra)) {
-            continue;
-        }
-
-        if (!empty($extra['novoton_booking']) && empty($extra['travel_booking'])) {
-            $extra['travel_booking'] = true;
-            db_query(
-                "UPDATE ?:user_session_products SET extra = ?s WHERE item_id = ?i",
-                serialize($extra), $row['item_id']
-            );
-            $updated++;
-        }
+    $result = [0 => '-- ' . __('none') . ' --'];
+    foreach ($features as $f) {
+        $typeLabel = match ($f['feature_type']) {
+            'M' => 'Multi',
+            'S' => 'Select',
+            'C' => 'Checkbox',
+            'T' => 'Text',
+            'N' => 'Number',
+            'O' => 'Date',
+            default => $f['feature_type'],
+        };
+        $result[$f['feature_id']] = ($f['description'] ?: 'Feature') . " #{$f['feature_id']} ({$typeLabel})";
     }
 
-    if ($updated > 0) {
-        fn_log_event('general', 'runtime', "travel_core: migrated $updated cart session(s) from novoton_booking to travel_booking flag");
-    }
-
-    return $updated;
+    return $result;
 }
+
+// CS-Cart auto-discovers these by naming convention for <type>selectbox</type> settings
+function fn_settings_variants_addons_travel_core_feature_id_property_rating(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_meals(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_room_type(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_property_type(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_location(): array { return fn_travel_core_get_feature_variants(); }
 
 /**
  * Seed the travel_feature_map table with canonical codes.
@@ -143,6 +140,131 @@ function fn_travel_core_seed_feature_map(): void
         ['property_type', 'guest_house',  'Guest House',   'Pensiune'],
         ['property_type', 'chalet',       'Chalet',        'Cabană'],
         ['property_type', 'motel',        'Motel',         'Motel'],
+
+        // Facilities — canonical codes shared across providers.
+        // Each row can have its own cscart_feature_id (admin-assigned via UI).
+        // Food & Drink
+        ['facility', 'kids_menu',           "Kid's Menu",               'Meniu masă pentru copii'],
+        ['facility', 'water_bottle',        'Bottle of Water',          'Sticlă de apă'],
+        ['facility', 'fruits',              'Fruits',                   'Fructe'],
+        ['facility', 'restaurant',          'Restaurant',               'Restaurant'],
+        ['facility', 'restaurant_alacarte', 'Restaurant (à la carte)',  'Restaurant (à la carte)'],
+        ['facility', 'bar',                 'Bar',                      'Bar'],
+        ['facility', 'packed_lunch',        'Packed Lunch',             'Prânz la pachet'],
+        ['facility', 'special_diet',        'Special Diet Menus',       'Meniuri cu dietă specială'],
+        ['facility', 'room_service',        'Room Service',             'Room service'],
+        ['facility', 'breakfast_in_room',   'Breakfast in Room',        'Mic dejun în cameră'],
+        // Wellness & Recreation
+        ['facility', 'spa',                 'Spa Facilities',           'Facilități spa'],
+        ['facility', 'fitness',             'Fitness Centre',           'Fitness'],
+        ['facility', 'pool',                'Swimming Pool',            'Piscină'],
+        ['facility', 'massage',             'Massage',                  'Masaj'],
+        ['facility', 'casino',              'Casino',                   'Cazino'],
+        ['facility', 'full_body_massage',   'Full Body Massage',        'Masaj pentru tot corpul'],
+        ['facility', 'ski',                 'Skiing',                   'Schi'],
+        ['facility', 'hiking',              'Hiking',                   'Drumeții'],
+        ['facility', 'squash',              'Squash',                   'Squash'],
+        ['facility', 'cycling',             'Cycling',                  'Ciclism'],
+        ['facility', 'bowling',             'Bowling',                  'Bowling'],
+        ['facility', 'game_room',           'Game Room',                'Cameră de jocuri'],
+        ['facility', 'aqua_park',           'Aqua Park',                'Aqua park'],
+        ['facility', 'tennis',              'Tennis Court',             'Teren de tenis'],
+        ['facility', 'horse_riding',        'Horse Riding',             'Călărie'],
+        ['facility', 'ski_school',          'Ski School',               'Școală de schi'],
+        ['facility', 'bike_rental',         'Bicycle Rental',           'Închiriere de biciclete'],
+        ['facility', 'relaxation_area',     'Relaxation Area',          'Zonă de relaxare'],
+        // Parking & Transport
+        ['facility', 'free_parking',        'Free Parking',             'Parcare gratuită'],
+        ['facility', 'secured_parking',     'Secured Parking',          'Parcare securizată'],
+        ['facility', 'transfer_service',    'Transfer Service',         'Serviciu de transfer'],
+        ['facility', 'airport_transfer',    'Airport Transfer',         'Transfer aeroport'],
+        ['facility', 'car_rental',          'Car Rental',               'Închirieri auto'],
+        ['facility', 'bike_tours',          'Bicycle Tours',            'Tururi cu bicicleta'],
+        ['facility', 'walking_tours',       'Walking Tours',            'Tururi de mers pe jos'],
+        ['facility', 'parking',             'Parking',                  'Parcare'],
+        // Front Desk & Services
+        ['facility', 'front_desk_24h',      '24-Hour Front Desk',       'Recepție non-stop'],
+        ['facility', 'tour_desk',           'Tour Desk',                'Birou de turism'],
+        ['facility', 'currency_exchange',   'Currency Exchange',        'Schimb valutar'],
+        ['facility', 'luggage_storage',     'Luggage Storage',          'Cameră de bagaje'],
+        ['facility', 'safety_deposit_box',  'Safety Deposit Box',       'Seif la recepție'],
+        ['facility', 'strollers',           'Strollers',                'Cărucioare'],
+        ['facility', 'dry_cleaning',        'Dry Cleaning',             'Curățătorie chimică'],
+        ['facility', 'ironing_service',     'Ironing Service',          'Serviciu de călcătorie'],
+        ['facility', 'laundry',             'Laundry',                  'Spălătorie'],
+        ['facility', 'daily_housekeeping',  'Daily Housekeeping',       'Menaj zilnic'],
+        ['facility', 'meeting_facilities',  'Meeting/Banquet Facilities','Săli de conferințe'],
+        ['facility', 'business_centre',     'Business Centre',          'Business centre'],
+        ['facility', 'fax',                 'Fax/Photocopying',         'Fax'],
+        ['facility', 'conference_rooms',    'Conference Rooms',         'Săli de conferințe'],
+        ['facility', 'wake_up_service',     'Wake-up Service',          'Serviciu de trezire'],
+        ['facility', 'express_checkin',     'Express Check-in/Check-out','Check-in/check-out express'],
+        ['facility', 'babysitting',         'Babysitting/Child Services','Babysitting/servicii copii'],
+        ['facility', 'cafe',                'On-site Café',             'Cafenea la proprietate'],
+        ['facility', 'invoice_available',   'Invoice Available',        'Factură disponibilă'],
+        // Room Amenities
+        ['facility', 'pets_allowed',        'Pets Allowed',             'Animale de companie permise'],
+        ['facility', 'non_smoking',         'Non-smoking Throughout',   'Interzis fumatul'],
+        ['facility', 'smoking_area',        'Smoking Area',             'Zonă pentru fumători'],
+        ['facility', 'non_smoking_rooms',   'Non-smoking Rooms',        'Camere pentru nefumători'],
+        ['facility', 'family_rooms',        'Family Rooms',             'Camere de familie'],
+        ['facility', 'air_conditioning',    'Air Conditioning',         'Aer condiționat'],
+        ['facility', 'heating',             'Heating',                  'Încălzire'],
+        ['facility', 'free_wifi',           'Free Wi-Fi',               'Wi-Fi gratuit'],
+        ['facility', 'washer',              'Washer',                   'Mașină de spălat'],
+        ['facility', 'ski_storage',         'Ski Storage',              'Depozit schiuri'],
+        ['facility', 'tv',                  'TV',                       'TV'],
+        ['facility', 'fan',                 'Fan',                      'Ventilator'],
+        ['facility', 'desk',               'Desk',                     'Birou'],
+        ['facility', 'shower',              'Shower',                   'Duș'],
+        ['facility', 'view',                'View',                     'Vedere'],
+        ['facility', 'minibar',             'Minibar',                  'Minibar'],
+        ['facility', 'toilet',              'Toilet',                   'Toaletă'],
+        ['facility', 'towels',              'Towels',                   'Prosoape'],
+        ['facility', 'bed_linen',           'Bed Linen',                'Lenjerie de pat'],
+        ['facility', 'slippers',            'Slippers',                 'Papuci de casă'],
+        ['facility', 'telephone',           'Telephone',                'Telefon'],
+        ['facility', 'hair_dryer',          'Hair Dryer',               'Uscător de păr'],
+        ['facility', 'alarm_clock',         'Alarm Clock',              'Ceas deșteptător'],
+        ['facility', 'toilet_paper',        'Toilet Paper',             'Hârtie igienică'],
+        ['facility', 'flat_screen_tv',      'Flat-screen TV',           'TV cu ecran plat'],
+        ['facility', 'soundproofing',       'Soundproofing',            'Izolare fonică'],
+        ['facility', 'dressing_room',       'Dressing Room',            'Dressing'],
+        ['facility', 'cable_channels',      'Cable Channels',           'Canale prin cablu'],
+        ['facility', 'carpet',              'Carpet',                   'Mochetă'],
+        ['facility', 'free_toiletries',     'Free Toiletries',          'Articole de toaletă gratuite'],
+        ['facility', 'private_bathroom',    'Private Bathroom',         'Baie privată'],
+        ['facility', 'private_entrance',    'Private Entrance',         'Intrare privată'],
+        ['facility', 'safe',                'In-room Safe',             'Seif'],
+        ['facility', 'internet',            'Internet Services',        'Servicii de internet'],
+        ['facility', 'games_puzzles',       'Games & Puzzles',          'Jocuri și puzzle-uri'],
+        ['facility', 'bedside_socket',      'Socket Near Bed',          'Priză lângă pat'],
+        ['facility', 'mosquito_net',        'Mosquito Net',             'Plasă de țânțari'],
+        ['facility', 'fridge',              'Fridge',                   'Frigider'],
+        ['facility', 'wine_champagne',      'Wine/Champagne',           'Vin/Șampanie'],
+        ['facility', 'wardrobe',            'Wardrobe/Closet',          'Garderobă sau dulap'],
+        ['facility', 'shared_lounge',       'Shared Lounge/TV Area',    'Lounge/cameră cu TV comună'],
+        // Outdoor
+        ['facility', 'outdoor_furniture',   'Outdoor Furniture',        'Mobilier exterior'],
+        ['facility', 'garden',              'Garden',                   'Grădină'],
+        ['facility', 'terrace',             'Terrace',                  'Terasă'],
+        ['facility', 'sun_terrace',         'Sun Terrace',              'Terasă la soare'],
+        // Security
+        ['facility', 'security_24h',        '24-Hour Security',         'Securitate non-stop'],
+        ['facility', 'soundproof_rooms',    'Soundproof Rooms',         'Camere izolate fonic'],
+        ['facility', 'security_alarm',      'Security Alarm',           'Alarmă de securitate'],
+        ['facility', 'fire_extinguishers',  'Fire Extinguishers',       'Extinctoare'],
+        ['facility', 'co_detector',         'Carbon Monoxide Detector', 'Detector de monoxid de carbon'],
+        ['facility', 'card_access',         'Card Access',              'Acces cu cardul'],
+        ['facility', 'cctv_common',         'CCTV in Common Areas',     'Camere supraveghere zone comune'],
+        ['facility', 'cctv_outside',        'CCTV Outside Property',    'Camere supraveghere exterior'],
+        ['facility', 'smoke_alarm',         'Smoke Alarm',              'Alarmă de fum'],
+        ['facility', 'key_access',          'Key Access',               'Acces cu cheia'],
+        // Accessibility
+        ['facility', 'disabled_access',     'Facilities for Disabled',  'Facilități pentru persoane cu dizabilități'],
+        ['facility', 'stairs_only',         'Upper Floors by Stairs Only','Etaje superioare accesibile doar pe scări'],
+        // Smoking Policy
+        ['facility', 'no_smoking_all',      'No Smoking Everywhere',    'Fumatul interzis în toate spațiile'],
     ];
 
     foreach ($seeds as [$featureType, $canonicalCode, $nameEn, $nameRo]) {

@@ -1,0 +1,594 @@
+================================================================================
+  SPHINX FACILITY & FEATURE MAPPING — IMPLEMENTATION PLAN
+================================================================================
+  Version: 1.0
+  Date:    2026-03-17
+  Scope:   sphinx_holidays + travel_core + novoton_holidays
+  Status:  APPROVED
+================================================================================
+
+
+TABLE OF CONTENTS
+-----------------
+  1. Executive Summary
+  2. Sphinx API Investigation Results
+  3. Board/Meals Mapping (Question A)
+  4. CS-Cart Feature ID Dropdown (Question B)
+  5. Flexible Facility Categorization System (Question C)
+  6. Complete Sphinx Facility Catalog (124 IDs)
+  7. Implementation Phases
+  8. File Change List
+  9. Admin UI Specification
+  10. Verification Checklist
+
+
+================================================================================
+  1. EXECUTIVE SUMMARY
+================================================================================
+
+Sphinx's static hotel API returns 124 structured facilities per hotel as
+{id: int, name: string} objects. These are the richest feature data source.
+
+Board/meal types are NOT in static data — they appear only in search/offer
+results via meal_type_name. Decision: skip board as a product feature for
+Sphinx (it's per-offer, not per-hotel).
+
+The core design is a FLEXIBLE facility categorization system where each of
+the 124 Sphinx facilities can be assigned to ANY CS-Cart product feature
+through an admin dropdown — not hardcoded by ID range or category.
+
+
+================================================================================
+  2. SPHINX API INVESTIGATION RESULTS
+================================================================================
+
+2.1 ACTUAL API RESPONSE STRUCTURE
+----------------------------------
+Endpoint: GET /api/v1/static/hotels?page=1&per_page=10
+Auth:     Bearer token
+
+Hotel object keys (ACTUAL, verified via live API):
+  id, destination_id, name, type, classification, latitude, longitude,
+  description, address, images, facilities, external_ids
+
+PRESENT fields:
+  - facilities:  Array of {id: int, name: string} — 124 unique IDs found
+  - images:      Array of {url: string} — multiple per hotel
+  - address:     Object {street, city, country, email, phone, website}
+  - type:        "hotel", "boarding-house", "villa", "apartment", "motel"
+  - classification: Integer 0-5 (star rating)
+
+MISSING fields (NOT returned by API, code handles defensively):
+  - amenities        — NEVER populated (amenities_json always NULL)
+  - tags             — NEVER populated (tags_json always NULL)
+  - is_adults_only   — NEVER populated
+  - is_recommended   — NEVER populated
+  - rating           — NEVER populated
+  - rating_count     — NEVER populated
+
+IMPACT: SphinxFeatureAssigner::assignBoardTypes() is DEAD CODE because it
+reads from amenities_json which is always NULL. Board data only exists in
+search/offer results, not static hotel data.
+
+IMAGE FIX NEEDED: Code expects $raw['image_url'] but API returns
+images: [{url: "..."}]. Must use $raw['images'][0]['url'] ?? ''
+
+2.2 SAMPLE FACILITY DATA
+--------------------------
+Hotel "Residence Ambient" (ID 1, 4-star hotel):
+  facilities: [
+    {id: 11, name: "Bar"},
+    {id: 47, name: "Free parking"},
+    {id: 59, name: "24-hours front desk"},
+    {id: 70, name: "Safety deposit box"},
+    {id: 104, name: "Meeting / Banquet facilities"},
+    {id: 111, name: "Pets allowed"},
+    {id: 115, name: "Non-smoking throughout"},
+    {id: 120, name: "Camere de familie"},
+    {id: 125, name: "Incalzire"},
+    {id: 126, name: "Free Wi-Fi"},
+    ... (19 facilities total)
+  ]
+
+2.3 TOTAL CATALOG SIZE
+------------------------
+  - 103,928 hotels across 10,393 pages
+  - 124 unique facility IDs found across sampled hotels
+  - Facility names are mixed Romanian/English
+
+
+================================================================================
+  3. BOARD/MEALS MAPPING (Question A)
+================================================================================
+
+3.1 WHERE BOARD DATA EXISTS IN SPHINX API
+-------------------------------------------
+Board types appear in the Hotel offer object within SEARCH RESULTS:
+
+  {
+    "meal_type_category_id": null,
+    "meal_type_name": "ALL INCLUSIVE PLUS"
+  }
+
+This is per-offer, not per-hotel. Different offers for the same hotel can
+have different meal types (e.g., HB vs AI).
+
+3.2 WHAT ALREADY WORKS
+------------------------
+  - SphinxNormalizer::normalizeBoardCode() maps 16 free-text values to
+    canonical codes (AI, UAI, FB, HB, BB, RO, SC)
+  - fn_sphinx_holidays_seed_aliases() seeds 16 board aliases into
+    travel_api_alias with api_source='sphinx'
+  - Booking flow extracts meal_type_name and displays it
+  - Templates show board_name in booking forms and search results
+
+3.3 DECISION: SKIP BOARD AS PRODUCT FEATURE
+----------------------------------------------
+Board types are dynamic per-offer, not static per-hotel. Assigning them
+as product features would be misleading (a hotel with AI offers might also
+have HB offers). The existing booking display system already handles this
+correctly.
+
+ACTION:
+  - Add comment to assignBoardTypes() explaining it's dead code
+  - Remove assignBoardTypes() call from assignAll()
+  - Keep the method body for future use if API adds amenities field
+
+
+================================================================================
+  4. CS-CART FEATURE ID DROPDOWN (Question B)
+================================================================================
+
+4.1 CURRENT STATE
+------------------
+travel_core addon.xml uses <type>input</type> for feature_id_* settings:
+  - Admin must manually type CS-Cart feature ID numbers
+  - No validation, no feature name shown, error-prone
+
+novoton_holidays addon.xml uses <type>selectbox</type> with dynamic variants:
+  - Admin selects from dropdown showing "Feature Name #ID (Type)"
+  - Uses CS-Cart auto-discovery: fn_settings_variants_addons_{addon}_{setting}()
+
+4.2 PROVEN PATTERN (from novoton func.php lines 67-108)
+---------------------------------------------------------
+  // Shared helper — queries all CS-Cart product features
+  function fn_novoton_holidays_get_feature_variants(): array {
+      $features = db_get_array(
+          "SELECT f.feature_id, f.feature_type, fd.description
+           FROM ?:product_features f
+           LEFT JOIN ?:product_features_descriptions fd
+             ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
+           ORDER BY fd.description", DESCR_SL);
+      $result = [];
+      foreach ($features as $f) {
+          $typeLabel = match ($f['feature_type']) {
+              'M' => 'Multi', 'S' => 'Select', 'C' => 'Checkbox',
+              'T' => 'Text', 'N' => 'Number', 'O' => 'Date',
+              default => $f['feature_type'],
+          };
+          $result[$f['feature_id']] = ($f['description'] ?: 'Feature')
+              . " #{$f['feature_id']} ({$typeLabel})";
+      }
+      return $result;
+  }
+
+  // One-liner per setting — CS-Cart discovers these by name
+  function fn_settings_variants_addons_novoton_holidays_feature_id_property_rating(): array {
+      return fn_novoton_holidays_get_feature_variants();
+  }
+
+4.3 CHANGES FOR TRAVEL_CORE
+-----------------------------
+File: addon-travel-core/app/addons/travel_core/addon.xml
+  - Change feature_id_property_rating from <type>input</type> to <type>selectbox</type>
+  - Change feature_id_meals         from <type>input</type> to <type>selectbox</type>
+  - Change feature_id_room_type     from <type>input</type> to <type>selectbox</type>
+  - Change feature_id_property_type from <type>input</type> to <type>selectbox</type>
+  - Change feature_id_location      from <type>input</type> to <type>selectbox</type>
+
+File: addon-travel-core/app/addons/travel_core/func.php
+  - Add fn_travel_core_get_feature_variants() helper (same as novoton's)
+  - Add 5 one-liner functions:
+      fn_settings_variants_addons_travel_core_feature_id_property_rating()
+      fn_settings_variants_addons_travel_core_feature_id_meals()
+      fn_settings_variants_addons_travel_core_feature_id_room_type()
+      fn_settings_variants_addons_travel_core_feature_id_property_type()
+      fn_settings_variants_addons_travel_core_feature_id_location()
+
+
+================================================================================
+  5. FLEXIBLE FACILITY CATEGORIZATION SYSTEM (Question C)
+================================================================================
+
+5.1 DESIGN PRINCIPLE
+---------------------
+Each Sphinx facility can be assigned to ANY CS-Cart feature — not locked to
+a predefined category. The admin controls which CS-Cart feature each facility
+maps to via a dropdown in the admin UI.
+
+5.2 DATA MODEL
+---------------
+Uses existing travel_feature_map table with feature_type = 'facility'.
+Each row carries its OWN cscart_feature_id (not inherited from a shared
+feature_type setting).
+
+  travel_feature_map:
+  +------------------+--------------+-------------------+-------------------+
+  | feature_type     | canonical_code| cscart_feature_id | cscart_variant_id |
+  +------------------+--------------+-------------------+-------------------+
+  | facility         | restaurant   | 13 (Hotel Fac)    | 88                |
+  | facility         | bar          | 13 (Hotel Fac)    | 89                |
+  | facility         | pool         | 13 (Hotel Fac)    | 90                |
+  | facility         | disabled     | 15 (Accessibility)| 42                |
+  | facility         | elevator     | 15 (Accessibility)| 43                |
+  | facility         | tv           | 7  (Room Fac)     | 55                |
+  | facility         | minibar      | 7  (Room Fac)     | 56                |
+  | facility         | safe         | 7  (Room Fac)     | 57                |
+  | facility         | tennis       | 16 (Sports)       | 60                |
+  | facility         | fitness      | 16 (Sports)       | 61                |
+  +------------------+--------------+-------------------+-------------------+
+
+  travel_api_alias (links Sphinx IDs to canonical codes):
+  +------------+-----------+-----------+
+  | api_source | api_value | map_id    |
+  +------------+-----------+-----------+
+  | sphinx     | 8         | -> restaurant |
+  | sphinx     | 11        | -> bar        |
+  | sphinx     | 37        | -> pool       |
+  | sphinx     | 118       | -> disabled   |
+  | sphinx     | 119       | -> elevator   |
+  | sphinx     | 130       | -> tv         |
+  | novoton    | 42        | -> pool       | <- same canonical, different API ID
+  +------------+-----------+-----------+
+
+5.3 HOW ASSIGNMENT WORKS IN CODE
+----------------------------------
+SphinxFeatureAssigner::assignFacilities():
+
+  foreach ($facilities as $facility) {
+      // Resolve: sphinx facility ID -> canonical code -> CS-Cart mapping
+      $mapping = FeatureMapper::resolve('sphinx', 'facility', (string)$facility['id']);
+      if (!$mapping || empty($mapping['cscart_variant_id'])) continue;
+
+      // EACH facility row has its own cscart_feature_id
+      $featureId = (int)($mapping['cscart_feature_id'] ?? 0);
+      $variantId = (int)$mapping['cscart_variant_id'];
+      if ($featureId > 0 && $variantId > 0) {
+          $this->assignCheckboxValue($productId, $featureId, $variantId);
+      }
+  }
+
+KEY: No hardcoded feature_type -> feature_id mapping. Each canonical code
+row in travel_feature_map determines its own CS-Cart feature target.
+
+5.4 ADMIN FLEXIBILITY EXAMPLES
+---------------------------------
+TODAY:
+  Admin has CS-Cart features:
+    #13 "Hotel Facilities" (Multi-checkbox)
+    #7  "Room Facilities"  (Multi-checkbox)
+
+  Assigns:
+    Pool, Spa, Restaurant, Bar          -> Feature #13
+    TV, Minibar, Safe, Hair dryer       -> Feature #7
+
+TOMORROW:
+  Admin creates CS-Cart feature #15 "Accessibility" (Multi-checkbox)
+  Goes to travel_feature_mappings admin UI
+  Reassigns "Facilities for disabled" and "Elevator" from #13 -> #15
+  Next hotel sync automatically assigns to the new feature
+
+LATER:
+  Admin creates CS-Cart feature #16 "Sports & Activities" (Multi-checkbox)
+  Reassigns Tennis, Fitness, Aqua park, Ski, Cycling -> Feature #16
+  No code changes needed — just admin UI clicks
+
+5.5 NOVOTON CROSS-COMPATIBILITY
+---------------------------------
+Novoton facilities can share the SAME canonical codes via travel_api_alias.
+If Novoton facility ID 42 = "Swimming Pool", it maps to:
+  travel_api_alias: {api_source: 'novoton', api_value: '42', map_id: -> pool}
+Same canonical code as Sphinx facility ID 37.
+
+Both providers resolve to the same CS-Cart variant, ensuring consistency
+across providers.
+
+
+================================================================================
+  6. COMPLETE SPHINX FACILITY CATALOG (124 IDs)
+================================================================================
+
+Food & Drink:
+    1: Meniu masa pentru copii      4: Bottle of water
+    5: Fructe                       8: Restaurant
+    9: Restaurant (a la carte)     11: Bar
+   14: Pránz la pachet             17: Meniuri cu diete speciale (la cerere)
+   18: Room service                19: Mic dejun ín camerá
+
+Wellness & Recreation:
+   25: Facilitáti spa              31: Fitness
+   37: Swimming pool               44: Masaj
+   86: Cazino                     163: Masaj pentru tot corpul
+  178: Schi                       179: Drumetii
+  180: Squash                     181: Ciclism
+  182: Bowling                    183: Camerá de jocuri
+  184: Aqua park                  186: Teren de tenis
+  187: Cálarie                    188: Scoalá de schi
+  189: Ínchiriere de biciclete    192: Zoná de relaxare
+
+Parking & Transport:
+   47: Free parking                48: Secured parking
+   54: Serviciu de transfer        57: Transfer de la si/sau la aeroport
+  142: Ínchirieri auto            143: Tururi cu bicicleta
+  148: Tururi de mers pe jos      199: Parcare
+
+Front Desk & Services:
+   59: 24-hours front desk         64: Birou de turism
+   65: Schimb valutar              68: Camerá de bagaje
+   70: Safety deposit box          94: Cárucioare
+   98: Curátátorie chimicá         99: Serviciu de cálcátorie
+  100: Spálátorie                 101: Menaj zilnic
+  104: Meeting / Banquet facilities
+  105: Business centre            106: Fax
+  128: Conference rooms           155: Receptie nonstop
+  156: Serviciu de trezire        170: Serviciu de trezire/ceas desteptátor
+  172: Sáli de conferinte si petreceri
+  195: Business centre            196: Cafenea la proprietate
+  198: Facturá disponibilá la cerere
+  201: Check-in/check-out express 202: Babysitting/servicii pentru copii
+
+Room Amenities:
+  111: Pets allowed               115: Non-smoking throughout
+  116: Zoná pentru fumátori       117: Camere pentru nefumátori
+  120: Camere de familie          124: Air conditioning
+  125: Íncálzire                  126: Free Wi-Fi
+  127: Washer                     129: Depozit schiuri
+  130: TV                         131: Ventilator
+  132: Birou                      133: Dus
+  134: Vedere                     135: Minibar
+  136: Toaletá                    137: Prosoape
+  138: Lenjerie de pat            139: Papuci de casá
+  140: Telefon                    141: Uscátor de pár
+  144: Ceas desteptátor           145: Háirtie igienicá
+  146: TV cu ecran plat           147: Izolare fonicá
+  149: Dressing                   150: Canale prin cablu
+  151: Mochetá                    152: Articole de toaletá gratuite
+  157: Aer conditionat            158: Baie privatá
+  160: Intrare privatá            161: Seif
+  162: Servicii de internet       164: Jocuri si puzzle-uri
+  165: Prizá lángá pat            190: Plasá de tántari
+  191: Frigider                   193: Vin/sampanie
+  194: Garderobá sau dulap        200: Lounge/camerá cu TV comuná
+
+Outdoor:
+   72: Mobilier exterior           75: Grádina
+   76: Terasá                      77: Terasá la soare
+
+Security:
+  153: Securitate non-stop        154: Camere izolate fonic
+  159: Alarmá de securitate       166: Extinctoare
+  171: Detector de monoxid de carbon
+  173: Acces cu cardul            174: Camere supraveghere zone comune
+  175: Camere supraveghere ín afara proprietátii
+  176: Alarmá de fum              197: Acces cu cheia
+
+Accessibility:
+  118: Facilities for disabled guests
+  203: Etaje superioare accesibile doar pe scári
+
+Smoking Policy:
+  204: Fumatul interzis ín toate spatiile publice si private
+
+
+================================================================================
+  7. IMPLEMENTATION PHASES
+================================================================================
+
+PHASE 1: CS-Cart Feature ID Dropdowns (travel_core)
+-----------------------------------------------------
+  1.1  Change addon.xml settings from input to selectbox
+  1.2  Add fn_travel_core_get_feature_variants() to func.php
+  1.3  Add 5 fn_settings_variants_addons_travel_core_* one-liners
+
+PHASE 2: Seed Facility Canonical Codes
+----------------------------------------
+  2.1  Add ~30 facility canonical codes to fn_travel_core_seed_feature_map()
+  2.2  Extend fn_sphinx_holidays_seed_aliases() with 124 facility ID mappings
+
+PHASE 3: SphinxFeatureAssigner Updates
+-----------------------------------------
+  3.1  Add assignFacilities() method using per-row cscart_feature_id
+  3.2  Call assignFacilities() from assignAll()
+  3.3  Comment out assignBoardTypes() call (dead code)
+  3.4  Fix image_url to use images[0].url from API response
+
+PHASE 4: Shared Admin UI (travel_core)
+-----------------------------------------
+  4.1  Create travel_feature_mappings controller
+  4.2  Create manage.tpl template
+  4.3  Create edit.tpl template with feature dropdown + AJAX variant loading
+  4.4  Register menu item
+  4.5  Add EN + RO language variables
+
+PHASE 5: HotelSyncService Fixes
+----------------------------------
+  5.1  Fix image_url extraction from images[] array
+  5.2  Add comments on dead fields
+  5.3  Keep defensive handling for future API changes
+
+
+================================================================================
+  8. FILE CHANGE LIST
+================================================================================
+
+TRAVEL_CORE (shared layer):
+  MODIFY  addon-travel-core/app/addons/travel_core/addon.xml
+          - Change 5 feature_id_* from input to selectbox
+          - Add language variables for admin UI
+
+  MODIFY  addon-travel-core/app/addons/travel_core/func.php
+          - Add fn_travel_core_get_feature_variants()
+          - Add 5 fn_settings_variants_addons_travel_core_feature_id_*()
+          - Add ~30 facility seeds to fn_travel_core_seed_feature_map()
+
+  CREATE  addon-travel-core/app/addons/travel_core/controllers/backend/
+            travel_feature_mappings.php
+          - Admin controller (~350 lines)
+          - Modes: manage, edit, update, bulk_update, reseed, resolve_variants
+
+  CREATE  addon-travel-core/design/backend/templates/addons/travel_core/views/
+            travel_feature_mappings/manage.tpl
+          - List page with stats, filters, grouped table
+
+  CREATE  addon-travel-core/design/backend/templates/addons/travel_core/views/
+            travel_feature_mappings/edit.tpl
+          - Edit page with CS-Cart feature dropdown, AJAX variant selector
+
+  CREATE  addon-travel-core/app/addons/travel_core/schemas/menu/actions.post.php
+          - Menu registration for feature mappings page
+
+SPHINX_HOLIDAYS (provider layer):
+  MODIFY  addon-sphinx-holidays/.../src/Services/SphinxFeatureAssigner.php
+          - Add assignFacilities() with per-row cscart_feature_id logic
+          - Comment out assignBoardTypes() in assignAll()
+
+  MODIFY  addon-sphinx-holidays/.../src/Services/HotelSyncService.php
+          - Fix image_url: $raw['images'][0]['url'] ?? ''
+          - Add comments on dead fields
+
+  MODIFY  addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
+          - Add 124 facility ID aliases to fn_sphinx_holidays_seed_aliases()
+
+REFERENCE (read-only, patterns to follow):
+  READ    addon-novoton-holidays/.../controllers/backend/novoton_feature_mappings.php
+  READ    addon-novoton-holidays/.../views/novoton_feature_mappings/edit.tpl
+  READ    addon-novoton-holidays/.../views/novoton_feature_mappings/manage.tpl
+  READ    addon-novoton-holidays/.../func.php (lines 67-108)
+
+
+================================================================================
+  9. ADMIN UI SPECIFICATION
+================================================================================
+
+9.1 MANAGE PAGE (travel_feature_mappings.manage)
+--------------------------------------------------
+  STATS BAR:
+    [Total: 75]  [Mapped: 48]  [Unmapped: 27]  [Aliases: 180]
+
+  FILTERS:
+    Feature Type: [All | board | stars | property_type | room_type | facility | location]
+    Status:       [All | Active | Disabled]
+
+  ACTION BUTTONS:
+    [Re-seed Canonical Codes]  [Auto-resolve Variants]
+
+  TABLE (grouped by feature_type):
+    +--+-----------+--------+----------+--------+------------------+---------+-------+
+    |  | Code      | EN     | RO       | Type   | CS-Cart Feature  | Variant | Alias |
+    +--+-----------+--------+----------+--------+------------------+---------+-------+
+    |[]| restaurant| Restau | Restaur  |facility| Hotel Fac #13 (M)| Restau  | 2     |
+    |[]| bar       | Bar    | Bar      |facility| Hotel Fac #13 (M)| Bar     | 2     |
+    |[]| disabled  | Disab  | Acces..  |facility| Accessib #15 (M) | Disab   | 1     |
+    |[]| pool      | Pool   | Pisciná  |facility| Hotel Fac #13 (M)| Pool    | 2     |
+    +--+-----------+--------+----------+--------+------------------+---------+-------+
+
+  BULK ACTIONS: [Activate] [Deactivate] [Delete]
+
+9.2 EDIT PAGE (travel_feature_mappings.edit)
+----------------------------------------------
+  Canonical Code:  restaurant  (read-only)
+  Feature Type:    facility    (read-only)
+
+  Display Name EN: [Restaurant                          ]
+  Display Name RO: [Restaurant                          ]
+
+  CS-Cart Feature: [v Hotel Facilities #13 (Multi)      ]  <- DROPDOWN of all features
+                   [  Room Facilities #7 (Multi)        ]
+                   [  Accessibility #15 (Multi)         ]
+                   [  Sports & Activities #16 (Multi)   ]
+                   [  Stars #4 (Select)                 ]
+
+  CS-Cart Variant: [v Restaurant                        ]  <- AJAX-loaded from feature
+                   [  Bar                               ]
+                   [  Swimming Pool                     ]
+
+  Status:          [v Active] [Disabled]
+
+  ALIASES:
+  +----------+-----------+------------+--------+
+  | Provider | API Value | Match Type | Action |
+  +----------+-----------+------------+--------+
+  | sphinx   | 8         | exact      | [X]    |
+  | novoton  | rest_001  | exact      | [X]    |
+  +----------+-----------+------------+--------+
+  [+ Add Alias]
+
+  [Save] [Cancel]
+
+9.3 CONTROLLER MODES
+----------------------
+  manage           List all travel_feature_map entries with filters
+  edit             Load single entry with feature dropdown + variants + aliases
+  update           Save entry changes (display names, feature_id, variant_id)
+  bulk_update      Activate/deactivate/delete multiple entries
+  reseed           Re-run fn_travel_core_seed_feature_map() (idempotent)
+  resolve_variants Auto-match unmapped entries by name (3-pass: exact, CI, normalized)
+  get_variants     AJAX endpoint: returns variants for a given feature_id (JSON)
+  add_alias        Add new alias row to travel_api_alias
+  delete_alias     Remove alias row from travel_api_alias
+
+9.4 AJAX VARIANT LOADING
+---------------------------
+When CS-Cart Feature dropdown changes:
+  1. JavaScript fires AJAX to dispatch=travel_feature_mappings.get_variants
+     &feature_id=13
+  2. Controller queries:
+     SELECT v.variant_id, vd.variant as name
+     FROM product_feature_variants v
+     LEFT JOIN product_feature_variant_descriptions vd
+       ON v.variant_id = vd.variant_id AND vd.lang_code = 'en'
+     WHERE v.feature_id = 13
+     ORDER BY v.position, vd.variant
+  3. Returns JSON: [{variant_id: 88, name: "Restaurant"}, ...]
+  4. JavaScript populates variant dropdown
+
+
+================================================================================
+  10. VERIFICATION CHECKLIST
+================================================================================
+
+  [ ] Dropdown test: travel_core settings -> feature_id_property_rating
+      shows dropdown of all CS-Cart features (not text input)
+
+  [ ] Seed test: After reseed, travel_feature_map has ~30 rows with
+      feature_type='facility'
+
+  [ ] Alias test: After Sphinx addon install, travel_api_alias has 124
+      rows with api_source='sphinx' and feature_type='facility'
+
+  [ ] Admin UI: Navigate to travel_feature_mappings.manage, verify
+      facility entries display with correct grouping and stats
+
+  [ ] Feature dropdown: In edit page, CS-Cart Feature dropdown shows
+      all product features with names and types
+
+  [ ] AJAX variants: Changing feature dropdown loads matching variants
+
+  [ ] Flexible assignment: Change a facility's cscart_feature_id from
+      "Hotel Facilities #13" to "Accessibility #15" in admin, run hotel
+      sync, verify the facility now maps to the new CS-Cart feature
+
+  [ ] Cross-provider: If both Sphinx and Novoton have a "Pool" alias
+      pointing to the same canonical code, verify both resolve to the
+      same CS-Cart variant
+
+  [ ] Image fix: After hotel sync, verify image_url is populated from
+      the API's images[0].url (not null)
+
+  [ ] Board skip: Verify assignBoardTypes() is not called during hotel
+      sync (commented out in assignAll)
+
+
+================================================================================
+  END OF PLAN
+================================================================================

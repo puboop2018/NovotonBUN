@@ -29,6 +29,9 @@ var/tmp/
 vendor/
 node_modules/
 
+# Legacy pre-split monolithic addon (archived — use addon-* directories instead)
+NovotonBeforeSplit/
+
 # OS Files
 .DS_Store
 Thumbs.db
