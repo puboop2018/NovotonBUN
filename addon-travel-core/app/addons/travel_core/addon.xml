@@ -89,7 +89,7 @@
                         <variants/>
                     </item>
                     <item id="default_currency">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>EUR</default_value>
                         <variants/>
                     </item>
