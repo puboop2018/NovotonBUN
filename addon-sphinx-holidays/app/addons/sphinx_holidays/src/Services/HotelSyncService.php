@@ -170,12 +170,14 @@ class HotelSyncService
 
         $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
 
-        $allHotels = [];
         $activeIds = [];
+        $batchSize = 100;
 
         $page = 1;
         $perPage = 1000;
 
+        // Stream-and-upsert: fetch each page and upsert immediately
+        // instead of accumulating all hotels in memory.
         while (true) {
             // Server-side filtering: pass destination_ids and updated_since to API
             $response = $this->api->getHotels($page, $perPage, $updatedSince, $destinationIds);
@@ -195,6 +197,7 @@ class HotelSyncService
                 break;
             }
 
+            $pageBatch = [];
             foreach ($items as $raw) {
                 $normalized = $this->normalizeHotel($raw);
                 if ($normalized === null) {
@@ -209,9 +212,22 @@ class HotelSyncService
                     continue;
                 }
 
-                $allHotels[] = $normalized;
+                $pageBatch[] = $normalized;
                 $activeIds[] = $normalized['hotel_id'];
                 $stats['total']++;
+
+                // Flush batch when full
+                if (count($pageBatch) >= $batchSize) {
+                    $affected = $this->hotelRepo->upsertBatch($pageBatch);
+                    $stats['synced'] += $affected;
+                    $pageBatch = [];
+                }
+            }
+
+            // Flush remaining items from this page
+            if (!empty($pageBatch)) {
+                $affected = $this->hotelRepo->upsertBatch($pageBatch);
+                $stats['synced'] += $affected;
             }
 
             // Pagination: check for more pages
@@ -231,23 +247,13 @@ class HotelSyncService
             $page++;
         }
 
-        if (empty($allHotels)) {
+        if ($stats['total'] === 0) {
             if ($updatedSince !== null) {
                 $this->output("    {$countryCode}: no hotels updated since {$updatedSince}");
             } else {
                 $this->output("    {$countryCode}: 0 hotels matched");
             }
             return $stats;
-        }
-
-        // Batch upsert
-        $this->output("    Upserting {$stats['total']} hotels...");
-        $batchSize = 100;
-        $batches = array_chunk($allHotels, $batchSize);
-
-        foreach ($batches as $i => $batch) {
-            $affected = $this->hotelRepo->upsertBatch($batch);
-            $stats['synced'] += $affected;
         }
 
         // Only mark stale hotels on full sync — incremental returns only changed items

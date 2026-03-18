@@ -73,9 +73,10 @@ class DestinationSyncService
 
             $page = 1;
             $perPage = 1000;
-            $allDestinations = [];
+            $batchSize = 100;
 
-            // Fetch all pages
+            // Stream-and-upsert: fetch each page and upsert immediately
+            // instead of accumulating all destinations in memory.
             while (true) {
                 $this->output("Fetching page {$page}...");
 
@@ -101,14 +102,30 @@ class DestinationSyncService
                     break;
                 }
 
+                // Normalize and upsert this page's items immediately
+                $pageBatch = [];
                 foreach ($items as $item) {
                     $normalized = $this->normalizeDestination($item);
                     if ($normalized !== null) {
-                        $allDestinations[] = $normalized;
+                        $pageBatch[] = $normalized;
+                        $stats['total']++;
+
+                        // Flush batch when full
+                        if (count($pageBatch) >= $batchSize) {
+                            $affected = $this->repository->upsertBatch($pageBatch);
+                            $stats['synced'] += $affected;
+                            $pageBatch = [];
+                        }
                     }
                 }
 
-                $this->output('  Fetched ' . count($items) . ' items (total so far: ' . count($allDestinations) . ')');
+                // Flush remaining items from this page
+                if (!empty($pageBatch)) {
+                    $affected = $this->repository->upsertBatch($pageBatch);
+                    $stats['synced'] += $affected;
+                }
+
+                $this->output("  Page {$page}: " . count($items) . ' items fetched, ' . $stats['total'] . ' total so far');
 
                 // Check if there are more pages
                 $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
@@ -117,7 +134,7 @@ class DestinationSyncService
                 if ($lastPage !== null && $page >= (int) $lastPage) {
                     break;
                 }
-                if ($totalItems !== null && count($allDestinations) >= (int) $totalItems) {
+                if ($totalItems !== null && $stats['total'] >= (int) $totalItems) {
                     break;
                 }
                 if (count($items) < $perPage) {
@@ -128,34 +145,20 @@ class DestinationSyncService
                 $page++;
             }
 
-            $stats['total'] = count($allDestinations);
-
-            if (empty($allDestinations) && !empty($stats['error'])) {
+            if ($stats['total'] === 0 && !empty($stats['error'])) {
                 $this->logComplete($logId, 'failed', $stats);
                 return $stats;
             }
 
-            if (empty($allDestinations) && $updatedSince !== null) {
+            if ($stats['total'] === 0 && $updatedSince !== null) {
                 $this->output('No destinations updated since last sync. Everything is up to date.');
                 $stats['success'] = true;
                 $stats['synced'] = 0;
             } else {
-                // Batch upsert into DB
-                $this->output("Upserting {$stats['total']} destinations into database...");
-
-                $batchSize = 100;
-                $batches = array_chunk($allDestinations, $batchSize);
-
-                foreach ($batches as $i => $batch) {
-                    $affected = $this->repository->upsertBatch($batch);
-                    $stats['synced'] += $affected;
-                    $this->output('  Batch ' . ($i + 1) . '/' . count($batches) . ': ' . $affected . ' rows');
-                }
-
                 $stats['failed'] = $stats['total'] - $stats['synced'];
                 $stats['success'] = true;
 
-                // Build full_path breadcrumbs for disambiguation
+                // Build full_path breadcrumbs for disambiguation (chunked)
                 $this->output('Building destination breadcrumb paths...');
                 $pathsUpdated = $this->repository->buildFullPaths();
                 $this->output("Updated {$pathsUpdated} full_path breadcrumbs.");
