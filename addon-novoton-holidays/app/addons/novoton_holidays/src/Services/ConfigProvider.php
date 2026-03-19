@@ -175,11 +175,6 @@ class ConfigProvider
         return max(0.0, (float) (self::settings()['commission'] ?? 0));
     }
 
-    public static function getCurrencyRiskCommission(): float
-    {
-        return max(0.0, (float) (self::settings()['currency_risk_commission'] ?? 0));
-    }
-
     // ── String Settings ──
 
     public static function getApiCurrency(): string

@@ -84,14 +84,6 @@ msgctxt "SettingsTooltips::novoton_holidays::api_currency"
 msgid "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 msgstr "The currency that the Novoton API returns prices in. Prices will be converted from this currency to the customer's selected currency."
 
-msgctxt "SettingsOptions::novoton_holidays::currency_risk_commission"
-msgid "Currency risk commission %"
-msgstr "Currency risk commission %"
-
-msgctxt "SettingsTooltips::novoton_holidays::currency_risk_commission"
-msgid "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
-msgstr "Percentage to add to exchange rates (0-5%, default 1.8%). Protects against currency fluctuation risk."
-
 msgctxt "SettingsOptions::novoton_holidays::api_resilience_header"
 msgid "API Resilience"
 msgstr "API Resilience"
@@ -163,10 +155,6 @@ msgstr "Update Information"
 msgctxt "Languages::novoton_holidays.last_update"
 msgid "Last Update"
 msgstr "Last Update"
-
-msgctxt "Languages::novoton_holidays.currency_risk_commission"
-msgid "Currency Risk Commission"
-msgstr "Currency Risk Commission"
 
 msgctxt "Languages::novoton_holidays.data_source"
 msgid "Data Source"

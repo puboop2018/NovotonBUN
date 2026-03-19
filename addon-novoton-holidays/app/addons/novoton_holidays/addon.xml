@@ -109,12 +109,6 @@
                         <default_value>EUR</default_value>
                         <variants/>
                     </item>
-                    <item id="currency_risk_commission">
-                        <type>input</type>
-                        <default_value>1.8</default_value>
-                        <variants/>
-                    </item>
-
                     <!-- Price Discrepancy Check Header -->
                     <item id="price_check_header">
                         <type>header</type>
