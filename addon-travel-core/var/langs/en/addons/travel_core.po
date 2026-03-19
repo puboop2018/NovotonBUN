@@ -387,3 +387,15 @@ msgstr "Exchange Rates"
 msgctxt "Languages::travel_core.exchange_rates_updated"
 msgid "Exchange rates updated successfully"
 msgstr "Exchange rates updated successfully"
+
+msgctxt "Languages::menu.travel_core_menu"
+msgid "Travel"
+msgstr "Travel"
+
+msgctxt "Languages::menu.travel_core_menu.travel_bookings"
+msgid "Bookings"
+msgstr "Bookings"
+
+msgctxt "Languages::menu.travel_core_menu.travel_feature_mappings"
+msgid "Feature Mappings"
+msgstr "Feature Mappings"

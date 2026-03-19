@@ -418,6 +418,26 @@
         <item lang="ro" id="travel_core.fm_alias_deleted"><![CDATA[Alias-ul a fost șters]]></item>
     </language_variables>
 
+    <!-- Admin menu -->
+    <menu>
+        <items>
+            <item id="travel_core_menu">
+                <title>Travel</title>
+                <position>5</position>
+                <items>
+                    <item id="travel_bookings">
+                        <href>travel_bookings.manage</href>
+                        <position>5</position>
+                    </item>
+                    <item id="travel_feature_mappings">
+                        <href>travel_feature_mappings.manage</href>
+                        <position>10</position>
+                    </item>
+                </items>
+            </item>
+        </items>
+    </menu>
+
     <!-- Functions to run on install/uninstall -->
     <functions>
         <item for="install">fn_travel_core_post_install</item>

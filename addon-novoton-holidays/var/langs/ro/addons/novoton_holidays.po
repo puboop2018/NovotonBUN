@@ -345,8 +345,12 @@ msgid "Novoton Holidays"
 msgstr "Novoton Holidays"
 
 msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
-msgid "Hotel Bookings"
-msgstr "Rezervări Hoteluri"
+msgid "All Bookings (Unified)"
+msgstr "Toate Rezervările (Unificate)"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_bookings_detail"
+msgid "Novoton Bookings (Detail)"
+msgstr "Rezervări Novoton (Detaliu)"
 
 msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
 msgid "Alternative Requests"

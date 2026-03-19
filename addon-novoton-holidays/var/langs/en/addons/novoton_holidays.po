@@ -261,8 +261,12 @@ msgid "Novoton Holidays"
 msgstr "Novoton Holidays"
 
 msgctxt "Languages::menu.novoton_holidays_menu.hotel_bookings"
-msgid "Hotel Bookings"
-msgstr "Hotel Bookings"
+msgid "All Bookings (Unified)"
+msgstr "All Bookings (Unified)"
+
+msgctxt "Languages::menu.novoton_holidays_menu.novoton_bookings_detail"
+msgid "Novoton Bookings (Detail)"
+msgstr "Novoton Bookings (Detail)"
 
 msgctxt "Languages::menu.novoton_holidays_menu.alternative_requests"
 msgid "Alternative Requests"
