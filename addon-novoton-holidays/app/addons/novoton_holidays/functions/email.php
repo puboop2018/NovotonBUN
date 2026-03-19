@@ -123,7 +123,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
     $email_data = [
         'import_type_label' => $type_label,
         'country' => $country ?: 'ALL',
-        'date' => date('d.m.Y H:i'),
+        'date' => date('d.m.Y H:i T'),
         'summary' => [
             'added'    => $summary['added'] ?? 0,
             'updated'  => $summary['updated'] ?? 0,
