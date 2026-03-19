@@ -370,6 +370,12 @@ final class Constants
     /** Default check-in offset for automatic price checks (days from today) */
     public const PRICE_CHECK_OFFSET_DAYS = 30;
 
+    /** Default check-in offset for test/diagnostic forms (days from today) */
+    public const DEFAULT_CHECKIN_DAYS_AHEAD = 30;
+
+    /** Default stay duration in nights for test/diagnostic forms */
+    public const DEFAULT_STAY_NIGHTS = 7;
+
     // ========== Date Formats ==========
     // Shared date formats are in TravelConstants (DATETIME_FORMAT, DATE_FORMAT)
 

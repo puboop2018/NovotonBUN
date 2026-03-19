@@ -46,6 +46,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+
 class PriceInfoCalculation implements PriceInfoCalculationInterface
 {
     /** @var float Commission percentage */
@@ -116,7 +118,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $this->parser->parseChildAgeBands();
 
         // Extract parameters
-        $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
+        $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
         $nights = (int)($params['nights'] ?? 7);
         $roomId = $params['room_id'] ?? '';
         $boardId = $params['board_id'] ?? '';

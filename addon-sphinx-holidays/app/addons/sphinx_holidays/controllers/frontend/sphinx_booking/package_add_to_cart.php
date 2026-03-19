@@ -87,17 +87,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
     }
 
-    // Resolve product_id — packages use SPH_PKG_{hotel_id} product code
+    // Resolve product_id — packages use SPX{hotel_id} product code
     $product_id = (int)($bookingData['product_id'] ?? 0);
     if (empty($product_id) && !empty($hotel_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPH_PKG_' . $hotel_id);
-    }
-    if (empty($product_id) && !empty($hotel_id)) {
-        // Fallback: try hotel product code
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPH_' . $hotel_id);
-    }
-    if (empty($product_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code LIKE ?l LIMIT 1", 'SPH_PKG_%');
+        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPX' . $hotel_id);
     }
     if (empty($product_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.product_not_found', ['[default]' => 'Package product not found.']));

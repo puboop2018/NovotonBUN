@@ -1,9 +1,9 @@
 /**
- * Novoton Booking Engine - Translation strings
+ * Travel Booking Engine - Translation strings
  *
  * Bilingual support: English (en) and Romanian (ro).
  * Calendar month/weekday names are kept here; UI label strings
- * are read at runtime from window.NovotonTranslations (injected by
+ * are read at runtime from window.TravelTranslations (injected by
  * Smarty templates) so the store admin can override them via the
  * CS-Cart language system.
  */

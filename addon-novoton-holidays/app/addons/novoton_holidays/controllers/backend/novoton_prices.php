@@ -614,8 +614,8 @@ if ($mode == 'room_price') {
     }
     
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
     
     Tygh::$app['view']->assign('hotel_id', $hotel_id);
     Tygh::$app['view']->assign('check_in', $check_in);

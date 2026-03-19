@@ -87,14 +87,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
     }
 
-    // Resolve product_id — circuits use SPH_CIR_{circuit_id} product code
+    // Resolve product_id — circuits use SPX{circuit_id} product code
     $product_id = (int)($bookingData['product_id'] ?? 0);
     if (empty($product_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPH_CIR_' . $circuit_id);
-    }
-    if (empty($product_id)) {
-        // Fallback: use the generic Sphinx circuits category product
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code LIKE ?l LIMIT 1", 'SPH_CIR_%');
+        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPX' . $circuit_id);
     }
     if (empty($product_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.product_not_found', ['[default]' => 'Circuit product not found.']));

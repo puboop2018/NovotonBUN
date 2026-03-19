@@ -33,6 +33,7 @@ function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details 
     // Decode priceinfo if available
     if (!empty($pkg['priceinfo_data'])) {
         $priceinfo = json_decode($pkg['priceinfo_data'], true);
+        if ($priceinfo === null) return $packageData;
         if ($priceinfo) {
             $packageData['priceinfo'] = $priceinfo;
 
@@ -95,6 +96,7 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
     $hotelInfoJson = $hotel['hotel_data'] ?? '';
     if (!empty($hotelInfoJson)) {
         $hotelInfo = json_decode($hotelInfoJson, true);
+        if ($hotelInfo === null) return $hotel;
         if ($hotelInfo) {
             if (isset($hotelInfo['rooms'])) {
                 $hotel['rooms'] = $hotelInfo['rooms'];
@@ -277,6 +279,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     }
 
     $priceinfo = json_decode($package['priceinfo_data'], true);
+    if ($priceinfo === null) return [];
     if (empty($priceinfo) || empty($priceinfo['season_price'])) {
         return [];
     }
@@ -376,7 +379,9 @@ function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?arr
         return null;
     }
 
-    return json_decode($pkg['priceinfo_data'], true);
+    $data = json_decode($pkg['priceinfo_data'], true);
+    if ($data === null) return null;
+    return $data;
 }
 
 /**
@@ -404,7 +409,9 @@ function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_n
         return null;
     }
 
-    return json_decode($pkg['priceinfo_data'], true);
+    $data = json_decode($pkg['priceinfo_data'], true);
+    if ($data === null) return null;
+    return $data;
 }
 
 /**

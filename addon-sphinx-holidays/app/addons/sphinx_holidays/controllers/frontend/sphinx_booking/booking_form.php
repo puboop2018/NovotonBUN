@@ -69,7 +69,7 @@ try {
     if (empty($product_id) && !empty($hotel_id)) {
         $product_id = (int)db_get_field(
             "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            'SPH_' . $hotel_id
+            'SPX' . $hotel_id
         );
     }
 

@@ -98,7 +98,7 @@ class AddProductsCommand
                 ],
                 $template
             );
-            $categoryId = fn_sphinx_holidays_get_or_create_category($path);
+            $categoryId = fn_travel_core_get_or_create_category($path);
             if (!$categoryId) {
                 $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category)");
                 $stats['failed']++;

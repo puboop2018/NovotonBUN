@@ -523,12 +523,9 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
         return;
     }
 
-    // Support both legacy SPH_ and new SPX product code prefixes
     $code = $product_data['product_code'];
     if (strpos($code, 'SPX') === 0) {
         $hotel_id = substr($code, 3);
-    } elseif (strpos($code, 'SPH_') === 0) {
-        $hotel_id = substr($code, 4);
     } else {
         return;
     }

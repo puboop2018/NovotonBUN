@@ -34,9 +34,6 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Load function files
-require_once __DIR__ . '/functions/products.php';
-
 // Register with shared travel provider registry (guard against travel_core not being loaded)
 if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(

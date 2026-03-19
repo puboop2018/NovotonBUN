@@ -162,7 +162,7 @@ function _sphinx_parse_dob(array $guest): string {
         $dob_value = trim($guest['dob']);
         if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob_value, $matches)) {
             $d = (int)$matches[1]; $m = (int)$matches[2]; $y = (int)$matches[3];
-            if ($d >= 1 && $d <= 31 && $m >= 1 && $m <= 12 && $y >= 1925 && $y <= (int)date('Y') && checkdate($m, $d, $y)) {
+            if ($d >= 1 && $d <= 31 && $m >= 1 && $m <= 12 && $y >= ((int)date('Y') - 120) && $y <= (int)date('Y') && checkdate($m, $d, $y)) {
                 $birthday = sprintf('%04d-%02d-%02d', $y, $m, $d);
             }
         } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob_value)) {

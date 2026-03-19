@@ -49,13 +49,11 @@ export function getLocale() {
 // ---------------------------------------------------------------------------
 
 /**
- * Read a key from `window.TravelTranslations`, falling back to
- * `window.NovotonTranslations` for backwards compatibility,
- * then to the provided default.
+ * Read a key from `window.TravelTranslations`, then fall back
+ * to the provided default.
  */
 export function t(key, fallback) {
-    const dict = (typeof window !== 'undefined' &&
-        (window.TravelTranslations || window.NovotonTranslations)) || {};
+    const dict = (typeof window !== 'undefined' && window.TravelTranslations) || {};
     return dict[key] || fallback || key;
 }
 

@@ -64,13 +64,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.experience_search'];
     }
 
-    // Resolve product_id — experiences use SPH_EXP_{experience_id} product code
+    // Resolve product_id — experiences use SPX{experience_id} product code
     $product_id = (int)($bookingData['product_id'] ?? 0);
     if (empty($product_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPH_EXP_' . $experience_id);
-    }
-    if (empty($product_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code LIKE ?l LIMIT 1", 'SPH_EXP_%');
+        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPX' . $experience_id);
     }
     if (empty($product_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.product_not_found', ['[default]' => 'Experience product not found.']));

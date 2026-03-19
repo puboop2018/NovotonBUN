@@ -27,6 +27,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
@@ -258,8 +259,8 @@ if ($mode == 'test_room_price') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
     $room_id = $_REQUEST['room_id'] ?? '';
     $board_id = $_REQUEST['board_id'] ?? 'AI';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
     $adults = (int)($_REQUEST['adults'] ?? 2);
 
     echo '<h2>Room Price Test</h2>';
@@ -321,8 +322,8 @@ if ($mode == 'test_search') {
     header('Content-Type: text/html; charset=utf-8');
 
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
     $adults = (int)($_REQUEST['adults'] ?? 2);
     $children = (int)($_REQUEST['children'] ?? 0);
 
@@ -460,8 +461,8 @@ if ($mode == 'test_hotel_request') {
 if ($mode == 'test_alternative_rs') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
     $id_num = $_REQUEST['id_num'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
 
     Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
     Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));

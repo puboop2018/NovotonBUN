@@ -209,8 +209,8 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'hotel_id' => $params['hotel_id'],
                 'room_id' => $params['room_id'] ?? '',
                 'board_id' => $params['board_id'] ?? 'AI',
-                'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+30 days')),
-                'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+37 days')),
+                'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')),
+                'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')),
                 'adults' => (int) ($params['adults'] ?? 2),
                 'children' => 0,
             ];
@@ -258,8 +258,8 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $api = $this->getApi();
 
             $searchParams = [
-                'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+30 days')),
-                'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+37 days')),
+                'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')),
+                'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')),
                 'adults' => (int) ($params['adults'] ?? 2),
                 'children' => (int) ($params['children'] ?? 0),
             ];

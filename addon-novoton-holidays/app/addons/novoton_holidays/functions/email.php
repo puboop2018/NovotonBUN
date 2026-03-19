@@ -14,6 +14,12 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+/** Star-rating label fallbacks by locale. */
+const NOVOTON_STAR_LABELS = [
+    'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
+    'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
+];
+
 /**
  * Escape a CSV field to prevent formula injection.
  *
@@ -356,7 +362,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
             $featureMapper = $container->featureMapper();
         } catch (\Exception $e) {
-            // Fall through to hardcoded labels
+            fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
         $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
@@ -374,10 +380,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         ]);
 
         // Star rating labels — use FeatureMapper display names with hardcoded fallback
-        $star_labels_fallback = [
-            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
-            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars']
-        ];
+        $star_labels_fallback = NOVOTON_STAR_LABELS;
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
@@ -402,6 +405,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
+                    if ($pi === null) continue;
                     if (!empty($pi['season_price'])) {
                         $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
                         foreach ($sp_list as $sp) {
@@ -509,13 +513,10 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
             $featureMapper = $container->featureMapper();
         } catch (\Exception $e) {
-            // Fall through to hardcoded labels
+            fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
-        $star_labels_fallback = [
-            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
-            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
-        ];
+        $star_labels_fallback = NOVOTON_STAR_LABELS;
 
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
@@ -549,6 +550,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
+                    if ($pi === null) continue;
                     if (!empty($pi['season_price'])) {
                         $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
                         foreach ($sp_list as $sp) {

@@ -14,7 +14,7 @@ declare(strict_types=1);
  *   index.php?dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=hotels&status=1
  *
  * Note: uses 'cron_mode' parameter (not 'mode') because CS-Cart reserves 'mode'
- * for the dispatch system. 'mode' is kept as fallback for backward compatibility.
+ * for the dispatch system.
  *
  * All modes are handled by Command classes via CronDispatcher.
  * See CronDispatcher::getAvailableModes() for the full list.
@@ -46,7 +46,7 @@ if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
 
 // ── Parse mode ──
 
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? $_REQUEST['mode'] ?? 'destinations'));
+$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? 'destinations'));
 
 // ── Status check (non-destructive) ──
 
