@@ -25,8 +25,9 @@
  * @since 1.0.0
  *}
 
-{if !$travel_provider}{$travel_provider = 'novoton'}{/if}
-{if !$travel_search_dispatch}{$travel_search_dispatch = 'novoton_booking.search'}{/if}
+{* Provider must be set by the including template — no provider-specific defaults *}
+{if !$travel_provider}{$travel_provider = ''}{/if}
+{if !$travel_search_dispatch}{$travel_search_dispatch = ''}{/if}
 {if !$travel_mode}{$travel_mode = 'product'}{/if}
 
 {* Get product_id from context - try multiple sources *}

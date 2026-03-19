@@ -7,9 +7,9 @@
  * is loaded by travel_core's hooks/index/scripts.post.tpl.
  *}
 
-{* Only set provider config on Novoton or shared pages — avoids overwriting Sphinx config *}
+{* Only set provider config on Novoton pages or Novoton hotel product pages — avoids overwriting Sphinx config *}
 {$_nvt_dispatch = $smarty.request.dispatch|default:''}
-{if $_nvt_dispatch|substr:0:8 == 'novoton_' || $_nvt_dispatch|substr:0:9 == 'products.' || $_nvt_dispatch|substr:0:8 == 'checkout' || $_nvt_dispatch == ''}
+{if $_nvt_dispatch|substr:0:8 == 'novoton_' || ($_nvt_dispatch|substr:0:9 == 'products.' && $is_hotel_product) || $_nvt_dispatch|substr:0:8 == 'checkout' || $_nvt_dispatch == ''}
 <script>
 window.TravelBookingConfig = window.TravelBookingConfig || {};
 window.TravelBookingConfig.provider = 'novoton';

@@ -7,9 +7,9 @@
  * is loaded by travel_core's hooks/index/scripts.post.tpl.
  *}
 
-{* Only set provider config on Sphinx pages — avoids overwriting Novoton config *}
+{* Only set provider config on Sphinx pages or Sphinx hotel product pages — avoids overwriting Novoton config *}
 {$_sph_dispatch = $smarty.request.dispatch|default:''}
-{if $_sph_dispatch|substr:0:7 == 'sphinx_'}
+{if $_sph_dispatch|substr:0:7 == 'sphinx_' || ($_sph_dispatch|substr:0:9 == 'products.' && $is_sphinx_hotel)}
 <script>
 window.TravelBookingConfig = window.TravelBookingConfig || {};
 window.TravelBookingConfig.provider = 'sphinx';
