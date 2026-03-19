@@ -95,7 +95,7 @@
 }
 </style>
 
-<div class="novoton-search-results-page" style="padding: 0 10px;">
+<div class="travel-search-results-page novoton-search-results-page" style="padding: 0 10px;">
     
     {* Debug Output *}
     {if $novoton_debug}
@@ -108,7 +108,7 @@
     {/if}
     
     {* ===== BOOKING FORM - React Component (shared travel_core mount) ===== *}
-    <div class="novoton-search-form-wrapper" style="margin-bottom: 20px;">
+    <div class="travel-search-form-wrapper novoton-search-form-wrapper" style="margin-bottom: 20px;">
         {$travel_search_params = $novoton_params}
         {include file="addons/novoton_holidays/blocks/booking_engine.tpl" travel_mode="search"}
     </div>

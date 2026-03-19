@@ -15,7 +15,8 @@
 
     {* Search form wrapper for re-searching *}
     <div class="travel-search-form-wrapper">
-        {include file="addons/sphinx_holidays/blocks/booking_engine.tpl"}
+        {$travel_search_params = $sphinx_search_params}
+        {include file="addons/sphinx_holidays/blocks/booking_engine.tpl" travel_mode="search"}
     </div>
 
     {if $sphinx_search_results}
