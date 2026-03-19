@@ -7,12 +7,15 @@
  * When `prices` prop is provided, each day cell displays a small per-night
  * price label below the day number, similar to Booking.com. Dates without
  * prices show "_" and are greyed out.
+ *
+ * Mobile (<= 768px): full-screen overlay with scrollable months, sticky
+ * weekday header, close (X) button, and confirm button at the bottom.
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { getLocale, nightsBetween, formatDateShort, t, tPlural, useFocusTrap } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
-import { ChevronLeft, ChevronRight } from './icons';
+import { ChevronLeft, ChevronRight, XIcon } from './icons';
 
 /**
  * Build a matrix of weeks (rows of 7 cells) for a given month.
@@ -65,12 +68,40 @@ function formatCalendarPrice(price) {
     return String(Math.round(price));
 }
 
+/** Number of months to render ahead in mobile scrollable view. */
+const MOBILE_MONTHS_AHEAD = 12;
+
+/** Simple media query check for mobile. */
+function useIsMobile(breakpoint = 768) {
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' && window.innerWidth <= breakpoint
+    );
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+        const handler = (e) => setIsMobile(e.matches);
+        // Modern browsers
+        if (mq.addEventListener) {
+            mq.addEventListener('change', handler);
+            return () => mq.removeEventListener('change', handler);
+        }
+        // Safari 13 fallback
+        mq.addListener(handler);
+        return () => mq.removeListener(handler);
+    }, [breakpoint]);
+
+    return isMobile;
+}
+
 export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices, pricesCurrency, triggerRef }) {
     const locale = getLocale();
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
 
     const hasPrices = prices && typeof prices === 'object' && Object.keys(prices).length > 0;
+
+    const isMobile = useIsMobile();
 
     // Memoize today so it doesn't invalidate useCallback deps on every render
     const today = useMemo(() => {
@@ -145,25 +176,40 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         }
     }, [tempCheckIn, tempCheckOut, today, onSelect]);
 
-    // Two consecutive months
+    // -----------------------------------------------------------------------
+    // Month lists
+    // -----------------------------------------------------------------------
+
+    // Desktop: two consecutive months from viewDate
     const month1Year = viewDate.getFullYear();
     const month1Month = viewDate.getMonth();
     const month2Date = new Date(month1Year, month1Month + 1, 1);
     const month2Year = month2Date.getFullYear();
     const month2Month = month2Date.getMonth();
 
+    // Mobile: 12 months ahead from current month (always start from today)
+    const mobileMonths = useMemo(() => {
+        if (!isMobile) return [];
+        const months = [];
+        for (let i = 0; i < MOBILE_MONTHS_AHEAD; i++) {
+            const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+            months.push({ year: d.getFullYear(), month: d.getMonth() });
+        }
+        return months;
+    }, [isMobile, today]);
+
     const canGoPrev = new Date(month1Year, month1Month, 1) > new Date(today.getFullYear(), today.getMonth(), 1);
 
     const nights = nightsBetween(tempCheckIn, tempCheckOut);
 
-    // Compute price tier thresholds (quartiles) across both visible months
+    // Compute price tier thresholds (quartiles) across visible months
     const priceTiers = useMemo(() => {
         if (!hasPrices) return null;
+        const monthList = isMobile
+            ? mobileMonths
+            : [{ year: month1Year, month: month1Month }, { year: month2Year, month: month2Month }];
         const allPrices = [];
-        for (const monthInfo of [
-            { year: month1Year, month: month1Month },
-            { year: month2Year, month: month2Month },
-        ]) {
+        for (const monthInfo of monthList) {
             const daysInMonth = new Date(monthInfo.year, monthInfo.month + 1, 0).getDate();
             for (let d = 1; d <= daysInMonth; d++) {
                 const key = toDateKey(monthInfo.year, monthInfo.month, d);
@@ -179,13 +225,13 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         const q2 = allPrices[Math.floor(allPrices.length * 0.50)];
         const q3 = allPrices[Math.floor(allPrices.length * 0.75)];
         return { q1, q2, q3 };
-    }, [hasPrices, prices, month1Year, month1Month, month2Year, month2Month, today]);
+    }, [hasPrices, prices, isMobile, mobileMonths, month1Year, month1Month, month2Year, month2Month, today]);
 
     function renderMonth(year, month) {
         const cells = buildCalendarGrid(year, month);
 
         return (
-            <div className="nvt-calendar-month">
+            <div className="nvt-calendar-month" key={`${year}-${month}`}>
                 <div className="nvt-calendar-header">
                     <h3>{monthNames[month]} {year}</h3>
                 </div>
@@ -293,8 +339,24 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         ? t('calendarPriceFooter', 'Approximate prices in %s for a 1-night stay').replace('%s', pricesCurrency)
         : '';
 
+    // Confirm button label (bilingual)
+    const confirmLabel = locale === 'ro'
+        ? t('selectThisDate', 'Selectează această dată')
+        : t('selectThisDate', 'Select this date');
+
     return (
         <div className="nvt-calendar-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('datePicker', 'Date picker')}>
+            {/* Close (X) button — visible on mobile only (hidden via CSS on desktop) */}
+            <button
+                type="button"
+                className="nvt-calendar-close"
+                onClick={() => onClose && onClose()}
+                aria-label={t('close', 'Close')}
+            >
+                <XIcon />
+            </button>
+
+            {/* Desktop: prev/next navigation (hidden on mobile via CSS) */}
             <div className="nvt-calendar-nav-bar">
                 <button
                     type="button"
@@ -315,10 +377,25 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 </button>
             </div>
 
-            <div className="nvt-calendar-months">
-                {renderMonth(month1Year, month1Month)}
-                {renderMonth(month2Year, month2Month)}
+            {/* Mobile: shared sticky weekday header (hidden on desktop via CSS) */}
+            <div className="nvt-calendar-sticky-weekdays">
+                {weekdays.map((d, i) => <span key={i}>{d}</span>)}
             </div>
+
+            {/* Mobile: scrollable months container */}
+            {isMobile ? (
+                <div className="nvt-calendar-scroll-container">
+                    <div className="nvt-calendar-months">
+                        {mobileMonths.map(({ year, month }) => renderMonth(year, month))}
+                    </div>
+                </div>
+            ) : (
+                /* Desktop: two months side-by-side (unchanged) */
+                <div className="nvt-calendar-months">
+                    {renderMonth(month1Year, month1Month)}
+                    {renderMonth(month2Year, month2Month)}
+                </div>
+            )}
 
             {priceFooterText && (
                 <div className="nvt-calendar-price-footer">
@@ -328,6 +405,18 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
 
             <div className="nvt-calendar-footer">
                 <span>{footerText}</span>
+            </div>
+
+            {/* Confirm button — visible on mobile only (hidden via CSS on desktop) */}
+            <div className="nvt-calendar-confirm">
+                <button
+                    type="button"
+                    className="nvt-done-btn"
+                    onClick={() => onClose && onClose()}
+                    disabled={!tempCheckIn}
+                >
+                    {confirmLabel}
+                </button>
             </div>
         </div>
     );
