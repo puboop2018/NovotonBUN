@@ -324,21 +324,52 @@ class HotelRepository
     /**
      * Get hotels that have boards_json AND a linked product.
      *
-     * @return array List of hotel rows with boards_json and product_id
+     * Returns all fields needed by SphinxFeatureAssigner::assignAll().
+     *
+     * @param string $countryCode Optional country filter
+     * @param int $limit Max rows (0 = unlimited)
+     * @param int $offset Starting offset for pagination
+     * @return array List of hotel rows
      */
-    public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0): array
+    public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
     {
         $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
         if ($countryCode !== '') {
             $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
         }
-        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+
+        $limitClause = '';
+        if ($limit > 0) {
+            $limitClause = db_quote(" LIMIT ?i, ?i", $offset, $limit);
+        } elseif ($offset > 0) {
+            $limitClause = db_quote(" LIMIT ?i, 18446744073709551615", $offset);
+        }
 
         return db_get_array(
-            "SELECT h.hotel_id, h.product_id, h.boards_json, h.name FROM ?:sphinx_hotels h
+            "SELECT h.hotel_id, h.product_id, h.boards_json, h.name,
+                    h.classification, h.property_type, h.destination_name,
+                    h.facilities_json, h.country_code
+             FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' ?p
              ORDER BY h.hotel_id ASC ?p",
             $condition, $limitClause
+        );
+    }
+
+    /**
+     * Count hotels that have boards_json AND a linked product.
+     */
+    public function countWithBoardsAndProduct(string $countryCode = ''): int
+    {
+        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        }
+
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' ?p",
+            $condition
         );
     }
 

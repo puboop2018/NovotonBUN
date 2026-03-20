@@ -7,6 +7,7 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use function fn_log_event;
 
 /**
  * Cron command: discover available board/meal types per hotel via live search.
@@ -332,6 +333,17 @@ class DiscoverBoardsCommand
             foreach ($state['boards_found'] as $code => $count) {
                 $this->output("    {$code}: {$count} offers");
             }
+        }
+
+        // Report unrecognized board names (helps identify new aliases needed)
+        $unknownBoards = SphinxNormalizer::getUnknownBoards();
+        if (!empty($unknownBoards)) {
+            arsort($unknownBoards);
+            $this->output('  Unrecognized board names (consider adding aliases):');
+            foreach (array_slice($unknownBoards, 0, 20) as $name => $count) {
+                $this->output("    \"{$name}\": {$count} occurrences");
+            }
+            SphinxNormalizer::clearUnknownBoards();
         }
 
         // Clear state file

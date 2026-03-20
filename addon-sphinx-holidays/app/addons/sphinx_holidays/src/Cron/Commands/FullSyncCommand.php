@@ -9,8 +9,11 @@ use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
  * Cron command: run all sync modes in sequence.
  *
  * Executes the complete sync pipeline:
- *   destinations → hotels → package_routes → circuits → experiences → order_status → cache_refresh → cleanup
+ *   destinations → hotels → assign_boards → package_routes → circuits →
+ *   experiences → order_status → add_products → cache_refresh → cleanup
  *
+ * Note: discover_boards is excluded — it uses live API search per destination
+ * and should run on its own cron schedule (mode=discover_boards).
  * Note: exchange_rates is handled by travel_core's centralized cron.
  *
  * Usage: php cron.php access_key=KEY mode=full
@@ -22,16 +25,24 @@ class FullSyncCommand
 
     /**
      * Ordered list of modes to execute in sequence.
+     *
      * 'full' itself is excluded to prevent recursion.
-     * 'add_products' is excluded as it's a manual-only action.
+     * 'discover_boards' is excluded — it performs live API searches per destination
+     * (slow, ~15s each) and should run on its own cron schedule with batch resume.
+     *
+     * assign_boards runs after hotels to assign already-discovered boards as
+     * CS-Cart product features. add_products runs before cache_refresh so
+     * newly created products are included in cache rebuilds.
      */
     private const SYNC_SEQUENCE = [
         'destinations',
         'hotels',
+        'assign_boards',
         'package_routes',
         'circuits',
         'experiences',
         'order_status',
+        'add_products',
         'cache_refresh',
         'cleanup',
     ];

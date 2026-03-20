@@ -15,21 +15,50 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  * resolves canonical codes to CS-Cart feature variants via travel_core FeatureMapper,
  * and assigns them as M-type (multiple checkboxes) product features.
  *
+ * Supports batch processing with resume capability:
+ * - Processes a configurable number of hotels per cron run
+ * - Saves state to a JSON file after each batch
+ * - Automatically resumes from where it left off on next run
+ * - Respects time limits to avoid PHP timeout
+ *
  * Diff-based: adds new board variants, removes stale ones.
  *
  * Usage:
  *   php cron.php access_key=KEY mode=assign_boards
  *   php cron.php access_key=KEY mode=assign_boards country=GR
- *   php cron.php access_key=KEY mode=assign_boards limit=100
+ *   php cron.php access_key=KEY mode=assign_boards max_time=300
+ *   php cron.php access_key=KEY mode=assign_boards unlimited=1
+ *   php cron.php access_key=KEY mode=assign_boards status=1
+ *   php cron.php access_key=KEY mode=assign_boards reset=1
  */
 class AssignBoardsCommand
 {
     /** @var callable|null */
     private $outputCallback = null;
 
+    /** State file name stored in DIR_CACHE */
+    private const STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
+
+    /** Batch configuration */
+    private const DEFAULT_BATCH_SIZE = 100;         // hotels per DB query batch
+    private const DEFAULT_MAX_TIME = 300;            // 5 minutes
+    private const STALE_HOURS = 6;                   // clear abandoned state after 6h
+
+    /** Default state structure */
+    private const DEFAULT_STATE = [
+        'status'     => 'idle',
+        'started_at' => null,
+        'last_run_at' => null,
+        'total'      => 0,
+        'processed'  => 0,
+        'assigned'   => 0,
+        'errors'     => 0,
+        'country_code' => '',
+    ];
+
     public static function getDescription(): string
     {
-        return 'Assign discovered board/meal types as CS-Cart product features';
+        return 'Assign discovered board/meal types as CS-Cart product features (batched with resume)';
     }
 
     public function setOutputCallback(callable $callback): void
@@ -39,11 +68,17 @@ class AssignBoardsCommand
 
     public function execute(array $params = []): array
     {
-        $hotelRepo = new HotelRepository();
-        $featureAssigner = Container::getFeatureAssigner();
+        // Handle reset
+        if (!empty($params['reset'])) {
+            $this->clearState();
+            $this->output('State cleared. Ready for fresh assignment run.');
+            return ['success' => true, 'action' => 'reset'];
+        }
 
-        $countryCode = $params['country'] ?? '';
-        $limit = (int) ($params['limit'] ?? 0);
+        // Handle status check
+        if (!empty($params['status'])) {
+            return $this->showStatus();
+        }
 
         // Check that feature_id_meals is configured in travel_core
         $featureId = (int) Registry::get('addons.travel_core.feature_id_meals');
@@ -55,57 +90,335 @@ class AssignBoardsCommand
 
         $this->output("Using CS-Cart feature ID: {$featureId} for board/meals");
 
-        // Get hotels with discovered boards AND linked products
-        $hotels = $hotelRepo->findWithBoardsAndProduct($countryCode, $limit);
-        $this->output('Hotels with boards + products: ' . count($hotels));
+        // Load existing state
+        $state = $this->loadState();
 
-        if (empty($hotels)) {
+        // Check for in-progress state
+        if ($state['status'] === 'in_progress') {
+            if ($this->isStale($state)) {
+                $this->output("Stale state detected (no activity since {$state['last_run_at']}). Clearing and starting fresh.");
+                $this->clearState();
+                $state = self::DEFAULT_STATE;
+            } else {
+                // Resume
+                $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
+                $this->output("Resuming board assignment: {$state['processed']}/{$state['total']} ({$pct}%) done");
+                return $this->processBatch($state, $params);
+            }
+        }
+
+        // Fresh start
+        $countryCode = $params['country'] ?? '';
+        $hotelRepo = new HotelRepository();
+        $total = $hotelRepo->countWithBoardsAndProduct($countryCode);
+
+        $this->output('Hotels with boards + products: ' . $total);
+
+        if ($total === 0) {
             $this->output('No hotels to process. Run discover_boards first, then add_products.');
             return ['success' => true, 'stats' => ['processed' => 0]];
         }
 
-        $stats = [
-            'processed'       => 0,
-            'assigned'        => 0,
-            'removed'         => 0,
-            'skipped_no_map'  => 0,
-            'errors'          => 0,
+        // Create initial state
+        $state = [
+            'status'       => 'in_progress',
+            'started_at'   => date('Y-m-d H:i:s'),
+            'last_run_at'  => date('Y-m-d H:i:s'),
+            'total'        => $total,
+            'processed'    => 0,
+            'assigned'     => 0,
+            'errors'       => 0,
+            'country_code' => $countryCode,
         ];
 
-        foreach ($hotels as $hotel) {
-            $productId = (int) $hotel['product_id'];
-            $hotelId = $hotel['hotel_id'];
+        $this->saveState($state);
+        $this->output("Starting board assignment: {$total} hotels");
 
-            $boards = json_decode($hotel['boards_json'], true);
-            if (!is_array($boards) || empty($boards)) {
-                continue;
+        return $this->processBatch($state, $params);
+    }
+
+    /**
+     * Process hotels in batches, respecting time limits.
+     */
+    private function processBatch(array $state, array $params): array
+    {
+        $maxTime = max(60, (int) ($params['max_time'] ?? self::DEFAULT_MAX_TIME));
+        $unlimited = !empty($params['unlimited']);
+        $startTime = time();
+
+        $hotelRepo = new HotelRepository();
+        $featureAssigner = Container::getFeatureAssigner();
+
+        $offset = $state['processed'];
+        $total = $state['total'];
+        $processedThisRun = 0;
+
+        while ($offset < $total) {
+            // Check time limit
+            if (!$unlimited && (time() - $startTime) > $maxTime) {
+                $this->output('');
+                $this->output("Time limit ({$maxTime}s) reached. Saving state for resume.");
+                break;
             }
 
-            try {
-                $featureAssigner->assignAll($productId, $hotel);
-                $stats['processed']++;
-            } catch (\Throwable $e) {
-                $stats['errors']++;
-                if ($stats['errors'] <= 10) {
-                    $this->output("  [ERROR] Hotel {$hotelId}: " . $e->getMessage());
+            // Fetch next batch from DB
+            $hotels = $hotelRepo->findWithBoardsAndProduct(
+                $state['country_code'],
+                self::DEFAULT_BATCH_SIZE,
+                $offset
+            );
+
+            if (empty($hotels)) {
+                // No more hotels — we've reached the end
+                $offset = $total;
+                break;
+            }
+
+            foreach ($hotels as $hotel) {
+                // Check time limit within batch
+                if (!$unlimited && (time() - $startTime) > $maxTime) {
+                    break 2;
                 }
+
+                $productId = (int) $hotel['product_id'];
+
+                try {
+                    $featureAssigner->assignAll($productId, $hotel);
+                    $state['assigned']++;
+                } catch (\Throwable $e) {
+                    $state['errors']++;
+                    if ($state['errors'] <= 10) {
+                        $this->output("  [ERROR] Hotel {$hotel['hotel_id']}: " . $e->getMessage());
+                    }
+                }
+
+                $offset++;
+                $processedThisRun++;
             }
 
-            // Progress every 100
-            if ($stats['processed'] % 100 === 0 && $stats['processed'] > 0) {
-                $this->output("  Progress: {$stats['processed']}/" . count($hotels));
+            // Save state after each batch
+            $state['processed'] = $offset;
+            $state['last_run_at'] = date('Y-m-d H:i:s');
+            $this->saveState($state);
+
+            // Progress output
+            if ($processedThisRun > 0 && $offset % 200 === 0) {
+                $pct = round($offset / $total * 100, 1);
+                $this->output("  {$offset}/{$total} ({$pct}%) — {$state['assigned']} assigned");
             }
         }
 
-        // Clear cache
+        // Update final state
+        $state['processed'] = $offset;
+        $state['last_run_at'] = date('Y-m-d H:i:s');
+        $this->saveState($state);
+
+        // Check if complete
+        if ($offset >= $total) {
+            return $this->completeSync($state);
+        }
+
+        // Still in progress
+        $remaining = $total - $offset;
+        $elapsed = time() - $startTime;
+        $this->output("Processed {$processedThisRun} hotels this run ({$elapsed}s).");
+        $this->output("Run again to continue ({$remaining} hotels remaining).");
+
+        return [
+            'success'            => true,
+            'status'             => 'in_progress',
+            'total'              => $total,
+            'processed'          => $offset,
+            'remaining'          => $remaining,
+            'processed_this_run' => $processedThisRun,
+            'assigned'           => $state['assigned'],
+            'errors'             => $state['errors'],
+        ];
+    }
+
+    /**
+     * Mark sync as completed, log, and clear state.
+     */
+    private function completeSync(array $state): array
+    {
+        $durationSeconds = !empty($state['started_at'])
+            ? time() - strtotime($state['started_at'])
+            : 0;
+
+        // Clear FeatureMapper cache
         FeatureMapper::clearCache();
 
-        $this->output('');
-        $this->output('Board Assignment Summary:');
-        $this->output("  Hotels processed: {$stats['processed']}");
-        $this->output("  Errors: {$stats['errors']}");
+        // Log to sphinx_sync_log
+        db_query(
+            "INSERT INTO ?:sphinx_sync_log (sync_type, status, items_total, items_synced, items_failed, sync_mode, duration_ms, started_at, completed_at)
+             VALUES ('assign_boards', 'completed', ?i, ?i, ?i, 'full', ?i, ?s, NOW())",
+            $state['total'],
+            $state['assigned'],
+            $state['errors'],
+            $durationSeconds * 1000,
+            $state['started_at']
+        );
 
-        return ['success' => true, 'stats' => $stats];
+        $this->output('');
+        $this->output('Board Assignment Complete:');
+        $this->output("  Hotels processed: {$state['processed']}");
+        $this->output("  Features assigned: {$state['assigned']}");
+        $this->output("  Errors: {$state['errors']}");
+        $this->output('  Duration: ' . $this->formatDuration($durationSeconds));
+
+        $this->clearState();
+
+        return [
+            'success' => true,
+            'status'  => 'completed',
+            'stats'   => [
+                'processed'        => $state['processed'],
+                'assigned'         => $state['assigned'],
+                'errors'           => $state['errors'],
+                'duration_seconds' => $durationSeconds,
+            ],
+        ];
+    }
+
+    /**
+     * Show current assignment progress.
+     */
+    private function showStatus(): array
+    {
+        $state = $this->loadState();
+
+        if ($state['status'] === 'idle') {
+            $this->output('Board Assignment Status: idle (no assignment in progress)');
+
+            $lastRun = db_get_row(
+                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1"
+            );
+            if (!empty($lastRun)) {
+                $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} features assigned");
+            }
+
+            return ['success' => true, 'status' => 'idle'];
+        }
+
+        $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
+        $remaining = $state['total'] - $state['processed'];
+
+        $this->output('Board Assignment Status:');
+        $this->output("  Status: {$state['status']}");
+        $this->output("  Progress: {$state['processed']}/{$state['total']} ({$pct}%)");
+        $this->output("  Remaining: {$remaining} hotels");
+        $this->output("  Assigned: {$state['assigned']}");
+        $this->output("  Errors: {$state['errors']}");
+        $this->output("  Started: {$state['started_at']}");
+        $this->output("  Last activity: {$state['last_run_at']}");
+
+        if ($this->isStale($state)) {
+            $this->output('  WARNING: State appears stale (no activity for 6+ hours). Run with reset=1 to clear.');
+        }
+
+        return ['success' => true, 'status' => $state['status'], 'processed' => $state['processed'], 'total' => $state['total']];
+    }
+
+    // ─── State file I/O (same pattern as DiscoverBoardsCommand) ──────────
+
+    private function getStatePath(): string
+    {
+        $cacheDir = defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir() . '/';
+        return $cacheDir . self::STATE_FILE_NAME;
+    }
+
+    private function loadState(): array
+    {
+        $path = $this->getStatePath();
+        if (!file_exists($path)) {
+            return self::DEFAULT_STATE;
+        }
+
+        $content = @file_get_contents($path);
+        if ($content === false) {
+            return self::DEFAULT_STATE;
+        }
+
+        $decoded = json_decode($content, true);
+        if (!is_array($decoded)) {
+            return self::DEFAULT_STATE;
+        }
+
+        if (isset($decoded['_checksum'], $decoded['_data'])) {
+            $expected = $decoded['_checksum'];
+            $actual = md5(json_encode($decoded['_data']));
+            if ($expected !== $actual) {
+                return self::DEFAULT_STATE;
+            }
+            $state = $decoded['_data'];
+        } else {
+            $state = $decoded;
+        }
+
+        return is_array($state) ? array_merge(self::DEFAULT_STATE, $state) : self::DEFAULT_STATE;
+    }
+
+    private function saveState(array $state): void
+    {
+        $path = $this->getStatePath();
+
+        $data = json_encode($state);
+        if ($data === false) {
+            return;
+        }
+
+        $wrapped = json_encode([
+            '_checksum' => md5($data),
+            '_data'     => $state,
+        ]);
+
+        $tmpPath = $path . '.tmp';
+        if (@file_put_contents($tmpPath, $wrapped, LOCK_EX) === false) {
+            return;
+        }
+
+        @rename($tmpPath, $path);
+    }
+
+    private function clearState(): void
+    {
+        $path = $this->getStatePath();
+        foreach (['', '.tmp'] as $suffix) {
+            $file = $path . $suffix;
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+    }
+
+    private function isStale(array $state): bool
+    {
+        if ($state['status'] !== 'in_progress') {
+            return false;
+        }
+
+        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
+        if ($lastRun === null) {
+            return true;
+        }
+
+        $ageHours = (time() - strtotime($lastRun)) / 3600;
+        return $ageHours > self::STALE_HOURS;
+    }
+
+    private function formatDuration(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return "{$seconds}s";
+        }
+        if ($seconds < 3600) {
+            $m = (int) floor($seconds / 60);
+            $s = $seconds % 60;
+            return "{$m}m {$s}s";
+        }
+        $h = (int) floor($seconds / 3600);
+        $m = (int) floor(($seconds % 3600) / 60);
+        return "{$h}h {$m}m";
     }
 
     private function output(string $message): void
