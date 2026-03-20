@@ -342,6 +342,7 @@ class HotelRepository
         if ($limit > 0) {
             $limitClause = db_quote(" LIMIT ?i, ?i", $offset, $limit);
         } elseif ($offset > 0) {
+            // MySQL max BIGINT UNSIGNED — effectively "no limit, offset only"
             $limitClause = db_quote(" LIMIT ?i, 18446744073709551615", $offset);
         }
 

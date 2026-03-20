@@ -194,7 +194,7 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
         }
 
         // Skip primary currency (EUR should have coefficient = 1)
-        if ($currency['is_primary'] == 'Y') {
+        if ($currency['is_primary'] === 'Y') {
             $results[$currency_code] = [
                 'success' => true,
                 'message' => 'Primary currency - coefficient unchanged',

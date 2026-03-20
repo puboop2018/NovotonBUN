@@ -87,7 +87,7 @@ class CronDispatcher
 
         // Acquire file lock to prevent concurrent execution of the same mode
         $lockFile = $this->getLockPath($mode);
-        $lockFp = @fopen($lockFile, 'w');
+        $lockFp = fopen($lockFile, 'w');
 
         if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
             fclose($lockFp);

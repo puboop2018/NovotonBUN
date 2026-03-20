@@ -322,7 +322,7 @@ if ($mode == 'check') {
     $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
     if ($addon) {
         echo "[Good] Addon in database\n";
-        echo "     Status: {$addon['status']} " . ($addon['status'] == 'A' ? '(Active)' : '(Disabled)') . "\n";
+        echo "     Status: {$addon['status']} " . ($addon['status'] === 'A' ? '(Active)' : '(Disabled)') . "\n";
         echo "     Version: {$addon['version']}\n";
     } else {
         echo "[ERROR] Addon not found in database\n";

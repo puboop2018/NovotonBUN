@@ -122,7 +122,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
                 $internal_status = \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_TO_INTERNAL[$new_status]
                     ?? $booking['status'];
 
-                if ($internal_status != $booking['status']) {
+                if ($internal_status !== $booking['status']) {
                     $bookingRepo->updateStatus((int) $booking['booking_id'], $internal_status, $new_status);
                     $result['updated']++;
                     $result['details'][$booking['booking_id']] = [

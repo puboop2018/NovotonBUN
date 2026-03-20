@@ -633,7 +633,8 @@ function fn_novoton_holidays_remove_theme_presets(): void
             continue;
         }
 
-        $manifest = @json_decode(file_get_contents($manifest_path), true);
+        $content = file_get_contents($manifest_path);
+        $manifest = ($content !== false) ? json_decode($content, true) : null;
         if (!is_array($manifest)) {
             continue;
         }

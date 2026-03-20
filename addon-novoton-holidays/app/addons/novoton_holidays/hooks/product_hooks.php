@@ -180,7 +180,7 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
     \Tygh\Tygh::$app['view']->assign('addon_settings', $addon_settings);
 
     // Booking form settings
-    $show_booking_form    = !isset($addon_settings['show_booking_form']) || $addon_settings['show_booking_form'] == 'Y';
+    $show_booking_form    = !isset($addon_settings['show_booking_form']) || $addon_settings['show_booking_form'] === 'Y';
     $booking_form_position = $addon_settings['booking_form_position'] ?? 'before_tabs';
 
     \Tygh\Tygh::$app['view']->assign('show_novoton_booking_form', $show_booking_form);
