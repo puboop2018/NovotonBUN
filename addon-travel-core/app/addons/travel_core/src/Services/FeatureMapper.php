@@ -76,7 +76,12 @@ class FeatureMapper
     }
 
     /**
-     * Bulk resolve for import performance (single query, keyed result).
+     * Bulk resolve for import performance (keyed result).
+     *
+     * Delegates to resolve() per value to support all match types
+     * (exact, prefix, contains) with priority ordering. Results are
+     * cached in memory, so repeated calls within the same request
+     * are nearly free.
      *
      * @return array<string, array> Keyed by api_value
      */
@@ -86,17 +91,12 @@ class FeatureMapper
             return [];
         }
 
-        $rows = db_get_array(
-            "SELECT a.api_value, m.map_id, m.canonical_code, m.display_name_en, m.display_name_ro, m.cscart_variant_id
-             FROM ?:travel_api_alias a
-             JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND a.api_value IN (?a) AND m.feature_type = ?s AND m.status = 'A'",
-            $apiSource, $apiValues, $featureType
-        );
-
         $result = [];
-        foreach ($rows as $row) {
-            $result[$row['api_value']] = $row;
+        foreach ($apiValues as $apiValue) {
+            $mapping = self::resolve($apiSource, $featureType, $apiValue);
+            if ($mapping !== null) {
+                $result[$apiValue] = $mapping;
+            }
         }
 
         return $result;
@@ -127,6 +127,8 @@ class FeatureMapper
             $mapId, $apiSource, $apiValue, $matchType,
             $mapId, $matchType
         );
+
+        self::$cache = [];
     }
 
     /**

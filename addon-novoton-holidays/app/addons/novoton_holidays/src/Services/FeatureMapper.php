@@ -16,13 +16,17 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepositoryInterface;
+use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 class FeatureMapper
 {
-    private FeatureMappingRepositoryInterface $mappingRepo;
+    use CsCartFeatureAssignment {
+        assignSelectBoxValue as private assignSelectBox;
+        assignCheckboxValue as private assignCheckbox;
+        createVariant as private createVariantFromTrait;
+    }
 
-    /** @var string[]|null Cached active language codes */
-    private ?array $activeLanguages = null;
+    private FeatureMappingRepositoryInterface $mappingRepo;
 
     public function __construct(FeatureMappingRepositoryInterface $mappingRepo)
     {
@@ -552,6 +556,8 @@ class FeatureMapper
 
     /**
      * Create a CS-Cart product feature variant + descriptions.
+     * Delegates to the shared trait's createVariant(), adding Novoton-specific
+     * logic for position and provider_code fallback.
      *
      * @return int New variant_id or 0 on failure
      */
@@ -562,111 +568,11 @@ class FeatureMapper
         $nameEn = $mapping['display_name_en'] ?? mb_convert_case($mapping['provider_code'], MB_CASE_TITLE, 'UTF-8');
         $nameRo = $mapping['display_name_ro'] ?? '';
 
-        // Language fallback
-        if ($nameRo === '') {
-            $nameRo = $nameEn;
-        }
-
-        $variantId = (int) db_query(
-            "INSERT INTO ?:product_feature_variants ?e",
-            ['feature_id' => $featureId, 'position' => $position]
-        );
-
-        if ($variantId <= 0) {
-            return 0;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
-            db_query(
-                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant) " .
-                "VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
-                $variantId,
-                $langCode,
-                $variantName,
-                $variantName
-            );
-        }
-
-        return $variantId;
+        return $this->createVariantFromTrait($featureId, $nameEn, $nameRo, $position);
     }
 
-    /**
-     * Assign a Select Box feature value (overwrite: delete old + insert new).
-     */
-    private function assignSelectBox(int $productId, int $featureId, int $variantId): bool
-    {
-        // Atomic check: if already correct, skip
-        $existing = db_get_field(
-            "SELECT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-            $featureId,
-            $productId
-        );
-
-        if ((int) $existing === $variantId) {
-            return true;
-        }
-
-        // Overwrite: delete all then insert for each language
-        db_query(
-            "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i",
-            $featureId,
-            $productId
-        );
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i, value_int = ?i",
-                [
-                    'feature_id' => $featureId,
-                    'product_id' => $productId,
-                    'variant_id' => $variantId,
-                    'value' => '',
-                    'value_int' => $variantId,
-                    'lang_code' => $langCode,
-                ],
-                $variantId,
-                $variantId
-            );
-        }
-
-        return true;
-    }
-
-    /**
-     * Assign a single checkbox variant (merge: add if not present).
-     */
-    private function assignCheckbox(int $productId, int $featureId, int $variantId): bool
-    {
-        // Check if already assigned
-        $exists = db_get_field(
-            "SELECT 1 FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i AND lang_code = 'en'",
-            $featureId,
-            $productId,
-            $variantId
-        );
-
-        if ($exists) {
-            return true;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
-                [
-                    'feature_id' => $featureId,
-                    'product_id' => $productId,
-                    'variant_id' => $variantId,
-                    'value' => '',
-                    'value_int' => $variantId,
-                    'lang_code' => $langCode,
-                ],
-                $variantId
-            );
-        }
-
-        return true;
-    }
+    // assignSelectBox() and assignCheckbox() are provided by the CsCartFeatureAssignment trait
+    // (aliased from assignSelectBoxValue and assignCheckboxValue respectively).
 
     /**
      * Assign multiple checkboxes with diff-based sync (add new, remove stale).
@@ -768,20 +674,5 @@ class FeatureMapper
         return false;
     }
 
-    /**
-     * Get all active language codes from CS-Cart.
-     *
-     * @return string[]
-     */
-    private function getActiveLanguages(): array
-    {
-        if ($this->activeLanguages === null) {
-            $this->activeLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-            if (empty($this->activeLanguages)) {
-                $this->activeLanguages = ['en'];
-            }
-        }
-
-        return $this->activeLanguages;
-    }
+    // getActiveLanguages() is provided by the CsCartFeatureAssignment trait.
 }

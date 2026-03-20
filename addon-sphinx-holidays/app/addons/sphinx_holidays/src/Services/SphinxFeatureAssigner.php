@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
  * Assigns CS-Cart product features to Sphinx hotel products.
@@ -18,10 +19,11 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class SphinxFeatureAssigner
 {
+    use CsCartFeatureAssignment;
+
     private const API_SOURCE = 'sphinx';
 
     private SphinxNormalizer $normalizer;
-    private ?array $activeLanguages = null;
 
     /** Feature type → travel_core addon setting key for cscart_feature_id */
     private const FEATURE_SETTINGS = [
@@ -119,11 +121,15 @@ class SphinxFeatureAssigner
     }
 
     /**
-     * Assign facility features from facilities_json.
+     * Assign facility features from facilities_json (diff-based sync).
      *
      * Each facility canonical code in travel_feature_map carries its own cscart_feature_id,
      * so different facilities can map to different CS-Cart features (e.g., "Hotel Facilities",
      * "Room Amenities", "Accessibility"). The admin controls this via the travel_feature_mappings UI.
+     *
+     * Groups wanted variants by cscart_feature_id, then for each feature:
+     * adds new variants and removes stale ones — preventing accumulation
+     * of facilities that are no longer present in the API data.
      */
     private function assignFacilities(int $productId, array $hotel): void
     {
@@ -137,6 +143,8 @@ class SphinxFeatureAssigner
             return;
         }
 
+        // Resolve all facilities and group wanted variant_ids by feature_id
+        $wantedByFeature = [];
         foreach ($facilities as $facility) {
             $facilityId = (string) ($facility['id'] ?? '');
             if ($facilityId === '') {
@@ -148,7 +156,6 @@ class SphinxFeatureAssigner
                 continue;
             }
 
-            // Each facility row has its own cscart_feature_id — not from addon settings
             $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
             $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
 
@@ -156,7 +163,35 @@ class SphinxFeatureAssigner
                 continue;
             }
 
-            $this->assignCheckboxValue($productId, $featureId, $variantId);
+            $wantedByFeature[$featureId][] = $variantId;
+        }
+
+        // Diff-based sync per feature_id
+        foreach ($wantedByFeature as $featureId => $wantedVariants) {
+            $wantedVariants = array_unique($wantedVariants);
+
+            $currentVariants = array_map('intval', db_get_fields(
+                "SELECT variant_id FROM ?:product_features_values
+                 WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
+                $featureId, $productId
+            ));
+
+            // Add new variants
+            foreach ($wantedVariants as $vid) {
+                if (!in_array($vid, $currentVariants, true)) {
+                    $this->assignCheckboxValue($productId, $featureId, $vid);
+                }
+            }
+
+            // Remove stale variants
+            $stale = array_diff($currentVariants, $wantedVariants);
+            foreach ($stale as $vid) {
+                db_query(
+                    "DELETE FROM ?:product_features_values
+                     WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
+                    $featureId, $productId, (int) $vid
+                );
+            }
         }
     }
 
@@ -242,31 +277,18 @@ class SphinxFeatureAssigner
 
     /**
      * Auto-create a CS-Cart feature variant from mapping display names.
+     * Delegates to the shared trait for variant creation, then updates
+     * travel_feature_map with the new variant_id for future lookups.
      */
     private function autoCreateVariant(int $featureId, array $mapping): int
     {
         $nameEn = $mapping['display_name_en'] ?? $mapping['canonical_code'] ?? '';
         $nameRo = $mapping['display_name_ro'] ?? $nameEn;
 
-        $variantId = (int) db_query(
-            "INSERT INTO ?:product_feature_variants ?e",
-            ['feature_id' => $featureId, 'position' => 0]
-        );
-        if ($variantId <= 0) {
-            return 0;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
-            db_query(
-                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
-                 VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
-                $variantId, $langCode, $variantName, $variantName
-            );
-        }
+        $variantId = $this->createVariant($featureId, $nameEn, $nameRo);
 
         // Update travel_feature_map with the new variant_id for future lookups
-        if (!empty($mapping['map_id'])) {
+        if ($variantId > 0 && !empty($mapping['map_id'])) {
             db_query(
                 "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
                 $variantId, (int) $mapping['map_id']
@@ -277,69 +299,6 @@ class SphinxFeatureAssigner
         return $variantId;
     }
 
-    /**
-     * Assign a Select Box feature value (overwrite: DELETE + INSERT per language).
-     */
-    private function assignSelectBoxValue(int $productId, int $featureId, int $variantId): void
-    {
-        db_query(
-            "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i",
-            $featureId, $productId
-        );
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i, value_int = ?i",
-                [
-                    'feature_id'  => $featureId,
-                    'product_id'  => $productId,
-                    'variant_id'  => $variantId,
-                    'value'       => '',
-                    'value_int'   => $variantId,
-                    'lang_code'   => $langCode,
-                ],
-                $variantId, $variantId
-            );
-        }
-    }
-
-    /**
-     * Assign a Multiple Checkbox feature value (merge: INSERT if not present).
-     */
-    private function assignCheckboxValue(int $productId, int $featureId, int $variantId): void
-    {
-        $exists = db_get_field(
-            "SELECT 1 FROM ?:product_features_values
-             WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i AND lang_code = 'en'",
-            $featureId, $productId, $variantId
-        );
-        if ($exists) {
-            return;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
-                [
-                    'feature_id'  => $featureId,
-                    'product_id'  => $productId,
-                    'variant_id'  => $variantId,
-                    'value'       => '',
-                    'value_int'   => $variantId,
-                    'lang_code'   => $langCode,
-                ],
-                $variantId
-            );
-        }
-    }
-
-    private function getActiveLanguages(): array
-    {
-        if ($this->activeLanguages === null) {
-            $this->activeLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-            if (empty($this->activeLanguages)) {
-                $this->activeLanguages = ['en'];
-            }
-        }
-        return $this->activeLanguages;
-    }
+    // assignSelectBoxValue(), assignCheckboxValue(), getActiveLanguages(),
+    // and createVariant() are provided by CsCartFeatureAssignment trait.
 }
