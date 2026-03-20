@@ -227,6 +227,7 @@
                 `amenities_json`    JSON DEFAULT NULL COMMENT 'Array of amenity objects',
                 `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
                 `facilities_json`   JSON DEFAULT NULL COMMENT 'Array of facility objects from static endpoint',
+                `boards_json`       JSON DEFAULT NULL COMMENT 'Array of canonical board codes discovered from cache API',
                 `is_recommended`    ENUM('Y','N') DEFAULT 'N',
                 `is_adults_only`    ENUM('Y','N') DEFAULT 'N',
                 `rating`            DECIMAL(3,1) DEFAULT NULL COMMENT 'Guest rating (e.g. 8.5)',
@@ -356,6 +357,13 @@
                 `expires_at`    INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- Upgrade: add boards_json column to sphinx_hotels -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `boards_json` JSON DEFAULT NULL
+                COMMENT 'Array of canonical board codes discovered from cache API'
+                AFTER `facilities_json`;
         </item>
         <!-- Upgrade: add full_path column to existing sphinx_destinations -->
         <item for="upgrade">

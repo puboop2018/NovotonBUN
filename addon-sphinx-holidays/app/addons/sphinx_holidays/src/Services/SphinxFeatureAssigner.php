@@ -28,6 +28,7 @@ class SphinxFeatureAssigner
         'stars'         => 'feature_id_property_rating',
         'property_type' => 'feature_id_property_type',
         'resort'        => 'feature_id_location',
+        'board'         => 'feature_id_meals',
     ];
 
     public function __construct(SphinxNormalizer $normalizer)
@@ -44,6 +45,7 @@ class SphinxFeatureAssigner
         $this->assignPropertyType($productId, $hotel);
         $this->assignResort($productId, $hotel);
         $this->assignFacilities($productId, $hotel);
+        $this->assignBoards($productId, $hotel);
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -155,6 +157,75 @@ class SphinxFeatureAssigner
             }
 
             $this->assignCheckboxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Assign board/meal features from boards_json (diff-based sync).
+     *
+     * boards_json contains canonical codes (e.g. ["AI", "HB", "BB"]) discovered
+     * by the discover_boards cron command from the cache API.
+     *
+     * Uses M-type (multiple checkboxes) assignment: a hotel can offer
+     * multiple board options simultaneously (e.g. All Inclusive + Half Board).
+     * Diff-based: adds new variants, removes stale ones.
+     */
+    private function assignBoards(int $productId, array $hotel): void
+    {
+        $boardsJson = $hotel['boards_json'] ?? null;
+        if (empty($boardsJson)) {
+            return;
+        }
+
+        $boards = is_string($boardsJson) ? json_decode($boardsJson, true) : $boardsJson;
+        if (!is_array($boards) || empty($boards)) {
+            return;
+        }
+
+        $featureId = $this->getFeatureId('board');
+        if (!$featureId) {
+            return;
+        }
+
+        // Get current variant_ids for diff
+        $currentVariants = array_map('intval', db_get_fields(
+            "SELECT variant_id FROM ?:product_features_values
+             WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
+            $featureId, $productId
+        ));
+
+        // Resolve wanted variant_ids from canonical codes
+        $wantedVariants = [];
+        foreach ($boards as $code) {
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'board', $code);
+            if (!$mapping) {
+                continue;
+            }
+
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            if ($variantId <= 0) {
+                $variantId = $this->autoCreateVariant($featureId, $mapping);
+            }
+            if ($variantId > 0) {
+                $wantedVariants[] = $variantId;
+            }
+        }
+
+        // Add new variants
+        foreach ($wantedVariants as $vid) {
+            if (!in_array($vid, $currentVariants, true)) {
+                $this->assignCheckboxValue($productId, $featureId, $vid);
+            }
+        }
+
+        // Remove stale variants
+        $stale = array_diff($currentVariants, $wantedVariants);
+        foreach ($stale as $vid) {
+            db_query(
+                "DELETE FROM ?:product_features_values
+                 WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
+                $featureId, $productId, (int) $vid
+            );
         }
     }
 

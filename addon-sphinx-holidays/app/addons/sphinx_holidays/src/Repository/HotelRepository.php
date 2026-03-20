@@ -267,6 +267,82 @@ class HotelRepository
     }
 
     /**
+     * Get distinct destination_ids for active hotels, filtered by country codes.
+     *
+     * @param string[] $countryCodes Country codes to filter (e.g. ['GR', 'BG'])
+     * @return int[] Distinct destination IDs
+     */
+    public function getDestinationIdsByCountry(array $countryCodes): array
+    {
+        if (empty($countryCodes)) {
+            return db_get_fields(
+                "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0"
+            );
+        }
+
+        $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
+        return db_get_fields(
+            "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0 AND country_code IN ($placeholders)",
+            ...$countryCodes
+        );
+    }
+
+    /**
+     * Get hotel_id → hotel_id map for a given destination (for matching cache deals to hotels).
+     *
+     * @return array<string, string> hotel_id => hotel_id
+     */
+    public function getHotelIdsByDestination(int $destinationId): array
+    {
+        return db_get_hash_single_array(
+            "SELECT hotel_id, hotel_id FROM ?:sphinx_hotels WHERE destination_id = ?i AND sync_status = 'active'",
+            ['hotel_id', 'hotel_id'],
+            $destinationId
+        );
+    }
+
+    /**
+     * Update boards_json for a batch of hotels.
+     *
+     * @param array<string, string[]> $boardsByHotel hotel_id => array of canonical board codes
+     * @return int Number of hotels updated
+     */
+    public function updateBoardsBatch(array $boardsByHotel): int
+    {
+        $updated = 0;
+        foreach ($boardsByHotel as $hotelId => $boards) {
+            $json = !empty($boards) ? json_encode(array_values(array_unique($boards))) : null;
+            db_query(
+                "UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s",
+                $json, (string) $hotelId
+            );
+            $updated++;
+        }
+        return $updated;
+    }
+
+    /**
+     * Get hotels that have boards_json AND a linked product.
+     *
+     * @return array List of hotel rows with boards_json and product_id
+     */
+    public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0): array
+    {
+        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        }
+        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+
+        return db_get_array(
+            "SELECT h.hotel_id, h.product_id, h.boards_json, h.name FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' ?p
+             ORDER BY h.hotel_id ASC ?p",
+            $condition, $limitClause
+        );
+    }
+
+    /**
      * Mark hotels as inactive if not in the provided ID list (for a given country).
      * Used after sync to detect hotels removed from the API.
      *

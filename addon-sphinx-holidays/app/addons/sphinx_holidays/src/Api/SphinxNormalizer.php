@@ -34,6 +34,9 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         'bed & breakfast'      => 'BB',
         'room only'            => 'RO',
         'b&b'                  => 'BB',
+        'buffet breakfast'     => 'BB',
+        'platinum all inclusive' => 'AI',
+        'ro'                   => 'RO',
     ];
 
     /** Room type prefix mapping */

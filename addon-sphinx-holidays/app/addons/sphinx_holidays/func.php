@@ -102,7 +102,16 @@ function fn_sphinx_holidays_seed_aliases(): void
         'Fără masă'            => 'RO',
         'Room Only'            => 'RO',
         'ROOM ONLY'            => 'RO',
+        'RO'                   => 'RO',
         'Self Catering'        => 'SC',
+        'SELF CATERING'        => 'SC',
+        'FULL BOARD'           => 'FB',
+        'HALF BOARD'           => 'HB',
+        'BED AND BREAKFAST'    => 'BB',
+        'BUFFET BREAKFAST'     => 'BB',
+        'ULTRA ALL INCLUSIVE'  => 'UAI',
+        'PLATINUM ALL INCLUSIVE' => 'AI',
+        'ALL INCLUSIVE PLUS'   => 'AI',
     ];
 
     // Room type aliases (prefix match)
