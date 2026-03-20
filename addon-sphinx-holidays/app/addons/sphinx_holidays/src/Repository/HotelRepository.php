@@ -11,6 +11,15 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
 class HotelRepository
 {
     /**
+     * Core columns for hotel listing (excludes large JSON/TEXT columns).
+     */
+    private const LISTING_COLUMNS = 'hotel_id, product_id, name, classification, property_type,
+        destination_id, destination_name, region_id, region_name,
+        country_code, country_name, latitude, longitude,
+        image_url, is_recommended, is_adults_only, rating, rating_count,
+        sync_status, last_synced_at, created_at, updated_at';
+
+    /**
      * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
      *
      * @param array $hotels Array of hotel rows
@@ -126,8 +135,9 @@ class HotelRepository
 
         $offset = ($page - 1) * $perPage;
 
+        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
         $items = db_get_array(
-            "SELECT h.* FROM ?:sphinx_hotels h
+            "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE 1 ?p
              ORDER BY h.country_code ASC, h.name ASC
              LIMIT ?i, ?i",
@@ -151,12 +161,12 @@ class HotelRepository
     }
 
     /**
-     * Get hotels by destination ID.
+     * Get hotels by destination ID (excludes large JSON/TEXT columns).
      */
     public function getByDestination(int $destinationId): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC",
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC",
             $destinationId
         );
     }
@@ -211,13 +221,13 @@ class HotelRepository
     }
 
     /**
-     * Search hotels by name.
+     * Search hotels by name (excludes large JSON/TEXT columns).
      */
     public function search(string $query, int $limit = 20): array
     {
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
-            "SELECT * FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
             '%' . $escaped . '%',
             $limit
         );
@@ -247,9 +257,10 @@ class HotelRepository
         }
 
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
 
         return db_get_array(
-            "SELECT h.* FROM ?:sphinx_hotels h
+            "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' AND (h.product_id IS NULL OR h.product_id = 0) ?p
              ORDER BY h.country_code ASC, h.name ASC ?p",
             $condition, $limitClause

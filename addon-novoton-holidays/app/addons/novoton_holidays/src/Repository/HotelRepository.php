@@ -45,18 +45,19 @@ class HotelRepository implements HotelRepositoryInterface
      * Core columns for hotel listing (excludes large hotel_data JSON)
      */
     private const LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
-        hotel_type, star_rating, latitude, longitude, has_room_price, packages_count,
-        hotelinfo_synced_at, hotel_list_synced_at, created_at, updated_at';
+        hotel_type, star_rating, property_type, is_adults_only, latitude, longitude,
+        has_room_price, packages_count, hotelinfo_synced_at, hotel_list_synced_at,
+        last_price_check, created_at, updated_at';
 
     /**
-     * Find all hotels with optional filters
+     * Find all hotels with optional filters (excludes large JSON columns)
      */
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $where = $this->buildWhereClause($filters);
         $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
 
-        return db_get_array("SELECT * FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
     }
 
     /**
@@ -72,11 +73,11 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Find hotels by country
+     * Find hotels by country (excludes large JSON columns)
      */
     public function findByCountry(string $country): array
     {
-        return db_get_array("SELECT * FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
+        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
     }
 
     /**
@@ -103,14 +104,15 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Find hotels without packages (V3: checks novoton_hotel_packages table)
+     * Find hotels without packages (V3: checks novoton_hotel_packages table, excludes large JSON)
      */
     public function findWithoutPackages(int $limit = 0): array
     {
         $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
 
         return db_get_array(
-            "SELECT h.* FROM ?:novoton_hotels h
+            "SELECT {$cols} FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.id IS NULL
              ORDER BY h.hotel_name {$limit_clause}"
@@ -350,7 +352,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
-        $query = "SELECT * FROM ?:novoton_hotels
+        $query = "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels
                   WHERE has_room_price = 'Y' AND country = ?s
                   AND (product_id IS NULL OR product_id = 0)";
         $params = [$country];

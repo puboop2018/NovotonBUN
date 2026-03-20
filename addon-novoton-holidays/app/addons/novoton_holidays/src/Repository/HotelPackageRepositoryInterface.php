@@ -13,12 +13,21 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 interface HotelPackageRepositoryInterface
 {
     /**
-     * Find all packages for a hotel.
+     * Find all packages for a hotel (excludes large priceinfo_data JSON).
      *
      * @param string $hotelId
      * @return array
      */
     public function findByHotelId(string $hotelId): array;
+
+    /**
+     * Find all packages for a hotel including full priceinfo_data JSON.
+     * Use only when the caller needs to process pricing data.
+     *
+     * @param string $hotelId
+     * @return array
+     */
+    public function findByHotelIdFull(string $hotelId): array;
 
     /**
      * Find a specific package by hotel + package ID.

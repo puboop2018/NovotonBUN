@@ -454,6 +454,29 @@ function fn_novoton_holidays_setup_db(): void
         @db_query("UPDATE ?:novoton_facilities SET facility_type = 'room_facility'  WHERE facility_type = 'room'");
     }
 
+    // ── Cache table migration: TIMESTAMP → INT UNSIGNED for expires_at/created_at ──
+    // Aligns with sphinx_cache (INT unix timestamp) for consistency and performance
+    $cacheTable = $resolve('?:novoton_cache');
+    $cacheExpiresType = db_get_field(
+        "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?s AND COLUMN_NAME = 'expires_at'",
+        $cacheTable
+    );
+    if ($cacheExpiresType && strtolower($cacheExpiresType) === 'timestamp') {
+        // Convert existing TIMESTAMP values to unix timestamps, then change column type
+        @db_query("ALTER TABLE ?:novoton_cache ADD COLUMN `expires_at_new` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `expires_at`");
+        @db_query("UPDATE ?:novoton_cache SET `expires_at_new` = UNIX_TIMESTAMP(`expires_at`)");
+        @db_query("ALTER TABLE ?:novoton_cache DROP COLUMN `expires_at`");
+        @db_query("ALTER TABLE ?:novoton_cache CHANGE `expires_at_new` `expires_at` INT UNSIGNED NOT NULL COMMENT 'Unix timestamp'");
+        @db_query("ALTER TABLE ?:novoton_cache ADD KEY `idx_expires` (`expires_at`)");
+        // Also convert created_at if it's a TIMESTAMP
+        @db_query("ALTER TABLE ?:novoton_cache ADD COLUMN `created_at_new` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `created_at`");
+        @db_query("UPDATE ?:novoton_cache SET `created_at_new` = UNIX_TIMESTAMP(`created_at`)");
+        @db_query("ALTER TABLE ?:novoton_cache DROP COLUMN `created_at`");
+        @db_query("ALTER TABLE ?:novoton_cache CHANGE `created_at_new` `created_at` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Unix timestamp'");
+    }
+
     // ── Foreign key constraints (idempotent — only adds if missing) ──
     $foreign_keys = [
         [

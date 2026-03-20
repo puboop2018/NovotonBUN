@@ -23,6 +23,18 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     public function findByHotelId(string $hotelId): array
     {
         return db_get_array(
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotelId
+        );
+    }
+
+    /**
+     * Find all packages for a hotel including full priceinfo_data JSON.
+     * Use only when the caller needs to process pricing data.
+     */
+    public function findByHotelIdFull(string $hotelId): array
+    {
+        return db_get_array(
             "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
             $hotelId
         );
