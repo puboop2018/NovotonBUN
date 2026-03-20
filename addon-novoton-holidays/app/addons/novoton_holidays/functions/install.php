@@ -272,6 +272,18 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         }
     }
 
+    // Star rating aliases (Novoton uses simple '1'-'5' codes, same as canonical)
+    $starAliases = ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5'];
+    foreach ($starAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
+
     // Clear resolve cache after batch alias inserts
     $featureMapper::clearCache();
 }

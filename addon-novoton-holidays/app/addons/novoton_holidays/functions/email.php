@@ -419,19 +419,14 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             }
             $boards_str = implode(',', array_unique($board_names));
 
-            // Generate star label from FeatureMapper or fallback
+            // Generate star label from travel_core FeatureMapper or fallback
             foreach (['ro', 'en'] as $lang) {
                 $star_label = '';
                 if ($stars >= 1 && $stars <= 5) {
-                    if ($featureMapper) {
-                        $star_label = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                            (string) $stars,
-                            $lang
-                        ) ?? $star_labels_fallback[$lang][$stars - 1];
-                    } else {
-                        $star_label = $star_labels_fallback[$lang][$stars - 1];
-                    }
+                    $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+                        ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
+                        : '';
+                    $star_label = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
                 }
 
                 $csv_lines[] = implode(';', [
@@ -568,15 +563,10 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
             foreach (['ro', 'en'] as $lang) {
                 $star_value = '';
                 if ($stars >= 1 && $stars <= 5) {
-                    if ($featureMapper) {
-                        $star_value = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                            (string) $stars,
-                            $lang
-                        ) ?? $star_labels_fallback[$lang][$stars - 1];
-                    } else {
-                        $star_value = $star_labels_fallback[$lang][$stars - 1];
-                    }
+                    $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+                        ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
+                        : '';
+                    $star_value = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
                 }
 
                 $product_node = $dom->createElement('product');

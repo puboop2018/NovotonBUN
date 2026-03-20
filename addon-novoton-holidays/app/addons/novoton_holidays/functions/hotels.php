@@ -789,11 +789,8 @@ function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_r
         return false;
     }
 
-    return $featureMapper->assignFeatureToProduct(
-        (int) $product_id,
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-        $code
-    );
+    // Uses shared travel_core mapping (travel_feature_map + travel_api_alias)
+    return $featureMapper->assignFeatureViaCore((int) $product_id, 'stars', $code);
 }
 
 /**
@@ -930,34 +927,9 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
     };
 
     // ── Star Ratings (1-5) ──
-    $starFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING);
-    if ($starFeatureId > 0) {
-        $csType = $getActualFeatureType($starFeatureId, 'S');
-        $starNames = [
-            '1' => ['en' => '1 star',  'ro' => '1 stea'],
-            '2' => ['en' => '2 stars', 'ro' => '2 stele'],
-            '3' => ['en' => '3 stars', 'ro' => '3 stele'],
-            '4' => ['en' => '4 stars', 'ro' => '4 stele'],
-            '5' => ['en' => '5 stars', 'ro' => '5 stele'],
-        ];
-        foreach ($starNames as $code => $names) {
-            $repo->save([
-                'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                'provider_code' => $code,
-                'cs_cart_feature_id' => $starFeatureId,
-                'cs_cart_feature_type' => $csType,
-                'display_name_en' => $names['en'],
-                'display_name_ro' => $names['ro'],
-                'position' => (int) $code * 10,
-                'is_active' => 'Y',
-                'mapping_source' => 'seed',
-            ]);
-            $seeded++;
-        }
-    } else {
-        $skipped += 5;
-    }
+    // Managed by travel_core (travel_feature_map + travel_api_alias tables).
+    // Aliases seeded in fn_novoton_holidays_seed_travel_aliases().
+    // Legacy hotel_feature_mappings rows for property_rating are no longer created.
 
     // ── Board Types ──
     $boardFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS);

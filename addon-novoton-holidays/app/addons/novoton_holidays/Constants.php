@@ -208,7 +208,7 @@ final class Constants
 
     // ========== Addon Settings Keys (Feature Mapping) ==========
 
-    public const SETTING_FEATURE_ID_PROPERTY_RATING = 'addons.novoton_holidays.feature_id_property_rating';
+    public const SETTING_FEATURE_ID_PROPERTY_RATING = 'addons.travel_core.feature_id_property_rating';
     public const SETTING_FEATURE_ID_MEALS           = 'addons.novoton_holidays.feature_id_meals';
     public const SETTING_FEATURE_ID_HOTEL_FACILITY  = 'addons.novoton_holidays.feature_id_hotel_facility';
     public const SETTING_FEATURE_ID_ROOM_FACILITY   = 'addons.novoton_holidays.feature_id_room_facility';

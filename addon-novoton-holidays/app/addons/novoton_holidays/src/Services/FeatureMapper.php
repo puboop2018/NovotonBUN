@@ -182,6 +182,80 @@ class FeatureMapper
         }
     }
 
+    /**
+     * Assign a feature using travel_core's shared FeatureMapper::resolve().
+     *
+     * Used for feature types migrated to the shared canonical hub (travel_feature_map).
+     * Resolves the provider code via travel_core, auto-creates the CS-Cart variant
+     * if needed, and assigns to the product.
+     *
+     * @param string $coreFeatureType travel_core feature type (e.g. 'stars', not 'property_rating')
+     */
+    public function assignFeatureViaCore(
+        int $productId,
+        string $coreFeatureType,
+        string $providerCode,
+        string $apiSource = 'novoton'
+    ): bool {
+        if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+            return false;
+        }
+
+        $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve(
+            $apiSource, $coreFeatureType, $providerCode
+        );
+        if (!$mapping) {
+            return false;
+        }
+
+        // Read feature_id from travel_core setting
+        $settingKey = 'addons.travel_core.feature_id_' . $coreFeatureType;
+        if ($coreFeatureType === 'stars') {
+            $settingKey = 'addons.travel_core.feature_id_property_rating';
+        }
+        $featureId = (int) \Tygh\Registry::get($settingKey);
+        if ($featureId <= 0) {
+            return false;
+        }
+
+        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+        // Auto-create variant if not yet resolved
+        if ($variantId <= 0) {
+            $variantId = $this->createCsCartVariant([
+                'cs_cart_feature_id' => $featureId,
+                'display_name_en'    => $mapping['display_name_en'] ?? $providerCode,
+                'display_name_ro'    => $mapping['display_name_ro'] ?? $providerCode,
+                'position'           => 0,
+            ]);
+            if ($variantId > 0) {
+                db_query(
+                    "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
+                    $variantId, (int) $mapping['map_id']
+                );
+                \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+            }
+        }
+
+        if ($variantId <= 0) {
+            return false;
+        }
+
+        // Determine CS-Cart feature type and assign
+        $csFeatureType = db_get_field(
+            "SELECT feature_type FROM ?:product_features WHERE feature_id = ?i", $featureId
+        );
+
+        if ($csFeatureType === 'S') {
+            return $this->assignSelectBox($productId, $featureId, $variantId);
+        }
+        if ($csFeatureType === 'M') {
+            return $this->assignCheckbox($productId, $featureId, $variantId);
+        }
+
+        return false;
+    }
+
     // =========================================================================
     // Private methods
     // =========================================================================

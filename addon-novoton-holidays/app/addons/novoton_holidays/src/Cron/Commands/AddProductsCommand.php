@@ -213,11 +213,11 @@ class AddProductsCommand extends AbstractCronCommand
         $normalizer = $container->novotonNormalizer();
         $facilityRepo = $container->facilityRepository();
 
-        // Star rating
+        // Star rating — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
         if (!empty($hotel['star_rating']) && (int) $hotel['star_rating'] >= 1) {
             $code = $normalizer->normalizeStarRating((string) $hotel['star_rating']);
             if ($code !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_PROPERTY_RATING, $code);
+                $featureMapper->assignFeatureViaCore($productId, 'stars', $code);
             }
         }
 
