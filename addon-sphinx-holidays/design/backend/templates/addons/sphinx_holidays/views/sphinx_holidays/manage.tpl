@@ -197,6 +197,20 @@
                     <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.cleanup}</code></td>
                     <td><a href="{$cron_urls.cleanup}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
+                <tr>
+                    <td><strong>discover_boards</strong></td>
+                    <td>Discover meal plans from cache API</td>
+                    <td><code>0 3 * * *</code> (daily)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.discover_boards}</code></td>
+                    <td><a href="{$cron_urls.discover_boards}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>assign_boards</strong></td>
+                    <td>Assign board codes to hotels</td>
+                    <td><code>30 3 * * *</code> (daily, after discover)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.assign_boards}</code></td>
+                    <td><a href="{$cron_urls.assign_boards}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
             </tbody>
         </table>
 
