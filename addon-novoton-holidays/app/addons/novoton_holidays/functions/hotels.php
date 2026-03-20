@@ -891,7 +891,7 @@ function fn_novoton_holidays_add_product_image($product_id, $image_url, $is_main
  *
  * Populates mapping rows for:
  * - Star ratings (1-5) — strict, type S
- * - Board types (AI/UAI/FB/FB+/HB/HB+/BB/RO/SC) — strict, type M
+ * - Board types — managed by travel_core (travel_feature_map + travel_api_alias)
  * - Property types — managed by travel_core (travel_feature_map + travel_api_alias)
  * - Hotel facilities from novoton_facilities (type='hotel') — dynamic, type M
  * - Room facilities from novoton_facilities (type='room') — dynamic, type M
@@ -932,38 +932,9 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
     // Legacy hotel_feature_mappings rows for property_rating are no longer created.
 
     // ── Board Types ──
-    $boardFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS);
-    if ($boardFeatureId > 0) {
-        $csType = $getActualFeatureType($boardFeatureId, 'M');
-        $boards = [
-            'AI'  => ['en' => 'All Inclusive',       'ro' => 'All Inclusive',       'pos' => 10],
-            'UAI' => ['en' => 'Ultra All Inclusive',  'ro' => 'Ultra All Inclusive',  'pos' => 20],
-            'FB'  => ['en' => 'Full Board',           'ro' => 'Pensiune Completă',   'pos' => 30],
-            'FB+' => ['en' => 'Full Board Plus',      'ro' => 'Pensiune Completă Plus', 'pos' => 40],
-            'HB'  => ['en' => 'Half Board',           'ro' => 'Demipensiune',        'pos' => 50],
-            'HB+' => ['en' => 'Half Board Plus',      'ro' => 'Demipensiune Plus',   'pos' => 60],
-            'BB'  => ['en' => 'Bed & Breakfast',      'ro' => 'Mic Dejun Inclus',    'pos' => 70],
-            'RO'  => ['en' => 'Room Only',            'ro' => 'Doar Cazare',         'pos' => 80],
-            'SC'  => ['en' => 'Self Catering',        'ro' => 'Self Catering',       'pos' => 90],
-        ];
-        foreach ($boards as $code => $data) {
-            $repo->save([
-                'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS,
-                'provider_code' => $code,
-                'cs_cart_feature_id' => $boardFeatureId,
-                'cs_cart_feature_type' => $csType,
-                'display_name_en' => $data['en'],
-                'display_name_ro' => $data['ro'],
-                'position' => $data['pos'],
-                'is_active' => 'Y',
-                'mapping_source' => 'seed',
-            ]);
-            $seeded++;
-        }
-    } else {
-        $skipped += 9;
-    }
+    // Managed by travel_core (travel_feature_map + travel_api_alias tables).
+    // Aliases seeded in fn_novoton_holidays_seed_travel_aliases().
+    // FB+ and HB+ map to FB and HB respectively for product feature filtering.
 
     // ── Property Types ──
     // Managed by travel_core (travel_feature_map + travel_api_alias tables).

@@ -221,7 +221,7 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Board types (from hotel data if available)
+        // Board types — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
         $hotelData = fn_novoton_holidays_get_hotel_data($hotelId);
         if (!empty($hotelData['boards'])) {
             $boardCodes = [];
@@ -233,7 +233,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
             }
             if (!empty($boardCodes)) {
-                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_MEALS, array_unique($boardCodes));
+                $featureMapper->assignMultipleViaCore($productId, 'board', array_unique($boardCodes));
             }
         }
 
