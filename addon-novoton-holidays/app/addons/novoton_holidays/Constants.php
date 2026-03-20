@@ -213,7 +213,7 @@ final class Constants
     public const SETTING_FEATURE_ID_HOTEL_FACILITY  = 'addons.novoton_holidays.feature_id_hotel_facility';
     public const SETTING_FEATURE_ID_ROOM_FACILITY   = 'addons.novoton_holidays.feature_id_room_facility';
     public const SETTING_FEATURE_ID_RESORT          = 'addons.novoton_holidays.feature_id_resort';
-    public const SETTING_FEATURE_ID_PROPERTY_TYPE   = 'addons.novoton_holidays.feature_id_property_type';
+    public const SETTING_FEATURE_ID_PROPERTY_TYPE   = 'addons.travel_core.feature_id_property_type';
     public const SETTING_FEATURE_ID_TRAVEL_GROUP    = 'addons.novoton_holidays.feature_id_travel_group';
     public const SETTING_FEATURE_ID_BEACH_ACCESS    = 'addons.novoton_holidays.feature_id_beach_access';
 

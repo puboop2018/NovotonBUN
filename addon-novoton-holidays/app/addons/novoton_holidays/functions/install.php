@@ -284,6 +284,29 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         }
     }
 
+    // Property type aliases (Novoton canonical codes match travel_core)
+    $propertyTypeAliases = [
+        'hotel'          => 'hotel',
+        'villa'          => 'villa',
+        'apartment'      => 'apartment',
+        'resort'         => 'resort',
+        'hostel'         => 'hostel',
+        'guest_house'    => 'guest_house',
+        'chalet'         => 'chalet',
+        'motel'          => 'motel',
+        'boarding_house' => 'boarding_house',
+        'cabin'          => 'cabin',
+    ];
+    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
+
     // Clear resolve cache after batch alias inserts
     $featureMapper::clearCache();
 }
@@ -342,7 +365,7 @@ function fn_novoton_holidays_setup_db(): void
         [
             'table'   => '?:novoton_hotels',
             'column'  => 'property_type',
-            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin' AFTER `star_rating`",
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest_house,resort,hostel,motel,boarding_house,cabin' AFTER `star_rating`",
             'post_sql' => "ALTER TABLE ?:novoton_hotels ADD KEY `idx_property_type` (`property_type`)",
         ],
         [
@@ -401,6 +424,17 @@ function fn_novoton_holidays_setup_db(): void
         if ($oldExists) {
             @db_query("UPDATE ?:settings_objects SET name = ?s WHERE name = ?s AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')", $newName, $oldName);
         }
+    }
+
+    // ── Property type code migration: hyphens → underscores ──
+    // Aligns Novoton codes with travel_core canonical codes (e.g. guest-house → guest_house)
+    $hyphenRenames = [
+        'guest-house'    => 'guest_house',
+        'boarding-house' => 'boarding_house',
+    ];
+    foreach ($hyphenRenames as $oldCode => $newCode) {
+        @db_query("UPDATE ?:novoton_hotels SET property_type = ?s WHERE property_type = ?s", $newCode, $oldCode);
+        @db_query("UPDATE ?:hotel_feature_mappings SET provider_code = ?s WHERE provider_code = ?s AND feature_type = 'property_type'", $newCode, $oldCode);
     }
 
     // ── Facility type migration: enum('hotel','room') → varchar(30) feature type ──

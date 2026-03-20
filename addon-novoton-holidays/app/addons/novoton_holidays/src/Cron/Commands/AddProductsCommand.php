@@ -265,11 +265,11 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Property type
+        // Property type — uses shared travel_core mapping
         if (!empty($hotel['property_type'])) {
             $code = $normalizer->normalizePropertyType($hotel['property_type']);
             if ($code !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_PROPERTY_TYPE, $code);
+                $featureMapper->assignFeatureViaCore($productId, 'property_type', $code);
             }
         }
     }

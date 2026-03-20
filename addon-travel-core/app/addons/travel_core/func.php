@@ -132,14 +132,16 @@ function fn_travel_core_seed_feature_map(): void
         ['stars', '5', '5 Stars', '5 Stele'],
 
         // Property types
-        ['property_type', 'hotel',        'Hotel',         'Hotel'],
-        ['property_type', 'villa',        'Villa',         'Vilă'],
-        ['property_type', 'apartment',    'Apartment',     'Apartament'],
-        ['property_type', 'resort',       'Resort',        'Resort'],
-        ['property_type', 'hostel',       'Hostel',        'Hostel'],
-        ['property_type', 'guest_house',  'Guest House',   'Pensiune'],
-        ['property_type', 'chalet',       'Chalet',        'Cabană'],
-        ['property_type', 'motel',        'Motel',         'Motel'],
+        ['property_type', 'hotel',          'Hotel',          'Hotel'],
+        ['property_type', 'villa',          'Villa',          'Vilă'],
+        ['property_type', 'apartment',      'Apartment',      'Apartament'],
+        ['property_type', 'resort',         'Resort',         'Resort'],
+        ['property_type', 'hostel',         'Hostel',         'Hostel'],
+        ['property_type', 'guest_house',    'Guest House',    'Pensiune'],
+        ['property_type', 'chalet',         'Chalet',         'Cabană'],
+        ['property_type', 'motel',          'Motel',          'Motel'],
+        ['property_type', 'boarding_house', 'Boarding House', 'Pensiune'],
+        ['property_type', 'cabin',          'Cabin',          'Cabană'],
 
         // Facilities — canonical codes shared across providers.
         // Each row can have its own cscart_feature_id (admin-assigned via UI).
