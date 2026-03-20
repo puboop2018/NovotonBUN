@@ -28,9 +28,9 @@ class NovotonHttpClient implements HttpClientInterface
     // Circuit breaker configuration
     private int $circuitBreakerThreshold;
     private int $circuitBreakerTimeout;
-    private static int $failureCount = 0;
-    private static int $lastFailureTime = 0;
-    private static bool $circuitOpen = false;
+    private int $failureCount = 0;
+    private int $lastFailureTime = 0;
+    private bool $circuitOpen = false;
 
     // Debug properties
     public int $lastHttpCode = 0;
@@ -109,7 +109,7 @@ class NovotonHttpClient implements HttpClientInterface
     public function sendRequest(string $function, string $xml = '', string $lang = 'UK'): string
     {
         if (!$this->isCircuitClosed()) {
-            $secondsUntilRetry = $this->circuitBreakerTimeout - (time() - self::$lastFailureTime);
+            $secondsUntilRetry = $this->circuitBreakerTimeout - (time() - $this->lastFailureTime);
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API request blocked by circuit breaker',
                 'function' => $function,
@@ -290,12 +290,12 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function isCircuitClosed(): bool
     {
-        if (!self::$circuitOpen) {
+        if (!$this->circuitOpen) {
             return true;
         }
 
-        if (time() - self::$lastFailureTime >= $this->circuitBreakerTimeout) {
-            self::$circuitOpen = false;
+        if (time() - $this->lastFailureTime >= $this->circuitBreakerTimeout) {
+            $this->circuitOpen = false;
             return true;
         }
 
@@ -307,13 +307,13 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function recordFailure(): void
     {
-        self::$failureCount++;
-        self::$lastFailureTime = time();
+        $this->failureCount++;
+        $this->lastFailureTime = time();
 
-        if (self::$failureCount >= $this->circuitBreakerThreshold) {
-            self::$circuitOpen = true;
+        if ($this->failureCount >= $this->circuitBreakerThreshold) {
+            $this->circuitOpen = true;
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton API circuit breaker OPENED after ' . self::$failureCount . ' failures',
+                'message' => 'Novoton API circuit breaker OPENED after ' . $this->failureCount . ' failures',
                 'threshold' => $this->circuitBreakerThreshold,
                 'timeout_seconds' => $this->circuitBreakerTimeout
             ]);
@@ -325,14 +325,14 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function recordSuccess(): void
     {
-        if (self::$failureCount > 0 || self::$circuitOpen) {
+        if ($this->failureCount > 0 || $this->circuitOpen) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API circuit breaker RESET after success',
-                'previous_failures' => self::$failureCount
+                'previous_failures' => $this->failureCount
             ]);
         }
-        self::$failureCount = 0;
-        self::$circuitOpen = false;
+        $this->failureCount = 0;
+        $this->circuitOpen = false;
     }
 
     /**
@@ -341,12 +341,12 @@ class NovotonHttpClient implements HttpClientInterface
     public function getCircuitStatus(): array
     {
         return [
-            'is_open' => self::$circuitOpen,
-            'failure_count' => self::$failureCount,
+            'is_open' => $this->circuitOpen,
+            'failure_count' => $this->failureCount,
             'threshold' => $this->circuitBreakerThreshold,
-            'last_failure' => self::$lastFailureTime > 0 ? date('Y-m-d H:i:s', self::$lastFailureTime) : null,
+            'last_failure' => $this->lastFailureTime > 0 ? date('Y-m-d H:i:s', $this->lastFailureTime) : null,
             'timeout_seconds' => $this->circuitBreakerTimeout,
-            'seconds_until_retry' => self::$circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - self::$lastFailureTime)) : 0
+            'seconds_until_retry' => $this->circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - $this->lastFailureTime)) : 0
         ];
     }
 
@@ -355,12 +355,12 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function resetCircuitBreaker(): void
     {
-        $wasOpen = self::$circuitOpen;
-        $previousFailures = self::$failureCount;
+        $wasOpen = $this->circuitOpen;
+        $previousFailures = $this->failureCount;
 
-        self::$failureCount = 0;
-        self::$lastFailureTime = 0;
-        self::$circuitOpen = false;
+        $this->failureCount = 0;
+        $this->lastFailureTime = 0;
+        $this->circuitOpen = false;
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton API circuit breaker manually reset',

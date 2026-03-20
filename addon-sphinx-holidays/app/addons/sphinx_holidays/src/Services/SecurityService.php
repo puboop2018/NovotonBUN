@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\SecurityServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class SecurityService implements SecurityServiceInterface
@@ -179,17 +180,11 @@ class SecurityService implements SecurityServiceInterface
 
     private function isValidDate(string $date): bool
     {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return false;
-        }
-
-        [$year, $month, $day] = explode('-', $date);
-        return checkdate((int)$month, (int)$day, (int)$year);
+        return ValidationHelpers::isValidDate($date);
     }
 
     private function sanitizeName(string $name): string
     {
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
-        return mb_substr(trim($name), 0, 100);
+        return ValidationHelpers::sanitizeName($name);
     }
 }

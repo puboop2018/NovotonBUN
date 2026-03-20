@@ -14,6 +14,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
@@ -432,46 +433,24 @@ class SecurityService implements SecurityServiceInterface
     
     // ========== Private Helper Methods ==========
     
-    /**
-     * Check if string is valid date
-     */
     private function isValidDate(string $date): bool
     {
-        // Accept YYYY-MM-DD format
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return false;
-        }
-        
-        [$year, $month, $day] = explode('-', $date);
-        return checkdate((int)$month, (int)$day, (int)$year);
+        return ValidationHelpers::isValidDate($date);
     }
-    
-    /**
-     * Check if hotel ID is valid format
-     */
+
     private function isValidHotelId(string $hotelId): bool
     {
-        // Allow alphanumeric, hyphens, underscores (typical ID formats)
-        return (bool) preg_match('/^[a-zA-Z0-9_-]{1,50}$/', $hotelId);
+        return ValidationHelpers::isValidEntityId($hotelId);
     }
-    
-    /**
-     * Check if name contains only valid characters
-     */
+
     private function isValidName(string $name): bool
     {
-        // Allow letters (including accented), spaces, hyphens, apostrophes
-        return (bool) preg_match('/^[\p{L}\s\'-]{1,100}$/u', $name);
+        return ValidationHelpers::isValidName($name);
     }
-    
-    /**
-     * Sanitize a name string
-     */
+
     private function sanitizeName(string $name): string
     {
-        // Remove anything that's not a letter, space, hyphen, or apostrophe
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
-        return mb_substr(trim($name), 0, 100);
+        return ValidationHelpers::sanitizeName($name);
     }
     
     /**

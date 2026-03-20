@@ -39,7 +39,10 @@ trait SyncStateTrait
     }
 
     /**
-     * Persist state to JSON file.
+     * Persist state to JSON file with proper file locking.
+     *
+     * Uses fopen/flock/fwrite/fclose instead of file_put_contents with LOCK_EX,
+     * which does not reliably acquire exclusive locks on all platforms.
      */
     private function saveState(array $state): void
     {
@@ -47,7 +50,21 @@ trait SyncStateTrait
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
-        file_put_contents($this->state_file, json_encode($state, JSON_PRETTY_PRINT), LOCK_EX);
+
+        $tmpFile = $this->state_file . '.tmp';
+        $fp = fopen($tmpFile, 'w');
+        if ($fp === false) {
+            return;
+        }
+
+        if (flock($fp, LOCK_EX)) {
+            fwrite($fp, json_encode($state, JSON_PRETTY_PRINT));
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+
+        rename($tmpFile, $this->state_file);
     }
 
     /**

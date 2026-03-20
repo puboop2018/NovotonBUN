@@ -101,7 +101,7 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
         try {
             $api = new NovotonApi();
         } catch (\Exception $e) {
-            fn_log_event('novoton', 'error', 'Failed to initialize API: ' . $e->getMessage());
+            fn_log_event('general', 'runtime', 'Failed to initialize API: ' . $e->getMessage());
             return null;
         }
     }
@@ -241,7 +241,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         return $packagesUpdated > 0 ? true : 'no_data';
 
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Price update failed: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Price update failed: ' . $e->getMessage());
         return false;
     }
 }

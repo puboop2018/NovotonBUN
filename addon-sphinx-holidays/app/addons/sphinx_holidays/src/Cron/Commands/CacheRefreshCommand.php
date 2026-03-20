@@ -35,19 +35,31 @@ class CacheRefreshCommand
     {
         $this->output('Starting cache refresh...');
 
-        $api = Container::getApi();
-        $commission = ConfigProvider::getCommission();
-        $roundPrices = ConfigProvider::shouldRoundPrices();
+        try {
+            $api = Container::getApi();
+            $commission = ConfigProvider::getCommission();
+            $roundPrices = ConfigProvider::shouldRoundPrices();
 
-        $service = new CacheEndpointService($api, $commission, $roundPrices);
-        $stats = $service->refreshAll();
+            $service = new CacheEndpointService($api, $commission, $roundPrices);
+            $stats = $service->refreshAll();
 
-        $this->output("Cache refresh complete: {$stats['hotels_count']} hotels, {$stats['packages_count']} packages, {$stats['errors']} errors");
+            $this->output("Cache refresh complete: {$stats['hotels_count']} hotels, {$stats['packages_count']} packages, {$stats['errors']} errors");
 
-        return [
-            'success' => $stats['errors'] === 0,
-            'stats'   => $stats,
-        ];
+            return [
+                'success' => $stats['errors'] === 0,
+                'stats'   => $stats,
+            ];
+        } catch (\Throwable $e) {
+            $this->output("Cache refresh FAILED: " . $e->getMessage());
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx cache refresh failed: ' . $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'stats'   => ['errors' => 1, 'error_message' => $e->getMessage()],
+            ];
+        }
     }
 
     private function output(string $message): void

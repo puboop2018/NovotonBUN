@@ -106,7 +106,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
     }
     
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send cron report: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send cron report: no admin email found');
         return false;
     }
 
@@ -178,7 +178,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
         ], 'A', CART_LANGUAGE);
 
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send cron report email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send cron report email: ' . $e->getMessage());
     }
 
     // Clean up old reports (once a day)
@@ -204,7 +204,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
     $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
 
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send price alert email: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send price alert email: no admin email found');
         return false;
     }
 
@@ -236,7 +236,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
             'template_code' => 'novoton_holidays_price_alert',
         ], 'A', CART_LANGUAGE);
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send price alert email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send price alert email: ' . $e->getMessage());
         return false;
     }
 }
@@ -258,7 +258,7 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
     $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
 
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send price discrepancy email: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send price discrepancy email: no admin email found');
         return false;
     }
 
@@ -301,7 +301,7 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
             'template_code' => 'novoton_holidays_price_discrepancy',
         ], 'A', CART_LANGUAGE);
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send price discrepancy email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send price discrepancy email: ' . $e->getMessage());
         return false;
     }
 }
