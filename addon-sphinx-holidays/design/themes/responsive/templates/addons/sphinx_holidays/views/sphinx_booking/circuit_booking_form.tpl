@@ -141,7 +141,7 @@
                             </div>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <div style="flex: 1; min-width: 200px;">
-                                    <label>{__("travel_core.first_name")|default:"First Name"}</label>
+                                    <label for="circuit_guest_first_{$room_num|default:1}_{$smarty.section.adult.index|default:$child_idx+1}">{__("travel_core.first_name")|default:"First Name"}</label>
                                     <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]" class="ty-input-text" required>
                                     <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][type]" value="adult">
                                     <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
@@ -172,7 +172,7 @@
                                 </div>
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                     <div style="flex: 1; min-width: 200px;">
-                                        <label>{__("travel_core.first_name")|default:"First Name"}</label>
+                                        <label for="circuit_guest_first_{$room_num|default:1}_{$smarty.section.adult.index|default:$child_idx+1}">{__("travel_core.first_name")|default:"First Name"}</label>
                                         <input type="text" name="guests[room{$room_num}_child_{$child_idx+1}][first_name]" class="ty-input-text" required>
                                         <input type="hidden" name="guests[room{$room_num}_child_{$child_idx+1}][type]" value="child">
                                         <input type="hidden" name="guests[room{$room_num}_child_{$child_idx+1}][age]" value="{$child_age}">

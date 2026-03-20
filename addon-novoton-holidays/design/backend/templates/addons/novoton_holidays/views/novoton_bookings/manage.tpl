@@ -93,8 +93,7 @@
                         {/if}
                     </a>
                 </th>
-                <th>{__("hotel")}</th>
-                <th>{__("novoton_holidays.room_type")}</th>
+                <th>{__("hotel")} / {__("novoton_holidays.room_type")}</th>
                 <th>
                     <a href="{"novoton_bookings.manage?sort_by=check_in&sort_order=`$sort_order_toggle`"|fn_url}">
                         {__("novoton_holidays.check_in")}
@@ -105,9 +104,7 @@
                 </th>
                 <th>{__("novoton_holidays.nights")}</th>
                 <th>{__("novoton_holidays.guests")}</th>
-                <th>{__("novoton_holidays.api_price")}</th>
                 <th>{__("price")}</th>
-                <th width="100">Novoton ID</th>
                 <th width="80">{__("status")}</th>
                 <th width="80">{__("tools")}</th>
             </tr>
@@ -134,21 +131,18 @@
                     {if $booking.total_rooms > 1}
                         <br><small class="multi-room-badge">Room {$booking.room_number} of {$booking.total_rooms}</small>
                     {/if}
-                </td>
-                <td>
-                    {* G12: Display room types one per line *}
+                    <br><small style="color: #666;">
                     {if $booking.room_types_list}
                         {$room_types = $booking.room_types_list|replace:'%2b':'+'|replace:'%2B':'+'}
                         {$room_types_array = ", "|explode:$room_types}
                         {foreach from=$room_types_array item=room_type name=rtloop}
-                            {$room_type|trim}{if !$smarty.foreach.rtloop.last}<br>{/if}
+                            {$room_type|trim}{if !$smarty.foreach.rtloop.last}, {/if}
                         {/foreach}
                     {elseif $booking.room_id}
                         {$booking.room_id|replace:'%2b':'+'|replace:'%2B':'+'}
-                    {else}
-                        <span class="muted">N/A</span>
                     {/if}
-                    <br><small>{$booking.board_display|default:$booking.board_id|default:'-'}</small>
+                    {if $booking.board_display|default:$booking.board_id} &middot; {$booking.board_display|default:$booking.board_id}{/if}
+                    </small>
                 </td>
                 <td>
                     {$booking.check_in|date_format:"%d.%m.%Y"}<br>
@@ -167,24 +161,11 @@
                     {/if}
                 </td>
                 <td>
-                    {if $booking.base_price > 0}
-                        <span class="muted">{$booking.base_price|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
-                    {else}
-                        <span class="muted">-</span>
-                    {/if}
-                </td>
-                <td>
                     {if $booking.total_price > 0}
-                        <strong>{$booking.total_price|number_format:2} {$booking.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</strong>
+                        <strong title="{if $booking.base_price > 0}API: {$booking.base_price|number_format:2} {$smarty.const.CART_PRIMARY_CURRENCY}{/if}">{$booking.total_price|number_format:2} {$booking.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</strong>
+                        {if $booking.novoton_invoice_id}<br><small class="muted">NT {$booking.novoton_invoice_id}</small>{/if}
                     {else}
                         <span class="muted" title="Price not recorded">N/A</span>
-                    {/if}
-                </td>
-                <td>
-                    {if $booking.novoton_invoice_id}
-                        NT {$booking.novoton_invoice_id}
-                    {else}
-                        <span class="muted">-</span>
                     {/if}
                 </td>
                 <td>

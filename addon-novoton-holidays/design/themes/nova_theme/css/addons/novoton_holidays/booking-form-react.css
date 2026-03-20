@@ -290,8 +290,8 @@
     background: var(--nvt-primary, #003580);
     border: none;
     color: #fff;
-    width: 24px;
-    height: 24px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 14px;
@@ -340,8 +340,8 @@
 }
 
 .novoton-booking-react .guest-controls button {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border: 2px solid var(--nvt-primary-light, #0071c2);
     background: var(--nvt-bg, #fff);
     color: var(--nvt-primary-light, #0071c2);

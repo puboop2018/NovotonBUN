@@ -225,9 +225,9 @@
                 </div>
                 
                 <div class="booking-price-box">
-                    <div id="price-error-message" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
+                    <div id="price-error-message" role="alert" aria-live="assertive" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
                     <div class="price-label">{__("novoton_holidays.total")}:</div>
-                    <div class="price-total" id="novoton-total-price">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
+                    <div class="price-total" id="novoton-total-price" aria-live="polite" aria-atomic="true">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                     <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
                         ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
                     </span>
@@ -296,18 +296,22 @@
                             
                             <div class="field-row">
                                 <div class="field-group">
-                                    <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
-                                    <input type="text" 
-                                           name="guests[room{$room_num}_adult_{$i}][last_name]" 
-                                           required 
+                                    <label for="guest_r{$room_num}_a{$i}_last">{__("novoton_holidays.last_name")}<span class="required" aria-hidden="true">*</span></label>
+                                    <input type="text"
+                                           id="guest_r{$room_num}_a{$i}_last"
+                                           name="guests[room{$room_num}_adult_{$i}][last_name]"
+                                           required
+                                           aria-required="true"
                                            value="{$prefilled_last_name}"
                                            placeholder="{__('novoton_holidays.last_name')}" />
                                 </div>
                                 <div class="field-group">
-                                    <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
-                                    <input type="text" 
-                                           name="guests[room{$room_num}_adult_{$i}][first_name]" 
-                                           required 
+                                    <label for="guest_r{$room_num}_a{$i}_first">{__("novoton_holidays.first_name")}<span class="required" aria-hidden="true">*</span></label>
+                                    <input type="text"
+                                           id="guest_r{$room_num}_a{$i}_first"
+                                           name="guests[room{$room_num}_adult_{$i}][first_name]"
+                                           required
+                                           aria-required="true"
                                            value="{$prefilled_first_name}"
                                            placeholder="{__('novoton_holidays.first_name')}" />
                                 </div>
@@ -372,18 +376,22 @@
                                 {* Row 1: Last Name + First Name (side by side on desktop, stacked on mobile) *}
                                 <div class="field-row field-row-names">
                                     <div class="field-group">
-                                        <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
-                                        <input type="text" 
-                                               name="guests[room{$room_num}_child_{$i}][last_name]" 
-                                               required 
+                                        <label for="guest_r{$room_num}_c{$i}_last">{__("novoton_holidays.last_name")}<span class="required" aria-hidden="true">*</span></label>
+                                        <input type="text"
+                                               id="guest_r{$room_num}_c{$i}_last"
+                                               name="guests[room{$room_num}_child_{$i}][last_name]"
+                                               required
+                                               aria-required="true"
                                                value="{$prefilled_child_last_name}"
                                                placeholder="{__('novoton_holidays.last_name')}" />
                                     </div>
                                     <div class="field-group">
-                                        <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
-                                        <input type="text" 
-                                               name="guests[room{$room_num}_child_{$i}][first_name]" 
-                                               required 
+                                        <label for="guest_r{$room_num}_c{$i}_first">{__("novoton_holidays.first_name")}<span class="required" aria-hidden="true">*</span></label>
+                                        <input type="text"
+                                               id="guest_r{$room_num}_c{$i}_first"
+                                               name="guests[room{$room_num}_child_{$i}][first_name]"
+                                               required
+                                               aria-required="true"
                                                value="{$prefilled_child_first_name}"
                                                placeholder="{__('novoton_holidays.first_name')}" />
                                     </div>
@@ -392,12 +400,14 @@
                                 {* Row 2: Date of Birth (own row for better visibility) *}
                                 <div class="field-row field-row-dob">
                                     <div class="field-group field-group-dob">
-                                        <label>{__("novoton_holidays.date_of_birth")} <span style="font-weight: normal; color: #666;">(ex: 27/05/2020)</span><span class="required">*</span></label>
-                                        <input type="tel" 
-                                               name="guests[room{$room_num}_child_{$i}][dob]" 
-                                               id="child_dob_r{$room_num}_c{$i}" 
+                                        <label for="child_dob_r{$room_num}_c{$i}">{__("novoton_holidays.date_of_birth")} <span style="font-weight: normal; color: #666;">(ex: 27/05/2020)</span><span class="required" aria-hidden="true">*</span></label>
+                                        <input type="tel"
+                                               name="guests[room{$room_num}_child_{$i}][dob]"
+                                               id="child_dob_r{$room_num}_c{$i}"
                                                class="dob-masked-input"
-                                               required 
+                                               required
+                                               aria-required="true"
+                                               aria-describedby="dob_error_r{$room_num}_c{$i}"
                                                maxlength="10"
                                                inputmode="numeric"
                                                autocomplete="off"
@@ -412,7 +422,7 @@
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
                                 </div>
-                                <div id="dob_error_r{$room_num}_c{$i}" class="dob-validation-error" style="display: none; color: #dc3545; font-size: 12px; margin-top: 5px;"></div>
+                                <div id="dob_error_r{$room_num}_c{$i}" class="dob-validation-error" role="alert" aria-live="assertive" style="display: none; color: #dc3545; font-size: 12px; margin-top: 5px;"></div>
                             </div>
                         {/for}
                     {/if}
@@ -1035,6 +1045,8 @@ function showPriceNotification(difference) {
     if (!notif) {
         notif = document.createElement('div');
         notif.id = 'price-change-notification';
+        notif.setAttribute('role', 'status');
+        notif.setAttribute('aria-live', 'polite');
         notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:8px 15px;margin:0 0 10px 0;border-radius:4px;font-size:14px;';
         var heading = document.querySelector('.guest-names-section h3');
         if (heading && heading.parentNode) {
@@ -1053,6 +1065,8 @@ function showInfoNotice(message) {
     if (!notif) {
         notif = document.createElement('div');
         notif.id = 'price-recalc-notice';
+        notif.setAttribute('role', 'status');
+        notif.setAttribute('aria-live', 'polite');
         notif.style.cssText = 'background:#e7f3ff;border-left:4px solid #0071c2;color:#004085;padding:10px 15px;margin:10px 0;border-radius:4px;font-size:13px;';
         var priceBox = document.querySelector('.booking-price-box');
         if (priceBox && priceBox.parentNode) {
@@ -1084,11 +1098,11 @@ function showRoomChangeModal(data) {
         priceDiffStyle = 'color:#28a745;font-weight:bold;';
     }
     
-    var html = '<div id="room-change-warning" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
+    var html = '<div id="room-change-warning" role="dialog" aria-modal="true" aria-labelledby="room-modal-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
         '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
         '<div style="text-align:center;margin-bottom:20px;">' +
             '<div style="font-size:40px;margin-bottom:10px;"></div>' +
-            '<h3 style="margin:0;color:#856404;font-size:18px;">{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"}</h3>' +
+            '<h3 id="room-modal-title" style="margin:0;color:#856404;font-size:18px;">{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"}</h3>' +
         '</div>' +
         '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">{__("novoton_holidays.room_changed_due_to_age")|default:"Camera selectata nu este disponibila pentru varsta copilului introdusa."}</p>' +
         '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin-bottom:20px;">' +
@@ -1119,14 +1133,46 @@ function showRoomChangeModal(data) {
         '</div></div>';
     
     window._roomChangeData = data;
+    window._roomChangeTrigger = document.activeElement;
     var wrapper = document.createElement('div');
     wrapper.innerHTML = html;
     document.body.appendChild(wrapper.firstChild);
+
+    // Focus management: move focus into modal
+    var modal = document.getElementById('room-change-warning');
+    if (modal) {
+        var firstBtn = modal.querySelector('button');
+        if (firstBtn) firstBtn.focus();
+
+        // Close on Escape key
+        modal._escHandler = function(e) {
+            if (e.key === 'Escape') { closeRoomModal(); }
+        };
+        document.addEventListener('keydown', modal._escHandler);
+
+        // Trap focus inside modal
+        modal.addEventListener('keydown', function(e) {
+            if (e.key !== 'Tab') return;
+            var focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable.length === 0) return;
+            var first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        });
+    }
 }
 
 function closeRoomModal() {
     var modal = document.getElementById('room-change-warning');
-    if (modal) modal.remove();
+    if (modal) {
+        if (modal._escHandler) document.removeEventListener('keydown', modal._escHandler);
+        modal.remove();
+    }
+    // Return focus to the element that triggered the modal
+    if (window._roomChangeTrigger) {
+        window._roomChangeTrigger.focus();
+        window._roomChangeTrigger = null;
+    }
 }
 
 function acceptRoomChangeInline() {

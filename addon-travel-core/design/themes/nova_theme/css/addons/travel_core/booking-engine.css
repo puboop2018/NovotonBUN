@@ -267,8 +267,8 @@ button.nvt-field-input:active {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     border: 1px solid var(--nvt-border, #e0e0e0);
     background: var(--nvt-bg, #ffffff);
@@ -847,7 +847,7 @@ button.nvt-field-input:active {
         font-size: 13px;
     }
     .nvt-calendar-day-price {
-        font-size: 9px;
+        font-size: 10px;
     }
     .nvt-guest-popup {
         left: 0;
