@@ -1,0 +1,586 @@
+================================================================================
+  PRODUCT / HOTEL FEATURE AUDIT — NOVOTON vs SPHINX
+  Which features can be shared by travel-core?
+  Date: 2026-03-20
+================================================================================
+
+
+EXECUTIVE SUMMARY
+-----------------
+
+This audit inventories every product/hotel feature assigned by the Novoton and
+Sphinx provider addons, compares them side-by-side, and determines which ones
+can (and should) be managed by the shared travel-core addon.
+
+Key findings:
+  - Novoton defines 8 feature types; Sphinx uses only 4
+  - 3 feature types are already shared via travel_core (stars, property_type,
+    facility) — but only Sphinx actually uses the shared system
+  - Novoton runs a parallel mapping table (hotel_feature_mappings) instead of
+    using travel_core's travel_feature_map
+  - 4 features could be added to travel_core: resort, board/meals, travel_group,
+    beach_access
+  - 2 canonical code sets exist in travel_core but are NOT assigned as product
+    features by either provider: board and room_type
+
+
+================================================================================
+1. COMPLETE FEATURE INVENTORY
+================================================================================
+
+1.1 Novoton Holidays — 8 Feature Types
+----------------------------------------
+
+ #  Feature Type       CS-Cart Type  Mode     Canonical Codes
+ -- ----------------   ------------- -------  ------------------------------------------
+ 1  property_rating    S (SelectBox) STRICT   1, 2, 3, 4, 5
+ 2  meals              M (Checkbox)  STRICT   AI, UAI, FB, FB+, HB, HB+, BB, RO, SC
+ 3  hotel_facility     M (Checkbox)  DYNAMIC  Facility IDs from novoton_facilities table
+ 4  room_facility      M (Checkbox)  DYNAMIC  Facility IDs from novoton_facilities table
+ 5  resort             S (SelectBox) DYNAMIC  City/destination names (title-cased)
+ 6  property_type      S (SelectBox) STRICT   hotel, motel, hostel, villa, apartment,
+                                              boarding-house, cabin, chalet, guest-house,
+                                              resort
+ 7  travel_group       M (Checkbox)  STRICT   adults_only (virtual) + facility IDs
+ 8  beach_access       S (SelectBox) STRICT   Facility IDs of type 'beach_access'
+
+ Data source: hotel_feature_mappings table (Novoton-specific)
+ Assignment: FeatureMapper (instance-based, DI via Container)
+ Mapping: addon-novoton-holidays/.../Constants.php lines 169-230
+
+
+1.2 Sphinx Holidays — 4 Feature Types
+---------------------------------------
+
+ #  Feature Type       CS-Cart Type  Canonical Codes
+ -- ----------------   ------------- ------------------------------------------
+ 1  stars              S (SelectBox) 1, 2, 3, 4, 5
+ 2  property_type      S (SelectBox) hotel, villa, apartment, resort, hostel,
+                                     guest_house, chalet, motel
+ 3  resort             S (SelectBox) Dynamic destination names (title-cased)
+ 4  facility           M (Checkbox)  78 canonical codes from Sphinx API
+                                     (mapped from 120+ Sphinx facility IDs)
+
+ Data source: travel_feature_map + travel_api_alias tables (shared)
+ Assignment: SphinxFeatureAssigner → Travel Core FeatureMapper::resolve()
+ Mapping: addon-sphinx-holidays/.../src/Services/SphinxFeatureAssigner.php
+
+
+1.3 Travel Core — 5 Canonical Code Sets (Shared Hub)
+------------------------------------------------------
+
+ #  Feature Type    Codes  Canonical Codes
+ -- --------------- -----  ------------------------------------------
+ 1  board            7     AI, UAI, FB, HB, BB, RO, SC
+ 2  room_type        8     SGL, DBL, TWIN, TRP, QUAD, SUITE, APT, STUDIO
+ 3  stars            5     1, 2, 3, 4, 5
+ 4  property_type    8     hotel, villa, apartment, resort, hostel,
+                           guest_house, chalet, motel
+ 5  facility       102     78 used by Sphinx, 102 total seeded codes
+                           (food, wellness, parking, services, room
+                           amenities, outdoor, security, accessibility)
+
+ Data source: travel_feature_map table
+ Aliases: travel_api_alias table (per-provider)
+ Service: FeatureMapper (static, addon-travel-core/.../Services/FeatureMapper.php)
+
+
+================================================================================
+2. SIDE-BY-SIDE COMPARISON MATRIX
+================================================================================
+
+ Feature            Novoton         Sphinx          Travel Core     Status
+ ================== =============== =============== =============== ==========
+ Star Rating        property_rating stars           stars           OVERLAP
+                    (own table)     (shared table)  (5 codes)
+
+ Board / Meals      meals           NOT assigned    board           GAP
+                    (9 codes)       as feature      (7 codes)
+
+ Room Type          NOT assigned    NOT assigned    room_type       UNUSED
+                    as feature      as feature      (8 codes)
+
+ Hotel Facilities   hotel_facility  facility        facility        OVERLAP
+                    (own table,     (shared table,  (102 codes)
+                    dynamic IDs)    78 codes)
+
+ Room Facilities    room_facility   (merged into    (merged into    SPLIT vs
+                    (own table,     facility)       facility)       MERGED
+                    dynamic IDs)
+
+ Resort/Location    resort          resort          NOT defined     GAP
+                    (own table)     (via settings)  as feature type
+
+ Property Type      property_type   property_type   property_type   OVERLAP
+                    (own table,     (shared table,  (8 codes)
+                    10 codes)       8 codes)
+
+ Travel Group       travel_group    NOT present     NOT defined     NOVOTON
+                    (virtual +                                      ONLY
+                    facility IDs)
+
+ Beach Access       beach_access    NOT present     NOT defined     NOVOTON
+                    (facility IDs)                                  ONLY
+
+
+================================================================================
+3. DETAILED DISCREPANCIES
+================================================================================
+
+3.1 Star Rating / Property Rating
+----------------------------------
+  Novoton:  Uses "property_rating" as feature_type in hotel_feature_mappings
+            Codes: '1' through '5'
+            Setting: addons.novoton_holidays.feature_id_property_rating
+
+  Sphinx:   Uses "stars" as feature_type in travel_feature_map
+            Codes: '1' through '5'
+            Setting: addons.travel_core.feature_id_property_rating
+
+  Issue:    Same feature, different names, different tables, different settings.
+            Both resolve to the same CS-Cart feature_id in practice.
+
+  Can share: YES — canonical codes are identical.
+
+
+3.2 Board / Meals
+------------------
+  Novoton:  Assigns "meals" as M-type product feature (checkboxes)
+            Codes: AI, UAI, FB, FB+, HB, HB+, BB, RO, SC (9 codes)
+            Source: hotelData['boards'] array from Novoton API
+
+  Sphinx:   Does NOT assign board/meals as a product feature.
+            Board codes are only used in booking verification/search filtering.
+            Normalizer has normalizeBoardCode() but SphinxFeatureAssigner
+            does not call it.
+
+  Travel Core: Has "board" canonical type with 7 codes (AI, UAI, FB, HB, BB, RO, SC)
+               Missing FB+ and HB+ (Novoton-specific "plus" variants)
+
+  Can share: YES — but requires:
+    1. Add FB+ and HB+ to travel_core seed data
+    2. Sphinx must start assigning board as product feature (if desired)
+    3. Add feature_id_meals setting to travel_core (currently only in novoton)
+
+
+3.3 Room Type
+--------------
+  Novoton:  Does NOT assign room_type as a product feature
+  Sphinx:   Does NOT assign room_type as a product feature
+  Travel Core: Has "room_type" with 8 canonical codes (SGL, DBL, TWIN, etc.)
+
+  Status:   UNUSED as product feature by both providers. Canonical codes exist
+            only for booking/search alias resolution.
+
+  Can share: N/A — not used as product feature. May become relevant if
+             room-level filtering is added to storefront search.
+
+
+3.4 Facilities (Hotel + Room)
+------------------------------
+  Novoton:  Splits into 3 separate feature types:
+            - hotel_facility (M) — hotel-level amenities
+            - room_facility (M) — room-level amenities
+            - beach_access (S) — beach proximity classification
+            All use Novoton facility IDs as provider_code.
+            Dynamic: unknown IDs auto-registered.
+
+  Sphinx:   Single "facility" type (M) — all amenities in one bucket.
+            Uses canonical codes from travel_feature_map.
+            78 canonical codes mapped from 120+ Sphinx facility IDs.
+
+  Travel Core: Has "facility" type with 102 canonical codes organized
+               into 9 categories (food, wellness, parking, services,
+               room amenities, outdoor, security, accessibility, smoking).
+
+  Issue:    Novoton's 3-way split (hotel/room/beach) vs Sphinx's flat model.
+            The canonical codes overlap but the CS-Cart features they map to
+            may differ:
+            - Sphinx: all facilities → one or a few CS-Cart features
+            - Novoton: hotel_facility → feature X, room_facility → feature Y,
+              beach_access → feature Z
+
+  Can share: PARTIALLY — The canonical codes can be shared. The CS-Cart
+             feature_id assignment per facility depends on the admin's
+             preference (split vs flat). travel_feature_map already supports
+             per-row cscart_feature_id, enabling both models.
+
+
+3.5 Resort / Location
+-----------------------
+  Novoton:  "resort" feature type, S (SelectBox), DYNAMIC
+            Codes: title-cased city names from novoton_resorts table
+            Setting: addons.novoton_holidays.feature_id_resort
+
+  Sphinx:   "resort" feature in SphinxFeatureAssigner
+            Codes: title-cased destination_name from Sphinx API
+            Setting: addons.travel_core.feature_id_location
+
+  Travel Core: No "resort" canonical type defined in travel_feature_map.
+               Has a setting (feature_id_location) but no seeded codes.
+
+  Can share: YES — but resort is inherently dynamic (destination names are
+             open-ended). Sharing requires:
+             1. Add "resort" as a feature_type in travel_feature_map
+             2. Seed common destination names
+             3. Support dynamic registration of new resorts
+
+
+3.6 Property Type
+------------------
+  Novoton:  "property_type" feature, S (SelectBox), STRICT
+            Codes: hotel, motel, hostel, villa, apartment, boarding-house,
+                   cabin, chalet, guest-house, resort (10 codes)
+
+  Sphinx:   "property_type" feature, S (SelectBox)
+            Codes: hotel, villa, apartment, resort, hostel, guest_house,
+                   chalet, motel (8 codes)
+
+  Travel Core: "property_type" canonical type with 8 codes:
+               hotel, villa, apartment, resort, hostel, guest_house,
+               chalet, motel
+
+  Issue:    Novoton has 2 extra codes not in travel_core:
+            - boarding-house (uses hyphen; travel_core has no equivalent)
+            - cabin (not in travel_core)
+
+  Can share: YES — add boarding_house and cabin to travel_core seed data.
+             Normalize Novoton's "boarding-house" to "boarding_house" (no hyphen).
+
+
+3.7 Travel Group
+-----------------
+  Novoton:  "travel_group" feature, M (Checkbox), STRICT
+            Codes: "adults_only" (virtual) + facility IDs marked as
+                   facility_type='travel_group' in novoton_facilities
+            Used to flag adults-only hotels + travel group classification
+
+  Sphinx:   NOT present. Sphinx API does not provide travel group data.
+
+  Travel Core: NOT defined as a canonical type.
+
+  Can share: YES (future) — if Sphinx or other providers start providing
+             travel group data. Define "travel_group" in travel_feature_map
+             with canonical codes: adults_only, family_friendly, seniors, etc.
+             Currently Novoton-specific.
+
+
+3.8 Beach Access
+-----------------
+  Novoton:  "beach_access" feature, S (SelectBox), STRICT
+            Codes: facility IDs from novoton_facilities where
+                   facility_type='beach_access'
+            Represents proximity to beach (e.g., beachfront, 100m, 500m)
+
+  Sphinx:   NOT present. Sphinx API does not provide beach access data
+            as a distinct feature. Some beach info may exist in facilities.
+
+  Travel Core: NOT defined as a canonical type.
+
+  Can share: YES (future) — define "beach_access" canonical codes in
+             travel_feature_map (beachfront, near_beach, no_beach, etc.)
+             Currently Novoton-specific.
+
+
+================================================================================
+4. SHAREABILITY MATRIX
+================================================================================
+
+ Feature            Already   Can Be    Effort   Priority  Notes
+                    Shared?   Shared?
+ ================== ========= ========= ======== ========= ====================
+ Star Rating        Partial*  YES       LOW      HIGH      Same codes, just
+                                                           unify table usage
+
+ Board / Meals      No        YES       MEDIUM   HIGH      Add FB+, HB+ to
+                                                           travel_core; Sphinx
+                                                           may opt in later
+
+ Property Type      Partial*  YES       LOW      HIGH      Add cabin,
+                                                           boarding_house to
+                                                           travel_core
+
+ Facilities         Partial*  YES       MEDIUM   HIGH      Novoton must map
+                                                           its facility IDs
+                                                           to canonical codes
+
+ Resort             No        YES       MEDIUM   MEDIUM    Dynamic by nature;
+                                                           add as feature type
+                                                           to travel_feature_map
+
+ Room Type          N/A       FUTURE    LOW      LOW       Not used as product
+                                                           feature by either
+
+ Travel Group       No        FUTURE    LOW      LOW       Novoton-only for now
+
+ Beach Access       No        FUTURE    LOW      LOW       Novoton-only for now
+
+ * "Partial" = Sphinx uses shared table, Novoton uses own table
+
+
+================================================================================
+5. GAP ANALYSIS — What travel_core Needs
+================================================================================
+
+5.1 Missing Canonical Codes
+-----------------------------
+  Type            Missing Codes             Source
+  --------------- ------------------------- -------------------------
+  board           FB+, HB+                  Novoton-specific "plus"
+                                            variants
+  property_type   boarding_house, cabin      Novoton has these types
+  resort          (entire type missing)      Dynamic — no seeded codes
+  travel_group    (entire type missing)      adults_only + custom
+  beach_access    (entire type missing)      beachfront, near_beach, etc.
+
+
+5.2 Missing Feature Type Definitions
+--------------------------------------
+  travel_feature_map currently supports: board, room_type, stars,
+  property_type, facility
+
+  To add:
+    - resort          (S) — dynamic destination names
+    - travel_group    (M) — travel group classification
+    - beach_access    (S) — beach proximity classification
+
+
+5.3 Missing Addon Settings
+----------------------------
+  travel_core currently has settings for:
+    feature_id_property_rating, feature_id_meals, feature_id_room_type,
+    feature_id_property_type, feature_id_location
+
+  Duplicated in novoton_holidays:
+    feature_id_property_rating, feature_id_meals, feature_id_hotel_facility,
+    feature_id_room_facility, feature_id_resort, feature_id_property_type,
+    feature_id_travel_group, feature_id_beach_access
+
+  To consolidate: Move all feature_id_* settings to travel_core.
+  Add missing:
+    - feature_id_hotel_facility  (or reuse facility with sub-types)
+    - feature_id_room_facility   (or reuse facility with sub-types)
+    - feature_id_travel_group
+    - feature_id_beach_access
+
+
+5.4 Missing Alias Registrations
+---------------------------------
+  Novoton currently registers aliases ONLY for board and room_type in
+  travel_api_alias. It does NOT register aliases for:
+    - stars (uses hotel_feature_mappings instead)
+    - property_type (uses hotel_feature_mappings instead)
+    - facilities (uses Novoton facility IDs in hotel_feature_mappings)
+    - resort (uses hotel_feature_mappings instead)
+
+  For full sharing, Novoton should register all its provider codes as
+  aliases in travel_api_alias, just as Sphinx does.
+
+
+5.5 Facility ID Mapping Gap
+------------------------------
+  Novoton:  Uses integer facility IDs (e.g., "42", "117") as provider_code
+            in hotel_feature_mappings. These are Novoton-specific IDs.
+
+  Sphinx:   Uses integer facility IDs that are mapped to canonical codes
+            via travel_api_alias (e.g., Sphinx ID "31" → "fitness").
+
+  Gap:      Novoton facility IDs are NOT mapped to travel_core canonical
+            codes. To share the facility system, Novoton must register its
+            facility IDs as aliases to canonical codes in travel_api_alias.
+
+  Scope:    Novoton has ~200+ facility IDs. Each must be mapped to one of
+            the 102 canonical facility codes (or new codes added as needed).
+
+
+================================================================================
+6. RECOMMENDED ACTIONS
+================================================================================
+
+Phase 1: Extend travel_core Canonical Codes (LOW effort)
+---------------------------------------------------------
+  1. Add FB+ and HB+ to board type in fn_travel_core_seed_feature_map()
+  2. Add boarding_house and cabin to property_type
+  3. Add "resort" feature_type to travel_feature_map (no seeded codes —
+     dynamic by nature)
+  4. Add "travel_group" feature_type with canonical codes:
+     adults_only, family_friendly, seniors
+  5. Add "beach_access" feature_type with canonical codes:
+     beachfront, near_beach_100m, near_beach_500m, no_beach
+
+
+Phase 2: Consolidate Addon Settings (MEDIUM effort)
+-----------------------------------------------------
+  1. Move feature_id_hotel_facility, feature_id_room_facility,
+     feature_id_travel_group, feature_id_beach_access from
+     novoton_holidays to travel_core addon settings
+  2. Remove duplicate settings from novoton_holidays
+  3. Update all references in novoton_holidays to read from
+     travel_core settings instead
+
+
+Phase 3: Register Novoton Aliases (MEDIUM effort)
+---------------------------------------------------
+  1. Map Novoton facility IDs to travel_core canonical facility codes.
+     This is the biggest task — requires a mapping table of ~200 IDs.
+  2. Register Novoton star rating codes (1-5) as aliases
+  3. Register Novoton property type codes as aliases
+  4. Register Novoton resort names as aliases (or use dynamic resolution)
+  5. Add to fn_novoton_holidays_seed_travel_aliases()
+
+
+Phase 4: Migrate Novoton to Shared Table (HIGH effort, FUTURE)
+----------------------------------------------------------------
+  1. Modify Novoton FeatureMapper to resolve canonical codes from
+     travel_feature_map via FeatureMapper::resolve() instead of
+     hotel_feature_mappings
+  2. Keep hotel_feature_mappings for Novoton-specific metadata only:
+     - strict/dynamic mode
+     - variant_source (auto/manual)
+     - mapping_source (seed/auto/manual)
+     - last_synced_at
+  3. Two-table approach: travel_feature_map for canonical resolution,
+     hotel_feature_mappings for extended sync metadata
+  4. Update the admin UI to show both layers
+
+
+Phase 5: Enable Shared Features in Sphinx (OPTIONAL)
+------------------------------------------------------
+  1. Add board/meals assignment to SphinxFeatureAssigner
+     (board codes already resolved by normalizer, just not assigned)
+  2. Add travel_group detection if Sphinx API provides it
+  3. Add beach_access classification if derivable from Sphinx facilities
+
+
+================================================================================
+7. CANONICAL CODE REFERENCE — FULL LISTING
+================================================================================
+
+7.1 Board / Meals — 9 codes (7 in travel_core + 2 to add)
+-----------------------------------------------------------
+  Code   EN Name                  RO Name                   In TC?
+  -----  ----------------------   ----------------------    ------
+  AI     All Inclusive            All Inclusive              YES
+  UAI    Ultra All Inclusive      Ultra All Inclusive        YES
+  FB     Full Board               Pensiune Completa         YES
+  FB+    Full Board Plus          Pensiune Completa Plus    NO *
+  HB     Half Board               Demipensiune              YES
+  HB+    Half Board Plus          Demipensiune Plus         NO *
+  BB     Bed & Breakfast          Mic Dejun Inclus          YES
+  RO     Room Only                Doar Cazare               YES
+  SC     Self Catering            Self Catering             YES
+
+  * = Must be added to travel_core
+
+
+7.2 Stars — 5 codes
+---------------------
+  Code   EN Name     RO Name      In TC?
+  -----  ---------   ----------   ------
+  1      1 Star      1 Stea       YES
+  2      2 Stars     2 Stele      YES
+  3      3 Stars     3 Stele      YES
+  4      4 Stars     4 Stele      YES
+  5      5 Stars     5 Stele      YES
+
+
+7.3 Property Type — 10 codes (8 in travel_core + 2 to add)
+------------------------------------------------------------
+  Code            EN Name          RO Name          In TC?
+  --------------- ---------------  ---------------  ------
+  hotel           Hotel            Hotel            YES
+  villa           Villa            Vila             YES
+  apartment       Apartment        Apartament       YES
+  resort          Resort           Resort           YES
+  hostel          Hostel           Hostel           YES
+  guest_house     Guest House      Pensiune         YES
+  chalet          Chalet           Chalet           YES
+  motel           Motel            Motel            YES
+  boarding_house  Boarding House   Pensiune         NO *
+  cabin           Cabin            Cabana           NO *
+
+  * = Must be added to travel_core
+
+
+7.4 Room Type — 8 codes (all in travel_core, NOT used as product feature)
+---------------------------------------------------------------------------
+  Code     EN Name          RO Name           In TC?
+  -------  ---------------  ----------------  ------
+  SGL      Single Room      Camera Single     YES
+  DBL      Double Room      Camera Dubla      YES
+  TWIN     Twin Room        Camera Twin       YES
+  TRP      Triple Room      Camera Tripla     YES
+  QUAD     Quadruple Room   Camera Cvadrupla  YES
+  SUITE    Suite            Suite             YES
+  APT      Apartment        Apartament        YES
+  STUDIO   Studio           Studio            YES
+
+
+7.5 Facilities — 102 canonical codes in travel_core
+------------------------------------------------------
+  Category               Count   Examples
+  ---------------------- -----   -----------------------------------
+  Food & Drink            10     kids_menu, restaurant, bar, room_service
+  Wellness & Recreation   18     spa, fitness, pool, massage, tennis
+  Parking & Transport      8     free_parking, airport_transfer, car_rental
+  Front Desk & Services   19     front_desk_24h, tour_desk, babysitting
+  Room Amenities          34     air_conditioning, free_wifi, minibar, safe
+  Outdoor                  4     garden, terrace, sun_terrace
+  Security                10     security_24h, fire_extinguishers, cctv
+  Accessibility            2     disabled_access, stairs_only
+  Smoking Policy           1     no_smoking_all
+
+  Provider alias coverage:
+    Sphinx: 204 alias entries → 78 canonical codes used
+    Novoton: 0 aliases (uses own hotel_feature_mappings table instead)
+
+
+7.6 Travel Group — Novoton only (proposed for travel_core)
+-----------------------------------------------------------
+  Code              EN Name              RO Name
+  ----------------  -------------------  -------------------------
+  adults_only       Adults Only          Exclusiv pentru adulti
+  family_friendly   Family Friendly      Prietenos cu familiile    (proposed)
+  seniors           Seniors              Seniori                   (proposed)
+
+
+7.7 Beach Access — Novoton only (proposed for travel_core)
+-----------------------------------------------------------
+  Current Novoton codes: facility IDs (integers) — need canonical mapping.
+  Proposed canonical codes:
+    beachfront       — Direct beach access
+    near_beach_100m  — Within 100m of beach
+    near_beach_500m  — Within 500m of beach
+    no_beach         — No beach access
+
+
+================================================================================
+8. CONCLUSION
+================================================================================
+
+The feature systems of Novoton and Sphinx overlap significantly but are
+implemented through parallel mechanisms. The biggest wins come from:
+
+  1. IMMEDIATE: Add missing canonical codes (FB+, HB+, boarding_house, cabin)
+     to travel_core — eliminates code drift with almost zero effort.
+
+  2. SHORT-TERM: Add resort, travel_group, and beach_access as feature types
+     in travel_core — prepares the shared hub for full coverage.
+
+  3. MEDIUM-TERM: Map Novoton's ~200 facility IDs to travel_core canonical
+     codes — this is the largest effort but unifies the facility system across
+     providers.
+
+  4. LONG-TERM: Migrate Novoton to resolve from travel_feature_map while
+     keeping hotel_feature_mappings for extended metadata — eliminates the
+     dual-table problem.
+
+The shared travel_core addon is well-positioned to become the single source
+of truth for all product features. The canonical code set is already 80%
+complete; the remaining 20% consists of Novoton-specific codes and two new
+feature types that can be added incrementally.
+
+
+================================================================================
+  END OF REPORT
+================================================================================
