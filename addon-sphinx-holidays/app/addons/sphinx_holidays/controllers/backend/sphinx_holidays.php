@@ -109,34 +109,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save_whitelist') {
         $whitelist = $_REQUEST['whitelist'] ?? [];
-        // Clear existing whitelist
-        db_query("DELETE FROM ?:sphinx_destination_whitelist");
 
-        if (!empty($whitelist) && is_array($whitelist)) {
-            foreach ($whitelist as $entry) {
-                $destId = (int) ($entry['destination_id'] ?? 0);
-                $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
-                if ($destId > 0) {
-                    db_query(
-                        "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
-                         ON DUPLICATE KEY UPDATE selection_type = ?s",
-                        $destId, $selType, $selType
-                    );
+        db_query("START TRANSACTION");
+        try {
+            // Clear existing whitelist
+            db_query("DELETE FROM ?:sphinx_destination_whitelist");
+
+            if (!empty($whitelist) && is_array($whitelist)) {
+                foreach ($whitelist as $entry) {
+                    $destId = (int) ($entry['destination_id'] ?? 0);
+                    $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
+                    if ($destId > 0) {
+                        db_query(
+                            "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
+                             ON DUPLICATE KEY UPDATE selection_type = ?s",
+                            $destId, $selType, $selType
+                        );
+                    }
                 }
             }
-        }
 
-        // Also update the legacy textarea setting with country codes for backward compat
-        $countryCodes = db_get_fields(
-            "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
-             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-             WHERE d.country_code != ''"
-        );
-        $settingVal = implode(',', array_unique($countryCodes));
-        db_query(
-            "UPDATE ?:settings_objects SET value = ?s WHERE addon = 'sphinx_holidays' AND name = 'selected_destinations'",
-            $settingVal
-        );
+            db_query("COMMIT");
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            fn_set_notification('E', __('error'), __('sphinx_holidays.whitelist_save_failed'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
+        }
 
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
@@ -397,17 +395,15 @@ if ($mode === 'manage') {
         ];
     }
 
-    // Summary stats
-    $whitelistedCountryCount = 0;
-    $whitelistedRegionCount = 0;
-    foreach ($whitelistRows as $row) {
-        $type = db_get_field("SELECT type FROM ?:sphinx_destinations WHERE destination_id = ?i", (int) $row['destination_id']);
-        if ($type === 'country') {
-            $whitelistedCountryCount++;
-        } else {
-            $whitelistedRegionCount++;
-        }
-    }
+    // Summary stats — single query instead of N+1
+    $whitelistedTypeCounts = db_get_hash_single_array(
+        "SELECT d.type, COUNT(*) as cnt FROM ?:sphinx_destination_whitelist w
+         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+         GROUP BY d.type",
+        ['type', 'cnt']
+    );
+    $whitelistedCountryCount = (int) ($whitelistedTypeCounts['country'] ?? 0);
+    $whitelistedRegionCount = array_sum($whitelistedTypeCounts) - $whitelistedCountryCount;
 
     // Sample whitelisted city names for summary
     $sampleCities = db_get_fields(

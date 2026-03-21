@@ -129,15 +129,10 @@ class ConfigProvider
     }
 
     /**
-     * Get selected sync targets — country codes, destination names, and/or destination IDs.
+     * @deprecated Use getSelectedCountryCodes() or getAllowedDestinationIds() instead.
+     *             Those methods read from the sphinx_destination_whitelist table.
      *
-     * Setting format: comma-separated, supports three token types:
-     *   - 2-letter alpha codes → country codes (e.g. "GR", "BG")
-     *   - Numeric strings → destination IDs (e.g. "1234")
-     *   - Anything else → destination names resolved from DB (e.g. "Crete", "Rhodes")
-     *
-     * Examples: "GR,Crete" → sync all Greece + Crete region specifically
-     *           "GR,BG,Rhodes" → sync Greece, Bulgaria, + Rhodes by name
+     * Get selected sync targets from the legacy textarea setting.
      *
      * @return array{country_codes: string[], destination_ids: int[]}
      */
@@ -260,25 +255,14 @@ class ConfigProvider
      */
     public static function getSelectedCountryCodes(): array
     {
-        // Priority 1: Derive from whitelist table if populated
         $whitelistCodes = db_get_fields(
             "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
              WHERE d.country_code != ''
              ORDER BY d.country_code"
         );
-        if (!empty($whitelistCodes)) {
-            return $whitelistCodes;
-        }
 
-        // Priority 2: Fall back to textarea setting
-        $targets = self::getSelectedSyncTargets();
-
-        if (!empty($targets['country_codes'])) {
-            return $targets['country_codes'];
-        }
-
-        return [];
+        return !empty($whitelistCodes) ? $whitelistCodes : [];
     }
 
     /**
@@ -322,47 +306,13 @@ class ConfigProvider
             return $cached;
         }
 
-        // Priority 1: Use whitelist table if it has entries
         $whitelistEntries = db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
         if (!empty($whitelistEntries)) {
             $cached = self::resolveWhitelistEntries($whitelistEntries);
-            return $cached;
-        }
-
-        // Priority 2: Fall back to textarea setting
-        $targets = self::getSelectedSyncTargets();
-        $countryCodes = $targets['country_codes'];
-        $extraIds = $targets['destination_ids'];
-
-        if (empty($countryCodes) && empty($extraIds)) {
+        } else {
             $cached = [];
-            return $cached;
         }
 
-        $allIds = [];
-
-        // Resolve country codes → all destination IDs in those countries
-        if (!empty($countryCodes)) {
-            $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
-            $countryDestIds = db_get_fields(
-                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN ($placeholders)",
-                ...$countryCodes
-            );
-            $allIds = array_map('intval', $countryDestIds);
-        }
-
-        // Add explicitly selected IDs + their children
-        if (!empty($extraIds)) {
-            $allIds = array_merge($allIds, $extraIds);
-            $idPlaceholders = implode(',', array_fill(0, count($extraIds), '?i'));
-            $children = db_get_fields(
-                "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id IN ($idPlaceholders)",
-                ...$extraIds
-            );
-            $allIds = array_merge($allIds, array_map('intval', $children));
-        }
-
-        $cached = array_values(array_unique($allIds));
         return $cached;
     }
 

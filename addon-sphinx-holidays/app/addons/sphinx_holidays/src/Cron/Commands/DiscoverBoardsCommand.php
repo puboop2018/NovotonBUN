@@ -564,8 +564,7 @@ class DiscoverBoardsCommand
             }, explode(',', $params['country'])));
         }
 
-        $targets = ConfigProvider::getSelectedSyncTargets();
-        return $targets['country_codes'];
+        return ConfigProvider::getSelectedCountryCodes();
     }
 
     private function formatDuration(int $seconds): string
