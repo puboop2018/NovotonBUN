@@ -7,4 +7,8 @@ $schema['travel_core'] = [
     'permissions' => ['GET', 'POST'],
 ];
 
+$schema['travel_tools'] = [
+    'permissions' => ['GET', 'POST'],
+];
+
 return $schema;

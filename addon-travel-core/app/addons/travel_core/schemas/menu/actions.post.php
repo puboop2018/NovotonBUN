@@ -24,4 +24,10 @@ $schema['travel_feature_mappings.manage'] = [
     'position' => 500,
 ];
 
+$schema['travel_tools.manage'] = [
+    'href'     => 'travel_tools.manage',
+    'text'     => __('travel_core.tools_and_cron'),
+    'position' => 520,
+];
+
 return $schema;
