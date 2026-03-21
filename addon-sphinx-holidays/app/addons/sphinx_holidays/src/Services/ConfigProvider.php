@@ -271,7 +271,7 @@ class ConfigProvider
             "SELECT DISTINCT country_code FROM ?:sphinx_destinations WHERE type = 'country' AND country_code != '' ORDER BY country_code"
         );
 
-        return !empty($rows) ? $rows : ['GR'];
+        return $rows ?: [];
     }
 
     /**
@@ -296,6 +296,59 @@ class ConfigProvider
         }
 
         return true;
+    }
+
+    /**
+     * Get the full set of allowed destination IDs from sync targets.
+     *
+     * Resolves country codes → all destination IDs for those countries,
+     * merges with explicitly selected destination IDs + their children.
+     * Used by circuit, experience, and package route sync services
+     * for client-side filtering.
+     *
+     * @return int[] Destination IDs allowed by sync targets (empty = nothing configured)
+     */
+    public static function getAllowedDestinationIds(): array
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $targets = self::getSelectedSyncTargets();
+        $countryCodes = $targets['country_codes'];
+        $extraIds = $targets['destination_ids'];
+
+        if (empty($countryCodes) && empty($extraIds)) {
+            $cached = [];
+            return $cached;
+        }
+
+        $allIds = [];
+
+        // Resolve country codes → all destination IDs in those countries
+        if (!empty($countryCodes)) {
+            $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
+            $countryDestIds = db_get_fields(
+                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN ($placeholders)",
+                ...$countryCodes
+            );
+            $allIds = array_map('intval', $countryDestIds);
+        }
+
+        // Add explicitly selected IDs + their children
+        if (!empty($extraIds)) {
+            $allIds = array_merge($allIds, $extraIds);
+            $idPlaceholders = implode(',', array_fill(0, count($extraIds), '?i'));
+            $children = db_get_fields(
+                "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id IN ($idPlaceholders)",
+                ...$extraIds
+            );
+            $allIds = array_merge($allIds, array_map('intval', $children));
+        }
+
+        $cached = array_values(array_unique($allIds));
+        return $cached;
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed

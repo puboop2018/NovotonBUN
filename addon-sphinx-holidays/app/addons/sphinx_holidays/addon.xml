@@ -174,7 +174,7 @@
                     </item>
                     <item id="selected_destinations">
                         <type>textarea</type>
-                        <default_value>GR</default_value>
+                        <default_value></default_value>
                         <variants/>
                     </item>
 
@@ -452,10 +452,14 @@
         <item lang="ro" id="sphinx_holidays.circuit_breaker_threshold"><![CDATA[Prag circuit breaker (eșecuri înainte de deschidere)]]></item>
         <item lang="en" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Circuit breaker timeout (seconds)]]></item>
         <item lang="ro" id="sphinx_holidays.circuit_breaker_timeout"><![CDATA[Timeout circuit breaker (secunde)]]></item>
-        <item lang="en" id="sphinx_holidays.hotel_sync_header"><![CDATA[Hotel Sync Settings]]></item>
-        <item lang="ro" id="sphinx_holidays.hotel_sync_header"><![CDATA[Setări Sincronizare Hoteluri]]></item>
-        <item lang="en" id="sphinx_holidays.selected_destinations"><![CDATA[Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)]]></item>
-        <item lang="ro" id="sphinx_holidays.selected_destinations"><![CDATA[Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații (Crete, Rhodes), sau ID-uri destinații (1234)]]></item>
+        <item lang="en" id="sphinx_holidays.hotel_sync_header"><![CDATA[Sync Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.hotel_sync_header"><![CDATA[Setări Sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.selected_destinations"><![CDATA[Sync targets (comma-separated). Applies to: Hotels, Circuits, Experiences, Package Routes. Destinations sync all regardless. Supports: country codes (GR, BG), destination names (Crete, Rhodes), or IDs (1234).]]></item>
+        <item lang="ro" id="sphinx_holidays.selected_destinations"><![CDATA[Ținte sincronizare (separate prin virgulă). Se aplică la: Hoteluri, Circuite, Experiențe, Rute Pachete. Destinațiile se sincronizează toate indiferent. Suportă: coduri țări (GR, BG), nume destinații (Crete, Rhodes), sau ID-uri (1234).]]></item>
+        <item lang="en" id="sphinx_holidays.sync_targets_tooltip"><![CDATA[Filters Hotels, Circuits, Experiences and Package Routes. Destinations sync globally.]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_targets_tooltip"><![CDATA[Filtrează Hoteluri, Circuite, Experiențe și Rute Pachete. Destinațiile se sincronizează global.]]></item>
+        <item lang="en" id="sphinx_holidays.no_sync_targets"><![CDATA[No sync targets configured. Set country codes in addon settings to enable hotel, circuit, experience and package sync.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_sync_targets"><![CDATA[Nu sunt configurate ținte de sincronizare. Setați coduri de țări în setările addon-ului pentru a activa sincronizarea hotelurilor, circuitelor, experiențelor și pachetelor.]]></item>
 
         <item lang="en" id="sphinx_holidays.cron_header"><![CDATA[Cron Settings]]></item>
         <item lang="ro" id="sphinx_holidays.cron_header"><![CDATA[Setări Cron]]></item>

@@ -85,7 +85,7 @@ class HotelRepository
                 (string) ($hotel['description'] ?? ''),
                 (string) ($hotel['short_description'] ?? ''),
                 (string) ($hotel['image_url'] ?? ''),
-                $hotel['facilities_json'] ?? null,
+                $hotel['facilities_json'] ?? '[]',
                 date('Y-m-d H:i:s')
             );
 
@@ -322,7 +322,7 @@ class HotelRepository
     {
         $updated = 0;
         foreach ($boardsByHotel as $hotelId => $boards) {
-            $json = !empty($boards) ? json_encode(array_values(array_unique($boards))) : null;
+            $json = !empty($boards) ? json_encode(array_values(array_unique($boards))) : '[]';
             db_query(
                 "UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s",
                 $json, (string) $hotelId

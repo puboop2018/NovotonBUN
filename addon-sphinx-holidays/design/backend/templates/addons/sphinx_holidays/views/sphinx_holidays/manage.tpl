@@ -29,8 +29,15 @@
         </form>
 
         {if $selected_countries}
-            <span class="muted">
+            <span class="muted" title="{__("sphinx_holidays.sync_targets_tooltip")}">
                 {__("sphinx_holidays.sync_targets")}: <code>{', '|implode:$selected_countries}</code>
+            </span>
+            <a href="{"addons.update&addon=sphinx_holidays"|fn_url}" class="btn btn-micro">
+                <i class="icon-cog"></i> {__("sphinx_holidays.change_settings")}
+            </a>
+        {else}
+            <span class="text-warning">
+                <i class="icon-warning-sign"></i> {__("sphinx_holidays.no_sync_targets")}
             </span>
             <a href="{"addons.update&addon=sphinx_holidays"|fn_url}" class="btn btn-micro">
                 <i class="icon-cog"></i> {__("sphinx_holidays.change_settings")}
@@ -58,7 +65,7 @@
             <div class="stat-label">{__("sphinx_holidays.regions")}</div>
         </div>
         <div class="stat-card warning">
-            <div class="stat-value">{$counts_by_type.city|default:0}</div>
+            <div class="stat-value">{math equation="x+y" x=$counts_by_type.city|default:0 y=$counts_by_type.destination|default:0}</div>
             <div class="stat-label">{__("sphinx_holidays.cities")}</div>
         </div>
     </div>
