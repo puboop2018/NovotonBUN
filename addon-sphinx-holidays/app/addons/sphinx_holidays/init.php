@@ -59,3 +59,16 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         }
     );
 }
+
+// Register addon hooks
+fn_register_hooks(
+    'pre_place_order',                         // Re-verify Sphinx offer prices before order
+    'place_order_post',                        // Submit booking to Sphinx API after order
+    'calculate_cart_items',                     // Preserve stored price for Sphinx bookings
+    'get_product_data_post',                   // Attach hotel data to Sphinx products
+    'gather_additional_product_data_post',     // Pass booking form config to templates
+    'user_login_post',                         // Link session bookings to logged-in user
+    'create_user_post',                        // Link bookings to newly registered users
+    'get_order_info',                          // Admin notification for failed bookings
+    'travel_core_exchange_rates_updated'       // Log exchange rate sync to sphinx_sync_log
+);
