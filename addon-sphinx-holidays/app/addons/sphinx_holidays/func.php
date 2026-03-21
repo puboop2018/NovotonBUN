@@ -52,6 +52,7 @@ function fn_sphinx_holidays_uninstall(): bool
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'sphinx_holidays.%'");
 
     // Drop Sphinx-specific tables (order matters for FK constraints)
+    db_query("DROP TABLE IF EXISTS ?:sphinx_destination_whitelist");
     db_query("DROP TABLE IF EXISTS ?:sphinx_cache");
     db_query("DROP TABLE IF EXISTS ?:sphinx_sync_log");
     db_query("DROP TABLE IF EXISTS ?:sphinx_bookings");
