@@ -179,7 +179,7 @@ class SearchResultFormatter
 
                 // Fetch packages once, reuse across sub-methods
                 $packageRepo = Container::getInstance()->hotelPackageRepository();
-                $packages    = $packageRepo->findByHotelId($hotelId);
+                $packages    = $packageRepo->findByHotelIdFull($hotelId);
 
                 $this->assignPackages($view, $packages);
                 $this->assignActiveEarlyBooking($view, $packages);

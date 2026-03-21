@@ -505,10 +505,10 @@ function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, strin
         'hostel'         => 'Hostel',
         'villa'          => 'Villa',
         'apartment'      => 'Apartments',
-        'boarding-house' => 'Boarding House',
-        'cabin'          => 'Cabin',
-        'chalet'         => 'Chalet',
-        'guest-house'    => 'Guest House',
+        'boarding_house'  => 'Boarding House',
+        'cabin'           => 'Cabin',
+        'chalet'          => 'Chalet',
+        'guest_house'     => 'Guest House',
         'resort'         => 'Resort',
     ];
 

@@ -40,9 +40,10 @@ class AddProductsCommand
         $featureAssigner = Container::getFeatureAssigner();
         $template = ConfigProvider::getProductCategoryTemplate();
 
-        // Parse params: country=GR, limit=100
+        // Parse params: country=GR, limit=100, batch_size=200
         $countryCode = $params['country'] ?? '';
         $limit = (int) ($params['limit'] ?? 0);
+        $batchSize = (int) ($params['batch_size'] ?? 200);
 
         // Country code validation: load valid CS-Cart country codes (read-only from ?:countries)
         $validCountryCodes = db_get_hash_single_array(
@@ -50,16 +51,34 @@ class AddProductsCommand
             ['code', 'code']
         );
 
-        $hotels = $hotelRepo->findUnlinked($countryCode, $limit);
-        $this->output("Found " . count($hotels) . " unlinked hotels.");
-
         $stats = [
             'added'           => 0,
             'skipped'         => 0,
             'failed'          => 0,
             'invalid_country' => 0,
-            'total'           => count($hotels),
+            'total'           => 0,
         ];
+
+        // Process in batches to avoid OOM on large datasets
+        $processed = 0;
+        $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
+
+        while (true) {
+            $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $hotels = $hotelRepo->findUnlinked($countryCode, min($remaining, $effectiveBatch));
+            if (empty($hotels)) {
+                break;
+            }
+
+            if ($stats['total'] === 0) {
+                $this->output("Processing unlinked hotels in batches of {$effectiveBatch}...");
+            }
+
+            $stats['total'] += count($hotels);
 
         foreach ($hotels as $hotel) {
             $hotelId = $hotel['hotel_id'];
@@ -98,7 +117,7 @@ class AddProductsCommand
                 ],
                 $template
             );
-            $categoryId = fn_sphinx_holidays_get_or_create_category($path);
+            $categoryId = fn_travel_core_get_or_create_category($path);
             if (!$categoryId) {
                 $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category)");
                 $stats['failed']++;
@@ -140,6 +159,9 @@ class AddProductsCommand
 
             $this->output("[{$hotelId}] {$hotel['name']} ... ADDED (ID: {$productId})");
             $stats['added']++;
+        }
+
+            $processed += count($hotels);
         }
 
         // Clear FeatureMapper cache to free memory

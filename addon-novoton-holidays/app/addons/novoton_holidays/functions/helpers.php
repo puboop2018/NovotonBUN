@@ -25,7 +25,6 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * @param mixed $selected_countries Countries from settings (array or comma-separated string)
  * @return array List of country names in uppercase
  */
-if (!function_exists('fn_novoton_holidays_parse_countries')) {
 function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): array
 {
     // When called without argument, delegate to ConfigProvider (single source of truth)
@@ -59,7 +58,6 @@ function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): 
 
     return $countries;
 }
-} // end function_exists
 
 /**
  * Check if debug mode is enabled
@@ -103,7 +101,7 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
         try {
             $api = new NovotonApi();
         } catch (\Exception $e) {
-            fn_log_event('novoton', 'error', 'Failed to initialize API: ' . $e->getMessage());
+            fn_log_event('general', 'runtime', 'Failed to initialize API: ' . $e->getMessage());
             return null;
         }
     }
@@ -243,7 +241,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         return $packagesUpdated > 0 ? true : 'no_data';
 
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Price update failed: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Price update failed: ' . $e->getMessage());
         return false;
     }
 }

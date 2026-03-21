@@ -52,6 +52,7 @@
             <label class="control-label">{__("travel_core.dates")}:</label>
             <div class="controls">
                 {include file="common/calendar.tpl" date_id="date_from" date_name="date_from" date_val=$search.date_from extra="placeholder='From'"}
+                <span style="display: inline-block; padding: 0 5px; vertical-align: middle; color: #999;">&mdash;</span>
                 {include file="common/calendar.tpl" date_id="date_to" date_name="date_to" date_val=$search.date_to extra="placeholder='To'"}
             </div>
         </div>

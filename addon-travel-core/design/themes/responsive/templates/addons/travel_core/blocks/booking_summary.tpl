@@ -2,7 +2,6 @@
  * Travel Core - Shared Booking Summary Block
  *
  * Displays booking details in cart/checkout.
- * Works with both travel_booking and novoton_booking extra keys.
  *
  * Usage:
  *   {include file="addons/travel_core/blocks/booking_summary.tpl" product=$product key=$key}
@@ -11,14 +10,11 @@
  * @since 1.0.0
  *}
 
-{* Support both travel_booking and novoton_booking extra keys *}
-{if !empty($product.extra.travel_booking) || !empty($product.extra.novoton_booking)}
+{if !empty($product.extra.travel_booking)}
 
 {* Determine provider and edit dispatch *}
 {if $product.extra.travel_provider}
     {$booking_provider = $product.extra.travel_provider}
-{elseif !empty($product.extra.novoton_booking)}
-    {$booking_provider = 'novoton'}
 {else}
     {$booking_provider = 'unknown'}
 {/if}
@@ -74,12 +70,12 @@
     {/if}
 
     {* Edit booking link *}
-    {if $product.extra.travel_booking_id || $product.extra.novoton_booking_id}
-    {$booking_id = $product.extra.travel_booking_id|default:$product.extra.novoton_booking_id}
+    {if $product.extra.travel_booking_id}
+    {$booking_id = $product.extra.travel_booking_id}
     <div style="margin-top: 10px;">
         <a href="{"`$edit_dispatch`?booking_id=`$booking_id`&cart_id=`$key`"|fn_url}"
            style="color: #fff; background: var(--nvt-btn-primary-bg, #003580); font-size: 12px; text-decoration: none; display: inline-block; padding: 6px 12px; border-radius: 4px;">
-             {__("travel_core.edit_guest_details")|default:__("novoton_holidays.edit_guest_details")|default:"Edit guest details"}
+             {__("travel_core.edit_guest_details")|default:"Edit guest details"}
         </a>
     </div>
     {/if}

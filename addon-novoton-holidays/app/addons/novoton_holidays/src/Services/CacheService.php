@@ -421,12 +421,12 @@ class CacheService implements CacheServiceInterface
             return null;
         }
         
-        // Check expiration
-        if (strtotime($row['expires_at']) < time()) {
+        // Check expiration (expires_at is INT UNSIGNED unix timestamp)
+        if ((int) $row['expires_at'] < time()) {
             $this->deleteFromDatabase($key);
             return null;
         }
-        
+
         $data = json_decode($row['cache_data'], true);
         if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             // Invalid or legacy serialized format — treat as cache miss
@@ -437,7 +437,7 @@ class CacheService implements CacheServiceInterface
         // Store in memory
         self::$memory_cache[$key] = [
             'data' => $data,
-            'expires' => strtotime($row['expires_at'])
+            'expires' => (int) $row['expires_at']
         ];
         
         return $data;
@@ -456,8 +456,8 @@ class CacheService implements CacheServiceInterface
         $data = [
             'cache_key' => $key,
             'cache_data' => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            'expires_at' => date('Y-m-d H:i:s', $expires),
-            'created_at' => date('Y-m-d H:i:s')
+            'expires_at' => $expires,
+            'created_at' => time()
         ];
         
         // Use REPLACE to handle both insert and update
@@ -547,7 +547,7 @@ class CacheService implements CacheServiceInterface
         } else {
             // Clean expired database cache
             $count = db_query(
-                "DELETE FROM ?:novoton_cache WHERE expires_at < NOW()"
+                "DELETE FROM ?:novoton_cache WHERE expires_at < ?i", time()
             );
         }
         
@@ -577,7 +577,7 @@ class CacheService implements CacheServiceInterface
                 "SELECT COUNT(*) FROM ?:novoton_cache"
             );
             $stats['expired_items'] = db_get_field(
-                "SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < NOW()"
+                "SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < ?i", time()
             );
         }
         

@@ -41,6 +41,12 @@ class ConfigProvider
         return (string) self::getSetting('default_currency', 'EUR');
     }
 
+    /** @return array<string, string> Currency code => display symbol */
+    public static function getCurrencySymbols(): array
+    {
+        return ['EUR' => '€', 'USD' => '$', 'GBP' => '£', 'RON' => 'lei', 'BGN' => 'лв'];
+    }
+
     public static function getIgnoreDomains(): string
     {
         return (string) self::getSetting('ignore_domains', '');

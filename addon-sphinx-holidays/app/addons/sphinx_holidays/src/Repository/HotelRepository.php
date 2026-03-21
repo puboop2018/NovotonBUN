@@ -11,6 +11,15 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
 class HotelRepository
 {
     /**
+     * Core columns for hotel listing (excludes large JSON/TEXT columns).
+     */
+    private const LISTING_COLUMNS = 'hotel_id, product_id, name, classification, property_type,
+        destination_id, destination_name, region_id, region_name,
+        country_code, country_name, latitude, longitude,
+        image_url, is_recommended, is_adults_only, rating, rating_count,
+        sync_status, last_synced_at, created_at, updated_at';
+
+    /**
      * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
      *
      * @param array $hotels Array of hotel rows
@@ -126,8 +135,9 @@ class HotelRepository
 
         $offset = ($page - 1) * $perPage;
 
+        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
         $items = db_get_array(
-            "SELECT h.* FROM ?:sphinx_hotels h
+            "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE 1 ?p
              ORDER BY h.country_code ASC, h.name ASC
              LIMIT ?i, ?i",
@@ -151,12 +161,12 @@ class HotelRepository
     }
 
     /**
-     * Get hotels by destination ID.
+     * Get hotels by destination ID (excludes large JSON/TEXT columns).
      */
     public function getByDestination(int $destinationId): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC",
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC",
             $destinationId
         );
     }
@@ -211,13 +221,13 @@ class HotelRepository
     }
 
     /**
-     * Search hotels by name.
+     * Search hotels by name (excludes large JSON/TEXT columns).
      */
     public function search(string $query, int $limit = 20): array
     {
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
-            "SELECT * FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
+            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
             '%' . $escaped . '%',
             $limit
         );
@@ -247,9 +257,10 @@ class HotelRepository
         }
 
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
 
         return db_get_array(
-            "SELECT h.* FROM ?:sphinx_hotels h
+            "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' AND (h.product_id IS NULL OR h.product_id = 0) ?p
              ORDER BY h.country_code ASC, h.name ASC ?p",
             $condition, $limitClause
@@ -263,6 +274,114 @@ class HotelRepository
     {
         return (int) db_get_field(
             "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'"
+        );
+    }
+
+    /**
+     * Get distinct destination_ids for active hotels, filtered by country codes.
+     *
+     * @param string[] $countryCodes Country codes to filter (e.g. ['GR', 'BG'])
+     * @return int[] Distinct destination IDs
+     */
+    public function getDestinationIdsByCountry(array $countryCodes): array
+    {
+        if (empty($countryCodes)) {
+            return db_get_fields(
+                "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0"
+            );
+        }
+
+        $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
+        return db_get_fields(
+            "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0 AND country_code IN ($placeholders)",
+            ...$countryCodes
+        );
+    }
+
+    /**
+     * Get hotel_id → hotel_id map for a given destination (for matching cache deals to hotels).
+     *
+     * @return array<string, string> hotel_id => hotel_id
+     */
+    public function getHotelIdsByDestination(int $destinationId): array
+    {
+        return db_get_hash_single_array(
+            "SELECT hotel_id, hotel_id FROM ?:sphinx_hotels WHERE destination_id = ?i AND sync_status = 'active'",
+            ['hotel_id', 'hotel_id'],
+            $destinationId
+        );
+    }
+
+    /**
+     * Update boards_json for a batch of hotels.
+     *
+     * @param array<string, string[]> $boardsByHotel hotel_id => array of canonical board codes
+     * @return int Number of hotels updated
+     */
+    public function updateBoardsBatch(array $boardsByHotel): int
+    {
+        $updated = 0;
+        foreach ($boardsByHotel as $hotelId => $boards) {
+            $json = !empty($boards) ? json_encode(array_values(array_unique($boards))) : null;
+            db_query(
+                "UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s",
+                $json, (string) $hotelId
+            );
+            $updated++;
+        }
+        return $updated;
+    }
+
+    /**
+     * Get hotels that have boards_json AND a linked product.
+     *
+     * Returns all fields needed by SphinxFeatureAssigner::assignAll().
+     *
+     * @param string $countryCode Optional country filter
+     * @param int $limit Max rows (0 = unlimited)
+     * @param int $offset Starting offset for pagination
+     * @return array List of hotel rows
+     */
+    public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
+    {
+        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        }
+
+        $limitClause = '';
+        if ($limit > 0) {
+            $limitClause = db_quote(" LIMIT ?i, ?i", $offset, $limit);
+        } elseif ($offset > 0) {
+            // MySQL max BIGINT UNSIGNED — effectively "no limit, offset only"
+            $limitClause = db_quote(" LIMIT ?i, 18446744073709551615", $offset);
+        }
+
+        return db_get_array(
+            "SELECT h.hotel_id, h.product_id, h.boards_json, h.name,
+                    h.classification, h.property_type, h.destination_name,
+                    h.facilities_json, h.country_code
+             FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' ?p
+             ORDER BY h.hotel_id ASC ?p",
+            $condition, $limitClause
+        );
+    }
+
+    /**
+     * Count hotels that have boards_json AND a linked product.
+     */
+    public function countWithBoardsAndProduct(string $countryCode = ''): int
+    {
+        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        }
+
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' ?p",
+            $condition
         );
     }
 

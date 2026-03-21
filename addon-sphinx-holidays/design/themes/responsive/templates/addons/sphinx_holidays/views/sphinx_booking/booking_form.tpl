@@ -29,7 +29,7 @@
     {* Price display *}
     <div class="booking-price-box" style="text-align: right; margin-bottom: 20px; padding: 15px; background: #f5f9fc; border-radius: 8px;">
         <div style="font-size: 13px; color: #666;">{__("travel_core.total_price")|default:"Total price"}</div>
-        <div class="price-total" style="font-size: 28px; font-weight: 700; color: #003580;">
+        <div class="price-total" aria-live="polite" aria-atomic="true" style="font-size: 28px; font-weight: 700; color: #003580;">
             {$sphinx_booking_data.total_price|number_format:2:",":"."} {if $sphinx_booking_data.currency == 'EUR'}€{else}{$sphinx_booking_data.currency}{/if}
         </div>
         <div id="price-loading-indicator" style="display: none;"><i class="icon-refresh"></i></div>
@@ -75,9 +75,10 @@
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 200px;">
-                                <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]"
-                                       class="ty-input-text" required placeholder="{__("travel_core.first_name")|default:"First Name"}">
+                                <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_first">{__("travel_core.first_name")|default:"First Name"}</label>
+                                <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_first"
+                                       name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]"
+                                       class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.first_name")|default:"First Name"}">
                                 <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][type]" value="adult">
                                 <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
                                 {if $room_idx == 0 && $smarty.section.adult.index == 1}
@@ -85,13 +86,15 @@
                                 {/if}
                             </div>
                             <div style="flex: 1; min-width: 200px;">
-                                <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][last_name]"
-                                       class="ty-input-text" required placeholder="{__("travel_core.last_name")|default:"Last Name"}">
+                                <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_last">{__("travel_core.last_name")|default:"Last Name"}</label>
+                                <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_last"
+                                       name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][last_name]"
+                                       class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.last_name")|default:"Last Name"}">
                             </div>
                             <div style="flex: 0 0 150px;">
-                                <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
+                                <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_dob">{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
+                                <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_dob"
+                                       name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
                                        class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
                                        onkeydown="TravelBooking.handleDobKeydown(event)"
                                        oninput="TravelBooking.applyDobMask(this)">
@@ -113,23 +116,26 @@
                             </div>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <div style="flex: 1; min-width: 200px;">
-                                    <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                    <input type="text" name="guests[room{$room_num}_child_{$smarty.section.child.index}][first_name]"
-                                           class="ty-input-text" required placeholder="{__("travel_core.first_name")|default:"First Name"}">
+                                    <label for="sphinx_r{$room_num}_c{$smarty.section.child.index}_first">{__("travel_core.first_name")|default:"First Name"}</label>
+                                    <input type="text" id="sphinx_r{$room_num}_c{$smarty.section.child.index}_first"
+                                           name="guests[room{$room_num}_child_{$smarty.section.child.index}][first_name]"
+                                           class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.first_name")|default:"First Name"}">
                                     <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][type]" value="child">
                                     <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][age]" value="{$child_age}">
                                     <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][room]" value="{$room_num}">
                                 </div>
                                 <div style="flex: 1; min-width: 200px;">
-                                    <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                    <input type="text" name="guests[room{$room_num}_child_{$smarty.section.child.index}][last_name]"
-                                           class="ty-input-text" required placeholder="{__("travel_core.last_name")|default:"Last Name"}">
+                                    <label for="sphinx_r{$room_num}_c{$smarty.section.child.index}_last">{__("travel_core.last_name")|default:"Last Name"}</label>
+                                    <input type="text" id="sphinx_r{$room_num}_c{$smarty.section.child.index}_last"
+                                           name="guests[room{$room_num}_child_{$smarty.section.child.index}][last_name]"
+                                           class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.last_name")|default:"Last Name"}">
                                 </div>
                                 <div style="flex: 0 0 150px;">
-                                    <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                    <input type="text" name="guests[room{$room_num}_child_{$smarty.section.child.index}][dob]"
-                                           id="dob_r{$room_num}_c{$smarty.section.child.index}"
-                                           class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
+                                    <label for="dob_r{$room_num}_c{$smarty.section.child.index}">{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
+                                    <input type="text" id="dob_r{$room_num}_c{$smarty.section.child.index}"
+                                           name="guests[room{$room_num}_child_{$smarty.section.child.index}][dob]"
+                                           class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
+                                           required aria-required="true"
                                            onkeydown="TravelBooking.handleDobKeydown(event)"
                                            oninput="TravelBooking.applyDobMask(this)">
                                     <span id="child_age_display_r{$room_num}_c{$smarty.section.child.index}" class="sphinx-age-display" style="font-size: 12px; color: #666;"></span>
@@ -146,12 +152,12 @@
             <h3><i class="icon-envelope"></i> {__("travel_core.contact_info")|default:"Contact Information"}</h3>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 200px;">
-                    <label>{__("travel_core.email")|default:"Email"}</label>
-                    <input type="email" name="contact[email]" class="ty-input-text" placeholder="email@example.com">
+                    <label for="sphinx_contact_email">{__("travel_core.email")|default:"Email"}</label>
+                    <input type="email" id="sphinx_contact_email" name="contact[email]" class="ty-input-text" placeholder="email@example.com">
                 </div>
                 <div style="flex: 1; min-width: 200px;">
-                    <label>{__("travel_core.phone")|default:"Phone"}</label>
-                    <input type="tel" name="contact[phone]" class="ty-input-text" placeholder="+40...">
+                    <label for="sphinx_contact_phone">{__("travel_core.phone")|default:"Phone"}</label>
+                    <input type="tel" id="sphinx_contact_phone" name="contact[phone]" class="ty-input-text" placeholder="+40...">
                 </div>
             </div>
         </div>

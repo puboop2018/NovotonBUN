@@ -213,15 +213,15 @@ class AddProductsCommand extends AbstractCronCommand
         $normalizer = $container->novotonNormalizer();
         $facilityRepo = $container->facilityRepository();
 
-        // Star rating
+        // Star rating — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
         if (!empty($hotel['star_rating']) && (int) $hotel['star_rating'] >= 1) {
             $code = $normalizer->normalizeStarRating((string) $hotel['star_rating']);
             if ($code !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_PROPERTY_RATING, $code);
+                $featureMapper->assignFeatureViaCore($productId, 'stars', $code);
             }
         }
 
-        // Board types (from hotel data if available)
+        // Board types — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
         $hotelData = fn_novoton_holidays_get_hotel_data($hotelId);
         if (!empty($hotelData['boards'])) {
             $boardCodes = [];
@@ -233,7 +233,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
             }
             if (!empty($boardCodes)) {
-                $featureMapper->assignMultipleToProduct($productId, Constants::FEATURE_TYPE_MEALS, array_unique($boardCodes));
+                $featureMapper->assignMultipleViaCore($productId, 'board', array_unique($boardCodes));
             }
         }
 
@@ -265,11 +265,11 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Property type
+        // Property type — uses shared travel_core mapping
         if (!empty($hotel['property_type'])) {
             $code = $normalizer->normalizePropertyType($hotel['property_type']);
             if ($code !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_PROPERTY_TYPE, $code);
+                $featureMapper->assignFeatureViaCore($productId, 'property_type', $code);
             }
         }
     }

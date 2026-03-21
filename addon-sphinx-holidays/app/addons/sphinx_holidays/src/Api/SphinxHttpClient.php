@@ -11,6 +11,12 @@ namespace Tygh\Addons\SphinxHolidays\Api;
  */
 class SphinxHttpClient
 {
+    private const CURL_TIMEOUT = 30;
+    private const CURL_CONNECT_TIMEOUT = 10;
+    private const RATE_LIMIT_PAUSE_DEFAULT = 5;
+    private const RATE_LIMIT_MAX_WAIT = 120;
+    private const RATE_LIMIT_FALLBACK_WAIT = 60;
+
     private string $baseUrl;
     private string $apiKey;
     private int $maxRetries;
@@ -101,7 +107,7 @@ class SphinxHttpClient
             if ($this->rateLimitRemaining !== null && $this->rateLimitRemaining <= 2 && $this->rateLimitRemaining > 0) {
                 $pauseSeconds = ($this->rateLimitReset !== null)
                     ? max(1, min(30, $this->rateLimitReset - time()))
-                    : 5;
+                    : self::RATE_LIMIT_PAUSE_DEFAULT;
                 $this->log("Approaching rate limit (remaining={$this->rateLimitRemaining}). Pausing {$pauseSeconds}s.");
                 sleep($pauseSeconds);
             }
@@ -123,8 +129,8 @@ class SphinxHttpClient
             $opts = [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER     => $headers,
-                CURLOPT_TIMEOUT        => 30,
-                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT        => self::CURL_TIMEOUT,
+                CURLOPT_CONNECTTIMEOUT => self::CURL_CONNECT_TIMEOUT,
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders'],
             ];
@@ -166,9 +172,9 @@ class SphinxHttpClient
                 } elseif ($this->rateLimitReset !== null) {
                     $waitSeconds = max(1, $this->rateLimitReset - time());
                 } else {
-                    $waitSeconds = 60;
+                    $waitSeconds = self::RATE_LIMIT_FALLBACK_WAIT;
                 }
-                $waitSeconds = min($waitSeconds, 120);
+                $waitSeconds = min($waitSeconds, self::RATE_LIMIT_MAX_WAIT);
                 $this->lastError = "Rate limited. Waiting {$waitSeconds}s.";
                 // Always log rate limit events (operationally important)
                 error_log("[SphinxHttpClient] Rate limited on {$method} {$url}. Waiting {$waitSeconds}s. Remaining: {$this->rateLimitRemaining}, Limit: {$this->rateLimitLimit}");

@@ -88,40 +88,16 @@ function readConfig(el) {
 
 /**
  * Main initialisation function.
- * Looks for mount points by [data-travel-booking] attribute or legacy IDs.
+ * Finds mount points by [data-travel-booking] attribute and renders React roots.
  */
 function init() {
-    // Modern: find all [data-travel-booking] elements
     const mountPoints = document.querySelectorAll('[data-travel-booking]');
-    if (mountPoints.length > 0) {
-        mountPoints.forEach(el => {
-            loadTranslations(el);
-            const config = readConfig(el);
-            if (!config.mode) config.mode = el.dataset.travelBooking || 'product';
-            createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
-        });
-        return;
-    }
-
-    // Legacy: look for specific element IDs (backwards compatibility with novoton)
-    const legacyMounts = [
-        { id: 'novoton-booking-root',       mode: 'product' },
-        { id: 'novoton-search-form-root',   mode: 'search' },
-        { id: 'novoton-homepage-form-root', mode: 'homepage' },
-        { id: 'travel-booking-root',        mode: 'product' },
-        { id: 'travel-search-form-root',    mode: 'search' },
-        { id: 'travel-homepage-form-root',  mode: 'homepage' },
-    ];
-
-    for (const { id, mode } of legacyMounts) {
-        const el = document.getElementById(id);
-        if (el) {
-            loadTranslations(el);
-            const config = readConfig(el);
-            config.mode = mode;
-            createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
-        }
-    }
+    mountPoints.forEach(el => {
+        loadTranslations(el);
+        const config = readConfig(el);
+        if (!config.mode) config.mode = el.dataset.travelBooking || 'product';
+        createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
+    });
 }
 
 /**
@@ -161,5 +137,3 @@ window.TravelBooking = {
     toDateString,
 };
 
-// Backwards compatibility alias
-window.NovotonBooking = window.TravelBooking;

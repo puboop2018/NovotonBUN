@@ -102,7 +102,16 @@ function fn_sphinx_holidays_seed_aliases(): void
         'Fără masă'            => 'RO',
         'Room Only'            => 'RO',
         'ROOM ONLY'            => 'RO',
+        'RO'                   => 'RO',
         'Self Catering'        => 'SC',
+        'SELF CATERING'        => 'SC',
+        'FULL BOARD'           => 'FB',
+        'HALF BOARD'           => 'HB',
+        'BED AND BREAKFAST'    => 'BB',
+        'BUFFET BREAKFAST'     => 'BB',
+        'ULTRA ALL INCLUSIVE'  => 'UAI',
+        'PLATINUM ALL INCLUSIVE' => 'AI',
+        'ALL INCLUSIVE PLUS'   => 'AI',
     ];
 
     // Room type aliases (prefix match)
@@ -523,12 +532,9 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
         return;
     }
 
-    // Support both legacy SPH_ and new SPX product code prefixes
     $code = $product_data['product_code'];
     if (strpos($code, 'SPX') === 0) {
         $hotel_id = substr($code, 3);
-    } elseif (strpos($code, 'SPH_') === 0) {
-        $hotel_id = substr($code, 4);
     } else {
         return;
     }

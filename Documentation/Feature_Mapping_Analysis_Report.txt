@@ -1,0 +1,541 @@
+================================================================================
+  FEATURE MAPPING ARCHITECTURE — ANALYSIS REPORT
+  Date: 2026-03-20
+================================================================================
+
+EXECUTIVE SUMMARY
+-----------------
+
+The NovotonBUN codebase implements a dual-layer Feature Mapping system across
+three addons (travel-core, novoton-holidays, sphinx-holidays) that translates
+provider API values into CS-Cart product feature variants. The architecture is
+fundamentally sound — it cleanly separates a shared canonical hub (travel_core)
+from provider-specific adapters (novoton, sphinx). However, the system has
+accumulated significant code duplication between the two provider addons, uses
+an inconsistent design paradigm (static vs instance-based), and maintains two
+partially overlapping mapping tables. This report documents the current state,
+identifies concrete improvement opportunities, and provides prioritized
+recommendations.
+
+
+================================================================================
+1. ARCHITECTURE OVERVIEW — CURRENT STATE
+================================================================================
+
+1.1 The Two Mapping Systems
+----------------------------
+
+SYSTEM A: Novoton Holidays (Instance-based, hotel_feature_mappings table)
+
+  Flow:  API Raw Value
+           → NovotonNormalizer (canonical code)
+           → hotel_feature_mappings lookup
+           → FeatureMapper.assignFeatureToProduct()
+           → product_features_values (S: overwrite, M: merge)
+
+  Key files:
+  - FeatureMapper.php          (586 lines, instance-based, DI via Container)
+  - FeatureMappingRepository   (293 lines, interface + implementation)
+  - Constants.php              (8 feature types, strict/dynamic classification)
+
+SYSTEM B: Travel Core (Static, travel_feature_map + travel_api_alias tables)
+
+  Flow:  API Raw Value
+           → travel_api_alias lookup (exact > prefix > contains)
+           → travel_feature_map canonical code
+           → FeatureMapper::resolve() static call
+           → Provider-specific assignment (SphinxFeatureAssigner)
+
+  Key files:
+  - FeatureMapper.php          (149 lines, all-static methods)
+  - SphinxFeatureAssigner.php  (275 lines, uses Travel Core FeatureMapper)
+
+
+1.2 Database Tables
+--------------------
+
+Table: hotel_feature_mappings (Novoton-specific)
+  - 14 columns including provider, feature_type, provider_code, variant_source,
+    mapping_source, last_synced_at, created_at, updated_at
+  - Supports strict/dynamic mode per feature type
+  - Tracks variant_source (auto/manual) to protect admin edits
+  - Supports audit trail with timestamps
+
+Table: travel_feature_map (Shared canonical hub)
+  - 10 columns: feature_type, canonical_code, display names, cscart IDs
+  - 268+ seeded canonical codes at install time
+  - Provider-agnostic — no provider column
+
+Table: travel_api_alias (Provider-specific aliases)
+  - Links api_source + api_value to a travel_feature_map row
+  - Supports match_type: exact, prefix, contains, regex
+  - Allows multiple providers to share canonical codes
+
+
+1.3 Feature Type Classification (Novoton)
+-------------------------------------------
+
+  Strict (unknown codes logged + skipped):
+    - property_rating, meals, property_type, travel_group, beach_access
+
+  Dynamic (unknown codes auto-registered):
+    - hotel_facility, room_facility, resort
+
+  Sphinx uses Travel Core's canonical codes directly and has no strict/dynamic
+  concept — unmapped values are simply skipped.
+
+
+================================================================================
+2. PER-ADDON ANALYSIS
+================================================================================
+
+2.1 addon-travel-core — Shared Canonical Hub
+----------------------------------------------
+
+  Class: Tygh\Addons\TravelCore\Services\FeatureMapper
+  File:  addon-travel-core/.../src/Services/FeatureMapper.php
+
+  Design: All-static utility class with per-request in-memory cache.
+
+  Methods:
+    resolve()        — Single API value → canonical mapping (priority-ordered SQL)
+    resolveMany()    — Bulk resolve (exact match only, no priority ordering)
+    toVariantId()    — Convenience wrapper for resolve() → variant_id
+    getDisplayName() — Language-aware display name from canonical code
+    addAlias()       — Register a new API alias
+    allCodes()       — Get all canonical codes for a feature type
+    clearCache()     — Manual cache invalidation
+
+  Strengths:
+    + Compact, focused API (149 lines total)
+    + Priority-based matching in resolve() (exact > prefix > contains)
+    + In-memory cache prevents repeated DB hits during a single request
+    + Clean two-table design separates canonical definitions from API aliases
+    + Seeded with 268+ canonical codes at install time
+
+  Weaknesses:
+    - All-static design prevents dependency injection and unit testing
+    - resolveMany() only does exact matching — ignores prefix/contains aliases
+    - No mechanism for strict/dynamic feature type handling
+    - clearCache() must be called manually — no automatic invalidation
+    - No audit trail (no last_synced_at, no mapping_source tracking)
+    - getDisplayName() does direct DB query per call — no caching
+
+
+2.2 addon-novoton-holidays — Provider Adapter
+-----------------------------------------------
+
+  Class: Tygh\Addons\NovotonHolidays\Services\FeatureMapper
+  File:  addon-novoton-holidays/.../src/Services/FeatureMapper.php
+
+  Design: Instance-based service with dependency injection via Container.
+  Dependencies: FeatureMappingRepositoryInterface (interface-based DI).
+
+  Methods:
+    assignFeatureToProduct()     — Single S/M feature assignment
+    assignMultipleToProduct()    — Batch with diff-based sync for M-type
+    getDisplayName()             — Language-aware display name
+    getFeatureName()             — CS-Cart feature description lookup
+    verifyCsCartFeatureType()    — Cache vs actual type validation
+    createVariantFromMapping()   — Public wrapper for variant auto-creation
+
+  Private methods:
+    ensureVariantExists()        — 4-step variant resolution (check → manual lock
+                                   → name match → auto-create)
+    findVariantByName()          — 3-pass fuzzy matching (exact → case-insensitive
+                                   → normalized)
+    normalizeName()              — Strip non-alnum, collapse whitespace, lowercase
+    createCsCartVariant()        — Create variant + descriptions per language
+    assignSelectBox()            — S-type: DELETE old + INSERT new (with skip-if-same)
+    assignCheckbox()             — M-type: INSERT if not present
+    assignMultipleCheckboxes()   — Diff-based sync: add new, remove stale
+    handleUnmapped()             — Strict: log+skip; Dynamic: auto-register
+    getActiveLanguages()         — Cached active language codes from CS-Cart
+
+  Strengths:
+    + Proper DI with interface (testable, mockable)
+    + Smart 3-pass variant name matching prevents duplicates
+    + Diff-based sync for M-type features (add new, remove stale)
+    + Variant source tracking prevents overwriting admin edits
+    + Strict/Dynamic classification provides fine-grained control
+    + Skip-if-same optimization in assignSelectBox()
+    + Comprehensive audit trail (last_synced_at, mapping_source, variant_source)
+
+  Weaknesses:
+    - CS-Cart assignment logic (assignSelectBox, assignCheckbox, getActiveLanguages)
+      is duplicated nearly identically in SphinxFeatureAssigner
+    - Variant auto-creation logic is duplicated in SphinxFeatureAssigner
+    - Uses its own mapping table rather than the shared travel_feature_map
+
+
+2.3 addon-sphinx-holidays — Provider Adapter
+----------------------------------------------
+
+  Class: Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner
+  File:  addon-sphinx-holidays/.../src/Services/SphinxFeatureAssigner.php
+
+  Design: Instance-based service. Uses Travel Core's static FeatureMapper for
+  alias resolution, then handles CS-Cart assignment directly.
+
+  Methods:
+    assignAll()              — Assign all features from a sphinx_hotels row
+    assignStarRating()       — Star rating (S-type)
+    assignPropertyType()     — Property type (S-type)
+    assignResort()           — Resort/destination (S-type)
+    assignFacilities()       — Facility features from JSON (M-type)
+
+  Private methods:
+    getFeatureId()           — Read from addon settings
+    autoCreateVariant()      — Create variant + descriptions per language
+    assignSelectBoxValue()   — S-type: DELETE + INSERT (no skip-if-same optimization)
+    assignCheckboxValue()    — M-type: INSERT if not present
+    getActiveLanguages()     — Cached active language codes from CS-Cart
+
+  Strengths:
+    + Delegates alias resolution to shared Travel Core FeatureMapper
+    + Clean, focused assignment methods per feature type
+    + Updates travel_feature_map with auto-created variant_id + clears cache
+
+  Weaknesses:
+    - Duplicates CS-Cart assignment logic from Novoton FeatureMapper
+    - Duplicates variant auto-creation logic from Novoton FeatureMapper
+    - No diff-based sync for checkbox features (only adds, never removes stale)
+    - No skip-if-same optimization in assignSelectBoxValue()
+    - No strict/dynamic handling — unmapped values silently skipped
+    - Only handles 4 feature types (stars, property_type, resort, facility)
+      while Novoton handles 8
+
+
+================================================================================
+3. STRENGTHS OF THE CURRENT DESIGN
+================================================================================
+
+  S1. Clean Shared Hub
+      Travel Core provides a single canonical source of truth (268+ codes)
+      that multiple providers can reference via aliases. New providers only
+      need to register their API-specific aliases.
+
+  S2. Provider Isolation
+      Each provider addon has its own adapter layer. Changes to Novoton's
+      mapping logic don't affect Sphinx and vice versa.
+
+  S3. Smart Variant Resolution (Novoton)
+      The 3-pass fuzzy matching (exact → case-insensitive → normalized)
+      prevents duplicate variant creation even when names have minor
+      formatting differences ("All-Inclusive" vs "All Inclusive").
+
+  S4. Strict vs Dynamic Classification (Novoton)
+      Controlled feature types (star ratings, meals) reject unknown values
+      to prevent data pollution, while open-ended types (facilities, resorts)
+      auto-register new values from the API.
+
+  S5. Diff-Based Sync (Novoton)
+      For M-type (Multiple Checkboxes) features, the system calculates a diff
+      between current and new values, adding only new ones and removing stale
+      ones — preventing unnecessary DB churn.
+
+  S6. Admin Protection
+      Variant source tracking (auto/manual) ensures that admin-curated
+      mappings are never overwritten by automated sync processes.
+
+  S7. In-Memory Caching
+      Both systems cache lookups in memory during a request to avoid N+1
+      query patterns during batch hotel sync operations.
+
+
+================================================================================
+4. CODE DUPLICATION INVENTORY
+================================================================================
+
+The following code segments are duplicated between Novoton FeatureMapper and
+Sphinx SphinxFeatureAssigner:
+
+  DUP-1: getActiveLanguages()
+  -----------------------------------------------------------------------
+  Novoton:  FeatureMapper.php:574-584
+  Sphinx:   SphinxFeatureAssigner.php:264-273
+  Status:   IDENTICAL — Same query, same fallback to ['en'], same caching
+  Impact:   Low risk but maintenance burden
+
+  DUP-2: assignSelectBoxValue() / assignSelectBox()
+  -----------------------------------------------------------------------
+  Novoton:  FeatureMapper.php:395-432
+  Sphinx:   SphinxFeatureAssigner.php:212-232
+  Status:   NEAR-IDENTICAL — Novoton has skip-if-same optimization (6 extra
+            lines). Core DELETE + INSERT logic is the same.
+  Impact:   Sphinx misses the skip-if-same optimization, causing unnecessary
+            DB writes during re-sync.
+
+  DUP-3: assignCheckboxValue() / assignCheckbox()
+  -----------------------------------------------------------------------
+  Novoton:  FeatureMapper.php:437-467
+  Sphinx:   SphinxFeatureAssigner.php:237-262
+  Status:   IDENTICAL — Same existence check + INSERT per language
+  Impact:   Low risk but maintenance burden
+
+  DUP-4: autoCreateVariant() / createCsCartVariant()
+  -----------------------------------------------------------------------
+  Novoton:  FeatureMapper.php:356-390
+  Sphinx:   SphinxFeatureAssigner.php:175-207
+  Status:   NEAR-IDENTICAL — Same INSERT into product_feature_variants +
+            descriptions per language. Sphinx additionally updates
+            travel_feature_map.cscart_variant_id and clears cache.
+  Impact:   Any bug fix to variant creation must be applied in two places.
+            Sphinx version lacks the position-from-mapping logic.
+
+
+================================================================================
+5. DESIGN ISSUES
+================================================================================
+
+  ISSUE-1: Two Parallel Mapping Tables           Severity: MEDIUM
+  -----------------------------------------------------------------------
+  hotel_feature_mappings (Novoton) and travel_feature_map (Travel Core)
+  serve overlapping purposes for several feature types (board/meals,
+  property_type, stars). During sync, Novoton reads from
+  hotel_feature_mappings while Sphinx reads from travel_feature_map.
+
+  Risk: If an admin updates a mapping in one table but not the other,
+  the same hotel imported by different providers may get different
+  feature values. There is no synchronization mechanism between the tables.
+
+  Recommendation: Document the boundary clearly — travel_feature_map owns
+  the canonical definitions, hotel_feature_mappings is Novoton's
+  provider-specific cache with extended metadata (strict/dynamic, audit).
+  Consider adding a migration path to have Novoton read canonical data
+  from travel_feature_map while keeping its extended metadata in
+  hotel_feature_mappings.
+
+
+  ISSUE-2: Static vs Instance Design              Severity: MEDIUM
+  -----------------------------------------------------------------------
+  Travel Core FeatureMapper uses all-static methods with a static cache.
+  This prevents:
+    - Unit testing with mock databases
+    - Dependency injection into consuming classes
+    - Multiple instances with different configurations
+    - Proper lifecycle management
+
+  Novoton FeatureMapper uses proper instance-based DI with an interface,
+  which is the better pattern.
+
+  Recommendation: Refactor Travel Core FeatureMapper to instance-based with
+  DI, registered in a shared Container. Keep static facade methods as
+  thin wrappers during migration.
+
+
+  ISSUE-3: resolveMany() Ignores Match Type       Severity: MEDIUM
+  -----------------------------------------------------------------------
+  File: addon-travel-core/.../FeatureMapper.php:83-103
+
+  resolveMany() uses `a.api_value IN (?a)` which only matches exact values.
+  It does not apply prefix/contains matching like resolve() does.
+  Any API values that rely on prefix or contains aliases will silently
+  fail in bulk resolution.
+
+  Recommendation: Either document this limitation clearly, or implement
+  a batched version that applies the same priority matching as resolve().
+  A pragmatic approach: iterate and call resolve() for each value (still
+  benefits from in-memory cache), or use a UNION query approach.
+
+
+  ISSUE-4: No Diff-Based Sync in Sphinx           Severity: LOW-MEDIUM
+  -----------------------------------------------------------------------
+  File: addon-sphinx-holidays/.../SphinxFeatureAssigner.php:126-159
+
+  assignFacilities() uses assignCheckboxValue() which only adds — it never
+  removes facilities that are no longer present in the Sphinx API data.
+  Over time, products accumulate stale facility checkboxes.
+
+  Novoton's assignMultipleCheckboxes() handles this correctly with
+  diff-based sync.
+
+  Recommendation: Extract diff-based sync to a shared helper or trait
+  and use it in SphinxFeatureAssigner.
+
+
+  ISSUE-5: Missing Skip-If-Same in Sphinx          Severity: LOW
+  -----------------------------------------------------------------------
+  File: addon-sphinx-holidays/.../SphinxFeatureAssigner.php:212-232
+
+  assignSelectBoxValue() always does DELETE + INSERT, even when the
+  existing value is already correct. Novoton's assignSelectBox() checks
+  first and skips if already correct. During a sync of thousands of
+  hotels, this causes unnecessary DB write load.
+
+  Recommendation: Add the same skip-if-same check to SphinxFeatureAssigner.
+
+
+  ISSUE-6: Language Hardcoded to EN/RO Columns     Severity: LOW
+  -----------------------------------------------------------------------
+  Both mapping tables use display_name_en and display_name_ro columns
+  instead of a normalized language table. Adding a third language
+  requires schema changes + code changes in multiple files.
+
+  Mitigation: For a two-language system this is pragmatic and acceptable.
+  Only becomes problematic if a third language is needed.
+
+  Recommendation: No immediate action. Document the trade-off. If a third
+  language is ever needed, migrate display names to a separate descriptions
+  table keyed by lang_code.
+
+
+  ISSUE-7: No Shared Interface                     Severity: LOW
+  -----------------------------------------------------------------------
+  Novoton FeatureMapper and Travel Core FeatureMapper have no shared
+  interface despite similar public APIs (resolve, getDisplayName). This
+  prevents polymorphic usage and makes it harder to write provider-agnostic
+  code.
+
+  Recommendation: Define a FeatureResolverInterface in travel_core with
+  resolve() and getDisplayName() methods. Both systems should implement it.
+
+
+  ISSUE-8: Manual Cache Invalidation               Severity: LOW
+  -----------------------------------------------------------------------
+  Travel Core FeatureMapper requires explicit clearCache() calls after
+  mutations. Missing a clearCache() call causes stale data within the
+  same request.
+
+  Novoton's FeatureMappingRepository handles this internally — every
+  mutation method calls clearCache() automatically.
+
+  Recommendation: Apply the same pattern in Travel Core — invalidate
+  cache automatically in addAlias() (already does the INSERT, should
+  also clear). Or switch to a write-through cache.
+
+
+================================================================================
+6. RECOMMENDATIONS — PRIORITIZED
+================================================================================
+
+  Priority 1 — HIGH VALUE, LOW EFFORT
+  =====================================
+
+  R1. Extract Shared CS-Cart Assignment Trait
+      Create: addon-travel-core/.../Traits/CsCartFeatureAssignment.php
+      Methods: assignSelectBoxValue(), assignCheckboxValue(),
+               getActiveLanguages(), createCsCartVariant()
+      Use in: Novoton FeatureMapper, SphinxFeatureAssigner
+      Benefit: Eliminates DUP-1 through DUP-4. Bug fixes in one place.
+      Effort: ~2 hours
+
+  R2. Add Skip-If-Same to Sphinx
+      Add existing-value check before DELETE+INSERT in
+      SphinxFeatureAssigner::assignSelectBoxValue()
+      Benefit: Reduces unnecessary DB writes during bulk sync.
+      Effort: ~15 minutes
+
+  R3. Auto-Invalidate Cache in Travel Core
+      Add self::$cache = [] at the end of addAlias()
+      Benefit: Prevents stale cache bugs.
+      Effort: ~5 minutes
+
+
+  Priority 2 — MEDIUM VALUE, MEDIUM EFFORT
+  ==========================================
+
+  R4. Add Diff-Based Sync to Sphinx Facilities
+      Either use the shared trait from R1 or extract
+      assignMultipleCheckboxes() into the shared trait.
+      Benefit: Prevents stale facility values accumulating on products.
+      Effort: ~1 hour
+
+  R5. Fix resolveMany() Match Type Support
+      Either document the exact-only limitation, or implement a version
+      that calls resolve() per item (leveraging cache).
+      Benefit: Prevents silent resolution failures for prefix/contains aliases.
+      Effort: ~30 minutes
+
+  R6. Document Table Boundary
+      Add clear documentation in Constants.php and the Feature Mapping
+      System docs explaining:
+        - travel_feature_map = canonical definitions (shared)
+        - hotel_feature_mappings = Novoton-specific extended metadata
+        - When to use which table
+        - How they relate to each other
+      Benefit: Prevents admin confusion and developer mistakes.
+      Effort: ~30 minutes
+
+
+  Priority 3 — HIGH VALUE, HIGH EFFORT (FUTURE)
+  ================================================
+
+  R7. Refactor Travel Core FeatureMapper to Instance-Based
+      Convert static methods to instance methods with DI.
+      Register in a shared TravelCore Container.
+      Keep static facades as thin wrappers for backward compatibility
+      during migration.
+      Benefit: Testability, proper DI, consistent design across addons.
+      Effort: ~4 hours (including updating all call sites in Sphinx)
+
+  R8. Define FeatureResolverInterface
+      Create interface in travel_core with resolve() and getDisplayName().
+      Implement in both FeatureMapper classes.
+      Benefit: Enables provider-agnostic feature code.
+      Effort: ~2 hours
+
+  R9. Consider Table Consolidation (Long-term)
+      Evaluate whether hotel_feature_mappings can be reduced to a
+      provider-specific extension of travel_feature_map rather than
+      a parallel system. Keep hotel_feature_mappings for Novoton-specific
+      metadata (strict/dynamic mode, variant_source, mapping_source,
+      last_synced_at) but resolve canonical codes from travel_feature_map.
+      Benefit: Single source of truth for canonical mappings.
+      Effort: ~8 hours (requires careful migration + testing)
+
+
+================================================================================
+7. COMPARISON MATRIX
+================================================================================
+
+  Feature                          Novoton    Travel Core    Sphinx
+  ----------------------------------------------------------------
+  Design paradigm                  Instance   Static         Instance
+  Dependency injection             Yes (DI)   No             Partial
+  Interface-based                  Yes        No             No
+  Mapping table                    Own        Shared         Uses shared
+  Strict/Dynamic modes             Yes        No             No
+  Variant auto-creation            Yes        No             Yes (dup)
+  3-pass fuzzy name matching       Yes        No             No
+  Diff-based checkbox sync         Yes        No             No
+  Skip-if-same optimization        Yes        No             No
+  In-memory caching                Yes        Yes            Yes (dup)
+  Auto cache invalidation          Yes        Manual         N/A
+  Variant source tracking          Yes        No             No
+  Audit trail (timestamps)         Yes        No             No
+  Bulk resolution                  Yes        Yes (partial)  No
+  Priority-based matching          No         Yes (single)   Via TC
+  Alias system (multi-match)       No         Yes            Via TC
+  Feature types supported          8          5              4
+
+
+================================================================================
+8. CONCLUSION
+================================================================================
+
+The Feature Mapping system is architecturally well-designed at the macro level.
+The shared canonical hub (travel_core) with provider-specific adapters is the
+right pattern for a multi-provider system. The Novoton FeatureMapper in
+particular demonstrates excellent engineering: DI, interface-based repository,
+3-pass fuzzy matching, diff-based sync, and admin protection.
+
+The primary area for improvement is code duplication. Four significant code
+blocks are duplicated between Novoton and Sphinx, with the Sphinx versions
+missing optimizations present in Novoton. Extracting a shared trait (R1) would
+eliminate this duplication and ensure both providers benefit from the same
+optimizations.
+
+The secondary area is the inconsistent design paradigm (static vs instance)
+between Travel Core and Novoton FeatureMapper. While functional, this creates
+a testing barrier and architectural inconsistency that should be addressed in
+a future refactoring cycle.
+
+The system is NOT critically broken — it works correctly for its current scope.
+The recommendations above are ordered by value/effort ratio to guide incremental
+improvement without requiring a rewrite.
+
+
+================================================================================
+  END OF REPORT
+================================================================================

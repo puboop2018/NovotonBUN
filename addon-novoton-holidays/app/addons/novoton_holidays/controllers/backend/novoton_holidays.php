@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -346,8 +347,8 @@ if ($mode == 'room_price') {
     }
 
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
 
     Tygh::$app['view']->assign('hotel_id', $hotel_id);
     Tygh::$app['view']->assign('check_in', $check_in);
@@ -423,8 +424,8 @@ if ($mode == 'test_hotel_request') {
 if ($mode == 'test_alternative_rs') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
     $id_num = $_REQUEST['id_num'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+30 days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+37 days'));
+    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
+    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
 
     Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
     Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));

@@ -14,6 +14,12 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+/** Star-rating label fallbacks by locale. */
+const NOVOTON_STAR_LABELS = [
+    'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
+    'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
+];
+
 /**
  * Escape a CSV field to prevent formula injection.
  *
@@ -100,7 +106,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
     }
     
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send cron report: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send cron report: no admin email found');
         return false;
     }
 
@@ -123,7 +129,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
     $email_data = [
         'import_type_label' => $type_label,
         'country' => $country ?: 'ALL',
-        'date' => date('d.m.Y H:i'),
+        'date' => date('d.m.Y H:i T'),
         'summary' => [
             'added'    => $summary['added'] ?? 0,
             'updated'  => $summary['updated'] ?? 0,
@@ -172,7 +178,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
         ], 'A', CART_LANGUAGE);
 
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send cron report email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send cron report email: ' . $e->getMessage());
     }
 
     // Clean up old reports (once a day)
@@ -198,7 +204,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
     $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
 
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send price alert email: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send price alert email: no admin email found');
         return false;
     }
 
@@ -230,7 +236,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
             'template_code' => 'novoton_holidays_price_alert',
         ], 'A', CART_LANGUAGE);
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send price alert email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send price alert email: ' . $e->getMessage());
         return false;
     }
 }
@@ -252,7 +258,7 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
     $admin_email = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getAdminEmail();
 
     if (empty($admin_email)) {
-        fn_log_event('novoton', 'error', 'Cannot send price discrepancy email: no admin email found');
+        fn_log_event('general', 'runtime', 'Cannot send price discrepancy email: no admin email found');
         return false;
     }
 
@@ -295,7 +301,7 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
             'template_code' => 'novoton_holidays_price_discrepancy',
         ], 'A', CART_LANGUAGE);
     } catch (\Exception $e) {
-        fn_log_event('novoton', 'error', 'Failed to send price discrepancy email: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', 'Failed to send price discrepancy email: ' . $e->getMessage());
         return false;
     }
 }
@@ -356,7 +362,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
             $featureMapper = $container->featureMapper();
         } catch (\Exception $e) {
-            // Fall through to hardcoded labels
+            fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
         $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
@@ -374,10 +380,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         ]);
 
         // Star rating labels — use FeatureMapper display names with hardcoded fallback
-        $star_labels_fallback = [
-            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
-            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars']
-        ];
+        $star_labels_fallback = NOVOTON_STAR_LABELS;
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
@@ -402,6 +405,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
+                    if ($pi === null) continue;
                     if (!empty($pi['season_price'])) {
                         $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
                         foreach ($sp_list as $sp) {
@@ -415,19 +419,14 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             }
             $boards_str = implode(',', array_unique($board_names));
 
-            // Generate star label from FeatureMapper or fallback
+            // Generate star label from travel_core FeatureMapper or fallback
             foreach (['ro', 'en'] as $lang) {
                 $star_label = '';
                 if ($stars >= 1 && $stars <= 5) {
-                    if ($featureMapper) {
-                        $star_label = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                            (string) $stars,
-                            $lang
-                        ) ?? $star_labels_fallback[$lang][$stars - 1];
-                    } else {
-                        $star_label = $star_labels_fallback[$lang][$stars - 1];
-                    }
+                    $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+                        ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
+                        : '';
+                    $star_label = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
                 }
 
                 $csv_lines[] = implode(';', [
@@ -509,13 +508,10 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
             $featureMapper = $container->featureMapper();
         } catch (\Exception $e) {
-            // Fall through to hardcoded labels
+            fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
-        $star_labels_fallback = [
-            'ro' => ['1 stea', '2 stele', '3 stele', '4 stele', '5 stele'],
-            'en' => ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
-        ];
+        $star_labels_fallback = NOVOTON_STAR_LABELS;
 
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
@@ -549,6 +545,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
+                    if ($pi === null) continue;
                     if (!empty($pi['season_price'])) {
                         $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
                         foreach ($sp_list as $sp) {
@@ -566,15 +563,10 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
             foreach (['ro', 'en'] as $lang) {
                 $star_value = '';
                 if ($stars >= 1 && $stars <= 5) {
-                    if ($featureMapper) {
-                        $star_value = $featureMapper->getDisplayName(
-                            \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                            (string) $stars,
-                            $lang
-                        ) ?? $star_labels_fallback[$lang][$stars - 1];
-                    } else {
-                        $star_value = $star_labels_fallback[$lang][$stars - 1];
-                    }
+                    $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+                        ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
+                        : '';
+                    $star_value = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
                 }
 
                 $product_node = $dom->createElement('product');

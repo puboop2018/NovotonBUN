@@ -33,6 +33,7 @@ function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details 
     // Decode priceinfo if available
     if (!empty($pkg['priceinfo_data'])) {
         $priceinfo = json_decode($pkg['priceinfo_data'], true);
+        if ($priceinfo === null) return $packageData;
         if ($priceinfo) {
             $packageData['priceinfo'] = $priceinfo;
 
@@ -95,6 +96,7 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
     $hotelInfoJson = $hotel['hotel_data'] ?? '';
     if (!empty($hotelInfoJson)) {
         $hotelInfo = json_decode($hotelInfoJson, true);
+        if ($hotelInfo === null) return $hotel;
         if ($hotelInfo) {
             if (isset($hotelInfo['rooms'])) {
                 $hotel['rooms'] = $hotelInfo['rooms'];
@@ -277,6 +279,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     }
 
     $priceinfo = json_decode($package['priceinfo_data'], true);
+    if ($priceinfo === null) return [];
     if (empty($priceinfo) || empty($priceinfo['season_price'])) {
         return [];
     }
@@ -376,7 +379,9 @@ function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?arr
         return null;
     }
 
-    return json_decode($pkg['priceinfo_data'], true);
+    $data = json_decode($pkg['priceinfo_data'], true);
+    if ($data === null) return null;
+    return $data;
 }
 
 /**
@@ -404,7 +409,9 @@ function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_n
         return null;
     }
 
-    return json_decode($pkg['priceinfo_data'], true);
+    $data = json_decode($pkg['priceinfo_data'], true);
+    if ($data === null) return null;
+    return $data;
 }
 
 /**
@@ -782,11 +789,8 @@ function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_r
         return false;
     }
 
-    return $featureMapper->assignFeatureToProduct(
-        (int) $product_id,
-        \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-        $code
-    );
+    // Uses shared travel_core mapping (travel_feature_map + travel_api_alias)
+    return $featureMapper->assignFeatureViaCore((int) $product_id, 'stars', $code);
 }
 
 /**
@@ -887,8 +891,8 @@ function fn_novoton_holidays_add_product_image($product_id, $image_url, $is_main
  *
  * Populates mapping rows for:
  * - Star ratings (1-5) — strict, type S
- * - Board types (AI/UAI/FB/FB+/HB/HB+/BB/RO/SC) — strict, type M
- * - Property types (hotel/motel/hostel/villa/apartment/boarding-house/cabin) — strict, type S
+ * - Board types — managed by travel_core (travel_feature_map + travel_api_alias)
+ * - Property types — managed by travel_core (travel_feature_map + travel_api_alias)
  * - Hotel facilities from novoton_facilities (type='hotel') — dynamic, type M
  * - Room facilities from novoton_facilities (type='room') — dynamic, type M
  * - Resorts from novoton_resorts — dynamic, type S
@@ -923,103 +927,18 @@ function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton')
     };
 
     // ── Star Ratings (1-5) ──
-    $starFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING);
-    if ($starFeatureId > 0) {
-        $csType = $getActualFeatureType($starFeatureId, 'S');
-        $starNames = [
-            '1' => ['en' => '1 star',  'ro' => '1 stea'],
-            '2' => ['en' => '2 stars', 'ro' => '2 stele'],
-            '3' => ['en' => '3 stars', 'ro' => '3 stele'],
-            '4' => ['en' => '4 stars', 'ro' => '4 stele'],
-            '5' => ['en' => '5 stars', 'ro' => '5 stele'],
-        ];
-        foreach ($starNames as $code => $names) {
-            $repo->save([
-                'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING,
-                'provider_code' => $code,
-                'cs_cart_feature_id' => $starFeatureId,
-                'cs_cart_feature_type' => $csType,
-                'display_name_en' => $names['en'],
-                'display_name_ro' => $names['ro'],
-                'position' => (int) $code * 10,
-                'is_active' => 'Y',
-                'mapping_source' => 'seed',
-            ]);
-            $seeded++;
-        }
-    } else {
-        $skipped += 5;
-    }
+    // Managed by travel_core (travel_feature_map + travel_api_alias tables).
+    // Aliases seeded in fn_novoton_holidays_seed_travel_aliases().
+    // Legacy hotel_feature_mappings rows for property_rating are no longer created.
 
     // ── Board Types ──
-    $boardFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS);
-    if ($boardFeatureId > 0) {
-        $csType = $getActualFeatureType($boardFeatureId, 'M');
-        $boards = [
-            'AI'  => ['en' => 'All Inclusive',       'ro' => 'All Inclusive',       'pos' => 10],
-            'UAI' => ['en' => 'Ultra All Inclusive',  'ro' => 'Ultra All Inclusive',  'pos' => 20],
-            'FB'  => ['en' => 'Full Board',           'ro' => 'Pensiune Completă',   'pos' => 30],
-            'FB+' => ['en' => 'Full Board Plus',      'ro' => 'Pensiune Completă Plus', 'pos' => 40],
-            'HB'  => ['en' => 'Half Board',           'ro' => 'Demipensiune',        'pos' => 50],
-            'HB+' => ['en' => 'Half Board Plus',      'ro' => 'Demipensiune Plus',   'pos' => 60],
-            'BB'  => ['en' => 'Bed & Breakfast',      'ro' => 'Mic Dejun Inclus',    'pos' => 70],
-            'RO'  => ['en' => 'Room Only',            'ro' => 'Doar Cazare',         'pos' => 80],
-            'SC'  => ['en' => 'Self Catering',        'ro' => 'Self Catering',       'pos' => 90],
-        ];
-        foreach ($boards as $code => $data) {
-            $repo->save([
-                'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS,
-                'provider_code' => $code,
-                'cs_cart_feature_id' => $boardFeatureId,
-                'cs_cart_feature_type' => $csType,
-                'display_name_en' => $data['en'],
-                'display_name_ro' => $data['ro'],
-                'position' => $data['pos'],
-                'is_active' => 'Y',
-                'mapping_source' => 'seed',
-            ]);
-            $seeded++;
-        }
-    } else {
-        $skipped += 9;
-    }
+    // Managed by travel_core (travel_feature_map + travel_api_alias tables).
+    // Aliases seeded in fn_novoton_holidays_seed_travel_aliases().
+    // FB+ and HB+ map to FB and HB respectively for product feature filtering.
 
     // ── Property Types ──
-    $propFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_TYPE);
-    if ($propFeatureId > 0) {
-        $csType = $getActualFeatureType($propFeatureId, 'S');
-        $propTypes = [
-            'hotel'          => ['en' => 'Hotel',          'ro' => 'Hotel',          'pos' => 10],
-            'motel'          => ['en' => 'Motel',          'ro' => 'Motel',          'pos' => 20],
-            'hostel'         => ['en' => 'Hostel',         'ro' => 'Hostel',         'pos' => 30],
-            'villa'          => ['en' => 'Villa',          'ro' => 'Vilă',           'pos' => 40],
-            'apartment'      => ['en' => 'Apartment',      'ro' => 'Apartament',     'pos' => 50],
-            'boarding-house' => ['en' => 'Boarding House',  'ro' => 'Pensiune',       'pos' => 60],
-            'cabin'          => ['en' => 'Cabin',          'ro' => 'Cabană',         'pos' => 70],
-            'chalet'         => ['en' => 'Chalet',         'ro' => 'Chalet',         'pos' => 80],
-            'guest-house'    => ['en' => 'Guest House',    'ro' => 'Pensiune',       'pos' => 90],
-            'resort'         => ['en' => 'Resort',         'ro' => 'Resort',         'pos' => 100],
-        ];
-        foreach ($propTypes as $code => $data) {
-            $repo->save([
-                'provider' => $provider,
-                'feature_type' => \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_TYPE,
-                'provider_code' => $code,
-                'cs_cart_feature_id' => $propFeatureId,
-                'cs_cart_feature_type' => $csType,
-                'display_name_en' => $data['en'],
-                'display_name_ro' => $data['ro'],
-                'position' => $data['pos'],
-                'is_active' => 'Y',
-                'mapping_source' => 'seed',
-            ]);
-            $seeded++;
-        }
-    } else {
-        $skipped += 10;
-    }
+    // Managed by travel_core (travel_feature_map + travel_api_alias tables).
+    // Aliases seeded in fn_novoton_holidays_seed_travel_aliases().
 
     // ── Travel Group (adults_only + facility IDs mapped to travel_group) ──
     $travelGroupFeatureId = $getFeatureId(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TRAVEL_GROUP);

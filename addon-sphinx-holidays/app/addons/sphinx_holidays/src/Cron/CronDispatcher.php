@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron;
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
@@ -34,6 +36,8 @@ class CronDispatcher
         'order_status'    => OrderStatusSyncCommand::class,
         'cache_refresh'   => CacheRefreshCommand::class,
         'add_products'    => AddProductsCommand::class,
+        'discover_boards' => DiscoverBoardsCommand::class,
+        'assign_boards'   => AssignBoardsCommand::class,
         'cleanup'         => CleanupCommand::class,
         'full'            => FullSyncCommand::class,
     ];
@@ -83,7 +87,7 @@ class CronDispatcher
 
         // Acquire file lock to prevent concurrent execution of the same mode
         $lockFile = $this->getLockPath($mode);
-        $lockFp = @fopen($lockFile, 'w');
+        $lockFp = fopen($lockFile, 'w');
 
         if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
             fclose($lockFp);

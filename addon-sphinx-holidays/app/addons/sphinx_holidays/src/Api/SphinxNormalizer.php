@@ -14,6 +14,13 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 class SphinxNormalizer implements ProviderNormalizerInterface
 {
+    /**
+     * Collects unrecognized board names during normalization.
+     * Callers can retrieve and report these via getUnknownBoards().
+     * @var array<string, int>  raw_value => occurrence count
+     */
+    private static array $unknownBoards = [];
+
     /** Board code mapping: Sphinx meal names → canonical codes */
     private const BOARD_MAP = [
         // Romanian
@@ -34,6 +41,9 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         'bed & breakfast'      => 'BB',
         'room only'            => 'RO',
         'b&b'                  => 'BB',
+        'buffet breakfast'     => 'BB',
+        'platinum all inclusive' => 'AI',
+        'ro'                   => 'RO',
     ];
 
     /** Room type prefix mapping */
@@ -84,7 +94,29 @@ class SphinxNormalizer implements ProviderNormalizerInterface
             }
         }
 
+        // Track unrecognized board names for reporting
+        if ($lower !== '') {
+            self::$unknownBoards[$lower] = (self::$unknownBoards[$lower] ?? 0) + 1;
+        }
+
         return null;
+    }
+
+    /**
+     * Get unrecognized board names collected during normalization.
+     * @return array<string, int> raw_value => occurrence count
+     */
+    public static function getUnknownBoards(): array
+    {
+        return self::$unknownBoards;
+    }
+
+    /**
+     * Clear the unknown boards collector.
+     */
+    public static function clearUnknownBoards(): void
+    {
+        self::$unknownBoards = [];
     }
 
     public function normalizeRoomTypeCode(mixed $rawValue): ?string

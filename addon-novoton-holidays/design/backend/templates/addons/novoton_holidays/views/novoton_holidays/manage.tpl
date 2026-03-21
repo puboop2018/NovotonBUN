@@ -36,7 +36,7 @@
             </div>
             <div class="novoton-stat-row">
                 <span>Cancelled</span>
-                <span>{$stats.bookings.cancelled|default:0}</span>
+                <span class="novoton-badge novoton-badge-danger">{$stats.bookings.cancelled|default:0}</span>
             </div>
         </div>
 
@@ -139,7 +139,10 @@
                 Smart sync with resume capability. First run syncs all hotels, then daily syncs only new/changed hotels.
                 Automatically does full re-sync every 6 months.
             </p>
-            <div class="novoton-cron-url cron-url-box">{$cron_urls.hotel_info_batched}</div>
+            <div class="novoton-cron-url cron-url-box" style="position: relative;">
+                <code style="display: block; padding: 8px 70px 8px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; word-break: break-all; cursor: text;" onclick="this.ownerDocument.defaultView.getSelection().selectAllChildren(this)">{$cron_urls.hotel_info_batched}</code>
+                <button type="button" class="novoton-btn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 3px 8px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim()).then(function(){ldelim}var b=event.target;b.textContent='Copied!';setTimeout(function(){ldelim}b.textContent='Copy';{rdelim},1500);{rdelim})">Copy</button>
+            </div>
             <div class="cron-actions">
                 <a href="{$cron_urls.hotel_info_batched}" target="_blank" class="novoton-btn novoton-btn-success">Run Now</a>
                 <a href="{$cron_urls.hotel_info_batched}&status=1" target="_blank" class="novoton-btn">Check Status</a>
@@ -193,7 +196,8 @@
         {/if}
 
         {* Cron Jobs Table *}
-        <p><strong>Cron Jobs:</strong></p>
+        <details>
+        <summary style="cursor: pointer; font-weight: bold; padding: 8px 0; user-select: none;">Cron Jobs</summary>
         <table class="novoton-table">
             <tr>
                 <th style="width: 180px;">Job</th>
@@ -268,11 +272,12 @@
             Please set the <strong>Cron Access Key</strong> in <a href="{"addons.update?addon=novoton_holidays"|fn_url}">addon settings</a> to enable cron jobs.
         </div>
         {/if}
+    </details>
     </div>
 
     {** Excluded Resorts Management **}
-    <div class="novoton-section">
-        <h3>[E] Excluded Resorts</h3>
+    <details class="novoton-section">
+        <summary style="cursor: pointer; font-weight: bold; font-size: 16px; padding: 8px 0; user-select: none;">[E] Excluded Resorts</summary>
         <p class="muted">Select resorts to EXCLUDE when adding hotels as products. Hotels from excluded resorts will be skipped.</p>
 
         {if $resorts_by_country}
@@ -348,12 +353,12 @@
             Run the "Hotel List Sync" cron job first to load resort data from the API.
         </div>
         {/if}
-    </div>
+    </details>
 
     {** Recent Sync Logs **}
     {if $recent_syncs}
-    <div class="novoton-section">
-        <h3>[A] Recent Sync Activity</h3>
+    <details class="novoton-section">
+        <summary style="cursor: pointer; font-weight: bold; font-size: 16px; padding: 8px 0; user-select: none;">[A] Recent Sync Activity</summary>
         <table class="novoton-table">
             <tr>
                 <th>Date</th>
@@ -386,7 +391,7 @@
             </tr>
             {/foreach}
         </table>
-    </div>
+    </details>
     {/if}
 
 </div>

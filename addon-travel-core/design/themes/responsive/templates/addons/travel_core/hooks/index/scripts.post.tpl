@@ -8,7 +8,7 @@
  * @since 1.0.0
  *}
 
-{$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
+{$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
 
 {* Shared utilities *}
 <script src="{$config.current_location}/js/addons/addon-travel-core/utils.js?v={$cache_ver}" defer></script>

@@ -208,12 +208,12 @@ final class Constants
 
     // ========== Addon Settings Keys (Feature Mapping) ==========
 
-    public const SETTING_FEATURE_ID_PROPERTY_RATING = 'addons.novoton_holidays.feature_id_property_rating';
-    public const SETTING_FEATURE_ID_MEALS           = 'addons.novoton_holidays.feature_id_meals';
+    public const SETTING_FEATURE_ID_PROPERTY_RATING = 'addons.travel_core.feature_id_property_rating';
+    public const SETTING_FEATURE_ID_MEALS           = 'addons.travel_core.feature_id_meals';
     public const SETTING_FEATURE_ID_HOTEL_FACILITY  = 'addons.novoton_holidays.feature_id_hotel_facility';
     public const SETTING_FEATURE_ID_ROOM_FACILITY   = 'addons.novoton_holidays.feature_id_room_facility';
     public const SETTING_FEATURE_ID_RESORT          = 'addons.novoton_holidays.feature_id_resort';
-    public const SETTING_FEATURE_ID_PROPERTY_TYPE   = 'addons.novoton_holidays.feature_id_property_type';
+    public const SETTING_FEATURE_ID_PROPERTY_TYPE   = 'addons.travel_core.feature_id_property_type';
     public const SETTING_FEATURE_ID_TRAVEL_GROUP    = 'addons.novoton_holidays.feature_id_travel_group';
     public const SETTING_FEATURE_ID_BEACH_ACCESS    = 'addons.novoton_holidays.feature_id_beach_access';
 
@@ -369,6 +369,12 @@ final class Constants
 
     /** Default check-in offset for automatic price checks (days from today) */
     public const PRICE_CHECK_OFFSET_DAYS = 30;
+
+    /** Default check-in offset for test/diagnostic forms (days from today) */
+    public const DEFAULT_CHECKIN_DAYS_AHEAD = 30;
+
+    /** Default stay duration in nights for test/diagnostic forms */
+    public const DEFAULT_STAY_NIGHTS = 7;
 
     // ========== Date Formats ==========
     // Shared date formats are in TravelConstants (DATETIME_FORMAT, DATE_FORMAT)

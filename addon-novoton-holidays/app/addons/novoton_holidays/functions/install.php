@@ -272,6 +272,41 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         }
     }
 
+    // Star rating aliases (Novoton uses simple '1'-'5' codes, same as canonical)
+    $starAliases = ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5'];
+    foreach ($starAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
+
+    // Property type aliases (Novoton canonical codes match travel_core)
+    $propertyTypeAliases = [
+        'hotel'          => 'hotel',
+        'villa'          => 'villa',
+        'apartment'      => 'apartment',
+        'resort'         => 'resort',
+        'hostel'         => 'hostel',
+        'guest_house'    => 'guest_house',
+        'chalet'         => 'chalet',
+        'motel'          => 'motel',
+        'boarding_house' => 'boarding_house',
+        'cabin'          => 'cabin',
+    ];
+    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
+            $canonicalCode
+        );
+        if ($mapId > 0) {
+            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        }
+    }
+
     // Clear resolve cache after batch alias inserts
     $featureMapper::clearCache();
 }
@@ -330,7 +365,7 @@ function fn_novoton_holidays_setup_db(): void
         [
             'table'   => '?:novoton_hotels',
             'column'  => 'property_type',
-            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest-house,resort,hostel,motel,boarding-house,cabin' AFTER `star_rating`",
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `property_type` varchar(20) DEFAULT 'hotel' COMMENT 'Detected: hotel,villa,apartment,chalet,guest_house,resort,hostel,motel,boarding_house,cabin' AFTER `star_rating`",
             'post_sql' => "ALTER TABLE ?:novoton_hotels ADD KEY `idx_property_type` (`property_type`)",
         ],
         [
@@ -391,6 +426,17 @@ function fn_novoton_holidays_setup_db(): void
         }
     }
 
+    // ── Property type code migration: hyphens → underscores ──
+    // Aligns Novoton codes with travel_core canonical codes (e.g. guest-house → guest_house)
+    $hyphenRenames = [
+        'guest-house'    => 'guest_house',
+        'boarding-house' => 'boarding_house',
+    ];
+    foreach ($hyphenRenames as $oldCode => $newCode) {
+        @db_query("UPDATE ?:novoton_hotels SET property_type = ?s WHERE property_type = ?s", $newCode, $oldCode);
+        @db_query("UPDATE ?:hotel_feature_mappings SET provider_code = ?s WHERE provider_code = ?s AND feature_type = 'property_type'", $newCode, $oldCode);
+    }
+
     // ── Facility type migration: enum('hotel','room') → varchar(30) feature type ──
     // Allows each facility to map directly to a CS-Cart feature type (hotel_facility,
     // room_facility, travel_group, beach_access, etc.) instead of just hotel/room.
@@ -406,6 +452,29 @@ function fn_novoton_holidays_setup_db(): void
         // Convert legacy enum values to feature type constants
         @db_query("UPDATE ?:novoton_facilities SET facility_type = 'hotel_facility' WHERE facility_type = 'hotel'");
         @db_query("UPDATE ?:novoton_facilities SET facility_type = 'room_facility'  WHERE facility_type = 'room'");
+    }
+
+    // ── Cache table migration: TIMESTAMP → INT UNSIGNED for expires_at/created_at ──
+    // Aligns with sphinx_cache (INT unix timestamp) for consistency and performance
+    $cacheTable = $resolve('?:novoton_cache');
+    $cacheExpiresType = db_get_field(
+        "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?s AND COLUMN_NAME = 'expires_at'",
+        $cacheTable
+    );
+    if ($cacheExpiresType && strtolower($cacheExpiresType) === 'timestamp') {
+        // Convert existing TIMESTAMP values to unix timestamps, then change column type
+        @db_query("ALTER TABLE ?:novoton_cache ADD COLUMN `expires_at_new` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `expires_at`");
+        @db_query("UPDATE ?:novoton_cache SET `expires_at_new` = UNIX_TIMESTAMP(`expires_at`)");
+        @db_query("ALTER TABLE ?:novoton_cache DROP COLUMN `expires_at`");
+        @db_query("ALTER TABLE ?:novoton_cache CHANGE `expires_at_new` `expires_at` INT UNSIGNED NOT NULL COMMENT 'Unix timestamp'");
+        @db_query("ALTER TABLE ?:novoton_cache ADD KEY `idx_expires` (`expires_at`)");
+        // Also convert created_at if it's a TIMESTAMP
+        @db_query("ALTER TABLE ?:novoton_cache ADD COLUMN `created_at_new` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `created_at`");
+        @db_query("UPDATE ?:novoton_cache SET `created_at_new` = UNIX_TIMESTAMP(`created_at`)");
+        @db_query("ALTER TABLE ?:novoton_cache DROP COLUMN `created_at`");
+        @db_query("ALTER TABLE ?:novoton_cache CHANGE `created_at_new` `created_at` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Unix timestamp'");
     }
 
     // ── Foreign key constraints (idempotent — only adds if missing) ──
@@ -587,7 +656,8 @@ function fn_novoton_holidays_remove_theme_presets(): void
             continue;
         }
 
-        $manifest = @json_decode(file_get_contents($manifest_path), true);
+        $content = file_get_contents($manifest_path);
+        $manifest = ($content !== false) ? json_decode($content, true) : null;
         if (!is_array($manifest)) {
             continue;
         }

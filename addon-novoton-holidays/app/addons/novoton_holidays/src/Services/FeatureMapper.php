@@ -16,13 +16,17 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepositoryInterface;
+use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 class FeatureMapper
 {
-    private FeatureMappingRepositoryInterface $mappingRepo;
+    use CsCartFeatureAssignment {
+        assignSelectBoxValue as private assignSelectBox;
+        assignCheckboxValue as private assignCheckbox;
+        createVariant as private createVariantFromTrait;
+    }
 
-    /** @var string[]|null Cached active language codes */
-    private ?array $activeLanguages = null;
+    private FeatureMappingRepositoryInterface $mappingRepo;
 
     public function __construct(FeatureMappingRepositoryInterface $mappingRepo)
     {
@@ -182,9 +186,211 @@ class FeatureMapper
         }
     }
 
+    /**
+     * Assign a feature using travel_core's shared FeatureMapper::resolve().
+     *
+     * Used for feature types migrated to the shared canonical hub (travel_feature_map).
+     * Resolves the provider code via travel_core, auto-creates the CS-Cart variant
+     * if needed, and assigns to the product.
+     *
+     * @param string $coreFeatureType travel_core feature type (e.g. 'stars', not 'property_rating')
+     */
+    public function assignFeatureViaCore(
+        int $productId,
+        string $coreFeatureType,
+        string $providerCode,
+        string $apiSource = 'novoton'
+    ): bool {
+        if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+            return false;
+        }
+
+        $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve(
+            $apiSource, $coreFeatureType, $providerCode
+        );
+        if (!$mapping) {
+            return false;
+        }
+
+        $featureId = $this->getCoreFeatureId($coreFeatureType);
+        if ($featureId <= 0) {
+            return false;
+        }
+
+        $variantId = $this->ensureCoreVariantExists($mapping, $featureId);
+        if ($variantId <= 0) {
+            return false;
+        }
+
+        // Determine CS-Cart feature type and assign
+        $csFeatureType = db_get_field(
+            "SELECT feature_type FROM ?:product_features WHERE feature_id = ?i", $featureId
+        );
+
+        if ($csFeatureType === 'S') {
+            return $this->assignSelectBox($productId, $featureId, $variantId);
+        }
+        if ($csFeatureType === 'M') {
+            return $this->assignCheckbox($productId, $featureId, $variantId);
+        }
+
+        return false;
+    }
+
+    /**
+     * Assign multiple feature values using travel_core's shared mapping (diff-based sync).
+     *
+     * For M-type (Multiple Checkboxes) features: adds new variants, removes stale ones.
+     * For S-type (Select Box) features: uses the last code in the array.
+     *
+     * @param string   $coreFeatureType travel_core feature type (e.g. 'board')
+     * @param string[] $providerCodes   Normalized provider codes (e.g. ['AI', 'FB+', 'HB'])
+     * @return int Number of successfully assigned features
+     */
+    public function assignMultipleViaCore(
+        int $productId,
+        string $coreFeatureType,
+        array $providerCodes,
+        string $apiSource = 'novoton'
+    ): int {
+        if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+            return 0;
+        }
+
+        $providerCodes = array_unique(array_filter(array_map('trim', $providerCodes)));
+        if (empty($providerCodes)) {
+            return 0;
+        }
+
+        $featureId = $this->getCoreFeatureId($coreFeatureType);
+        if ($featureId <= 0) {
+            return 0;
+        }
+
+        $csFeatureType = db_get_field(
+            "SELECT feature_type FROM ?:product_features WHERE feature_id = ?i", $featureId
+        );
+
+        // S-type: only the last code wins
+        if ($csFeatureType === 'S') {
+            $lastCode = end($providerCodes);
+            return $this->assignFeatureViaCore($productId, $coreFeatureType, $lastCode, $apiSource) ? 1 : 0;
+        }
+
+        if ($csFeatureType !== 'M') {
+            return 0;
+        }
+
+        // M-type: resolve all codes to variant IDs via travel_core
+        $newVariantIds = [];
+        foreach ($providerCodes as $code) {
+            $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve(
+                $apiSource, $coreFeatureType, $code
+            );
+            if (!$mapping) {
+                continue;
+            }
+
+            $variantId = $this->ensureCoreVariantExists($mapping, $featureId);
+            if ($variantId > 0) {
+                $newVariantIds[] = $variantId;
+            }
+        }
+
+        if (empty($newVariantIds)) {
+            return 0;
+        }
+
+        // Diff-based sync: add new, remove stale
+        $currentVariantIds = db_get_fields(
+            "SELECT DISTINCT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id > 0",
+            $featureId,
+            $productId
+        );
+        $currentVariantIds = array_map('intval', $currentVariantIds);
+
+        $toAdd = array_diff($newVariantIds, $currentVariantIds);
+        $toRemove = array_diff($currentVariantIds, $newVariantIds);
+
+        foreach ($toRemove as $staleVariantId) {
+            db_query(
+                "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
+                $featureId, $productId, $staleVariantId
+            );
+        }
+
+        $count = 0;
+        foreach ($toAdd as $variantId) {
+            foreach ($this->getActiveLanguages() as $langCode) {
+                db_query(
+                    "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
+                    [
+                        'feature_id' => $featureId,
+                        'product_id' => $productId,
+                        'variant_id' => $variantId,
+                        'value'      => '',
+                        'value_int'  => $variantId,
+                        'lang_code'  => $langCode,
+                    ],
+                    $variantId
+                );
+            }
+            $count++;
+        }
+
+        return $count + count(array_intersect($newVariantIds, $currentVariantIds));
+    }
+
     // =========================================================================
     // Private methods
     // =========================================================================
+
+    /**
+     * Get feature_id from travel_core setting for a given core feature type.
+     *
+     * Maps core feature types to their actual setting key names where they differ:
+     *   'stars' → feature_id_property_rating
+     *   'board' → feature_id_meals
+     */
+    private function getCoreFeatureId(string $coreFeatureType): int
+    {
+        $settingMap = [
+            'stars' => 'feature_id_property_rating',
+            'board' => 'feature_id_meals',
+        ];
+
+        $settingName = $settingMap[$coreFeatureType] ?? ('feature_id_' . $coreFeatureType);
+        return (int) \Tygh\Registry::get('addons.travel_core.' . $settingName);
+    }
+
+    /**
+     * Ensure a travel_core mapping has a CS-Cart variant_id.
+     * Auto-creates the variant if not yet resolved.
+     *
+     * @return int variant_id or 0 on failure
+     */
+    private function ensureCoreVariantExists(array $mapping, int $featureId): int
+    {
+        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+        if ($variantId <= 0) {
+            $variantId = $this->createCsCartVariant([
+                'cs_cart_feature_id' => $featureId,
+                'display_name_en'    => $mapping['display_name_en'] ?? '',
+                'display_name_ro'    => $mapping['display_name_ro'] ?? '',
+                'position'           => 0,
+            ]);
+            if ($variantId > 0) {
+                db_query(
+                    "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
+                    $variantId, (int) $mapping['map_id']
+                );
+                \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+            }
+        }
+
+        return $variantId;
+    }
 
     /**
      * Ensure the CS-Cart variant exists.
@@ -350,6 +556,8 @@ class FeatureMapper
 
     /**
      * Create a CS-Cart product feature variant + descriptions.
+     * Delegates to the shared trait's createVariant(), adding Novoton-specific
+     * logic for position and provider_code fallback.
      *
      * @return int New variant_id or 0 on failure
      */
@@ -360,111 +568,11 @@ class FeatureMapper
         $nameEn = $mapping['display_name_en'] ?? mb_convert_case($mapping['provider_code'], MB_CASE_TITLE, 'UTF-8');
         $nameRo = $mapping['display_name_ro'] ?? '';
 
-        // Language fallback
-        if ($nameRo === '') {
-            $nameRo = $nameEn;
-        }
-
-        $variantId = (int) db_query(
-            "INSERT INTO ?:product_feature_variants ?e",
-            ['feature_id' => $featureId, 'position' => $position]
-        );
-
-        if ($variantId <= 0) {
-            return 0;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
-            db_query(
-                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant) " .
-                "VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
-                $variantId,
-                $langCode,
-                $variantName,
-                $variantName
-            );
-        }
-
-        return $variantId;
+        return $this->createVariantFromTrait($featureId, $nameEn, $nameRo, $position);
     }
 
-    /**
-     * Assign a Select Box feature value (overwrite: delete old + insert new).
-     */
-    private function assignSelectBox(int $productId, int $featureId, int $variantId): bool
-    {
-        // Atomic check: if already correct, skip
-        $existing = db_get_field(
-            "SELECT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-            $featureId,
-            $productId
-        );
-
-        if ((int) $existing === $variantId) {
-            return true;
-        }
-
-        // Overwrite: delete all then insert for each language
-        db_query(
-            "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i",
-            $featureId,
-            $productId
-        );
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i, value_int = ?i",
-                [
-                    'feature_id' => $featureId,
-                    'product_id' => $productId,
-                    'variant_id' => $variantId,
-                    'value' => '',
-                    'value_int' => $variantId,
-                    'lang_code' => $langCode,
-                ],
-                $variantId,
-                $variantId
-            );
-        }
-
-        return true;
-    }
-
-    /**
-     * Assign a single checkbox variant (merge: add if not present).
-     */
-    private function assignCheckbox(int $productId, int $featureId, int $variantId): bool
-    {
-        // Check if already assigned
-        $exists = db_get_field(
-            "SELECT 1 FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i AND lang_code = 'en'",
-            $featureId,
-            $productId,
-            $variantId
-        );
-
-        if ($exists) {
-            return true;
-        }
-
-        foreach ($this->getActiveLanguages() as $langCode) {
-            db_query(
-                "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
-                [
-                    'feature_id' => $featureId,
-                    'product_id' => $productId,
-                    'variant_id' => $variantId,
-                    'value' => '',
-                    'value_int' => $variantId,
-                    'lang_code' => $langCode,
-                ],
-                $variantId
-            );
-        }
-
-        return true;
-    }
+    // assignSelectBox() and assignCheckbox() are provided by the CsCartFeatureAssignment trait
+    // (aliased from assignSelectBoxValue and assignCheckboxValue respectively).
 
     /**
      * Assign multiple checkboxes with diff-based sync (add new, remove stale).
@@ -566,20 +674,5 @@ class FeatureMapper
         return false;
     }
 
-    /**
-     * Get all active language codes from CS-Cart.
-     *
-     * @return string[]
-     */
-    private function getActiveLanguages(): array
-    {
-        if ($this->activeLanguages === null) {
-            $this->activeLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-            if (empty($this->activeLanguages)) {
-                $this->activeLanguages = ['en'];
-            }
-        }
-
-        return $this->activeLanguages;
-    }
+    // getActiveLanguages() is provided by the CsCartFeatureAssignment trait.
 }

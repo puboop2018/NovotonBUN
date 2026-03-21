@@ -612,8 +612,8 @@
             CREATE TABLE IF NOT EXISTS `?:novoton_cache` (
                 `cache_key` VARCHAR(255) NOT NULL,
                 `cache_data` MEDIUMTEXT,
-                `expires_at` TIMESTAMP NOT NULL,
-                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `expires_at` INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
+                `created_at` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Unix timestamp',
                 PRIMARY KEY (`cache_key`),
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Cached API responses for live data'
@@ -720,7 +720,8 @@
                 KEY `idx_feature_type` (`feature_type`),
                 KEY `idx_cs_cart_feature` (`cs_cart_feature_id`),
                 KEY `idx_active` (`is_active`),
-                KEY `idx_mapping_source` (`mapping_source`)
+                KEY `idx_mapping_source` (`mapping_source`),
+                KEY `idx_unmapped` (`is_active`, `cs_cart_variant_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Maps provider codes to CS-Cart feature variants'
         </item>
 
