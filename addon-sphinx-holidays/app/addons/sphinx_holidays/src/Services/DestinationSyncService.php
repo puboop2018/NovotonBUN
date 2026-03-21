@@ -136,7 +136,8 @@ class DestinationSyncService
                     $stats['synced'] += $affected;
                 }
 
-                $this->output("  Page {$page}: " . count($items) . ' items fetched, ' . $stats['total'] . ' accepted, ' . $skipped . ' skipped (no name/id)');
+                $skipMsg = $skipped > 0 ? ", {$skipped} skipped (no name/id)" : '';
+                $this->output("  Page {$page}: " . count($items) . " items fetched, {$stats['total']} accepted{$skipMsg}");
 
                 // Check if there are more pages
                 $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;

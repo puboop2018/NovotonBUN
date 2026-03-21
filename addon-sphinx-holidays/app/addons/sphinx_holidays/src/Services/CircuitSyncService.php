@@ -47,9 +47,18 @@ class CircuitSyncService
         ];
 
         try {
-            $this->output('Circuit sync starting...');
+            $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
+            if (empty($allowedDestIds)) {
+                $stats['error'] = 'No sync targets configured. Set selected_destinations in Sphinx addon settings.';
+                $this->output('ERROR: ' . $stats['error']);
+                $this->logComplete($logId, 'failed', $stats);
+                return $stats;
+            }
+
+            $this->output('Circuit sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
 
             $allCircuits = [];
+            $filtered = 0;
             $page = 1;
             $perPage = 1000;
 
@@ -71,6 +80,16 @@ class CircuitSyncService
                         $stats['failed']++;
                         continue;
                     }
+
+                    // Client-side filtering: skip circuits outside sync targets
+                    $circuitDestIds = !empty($normalized['destination_ids'])
+                        ? json_decode($normalized['destination_ids'], true) ?: []
+                        : [];
+                    if (!empty($circuitDestIds) && empty(array_intersect($circuitDestIds, $allowedDestIds))) {
+                        $filtered++;
+                        continue;
+                    }
+
                     $allCircuits[] = $normalized;
                     $stats['total']++;
                 }
@@ -90,7 +109,8 @@ class CircuitSyncService
             }
 
             $stats['success'] = true;
-            $this->output("Circuit sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed.");
+            $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
+            $this->output("Circuit sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
 
         } catch (\Throwable $e) {
             $stats['error'] = $e->getMessage();

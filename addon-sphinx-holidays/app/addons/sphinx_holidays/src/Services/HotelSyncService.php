@@ -79,6 +79,13 @@ class HotelSyncService
                 $extraDestinationIds = $targets['destination_ids'];
             }
 
+            if (empty($countryCodes) && empty($extraDestinationIds)) {
+                $stats['error'] = 'No sync targets configured. Set selected_destinations in Sphinx addon settings.';
+                $this->output('ERROR: ' . $stats['error']);
+                $this->logComplete($logId, 'failed', $stats);
+                return $stats;
+            }
+
             // Determine sync mode
             $updatedSince = null;
             if (!$fullSync) {
@@ -373,7 +380,7 @@ class HotelSyncService
             'description'       => (string) ($raw['description'] ?? ''),
             'short_description' => (string) ($raw['short_description'] ?? ''),
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
-            'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : null,
+            'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
         ];
     }
 

@@ -143,7 +143,7 @@ class ConfigProvider
      */
     public static function getSelectedSyncTargets(): array
     {
-        $val = (string) self::getSetting('selected_destinations', 'GR');
+        $val = (string) self::getSetting('selected_destinations', '');
         $countryCodes = [];
         $destinationIds = [];
         $nameTokens = [];
@@ -162,10 +162,6 @@ class ConfigProvider
         if (!empty($nameTokens)) {
             $resolvedIds = self::resolveNameTokens($nameTokens, $countryCodes);
             $destinationIds = array_merge($destinationIds, $resolvedIds);
-        }
-
-        if (empty($countryCodes) && empty($destinationIds)) {
-            $countryCodes = ['GR'];
         }
 
         return ['country_codes' => $countryCodes, 'destination_ids' => $destinationIds];
@@ -264,18 +260,25 @@ class ConfigProvider
      */
     public static function getSelectedCountryCodes(): array
     {
+        // Priority 1: Derive from whitelist table if populated
+        $whitelistCodes = db_get_fields(
+            "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+             WHERE d.country_code != ''
+             ORDER BY d.country_code"
+        );
+        if (!empty($whitelistCodes)) {
+            return $whitelistCodes;
+        }
+
+        // Priority 2: Fall back to textarea setting
         $targets = self::getSelectedSyncTargets();
 
         if (!empty($targets['country_codes'])) {
             return $targets['country_codes'];
         }
 
-        // Fallback: all country codes from synced destinations
-        $rows = db_get_fields(
-            "SELECT DISTINCT country_code FROM ?:sphinx_destinations WHERE type = 'country' AND country_code != '' ORDER BY country_code"
-        );
-
-        return !empty($rows) ? $rows : ['GR'];
+        return [];
     }
 
     /**
@@ -300,6 +303,105 @@ class ConfigProvider
         }
 
         return true;
+    }
+
+    /**
+     * Get the full set of allowed destination IDs from sync targets.
+     *
+     * Resolves country codes → all destination IDs for those countries,
+     * merges with explicitly selected destination IDs + their children.
+     * Used by circuit, experience, and package route sync services
+     * for client-side filtering.
+     *
+     * @return int[] Destination IDs allowed by sync targets (empty = nothing configured)
+     */
+    public static function getAllowedDestinationIds(): array
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Priority 1: Use whitelist table if it has entries
+        $whitelistEntries = db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
+        if (!empty($whitelistEntries)) {
+            $cached = self::resolveWhitelistEntries($whitelistEntries);
+            return $cached;
+        }
+
+        // Priority 2: Fall back to textarea setting
+        $targets = self::getSelectedSyncTargets();
+        $countryCodes = $targets['country_codes'];
+        $extraIds = $targets['destination_ids'];
+
+        if (empty($countryCodes) && empty($extraIds)) {
+            $cached = [];
+            return $cached;
+        }
+
+        $allIds = [];
+
+        // Resolve country codes → all destination IDs in those countries
+        if (!empty($countryCodes)) {
+            $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
+            $countryDestIds = db_get_fields(
+                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN ($placeholders)",
+                ...$countryCodes
+            );
+            $allIds = array_map('intval', $countryDestIds);
+        }
+
+        // Add explicitly selected IDs + their children
+        if (!empty($extraIds)) {
+            $allIds = array_merge($allIds, $extraIds);
+            $idPlaceholders = implode(',', array_fill(0, count($extraIds), '?i'));
+            $children = db_get_fields(
+                "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id IN ($idPlaceholders)",
+                ...$extraIds
+            );
+            $allIds = array_merge($allIds, array_map('intval', $children));
+        }
+
+        $cached = array_values(array_unique($allIds));
+        return $cached;
+    }
+
+    /**
+     * Resolve whitelist table entries into a flat set of destination IDs.
+     *
+     * For entries with selection_type='all' (country-level), includes all
+     * destinations under that country. For 'specific', includes only the
+     * explicitly listed destinations.
+     *
+     * @param array $entries Rows from sphinx_destination_whitelist
+     * @return int[] Deduplicated destination IDs
+     */
+    private static function resolveWhitelistEntries(array $entries): array
+    {
+        $allIds = [];
+
+        foreach ($entries as $entry) {
+            $destId = (int) $entry['destination_id'];
+            $selType = $entry['selection_type'];
+            $allIds[] = $destId;
+
+            if ($selType === 'all') {
+                // This is a country with "all children" — include every destination under it
+                $countryCode = db_get_field(
+                    "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
+                    $destId
+                );
+                if (!empty($countryCode)) {
+                    $childIds = db_get_fields(
+                        "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
+                        $countryCode
+                    );
+                    $allIds = array_merge($allIds, array_map('intval', $childIds));
+                }
+            }
+        }
+
+        return array_values(array_unique($allIds));
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed

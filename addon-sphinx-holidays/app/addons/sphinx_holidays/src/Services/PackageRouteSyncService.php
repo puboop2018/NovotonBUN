@@ -49,15 +49,24 @@ class PackageRouteSyncService
         ];
 
         try {
-            $this->output('Package route sync starting...');
+            $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
+            if (empty($allowedDestIds)) {
+                $stats['error'] = 'No sync targets configured. Set selected_destinations in Sphinx addon settings.';
+                $this->output('ERROR: ' . $stats['error']);
+                $this->logComplete($logId, 'failed', $stats);
+                return $stats;
+            }
+
+            $this->output('Package route sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
 
             $allRoutes = [];
+            $filtered = 0;
             $page = 1;
             $perPage = 1000;
 
             while (true) {
                 $this->output("Fetching page {$page}...");
-                $response = $this->api->getPackageRoutes($page, $perPage, $departureIds, $destinationIds);
+                $response = $this->api->getPackageRoutes($page, $perPage);
 
                 if ($response === null) {
                     $stats['error'] = 'API request failed on page ' . $page;
@@ -75,6 +84,13 @@ class PackageRouteSyncService
                         $stats['failed']++;
                         continue;
                     }
+
+                    // Client-side filtering: skip routes whose arrival destination is outside sync targets
+                    if (!in_array($normalized['arrival_id'], $allowedDestIds, true)) {
+                        $filtered++;
+                        continue;
+                    }
+
                     $allRoutes[] = $normalized;
                     $stats['total']++;
                 }
@@ -94,7 +110,8 @@ class PackageRouteSyncService
             }
 
             $stats['success'] = empty($stats['error']);
-            $this->output("Package route sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed.");
+            $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
+            $this->output("Package route sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
 
         } catch (\Throwable $e) {
             $stats['error'] = $e->getMessage();

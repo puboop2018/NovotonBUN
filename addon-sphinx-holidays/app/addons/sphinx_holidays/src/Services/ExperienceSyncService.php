@@ -44,9 +44,18 @@ class ExperienceSyncService
         ];
 
         try {
-            $this->output('Experience sync starting...');
+            $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
+            if (empty($allowedDestIds)) {
+                $stats['error'] = 'No sync targets configured. Set selected_destinations in Sphinx addon settings.';
+                $this->output('ERROR: ' . $stats['error']);
+                $this->logComplete($logId, 'failed', $stats);
+                return $stats;
+            }
+
+            $this->output('Experience sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
 
             $allExperiences = [];
+            $filtered = 0;
             $page = 1;
             $perPage = 1000;
 
@@ -68,6 +77,16 @@ class ExperienceSyncService
                         $stats['failed']++;
                         continue;
                     }
+
+                    // Client-side filtering: skip experiences outside sync targets
+                    $expDestIds = !empty($normalized['destination_ids'])
+                        ? json_decode($normalized['destination_ids'], true) ?: []
+                        : [];
+                    if (!empty($expDestIds) && empty(array_intersect($expDestIds, $allowedDestIds))) {
+                        $filtered++;
+                        continue;
+                    }
+
                     $allExperiences[] = $normalized;
                     $stats['total']++;
                 }
@@ -87,7 +106,8 @@ class ExperienceSyncService
             }
 
             $stats['success'] = true;
-            $this->output("Experience sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed.");
+            $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
+            $this->output("Experience sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
 
         } catch (\Throwable $e) {
             $stats['error'] = $e->getMessage();

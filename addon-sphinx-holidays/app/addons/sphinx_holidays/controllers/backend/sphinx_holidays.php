@@ -106,6 +106,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
     }
+
+    if ($mode === 'save_whitelist') {
+        $whitelist = $_REQUEST['whitelist'] ?? [];
+        // Clear existing whitelist
+        db_query("DELETE FROM ?:sphinx_destination_whitelist");
+
+        if (!empty($whitelist) && is_array($whitelist)) {
+            foreach ($whitelist as $entry) {
+                $destId = (int) ($entry['destination_id'] ?? 0);
+                $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
+                if ($destId > 0) {
+                    db_query(
+                        "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
+                         ON DUPLICATE KEY UPDATE selection_type = ?s",
+                        $destId, $selType, $selType
+                    );
+                }
+            }
+        }
+
+        // Also update the legacy textarea setting with country codes for backward compat
+        $countryCodes = db_get_fields(
+            "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+             WHERE d.country_code != ''"
+        );
+        $settingVal = implode(',', array_unique($countryCodes));
+        db_query(
+            "UPDATE ?:settings_objects SET value = ?s WHERE addon = 'sphinx_holidays' AND name = 'selected_destinations'",
+            $settingVal
+        );
+
+        fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
+    }
 }
 
 // ─── AJAX JSON handlers ───
@@ -152,6 +187,51 @@ if ($mode === 'get_destinations_tree') {
         $tree[] = $region;
     }
     echo json_encode(['tree' => $tree]);
+    exit;
+}
+
+if ($mode === 'get_whitelist_children') {
+    header('Content-Type: application/json; charset=utf-8');
+    $countryId = (int) ($_REQUEST['country_id'] ?? 0);
+    if ($countryId <= 0) {
+        echo json_encode(['children' => []]);
+        exit;
+    }
+    $countryCode = db_get_field("SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i", $countryId);
+    if (empty($countryCode)) {
+        echo json_encode(['children' => []]);
+        exit;
+    }
+    $childIds = db_get_fields(
+        "SELECT w.destination_id FROM ?:sphinx_destination_whitelist w
+         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+         WHERE d.country_code = ?s AND d.type != 'country'",
+        $countryCode
+    );
+    echo json_encode(['children' => array_map('intval', $childIds)]);
+    exit;
+}
+
+if ($mode === 'search_destinations') {
+    header('Content-Type: application/json; charset=utf-8');
+    $q = trim((string) ($_REQUEST['q'] ?? ''));
+    if (strlen($q) < 2) {
+        echo json_encode(['results' => []]);
+        exit;
+    }
+    $destRepo = new DestinationRepository();
+    $results = $destRepo->search($q, 30);
+    $formatted = [];
+    foreach ($results as $r) {
+        $formatted[] = [
+            'destination_id' => (int) $r['destination_id'],
+            'name' => $r['name'],
+            'type' => $r['type'],
+            'country_code' => $r['country_code'] ?? '',
+            'full_path' => $r['full_path'] ?? $r['name'],
+        ];
+    }
+    echo json_encode(['results' => $formatted]);
     exit;
 }
 
@@ -270,4 +350,78 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('search', $params);
     Tygh::$app['view']->assign('total_items', $result['total']);
     Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
+
+} elseif ($mode === 'whitelist') {
+    $destRepo = new DestinationRepository();
+    $countsByType = $destRepo->getCountsByType();
+    $totalDestinations = $destRepo->getTotal();
+
+    // Get all countries for the tree
+    $countries = $destRepo->getCountries();
+
+    // Get current whitelist entries
+    $whitelistRows = db_get_array("SELECT * FROM ?:sphinx_destination_whitelist");
+    $whitelistMap = []; // destination_id => selection_type
+    foreach ($whitelistRows as $row) {
+        $whitelistMap[(int) $row['destination_id']] = $row['selection_type'];
+    }
+
+    // For each whitelisted country, get child count for badge display
+    $countryData = [];
+    foreach ($countries as $country) {
+        $cid = (int) $country['destination_id'];
+        $isWhitelisted = isset($whitelistMap[$cid]);
+        $selectionType = $whitelistMap[$cid] ?? null;
+
+        $childCount = 0;
+        $whitelistedChildren = [];
+        if ($isWhitelisted && $selectionType !== 'all') {
+            // Get whitelisted children for this country
+            $childIds = db_get_fields(
+                "SELECT d.destination_id FROM ?:sphinx_destinations d
+                 JOIN ?:sphinx_destination_whitelist w ON d.destination_id = w.destination_id
+                 WHERE d.country_code = ?s AND d.type != 'country'",
+                $country['country_code']
+            );
+            $whitelistedChildren = array_map('intval', $childIds);
+            $childCount = count($whitelistedChildren);
+        }
+
+        $countryData[] = [
+            'destination_id' => $cid,
+            'name' => $country['name'],
+            'country_code' => $country['country_code'],
+            'is_whitelisted' => $isWhitelisted,
+            'selection_type' => $selectionType,
+            'whitelisted_child_count' => $childCount,
+        ];
+    }
+
+    // Summary stats
+    $whitelistedCountryCount = 0;
+    $whitelistedRegionCount = 0;
+    foreach ($whitelistRows as $row) {
+        $type = db_get_field("SELECT type FROM ?:sphinx_destinations WHERE destination_id = ?i", (int) $row['destination_id']);
+        if ($type === 'country') {
+            $whitelistedCountryCount++;
+        } else {
+            $whitelistedRegionCount++;
+        }
+    }
+
+    // Sample whitelisted city names for summary
+    $sampleCities = db_get_fields(
+        "SELECT d.name FROM ?:sphinx_destination_whitelist w
+         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+         WHERE d.type != 'country'
+         ORDER BY d.name LIMIT 5"
+    );
+
+    Tygh::$app['view']->assign('counts_by_type', $countsByType);
+    Tygh::$app['view']->assign('total_destinations', $totalDestinations);
+    Tygh::$app['view']->assign('countries', $countryData);
+    Tygh::$app['view']->assign('whitelist_map', $whitelistMap);
+    Tygh::$app['view']->assign('whitelisted_country_count', $whitelistedCountryCount);
+    Tygh::$app['view']->assign('whitelisted_region_count', $whitelistedRegionCount);
+    Tygh::$app['view']->assign('sample_cities', $sampleCities);
 }
