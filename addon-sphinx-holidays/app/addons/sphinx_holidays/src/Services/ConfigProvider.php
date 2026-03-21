@@ -255,6 +255,8 @@ class ConfigProvider
      */
     public static function getSelectedCountryCodes(): array
     {
+        self::migrateFromLegacySetting();
+
         $whitelistCodes = db_get_fields(
             "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
@@ -306,6 +308,8 @@ class ConfigProvider
             return $cached;
         }
 
+        self::migrateFromLegacySetting();
+
         $whitelistEntries = db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
         if (!empty($whitelistEntries)) {
             $cached = self::resolveWhitelistEntries($whitelistEntries);
@@ -352,6 +356,48 @@ class ConfigProvider
         }
 
         return array_values(array_unique($allIds));
+    }
+
+    /**
+     * One-time migration: if the whitelist table is empty but the legacy
+     * selected_destinations textarea setting has values, populate the
+     * whitelist table with country-level entries (selection_type='all').
+     */
+    private static function migrateFromLegacySetting(): void
+    {
+        static $migrated = false;
+        if ($migrated) {
+            return;
+        }
+        $migrated = true;
+
+        $count = (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_destination_whitelist");
+        if ($count > 0) {
+            return; // Whitelist already has data, no migration needed
+        }
+
+        $val = (string) self::getSetting('selected_destinations', '');
+        $tokens = array_filter(array_map('trim', explode(',', $val)));
+        if (empty($tokens)) {
+            return;
+        }
+
+        foreach ($tokens as $token) {
+            if (strlen($token) === 2 && ctype_alpha($token)) {
+                // Country code — find the country destination and add with selection_type='all'
+                $countryCode = strtoupper($token);
+                $countryDestId = (int) db_get_field(
+                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
+                    $countryCode
+                );
+                if ($countryDestId > 0) {
+                    db_query(
+                        "INSERT IGNORE INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, 'all')",
+                        $countryDestId
+                    );
+                }
+            }
+        }
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed
