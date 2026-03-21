@@ -99,6 +99,26 @@ function fn_settings_variants_addons_travel_core_feature_id_property_type(): arr
 function fn_settings_variants_addons_travel_core_feature_id_location(): array { return fn_travel_core_get_feature_variants(); }
 
 /**
+ * Variants function for the default_currency addon setting.
+ * Pulls currencies from CS-Cart's configured currencies.
+ */
+function fn_settings_variants_addons_travel_core_default_currency(): array
+{
+    $currencies = \Tygh\Registry::get('currencies');
+    $result = [];
+
+    if (empty($currencies) || !is_array($currencies)) {
+        return $result;
+    }
+
+    foreach ($currencies as $code => $currency) {
+        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+    }
+
+    return $result;
+}
+
+/**
  * Seed the travel_feature_map table with canonical codes.
  * Idempotent — uses INSERT IGNORE to skip existing entries.
  */

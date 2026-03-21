@@ -73,9 +73,12 @@ class DestinationSyncService
 
             $page = 1;
             $perPage = 1000;
-            $allDestinations = [];
+            $batchSize = 100;
+            $skipped = 0;
+            $debuggedKeys = false;
 
-            // Fetch all pages
+            // Stream-and-upsert: fetch each page and upsert immediately
+            // instead of accumulating all destinations in memory.
             while (true) {
                 $this->output("Fetching page {$page}...");
 
@@ -101,14 +104,39 @@ class DestinationSyncService
                     break;
                 }
 
+                // Log first item's keys on first page (helps debug field name mismatches)
+                if (!$debuggedKeys && !empty($items[0]) && is_array($items[0])) {
+                    $sampleKeys = array_keys($items[0]);
+                    $this->output('  API fields: ' . implode(', ', $sampleKeys));
+                    $debuggedKeys = true;
+                }
+
+                // Normalize and upsert this page's items immediately
+                $pageBatch = [];
                 foreach ($items as $item) {
                     $normalized = $this->normalizeDestination($item);
                     if ($normalized !== null) {
-                        $allDestinations[] = $normalized;
+                        $pageBatch[] = $normalized;
+                        $stats['total']++;
+
+                        // Flush batch when full
+                        if (count($pageBatch) >= $batchSize) {
+                            $affected = $this->repository->upsertBatch($pageBatch);
+                            $stats['synced'] += $affected;
+                            $pageBatch = [];
+                        }
+                    } else {
+                        $skipped++;
                     }
                 }
 
-                $this->output('  Fetched ' . count($items) . ' items (total so far: ' . count($allDestinations) . ')');
+                // Flush remaining items from this page
+                if (!empty($pageBatch)) {
+                    $affected = $this->repository->upsertBatch($pageBatch);
+                    $stats['synced'] += $affected;
+                }
+
+                $this->output("  Page {$page}: " . count($items) . ' items fetched, ' . $stats['total'] . ' accepted, ' . $skipped . ' skipped (no name/id)');
 
                 // Check if there are more pages
                 $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
@@ -117,7 +145,7 @@ class DestinationSyncService
                 if ($lastPage !== null && $page >= (int) $lastPage) {
                     break;
                 }
-                if ($totalItems !== null && count($allDestinations) >= (int) $totalItems) {
+                if ($totalItems !== null && $stats['total'] >= (int) $totalItems) {
                     break;
                 }
                 if (count($items) < $perPage) {
@@ -128,39 +156,28 @@ class DestinationSyncService
                 $page++;
             }
 
-            $stats['total'] = count($allDestinations);
-
-            if (empty($allDestinations) && !empty($stats['error'])) {
+            if ($stats['total'] === 0 && !empty($stats['error'])) {
                 $this->logComplete($logId, 'failed', $stats);
                 return $stats;
             }
 
-            if (empty($allDestinations) && $updatedSince !== null) {
+            if ($stats['total'] === 0 && $updatedSince !== null) {
                 $this->output('No destinations updated since last sync. Everything is up to date.');
                 $stats['success'] = true;
                 $stats['synced'] = 0;
             } else {
-                // Batch upsert into DB
-                $this->output("Upserting {$stats['total']} destinations into database...");
-
-                $batchSize = 100;
-                $batches = array_chunk($allDestinations, $batchSize);
-
-                foreach ($batches as $i => $batch) {
-                    $affected = $this->repository->upsertBatch($batch);
-                    $stats['synced'] += $affected;
-                    $this->output('  Batch ' . ($i + 1) . '/' . count($batches) . ': ' . $affected . ' rows');
-                }
-
                 $stats['failed'] = $stats['total'] - $stats['synced'];
                 $stats['success'] = true;
 
-                // Build full_path breadcrumbs for disambiguation
+                // Build full_path breadcrumbs for disambiguation (chunked)
                 $this->output('Building destination breadcrumb paths...');
                 $pathsUpdated = $this->repository->buildFullPaths();
                 $this->output("Updated {$pathsUpdated} full_path breadcrumbs.");
             }
 
+            if ($skipped > 0) {
+                $this->output("{$skipped} destination(s) skipped (empty name or invalid ID).");
+            }
             $this->output("Sync complete: {$stats['synced']}/{$stats['total']} destinations synced ({$stats['sync_mode']}).");
         } catch (\Throwable $e) {
             $stats['error'] = $e->getMessage();
@@ -194,6 +211,27 @@ class DestinationSyncService
             return null;
         }
 
+        // Extract name — try multiple field names the API might use
+        $name = (string) ($raw['name'] ?? $raw['title'] ?? $raw['label'] ?? '');
+
+        // Some APIs nest the name inside a translations/localized object
+        if ($name === '' && isset($raw['translations'])) {
+            $translations = $raw['translations'];
+            $name = (string) ($translations['en'] ?? $translations['en_US'] ?? reset($translations) ?? '');
+        }
+        if ($name === '' && isset($raw['names'])) {
+            $names = $raw['names'];
+            $name = (string) ($names['en'] ?? $names['en_US'] ?? reset($names) ?? '');
+        }
+        if ($name === '' && isset($raw['name_en'])) {
+            $name = (string) $raw['name_en'];
+        }
+
+        // Skip destinations with no name — they are unusable for disambiguation
+        if (trim($name) === '') {
+            return null;
+        }
+
         // Determine destination type from API data
         $type = strtolower((string) ($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
 
@@ -211,7 +249,7 @@ class DestinationSyncService
 
         return [
             'destination_id' => $id,
-            'name'           => (string) ($raw['name'] ?? $raw['title'] ?? ''),
+            'name'           => trim($name),
             'type'           => $type,
             'parent_id'      => (int) ($raw['parent_id'] ?? $raw['parent'] ?? 0),
             'country_code'   => (string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),

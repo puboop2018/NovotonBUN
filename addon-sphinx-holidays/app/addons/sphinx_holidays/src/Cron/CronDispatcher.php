@@ -94,6 +94,10 @@ class CronDispatcher
         }
 
         try {
+            // Remove PHP execution time limit for long-running sync jobs
+            // (destination sync: 200k+ items, hotel sync: 100k+ items)
+            @set_time_limit(0);
+
             $class = self::$modes[$mode];
             $command = new $class();
 

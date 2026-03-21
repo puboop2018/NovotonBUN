@@ -387,3 +387,15 @@ msgstr "Cursuri Valutare"
 msgctxt "Languages::travel_core.exchange_rates_updated"
 msgid "Exchange rates updated successfully"
 msgstr "Cursurile valutare au fost actualizate cu succes"
+
+msgctxt "Languages::menu.travel_core_menu"
+msgid "Travel"
+msgstr "Travel"
+
+msgctxt "Languages::menu.travel_core_menu.travel_bookings"
+msgid "Bookings"
+msgstr "Rezervări"
+
+msgctxt "Languages::menu.travel_core_menu.travel_feature_mappings"
+msgid "Feature Mappings"
+msgstr "Mapări Caracteristici"

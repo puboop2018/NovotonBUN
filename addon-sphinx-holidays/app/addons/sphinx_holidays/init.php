@@ -44,4 +44,21 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'Sphinx / Christian Tour',
         new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
     );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setBookingAdminProvider(
+        'sphinx',
+        new \Tygh\Addons\SphinxHolidays\Services\BookingAdminProvider()
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
+        'sphinx',
+        function () {
+            $api = \Tygh\Addons\SphinxHolidays\Services\Container::getApi();
+            $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+            $service = new \Tygh\Addons\SphinxHolidays\Services\OrderStatusSyncService($api, $repo);
+            return $service->syncAll();
+        },
+        function (int $bookingId) {
+            $provider = new \Tygh\Addons\SphinxHolidays\Services\BookingAdminProvider();
+            return $provider->checkStatus((string) $bookingId);
+        }
+    );
 }

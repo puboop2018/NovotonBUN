@@ -27,6 +27,7 @@ export default function BookingEngine({ config }) {
     useEffect(() => { injectStyles(); }, []);
 
     const {
+        provider = '',
         hotelId = '',
         productId = '',
         mode = 'product',
@@ -187,11 +188,12 @@ export default function BookingEngine({ config }) {
             params.set('dispatch', 'products.search');
             params.set('q', searchQuery);
         } else {
-            // Use provider-specific dispatch from config, with fallback
-            const dispatch = searchDispatch
-                || (window.TravelBookingConfig && window.TravelBookingConfig.searchDispatch)
-                || 'novoton_booking.search';
-            params.set('dispatch', dispatch);
+            // Provider dispatch must be set via data-search-dispatch on the mount element
+            const fallbackDispatch = provider ? `${provider}_booking.search` : '';
+            if (!searchDispatch && !fallbackDispatch) {
+                console.error('[TravelBooking] data-search-dispatch and data-provider not set on mount element');
+            }
+            params.set('dispatch', searchDispatch || fallbackDispatch);
             if (hotelId) params.set('hotel_id', hotelId);
             if (productId) params.set('product_id', productId);
         }
@@ -214,7 +216,7 @@ export default function BookingEngine({ config }) {
         }
 
         return base + '?' + params.toString();
-    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, searchDispatch, totalAdults, totalChildren]);
+    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, searchDispatch, provider, totalAdults, totalChildren]);
 
     const performAjaxSearch = useCallback((url) => {
         setIsSearching(true);

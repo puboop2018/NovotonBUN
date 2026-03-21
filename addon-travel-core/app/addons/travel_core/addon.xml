@@ -89,13 +89,13 @@
                         <variants/>
                     </item>
                     <item id="default_currency">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>EUR</default_value>
                         <variants/>
                     </item>
                     <item id="currency_risk_commission">
                         <type>input</type>
-                        <default_value>0</default_value>
+                        <default_value>1.8</default_value>
                         <variants/>
                     </item>
                     <item id="round_prices">
@@ -417,6 +417,26 @@
         <item lang="en" id="travel_core.fm_alias_deleted"><![CDATA[Alias deleted]]></item>
         <item lang="ro" id="travel_core.fm_alias_deleted"><![CDATA[Alias-ul a fost șters]]></item>
     </language_variables>
+
+    <!-- Admin menu -->
+    <menu>
+        <items>
+            <item id="travel_core_menu">
+                <title>Travel</title>
+                <position>5</position>
+                <items>
+                    <item id="travel_bookings">
+                        <href>travel_bookings.manage</href>
+                        <position>5</position>
+                    </item>
+                    <item id="travel_feature_mappings">
+                        <href>travel_feature_mappings.manage</href>
+                        <position>10</position>
+                    </item>
+                </items>
+            </item>
+        </items>
+    </menu>
 
     <!-- Functions to run on install/uninstall -->
     <functions>

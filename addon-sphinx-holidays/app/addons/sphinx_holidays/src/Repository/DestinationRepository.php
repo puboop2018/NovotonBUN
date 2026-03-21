@@ -262,47 +262,73 @@ class DestinationRepository
      * Generates paths like "Athens, Attica, Greece, Europe" for disambiguation.
      * Called after destination sync completes.
      *
+     * Processes in chunks to avoid loading 200k+ rows into memory at once.
+     * Only loads a lightweight parent lookup (id → name, parent_id) which is
+     * needed for the chain walk, but processes updates in bounded batches.
+     *
      * @return int Number of paths updated
      */
     public function buildFullPaths(): int
     {
-        // Load all destinations into memory for fast parent_id traversal
-        $rows = db_get_hash_array(
-            "SELECT destination_id, name, parent_id FROM ?:sphinx_destinations",
-            'destination_id'
-        );
+        // Build a lightweight parent lookup: id → [name, parent_id]
+        // At ~80 bytes per row × 200k rows ≈ 16 MB — acceptable for the chain walk.
+        // We avoid loading full rows (with full_path, country_code, etc.) to save memory.
+        $parentLookup = [];
+        $chunkSize = 10000;
+        $offset = 0;
 
-        if (empty($rows)) {
+        while (true) {
+            $chunk = db_get_array(
+                "SELECT destination_id, name, parent_id FROM ?:sphinx_destinations ORDER BY destination_id LIMIT ?i, ?i",
+                $offset,
+                $chunkSize
+            );
+
+            if (empty($chunk)) {
+                break;
+            }
+
+            foreach ($chunk as $row) {
+                $parentLookup[(int) $row['destination_id']] = [
+                    'name'      => $row['name'],
+                    'parent_id' => (int) $row['parent_id'],
+                ];
+            }
+
+            if (count($chunk) < $chunkSize) {
+                break;
+            }
+            $offset += $chunkSize;
+        }
+
+        if (empty($parentLookup)) {
             return 0;
         }
 
-        $updates = [];
-
-        foreach ($rows as $id => $row) {
-            $segments = [$row['name']];
-            $currentId = (int) $row['parent_id'];
-            $visited = [$id => true]; // cycle protection
-
-            // Walk up the parent chain (max depth 5)
-            while ($currentId > 0 && isset($rows[$currentId]) && !isset($visited[$currentId])) {
-                $visited[$currentId] = true;
-                $segments[] = $rows[$currentId]['name'];
-                $currentId = (int) $rows[$currentId]['parent_id'];
-            }
-
-            $updates[$id] = implode(', ', $segments);
-        }
-
-        // Batch update in chunks
+        // Process updates in chunks: walk chains and update full_path
         $updated = 0;
-        $chunks = array_chunk($updates, 100, true);
+        $ids = array_keys($parentLookup);
+        $idChunks = array_chunk($ids, 500);
 
-        foreach ($chunks as $chunk) {
-            foreach ($chunk as $destId => $fullPath) {
+        foreach ($idChunks as $idBatch) {
+            foreach ($idBatch as $id) {
+                $row = $parentLookup[$id];
+                $segments = [$row['name']];
+                $currentId = $row['parent_id'];
+                $visited = [$id => true]; // cycle protection
+
+                // Walk up the parent chain (max depth 5)
+                while ($currentId > 0 && isset($parentLookup[$currentId]) && !isset($visited[$currentId])) {
+                    $visited[$currentId] = true;
+                    $segments[] = $parentLookup[$currentId]['name'];
+                    $currentId = $parentLookup[$currentId]['parent_id'];
+                }
+
+                $fullPath = implode(', ', $segments);
                 db_query(
                     "UPDATE ?:sphinx_destinations SET full_path = ?s WHERE destination_id = ?i",
                     $fullPath,
-                    $destId
+                    $id
                 );
                 $updated++;
             }

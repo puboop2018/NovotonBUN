@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 /**
- * Travel Core - Admin Booking Management Controller
+ * Travel Core - Unified Booking Management Controller
  *
  * Provides a unified admin view of all travel bookings across providers.
- * Reads from the shared `travel_bookings` table.
+ * Reads from the shared `travel_bookings` table and enriches each booking
+ * with provider-specific display data and actions via BookingAdminProviderInterface.
  *
  * Modes:
  *   - manage (default): List all bookings with filters
@@ -30,6 +31,40 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 // CS-Cart auto-sets $mode from dispatch URL (e.g., dispatch=travel_bookings.manage → $mode = 'manage')
 // Do NOT overwrite $mode from $_REQUEST — that causes 404 errors.
 
+/**
+ * Enrich a booking row with provider-specific display data and actions.
+ *
+ * Uses the BookingAdminProviderInterface registered for the booking's provider.
+ */
+function _travel_bookings_enrich(array $booking): array
+{
+    $providerName = $booking['provider'] ?? '';
+    if (empty($providerName)) {
+        return $booking;
+    }
+
+    $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
+    if ($adminProvider === null) {
+        return $booking;
+    }
+
+    $providerBookingId = (string) ($booking['provider_booking_id'] ?? $booking['booking_id'] ?? '');
+    if (empty($providerBookingId)) {
+        return $booking;
+    }
+
+    // Get provider-specific display data (status labels, refs, etc.)
+    $booking['provider_display'] = $adminProvider->getDisplayData($providerBookingId);
+
+    // Get available actions (check status, alternatives, etc.)
+    $booking['provider_actions'] = $adminProvider->getAvailableActions($booking);
+
+    // Get link to provider's own detailed view
+    $booking['provider_view_url'] = $adminProvider->getProviderViewUrl($providerBookingId);
+
+    return $booking;
+}
+
 // ── POST modes ──
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -54,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'check_status') {
         $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
         if ($booking_id > 0) {
-            $booking = db_get_row("SELECT provider FROM ?:travel_bookings WHERE booking_id = ?i", $booking_id);
+            $booking = db_get_row("SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i", $booking_id);
             if ($booking) {
                 $providerInfo = TravelProviderRegistry::get($booking['provider']);
                 if ($providerInfo && !empty($providerInfo['single_status_callback'])) {
@@ -63,6 +98,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
                     } else {
                         fn_set_notification('N', __('notice'), 'No status change detected.');
+                    }
+                } else {
+                    // Fallback: try BookingAdminProvider directly
+                    $adminProvider = TravelProviderRegistry::getBookingAdminProvider($booking['provider']);
+                    if ($adminProvider) {
+                        $pbId = (string) ($booking['provider_booking_id'] ?? $booking_id);
+                        $result = $adminProvider->checkStatus($pbId);
+                        if (!empty($result['changed'])) {
+                            fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
+                        } else {
+                            fn_set_notification('N', __('notice'), $result['error'] ?? 'No status change detected.');
+                        }
                     }
                 }
             }
@@ -110,7 +157,7 @@ if ($mode === 'manage') {
     }
 
     // Sorting — whitelist allowed columns
-    $allowedSortBy = ['created_at', 'order_id', 'check_in', 'total_price'];
+    $allowedSortBy = ['created_at', 'order_id', 'check_in', 'total_price', 'hotel_name', 'status'];
     $sortBy = in_array($params['sort_by'], $allowedSortBy, true) ? $params['sort_by'] : 'created_at';
     $sortOrder = $params['sort_order'] === 'asc' ? 'ASC' : 'DESC';
 
@@ -129,6 +176,12 @@ if ($mode === 'manage') {
          LIMIT ?i, ?i",
         $condition, $offset, $limit
     );
+
+    // Enrich each booking with provider-specific display data and actions
+    foreach ($bookings as &$booking) {
+        $booking = _travel_bookings_enrich($booking);
+    }
+    unset($booking);
 
     // Get registered providers for filter dropdown
     $providers = TravelProviderRegistry::all();
@@ -165,6 +218,23 @@ if ($mode === 'manage') {
 
     if (empty($booking)) {
         return [CONTROLLER_STATUS_NO_PAGE];
+    }
+
+    // Enrich with provider-specific data
+    $booking = _travel_bookings_enrich($booking);
+
+    // Decode guests JSON for display
+    if (!empty($booking['guests_json'])) {
+        $decoded = json_decode($booking['guests_json'], true);
+        if (is_array($decoded)) {
+            $booking['guests_decoded'] = $decoded;
+        }
+    }
+
+    // Get order info if linked
+    if (!empty($booking['order_id']) && (int) $booking['order_id'] > 0) {
+        $order = fn_get_order_info((int) $booking['order_id']);
+        Tygh::$app['view']->assign('order', $order);
     }
 
     Tygh::$app['view']->assign('booking', $booking);
