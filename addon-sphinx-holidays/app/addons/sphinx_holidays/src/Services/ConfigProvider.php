@@ -143,7 +143,7 @@ class ConfigProvider
      */
     public static function getSelectedSyncTargets(): array
     {
-        $val = (string) self::getSetting('selected_destinations', 'GR');
+        $val = (string) self::getSetting('selected_destinations', '');
         $countryCodes = [];
         $destinationIds = [];
         $nameTokens = [];
@@ -162,10 +162,6 @@ class ConfigProvider
         if (!empty($nameTokens)) {
             $resolvedIds = self::resolveNameTokens($nameTokens, $countryCodes);
             $destinationIds = array_merge($destinationIds, $resolvedIds);
-        }
-
-        if (empty($countryCodes) && empty($destinationIds)) {
-            $countryCodes = ['GR'];
         }
 
         return ['country_codes' => $countryCodes, 'destination_ids' => $destinationIds];
