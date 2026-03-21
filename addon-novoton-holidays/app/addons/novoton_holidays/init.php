@@ -154,7 +154,9 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
     );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
         'novoton',
-        'fn_novoton_holidays_cron_resinfo',
+        function () {
+            return fn_novoton_holidays_cron_resinfo();
+        },
         function (int $bookingId) {
             $provider = new \Tygh\Addons\NovotonHolidays\Services\BookingAdminProvider();
             return $provider->checkStatus((string) $bookingId);
