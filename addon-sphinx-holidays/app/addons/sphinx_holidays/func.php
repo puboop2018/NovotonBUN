@@ -554,6 +554,44 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
 }
 
 /**
+ * Hook: gather_additional_product_data_post
+ * Assign Smarty variables for Sphinx hotel product pages so the booking
+ * engine form can render on the product detail page.
+ */
+function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
+{
+    if (empty($product['product_code'])) {
+        return;
+    }
+
+    $code = $product['product_code'];
+    if (strpos($code, 'SPX') === 0) {
+        $hotel_id = substr($code, 3);
+    } elseif (strpos($code, 'SPH_') === 0) {
+        $hotel_id = substr($code, 4);
+    } else {
+        \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
+        return;
+    }
+
+    $hotel = db_get_row(
+        "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+        $hotel_id
+    );
+
+    if (empty($hotel)) {
+        \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
+        return;
+    }
+
+    $view = \Tygh\Tygh::$app['view'];
+    $view->assign('is_sphinx_hotel', true);
+    $view->assign('sphinx_hotel_id', $hotel_id);
+    $view->assign('show_sphinx_booking_form', true);
+    $view->assign('sphinx_booking_form_position', 'before_tabs');
+}
+
+/**
  * Hook: user_login_post
  * Link session-based sphinx bookings to the logged-in user.
  */

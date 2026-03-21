@@ -65,6 +65,7 @@ function readConfig(el) {
     }
 
     return {
+        provider:            el.dataset.provider || '',
         hotelId:             str('hotel_id',   'hotelId'),
         productId:           str('product_id', 'productId'),
         mode:                el.dataset.mode || 'product',

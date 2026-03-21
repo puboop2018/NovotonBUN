@@ -130,7 +130,14 @@
     {* ── Cron Commands ── *}
     <h4>{__("sphinx_holidays.cron_commands")}</h4>
     <div class="well">
-        <table class="table table-condensed table-hover">
+        <table class="table table-condensed table-hover" style="table-layout:fixed; width:100%;">
+            <colgroup>
+                <col style="width:120px;" />
+                <col style="width:260px;" />
+                <col style="width:180px;" />
+                <col />
+                <col style="width:40px;" />
+            </colgroup>
             <thead>
                 <tr>
                     <th>Mode</th>
@@ -145,56 +152,56 @@
                     <td><strong>destinations</strong></td>
                     <td>Sync all destinations from Sphinx API</td>
                     <td><code>0 2 * * 0</code> (weekly)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.destinations}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.destinations}</code></td>
                     <td><a href="{$cron_urls.destinations}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>hotels</strong></td>
                     <td>Sync hotels for selected destinations</td>
                     <td><code>0 3 * * *</code> (daily)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.hotels}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.hotels}</code></td>
                     <td><a href="{$cron_urls.hotels}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>add_products</strong></td>
                     <td>Create CS-Cart products for unlinked hotels</td>
                     <td><code>30 3 * * *</code> (daily after hotels)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.add_products}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.add_products}</code></td>
                     <td><a href="{$cron_urls.add_products}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>package_routes</strong></td>
                     <td>Sync package routes from Sphinx API</td>
                     <td><code>0 4 * * 1</code> (weekly)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.package_routes}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.package_routes}</code></td>
                     <td><a href="{$cron_urls.package_routes}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>order_status</strong></td>
                     <td>Sync booking statuses with Sphinx API</td>
                     <td><code>*/15 * * * *</code> (every 15 min)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.order_status}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.order_status}</code></td>
                     <td><a href="{$cron_urls.order_status}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>exchange_rates</strong></td>
                     <td>Update BNR exchange rates (shared via Travel Core)</td>
                     <td><code>5 13 * * *</code> (daily at 13:05)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.exchange_rates}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.exchange_rates}</code></td>
                     <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>cache_refresh</strong></td>
                     <td>Refresh cached search results</td>
                     <td><code>*/30 * * * *</code> (every 30 min)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.cache_refresh}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.cache_refresh}</code></td>
                     <td><a href="{$cron_urls.cache_refresh}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>cleanup</strong></td>
                     <td>Clean expired cache and old sync logs</td>
                     <td><code>0 5 * * *</code> (daily)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.cleanup}</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.cleanup}</code></td>
                     <td><a href="{$cron_urls.cleanup}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>

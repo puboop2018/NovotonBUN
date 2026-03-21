@@ -37,6 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
+        @set_time_limit(0);
+
         $api = Container::getApi();
         $repository = new DestinationRepository();
         $service = new DestinationSyncService($api, $repository);
@@ -57,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
+
+        @set_time_limit(0);
 
         $api = Container::getApi();
         $hotelRepo = new HotelRepository();

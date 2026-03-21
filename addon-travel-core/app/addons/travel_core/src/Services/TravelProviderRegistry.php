@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 
 /**
@@ -10,7 +11,7 @@ use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
  *
  * Each API addon (novoton_holidays, sphinx_holidays) registers its provider
  * here during init.php. The registry resolves which provider handles a given
- * hotel and provides access to provider normalizers.
+ * hotel and provides access to provider normalizers and booking admin providers.
  */
 class TravelProviderRegistry
 {
@@ -20,7 +21,7 @@ class TravelProviderRegistry
      */
     public const KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
 
-    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}> */
+    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable}> */
     private static array $providers = [];
 
     /**
@@ -33,6 +34,43 @@ class TravelProviderRegistry
             'label' => $label,
             'normalizer' => $normalizer,
         ];
+    }
+
+    /**
+     * Set the booking admin provider for a registered provider.
+     */
+    public static function setBookingAdminProvider(string $name, BookingAdminProviderInterface $adminProvider): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$providers[$name]['booking_admin_provider'] = $adminProvider;
+        }
+    }
+
+    /**
+     * Set callbacks for status sync operations.
+     *
+     * @param string $name Provider name
+     * @param callable|null $bulkCallback Callback for bulk status sync (no args, returns ['checked'=>int,'changed'=>int])
+     * @param callable|null $singleCallback Callback for single booking status check (booking_id arg)
+     */
+    public static function setStatusCallbacks(string $name, ?callable $bulkCallback, ?callable $singleCallback): void
+    {
+        if (isset(self::$providers[$name])) {
+            if ($bulkCallback !== null) {
+                self::$providers[$name]['status_sync_callback'] = $bulkCallback;
+            }
+            if ($singleCallback !== null) {
+                self::$providers[$name]['single_status_callback'] = $singleCallback;
+            }
+        }
+    }
+
+    /**
+     * Get the BookingAdminProviderInterface for a provider, if registered.
+     */
+    public static function getBookingAdminProvider(string $name): ?BookingAdminProviderInterface
+    {
+        return self::$providers[$name]['booking_admin_provider'] ?? null;
     }
 
     /**

@@ -68,6 +68,22 @@ final class Occupancy
     public function totalGuests(): int   { return $this->adults + $this->children; }
     public function hasChildren(): bool  { return $this->children > 0; }
 
+    /**
+     * Build <Age> XML elements from an ages array.
+     *
+     * Used by Novoton API clients to generate XML request bodies.
+     *
+     * @param int[] $ages
+     */
+    public static function buildAgeXml(array $ages): string
+    {
+        $xml = '';
+        foreach ($ages as $age) {
+            $xml .= '<Age>' . (int) $age . '</Age>';
+        }
+        return $xml;
+    }
+
     public function toDisplayString(): string
     {
         $str = $this->adults . ' adult' . ($this->adults !== 1 ? 's' : '');
