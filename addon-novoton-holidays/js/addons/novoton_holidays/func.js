@@ -1,6 +1,8 @@
 (function(_, $) {
     $(document).ready(function() {
-        var $settings = $('#addon_options_novoton_holidays');
+        // CS-Cart appends numeric suffixes to addon setting IDs,
+        // so we use attribute-starts-with selectors
+        var $settings = $('[id^="content_novoton_holidays"]');
 
         if (!$settings.length) {
             return;
@@ -9,39 +11,39 @@
         // --- Section: General ---
 
         // api_url: domain/URL -> large
-        $settings.find('#addon_option_novoton_holidays_api_url').addClass('input-text-large');
+        $settings.find('[id^="addon_option_novoton_holidays_api_url"]').addClass('input-text-large');
 
         // api_key: API token -> large
-        $settings.find('#addon_option_novoton_holidays_api_key').addClass('input-text-large');
+        $settings.find('[id^="addon_option_novoton_holidays_api_key"]').addClass('input-text-large');
 
         // api_id: provider ID -> short
-        $settings.find('#addon_option_novoton_holidays_api_id').addClass('input-text-short');
+        $settings.find('[id^="addon_option_novoton_holidays_api_id"]').addClass('input-text-short');
 
         // api_user: username -> medium
-        $settings.find('#addon_option_novoton_holidays_api_user').addClass('input-text-medium');
+        $settings.find('[id^="addon_option_novoton_holidays_api_user"]').addClass('input-text-medium');
 
-        // api_password: password field (rendered by core, may already be styled)
+        // api_password: password -> large
+        $settings.find('[id^="addon_option_novoton_holidays_api_password"]').addClass('input-text-large');
 
         // commission: percentage -> short
-        $settings.find('#addon_option_novoton_holidays_commission').addClass('input-text-short');
+        $settings.find('[id^="addon_option_novoton_holidays_commission"]').addClass('input-text-short');
 
         // price_higher_threshold: percentage -> short
-        $settings.find('#addon_option_novoton_holidays_price_higher_threshold').addClass('input-text-short');
+        $settings.find('[id^="addon_option_novoton_holidays_price_higher_threshold"]').addClass('input-text-short');
 
         // preorder_cache_ttl: seconds -> short
-        $settings.find('#addon_option_novoton_holidays_preorder_cache_ttl').addClass('input-text-short');
+        $settings.find('[id^="addon_option_novoton_holidays_preorder_cache_ttl"]').addClass('input-text-short');
 
         // product_code_prefixes: short text -> medium
-        $settings.find('#addon_option_novoton_holidays_product_code_prefixes').addClass('input-text-medium');
+        $settings.find('[id^="addon_option_novoton_holidays_product_code_prefixes"]').addClass('input-text-medium');
 
         // country_category_map: multi-line data -> textarea-long
-        $settings.find('#addon_option_novoton_holidays_country_category_map').addClass('input-textarea-long');
+        $settings.find('[id^="addon_option_novoton_holidays_country_category_map"]').addClass('input-textarea-long');
 
         // cron_access_key: security token -> large
-        $settings.find('#addon_option_novoton_holidays_cron_access_key').addClass('input-text-large');
+        $settings.find('[id^="addon_option_novoton_holidays_cron_access_key"]').addClass('input-text-large');
 
         // --- Section: Advanced ---
-
         // Retry/resilience small integers -> short
         var shortFields = [
             'api_max_retries',
@@ -63,7 +65,7 @@
         ];
 
         $.each(shortFields, function(i, field) {
-            $settings.find('#addon_option_novoton_holidays_' + field).addClass('input-text-short');
+            $settings.find('[id^="addon_option_novoton_holidays_' + field + '"]').addClass('input-text-short');
         });
     });
 }(Tygh, Tygh.$));
