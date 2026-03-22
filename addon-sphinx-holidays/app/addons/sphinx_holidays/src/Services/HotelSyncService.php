@@ -349,6 +349,7 @@ class HotelSyncService extends AbstractSyncService
             'description'       => (string) ($raw['description'] ?? ''),
             'short_description' => (string) ($raw['short_description'] ?? ''),
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
+            'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
         ];
     }

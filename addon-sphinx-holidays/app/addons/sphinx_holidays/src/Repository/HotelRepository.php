@@ -44,13 +44,13 @@ class HotelRepository
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      description, short_description, image_url,
-                     facilities_json,
+                     images_json, facilities_json,
                      sync_status, last_synced_at)
                  VALUES (?s, ?s, ?i, ?s,
                      ?i, ?s, ?i, ?s,
                      ?s, ?s, ?d, ?d,
                      ?s, ?s, ?s,
-                     ?s,
+                     ?s, ?s,
                      'active', ?s)
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),
@@ -67,6 +67,7 @@ class HotelRepository
                     description = VALUES(description),
                     short_description = VALUES(short_description),
                     image_url = VALUES(image_url),
+                    images_json = VALUES(images_json),
                     facilities_json = VALUES(facilities_json),
                     sync_status = 'active',
                     last_synced_at = VALUES(last_synced_at),
@@ -75,6 +76,16 @@ class HotelRepository
                         OR country_name != VALUES(country_name)
                         OR country_code != VALUES(country_code),
                         NULL, product_skip_reason
+                    ),
+                    product_needs_update = IF(
+                        product_id IS NOT NULL AND product_id > 0 AND (
+                            name != VALUES(name)
+                            OR description != VALUES(description)
+                            OR short_description != VALUES(short_description)
+                            OR classification != VALUES(classification)
+                            OR image_url != VALUES(image_url)
+                        ),
+                        'Y', product_needs_update
                     )",
                 $hotelId,
                 (string) ($hotel['name'] ?? ''),
@@ -91,6 +102,7 @@ class HotelRepository
                 (string) ($hotel['description'] ?? ''),
                 (string) ($hotel['short_description'] ?? ''),
                 (string) ($hotel['image_url'] ?? ''),
+                $hotel['images_json'] ?? '[]',
                 $hotel['facilities_json'] ?? '[]',
                 date('Y-m-d H:i:s')
             );

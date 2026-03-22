@@ -666,3 +666,82 @@ function fn_sphinx_holidays_travel_core_exchange_rates_updated(array &$result): 
         ''
     );
 }
+
+/**
+ * Download an external image URL and attach it to a CS-Cart product.
+ *
+ * Uses CS-Cart's fn_update_image_pairs() to properly generate thumbnails
+ * and store the image in the standard product gallery.
+ *
+ * @param int    $product_id CS-Cart product ID
+ * @param string $image_url  External image URL to download
+ * @param bool   $is_main    True for main product image, false for additional
+ * @return bool True on success
+ */
+function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url, bool $is_main = false): bool
+{
+    if (empty($product_id) || empty($image_url)) {
+        return false;
+    }
+
+    $temp_file = fn_create_temp_file();
+    if (!$temp_file) {
+        return false;
+    }
+
+    $result = \Tygh\Http::get($image_url, [], [
+        'write_to_file' => $temp_file
+    ]);
+
+    if (empty($result) || !file_exists($temp_file) || filesize($temp_file) < 1000) {
+        if (file_exists($temp_file)) { unlink($temp_file); }
+        return false;
+    }
+
+    $image_info = @getimagesize($temp_file);
+    if (!$image_info) {
+        if (file_exists($temp_file)) { unlink($temp_file); }
+        return false;
+    }
+
+    $mime_to_ext = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+
+    $ext = $mime_to_ext[$image_info['mime']] ?? 'jpg';
+    $filename = "sphinx_hotel_{$product_id}_" . time() . '_' . mt_rand(100, 999) . ".{$ext}";
+
+    $existing_pairs = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
+        $product_id
+    );
+
+    $pair_data = [
+        'type'        => $is_main ? 'M' : 'A',
+        'object_id'   => $product_id,
+        'object_type' => 'product',
+        'position'    => $existing_pairs,
+    ];
+
+    if (function_exists('fn_update_image_pairs')) {
+        $icons = [];
+        $detailed = [
+            0 => [
+                'name' => $filename,
+                'path' => $temp_file,
+                'size' => filesize($temp_file),
+            ],
+        ];
+
+        $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, 'product', $product_id);
+
+        if (file_exists($temp_file)) { unlink($temp_file); }
+        return !empty($pair_ids);
+    }
+
+    if (file_exists($temp_file)) { unlink($temp_file); }
+    return false;
+}
