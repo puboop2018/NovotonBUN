@@ -150,7 +150,11 @@ class AddProductsCommand
                 'page_title'        => $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : ''),
             ];
 
-            $productId = (int) fn_update_product($product_data, 0, CART_LANGUAGE);
+            // Use configured languages (addon setting) instead of all active
+            $configuredLanguages = ConfigProvider::getProductLanguages();
+            $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+
+            $productId = (int) fn_update_product($product_data, 0, $primaryLang);
             if (!$productId) {
                 $hotelRepo->markSkipped($hotelId, 'product_creation_failed');
                 $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product creation)");
@@ -158,9 +162,8 @@ class AddProductsCommand
                 continue;
             }
 
-            // Ensure all active languages have descriptions
-            // (Sphinx API provides one language; replicate to all CS-Cart languages)
-            $otherLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A' AND lang_code != ?s", CART_LANGUAGE);
+            // Replicate descriptions to other configured languages
+            $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
             foreach ($otherLanguages as $lc) {
                 db_query(
                     "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)

@@ -135,6 +135,11 @@
                         <default_value>Hotels/{country}/{region}/{city}</default_value>
                         <variants/>
                     </item>
+                    <item id="product_languages">
+                        <type>multiple checkboxes</type>
+                        <default_value>ro</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -619,6 +624,11 @@
         <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie]]></item>
         <item lang="en" id="sphinx_holidays.product_category_template.tooltip"><![CDATA[Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion. Category paths are cached per unique combination within each cron run to avoid redundant lookups.]]></item>
         <item lang="ro" id="sphinx_holidays.product_category_template.tooltip"><![CDATA[Șablon pentru crearea automată a categoriilor CS-Cart la crearea produselor. Placeholder-e: {country}, {region}, {city}. Exemplu: Hotels/{country}/{region}/{city} creează Hotels > Grecia > Creta > Heraklion. Căile de categorii sunt memorate (cache) pe fiecare combinație unică.]]></item>
+
+        <item lang="en" id="sphinx_holidays.product_languages"><![CDATA[Product languages]]></item>
+        <item lang="ro" id="sphinx_holidays.product_languages"><![CDATA[Limbi produse]]></item>
+        <item lang="en" id="sphinx_holidays.product_languages.tooltip"><![CDATA[Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.]]></item>
+        <item lang="ro" id="sphinx_holidays.product_languages.tooltip"><![CDATA[Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate.]]></item>
 
         <!-- Rate Limiting -->
         <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>

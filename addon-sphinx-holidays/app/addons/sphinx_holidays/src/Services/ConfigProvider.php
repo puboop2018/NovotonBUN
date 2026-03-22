@@ -128,6 +128,24 @@ class ConfigProvider
     }
 
     /**
+     * Get the configured languages for hotel product descriptions.
+     *
+     * CS-Cart stores "multiple checkboxes" values as comma-separated string.
+     * Returns array of lang_code strings (e.g. ['ro', 'en']).
+     * Defaults to 'ro' if no setting configured.
+     *
+     * @return string[]
+     */
+    public static function getProductLanguages(): array
+    {
+        $value = (string) self::getSetting('product_languages', 'ro');
+        if (empty($value)) {
+            return [];
+        }
+        return array_filter(array_map('trim', explode(',', $value)));
+    }
+
+    /**
      * Get selected country codes for hotel sync filtering.
      *
      * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])

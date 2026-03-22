@@ -33,6 +33,20 @@ function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
 }
 
 /**
+ * Dynamic variants for the "Product languages" multiple checkboxes setting.
+ * Lists all active CS-Cart languages.
+ */
+function fn_settings_variants_addons_sphinx_holidays_product_languages(): array
+{
+    $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
+    $result = [];
+    foreach ($languages as $lang) {
+        $result[$lang['lang_code']] = $lang['name'] . ' (' . strtoupper($lang['lang_code']) . ')';
+    }
+    return $result;
+}
+
+/**
  * Addon uninstall function.
  * Drops Sphinx-specific tables and cleans up.
  */

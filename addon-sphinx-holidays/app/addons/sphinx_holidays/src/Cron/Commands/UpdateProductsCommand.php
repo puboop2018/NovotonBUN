@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Registry;
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
@@ -77,13 +78,16 @@ class UpdateProductsCommand
                     'page_title'        => $pageTitle,
                 ];
 
-                $result = fn_update_product($product_data, $productId, CART_LANGUAGE);
+                // Use configured languages (addon setting) instead of all active
+                $configuredLanguages = ConfigProvider::getProductLanguages();
+                $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
 
-                // Ensure all active languages have the same descriptions
-                // (Sphinx API provides one language; replicate to all CS-Cart languages)
+                $result = fn_update_product($product_data, $productId, $primaryLang);
+
+                // Replicate descriptions to other configured languages
                 if ($result) {
-                    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A' AND lang_code != ?s", CART_LANGUAGE);
-                    foreach ($languages as $lc) {
+                    $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+                    foreach ($otherLanguages as $lc) {
                         db_query(
                             "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
                              VALUES (?i, ?s, ?s, ?s, ?s, ?s)
