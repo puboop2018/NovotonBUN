@@ -444,8 +444,8 @@
         <item lang="ro" id="travel_core.tools_open_cron_url"><![CDATA[Deschide URL-ul cron într-un tab nou]]></item>
         <item lang="en" id="travel_core.tools_cron_setup_title"><![CDATA[External Cron Setup]]></item>
         <item lang="ro" id="travel_core.tools_cron_setup_title"><![CDATA[Configurare Cron Extern]]></item>
-        <item lang="en" id="travel_core.tools_cron_setup_desc"><![CDATA[To automate exchange rate updates, add the URL above to your cPanel cron jobs or an external cron service (e.g. cron-job.org). The recommended schedule for exchange rates is daily at 6:00 AM.]]></item>
-        <item lang="ro" id="travel_core.tools_cron_setup_desc"><![CDATA[Pentru a automatiza actualizarea cursului valutar, adăugați URL-ul de mai sus în joburile cron cPanel sau un serviciu cron extern (ex. cron-job.org). Programarea recomandată pentru cursul valutar este zilnic la ora 6:00.]]></item>
+        <item lang="en" id="travel_core.tools_cron_setup_desc"><![CDATA[To automate exchange rate updates, add the URL above to your cPanel cron jobs or an external cron service (e.g. cron-job.org). The recommended schedule for exchange rates is daily at 13:05 EET.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_setup_desc"><![CDATA[Pentru a automatiza actualizarea cursului valutar, adăugați URL-ul de mai sus în joburile cron cPanel sau un serviciu cron extern (ex. cron-job.org). Programarea recomandată pentru cursul valutar este zilnic la ora 13:05 EET.]]></item>
         <item lang="en" id="travel_core.tools_no_cron_key"><![CDATA[Cron access key is not configured. Please set it in]]></item>
         <item lang="ro" id="travel_core.tools_no_cron_key"><![CDATA[Cheia de acces cron nu este configurată. Vă rugăm să o setați în]]></item>
         <item lang="en" id="travel_core.tools_addon_settings"><![CDATA[addon settings]]></item>
