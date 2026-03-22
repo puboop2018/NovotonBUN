@@ -19,8 +19,6 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -40,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @set_time_limit(0);
 
         $api = Container::getApi();
-        $repository = new DestinationRepository();
+        $repository = Container::getDestinationRepository();
         $service = new DestinationSyncService($api, $repository);
 
         $result = $service->sync();
@@ -63,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @set_time_limit(0);
 
         $api = Container::getApi();
-        $hotelRepo = new HotelRepository();
-        $destRepo = new DestinationRepository();
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
@@ -80,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'add_products') {
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $unlinked = $hotelRepo->findUnlinked('', 1);
 
         if (empty($unlinked)) {
@@ -150,7 +148,7 @@ if ($mode === 'get_regions') {
         echo json_encode(['regions' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $regions = $destRepo->getRegionsByCountry($country_code);
     echo json_encode(['regions' => $regions]);
     exit;
@@ -163,7 +161,7 @@ if ($mode === 'get_cities') {
         echo json_encode(['cities' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $cities = $destRepo->getCitiesByParent($region_id);
     echo json_encode(['cities' => $cities]);
     exit;
@@ -176,7 +174,7 @@ if ($mode === 'get_destinations_tree') {
         echo json_encode(['tree' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $regions = $destRepo->getRegionsByCountry($country_code);
     $tree = [];
     foreach ($regions as $region) {
@@ -217,7 +215,7 @@ if ($mode === 'search_destinations') {
         echo json_encode(['results' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $results = $destRepo->search($q, 30);
     $formatted = [];
     foreach ($results as $r) {
@@ -236,8 +234,8 @@ if ($mode === 'search_destinations') {
 // ─── GET handlers ───
 
 if ($mode === 'manage') {
-    $destRepo = new DestinationRepository();
-    $hotelRepo = new HotelRepository();
+    $destRepo = Container::getDestinationRepository();
+    $hotelRepo = Container::getHotelRepository();
 
     // Destination stats
     $countsByType = $destRepo->getCountsByType();
@@ -294,7 +292,7 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('cron_key', $cron_key);
 
 } elseif ($mode === 'destinations') {
-    $repository = new DestinationRepository();
+    $repository = Container::getDestinationRepository();
 
     $params = [
         'type'      => $_REQUEST['type'] ?? '',
@@ -318,7 +316,7 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('total_items', $total);
 
 } elseif ($mode === 'hotels') {
-    $hotelRepo = new HotelRepository();
+    $hotelRepo = Container::getHotelRepository();
 
     $params = [
         'country_code'   => $_REQUEST['country_code'] ?? '',
@@ -349,7 +347,7 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
 
 } elseif ($mode === 'whitelist') {
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $countsByType = $destRepo->getCountsByType();
     $totalDestinations = $destRepo->getTotal();
 

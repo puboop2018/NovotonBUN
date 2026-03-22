@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use function fn_log_event;
@@ -117,7 +116,7 @@ class DiscoverBoardsCommand
         $this->output('Sync targets: ' . (empty($countryCodes) ? 'ALL countries' : implode(', ', $countryCodes)));
 
         // Get unique destination_ids from sphinx_hotels
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $destinationIds = $hotelRepo->getDestinationIdsByCountry($countryCodes);
 
         if (empty($destinationIds)) {
@@ -158,7 +157,7 @@ class DiscoverBoardsCommand
         $startTime = time();
 
         $api = Container::getApi();
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $normalizer = new SphinxNormalizer();
 
         // Search parameters

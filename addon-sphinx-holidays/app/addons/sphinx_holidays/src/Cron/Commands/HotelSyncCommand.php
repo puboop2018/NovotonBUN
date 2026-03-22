@@ -6,8 +6,6 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 
 /**
  * Cron command: sync hotels from Sphinx API.
@@ -37,8 +35,8 @@ class HotelSyncCommand extends AbstractSyncCommand
     public function execute(array $params = []): array
     {
         $api = Container::getApi();
-        $hotelRepo = new HotelRepository();
-        $destRepo = new DestinationRepository();
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         if ($this->outputCallback !== null) {

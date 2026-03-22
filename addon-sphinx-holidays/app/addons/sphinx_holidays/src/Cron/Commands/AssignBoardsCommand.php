@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Registry;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
@@ -108,7 +107,7 @@ class AssignBoardsCommand
 
         // Fresh start
         $countryCode = $params['country'] ?? '';
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $total = $hotelRepo->countWithBoardsAndProduct($countryCode);
 
         $this->output('Hotels with boards + products: ' . $total);
@@ -145,7 +144,7 @@ class AssignBoardsCommand
         $unlimited = !empty($params['unlimited']);
         $startTime = time();
 
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $featureAssigner = Container::getFeatureAssigner();
 
         $offset = $state['processed'];

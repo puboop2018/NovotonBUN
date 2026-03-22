@@ -5,7 +5,6 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 
 /**
  * Cron command: sync destinations from Sphinx API.
@@ -30,7 +29,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
     public function execute(array $params = []): array
     {
         $api = Container::getApi();
-        $repository = new DestinationRepository();
+        $repository = Container::getDestinationRepository();
         $service = new DestinationSyncService($api, $repository);
 
         if ($this->outputCallback !== null) {
