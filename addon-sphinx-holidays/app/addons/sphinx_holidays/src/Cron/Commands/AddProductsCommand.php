@@ -5,6 +5,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
@@ -36,6 +37,7 @@ class AddProductsCommand
     public function execute(array $params = []): array
     {
         $hotelRepo = new HotelRepository();
+        $destRepo = new DestinationRepository();
         $featureAssigner = Container::getFeatureAssigner();
         $template = ConfigProvider::getProductCategoryTemplate();
 
@@ -83,6 +85,11 @@ class AddProductsCommand
 
             $stats['total'] += count($hotels);
 
+            // Enrich hotel destination names from sphinx_destinations hierarchy.
+            // The API only returns destination_id — names must be resolved locally.
+            $destinationIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
+            $hierarchyMap = !empty($destinationIds) ? $destRepo->batchResolveHierarchies($destinationIds) : [];
+
         foreach ($hotels as $hotel) {
             $hotelId = $hotel['hotel_id'];
             $productCode = 'SPX' . $hotelId;
@@ -111,13 +118,19 @@ class AddProductsCommand
                 continue;
             }
 
-            // Build category path from template
+            // Build category path from template.
+            // Prefer hotel's own name fields; fall back to destination hierarchy lookup.
+            $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
+            $countryName = $hotel['country_name'] ?: ($hierarchy['country'] ?? '');
+            $regionName  = $hotel['region_name'] ?: ($hierarchy['region'] ?? '');
+            $cityName    = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
+
             $path = str_replace(
                 ['{country}', '{region}', '{city}'],
                 [
-                    $hotel['country_name'] ?: $hotel['country_code'] ?: 'Other',
-                    $hotel['region_name'] ?: 'Other',
-                    $hotel['destination_name'] ?: 'Other',
+                    $countryName ?: $hotel['country_code'] ?: 'Other',
+                    $regionName ?: 'Other',
+                    $cityName ?: 'Other',
                 ],
                 $template
             );

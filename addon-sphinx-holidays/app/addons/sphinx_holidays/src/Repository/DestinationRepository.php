@@ -354,6 +354,93 @@ class DestinationRepository
     }
 
     /**
+     * Batch-resolve destination hierarchies for a set of destination IDs.
+     *
+     * Walks each destination's parent_id chain to extract city, region, and country names.
+     * Loads a lightweight parent lookup once (same pattern as buildFullPaths()),
+     * then resolves all requested IDs in memory.
+     *
+     * @param array<int> $destinationIds List of destination IDs to resolve
+     * @return array<int, array{city: string, region: string, country: string}> Keyed by destination_id
+     */
+    public function batchResolveHierarchies(array $destinationIds): array
+    {
+        if (empty($destinationIds)) {
+            return [];
+        }
+
+        // Build lightweight parent lookup: id → [name, type, parent_id]
+        // ~80 bytes/row × 200k rows ≈ 16 MB — same approach as buildFullPaths()
+        $parentLookup = [];
+        $chunkSize = 10000;
+        $offset = 0;
+
+        while (true) {
+            $chunk = db_get_array(
+                "SELECT destination_id, name, type, parent_id FROM ?:sphinx_destinations ORDER BY destination_id LIMIT ?i, ?i",
+                $offset,
+                $chunkSize
+            );
+
+            if (empty($chunk)) {
+                break;
+            }
+
+            foreach ($chunk as $row) {
+                $parentLookup[(int) $row['destination_id']] = [
+                    'name'      => $row['name'],
+                    'type'      => $row['type'],
+                    'parent_id' => (int) $row['parent_id'],
+                ];
+            }
+
+            if (count($chunk) < $chunkSize) {
+                break;
+            }
+            $offset += $chunkSize;
+        }
+
+        if (empty($parentLookup)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($destinationIds as $destId) {
+            $destId = (int) $destId;
+            $hierarchy = ['city' => '', 'region' => '', 'country' => ''];
+
+            $currentId = $destId;
+            $visited = [];
+
+            // Walk up parent chain (max depth ~5: destination → city → region → country → continent)
+            while ($currentId > 0 && isset($parentLookup[$currentId]) && !isset($visited[$currentId])) {
+                $visited[$currentId] = true;
+                $node = $parentLookup[$currentId];
+                $type = $node['type'];
+
+                if (in_array($type, ['city', 'destination', 'resort'], true)) {
+                    // First city-level node wins (the hotel's own destination)
+                    if ($hierarchy['city'] === '') {
+                        $hierarchy['city'] = $node['name'];
+                    }
+                } elseif ($type === 'region') {
+                    if ($hierarchy['region'] === '') {
+                        $hierarchy['region'] = $node['name'];
+                    }
+                } elseif ($type === 'country') {
+                    $hierarchy['country'] = $node['name'];
+                }
+
+                $currentId = (int) $node['parent_id'];
+            }
+
+            $result[$destId] = $hierarchy;
+        }
+
+        return $result;
+    }
+
+    /**
      * Find destinations by name or full_path prefix.
      *
      * "Athens" matches by name. "Athens, Greece" matches via full_path prefix,
