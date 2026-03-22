@@ -111,6 +111,10 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'en' => 'Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.',
             'ro' => 'Selectati pentru care limbi CS-Cart sa se creeze descrierile produselor hoteliere. Hotelurile vor aparea in magazin doar pentru limbile selectate.',
         ],
+        'sphinx_holidays.addon_settings' => [
+            'en' => 'Settings',
+            'ro' => 'Setări',
+        ],
     ];
 
     foreach ($keys as $name => $translations) {

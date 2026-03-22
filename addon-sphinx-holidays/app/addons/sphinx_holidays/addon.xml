@@ -653,6 +653,8 @@
         <!-- Destination Whitelist UI -->
         <item lang="en" id="sphinx_holidays.destination_whitelist"><![CDATA[Destination Whitelist]]></item>
         <item lang="ro" id="sphinx_holidays.destination_whitelist"><![CDATA[Listă Albă Destinații]]></item>
+        <item lang="en" id="sphinx_holidays.addon_settings"><![CDATA[Settings]]></item>
+        <item lang="ro" id="sphinx_holidays.addon_settings"><![CDATA[Setări]]></item>
         <item lang="en" id="sphinx_holidays.whitelist_description"><![CDATA[Select countries and regions to sync. Hotels, circuits, experiences and package routes will only sync for whitelisted destinations.]]></item>
         <item lang="ro" id="sphinx_holidays.whitelist_description"><![CDATA[Selectați țările și regiunile de sincronizat. Hotelurile, circuitele, experiențele și rutele de pachete se vor sincroniza doar pentru destinațiile din lista albă.]]></item>
         <item lang="en" id="sphinx_holidays.select_all_children"><![CDATA[All regions/cities]]></item>
