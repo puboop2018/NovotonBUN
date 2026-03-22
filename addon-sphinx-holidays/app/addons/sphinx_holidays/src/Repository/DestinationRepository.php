@@ -354,24 +354,28 @@ class DestinationRepository
     }
 
     /**
-     * Batch-resolve destination hierarchies for a set of destination IDs.
+     * Lightweight parent lookup cache: id → [name, type, parent_id].
+     * Loaded once via loadParentLookup(), reused across resolveHierarchies() calls.
      *
-     * Walks each destination's parent_id chain to extract city, region, and country names.
-     * Loads a lightweight parent lookup once (same pattern as buildFullPaths()),
-     * then resolves all requested IDs in memory.
-     *
-     * @param array<int> $destinationIds List of destination IDs to resolve
-     * @return array<int, array{city: string, region: string, country: string}> Keyed by destination_id
+     * @var array<int, array{name: string, type: string, parent_id: int}>|null
      */
-    public function batchResolveHierarchies(array $destinationIds): array
+    private ?array $parentLookup = null;
+
+    /**
+     * Load the full destination parent lookup into memory.
+     *
+     * ~80 bytes/row × 200k rows ≈ 16 MB — same pattern as buildFullPaths().
+     * Call once before processing batches; reused by resolveHierarchies().
+     *
+     * @return bool True if lookup has data, false if sphinx_destinations is empty
+     */
+    public function loadParentLookup(): bool
     {
-        if (empty($destinationIds)) {
-            return [];
+        if ($this->parentLookup !== null) {
+            return !empty($this->parentLookup);
         }
 
-        // Build lightweight parent lookup: id → [name, type, parent_id]
-        // ~80 bytes/row × 200k rows ≈ 16 MB — same approach as buildFullPaths()
-        $parentLookup = [];
+        $this->parentLookup = [];
         $chunkSize = 10000;
         $offset = 0;
 
@@ -387,7 +391,7 @@ class DestinationRepository
             }
 
             foreach ($chunk as $row) {
-                $parentLookup[(int) $row['destination_id']] = [
+                $this->parentLookup[(int) $row['destination_id']] = [
                     'name'      => $row['name'],
                     'type'      => $row['type'],
                     'parent_id' => (int) $row['parent_id'],
@@ -400,7 +404,21 @@ class DestinationRepository
             $offset += $chunkSize;
         }
 
-        if (empty($parentLookup)) {
+        return !empty($this->parentLookup);
+    }
+
+    /**
+     * Resolve destination hierarchies for a set of destination IDs.
+     *
+     * Walks each destination's parent_id chain to extract city, region, and country names.
+     * Requires loadParentLookup() to have been called first.
+     *
+     * @param array<int> $destinationIds List of destination IDs to resolve
+     * @return array<int, array{city: string, region: string, country: string}> Keyed by destination_id
+     */
+    public function resolveHierarchies(array $destinationIds): array
+    {
+        if (empty($destinationIds) || empty($this->parentLookup)) {
             return [];
         }
 
@@ -413,9 +431,9 @@ class DestinationRepository
             $visited = [];
 
             // Walk up parent chain (max depth ~5: destination → city → region → country → continent)
-            while ($currentId > 0 && isset($parentLookup[$currentId]) && !isset($visited[$currentId])) {
+            while ($currentId > 0 && isset($this->parentLookup[$currentId]) && !isset($visited[$currentId])) {
                 $visited[$currentId] = true;
-                $node = $parentLookup[$currentId];
+                $node = $this->parentLookup[$currentId];
                 $type = $node['type'];
 
                 if (in_array($type, ['city', 'destination', 'resort'], true)) {

@@ -60,6 +60,12 @@ class AddProductsCommand
             'total'           => 0,
         ];
 
+        // Load destination hierarchy lookup once (200k rows, ~16 MB).
+        // Reused across all batches by resolveHierarchies().
+        if (!$destRepo->loadParentLookup()) {
+            $this->output("WARNING: sphinx_destinations is empty — run destination sync first. Category paths will use hotel fields only.");
+        }
+
         // Category path cache — avoid calling fn_travel_core_get_or_create_category()
         // multiple times for the same path within one run
         $categoryCache = [];
@@ -85,10 +91,9 @@ class AddProductsCommand
 
             $stats['total'] += count($hotels);
 
-            // Enrich hotel destination names from sphinx_destinations hierarchy.
-            // The API only returns destination_id — names must be resolved locally.
+            // Resolve destination names for this batch (uses pre-loaded parent lookup).
             $destinationIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
-            $hierarchyMap = !empty($destinationIds) ? $destRepo->batchResolveHierarchies($destinationIds) : [];
+            $hierarchyMap = !empty($destinationIds) ? $destRepo->resolveHierarchies($destinationIds) : [];
 
         foreach ($hotels as $hotel) {
             $hotelId = $hotel['hotel_id'];
@@ -125,12 +130,21 @@ class AddProductsCommand
             $regionName  = $hotel['region_name'] ?: ($hierarchy['region'] ?? '');
             $cityName    = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
 
+            // Skip hotels with unresolvable destinations — creating products under
+            // "Other" categories produces orphan products nobody can browse.
+            if ($countryName === '' && ($hotel['country_code'] ?? '') === '') {
+                $hotelRepo->markSkipped($hotelId, 'no_destination');
+                $this->output("[{$hotelId}] {$hotel['name']} ... SKIPPED (no country resolved)");
+                $stats['failed']++;
+                continue;
+            }
+
             $path = str_replace(
                 ['{country}', '{region}', '{city}'],
                 [
-                    $countryName ?: $hotel['country_code'] ?: 'Other',
-                    $regionName ?: 'Other',
-                    $cityName ?: 'Other',
+                    $countryName ?: $hotel['country_code'],
+                    $regionName ?: $countryName ?: $hotel['country_code'],
+                    $cityName ?: $regionName ?: $countryName ?: $hotel['country_code'],
                 ],
                 $template
             );
@@ -159,7 +173,7 @@ class AddProductsCommand
                 'category_ids'      => [$categoryId],
                 'full_description'  => $hotel['description'] ?? '',
                 'short_description' => $hotel['short_description'] ?? '',
-                'page_title'        => $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : ''),
+                'page_title'        => $hotel['name'] . ($cityName ? ' - ' . $cityName : ''),
             ];
 
             // Use configured languages (addon setting) instead of all active
