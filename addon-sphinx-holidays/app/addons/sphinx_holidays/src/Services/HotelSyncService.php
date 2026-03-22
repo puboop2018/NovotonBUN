@@ -22,30 +22,30 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
  *   4. Batch upsert into sphinx_hotels
  *   5. Mark stale hotels as inactive
  */
-class HotelSyncService
+class HotelSyncService extends AbstractSyncService
 {
-    private SphinxApi $api;
+    private const UPSERT_BATCH_SIZE = 100;
+    private const DEST_CHUNK_SIZE = 200;
+    private const PER_PAGE = 1000;
+
     private HotelRepository $hotelRepo;
     private DestinationRepository $destRepo;
     private SphinxNormalizer $normalizer;
-
-    /** @var callable|null */
-    private $outputCallback = null;
 
     public function __construct(
         SphinxApi $api,
         HotelRepository $hotelRepo,
         DestinationRepository $destRepo
     ) {
-        $this->api = $api;
+        parent::__construct($api);
         $this->hotelRepo = $hotelRepo;
         $this->destRepo = $destRepo;
         $this->normalizer = Container::getNormalizer();
     }
 
-    public function setOutputCallback(callable $callback): void
+    protected function getSyncType(): string
     {
-        $this->outputCallback = $callback;
+        return 'hotels';
     }
 
     /**
@@ -58,99 +58,74 @@ class HotelSyncService
      */
     public function sync(array $countryCodes = [], array $extraDestinationIds = [], bool $fullSync = false): array
     {
-        $startMs = (int) (microtime(true) * 1000);
-        $logId = $this->logStart('hotels');
+        return $this->runSync($fullSync, [
+            'country_codes'    => $countryCodes,
+            'destination_ids'  => $extraDestinationIds,
+        ]);
+    }
 
-        $stats = [
-            'success'     => false,
-            'total'       => 0,
-            'synced'      => 0,
-            'skipped'     => 0,
-            'failed'      => 0,
-            'duration_ms' => 0,
-            'error'       => '',
-            'sync_mode'   => 'full',
-        ];
+    protected function doSync(bool $fullSync, array $stats, array $context): array
+    {
+        $countryCodes = $context['country_codes'] ?? [];
+        $extraDestinationIds = $context['destination_ids'] ?? [];
 
-        try {
-            if (empty($countryCodes) && empty($extraDestinationIds)) {
-                $countryCodes = ConfigProvider::getSelectedCountryCodes();
-                $extraDestinationIds = ConfigProvider::getAllowedDestinationIds();
-            }
-
-            if (empty($countryCodes) && empty($extraDestinationIds)) {
-                $stats['error'] = 'No sync targets configured. Configure destinations in Sphinx Holidays > Whitelist.';
-                $this->output('ERROR: ' . $stats['error']);
-                $this->logComplete($logId, 'failed', $stats);
-                return $stats;
-            }
-
-            // Determine sync mode
-            $updatedSince = null;
-            if (!$fullSync) {
-                $lastSynced = $this->hotelRepo->getLastSyncedAt();
-                if ($lastSynced !== null) {
-                    $updatedSince = $lastSynced;
-                    $stats['sync_mode'] = 'incremental';
-                }
-            }
-
-            $labels = [];
-            if (!empty($countryCodes)) {
-                $labels[] = 'countries: ' . implode(', ', $countryCodes);
-            }
-            if (!empty($extraDestinationIds)) {
-                $labels[] = 'destination IDs: ' . implode(', ', $extraDestinationIds);
-            }
-            $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
-            $this->output("Hotel sync starting ({$modeLabel}) for " . implode('; ', $labels));
-
-            // Get destination IDs for selected countries (all types under those countries)
-            $destinationIds = $this->resolveDestinationIds($countryCodes, $extraDestinationIds);
-
-            if (empty($destinationIds)) {
-                $stats['error'] = 'No destinations found for selected countries. Sync destinations first.';
-                $this->output('ERROR: ' . $stats['error']);
-                $this->logComplete($logId, 'failed', $stats);
-                return $stats;
-            }
-
-            $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
-
-            // Fetch and sync hotels per country
-            foreach ($countryCodes as $countryCode) {
-                $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
-                $stats['total'] += $countryStats['total'];
-                $stats['synced'] += $countryStats['synced'];
-                $stats['skipped'] += $countryStats['skipped'];
-                $stats['failed'] += $countryStats['failed'];
-
-                if (!empty($countryStats['error'])) {
-                    $stats['error'] .= ($stats['error'] ? '; ' : '') . $countryStats['error'];
-                }
-            }
-
-            $stats['success'] = ($stats['synced'] > 0 || $stats['total'] === 0);
-            $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped ({$stats['sync_mode']}).");
-
-        } catch (\Throwable $e) {
-            $stats['error'] = $e->getMessage();
-            $this->output('EXCEPTION: ' . $e->getMessage());
-
-            fn_log_event('general', 'runtime', [
-                'message' => 'Sphinx hotel sync failed: ' . $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
+        if (empty($countryCodes) && empty($extraDestinationIds)) {
+            $countryCodes = ConfigProvider::getSelectedCountryCodes();
+            $extraDestinationIds = ConfigProvider::getAllowedDestinationIds();
         }
 
-        $stats['duration_ms'] = (int) (microtime(true) * 1000) - $startMs;
+        if (empty($countryCodes) && empty($extraDestinationIds)) {
+            $stats['error'] = 'No sync targets configured. Configure destinations in Sphinx Holidays > Whitelist.';
+            $this->output('ERROR: ' . $stats['error']);
+            return $stats;
+        }
 
-        // Capture rate limit info from the HTTP client
-        $httpClient = $this->api->getHttpClient();
-        $stats['rate_limit'] = $httpClient->getRateLimitState();
-        $stats['rate_limit_hits'] = $httpClient->getRateLimitHitCount();
+        // Determine sync mode
+        $updatedSince = null;
+        if (!$fullSync) {
+            $lastSynced = $this->hotelRepo->getLastSyncedAt();
+            if ($lastSynced !== null) {
+                $updatedSince = $lastSynced;
+                $stats['sync_mode'] = 'incremental';
+            }
+        }
 
-        $this->logComplete($logId, $stats['success'] ? 'completed' : 'failed', $stats);
+        $labels = [];
+        if (!empty($countryCodes)) {
+            $labels[] = 'countries: ' . implode(', ', $countryCodes);
+        }
+        if (!empty($extraDestinationIds)) {
+            $labels[] = 'destination IDs: ' . implode(', ', $extraDestinationIds);
+        }
+        $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
+        $this->output("Hotel sync starting ({$modeLabel}) for " . implode('; ', $labels));
+
+        // Get destination IDs for selected countries (all types under those countries)
+        $destinationIds = $this->resolveDestinationIds($countryCodes, $extraDestinationIds);
+
+        if (empty($destinationIds)) {
+            $stats['error'] = 'No destinations found for selected countries. Sync destinations first.';
+            $this->output('ERROR: ' . $stats['error']);
+            return $stats;
+        }
+
+        $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
+
+        // Fetch and sync hotels per country
+        foreach ($countryCodes as $countryCode) {
+            $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
+            $stats['total'] += $countryStats['total'];
+            $stats['synced'] += $countryStats['synced'];
+            $stats['skipped'] += $countryStats['skipped'];
+            $stats['failed'] += $countryStats['failed'];
+
+            if (!empty($countryStats['error'])) {
+                $stats['error'] .= ($stats['error'] ? '; ' : '') . $countryStats['error'];
+            }
+        }
+
+        $stats['success'] = ($stats['synced'] > 0 || $stats['total'] === 0);
+        $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped ({$stats['sync_mode']}).");
 
         return $stats;
     }
@@ -177,15 +152,25 @@ class HotelSyncService
         $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
 
         $activeIds = [];
-        $upsertBatchSize = 100;
-        $perPage = 1000;
 
         // Chunk destination IDs to avoid URL length overflow.
-        // 1887 IDs × ~25 chars each ≈ 47KB query string, which exceeds HTTP/2
-        // frame limits (~16KB) and causes "Error in the HTTP2 framing layer".
-        $destIdChunks = array_chunk($destinationIds, 200);
+        // Large ID lists create query strings that can exceed server limits.
+        $destIdChunks = array_chunk($destinationIds, self::DEST_CHUNK_SIZE);
 
         foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
+            // Wait for circuit breaker cooldown before attempting next chunk
+            $httpClient = $this->api->getHttpClient();
+            if ($chunkIdx > 0 && $httpClient->isCircuitOpen()) {
+                $waitSecs = $httpClient->getCircuitBreakerTimeout() + 5;
+                $this->output("    Circuit breaker open. Waiting {$waitSecs}s before retry...");
+                sleep($waitSecs);
+                if ($httpClient->isCircuitOpen()) {
+                    $this->output('    Circuit breaker still open after wait. Aborting remaining chunks.');
+                    $stats['error'] = 'Circuit breaker open — API unavailable';
+                    break;
+                }
+            }
+
             if (count($destIdChunks) > 1) {
                 $this->output("    Destination chunk " . ($chunkIdx + 1) . '/' . count($destIdChunks) . ' (' . count($destIdChunk) . ' IDs)');
             }
@@ -194,7 +179,7 @@ class HotelSyncService
 
             // Stream-and-upsert: fetch each page and upsert immediately
             while (true) {
-                $response = $this->api->getHotels($page, $perPage, $updatedSince, $destIdChunk);
+                $response = $this->api->getHotels($page, self::PER_PAGE, $updatedSince, $destIdChunk);
 
                 if ($response === null) {
                     $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
@@ -202,12 +187,9 @@ class HotelSyncService
                     break;
                 }
 
-                $items = $response['data'] ?? $response['items'] ?? $response;
-                if (isset($response[0]) && !isset($response['data'])) {
-                    $items = $response;
-                }
+                $items = $this->extractItems($response);
 
-                if (!is_array($items) || empty($items)) {
+                if (empty($items)) {
                     break;
                 }
 
@@ -230,29 +212,17 @@ class HotelSyncService
                     $activeIds[] = $normalized['hotel_id'];
                     $stats['total']++;
 
-                    if (count($pageBatch) >= $upsertBatchSize) {
-                        $affected = $this->hotelRepo->upsertBatch($pageBatch);
-                        $stats['synced'] += $affected;
+                    if (count($pageBatch) >= self::UPSERT_BATCH_SIZE) {
+                        $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
                         $pageBatch = [];
                     }
                 }
 
                 if (!empty($pageBatch)) {
-                    $affected = $this->hotelRepo->upsertBatch($pageBatch);
-                    $stats['synced'] += $affected;
+                    $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
                 }
 
-                // Pagination: check for more pages
-                $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
-                $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
-
-                if ($lastPage !== null && $page >= (int) $lastPage) {
-                    break;
-                }
-                if ($totalItems !== null && ($stats['total'] + $stats['skipped']) >= (int) $totalItems) {
-                    break;
-                }
-                if (count($items) < $perPage) {
+                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['skipped'])) {
                     break;
                 }
 
@@ -381,51 +351,5 @@ class HotelSyncService
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
         ];
-    }
-
-    private function logStart(string $syncType): int
-    {
-        db_query(
-            "INSERT INTO ?:sphinx_sync_log (sync_type, status, started_at) VALUES (?s, 'started', NOW())",
-            $syncType
-        );
-        return (int) db_get_field("SELECT LAST_INSERT_ID()");
-    }
-
-    private function logComplete(int $logId, string $status, array $stats): void
-    {
-        if ($logId <= 0) {
-            return;
-        }
-
-        db_query(
-            "UPDATE ?:sphinx_sync_log SET
-                status = ?s,
-                items_total = ?i,
-                items_synced = ?i,
-                items_failed = ?i,
-                error_message = ?s,
-                duration_ms = ?i,
-                rate_limit_hits = ?i,
-                sync_mode = ?s,
-                completed_at = NOW()
-             WHERE log_id = ?i",
-            $status,
-            $stats['total'] ?? 0,
-            $stats['synced'] ?? 0,
-            $stats['failed'] ?? 0,
-            $stats['error'] ?? '',
-            $stats['duration_ms'] ?? 0,
-            $stats['rate_limit_hits'] ?? 0,
-            $stats['sync_mode'] ?? 'full',
-            $logId
-        );
-    }
-
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
     }
 }

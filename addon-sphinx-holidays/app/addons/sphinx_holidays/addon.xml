@@ -640,6 +640,8 @@
         <item lang="ro" id="sphinx_holidays.no_destinations_synced"><![CDATA[Nicio destinație sincronizată. Rulați mai întâi sincronizarea destinațiilor.]]></item>
         <item lang="en" id="sphinx_holidays.save_whitelist"><![CDATA[Save Whitelist]]></item>
         <item lang="ro" id="sphinx_holidays.save_whitelist"><![CDATA[Salvează Lista Albă]]></item>
+        <item lang="en" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Remove All Whitelist]]></item>
+        <item lang="ro" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Elimină Toată Lista Albă]]></item>
         <item lang="en" id="sphinx_holidays.expand"><![CDATA[Expand]]></item>
         <item lang="ro" id="sphinx_holidays.expand"><![CDATA[Expandează]]></item>
         <item lang="en" id="sphinx_holidays.collapse"><![CDATA[Restrânge]]></item>

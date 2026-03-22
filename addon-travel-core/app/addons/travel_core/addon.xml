@@ -197,6 +197,8 @@
         <item lang="ro" id="travel_core.free_cancellation_until"><![CDATA[Anulare gratuită până la]]></item>
         <item lang="en" id="travel_core.on_booking"><![CDATA[on booking]]></item>
         <item lang="ro" id="travel_core.on_booking"><![CDATA[la rezervare]]></item>
+        <item lang="en" id="travel_core.admin_menu_travel"><![CDATA[Travel]]></item>
+        <item lang="ro" id="travel_core.admin_menu_travel"><![CDATA[Turism]]></item>
         <item lang="en" id="travel_core.manage_bookings"><![CDATA[Travel Bookings]]></item>
         <item lang="ro" id="travel_core.manage_bookings"><![CDATA[Rezervări Turism]]></item>
         <item lang="en" id="travel_core.complete_booking"><![CDATA[Booking Details]]></item>

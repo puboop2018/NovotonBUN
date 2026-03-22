@@ -14,19 +14,11 @@ use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
  *   php cron.php access_key=KEY mode=package_routes departure_ids=197128,197775
  *   php cron.php access_key=KEY mode=package_routes destination_ids=87819,3713
  */
-class PackageRouteSyncCommand
+class PackageRouteSyncCommand extends AbstractSyncCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Sync package routes (flight/bus) from Sphinx static API';
-    }
-
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -50,9 +42,8 @@ class PackageRouteSyncCommand
 
         $stats = $service->sync($departureIds, $destinationIds);
 
-        return [
-            'success' => $stats['success'],
-            'stats'   => $stats,
-        ];
+        $this->outputRateLimitSummary($stats);
+
+        return $this->wrapResult($stats);
     }
 }

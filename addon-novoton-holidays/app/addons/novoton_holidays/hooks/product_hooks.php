@@ -334,7 +334,12 @@ function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): v
         return;
     }
 
-    $product['novoton_hotel_info'] = $hotel_info;
+    // Assign hotel data directly to Smarty view — NOT to $product.
+    // Stuffing large nested arrays (full_data, rooms, packages) into $product
+    // causes Smarty's Data class to overflow PHP's stack limit during variable
+    // scope resolution, triggering "Maximum call stack size reached" on product
+    // detail pages. Templates access this data via dedicated Smarty variables
+    // ($rooms_data, $packages_data, etc.), never via $product.novoton_*.
 
     if (!empty($hotel_info['rooms'])) {
         // Re-index rooms by IdRoom so template can look up by room_id
@@ -345,17 +350,14 @@ function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): v
                 $rooms_by_id[$rid] = $room;
             }
         }
-        $product['novoton_rooms'] = $rooms_by_id;
         \Tygh\Tygh::$app['view']->assign('rooms_data', $rooms_by_id);
     }
 
     if (!empty($hotel_info['packages'])) {
-        $product['novoton_packages'] = $hotel_info['packages'];
         \Tygh\Tygh::$app['view']->assign('packages_data', $hotel_info['packages']);
     }
 
     if (!empty($hotel_info['board'])) {
-        $product['novoton_board'] = $hotel_info['board'];
         \Tygh\Tygh::$app['view']->assign('board_data', $hotel_info['board']);
     }
 
@@ -365,7 +367,6 @@ function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): v
     \Tygh\Tygh::$app['view']->assign('active_package', $active_package);
 
     if (!empty($hotel_info['full_data'])) {
-        $product['novoton_hotel_full'] = $hotel_info['full_data'];
         \Tygh\Tygh::$app['view']->assign('hotel_full_data', $hotel_info['full_data']);
     }
 }
