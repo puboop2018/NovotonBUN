@@ -1,0 +1,279 @@
+================================================================================
+                    ADDON INSTALL / UNINSTALL ORDER
+================================================================================
+
+Last updated: 2026-03-22
+
+
+1. ADDON DEPENDENCY GRAPH
+================================================================================
+
+    travel_core (v1.0.0)          <-- shared foundation, NO dependencies
+        |
+        +--- novoton_holidays (v3.2.0)    depends on: travel_core
+        |
+        +--- sphinx_holidays (v1.0.0)     depends on: travel_core
+
+Both novoton_holidays and sphinx_holidays declare:
+    <dependencies>travel_core</dependencies>
+in their addon.xml. CS-Cart enforces this at install time.
+
+novoton_holidays and sphinx_holidays have NO dependency on each other.
+They can be installed independently or together, in any order relative
+to each other.
+
+
+2. INSTALL ORDER (bottom-up, dependency first)
+================================================================================
+
+    Step 1:  travel_core            <-- MUST be installed FIRST
+    Step 2a: novoton_holidays       <-- any order relative to sphinx
+    Step 2b: sphinx_holidays        <-- any order relative to novoton
+
+CS-Cart will refuse to install novoton_holidays or sphinx_holidays
+if travel_core is not already active.
+
+
+3. WHAT HAPPENS DURING INSTALL (post_install functions)
+================================================================================
+
+STEP 1 — travel_core
+    Function: fn_travel_core_post_install()
+    File:     addon-travel-core/app/addons/travel_core/func.php
+
+    Actions:
+    - Calls fn_travel_core_seed_feature_map()
+    - Seeds 268+ canonical codes into travel_feature_map table:
+        * board (7):         AI, UAI, FB, HB, BB, RO, SC
+        * room_type (8):     SGL, DBL, TWIN, TRP, QUAD, SUITE, APT, STUDIO
+        * stars (5):         1, 2, 3, 4, 5
+        * property_type (10): hotel, villa, apartment, resort, hostel,
+                              guest_house, chalet, motel, boarding_house, cabin
+        * facility (200+):   pool, wifi, spa, restaurant, fitness, etc.
+    - Uses INSERT IGNORE (idempotent, safe to re-run)
+
+STEP 2a — novoton_holidays
+    Function: fn_novoton_holidays_post_install()
+    File:     addon-novoton-holidays/app/addons/novoton_holidays/functions/install.php
+
+    Actions:
+    - Creates product tab "Hotel Prices" for all active languages
+    - Verifies Theme Editor preset files (fn_novoton_holidays_create_theme_presets)
+    - Runs DB setup (fn_novoton_holidays_setup_db):
+        * Inserts language variables (until, free_cancellation, etc.)
+        * Runs schema migrations (adds columns if missing)
+        * Renames legacy feature types (star_rating -> property_rating,
+          board -> meals)
+        * Migrates property type codes (hyphens -> underscores)
+        * Migrates facility types (enum -> varchar)
+        * Migrates cache table timestamps (TIMESTAMP -> INT UNSIGNED)
+        * Creates foreign key constraints (idempotent)
+    - Seeds Novoton API aliases (fn_novoton_holidays_seed_travel_aliases):
+        * Board aliases:    AI, ALL INCL, ALL INCLUSIVE, ALLINC -> AI
+                           UAI, ULTRA ALL INCL -> UAI
+                           FB, FULL BOARD, FB+ -> FB
+                           HB, HALF BOARD, HB+ -> HB
+                           BB, BED AND BREAKFAST, B&B -> BB
+                           RO, ROOM ONLY -> RO
+                           SC, SELF CATERING -> SC
+        * Room aliases:    SGL, DBL, TWIN, TRP, QUAD, SUITE, APT, STUDIO
+        * Star aliases:    1->1, 2->2, 3->3, 4->4, 5->5
+        * Property type:   hotel, villa, apartment, resort, hostel,
+                           guest_house, chalet, motel, boarding_house, cabin
+        * All registered with api_source = 'novoton'
+    - Guards against missing travel_feature_map table (logs warning if absent)
+    - Creates novoton_reports directory
+
+STEP 2b — sphinx_holidays
+    Function: fn_sphinx_holidays_post_install()
+    File:     addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
+
+    Actions:
+    - Seeds Sphinx API aliases (fn_sphinx_holidays_seed_aliases):
+        * Board aliases (46+ mappings):
+            "All Inclusive", "ALL INCLUSIVE PLUS" -> AI
+            "Ultra All Inclusive", "ULTRA ALL INCLUSIVE" -> UAI
+            "Pensiune completa", "Full Board" -> FB
+            "Demipensiune", "Half Board" -> HB
+            "Mic dejun", "Bed & Breakfast", "BUFFET BREAKFAST" -> BB
+            "Fara masa", "Room Only" -> RO
+            "Self Catering" -> SC
+        * Room aliases (prefix match):
+            "Single Room" -> SGL, "Double Room" -> DBL,
+            "Twin Room" -> TWIN, "Triple Room" -> TRP,
+            "Quadruple" -> QUAD, "Suite" -> SUITE,
+            "Apartment" -> APT, "Studio" -> STUDIO,
+            "Family Room" -> DBL
+        * Star aliases:    1->1, 2->2, 3->3, 4->4, 5->5
+                           Plus text variants ("1 star", "5 stars")
+        * Property type:   hotel, villa, apartment, resort, hostel,
+                           guest_house, chalet, motel
+        * Facility aliases: 200+ Sphinx facility ID -> canonical code mappings
+        * All registered with api_source = 'sphinx'
+    - Guards against missing travel_feature_map table (logs warning if absent)
+
+
+4. UNINSTALL ORDER (top-down, dependents first)
+================================================================================
+
+    Step 1a: novoton_holidays       <-- uninstall provider addons FIRST
+    Step 1b: sphinx_holidays        <-- uninstall provider addons FIRST
+    Step 2:  travel_core            <-- uninstall LAST
+
+CRITICAL: travel_core actively BLOCKS its own uninstall if provider addons
+are still active. Code in fn_travel_core_uninstall() checks:
+
+    $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
+    foreach ($provider_addons as $addon) {
+        $status = db_get_field("SELECT status FROM ?:addons WHERE addon = ?s", $addon);
+        if ($status === 'A') {
+            $active_providers[] = $addon;
+        }
+    }
+    if (!empty($active_providers)) {
+        fn_set_notification('E', __('error'),
+            'Cannot disable travel_core: the following addons depend on it: '
+            . implode(', ', $active_providers)
+            . '. Please disable them first.'
+        );
+        return false;
+    }
+
+
+5. WHAT HAPPENS DURING UNINSTALL
+================================================================================
+
+STEP 1a — novoton_holidays
+    Function: fn_novoton_holidays_uninstall()
+    File:     addon-novoton-holidays/app/addons/novoton_holidays/functions/install.php
+
+    Actions (in order):
+    1. Removes Novoton aliases from shared travel_api_alias table:
+       DELETE FROM travel_api_alias WHERE api_source = 'novoton'
+       (guards: checks if table exists first)
+    2. Removes auto-generated Theme Editor preset files
+    3. Resets layouts using novoton_default style back to empty
+    4. Removes logos for novoton_default style
+    5. Removes product tabs (novoton_holidays addon tabs)
+    6. Removes block manager blocks (type LIKE 'novoton%')
+    7. Removes email templates (addon = 'novoton_holidays')
+    8. OPTIONAL: Deletes products if setting delete_products_on_uninstall = 'Y'
+       (iterates novoton_hotels with product_id > 0 and calls fn_delete_product)
+    9. Removes language variables (name LIKE 'novoton_holidays.%')
+    10. Removes novoton_reports directory
+    11. Removes novoton_logs directory
+    12. Removes API file cache (var/cache/novoton/)
+    13. Drops addon tables (in FK-safe order):
+        - hotel_feature_mappings
+        - novoton_resorts
+        - novoton_hotel_facilities
+        - novoton_facilities
+        - novoton_alternative_requests
+        - novoton_cache
+        - novoton_sync_log
+        - novoton_bookings
+        - novoton_hotel_packages
+        - novoton_hotels  (LAST - other tables reference it)
+
+STEP 1b — sphinx_holidays
+    Function: fn_sphinx_holidays_uninstall()
+    File:     addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
+
+    Actions (in order):
+    1. Removes Sphinx aliases from shared travel_api_alias table:
+       DELETE FROM travel_api_alias WHERE api_source = 'sphinx'
+       (guards: checks if table exists first)
+    2. Removes language variables (name LIKE 'sphinx_holidays.%')
+    3. Drops addon tables (in FK-safe order):
+        - sphinx_destination_whitelist
+        - sphinx_cache
+        - sphinx_sync_log
+        - sphinx_bookings
+        - sphinx_package_routes
+        - sphinx_destinations
+        - sphinx_hotels  (LAST)
+
+STEP 2 — travel_core
+    Function: fn_travel_core_uninstall()
+    File:     addon-travel-core/app/addons/travel_core/func.php
+
+    Actions (in order):
+    1. Checks for active provider addons (BLOCKS uninstall if found)
+    2. Drops shared tables (in FK-safe order):
+        - travel_api_alias    (references travel_feature_map)
+        - travel_bookings
+        - travel_feature_map  (canonical definitions)
+    3. Removes language variables (name LIKE 'travel_core.%')
+
+
+6. HOOK EXECUTION PRIORITY
+================================================================================
+
+Priority determines the order in which addon hooks execute. Lower number = runs first.
+
+    Addon               | Priority | Position
+    --------------------|----------|----------
+    travel_core         |   110    |    0
+    novoton_holidays    |   111    |    1
+    sphinx_holidays     |   112    |    2
+
+This ensures:
+- travel_core hooks run FIRST (shared infrastructure initialized)
+- novoton_holidays hooks run SECOND
+- sphinx_holidays hooks run THIRD
+
+
+7. DATABASE TABLES BY ADDON
+================================================================================
+
+travel_core (shared):
+    - travel_feature_map        Canonical feature definitions (268+ codes)
+    - travel_api_alias          Per-provider API value -> canonical code mappings
+    - travel_bookings           Shared bookings table
+
+novoton_holidays:
+    - novoton_hotels            Hotel data from Novoton API
+    - novoton_hotel_packages    Hotel package/price data
+    - novoton_hotel_facilities  Hotel-to-facility junction table
+    - novoton_facilities        Facility definitions
+    - novoton_resorts           Resort/destination definitions
+    - novoton_bookings          Novoton-specific booking data
+    - novoton_cache             API response cache
+    - novoton_sync_log          Sync operation log
+    - novoton_alternative_requests  Alternative hotel requests
+    - hotel_feature_mappings    Novoton-specific feature mappings
+                                (for facilities, resorts, travel groups, etc.)
+
+sphinx_holidays:
+    - sphinx_hotels             Hotel data from Sphinx API
+    - sphinx_bookings           Sphinx-specific booking data
+    - sphinx_destinations       Destination definitions
+    - sphinx_package_routes     Flight+hotel package routes
+    - sphinx_cache              API response cache
+    - sphinx_sync_log           Sync operation log
+    - sphinx_destination_whitelist  Allowed destinations for sync
+
+
+8. SAFE REINSTALL PROCEDURE
+================================================================================
+
+To cleanly reinstall all addons:
+
+    UNINSTALL (this order):
+    1. Disable novoton_holidays  (Admin > Add-ons > novoton_holidays > Disable)
+    2. Disable sphinx_holidays   (Admin > Add-ons > sphinx_holidays > Disable)
+    3. Disable travel_core       (Admin > Add-ons > travel_core > Disable)
+
+    INSTALL (this order):
+    1. Install travel_core       (seeds canonical codes)
+    2. Install novoton_holidays  (seeds novoton aliases + creates tables)
+    3. Install sphinx_holidays   (seeds sphinx aliases + creates tables)
+
+To reinstall only ONE provider addon:
+    1. Disable the provider addon (novoton_holidays or sphinx_holidays)
+    2. Re-install the provider addon
+    Note: travel_core stays active, its data is preserved.
+          Only the provider's aliases are re-seeded.
+
+WARNING: Uninstalling novoton_holidays with delete_products_on_uninstall = 'Y'
+will permanently delete all CS-Cart products created by that addon.
