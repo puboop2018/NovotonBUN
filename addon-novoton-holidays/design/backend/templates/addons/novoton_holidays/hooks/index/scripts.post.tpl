@@ -6,3 +6,4 @@
  *}
 
 {script src="js/addons/novoton_holidays/resort-manager.js"}
+{script src="js/addons/novoton_holidays/func.js"}
