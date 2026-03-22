@@ -22,6 +22,10 @@
             <div class="stat-value">{$counts_by_type.region|default:0}</div>
             <div class="stat-label">{__("sphinx_holidays.regions")}</div>
         </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{math equation="x+y" x=$counts_by_type.city|default:0 y=$counts_by_type.destination|default:0}</div>
+            <div class="stat-label">{__("sphinx_holidays.cities")}</div>
+        </div>
     </div>
 
     <p class="muted" style="margin-bottom: 15px;">{__("sphinx_holidays.whitelist_description")}</p>
@@ -96,24 +100,47 @@
         </div>
 
         {* ── Right: Summary Panel ── *}
-        <div style="width: 280px; flex-shrink: 0; border: 1px solid #ddd; border-radius: 6px; padding: 20px; background: #fafafa; position: sticky; top: 80px;">
+        <div style="width: 300px; flex-shrink: 0; border: 1px solid #ddd; border-radius: 6px; padding: 20px; background: #fafafa; position: sticky; top: 80px;">
             <h4 style="margin-top: 0;">{__("sphinx_holidays.whitelist_summary")}</h4>
 
-            <div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 8px;">
                 <strong>{__("sphinx_holidays.whitelisted_countries")}:</strong>
                 <span id="wl_summary_countries">{$whitelisted_country_count|default:0}</span>
             </div>
 
-            <div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 8px;">
                 <strong>{__("sphinx_holidays.whitelisted_regions")}:</strong>
                 <span id="wl_summary_regions">{$whitelisted_region_count|default:0}</span>
-                {if $sample_cities}
-                    <br><small class="muted" id="wl_summary_sample">(e.g., {', '|implode:$sample_cities}...)</small>
+            </div>
+
+            {* Per-country detail — server-rendered initially, rebuilt by JS on changes *}
+            <div id="wl_summary_country_names" style="margin-bottom: 12px; max-height: 300px; overflow-y: auto;">
+                {if $whitelist_summary}
+                    <div style="margin-bottom: 6px; font-size: 12px; color: #555;">
+                        <strong>{__("sphinx_holidays.countries")}:</strong>
+                        {foreach from=$whitelist_summary item=wc name=wcs}{$wc.name}{if !$smarty.foreach.wcs.last}, {/if}{/foreach}
+                    </div>
+                    {foreach from=$whitelist_summary item=wc}
+                        <div style="margin: 6px 0; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px;">
+                            <strong>{$wc.name}</strong><br/>
+                            <span style="color: #888;">regions:
+                                {if $wc.full_regions > 0}<span style="color: #28a745; font-weight: 600;">{$wc.full_regions} (full)</span>{/if}
+                                {if $wc.full_regions > 0 && $wc.partial_regions > 0} {/if}
+                                {if $wc.partial_regions > 0}<span style="color: #e67e22; font-weight: 600;">{$wc.partial_regions} (partial)</span>{/if}
+                                {if $wc.full_regions == 0 && $wc.partial_regions == 0}0{/if}
+                            </span><br/>
+                            <span style="color: #888;">cities: {$wc.total_cities}</span>
+                        </div>
+                    {/foreach}
                 {/if}
             </div>
 
             <button type="button" class="btn btn-primary" onclick="submitWhitelist()" style="width: 100%;">
                 <i class="icon-ok"></i> {__("sphinx_holidays.save_whitelist")}
+            </button>
+
+            <button type="button" class="btn" onclick="removeAllWhitelist()" style="width: 100%; margin-top: 8px;">
+                <i class="icon-trash"></i> {__("sphinx_holidays.remove_all_whitelist")}
             </button>
         </div>
 
@@ -424,16 +451,88 @@
 
     function updateSummary() {
         var countryCount = Object.keys(state).length;
-        var regionCount = 0;
+        var totalRegions = 0;
+        var countryNames = [];
+        var detailHtml = '';
+
         for (var cid in state) {
-            if (state[cid].type === 'all') {
-                regionCount += (loadedFlat[cid] || []).length || 0;
-            } else {
-                regionCount += state[cid].children.size;
+            var countryEl = document.querySelector('[data-country-id="' + cid + '"]');
+            var countryName = '?';
+            if (countryEl) {
+                var label = countryEl.querySelector('.wl-country-cb');
+                countryName = label ? label.parentNode.textContent.trim() : cid;
             }
+            countryNames.push(countryName);
+
+            var tree = loadedTree[cid] || [];
+            var isAll = state[cid].type === 'all';
+            var selectedChildren = state[cid].children;
+            var fullRegions = 0;
+            var partialRegions = 0;
+            var cityCount = 0;
+
+            if (tree.length > 0) {
+                tree.forEach(function(region) {
+                    if (isAll) {
+                        fullRegions++;
+                        cityCount += region.children.length;
+                    } else {
+                        var selectedInRegion = 0;
+                        region.children.forEach(function(city) {
+                            if (selectedChildren.has(city.destination_id)) {
+                                selectedInRegion++;
+                                cityCount++;
+                            }
+                        });
+                        if (selectedInRegion > 0) {
+                            if (selectedInRegion >= region.children.length) {
+                                fullRegions++;
+                            } else {
+                                partialRegions++;
+                            }
+                        }
+                    }
+                });
+                totalRegions += fullRegions + partialRegions;
+            } else {
+                // Tree not loaded yet — show basic info
+                if (isAll) {
+                    totalRegions += (loadedFlat[cid] || []).length;
+                } else {
+                    totalRegions += selectedChildren.size;
+                }
+            }
+
+            detailHtml += '<div style="margin:6px 0; padding:6px 0; border-bottom:1px solid #eee; font-size:12px;">' +
+                '<strong>' + escapeHtml(countryName) + '</strong><br/>';
+
+            if (tree.length > 0) {
+                detailHtml += '<span style="color:#888;">regions: ';
+                if (fullRegions > 0) detailHtml += '<span style="color:#28a745; font-weight:600;">' + fullRegions + ' (full)</span>';
+                if (fullRegions > 0 && partialRegions > 0) detailHtml += ' ';
+                if (partialRegions > 0) detailHtml += '<span style="color:#e67e22; font-weight:600;">' + partialRegions + ' (partial)</span>';
+                if (fullRegions === 0 && partialRegions === 0) detailHtml += '0';
+                detailHtml += '</span><br/>';
+                detailHtml += '<span style="color:#888;">cities: ' + cityCount + '</span>';
+            } else {
+                // Tree not loaded — show simplified
+                var count = isAll ? 'all' : selectedChildren.size;
+                detailHtml += '<span style="color:#888;">regions/cities: ' + count + '</span>';
+            }
+
+            detailHtml += '</div>';
         }
+
+        // Countries header line
+        var headerHtml = '';
+        if (countryNames.length > 0) {
+            headerHtml = '<div style="margin-bottom:6px; font-size:12px; color:#555;"><strong>Countries:</strong> ' +
+                countryNames.map(function(n) { return escapeHtml(n); }).join(', ') + '</div>';
+        }
+
         document.getElementById('wl_summary_countries').textContent = countryCount;
-        document.getElementById('wl_summary_regions').textContent = regionCount;
+        document.getElementById('wl_summary_regions').textContent = totalRegions;
+        document.getElementById('wl_summary_country_names').innerHTML = headerHtml + detailHtml;
     }
 
     // ─── Submit ───
@@ -456,6 +555,22 @@
             }
         }
         form.submit();
+    };
+
+    // ─── Remove All Whitelist ───
+
+    window.removeAllWhitelist = function() {
+        if (!confirm('Remove all whitelisted destinations? You must click Save to persist.')) return;
+
+        document.querySelectorAll('.wl-country-cb').forEach(function(cb) { cb.checked = false; });
+        document.querySelectorAll('.wl-select-all-children').forEach(function(cb) { cb.checked = false; });
+        document.querySelectorAll('.wl-child-cb').forEach(function(cb) { cb.checked = false; });
+
+        state = {};
+
+        document.querySelectorAll('[id^="wl_badge_"]').forEach(function(el) { el.innerHTML = ''; });
+
+        updateSummary();
     };
 
     // ─── Search: countries + regions/cities via AJAX ───

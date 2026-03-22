@@ -413,6 +413,54 @@ if ($mode === 'manage') {
          ORDER BY d.name LIMIT 5"
     );
 
+    // Per-country whitelist summary: region full/partial counts + city count
+    $whitelistSummary = [];
+    foreach ($countryData as $cd) {
+        if (!$cd['is_whitelisted']) {
+            continue;
+        }
+
+        $regions = $destRepo->getRegionsByCountry($cd['country_code']);
+        $fullRegions = 0;
+        $partialRegions = 0;
+        $totalCities = 0;
+
+        if ($cd['selection_type'] === 'all') {
+            $fullRegions = count($regions);
+            $totalCities = (int) db_get_field(
+                "SELECT COUNT(*) FROM ?:sphinx_destinations WHERE country_code = ?s AND type IN ('city','destination')",
+                $cd['country_code']
+            );
+        } else {
+            foreach ($regions as $region) {
+                $rid = (int) $region['destination_id'];
+                $citiesInRegion = $destRepo->getCitiesByParent($rid);
+                $totalInRegion = count($citiesInRegion);
+                $whitelistedInRegion = 0;
+                foreach ($citiesInRegion as $city) {
+                    if (isset($whitelistMap[(int) $city['destination_id']])) {
+                        $whitelistedInRegion++;
+                        $totalCities++;
+                    }
+                }
+                if ($whitelistedInRegion > 0) {
+                    if ($whitelistedInRegion >= $totalInRegion) {
+                        $fullRegions++;
+                    } else {
+                        $partialRegions++;
+                    }
+                }
+            }
+        }
+
+        $whitelistSummary[] = [
+            'name'            => $cd['name'],
+            'full_regions'    => $fullRegions,
+            'partial_regions' => $partialRegions,
+            'total_cities'    => $totalCities,
+        ];
+    }
+
     Tygh::$app['view']->assign('counts_by_type', $countsByType);
     Tygh::$app['view']->assign('total_destinations', $totalDestinations);
     Tygh::$app['view']->assign('countries', $countryData);
@@ -420,4 +468,5 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('whitelisted_country_count', $whitelistedCountryCount);
     Tygh::$app['view']->assign('whitelisted_region_count', $whitelistedRegionCount);
     Tygh::$app['view']->assign('sample_cities', $sampleCities);
+    Tygh::$app['view']->assign('whitelist_summary', $whitelistSummary);
 }
