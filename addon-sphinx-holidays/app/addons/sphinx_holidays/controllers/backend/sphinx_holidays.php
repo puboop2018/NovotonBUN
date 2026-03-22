@@ -289,7 +289,6 @@ if ($mode === 'manage') {
         'cleanup'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
         'discover_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=discover_boards",
         'assign_boards'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
-        'exchange_rates'  => $base_url . "index.php?dispatch=travel_cron.run&access_key=" . \Tygh\Registry::get('addons.travel_core.cron_access_key') . "&cron_mode=exchange_rates",
     ];
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);

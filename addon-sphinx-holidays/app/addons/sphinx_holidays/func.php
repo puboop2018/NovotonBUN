@@ -84,7 +84,49 @@ function fn_sphinx_holidays_uninstall(): bool
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
+    fn_sphinx_holidays_seed_language_keys();
     return true;
+}
+
+/**
+ * Ensure language keys added after initial install are present in the database.
+ * Idempotent — skips keys that already exist.
+ */
+function fn_sphinx_holidays_seed_language_keys(): void
+{
+    $keys = [
+        'sphinx_holidays.product_category_template' => [
+            'en' => 'Category path template',
+            'ro' => 'Sablon cale categorie',
+        ],
+        'sphinx_holidays.product_category_template.tooltip' => [
+            'en' => 'Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion.',
+            'ro' => 'Sablon pentru crearea automata a categoriilor CS-Cart la crearea produselor. Placeholder-e: {country}, {region}, {city}. Exemplu: Hotels/{country}/{region}/{city} creeaza Hotels > Grecia > Creta > Heraklion.',
+        ],
+        'sphinx_holidays.product_languages' => [
+            'en' => 'Product languages',
+            'ro' => 'Limbi produse',
+        ],
+        'sphinx_holidays.product_languages.tooltip' => [
+            'en' => 'Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.',
+            'ro' => 'Selectati pentru care limbi CS-Cart sa se creeze descrierile produselor hoteliere. Hotelurile vor aparea in magazin doar pentru limbile selectate.',
+        ],
+    ];
+
+    foreach ($keys as $name => $translations) {
+        foreach ($translations as $lang_code => $value) {
+            $exists = db_get_field(
+                "SELECT COUNT(*) FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
+                $name, $lang_code
+            );
+            if (!$exists) {
+                db_query(
+                    "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)",
+                    $name, $lang_code, $value
+                );
+            }
+        }
+    }
 }
 
 /**
