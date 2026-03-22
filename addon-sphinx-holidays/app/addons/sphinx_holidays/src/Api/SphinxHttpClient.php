@@ -132,6 +132,7 @@ class SphinxHttpClient
                 CURLOPT_TIMEOUT        => self::CURL_TIMEOUT,
                 CURLOPT_CONNECTTIMEOUT => self::CURL_CONNECT_TIMEOUT,
                 CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
                 CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders'],
             ];
 
@@ -271,6 +272,14 @@ class SphinxHttpClient
         if ($this->debugLogging) {
             error_log('[SphinxHttpClient] ' . $message);
         }
+    }
+
+    /**
+     * Check if the circuit breaker is currently open (public accessor).
+     */
+    public function isCircuitCurrentlyOpen(): bool
+    {
+        return $this->isCircuitOpen();
     }
 
     public function getLastHttpCode(): int { return $this->lastHttpCode; }

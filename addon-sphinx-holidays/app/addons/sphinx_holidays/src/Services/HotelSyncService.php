@@ -186,6 +186,19 @@ class HotelSyncService
         $destIdChunks = array_chunk($destinationIds, 200);
 
         foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
+            // Wait for circuit breaker cooldown before attempting next chunk
+            $httpClient = $this->api->getHttpClient();
+            if ($chunkIdx > 0 && $httpClient->isCircuitCurrentlyOpen()) {
+                $waitSecs = 65; // slightly longer than cbTimeout (60s)
+                $this->output("    Circuit breaker open. Waiting {$waitSecs}s before retry...");
+                sleep($waitSecs);
+                if ($httpClient->isCircuitCurrentlyOpen()) {
+                    $this->output('    Circuit breaker still open after wait. Aborting remaining chunks.');
+                    $stats['error'] = 'Circuit breaker open — API unavailable';
+                    break;
+                }
+            }
+
             if (count($destIdChunks) > 1) {
                 $this->output("    Destination chunk " . ($chunkIdx + 1) . '/' . count($destIdChunks) . ' (' . count($destIdChunk) . ' IDs)');
             }
