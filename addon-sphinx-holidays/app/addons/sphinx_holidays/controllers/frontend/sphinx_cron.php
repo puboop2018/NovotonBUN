@@ -105,6 +105,10 @@ try {
         $success = $result['success'] ?? false;
         echo "\n[" . date('Y-m-d H:i:s') . "] Cron job " . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
 
+        if (!empty($result['error'])) {
+            echo "Error: " . $result['error'] . "\n";
+        }
+
         if (!empty($result['stats'])) {
             $s = $result['stats'];
             echo "Stats: " . ($s['synced'] ?? $s['added'] ?? 0) . "/" . ($s['total'] ?? 0) . " synced";
@@ -121,7 +125,7 @@ try {
         }
     }
 
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
 
     fn_log_event('general', 'runtime', [

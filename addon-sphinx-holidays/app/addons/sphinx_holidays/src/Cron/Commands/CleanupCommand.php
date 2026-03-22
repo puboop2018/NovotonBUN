@@ -38,10 +38,9 @@ class CleanupCommand
 
         // 1. Remove orphan bookings (order_id = 0, created more than 48h ago)
         try {
-            db_query(
+            $cleaned['orphan_bookings'] = (int) db_query(
                 "DELETE FROM ?:sphinx_bookings WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)"
             );
-            $cleaned['orphan_bookings'] = (int)db_affected_rows();
             $this->output("Orphan bookings removed: {$cleaned['orphan_bookings']}");
         } catch (\Throwable $e) {
             $errors++;
@@ -55,8 +54,7 @@ class CleanupCommand
                 "SELECT log_id FROM ?:sphinx_sync_log ORDER BY log_id DESC LIMIT 1 OFFSET 200"
             );
             if ($cutoffId > 0) {
-                db_query("DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i", $cutoffId);
-                $cleaned['old_logs'] = (int)db_affected_rows();
+                $cleaned['old_logs'] = (int) db_query("DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i", $cutoffId);
             }
             $this->output("Old sync log entries removed: {$cleaned['old_logs']}");
         } catch (\Throwable $e) {
@@ -67,11 +65,10 @@ class CleanupCommand
 
         // 3. Delete expired cache entries
         try {
-            db_query(
+            $cleaned['expired_cache'] = (int) db_query(
                 "DELETE FROM ?:sphinx_cache WHERE expires_at < ?i",
                 time()
             );
-            $cleaned['expired_cache'] = (int)db_affected_rows();
             $this->output("Expired cache entries removed: {$cleaned['expired_cache']}");
         } catch (\Throwable $e) {
             $errors++;

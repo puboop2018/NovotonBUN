@@ -199,6 +199,7 @@
             CREATE TABLE IF NOT EXISTS `?:sphinx_hotels` (
                 `hotel_id`          VARCHAR(100) NOT NULL PRIMARY KEY COMMENT 'Sphinx hotel ID (e.g. s1-hotel-123)',
                 `product_id`        INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
+                `product_skip_reason` VARCHAR(50) DEFAULT NULL COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)',
                 `name`              VARCHAR(255) NOT NULL,
                 `classification`    TINYINT UNSIGNED DEFAULT NULL COMMENT 'Star rating 1-5',
                 `property_type`     VARCHAR(30) DEFAULT 'hotel',
@@ -389,6 +390,12 @@
         <item for="upgrade">
             ALTER TABLE `?:sphinx_cache`
                 MODIFY `cache_data` LONGTEXT NOT NULL;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `product_skip_reason` VARCHAR(50) DEFAULT NULL
+                COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)'
+                AFTER `product_id`;
         </item>
         <!-- Destination whitelist table for sync target UI -->
         <item>
