@@ -264,7 +264,7 @@ if ($mode == 'check') {
         $init_content = file_get_contents($init_file);
         
         // Check for require
-        $has_require = (strpos($init_content, 'require') !== false || strpos($init_content, 'include') !== false);
+        $has_require = (str_contains($init_content, 'require') || str_contains($init_content, 'include'));
         echo ($has_require ? "[Good]" : "[WARNING]") . " Includes hooks.php: " . ($has_require ? "YES" : "NO") . "\n";
         
         // Check registered hooks
@@ -277,7 +277,7 @@ if ($mode == 'check') {
         }
         
         // Check for view access
-        if (strpos($init_content, "['view']") !== false || strpos($init_content, "->view") !== false) {
+        if (str_contains($init_content, "['view']") || str_contains($init_content, "->view")) {
             echo "[WARNING] init.php accesses view - this can cause errors!\n";
         }
     } else {
@@ -298,13 +298,13 @@ if ($mode == 'check') {
         
         // Check for each required function
         foreach ($functions as $func) {
-            $found = strpos($hooks_content, "function $func") !== false;
+            $found = str_contains($hooks_content, "function $func");
             echo "     " . ($found ? "[Good]" : "[MISSING]") . " $func defined\n";
         }
         
         // Check for syntax errors
         exec("php -l " . escapeshellarg($hooks_file) . " 2>&1", $output, $return);
-        $syntax_ok = strpos(implode('', $output), 'No syntax errors') !== false;
+        $syntax_ok = str_contains(implode('', $output), 'No syntax errors');
         echo "     " . ($syntax_ok ? "[Good]" : "[ERROR]") . " Syntax check\n";
         if (!$syntax_ok) {
             echo "     Error: " . implode("\n     ", $output) . "\n";
@@ -357,7 +357,7 @@ if ($mode == 'check') {
     
     if (file_exists($init_file)) {
         $init_content = file_get_contents($init_file);
-        if (strpos($init_content, "['view']") !== false) {
+        if (str_contains($init_content, "['view']")) {
             $issues++;
             echo "??  MEDIUM: init.php accesses view directly\n";
             echo "   ? Wrap view access in: if (Tygh\Tygh::\$app->has('view')) { ... }\n\n";

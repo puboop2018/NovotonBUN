@@ -135,7 +135,7 @@ function fn_novoton_holidays_parse_xml_string($xml_string): ?\SimpleXMLElement
     $xml_string = trim($xml_string);
 
     // Extract from CDATA if needed
-    if (strpos($xml_string, '<') !== 0) {
+    if (!str_starts_with($xml_string, '<')) {
         if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xml_string, $matches)) {
             $xml_string = $matches[1];
         }

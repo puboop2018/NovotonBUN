@@ -15,6 +15,8 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\PackageRouteSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
 
 /**
  * Dispatches cron jobs by mode name.
@@ -38,6 +40,8 @@ class CronDispatcher
         'add_products'    => AddProductsCommand::class,
         'discover_boards' => DiscoverBoardsCommand::class,
         'assign_boards'   => AssignBoardsCommand::class,
+        'update_products' => UpdateProductsCommand::class,
+        'sync_images'     => SyncImagesCommand::class,
         'cleanup'         => CleanupCommand::class,
         'full'            => FullSyncCommand::class,
     ];
@@ -100,7 +104,7 @@ class CronDispatcher
         try {
             // Remove PHP execution time limit for long-running sync jobs
             // (destination sync: 200k+ items, hotel sync: 100k+ items)
-            @set_time_limit(0);
+            set_time_limit(0);
 
             $class = self::$modes[$mode];
             $command = new $class();

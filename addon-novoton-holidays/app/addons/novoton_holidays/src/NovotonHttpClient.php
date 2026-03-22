@@ -54,7 +54,7 @@ class NovotonHttpClient implements HttpClientInterface
         }
 
         // Log advisory when API credentials traverse unencrypted HTTP
-        if (stripos($this->apiUrl, 'http://') === 0) {
+        if (str_starts_with(strtolower($this->apiUrl), strtolower('http://'))) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API URL uses HTTP — credentials are sent unencrypted. '
                     . 'When the provider supports HTTPS, update api_url in addon settings.',
@@ -385,7 +385,7 @@ class NovotonHttpClient implements HttpClientInterface
         ];
 
         foreach ($retryableErrors as $retryable) {
-            if (stripos($error, $retryable) !== false) {
+            if (str_contains(strtolower($error), strtolower($retryable))) {
                 return true;
             }
         }

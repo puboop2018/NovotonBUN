@@ -101,6 +101,10 @@ class DestinationSyncService extends AbstractSyncService
                     }
                 } else {
                     $skipped++;
+                    $rawId = $item['id'] ?? $item['destination_id'] ?? '?';
+                    $rawName = $item['name'] ?? $item['title'] ?? $item['label'] ?? '(none)';
+                    $rawType = $item['type'] ?? $item['destination_type'] ?? '?';
+                    $this->output("  SKIP #{$skipped}: id={$rawId}, name=\"{$rawName}\", type={$rawType}");
                 }
             }
 

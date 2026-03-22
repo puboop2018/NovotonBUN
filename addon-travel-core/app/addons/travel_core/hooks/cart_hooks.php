@@ -60,7 +60,7 @@ function fn_travel_core_dispatch_before_display(): void
         $needs_css = false;
 
         foreach ($booking_pages as $prefix) {
-            if (strpos($dispatch, $prefix) === 0) {
+            if (str_starts_with($dispatch, $prefix)) {
                 $needs_css = true;
                 break;
             }

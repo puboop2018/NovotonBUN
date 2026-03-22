@@ -134,7 +134,7 @@ class CacheService implements CacheServiceInterface
             self::$memory_cache = [];
         } else {
             foreach (array_keys(self::$memory_cache) as $key) {
-                if (strpos($key, $prefix) === 0) {
+                if (str_starts_with($key, $prefix)) {
                     unset(self::$memory_cache[$key]);
                     $count++;
                 }
@@ -373,7 +373,7 @@ class CacheService implements CacheServiceInterface
         $safe_prefix = ($prefix !== null) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $prefix) : null;
         foreach ($files as $file) {
             $filename = basename($file, '.cache');
-            if ($safe_prefix === null || strpos($filename, $safe_prefix) === 0) {
+            if ($safe_prefix === null || str_starts_with($filename, $safe_prefix)) {
                 if (unlink($file)) {
                     $count++;
                 }

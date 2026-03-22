@@ -21,15 +21,14 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class AddProductsCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Create CS-Cart products from unlinked Sphinx hotels';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }
@@ -59,6 +58,10 @@ class AddProductsCommand
             'total'           => 0,
         ];
 
+        // Category path cache — avoid calling fn_travel_core_get_or_create_category()
+        // multiple times for the same path within one run
+        $categoryCache = [];
+
         // Process in batches to avoid OOM on large datasets
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
@@ -87,6 +90,7 @@ class AddProductsCommand
             // Country code validation — skip hotels with unrecognized codes
             $cc = $hotel['country_code'] ?? '';
             if (!empty($cc) && !isset($validCountryCodes[$cc])) {
+                $hotelRepo->markSkipped($hotelId, 'invalid_country');
                 fn_log_event('general', 'runtime', [
                     'message' => "Sphinx: country code '{$cc}' not found in CS-Cart countries. Hotel {$hotelId} skipped.",
                 ]);
@@ -117,9 +121,16 @@ class AddProductsCommand
                 ],
                 $template
             );
-            $categoryId = fn_travel_core_get_or_create_category($path);
+
+            // Use cache to avoid repeated category lookups for the same path
+            if (!isset($categoryCache[$path])) {
+                $categoryCache[$path] = fn_travel_core_get_or_create_category($path);
+            }
+            $categoryId = $categoryCache[$path];
+
             if (!$categoryId) {
-                $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category)");
+                $hotelRepo->markSkipped($hotelId, 'category_failed');
+                $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category: {$path})");
                 $stats['failed']++;
                 continue;
             }
@@ -138,11 +149,29 @@ class AddProductsCommand
                 'page_title'        => $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : ''),
             ];
 
-            $productId = (int) fn_update_product($product_data, 0, CART_LANGUAGE);
+            // Use configured languages (addon setting) instead of all active
+            $configuredLanguages = ConfigProvider::getProductLanguages();
+            $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+
+            $productId = (int) fn_update_product($product_data, 0, $primaryLang);
             if (!$productId) {
+                $hotelRepo->markSkipped($hotelId, 'product_creation_failed');
                 $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product creation)");
                 $stats['failed']++;
                 continue;
+            }
+
+            // Replicate descriptions to other configured languages
+            $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+            foreach ($otherLanguages as $lc) {
+                db_query(
+                    "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
+                     VALUES (?i, ?s, ?s, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                    $productId, $lc,
+                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title'],
+                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title']
+                );
             }
 
             // Link hotel → product

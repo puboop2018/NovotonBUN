@@ -219,7 +219,7 @@ if ($mode === 'manage') {
     // Post-decrypt email filter (LIKE doesn't work on encrypted data)
     if (!empty($search_email_filter)) {
         $requests = array_filter($requests, function($req) use ($search_email_filter) {
-            return stripos($req['contact_email'] ?? '', $search_email_filter) !== false;
+            return str_contains(strtolower($req['contact_email'] ?? ''), strtolower($search_email_filter));
         });
         $total_items = count($requests);
     }

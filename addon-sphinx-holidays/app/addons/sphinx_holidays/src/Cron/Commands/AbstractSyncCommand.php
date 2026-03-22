@@ -10,12 +10,11 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  */
 abstract class AbstractSyncCommand
 {
-    /** @var callable|null */
-    protected $outputCallback = null;
+    protected ?\Closure $outputCallback = null;
 
     abstract public static function getDescription(): string;
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

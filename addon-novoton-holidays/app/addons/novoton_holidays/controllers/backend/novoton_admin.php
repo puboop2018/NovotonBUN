@@ -179,7 +179,7 @@ if ($mode == 'download_log') {
     $realLogPath = realpath($logPath);
     $expectedDir = realpath(fn_get_files_dir_path() . 'novoton_logs/');
     
-    if ($realLogPath === false || $expectedDir === false || strpos($realLogPath, $expectedDir) !== 0) {
+    if ($realLogPath === false || $expectedDir === false || !str_starts_with($realLogPath, $expectedDir)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.log_file_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.sync_logs'];
     }

@@ -16,14 +16,10 @@ use Tygh\Addons\TravelCore\Exceptions\InvalidArgumentException;
 
 final class Occupancy
 {
-    /** @var int */
-    private $adults;
-
-    /** @var int */
-    private $children;
-
+    private int $adults;
+    private int $children;
     /** @var int[] */
-    private $childrenAges;
+    private array $childrenAges;
 
     private function __construct(int $adults, int $children, array $childrenAges)
     {

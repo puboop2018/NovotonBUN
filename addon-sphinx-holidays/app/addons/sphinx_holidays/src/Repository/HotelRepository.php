@@ -44,13 +44,13 @@ class HotelRepository
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      description, short_description, image_url,
-                     facilities_json,
+                     images_json, facilities_json,
                      sync_status, last_synced_at)
                  VALUES (?s, ?s, ?i, ?s,
                      ?i, ?s, ?i, ?s,
                      ?s, ?s, ?d, ?d,
                      ?s, ?s, ?s,
-                     ?s,
+                     ?s, ?s,
                      'active', ?s)
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),
@@ -67,9 +67,26 @@ class HotelRepository
                     description = VALUES(description),
                     short_description = VALUES(short_description),
                     image_url = VALUES(image_url),
+                    images_json = VALUES(images_json),
                     facilities_json = VALUES(facilities_json),
                     sync_status = 'active',
-                    last_synced_at = VALUES(last_synced_at)",
+                    last_synced_at = VALUES(last_synced_at),
+                    product_skip_reason = IF(
+                        destination_name != VALUES(destination_name)
+                        OR country_name != VALUES(country_name)
+                        OR country_code != VALUES(country_code),
+                        NULL, product_skip_reason
+                    ),
+                    product_needs_update = IF(
+                        product_id IS NOT NULL AND product_id > 0 AND (
+                            name != VALUES(name)
+                            OR description != VALUES(description)
+                            OR short_description != VALUES(short_description)
+                            OR classification != VALUES(classification)
+                            OR image_url != VALUES(image_url)
+                        ),
+                        'Y', product_needs_update
+                    )",
                 $hotelId,
                 (string) ($hotel['name'] ?? ''),
                 (int) ($hotel['classification'] ?? 0),
@@ -85,6 +102,7 @@ class HotelRepository
                 (string) ($hotel['description'] ?? ''),
                 (string) ($hotel['short_description'] ?? ''),
                 (string) ($hotel['image_url'] ?? ''),
+                $hotel['images_json'] ?? '[]',
                 $hotel['facilities_json'] ?? '[]',
                 date('Y-m-d H:i:s')
             );
@@ -261,7 +279,9 @@ class HotelRepository
 
         return db_get_array(
             "SELECT {$cols} FROM ?:sphinx_hotels h
-             WHERE h.sync_status = 'active' AND (h.product_id IS NULL OR h.product_id = 0) ?p
+             WHERE h.sync_status = 'active'
+               AND (h.product_id IS NULL OR h.product_id = 0)
+               AND h.product_skip_reason IS NULL ?p
              ORDER BY h.country_code ASC, h.name ASC ?p",
             $condition, $limitClause
         );
@@ -403,12 +423,61 @@ class HotelRepository
         $placeholders = implode(',', array_fill(0, count($activeIds), '?s'));
         $params = array_merge([$countryCode], $activeIds);
 
-        $result = db_query(
+        return (int) db_query(
             "UPDATE ?:sphinx_hotels SET sync_status = 'inactive'
              WHERE country_code = ?s AND sync_status = 'active' AND hotel_id NOT IN ($placeholders)",
             ...$params
         );
+    }
 
-        return (int) db_affected_rows();
+    /**
+     * Mark a hotel as skipped for product creation with a reason.
+     *
+     * Skipped hotels are excluded from findUnlinked() on subsequent runs.
+     * Reset with resetSkipped() to retry.
+     */
+    public function markSkipped(string $hotelId, string $reason): void
+    {
+        db_query(
+            "UPDATE ?:sphinx_hotels SET product_skip_reason = ?s WHERE hotel_id = ?s",
+            $reason, $hotelId
+        );
+    }
+
+    /**
+     * Reset skip reason for hotels, making them eligible for product creation again.
+     *
+     * @return int Number of hotels reset
+     */
+    public function resetSkipped(string $countryCode = '', string $reason = ''): int
+    {
+        $condition = '';
+        if ($countryCode !== '') {
+            $condition .= db_quote(" AND country_code = ?s", $countryCode);
+        }
+        if ($reason !== '') {
+            $condition .= db_quote(" AND product_skip_reason = ?s", $reason);
+        }
+
+        return (int) db_query(
+            "UPDATE ?:sphinx_hotels SET product_skip_reason = NULL
+             WHERE product_skip_reason IS NOT NULL ?p",
+            $condition
+        );
+    }
+
+    /**
+     * Count hotels that have been skipped for product creation.
+     */
+    public function countSkipped(string $reason = ''): int
+    {
+        $condition = '';
+        if ($reason !== '') {
+            $condition = db_quote(" AND product_skip_reason = ?s", $reason);
+        }
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_skip_reason IS NOT NULL ?p",
+            $condition
+        );
     }
 }

@@ -157,7 +157,7 @@ function _nvt_parse_and_validate_guests($guests, $check_in = '', $booking_id = 0
 
             // Validate child age: must be under 18 at check-in
             $guest_type = strtolower($guest['type'] ?? '');
-            $is_child_guest = (strpos($key, 'child') !== false || $guest_type === 'child');
+            $is_child_guest = (str_contains($key, 'child') || $guest_type === 'child');
             if ($dob_timestamp && $is_child_guest && !empty($check_in)) {
                 try {
                     $dob_date = new DateTime($birthday);

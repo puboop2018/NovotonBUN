@@ -50,8 +50,7 @@ final class BoardType
         'SELF CATERING'        => self::SELF_CATERING,
     ];
 
-    /** @var string */
-    private $code;
+    private string $code;
 
     private function __construct(string $code)
     {

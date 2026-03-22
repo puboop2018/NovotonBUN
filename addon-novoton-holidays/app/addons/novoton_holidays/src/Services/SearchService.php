@@ -465,7 +465,7 @@ class SearchService implements SearchServiceInterface
         $candidates = $mapping[$mealPlan] ?? [$mealPlan];
 
         foreach ($candidates as $candidate) {
-            if (stripos($boardId, $candidate) !== false) {
+            if (str_contains(strtolower($boardId), strtolower($candidate))) {
                 return true;
             }
         }

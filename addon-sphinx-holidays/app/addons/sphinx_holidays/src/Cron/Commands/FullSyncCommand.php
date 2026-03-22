@@ -20,8 +20,7 @@ use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
  */
 class FullSyncCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     /**
      * Ordered list of modes to execute in sequence.
@@ -33,6 +32,8 @@ class FullSyncCommand
      * assign_boards runs after hotels to assign already-discovered boards as
      * CS-Cart product features. add_products runs before cache_refresh so
      * newly created products are included in cache rebuilds.
+     * update_products syncs changed hotel data to existing CS-Cart products.
+     * sync_images downloads and attaches hotel images to CS-Cart products.
      */
     private const SYNC_SEQUENCE = [
         'destinations',
@@ -43,6 +44,8 @@ class FullSyncCommand
         'experiences',
         'order_status',
         'add_products',
+        'update_products',
+        'sync_images',
         'cache_refresh',
         'cleanup',
     ];
@@ -52,7 +55,7 @@ class FullSyncCommand
         return 'Run all sync modes in sequence (full pipeline)';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

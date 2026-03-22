@@ -33,8 +33,7 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class AssignBoardsCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     /** State file name stored in DIR_CACHE */
     private const STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
@@ -61,7 +60,7 @@ class AssignBoardsCommand
         return 'Assign discovered board/meal types as CS-Cart product features (batched with resume)';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

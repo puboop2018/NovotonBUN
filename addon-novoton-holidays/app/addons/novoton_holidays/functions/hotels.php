@@ -339,7 +339,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
             if (isset($sp[$key])) {
                 $val = $sp[$key];
                 // Handle percentage values like "80%"
-                if (is_string($val) && strpos($val, '%') !== false) {
+                if (is_string($val) && str_contains($val, '%')) {
                     $entry[$target_key] = $val; // Keep as string for template to handle
                 } else {
                     $entry[$target_key] = (float)($val);

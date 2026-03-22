@@ -15,8 +15,7 @@ use Tygh\Addons\TravelCore\Exceptions\InvalidArgumentException;
 
 final class HotelId
 {
-    /** @var string */
-    private $id;
+    private string $id;
 
     private function __construct(string $id)
     {

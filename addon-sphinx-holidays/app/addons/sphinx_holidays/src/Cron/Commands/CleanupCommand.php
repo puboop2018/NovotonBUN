@@ -10,15 +10,14 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  */
 class CleanupCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Clean up orphan bookings, old sync logs, and expired cache entries';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }
@@ -33,15 +32,15 @@ class CleanupCommand
             'orphan_bookings' => 0,
             'old_logs' => 0,
             'expired_cache' => 0,
+            'orphan_products' => 0,
         ];
         $errors = 0;
 
         // 1. Remove orphan bookings (order_id = 0, created more than 48h ago)
         try {
-            db_query(
+            $cleaned['orphan_bookings'] = (int) db_query(
                 "DELETE FROM ?:sphinx_bookings WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)"
             );
-            $cleaned['orphan_bookings'] = (int)db_affected_rows();
             $this->output("Orphan bookings removed: {$cleaned['orphan_bookings']}");
         } catch (\Throwable $e) {
             $errors++;
@@ -55,8 +54,7 @@ class CleanupCommand
                 "SELECT log_id FROM ?:sphinx_sync_log ORDER BY log_id DESC LIMIT 1 OFFSET 200"
             );
             if ($cutoffId > 0) {
-                db_query("DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i", $cutoffId);
-                $cleaned['old_logs'] = (int)db_affected_rows();
+                $cleaned['old_logs'] = (int) db_query("DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i", $cutoffId);
             }
             $this->output("Old sync log entries removed: {$cleaned['old_logs']}");
         } catch (\Throwable $e) {
@@ -67,11 +65,10 @@ class CleanupCommand
 
         // 3. Delete expired cache entries
         try {
-            db_query(
+            $cleaned['expired_cache'] = (int) db_query(
                 "DELETE FROM ?:sphinx_cache WHERE expires_at < ?i",
                 time()
             );
-            $cleaned['expired_cache'] = (int)db_affected_rows();
             $this->output("Expired cache entries removed: {$cleaned['expired_cache']}");
         } catch (\Throwable $e) {
             $errors++;
@@ -79,9 +76,26 @@ class CleanupCommand
             fn_log_event('general', 'runtime', ['message' => 'Sphinx cleanup: cache cleanup failed: ' . $e->getMessage()]);
         }
 
+        // 4. Unlink orphan product references (product deleted in CS-Cart but still referenced in sphinx_hotels)
+        try {
+            $cleaned['orphan_products'] = (int) db_query(
+                "UPDATE ?:sphinx_hotels h
+                 LEFT JOIN ?:products p ON p.product_id = h.product_id
+                 SET h.product_id = NULL, h.product_skip_reason = NULL, h.product_needs_update = 'N'
+                 WHERE h.product_id IS NOT NULL AND h.product_id > 0 AND p.product_id IS NULL"
+            );
+            if ($cleaned['orphan_products'] > 0) {
+                $this->output("Orphan product links cleared: {$cleaned['orphan_products']} (products deleted in CS-Cart, hotels eligible for re-creation)");
+            }
+        } catch (\Throwable $e) {
+            $errors++;
+            $this->output("Orphan product cleanup failed: " . $e->getMessage());
+            fn_log_event('general', 'runtime', ['message' => 'Sphinx cleanup: orphan products failed: ' . $e->getMessage()]);
+        }
+
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
         $total = array_sum($cleaned);
-        $this->output("Cleanup complete: {$total} items removed in " . round($durationMs / 1000, 1) . "s");
+        $this->output("Cleanup complete: {$total} items removed/fixed in " . round($durationMs / 1000, 1) . "s");
 
         return [
             'success' => $errors === 0,

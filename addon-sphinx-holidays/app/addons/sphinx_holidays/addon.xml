@@ -135,6 +135,11 @@
                         <default_value>Hotels/{country}/{region}/{city}</default_value>
                         <variants/>
                     </item>
+                    <item id="product_languages">
+                        <type>multiple checkboxes</type>
+                        <default_value>ro</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -199,6 +204,7 @@
             CREATE TABLE IF NOT EXISTS `?:sphinx_hotels` (
                 `hotel_id`          VARCHAR(100) NOT NULL PRIMARY KEY COMMENT 'Sphinx hotel ID (e.g. s1-hotel-123)',
                 `product_id`        INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
+                `product_skip_reason` VARCHAR(50) DEFAULT NULL COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)',
                 `name`              VARCHAR(255) NOT NULL,
                 `classification`    TINYINT UNSIGNED DEFAULT NULL COMMENT 'Star rating 1-5',
                 `property_type`     VARCHAR(30) DEFAULT 'hotel',
@@ -213,6 +219,8 @@
                 `description`       TEXT DEFAULT NULL,
                 `short_description` TEXT DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,
+                `images_json`       JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]',
+                `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product',
                 `amenities_json`    JSON DEFAULT NULL COMMENT 'Array of amenity objects',
                 `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
                 `facilities_json`   JSON DEFAULT NULL COMMENT 'Array of facility objects from static endpoint',
@@ -390,6 +398,24 @@
             ALTER TABLE `?:sphinx_cache`
                 MODIFY `cache_data` LONGTEXT NOT NULL;
         </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `product_skip_reason` VARCHAR(50) DEFAULT NULL
+                COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)'
+                AFTER `product_id`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `images_json` JSON DEFAULT NULL
+                COMMENT 'All image objects from API [{url, ...}, ...]'
+                AFTER `image_url`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `product_needs_update` ENUM('Y','N') DEFAULT 'N'
+                COMMENT 'Set to Y when API data differs from CS-Cart product'
+                AFTER `images_json`;
+        </item>
         <!-- Destination whitelist table for sync target UI -->
         <item>
             CREATE TABLE IF NOT EXISTS `?:sphinx_destination_whitelist` (
@@ -434,8 +460,8 @@
         <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
         <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
         <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
-        <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Mapping]]></item>
-        <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Mapare Produse]]></item>
+        <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Creation & Mapping]]></item>
+        <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Creare & Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
         <item lang="ro" id="sphinx_holidays.hotels_category_id"><![CDATA[ID categorie CS-Cart pentru hoteluri Sphinx]]></item>
         <item lang="en" id="sphinx_holidays.packages_category_id"><![CDATA[CS-Cart category ID for Sphinx packages]]></item>
@@ -594,8 +620,15 @@
         <item lang="ro" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[Nu s-au găsit hoteluri neasociate. Toate hotelurile au deja produse.]]></item>
         <item lang="en" id="sphinx_holidays.skipped_invalid_country"><![CDATA[skipped — invalid country code]]></item>
         <item lang="ro" id="sphinx_holidays.skipped_invalid_country"><![CDATA[omise — cod de țară invalid]]></item>
-        <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template ({country}, {region}, {city} placeholders)]]></item>
-        <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie ({country}, {region}, {city})]]></item>
+        <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template]]></item>
+        <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie]]></item>
+        <item lang="en" id="sphinx_holidays.product_category_template.tooltip"><![CDATA[Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion. Category paths are cached per unique combination within each cron run to avoid redundant lookups.]]></item>
+        <item lang="ro" id="sphinx_holidays.product_category_template.tooltip"><![CDATA[Șablon pentru crearea automată a categoriilor CS-Cart la crearea produselor. Placeholder-e: {country}, {region}, {city}. Exemplu: Hotels/{country}/{region}/{city} creează Hotels > Grecia > Creta > Heraklion. Căile de categorii sunt memorate (cache) pe fiecare combinație unică.]]></item>
+
+        <item lang="en" id="sphinx_holidays.product_languages"><![CDATA[Product languages]]></item>
+        <item lang="ro" id="sphinx_holidays.product_languages"><![CDATA[Limbi produse]]></item>
+        <item lang="en" id="sphinx_holidays.product_languages.tooltip"><![CDATA[Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.]]></item>
+        <item lang="ro" id="sphinx_holidays.product_languages.tooltip"><![CDATA[Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate.]]></item>
 
         <!-- Rate Limiting -->
         <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>

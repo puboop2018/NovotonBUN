@@ -34,8 +34,7 @@ use function fn_log_event;
  */
 class DiscoverBoardsCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     /** State file name stored in DIR_CACHE */
     private const STATE_FILE_NAME = 'sphinx_discover_boards_state.json';
@@ -77,7 +76,7 @@ class DiscoverBoardsCommand
         return 'Discover available board/meal types per hotel via live search API (batched with resume)';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

@@ -40,7 +40,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
      * @return array Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
-    public function normalize($raw): array
+    public function normalize(array|string $raw): array
     {
         $data = $this->decode($raw);
 

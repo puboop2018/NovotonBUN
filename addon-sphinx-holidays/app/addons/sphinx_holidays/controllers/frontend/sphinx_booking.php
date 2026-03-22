@@ -20,18 +20,17 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 //=============================================================================
-// SANITIZE $_REQUEST / $_GET — prevent "Array to string conversion" warnings
+// SANITIZE $_REQUEST / $_GET — flatten array params to comma-separated strings
+// to prevent "Array to string conversion" warnings in CS-Cart core dispatch.
 //=============================================================================
-$_sphinx_array_params = ['children_ages', 'ages'];
-foreach ($_sphinx_array_params as $_sphinx_param) {
-    foreach ([&$_REQUEST, &$_GET] as &$_sphinx_superglobal) {
-        if (isset($_sphinx_superglobal[$_sphinx_param]) && is_array($_sphinx_superglobal[$_sphinx_param])) {
-            $_sphinx_superglobal[$_sphinx_param] = implode(',', array_map('intval', $_sphinx_superglobal[$_sphinx_param]));
+foreach (['children_ages', 'ages'] as $_sphinx_param) {
+    foreach (['_REQUEST', '_GET'] as $_sphinx_sg_name) {
+        if (isset($GLOBALS[$_sphinx_sg_name][$_sphinx_param]) && is_array($GLOBALS[$_sphinx_sg_name][$_sphinx_param])) {
+            $GLOBALS[$_sphinx_sg_name][$_sphinx_param] = implode(',', array_map('intval', $GLOBALS[$_sphinx_sg_name][$_sphinx_param]));
         }
     }
-    unset($_sphinx_superglobal);
 }
-unset($_sphinx_array_params, $_sphinx_param);
+unset($_sphinx_param, $_sphinx_sg_name);
 
 //=============================================================================
 // UTILITY HELPERS
@@ -60,7 +59,7 @@ function _sphinx_parse_and_validate_guests(array $guests, string $check_in = '',
             }
 
             $guest_type = strtolower($guest['type'] ?? '');
-            $is_child_guest = (strpos($key, 'child') !== false || $guest_type === 'child');
+            $is_child_guest = (str_contains($key, 'child') || $guest_type === 'child');
             if ($dob_timestamp && $is_child_guest && !empty($check_in)) {
                 try {
                     $dob_date = new \DateTime($birthday);

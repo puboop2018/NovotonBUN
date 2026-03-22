@@ -316,7 +316,7 @@ class FeeCalculator
 
         if (count($occupancy['adults']) !== 1) return 0;
 
-        if (!empty($roomId) && stripos($roomId, 'SGL') !== false) {
+        if (!empty($roomId) && str_contains(strtolower($roomId), strtolower('SGL'))) {
             return 0;
         }
 

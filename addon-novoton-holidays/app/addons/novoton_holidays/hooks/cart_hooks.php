@@ -147,7 +147,7 @@ function fn_novoton_holidays_dispatch_before_display(): void
     $dispatch = $_REQUEST['dispatch'] ?? '';
 
     // Meta variable null-safety for our addon controllers
-    if (strpos($dispatch, 'novoton_') === 0) {
+    if (str_starts_with($dispatch, 'novoton_')) {
         _nvt_ensure_meta_variables();
     }
 
@@ -156,7 +156,7 @@ function fn_novoton_holidays_dispatch_before_display(): void
         $booking_pages = ['novoton_', 'products.', 'checkout', 'cart'];
         $needs_css = false;
         foreach ($booking_pages as $prefix) {
-            if (strpos($dispatch, $prefix) === 0) {
+            if (str_starts_with($dispatch, $prefix)) {
                 $needs_css = true;
                 break;
             }

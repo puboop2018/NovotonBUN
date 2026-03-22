@@ -318,7 +318,7 @@ class TermsFormatter
 
         $xmlString = trim($xmlString);
 
-        if (strpos($xmlString, '<') !== 0) {
+        if (!str_starts_with($xmlString, '<')) {
             if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xmlString, $matches)) {
                 $xmlString = $matches[1];
             }

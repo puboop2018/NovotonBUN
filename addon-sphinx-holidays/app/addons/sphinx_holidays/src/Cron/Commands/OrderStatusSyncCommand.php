@@ -17,15 +17,14 @@ use Tygh\Addons\SphinxHolidays\Services\OrderStatusSyncService;
  */
 class OrderStatusSyncCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Check Sphinx booking statuses via Orders API';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

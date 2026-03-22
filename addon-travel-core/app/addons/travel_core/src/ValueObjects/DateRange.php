@@ -15,14 +15,9 @@ use Tygh\Addons\TravelCore\Exceptions\InvalidArgumentException;
 
 final class DateRange
 {
-    /** @var string Y-m-d */
-    private $checkIn;
-
-    /** @var string Y-m-d */
-    private $checkOut;
-
-    /** @var int */
-    private $nights;
+    private string $checkIn;
+    private string $checkOut;
+    private int $nights;
 
     private function __construct(string $checkIn, string $checkOut, int $nights)
     {

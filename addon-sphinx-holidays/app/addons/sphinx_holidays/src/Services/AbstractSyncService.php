@@ -17,15 +17,14 @@ abstract class AbstractSyncService
 {
     protected SphinxApi $api;
 
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public function __construct(SphinxApi $api)
     {
         $this->api = $api;
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }
