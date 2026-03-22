@@ -107,7 +107,7 @@ try {
 
         if (!empty($result['stats'])) {
             $s = $result['stats'];
-            echo "Stats: {$s['synced']}/{$s['total']} synced";
+            echo "Stats: " . ($s['synced'] ?? $s['added'] ?? 0) . "/" . ($s['total'] ?? 0) . " synced";
             if (($s['skipped'] ?? 0) > 0) {
                 echo ", {$s['skipped']} skipped";
             }

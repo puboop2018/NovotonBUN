@@ -205,8 +205,8 @@ class SphinxHttpClient
             // Success
             $this->resetFailures();
             $decoded = json_decode($response, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->lastError = 'JSON decode error: ' . json_last_error_msg();
+            if (!is_array($decoded)) {
+                $this->lastError = 'JSON decode error: ' . (json_last_error_msg() ?: 'response is not a JSON object/array');
                 return null;
             }
 
@@ -220,7 +220,7 @@ class SphinxHttpClient
     /**
      * Parse rate limit headers from response.
      */
-    private function parseResponseHeaders($ch, string $header): int
+    private function parseResponseHeaders(\CurlHandle $ch, string $header): int
     {
         $len = strlen($header);
         $parts = explode(':', $header, 2);
@@ -241,7 +241,7 @@ class SphinxHttpClient
         return $len;
     }
 
-    private function isCircuitOpen(): bool
+    public function isCircuitOpen(): bool
     {
         if ($this->failureCount >= $this->cbThreshold) {
             if (time() - $this->circuitOpenedAt < $this->cbTimeout) {
@@ -274,13 +274,7 @@ class SphinxHttpClient
         }
     }
 
-    /**
-     * Check if the circuit breaker is currently open (public accessor).
-     */
-    public function isCircuitCurrentlyOpen(): bool
-    {
-        return $this->isCircuitOpen();
-    }
+    public function getCircuitBreakerTimeout(): int { return $this->cbTimeout; }
 
     public function getLastHttpCode(): int { return $this->lastHttpCode; }
     public function getLastError(): string { return $this->lastError; }

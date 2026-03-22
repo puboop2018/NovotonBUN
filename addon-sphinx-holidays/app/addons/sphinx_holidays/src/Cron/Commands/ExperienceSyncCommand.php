@@ -11,19 +11,11 @@ use Tygh\Addons\SphinxHolidays\Services\ExperienceSyncService;
  *
  * Usage: php cron.php access_key=KEY mode=experiences
  */
-class ExperienceSyncCommand
+class ExperienceSyncCommand extends AbstractSyncCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Sync experience catalog from Sphinx static API';
-    }
-
-    public function setOutputCallback(callable $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -35,6 +27,10 @@ class ExperienceSyncCommand
             $service->setOutputCallback($this->outputCallback);
         }
 
-        return $service->sync();
+        $stats = $service->sync();
+
+        $this->outputRateLimitSummary($stats);
+
+        return $this->wrapResult($stats);
     }
 }
