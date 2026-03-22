@@ -158,6 +158,20 @@ class AddProductsCommand
                 continue;
             }
 
+            // Ensure all active languages have descriptions
+            // (Sphinx API provides one language; replicate to all CS-Cart languages)
+            $otherLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A' AND lang_code != ?s", CART_LANGUAGE);
+            foreach ($otherLanguages as $lc) {
+                db_query(
+                    "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
+                     VALUES (?i, ?s, ?s, ?s, ?s, ?s)
+                     ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                    $productId, $lc,
+                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title'],
+                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title']
+                );
+            }
+
             // Link hotel → product
             $hotelRepo->linkToProduct($hotelId, $productId);
 

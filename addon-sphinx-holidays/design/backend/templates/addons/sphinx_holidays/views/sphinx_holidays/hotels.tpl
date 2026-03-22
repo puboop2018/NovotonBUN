@@ -72,7 +72,14 @@
     <tbody>
         {foreach from=$hotels item=hotel}
         <tr>
-            <td><code>{$hotel.hotel_id|escape:html|truncate:18}</code></td>
+            <td>
+                <code>{$hotel.hotel_id|escape:html|truncate:18}</code>
+                {if $hotel.product_id > 0}
+                    <a href="{"products.update?product_id=`$hotel.product_id`"|fn_url}" title="View CS-Cart product #{$hotel.product_id}" style="margin-left:4px;">
+                        <i class="icon-link"></i>
+                    </a>
+                {/if}
+            </td>
             <td>
                 {$hotel.name|escape:html}
                 {if $hotel.image_url}

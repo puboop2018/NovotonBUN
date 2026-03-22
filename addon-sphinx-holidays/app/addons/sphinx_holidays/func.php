@@ -517,13 +517,18 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
     }
 
     $hotel = db_get_row(
-        "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+        "SELECT hotel_id, classification, property_type,
+                destination_id, destination_name, region_id, region_name,
+                country_code, country_name, latitude, longitude,
+                facilities_json, boards_json
+         FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
 
     if (!empty($hotel)) {
         $product_data['hotel_id'] = $hotel['hotel_id'];
-        $product_data['hotel_name'] = $hotel['name'];
+        // Use CS-Cart product name (single source of truth); fall back to hotel_id if product was deleted
+        $product_data['hotel_name'] = $product_data['product'] ?? ('Hotel ' . $hotel['hotel_id']);
         $product_data['star_rating'] = $hotel['classification'];
         $product_data['travel_provider'] = 'sphinx';
         $product_data['sphinx_hotel'] = $hotel;
@@ -551,12 +556,12 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
         return;
     }
 
-    $hotel = db_get_row(
-        "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+    $exists = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE hotel_id = ?s AND sync_status = 'active'",
         $hotel_id
     );
 
-    if (empty($hotel)) {
+    if (!$exists) {
         \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
         return;
     }

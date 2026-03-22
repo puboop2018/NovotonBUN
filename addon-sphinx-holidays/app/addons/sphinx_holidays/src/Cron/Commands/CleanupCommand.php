@@ -33,6 +33,7 @@ class CleanupCommand
             'orphan_bookings' => 0,
             'old_logs' => 0,
             'expired_cache' => 0,
+            'orphan_products' => 0,
         ];
         $errors = 0;
 
@@ -76,9 +77,26 @@ class CleanupCommand
             fn_log_event('general', 'runtime', ['message' => 'Sphinx cleanup: cache cleanup failed: ' . $e->getMessage()]);
         }
 
+        // 4. Unlink orphan product references (product deleted in CS-Cart but still referenced in sphinx_hotels)
+        try {
+            $cleaned['orphan_products'] = (int) db_query(
+                "UPDATE ?:sphinx_hotels h
+                 LEFT JOIN ?:products p ON p.product_id = h.product_id
+                 SET h.product_id = NULL, h.product_skip_reason = NULL, h.product_needs_update = 'N'
+                 WHERE h.product_id IS NOT NULL AND h.product_id > 0 AND p.product_id IS NULL"
+            );
+            if ($cleaned['orphan_products'] > 0) {
+                $this->output("Orphan product links cleared: {$cleaned['orphan_products']} (products deleted in CS-Cart, hotels eligible for re-creation)");
+            }
+        } catch (\Throwable $e) {
+            $errors++;
+            $this->output("Orphan product cleanup failed: " . $e->getMessage());
+            fn_log_event('general', 'runtime', ['message' => 'Sphinx cleanup: orphan products failed: ' . $e->getMessage()]);
+        }
+
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
         $total = array_sum($cleaned);
-        $this->output("Cleanup complete: {$total} items removed in " . round($durationMs / 1000, 1) . "s");
+        $this->output("Cleanup complete: {$total} items removed/fixed in " . round($durationMs / 1000, 1) . "s");
 
         return [
             'success' => $errors === 0,

@@ -68,14 +68,32 @@ class UpdateProductsCommand
                 $hotelId = $hotel['hotel_id'];
                 $productId = (int) $hotel['product_id'];
 
+                $pageTitle = $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : '');
+
                 $product_data = [
                     'product'           => $hotel['name'],
                     'full_description'  => $hotel['description'] ?? '',
                     'short_description' => $hotel['short_description'] ?? '',
-                    'page_title'        => $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : ''),
+                    'page_title'        => $pageTitle,
                 ];
 
                 $result = fn_update_product($product_data, $productId, CART_LANGUAGE);
+
+                // Ensure all active languages have the same descriptions
+                // (Sphinx API provides one language; replicate to all CS-Cart languages)
+                if ($result) {
+                    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A' AND lang_code != ?s", CART_LANGUAGE);
+                    foreach ($languages as $lc) {
+                        db_query(
+                            "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
+                             VALUES (?i, ?s, ?s, ?s, ?s, ?s)
+                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                            $productId, $lc,
+                            $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $pageTitle,
+                            $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $pageTitle
+                        );
+                    }
+                }
                 if (!$result) {
                     $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product update)");
                     $stats['failed']++;
