@@ -7,16 +7,12 @@
 
 {style src="addons/travel_core/admin_styles.css"}
 
-{* Widen Sphinx addon settings fields to match CS-Cart input-large *}
-<style>
-    #addon_options_sphinx_holidays input[type="text"],
-    #addon_options_sphinx_holidays input[type="password"],
-    #addon_options_sphinx_holidays textarea,
-    #content_general input[type="text"],
-    #content_general input[type="password"],
-    #content_general textarea {ldelim}
-        width: calc(100% - 5px);
-        max-width: none;
-        box-sizing: border-box;
-    {rdelim}
-</style>
+{* Add CS-Cart input-text-large class to Sphinx addon settings fields *}
+<script>
+(function($) {ldelim}
+    $(document).ready(function() {ldelim}
+        $('#addon_options_sphinx_holidays input[type="text"], #addon_options_sphinx_holidays input[type="password"], #addon_options_sphinx_holidays textarea').addClass('input-text-large');
+        $('#content_general input[type="text"], #content_general input[type="password"], #content_general textarea').addClass('input-text-large');
+    {rdelim});
+{rdelim})(Tygh.$);
+</script>
