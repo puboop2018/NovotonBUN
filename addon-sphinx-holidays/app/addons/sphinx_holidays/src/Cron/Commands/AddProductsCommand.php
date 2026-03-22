@@ -95,127 +95,128 @@ class AddProductsCommand
             $destinationIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
             $hierarchyMap = !empty($destinationIds) ? $destRepo->resolveHierarchies($destinationIds) : [];
 
-        foreach ($hotels as $hotel) {
-            $hotelId = $hotel['hotel_id'];
-            $productCode = 'SPX' . $hotelId;
+            foreach ($hotels as $hotel) {
+                $hotelId = $hotel['hotel_id'];
+                $productCode = 'SPX' . $hotelId;
 
-            // Country code validation — skip hotels with unrecognized codes
-            $cc = $hotel['country_code'] ?? '';
-            if (!empty($cc) && !isset($validCountryCodes[$cc])) {
-                $hotelRepo->markSkipped($hotelId, 'invalid_country');
-                fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx: country code '{$cc}' not found in CS-Cart countries. Hotel {$hotelId} skipped.",
-                ]);
-                $this->output("[{$hotelId}] {$hotel['name']} ... SKIPPED (invalid country: {$cc})");
-                $stats['invalid_country']++;
-                continue;
-            }
+                // Country code validation — skip hotels with unrecognized codes
+                $cc = $hotel['country_code'] ?? '';
+                if (!empty($cc) && !isset($validCountryCodes[$cc])) {
+                    $hotelRepo->markSkipped($hotelId, 'invalid_country');
+                    fn_log_event('general', 'runtime', [
+                        'message' => "Sphinx: country code '{$cc}' not found in CS-Cart countries. Hotel {$hotelId} skipped.",
+                    ]);
+                    $this->output("[{$hotelId}] {$hotel['name']} ... SKIPPED (invalid country: {$cc})");
+                    $stats['invalid_country']++;
+                    continue;
+                }
 
-            // Check if product already exists (e.g. re-run after partial failure)
-            $existingProductId = (int) db_get_field(
-                "SELECT product_id FROM ?:products WHERE product_code = ?s",
-                $productCode
-            );
-            if ($existingProductId > 0) {
-                $hotelRepo->linkToProduct($hotelId, $existingProductId);
-                $this->output("[{$hotelId}] {$hotel['name']} ... LINKED (existing)");
-                $stats['skipped']++;
-                continue;
-            }
-
-            // Build category path from template.
-            // Prefer hotel's own name fields; fall back to destination hierarchy lookup.
-            $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
-            $countryName = $hotel['country_name'] ?: ($hierarchy['country'] ?? '');
-            $regionName  = $hotel['region_name'] ?: ($hierarchy['region'] ?? '');
-            $cityName    = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
-
-            // Skip hotels with unresolvable destinations — creating products under
-            // "Other" categories produces orphan products nobody can browse.
-            if ($countryName === '' && ($hotel['country_code'] ?? '') === '') {
-                $hotelRepo->markSkipped($hotelId, 'no_destination');
-                $this->output("[{$hotelId}] {$hotel['name']} ... SKIPPED (no country resolved)");
-                $stats['failed']++;
-                continue;
-            }
-
-            $path = str_replace(
-                ['{country}', '{region}', '{city}'],
-                [
-                    $countryName ?: $hotel['country_code'],
-                    $regionName ?: $countryName ?: $hotel['country_code'],
-                    $cityName ?: $regionName ?: $countryName ?: $hotel['country_code'],
-                ],
-                $template
-            );
-
-            // Use cache to avoid repeated category lookups for the same path
-            if (!isset($categoryCache[$path])) {
-                $categoryCache[$path] = fn_travel_core_get_or_create_category($path);
-            }
-            $categoryId = $categoryCache[$path];
-
-            if (!$categoryId) {
-                $hotelRepo->markSkipped($hotelId, 'category_failed');
-                $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category: {$path})");
-                $stats['failed']++;
-                continue;
-            }
-
-            // Create CS-Cart product
-            $product_data = [
-                'product'           => $hotel['name'],
-                'product_code'      => $productCode,
-                'price'             => 0,
-                'status'            => 'A',
-                'company_id'        => Registry::get('runtime.company_id') ?: 1,
-                'main_category'     => $categoryId,
-                'category_ids'      => [$categoryId],
-                'full_description'  => $hotel['description'] ?? '',
-                'short_description' => $hotel['short_description'] ?? '',
-                'page_title'        => $hotel['name'] . ($cityName ? ' - ' . $cityName : ''),
-            ];
-
-            // Use configured languages (addon setting) instead of all active
-            $configuredLanguages = ConfigProvider::getProductLanguages();
-            $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
-
-            $productId = (int) fn_update_product($product_data, 0, $primaryLang);
-            if (!$productId) {
-                $hotelRepo->markSkipped($hotelId, 'product_creation_failed');
-                $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product creation)");
-                $stats['failed']++;
-                continue;
-            }
-
-            // Replicate descriptions to other configured languages
-            $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
-            foreach ($otherLanguages as $lc) {
-                db_query(
-                    "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
-                     VALUES (?i, ?s, ?s, ?s, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
-                    $productId, $lc,
-                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title'],
-                    $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title']
+                // Check if product already exists (e.g. re-run after partial failure)
+                $existingProductId = (int) db_get_field(
+                    "SELECT product_id FROM ?:products WHERE product_code = ?s",
+                    $productCode
                 );
+                if ($existingProductId > 0) {
+                    $hotelRepo->linkToProduct($hotelId, $existingProductId);
+                    $this->output("[{$hotelId}] {$hotel['name']} ... LINKED (existing)");
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                // Enrich names: prefer hotel's own fields, fall back to destination hierarchy.
+                $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
+                $countryName = $hotel['country_name'] ?: ($hierarchy['country'] ?? '');
+                $regionName  = $hotel['region_name'] ?: ($hierarchy['region'] ?? '');
+                $cityName    = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
+
+                // At minimum we need a country to build a meaningful category path.
+                $effectiveCountry = $countryName ?: ($hotel['country_code'] ?? '');
+                if ($effectiveCountry === '') {
+                    $hotelRepo->markSkipped($hotelId, 'no_destination');
+                    $this->output("[{$hotelId}] {$hotel['name']} ... SKIPPED (no country resolved)");
+                    $stats['failed']++;
+                    continue;
+                }
+
+                // Build category path — only substitute what we actually have.
+                // Empty segments stay at the parent level rather than duplicating names.
+                $path = str_replace(
+                    ['{country}', '{region}', '{city}'],
+                    [
+                        $effectiveCountry,
+                        $regionName ?: $effectiveCountry,
+                        $cityName ?: $regionName ?: $effectiveCountry,
+                    ],
+                    $template
+                );
+
+                // Use cache to avoid repeated category lookups for the same path
+                if (!isset($categoryCache[$path])) {
+                    $categoryCache[$path] = fn_travel_core_get_or_create_category($path);
+                }
+                $categoryId = $categoryCache[$path];
+
+                if (!$categoryId) {
+                    $hotelRepo->markSkipped($hotelId, 'category_failed');
+                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (category: {$path})");
+                    $stats['failed']++;
+                    continue;
+                }
+
+                // Create CS-Cart product
+                $product_data = [
+                    'product'           => $hotel['name'],
+                    'product_code'      => $productCode,
+                    'price'             => 0,
+                    'status'            => 'A',
+                    'company_id'        => Registry::get('runtime.company_id') ?: 1,
+                    'main_category'     => $categoryId,
+                    'category_ids'      => [$categoryId],
+                    'full_description'  => $hotel['description'] ?? '',
+                    'short_description' => $hotel['short_description'] ?? '',
+                    'page_title'        => $hotel['name'] . ($cityName ? ' - ' . $cityName : ''),
+                ];
+
+                // Use configured languages (addon setting) instead of all active
+                $configuredLanguages = ConfigProvider::getProductLanguages();
+                $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+
+                $productId = (int) fn_update_product($product_data, 0, $primaryLang);
+                if (!$productId) {
+                    $hotelRepo->markSkipped($hotelId, 'product_creation_failed');
+                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product creation)");
+                    $stats['failed']++;
+                    continue;
+                }
+
+                // Replicate descriptions to other configured languages
+                $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+                foreach ($otherLanguages as $lc) {
+                    db_query(
+                        "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
+                         VALUES (?i, ?s, ?s, ?s, ?s, ?s)
+                         ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                        $productId, $lc,
+                        $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title'],
+                        $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $product_data['page_title']
+                    );
+                }
+
+                // Link hotel → product
+                $hotelRepo->linkToProduct($hotelId, $productId);
+
+                // Assign features (non-fatal — log and continue on error)
+                try {
+                    $featureAssigner->assignAll($productId, $hotel);
+                } catch (\Throwable $e) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => "Sphinx: feature assignment failed for hotel {$hotelId}: " . $e->getMessage(),
+                    ]);
+                }
+
+                $this->output("[{$hotelId}] {$hotel['name']} ... ADDED (ID: {$productId})");
+                $stats['added']++;
             }
-
-            // Link hotel → product
-            $hotelRepo->linkToProduct($hotelId, $productId);
-
-            // Assign features (non-fatal — log and continue on error)
-            try {
-                $featureAssigner->assignAll($productId, $hotel);
-            } catch (\Throwable $e) {
-                fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx: feature assignment failed for hotel {$hotelId}: " . $e->getMessage(),
-                ]);
-            }
-
-            $this->output("[{$hotelId}] {$hotel['name']} ... ADDED (ID: {$productId})");
-            $stats['added']++;
-        }
 
             $processed += count($hotels);
         }
