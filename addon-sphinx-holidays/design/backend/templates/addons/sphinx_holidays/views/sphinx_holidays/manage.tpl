@@ -29,18 +29,18 @@
         </form>
 
         {if $selected_countries}
-            <span class="muted" title="{__("sphinx_holidays.sync_targets_tooltip")}">
+            <span class="muted">
                 {__("sphinx_holidays.sync_targets")}: <code>{', '|implode:$selected_countries}</code>
             </span>
-            <a href="{"addons.update&addon=sphinx_holidays"|fn_url}" class="btn btn-micro">
-                <i class="icon-cog"></i> {__("sphinx_holidays.change_settings")}
+            <a href="{"sphinx_holidays.whitelist"|fn_url}" class="btn btn-micro">
+                <i class="icon-cog"></i> {__("sphinx_holidays.destination_whitelist")}
             </a>
         {else}
             <span class="text-warning">
                 <i class="icon-warning-sign"></i> {__("sphinx_holidays.no_sync_targets")}
             </span>
-            <a href="{"addons.update&addon=sphinx_holidays"|fn_url}" class="btn btn-micro">
-                <i class="icon-cog"></i> {__("sphinx_holidays.change_settings")}
+            <a href="{"sphinx_holidays.whitelist"|fn_url}" class="btn btn-micro">
+                <i class="icon-cog"></i> {__("sphinx_holidays.destination_whitelist")}
             </a>
         {/if}
     </div>

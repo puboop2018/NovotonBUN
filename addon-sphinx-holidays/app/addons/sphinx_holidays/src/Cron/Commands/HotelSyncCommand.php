@@ -85,9 +85,8 @@ class HotelSyncCommand
         }
 
         if (empty($countryCodes) && empty($destinationIds)) {
-            $targets = ConfigProvider::getSelectedSyncTargets();
-            $countryCodes = $targets['country_codes'];
-            $destinationIds = $targets['destination_ids'];
+            $countryCodes = ConfigProvider::getSelectedCountryCodes();
+            $destinationIds = ConfigProvider::getAllowedDestinationIds();
         }
 
         $fullSync = !empty($params['full']);

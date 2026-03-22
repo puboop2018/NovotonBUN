@@ -128,14 +128,6 @@ msgctxt "SettingsTooltips::sphinx_holidays::circuit_breaker_timeout"
 msgid "Seconds to wait before retrying after circuit opens"
 msgstr "Secunde de așteptare înainte de reîncercare după deschiderea circuitului"
 
-msgctxt "SettingsOptions::sphinx_holidays::hotel_sync_header"
-msgid "Hotel Sync Settings"
-msgstr "Setări Sincronizare Hoteluri"
-
-msgctxt "SettingsOptions::sphinx_holidays::selected_destinations"
-msgid "Sync targets (comma-separated). Supports: country codes (GR, BG), destination names (Crete, Rhodes), or destination IDs (1234)"
-msgstr "Ținte sincronizare (separate prin virgulă). Suportă: coduri țări (GR, BG), nume destinații (Crete, Rhodes), sau ID-uri destinații (1234)"
-
 msgctxt "SettingsOptions::sphinx_holidays::cron_header"
 msgid "Cron Settings"
 msgstr "Setări Cron"

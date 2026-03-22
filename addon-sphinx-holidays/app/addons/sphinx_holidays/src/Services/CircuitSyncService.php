@@ -49,7 +49,7 @@ class CircuitSyncService
         try {
             $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
             if (empty($allowedDestIds)) {
-                $stats['error'] = 'No sync targets configured. Set selected_destinations in Sphinx addon settings.';
+                $stats['error'] = 'No sync targets configured. Configure destinations in Sphinx Holidays > Whitelist.';
                 $this->output('ERROR: ' . $stats['error']);
                 $this->logComplete($logId, 'failed', $stats);
                 return $stats;

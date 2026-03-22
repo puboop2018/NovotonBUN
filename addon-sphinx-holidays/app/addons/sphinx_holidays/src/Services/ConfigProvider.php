@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Registry;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 
 /**
  * Sphinx Holidays configuration provider.
@@ -129,156 +128,22 @@ class ConfigProvider
     }
 
     /**
-     * Get selected sync targets — country codes, destination names, and/or destination IDs.
-     *
-     * Setting format: comma-separated, supports three token types:
-     *   - 2-letter alpha codes → country codes (e.g. "GR", "BG")
-     *   - Numeric strings → destination IDs (e.g. "1234")
-     *   - Anything else → destination names resolved from DB (e.g. "Crete", "Rhodes")
-     *
-     * Examples: "GR,Crete" → sync all Greece + Crete region specifically
-     *           "GR,BG,Rhodes" → sync Greece, Bulgaria, + Rhodes by name
-     *
-     * @return array{country_codes: string[], destination_ids: int[]}
-     */
-    public static function getSelectedSyncTargets(): array
-    {
-        $val = (string) self::getSetting('selected_destinations', '');
-        $countryCodes = [];
-        $destinationIds = [];
-        $nameTokens = [];
-
-        foreach (array_filter(array_map('trim', explode(',', $val))) as $token) {
-            if (ctype_digit($token)) {
-                $destinationIds[] = (int) $token;
-            } elseif (strlen($token) === 2 && ctype_alpha($token)) {
-                $countryCodes[] = strtoupper($token);
-            } else {
-                $nameTokens[] = $token;
-            }
-        }
-
-        // Resolve destination names to IDs via DB lookup
-        if (!empty($nameTokens)) {
-            $resolvedIds = self::resolveNameTokens($nameTokens, $countryCodes);
-            $destinationIds = array_merge($destinationIds, $resolvedIds);
-        }
-
-        return ['country_codes' => $countryCodes, 'destination_ids' => $destinationIds];
-    }
-
-    /**
-     * Resolve destination name tokens to destination IDs via DB lookup.
-     *
-     * Supports both plain names and full_path queries for disambiguation:
-     *   - "Crete" → name match (unambiguous if unique)
-     *   - "Athens, Greece" → full_path prefix match (resolves "Athens Problem")
-     *
-     * Disambiguation strategy:
-     *   1. If token contains ", " → treat as full_path query (unambiguous match)
-     *   2. Match via findByNameOrPath() (name exact OR full_path prefix)
-     *   3. If multiple matches, prefer those in already-selected countries
-     *   4. Among remaining, prefer higher hierarchy (region > city > destination)
-     *   5. If still ambiguous, include ALL matches and log warning with full_path breadcrumbs
-     *
-     * @param string[] $nameTokens Destination names to resolve
-     * @param string[] $contextCountryCodes Country codes already selected (for disambiguation)
-     * @return int[] Resolved destination IDs
-     */
-    private static function resolveNameTokens(array $nameTokens, array $contextCountryCodes): array
-    {
-        $repo = new DestinationRepository();
-        $resolvedIds = [];
-
-        foreach ($nameTokens as $name) {
-            $matches = $repo->findByNameOrPath($name);
-
-            if (empty($matches)) {
-                fn_log_event('general', 'runtime', [
-                    'message' => "Sphinx sync: destination '{$name}' not found in synced destinations. Skipping.",
-                ]);
-                continue;
-            }
-
-            if (count($matches) === 1) {
-                $resolvedIds[] = (int) $matches[0]['destination_id'];
-                continue;
-            }
-
-            // Full_path query (contains ", ") should already be narrow — if still multiple,
-            // use all matches since the admin explicitly provided a path prefix
-            if (str_contains($name, ', ')) {
-                foreach ($matches as $m) {
-                    $resolvedIds[] = (int) $m['destination_id'];
-                }
-                continue;
-            }
-
-            // Multiple matches from plain name — disambiguate
-            // Step 1: prefer matches in context countries
-            if (!empty($contextCountryCodes)) {
-                $contextMatches = array_filter($matches, function ($m) use ($contextCountryCodes) {
-                    return in_array(strtoupper($m['country_code'] ?? ''), $contextCountryCodes, true);
-                });
-                if (!empty($contextMatches)) {
-                    $matches = array_values($contextMatches);
-                }
-            }
-
-            if (count($matches) === 1) {
-                $resolvedIds[] = (int) $matches[0]['destination_id'];
-                continue;
-            }
-
-            // Step 2: include ALL matches (not just first) — let the sync be inclusive
-            foreach ($matches as $m) {
-                $resolvedIds[] = (int) $m['destination_id'];
-            }
-
-            // Log warning with full_path breadcrumbs for admin to refine
-            $labels = array_map(
-                fn($m) => $m['destination_id'] . ' (' . ($m['full_path'] ?? $m['type'] . ', ' . $m['country_code']) . ')',
-                $matches
-            );
-            fn_log_event('general', 'runtime', [
-                'message' => "Sphinx sync: '{$name}' matched " . count($matches) . " destinations: "
-                    . implode('; ', $labels)
-                    . ". To disambiguate, use full path in settings (e.g. \"{$name}, "
-                    . ($matches[0]['country_code'] ?? '') . "\").",
-            ]);
-        }
-
-        return array_unique($resolvedIds);
-    }
-
-    /**
      * Get selected country codes for hotel sync filtering.
-     *
-     * Convenience wrapper over getSelectedSyncTargets().
      *
      * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
      */
     public static function getSelectedCountryCodes(): array
     {
-        // Priority 1: Derive from whitelist table if populated
+        self::migrateFromLegacySetting();
+
         $whitelistCodes = db_get_fields(
             "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
              WHERE d.country_code != ''
              ORDER BY d.country_code"
         );
-        if (!empty($whitelistCodes)) {
-            return $whitelistCodes;
-        }
 
-        // Priority 2: Fall back to textarea setting
-        $targets = self::getSelectedSyncTargets();
-
-        if (!empty($targets['country_codes'])) {
-            return $targets['country_codes'];
-        }
-
-        return [];
+        return !empty($whitelistCodes) ? $whitelistCodes : [];
     }
 
     /**
@@ -322,47 +187,15 @@ class ConfigProvider
             return $cached;
         }
 
-        // Priority 1: Use whitelist table if it has entries
+        self::migrateFromLegacySetting();
+
         $whitelistEntries = db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
         if (!empty($whitelistEntries)) {
             $cached = self::resolveWhitelistEntries($whitelistEntries);
-            return $cached;
-        }
-
-        // Priority 2: Fall back to textarea setting
-        $targets = self::getSelectedSyncTargets();
-        $countryCodes = $targets['country_codes'];
-        $extraIds = $targets['destination_ids'];
-
-        if (empty($countryCodes) && empty($extraIds)) {
+        } else {
             $cached = [];
-            return $cached;
         }
 
-        $allIds = [];
-
-        // Resolve country codes → all destination IDs in those countries
-        if (!empty($countryCodes)) {
-            $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
-            $countryDestIds = db_get_fields(
-                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN ($placeholders)",
-                ...$countryCodes
-            );
-            $allIds = array_map('intval', $countryDestIds);
-        }
-
-        // Add explicitly selected IDs + their children
-        if (!empty($extraIds)) {
-            $allIds = array_merge($allIds, $extraIds);
-            $idPlaceholders = implode(',', array_fill(0, count($extraIds), '?i'));
-            $children = db_get_fields(
-                "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id IN ($idPlaceholders)",
-                ...$extraIds
-            );
-            $allIds = array_merge($allIds, array_map('intval', $children));
-        }
-
-        $cached = array_values(array_unique($allIds));
         return $cached;
     }
 
@@ -402,6 +235,48 @@ class ConfigProvider
         }
 
         return array_values(array_unique($allIds));
+    }
+
+    /**
+     * One-time migration: if the whitelist table is empty but the legacy
+     * selected_destinations textarea setting has values, populate the
+     * whitelist table with country-level entries (selection_type='all').
+     */
+    private static function migrateFromLegacySetting(): void
+    {
+        static $migrated = false;
+        if ($migrated) {
+            return;
+        }
+        $migrated = true;
+
+        $count = (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_destination_whitelist");
+        if ($count > 0) {
+            return; // Whitelist already has data, no migration needed
+        }
+
+        $val = (string) self::getSetting('selected_destinations', '');
+        $tokens = array_filter(array_map('trim', explode(',', $val)));
+        if (empty($tokens)) {
+            return;
+        }
+
+        foreach ($tokens as $token) {
+            if (strlen($token) === 2 && ctype_alpha($token)) {
+                // Country code — find the country destination and add with selection_type='all'
+                $countryCode = strtoupper($token);
+                $countryDestId = (int) db_get_field(
+                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
+                    $countryCode
+                );
+                if ($countryDestId > 0) {
+                    db_query(
+                        "INSERT IGNORE INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, 'all')",
+                        $countryDestId
+                    );
+                }
+            }
+        }
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed
