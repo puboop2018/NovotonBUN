@@ -65,6 +65,12 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /** @var PriceInfoCalculator */
     private $calculator;
 
+    /** @var FeeCalculator */
+    private $feeCalculator;
+
+    /** @var DiscountCalculator */
+    private $discountCalculator;
+
     /**
      * Constructor
      */
@@ -76,6 +82,8 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $logger = [$this, 'log'];
         $this->parser = new PriceInfoParser($logger);
         $this->calculator = new PriceInfoCalculator($this->parser, $this->commission, $logger);
+        $this->feeCalculator = new FeeCalculator($this->parser, $logger);
+        $this->discountCalculator = new DiscountCalculator($this->parser, $logger);
     }
 
     /**
@@ -168,34 +176,34 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $this->log('Base price', $basePrice);
 
         // Step 5: Calculate fees
-        $fees = $this->calculator->calculateFees($occupancy, $checkIn, $nights, $roomId, $boardId);
+        $fees = $this->feeCalculator->calculateFees($occupancy, $checkIn, $nights, $roomId, $boardId);
         $this->log('Fees', $fees);
 
         // Step 6: Get Early Booking discount
-        $ebDiscount = $this->calculator->calculateEarlyBookingDiscount($bookingDate, $checkIn, $nights, $basePrice, $fees);
+        $ebDiscount = $this->discountCalculator->calculateEarlyBookingDiscount($bookingDate, $checkIn, $nights, $basePrice, $fees);
         $this->log('Early Booking discount', $ebDiscount);
 
         // Step 7: Get Reduction (free nights)
-        $reduction = $this->calculator->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice, $fees);
+        $reduction = $this->discountCalculator->calculateReduction($checkIn, $nights, $seasonsByNight, $occupancy, $roomId, $boardId, $basePrice, $fees);
         $this->log('Reduction', $reduction);
 
         // Step 7b: Get Reduction Period (MaxDays cap)
-        $reductionPeriod = $this->calculator->calculateReductionPeriod($checkIn, $nights, $basePrice);
+        $reductionPeriod = $this->discountCalculator->calculateReductionPeriod($checkIn, $nights, $basePrice);
         $this->log('Reduction Period', $reductionPeriod);
 
         // Step 8: Apply Priority rules and pick best scenario
-        $finalPrice = $this->calculator->applyPriorityRules($basePrice, $fees, $ebDiscount, $reduction, $reductionPeriod);
+        $finalPrice = $this->discountCalculator->applyPriorityRules($basePrice, $fees, $ebDiscount, $reduction, $reductionPeriod);
         $this->log('Final price calculation', $finalPrice);
 
         // Step 8b: Apply reduction_perc_marketing (booking/travel date restricted)
-        $percMarketing = $this->calculator->calculateReductionPercMarketing(
+        $percMarketing = $this->discountCalculator->calculateReductionPercMarketing(
             $bookingDate, $checkIn, $nights, $roomId, $finalPrice['total']
         );
         $this->log('Reduction Perc Marketing', $percMarketing);
 
         // Step 8c: Apply reduction_perc_additional (flat promo discount)
         $subtotalAfterMarketing = $finalPrice['total'] - ($percMarketing['applicable'] ? $percMarketing['discount'] : 0);
-        $percAdditional = $this->calculator->calculateReductionPercAdditional(max(0, $subtotalAfterMarketing));
+        $percAdditional = $this->discountCalculator->calculateReductionPercAdditional(max(0, $subtotalAfterMarketing));
         $this->log('Reduction Perc Additional', $percAdditional);
 
         // Step 8d: Compute final total after all percentage discounts
@@ -319,7 +327,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      */
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {
-        return $this->calculator->collectSeasonPriceAgeTypes($roomId, $boardId);
+        return $this->feeCalculator->collectSeasonPriceAgeTypes($roomId, $boardId);
     }
 
     /**

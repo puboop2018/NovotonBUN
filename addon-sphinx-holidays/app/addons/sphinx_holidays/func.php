@@ -141,26 +141,26 @@ function fn_sphinx_holidays_seed_aliases(): void
         return;
     }
 
-    // Resolve map_ids from canonical codes and insert aliases
-    foreach ($boardAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'board' AND canonical_code = ?s",
-            $canonicalCode
+    // Helper: resolve canonical code to map_id and register alias.
+    // Eliminates 4 identical foreach+query blocks.
+    $seedAliasGroup = static function (string $featureType, array $aliases, string $matchType = 'exact'): void {
+        // Batch-load all map_ids for this feature type to avoid N+1 queries
+        $allMaps = db_get_hash_single_array(
+            "SELECT canonical_code, map_id FROM ?:travel_feature_map WHERE feature_type = ?s",
+            ['canonical_code', 'map_id'],
+            $featureType
         );
-        if ($mapId > 0) {
-            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
-        }
-    }
 
-    foreach ($roomAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'room_type' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'prefix');
+        foreach ($aliases as $apiValue => $canonicalCode) {
+            $mapId = (int) ($allMaps[$canonicalCode] ?? 0);
+            if ($mapId > 0) {
+                \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $apiValue, $mapId, $matchType);
+            }
         }
-    }
+    };
+
+    $seedAliasGroup('board', $boardAliases, 'exact');
+    $seedAliasGroup('room_type', $roomAliases, 'prefix');
 
     // Star rating aliases (feature_type='stars'): canonical codes '1' through '5'
     $starAliases = [
@@ -180,15 +180,7 @@ function fn_sphinx_holidays_seed_aliases(): void
         '5 stars' => '5',
     ];
 
-    foreach ($starAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $apiValue, $mapId, 'exact');
-        }
-    }
+    $seedAliasGroup('stars', $starAliases, 'exact');
 
     // Property type aliases (feature_type='property_type')
     $propertyTypeAliases = [
@@ -206,15 +198,7 @@ function fn_sphinx_holidays_seed_aliases(): void
         'motel'       => 'motel',
     ];
 
-    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $apiValue, $mapId, 'exact');
-        }
-    }
+    $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
 
     // Facility aliases — map Sphinx facility IDs to canonical codes.
     // Each canonical code row in travel_feature_map carries its own cscart_feature_id,
@@ -349,15 +333,7 @@ function fn_sphinx_holidays_seed_aliases(): void
         '204' => 'no_smoking_all',
     ];
 
-    foreach ($facilityAliases as $sphinxId => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'facility' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', $sphinxId, $mapId, 'exact');
-        }
-    }
+    $seedAliasGroup('facility', $facilityAliases, 'exact');
 
     // Clear resolve cache after batch alias inserts
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
@@ -437,7 +413,7 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
  * Status flow: pending → (API call) → confirmed on success, failed on error.
  * On API failure: marks booking as STATUS_FAILED and logs the error.
  */
-function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth)
+function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
     if (empty($order_id) || empty($cart['products'])) {
         return;
@@ -509,7 +485,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
  * Hook: calculate_cart_items
  * Preserve stored price for Sphinx bookings.
  */
-function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth)
+function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth): void
 {
     if (empty($cart['products'])) {
         return;
@@ -527,7 +503,7 @@ function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth
  * Hook: get_product_data_post
  * Attach booking engine config to Sphinx hotel products.
  */
-function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code)
+function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code): void
 {
     if (empty($product_data['product_code'])) {
         return;
@@ -596,7 +572,7 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
  * Hook: user_login_post
  * Link session-based sphinx bookings to the logged-in user.
  */
-function fn_sphinx_holidays_user_login_post($user_data, &$auth)
+function fn_sphinx_holidays_user_login_post($user_data, &$auth): void
 {
     if (empty($auth['user_id'])) {
         return;
@@ -615,7 +591,7 @@ function fn_sphinx_holidays_user_login_post($user_data, &$auth)
  * Hook: create_user_post
  * Link session-based sphinx bookings to the newly created user.
  */
-function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth)
+function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth): void
 {
     if (empty($user_id)) {
         return;
