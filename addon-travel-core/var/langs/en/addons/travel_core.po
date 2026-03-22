@@ -280,6 +280,10 @@ msgctxt "Languages::travel_core.guests"
 msgid "Guests"
 msgstr "Guests"
 
+msgctxt "Languages::travel_core.admin_menu_travel"
+msgid "Travel"
+msgstr "Travel"
+
 msgctxt "Languages::travel_core.manage_bookings"
 msgid "Travel Bookings"
 msgstr "Travel Bookings"

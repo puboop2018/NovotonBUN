@@ -2,7 +2,7 @@
 /***************************************************************************
  *                                                                          *
  *   Travel Core - Menu Actions Schema                                      *
- *   Registers admin menu items for feature mappings                        *
+ *   Registers admin tab navigation for travel_core pages                   *
  *                                                                          *
  ***************************************************************************/
 
@@ -10,24 +10,38 @@ defined('BOOTSTRAP') or die('Access denied');
 
 /** @var array $schema */
 
-$schema['travel_bookings.manage'] = [
-    'href'     => 'travel_bookings.manage',
-    'alt'      => 'travel_bookings.view',
-    'text'     => __('travel_core.manage_bookings'),
-    'position' => 490,
+// Shared tab set for all travel_core admin pages
+$tabs = [
+    'travel_bookings' => [
+        'href'     => 'travel_bookings.manage',
+        'text'     => __('travel_core.manage_bookings'),
+        'position' => 100,
+    ],
+    'travel_feature_mappings' => [
+        'href'     => 'travel_feature_mappings.manage',
+        'text'     => __('travel_core.feature_mappings'),
+        'position' => 200,
+    ],
+    'travel_tools' => [
+        'href'     => 'travel_tools.manage',
+        'text'     => __('travel_core.tools_and_cron'),
+        'position' => 300,
+    ],
 ];
 
-$schema['travel_feature_mappings.manage'] = [
-    'href'     => 'travel_feature_mappings.manage',
-    'alt'      => 'travel_feature_mappings.edit',
-    'text'     => __('travel_core.feature_mappings'),
-    'position' => 500,
+// Apply same tabs to all travel_core pages (DRY)
+$pages = [
+    'travel_bookings.manage',
+    'travel_bookings.view',
+    'travel_feature_mappings.manage',
+    'travel_feature_mappings.edit',
+    'travel_tools.manage',
 ];
 
-$schema['travel_tools.manage'] = [
-    'href'     => 'travel_tools.manage',
-    'text'     => __('travel_core.tools_and_cron'),
-    'position' => 520,
-];
+foreach ($pages as $page) {
+    foreach ($tabs as $key => $tab) {
+        $schema[$page][$key] = $tab;
+    }
+}
 
 return $schema;
