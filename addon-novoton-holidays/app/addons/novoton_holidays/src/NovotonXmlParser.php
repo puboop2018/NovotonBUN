@@ -28,7 +28,7 @@ class NovotonXmlParser implements XmlParserInterface
         }
 
         // Fast path: no ampersands at all
-        if (strpos($string, '&') === false) {
+        if (!str_contains($string, '&')) {
             return $string;
         }
 
@@ -38,7 +38,7 @@ class NovotonXmlParser implements XmlParserInterface
 
         $result = '';
         foreach ($parts as $part) {
-            if (strpos($part, '<![CDATA[') === 0) {
+            if (str_starts_with($part, '<![CDATA[')) {
                 // CDATA section — keep as-is
                 $result .= $part;
             } else {

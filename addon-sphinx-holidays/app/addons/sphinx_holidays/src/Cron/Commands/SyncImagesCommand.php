@@ -14,8 +14,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  */
 class SyncImagesCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     private const BATCH_SIZE = 50;
 
@@ -24,7 +23,7 @@ class SyncImagesCommand
         return 'Download and attach hotel images to CS-Cart products';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

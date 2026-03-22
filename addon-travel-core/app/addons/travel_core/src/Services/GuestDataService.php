@@ -333,7 +333,7 @@ class GuestDataService implements GuestDataServiceInterface
             if ($is_first && $guest_type === 'adult') {
                 $is_holder = true;
                 $is_first  = false;
-            } elseif (!empty($holder_name) && stripos($display_name, $holder_name) !== false) {
+            } elseif (!empty($holder_name) && str_contains(strtolower($display_name), strtolower($holder_name))) {
                 $is_holder = true;
             }
 

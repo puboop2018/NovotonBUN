@@ -29,9 +29,9 @@ $mode = $_GET['mode'] ?? '';
 if (isset($argv) && is_array($argv)) {
     foreach ($argv as $i => $arg) {
         if ($i === 0) continue;
-        if (strpos($arg, 'access_key=') === 0) {
+        if (str_starts_with($arg, 'access_key=')) {
             $providedKey = substr($arg, strlen('access_key='));
-        } elseif (strpos($arg, 'mode=') === 0) {
+        } elseif (str_starts_with($arg, 'mode=')) {
             $mode = substr($arg, strlen('mode='));
         }
     }

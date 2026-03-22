@@ -21,15 +21,14 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class AddProductsCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Create CS-Cart products from unlinked Sphinx hotels';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

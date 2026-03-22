@@ -239,7 +239,7 @@ class PriceInfoFormatter
         }
 
         // Infant types
-        if (strpos($type, 'INFANT') !== false || $type === 'INF') {
+        if (str_contains($type, 'INFANT') || $type === 'INF') {
             $count = 0;
             foreach ($occupancy['children'] as $child) {
                 if (($child['age'] ?? 0) < 2) {
@@ -250,7 +250,7 @@ class PriceInfoFormatter
         }
 
         // Child types (with optional age band)
-        if (strpos($type, 'CHD') !== false || strpos($type, 'CHILD') !== false) {
+        if (str_contains($type, 'CHD') || str_contains($type, 'CHILD')) {
             return self::countChildrenInBand($occupancy, $type);
         }
 

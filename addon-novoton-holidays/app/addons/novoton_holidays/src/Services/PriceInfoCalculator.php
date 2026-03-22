@@ -75,7 +75,7 @@ class PriceInfoCalculator
 
                 if ($row) {
                     $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
-                    $isExtraBed = stripos($adult['acc_type'], 'EXTRA') !== false;
+                    $isExtraBed = str_contains(strtolower($adult['acc_type']), strtolower('EXTRA'));
 
                     // RoomPrice dedup: only skip regular-bed occupants covered by
                     // the per-room charge.  Extra-bed guests always have their own
@@ -103,7 +103,7 @@ class PriceInfoCalculator
                         $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
                         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
                         $isPercentage = false;
-                        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+                        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
                             $isPercentage = true;
                         } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
                             $isPercentage = true;
@@ -144,7 +144,7 @@ class PriceInfoCalculator
 
                 if ($row) {
                     $childRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
-                    $isExtraBed = stripos($child['acc_type'], 'EXTRA') !== false;
+                    $isExtraBed = str_contains(strtolower($child['acc_type']), strtolower('EXTRA'));
 
                     // Same RoomPrice dedup logic: only skip regular-bed children
                     // (rare — a child occupying a regular bed in the room).
@@ -172,7 +172,7 @@ class PriceInfoCalculator
                         $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
                         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
                         $isPercentage = false;
-                        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+                        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
                             $isPercentage = true;
                         } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
                             $isPercentage = true;
@@ -334,7 +334,7 @@ class PriceInfoCalculator
         $isPercentage = false;
         $percentValue = 0.0;
 
-        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
             // Explicit percentage marker (e.g. "20%")
             $isPercentage = true;
             $percentValue = (float) str_replace('%', '', $rawPrice);

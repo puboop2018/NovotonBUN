@@ -20,8 +20,7 @@ use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
  */
 class FullSyncCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     /**
      * Ordered list of modes to execute in sequence.
@@ -56,7 +55,7 @@ class FullSyncCommand
         return 'Run all sync modes in sequence (full pipeline)';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

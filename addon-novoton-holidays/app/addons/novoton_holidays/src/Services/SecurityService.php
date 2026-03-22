@@ -582,7 +582,7 @@ class SecurityService implements SecurityServiceInterface
             if (!empty($_SERVER[$header])) {
                 $ip = $_SERVER[$header];
                 // Handle comma-separated IPs
-                if (strpos($ip, ',') !== false) {
+                if (str_contains($ip, ',')) {
                     $ip = trim(explode(',', $ip)[0]);
                 }
                 if (filter_var($ip, FILTER_VALIDATE_IP)) {

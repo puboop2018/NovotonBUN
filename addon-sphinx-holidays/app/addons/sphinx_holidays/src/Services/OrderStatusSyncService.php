@@ -22,8 +22,7 @@ class OrderStatusSyncService
     private SphinxApi $api;
     private SphinxBookingRepository $repo;
 
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     /** Map Sphinx API booking statuses to our internal TravelConstants statuses */
     private const STATUS_MAP = [
@@ -38,7 +37,7 @@ class OrderStatusSyncService
         $this->repo = $repo;
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }
@@ -270,12 +269,18 @@ class OrderStatusSyncService
             . "Status: {$oldStatus} → {$newStatus}\n\n"
             . "Please review this booking in the admin panel.";
 
-        @fn_send_mail([
-            'to'      => $adminEmail,
-            'from'    => 'default_company_orders_department',
-            'subject' => $subject,
-            'body'    => $body,
-        ], 'A');
+        try {
+            fn_send_mail([
+                'to'      => $adminEmail,
+                'from'    => 'default_company_orders_department',
+                'subject' => $subject,
+                'body'    => $body,
+            ], 'A');
+        } catch (\Throwable $e) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Failed to send booking notification: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     /**

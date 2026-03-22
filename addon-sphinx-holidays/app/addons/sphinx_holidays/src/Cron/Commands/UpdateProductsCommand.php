@@ -19,8 +19,7 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class UpdateProductsCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     private const BATCH_SIZE = 200;
 
@@ -29,7 +28,7 @@ class UpdateProductsCommand
         return 'Update CS-Cart products when Sphinx hotel data changes';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

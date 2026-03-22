@@ -351,7 +351,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     public function extractHotelId(string $productCode): ?string
     {
         $prefix = Constants::PRODUCT_CODE_PREFIX;
-        if (strpos($productCode, $prefix) === 0) {
+        if (str_starts_with($productCode, $prefix)) {
             return substr($productCode, strlen($prefix));
         }
 

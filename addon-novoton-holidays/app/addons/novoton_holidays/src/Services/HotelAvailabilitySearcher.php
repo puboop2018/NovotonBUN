@@ -375,7 +375,7 @@ class HotelAvailabilitySearcher
             $reordered = [];
             foreach ($preferredBoards as $pb) {
                 foreach ($boardTypes as $bt) {
-                    if (stripos($bt, $pb) !== false || stripos($pb, $bt) !== false) {
+                    if (str_contains(strtolower($bt), strtolower($pb)) || str_contains(strtolower($pb), strtolower($bt))) {
                         $reordered[] = $bt;
                     }
                 }

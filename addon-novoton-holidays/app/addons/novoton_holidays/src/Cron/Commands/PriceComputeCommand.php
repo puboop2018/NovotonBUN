@@ -318,12 +318,12 @@ class PriceComputeCommand extends AbstractCronCommand
             $idAge = (string) ($sp['IdAge'] ?? '');
 
             // Must contain ADULT (case-insensitive)
-            if (stripos($idAge, 'ADULT') === false) {
+            if (!str_contains(strtolower($idAge), strtolower('ADULT'))) {
                 continue;
             }
 
             // Exclude supplementary "3 RD ADULT" / "3RD ADULT" rows
-            if (stripos($idAge, '3 RD') !== false || stripos($idAge, '3RD') !== false) {
+            if (str_contains(strtolower($idAge), strtolower('3 RD')) || str_contains(strtolower($idAge), strtolower('3RD'))) {
                 continue;
             }
 
@@ -336,7 +336,7 @@ class PriceComputeCommand extends AbstractCronCommand
                 $priceVal = (string) $sp[$priceKey];
 
                 // Skip percentage values
-                if (strpos($priceVal, '%') !== false) {
+                if (str_contains($priceVal, '%')) {
                     continue;
                 }
 

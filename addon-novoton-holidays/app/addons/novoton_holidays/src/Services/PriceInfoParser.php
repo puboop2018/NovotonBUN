@@ -456,7 +456,7 @@ class PriceInfoParser
             }
 
             $rowAge = strtoupper(trim($rowAge));
-            if (strpos($rowAge, 'CHD') === false && strpos($rowAge, 'CHILD') === false) {
+            if (!str_contains($rowAge, 'CHD') && !str_contains($rowAge, 'CHILD')) {
                 continue;
             }
 

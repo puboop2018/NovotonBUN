@@ -286,7 +286,7 @@ class ConfigProvider
 
         foreach (explode("\n", $raw) as $line) {
             $line = trim($line);
-            if ($line === '' || strpos($line, ':') === false) {
+            if ($line === '' || !str_contains($line, ':')) {
                 continue;
             }
             [$key, $value] = explode(':', $line, 2);

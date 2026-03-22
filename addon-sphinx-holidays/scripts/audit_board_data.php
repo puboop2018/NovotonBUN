@@ -195,7 +195,7 @@ $preferredNames = ['Creta', 'South Aegean', 'Ionian', 'Peloponnese', 'Attica'];
 $searchRegions = [];
 foreach ($preferredNames as $pref) {
     foreach ($greeceRegions as $r) {
-        if (stripos($r['name'], $pref) !== false && count($searchRegions) < 3) {
+        if (str_contains(strtolower($r['name']), strtolower($pref)) && count($searchRegions) < 3) {
             $searchRegions[] = $r;
             break;
         }

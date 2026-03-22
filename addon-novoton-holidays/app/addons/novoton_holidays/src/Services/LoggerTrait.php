@@ -137,7 +137,7 @@ trait LoggerTrait
             $lowerKey = strtolower($key);
             
             foreach ($sensitiveKeys as $sensitive) {
-                if (strpos($lowerKey, $sensitive) !== false) {
+                if (str_contains($lowerKey, $sensitive)) {
                     $context[$key] = '***REDACTED***';
                     break;
                 }

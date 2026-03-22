@@ -18,15 +18,14 @@ use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
  */
 class CacheRefreshCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Refresh cached hotel & package deals from Sphinx cache endpoints';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

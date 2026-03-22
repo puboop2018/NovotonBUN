@@ -10,15 +10,14 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  */
 class CleanupCommand
 {
-    /** @var callable|null */
-    private $outputCallback = null;
+    private ?\Closure $outputCallback = null;
 
     public static function getDescription(): string
     {
         return 'Clean up orphan bookings, old sync logs, and expired cache entries';
     }
 
-    public function setOutputCallback(callable $callback): void
+    public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
     }

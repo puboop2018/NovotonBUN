@@ -73,8 +73,7 @@ final class RoomType
     private const BEDROOM_PREFIX_TEMPLATE = 'Apartament %d Dormitoare';
     private const BEDROOM_PREFIX_SINGULAR = 'Apartament 1 Dormitor';
 
-    /** @var string */
-    private $code;
+    private string $code;
 
     private function __construct(string $code)
     {

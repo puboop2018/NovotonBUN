@@ -293,7 +293,7 @@ function _nvt_is_hotel_product(array $product, array $addon_settings): bool
 
     foreach ($prefixes as $prefix) {
         $prefix = trim($prefix);
-        if (!empty($prefix) && strpos($product['product_code'], $prefix) === 0) {
+        if (!empty($prefix) && str_starts_with($product['product_code'], $prefix)) {
             return true;
         }
     }
@@ -310,7 +310,7 @@ function _nvt_is_hotel_product(array $product, array $addon_settings): bool
 function _nvt_extract_hotel_id(string $product_code): ?string
 {
     foreach (\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getProductCodePrefixes() as $prefix) {
-        if (!empty($prefix) && strpos($product_code, $prefix) === 0) {
+        if (!empty($prefix) && str_starts_with($product_code, $prefix)) {
             $remainder = substr($product_code, strlen($prefix));
             // Strip optional separator (e.g. "NVT-12345" legacy format)
             $remainder = ltrim($remainder, '-');
@@ -514,7 +514,7 @@ function _nvt_build_room_age_bands(array $prices): array
         }
 
         // Child age bands
-        if (strpos($age_type, 'CHD') !== false || strpos($age_type, 'CHILD') !== false) {
+        if (str_contains($age_type, 'CHD') || str_contains($age_type, 'CHILD')) {
             if (preg_match('/(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)/', $age_type, $m)) {
                 $from_raw   = str_replace(',', '.', $m[1]);
                 $to_raw     = str_replace(',', '.', $m[2]);

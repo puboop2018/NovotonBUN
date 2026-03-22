@@ -315,7 +315,7 @@ if ($mode == 'compare') {
         foreach ($personKeys as $pKey) {
             $rowInfo = $matchedRows[$pKey] ?? [];
             $personTotal = $byPerson[$pKey] ?? 0;
-            $isAdult = strpos($pKey, 'adult_') === 0;
+            $isAdult = str_starts_with($pKey, 'adult_');
             $badgeClass = $isAdult ? 'badge-adult' : 'badge-child';
             $label = str_replace('_', ' ', ucfirst($pKey));
 
@@ -880,7 +880,7 @@ if ($mode == 'compare') {
                 $firstAdultTotal = 0;
                 $apiFirstAdultTotal = 0;
                 foreach ($byPerson as $pKey => $pAmt) {
-                    if (strpos($pKey, 'adult_1') === 0) {
+                    if (str_starts_with($pKey, 'adult_1')) {
                         $firstAdultTotal = $pAmt;
                         $apiFirstAdultTotal = round($pAmt * $scaleFactor, 2);
                         break;

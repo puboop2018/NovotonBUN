@@ -70,7 +70,7 @@ class PriceInfoSync
             // Strip known prefixes first, then take trailing digits
             $code = $product['product_code'];
             foreach ($this->productPrefixes as $prefix) {
-                if (strpos($code, $prefix) === 0) {
+                if (str_starts_with($code, $prefix)) {
                     $code = substr($code, strlen($prefix));
                     break;
                 }

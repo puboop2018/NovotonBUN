@@ -579,7 +579,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             }
 
             // Only consider adult entries (ADULT, 1ST ADULT, 2ND ADULT, etc.)
-            $isAdult = stripos($rowAge, 'ADULT') !== false;
+            $isAdult = str_contains(strtolower($rowAge), strtolower('ADULT'));
             if (!$isAdult) continue;
 
             // Only consider regular bed (not extra bed)
@@ -640,12 +640,12 @@ class PriceInfoService implements PriceInfoServiceInterface
             return 0.0;
         }
 
-        if (is_string($rawPrice) && strpos($rawPrice, '%') !== false) {
+        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
             $percent = (float) str_replace('%', '', $rawPrice);
             // Resolve from Base code row
             if (isset($codeIndex['Base'][0])) {
                 $baseRaw = $codeIndex['Base'][0][$priceKey] ?? 0;
-                if (is_string($baseRaw) && strpos($baseRaw, '%') !== false) {
+                if (is_string($baseRaw) && str_contains($baseRaw, '%')) {
                     return 0.0; // Avoid infinite recursion
                 }
                 $basePrice = (float) $baseRaw;

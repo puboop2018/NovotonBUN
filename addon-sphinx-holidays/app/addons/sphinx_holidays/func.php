@@ -524,7 +524,7 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
     }
 
     $code = $product_data['product_code'];
-    if (strpos($code, 'SPX') === 0) {
+    if (str_starts_with($code, 'SPX')) {
         $hotel_id = substr($code, 3);
     } else {
         return;
@@ -561,9 +561,9 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
     }
 
     $code = $product['product_code'];
-    if (strpos($code, 'SPX') === 0) {
+    if (str_starts_with($code, 'SPX')) {
         $hotel_id = substr($code, 3);
-    } elseif (strpos($code, 'SPH_') === 0) {
+    } elseif (str_starts_with($code, 'SPH_')) {
         $hotel_id = substr($code, 4);
     } else {
         \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
