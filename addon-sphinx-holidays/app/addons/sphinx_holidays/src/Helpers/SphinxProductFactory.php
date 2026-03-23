@@ -111,7 +111,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Create CS-Cart product using SEO templates
         $productData = [
-            'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+            'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: ($hotel['name'] ?? 'Hotel'),
             'product_code'      => $productCode,
             'price'             => 0,
             'status'            => 'A',

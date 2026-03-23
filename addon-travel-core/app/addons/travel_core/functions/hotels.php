@@ -175,6 +175,18 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
     // Remove any leftover unreplaced {{...}} tokens
     $result = preg_replace('/\{\{[a-z_]+\}\}/', '', $result);
 
+    // Clean up dangling separators left by empty placeholders:
+    //   ", ,"  → ","    (double comma)
+    //   " - "  at start/end
+    //   "- ,"  or ", -" (mixed dangling)
+    $result = preg_replace('/,\s*,/', ',', $result);           // collapse double commas
+    $result = preg_replace('/\s*-\s*,/', ',', $result);        // "- ," → ","
+    $result = preg_replace('/,\s*-\s*/', ' - ', $result);      // ", -" → " - "
+    $result = preg_replace('/^\s*[-,]\s*/', '', $result);       // leading separator
+    $result = preg_replace('/\s*[-,]\s*$/', '', $result);       // trailing separator
+    $result = preg_replace('/\(\s*\)/', '', $result);           // empty parentheses
+    $result = preg_replace('/\s*-\s*-\s*/', ' - ', $result);   // double dashes
+
     // Collapse multiple spaces and trim
     return trim(preg_replace('/\s{2,}/', ' ', $result));
 }
@@ -201,5 +213,6 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
     // Fallback: basic slug generation
     $slug = mb_strtolower($rendered, 'UTF-8');
     $slug = preg_replace('/[^a-z0-9\-]+/', '-', $slug);
+    $slug = preg_replace('/-{2,}/', '-', $slug); // collapse multiple dashes
     return trim($slug, '-');
 }

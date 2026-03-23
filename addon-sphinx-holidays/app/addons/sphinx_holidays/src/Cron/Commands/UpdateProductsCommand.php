@@ -78,7 +78,7 @@ class UpdateProductsCommand
                     : ($hotel['description'] ?? '');
 
                 $product_data = [
-                    'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+                    'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: ($hotel['name'] ?? 'Hotel'),
                     'full_description'  => $fullDescription,
                     'short_description' => $hotel['short_description'] ?? '',
                     'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
