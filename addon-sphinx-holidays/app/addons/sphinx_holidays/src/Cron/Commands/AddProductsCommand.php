@@ -65,6 +65,11 @@ class AddProductsCommand extends AbstractSyncCommand
             return $this->showStatus();
         }
 
+        // Handle debug — diagnose category creation without modifying anything
+        if (!empty($params['debug'])) {
+            return $this->debugCategoryCreation($params);
+        }
+
         // Load existing state
         $state = $this->loadState();
 
@@ -207,6 +212,146 @@ class AddProductsCommand extends AbstractSyncCommand
             'invalid_country' => $state['invalid_country'],
             'total'           => $state['total'],
         ]];
+    }
+
+    /**
+     * Diagnose category creation: walk the path step by step, show SQL results.
+     * Does NOT create anything — read-only diagnostic.
+     *
+     * Usage: &cron_mode=add_products&debug=1
+     */
+    private function debugCategoryCreation(array $params): array
+    {
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
+        $template = ConfigProvider::getProductCategoryTemplate();
+
+        $this->output('=== CATEGORY CREATION DIAGNOSTIC ===');
+        $this->output('');
+
+        // 1. Show CART_LANGUAGE
+        $cartLang = defined('CART_LANGUAGE') ? CART_LANGUAGE : '(undefined)';
+        $this->output("CART_LANGUAGE = '{$cartLang}'");
+
+        // 2. Show active languages
+        $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+        $this->output('Active languages: ' . implode(', ', $languages));
+
+        // 3. Show category template
+        $this->output("Category template: '{$template}'");
+        $this->output('');
+
+        // 4. Show all existing categories
+        $this->output('--- Existing CS-Cart categories ---');
+        $cats = db_get_array(
+            "SELECT c.category_id, c.parent_id, c.status, cd.category, cd.lang_code
+             FROM ?:categories c
+             JOIN ?:category_descriptions cd ON cd.category_id = c.category_id
+             ORDER BY c.parent_id, c.category_id"
+        );
+        foreach ($cats as $cat) {
+            $indent = $cat['parent_id'] > 0 ? '  ' : '';
+            $this->output("{$indent}[{$cat['category_id']}] parent={$cat['parent_id']} lang={$cat['lang_code']} status={$cat['status']} name=\"{$cat['category']}\"");
+        }
+        $this->output('');
+
+        // 5. Load destination hierarchy and show it
+        $destRepo->loadParentLookup();
+
+        // 6. Pick first few unlinked hotels and walk their category paths
+        $countryCode = $params['country'] ?? '';
+        $hotels = $hotelRepo->findUnlinked($countryCode, 3);
+
+        if (empty($hotels)) {
+            // Also check skipped hotels
+            $hotels = db_get_array(
+                "SELECT hotel_id, name, destination_id, country_code, country_name, region_name, destination_name, product_skip_reason
+                 FROM ?:sphinx_hotels
+                 WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
+                 LIMIT 3"
+            );
+            if (!empty($hotels)) {
+                $this->output('No unlinked hotels found, showing skipped hotels instead:');
+            }
+        }
+
+        if (empty($hotels)) {
+            $this->output('No hotels found to diagnose.');
+            return ['success' => true, 'stats' => ['action' => 'debug']];
+        }
+
+        foreach ($hotels as $hotel) {
+            $hotelId = $hotel['hotel_id'];
+            $this->output("--- Hotel [{$hotelId}] {$hotel['name']} ---");
+            $this->output("  country_code={$hotel['country_code']}, country_name={$hotel['country_name']}");
+            $this->output("  region_name={$hotel['region_name']}, destination_name={$hotel['destination_name']}");
+            $this->output("  destination_id={$hotel['destination_id']}");
+            if (!empty($hotel['product_skip_reason'])) {
+                $this->output("  skip_reason={$hotel['product_skip_reason']}");
+            }
+
+            // Resolve hierarchy
+            $destinationIds = [(int) $hotel['destination_id']];
+            $hierarchyMap = !empty($destinationIds[0]) ? $destRepo->resolveHierarchies($destinationIds) : [];
+            $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
+            $this->output('  hierarchy: ' . json_encode($hierarchy));
+
+            // Build category path
+            $factory = Container::getProductFactory();
+            $path = $factory->buildCategoryPath($hotel, $hierarchy, $template);
+            $this->output("  category_path = \"{$path}\"");
+
+            if ($path === '') {
+                $this->output('  SKIP: empty path');
+                continue;
+            }
+
+            // Walk path step by step (READ ONLY — same SQL as fn_travel_core_get_or_create_category)
+            $parts = array_filter(array_map('trim', explode('/', $path)));
+            $parentId = 0;
+            $allFound = true;
+
+            foreach ($parts as $part) {
+                $catId = (int) db_get_field(
+                    "SELECT c.category_id FROM ?:categories c
+                     JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
+                     WHERE c.parent_id = ?i AND cd.category = ?s
+                     LIMIT 1",
+                    $cartLang, $parentId, $part
+                );
+
+                if ($catId > 0) {
+                    $this->output("  STEP \"{$part}\" parent_id={$parentId} => FOUND category_id={$catId}");
+                    $parentId = $catId;
+                } else {
+                    $this->output("  STEP \"{$part}\" parent_id={$parentId} => NOT FOUND (would need fn_update_category)");
+                    $allFound = false;
+
+                    // Check if it exists with a different lang_code
+                    $altMatch = db_get_row(
+                        "SELECT c.category_id, cd.lang_code FROM ?:categories c
+                         JOIN ?:category_descriptions cd ON cd.category_id = c.category_id
+                         WHERE c.parent_id = ?i AND cd.category = ?s
+                         LIMIT 1",
+                        $parentId, $part
+                    );
+                    if ($altMatch) {
+                        $this->output("    BUT exists with lang_code='{$altMatch['lang_code']}' as category_id={$altMatch['category_id']}");
+                    }
+                    break;
+                }
+            }
+
+            if ($allFound) {
+                $this->output("  RESULT: path fully resolved => leaf category_id={$parentId}");
+            } else {
+                $this->output("  RESULT: path BROKEN — fn_update_category() would be called here");
+            }
+            $this->output('');
+        }
+
+        $this->output('=== END DIAGNOSTIC ===');
+        return ['success' => true, 'stats' => ['action' => 'debug']];
     }
 
     /**
