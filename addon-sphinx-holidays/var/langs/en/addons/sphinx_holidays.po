@@ -84,6 +84,14 @@ msgctxt "SettingsOptions::sphinx_holidays::product_category_template"
 msgid "Category path template ({country}, {region}, {city} placeholders)"
 msgstr "Category path template ({country}, {region}, {city} placeholders)"
 
+msgctxt "SettingsOptions::sphinx_holidays::product_languages"
+msgid "Product languages"
+msgstr "Product languages"
+
+msgctxt "SettingsTooltips::sphinx_holidays::product_languages"
+msgid "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
+msgstr "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
+
 msgctxt "SettingsOptions::sphinx_holidays::resilience_header"
 msgid "API Resilience"
 msgstr "API Resilience"
