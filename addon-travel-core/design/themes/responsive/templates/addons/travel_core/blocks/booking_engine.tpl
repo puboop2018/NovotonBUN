@@ -30,14 +30,13 @@
 {if !$travel_search_dispatch}{$travel_search_dispatch = ''}{/if}
 {if !$travel_mode}{$travel_mode = 'product'}{/if}
 
-{* Get product_id from context - try multiple sources *}
+{* Get product_id from context - prefer explicitly passed vars over scope-inherited
+   $product to avoid Smarty scope chain recursion when included from hook templates *}
 {if !$current_product_id}
-    {if $travel_search_params.product_id}
-        {$current_product_id = $travel_search_params.product_id}
-    {elseif $product.product_id}
-        {$current_product_id = $product.product_id}
-    {elseif $product_id}
+    {if $product_id}
         {$current_product_id = $product_id}
+    {elseif $travel_search_params.product_id}
+        {$current_product_id = $travel_search_params.product_id}
     {elseif $smarty.request.product_id}
         {$current_product_id = $smarty.request.product_id}
     {else}
@@ -45,14 +44,12 @@
     {/if}
 {/if}
 
-{* Get hotel_id - try direct variable first, then from product data *}
+{* Get hotel_id - prefer explicitly passed var over scope-inherited $product *}
 {if !$current_hotel_id}
-    {if $travel_search_params.hotel_id}
-        {$current_hotel_id = $travel_search_params.hotel_id}
-    {elseif $hotel_id}
+    {if $hotel_id}
         {$current_hotel_id = $hotel_id}
-    {elseif $product.hotel_id}
-        {$current_hotel_id = $product.hotel_id}
+    {elseif $travel_search_params.hotel_id}
+        {$current_hotel_id = $travel_search_params.hotel_id}
     {else}
         {$current_hotel_id = ''}
     {/if}
