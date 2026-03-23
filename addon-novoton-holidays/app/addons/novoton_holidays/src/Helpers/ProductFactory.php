@@ -85,7 +85,7 @@ class ProductFactory implements ProductFactoryInterface
 
         // Create product using SEO templates
         $productData = [
-            'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: $displayName,
+            'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
             'product_code'     => $productCode,
             'price'            => 0,
             'status'           => 'D',

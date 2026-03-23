@@ -140,7 +140,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                 : $description;
 
             $product_data = [
-                'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: $display_name,
+                'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
                 'product_code'     => $product_code,
                 'price'            => 0,
                 'status'           => 'D',
