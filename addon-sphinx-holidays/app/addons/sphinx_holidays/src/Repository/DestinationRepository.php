@@ -392,11 +392,12 @@ class DestinationRepository
         }
 
         $this->parentLookup = $this->loadChunked(
-            ['destination_id', 'name', 'type', 'parent_id'],
+            ['destination_id', 'name', 'type', 'parent_id', 'country_code'],
             static fn(array $row): array => [
-                'name'      => $row['name'],
-                'type'      => $row['type'],
-                'parent_id' => (int) $row['parent_id'],
+                'name'         => $row['name'],
+                'type'         => $row['type'],
+                'parent_id'    => (int) $row['parent_id'],
+                'country_code' => $row['country_code'] ?? '',
             ]
         );
 
@@ -410,7 +411,7 @@ class DestinationRepository
      * Requires loadParentLookup() to have been called first.
      *
      * @param array<int> $destinationIds List of destination IDs to resolve
-     * @return array<int, array{city: string, region: string, country: string}> Keyed by destination_id
+     * @return array<int, array{city: string, region: string, country: string, country_code: string}> Keyed by destination_id
      */
     public function resolveHierarchies(array $destinationIds): array
     {
@@ -421,7 +422,7 @@ class DestinationRepository
         $result = [];
         foreach ($destinationIds as $destId) {
             $destId = (int) $destId;
-            $hierarchy = ['city' => '', 'region' => '', 'country' => ''];
+            $hierarchy = ['city' => '', 'region' => '', 'country' => '', 'country_code' => ''];
 
             $currentId = $destId;
             $visited = [];
@@ -443,6 +444,7 @@ class DestinationRepository
                     }
                 } elseif ($type === 'country') {
                     $hierarchy['country'] = $node['name'];
+                    $hierarchy['country_code'] = $node['country_code'];
                 }
 
                 $currentId = (int) $node['parent_id'];

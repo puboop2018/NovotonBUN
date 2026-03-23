@@ -111,6 +111,9 @@ class HotelSyncService extends AbstractSyncService
 
         $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
 
+        // Preload destination hierarchy for country/region/city resolution during sync
+        $this->destRepo->loadParentLookup();
+
         // Fetch and sync hotels per country
         foreach ($countryCodes as $countryCode) {
             $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
@@ -208,26 +211,17 @@ class HotelSyncService extends AbstractSyncService
                         continue;
                     }
 
-                    // Inject country_code and country_name from sync context when API omits them
-                    if ($normalized['country_code'] === '') {
-                        $normalized['country_code'] = $countryCode;
-                    }
-                    if ($normalized['country_name'] === '' && $countryCode !== '') {
-                        $normalized['country_name'] = $this->resolveCountryName($countryCode);
-                    }
-
                     $pageBatch[] = $normalized;
                     $activeIds[] = $normalized['hotel_id'];
                     $stats['total']++;
-
-                    if (count($pageBatch) >= self::UPSERT_BATCH_SIZE) {
-                        $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
-                        $pageBatch = [];
-                    }
                 }
 
-                if (!empty($pageBatch)) {
-                    $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
+                // Batch-resolve country/region/city from destination hierarchy
+                $pageBatch = $this->enrichFromHierarchy($pageBatch, $countryCode);
+
+                // Upsert in sub-batches
+                foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {
+                    $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
                 if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['skipped'])) {
@@ -362,34 +356,49 @@ class HotelSyncService extends AbstractSyncService
         ];
     }
 
-    /** @var array<string, string> country_code => country_name cache */
-    private array $countryNameCache = [];
-
     /**
-     * Resolve a country name from its ISO-2 code using CS-Cart's country descriptions
-     * or the sphinx_destinations table as fallback.
+     * Enrich a batch of normalized hotels with country/region data from the destination hierarchy.
+     *
+     * Uses the preloaded parentLookup (in-memory, no DB queries) to resolve country_code,
+     * country_name, and region_name from each hotel's destination_id. Falls back to the
+     * sync context $countryCode when destinations haven't been synced yet.
+     *
+     * @param array[] $hotels Normalized hotel rows
+     * @param string $countryCode Sync context country code (fallback)
+     * @return array[] Hotels with enriched country/region data
      */
-    private function resolveCountryName(string $countryCode): string
+    private function enrichFromHierarchy(array $hotels, string $countryCode): array
     {
-        if (isset($this->countryNameCache[$countryCode])) {
-            return $this->countryNameCache[$countryCode];
+        if (empty($hotels)) {
+            return $hotels;
         }
 
-        // Try CS-Cart country descriptions first
-        $name = (string) db_get_field(
-            "SELECT country FROM ?:country_descriptions WHERE code = ?s AND lang_code = ?s LIMIT 1",
-            $countryCode, CART_LANGUAGE
-        );
+        // Collect unique destination IDs for batch resolution
+        $destIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
+        $hierarchyMap = !empty($destIds) ? $this->destRepo->resolveHierarchies($destIds) : [];
 
-        // Fallback: sphinx_destinations country-level entry
-        if ($name === '') {
-            $name = (string) db_get_field(
-                "SELECT name FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
-                $countryCode
-            );
+        foreach ($hotels as &$hotel) {
+            $destId = (int) $hotel['destination_id'];
+            $hierarchy = $hierarchyMap[$destId] ?? [];
+
+            // Primary: derive from destination hierarchy
+            if (!empty($hierarchy['country_code'])) {
+                $hotel['country_code'] = $hierarchy['country_code'];
+            }
+            if (!empty($hierarchy['country'])) {
+                $hotel['country_name'] = $hierarchy['country'];
+            }
+            if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
+                $hotel['region_name'] = $hierarchy['region'];
+            }
+
+            // Fallback: sync context country code (when destinations aren't synced yet)
+            if ($hotel['country_code'] === '') {
+                $hotel['country_code'] = $countryCode;
+            }
         }
+        unset($hotel);
 
-        $this->countryNameCache[$countryCode] = $name;
-        return $name;
+        return $hotels;
     }
 }
