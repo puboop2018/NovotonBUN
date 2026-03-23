@@ -677,6 +677,44 @@
         <item lang="ro" id="sphinx_holidays.save_whitelist"><![CDATA[Salvează Lista Albă]]></item>
         <item lang="en" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Remove All Whitelist]]></item>
         <item lang="ro" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Elimină Toată Lista Albă]]></item>
+        <item lang="en" id="sphinx_holidays.show_whitelisted_only"><![CDATA[Show whitelisted only]]></item>
+        <item lang="ro" id="sphinx_holidays.show_whitelisted_only"><![CDATA[Arată doar cele din whitelist]]></item>
+        <item lang="en" id="sphinx_holidays.classification"><![CDATA[Classification]]></item>
+        <item lang="ro" id="sphinx_holidays.classification"><![CDATA[Clasificare]]></item>
+        <item lang="en" id="sphinx_holidays.link_status"><![CDATA[Link Status]]></item>
+        <item lang="ro" id="sphinx_holidays.link_status"><![CDATA[Status Legătură]]></item>
+        <item lang="en" id="sphinx_holidays.linked"><![CDATA[Linked]]></item>
+        <item lang="ro" id="sphinx_holidays.linked"><![CDATA[Legat]]></item>
+        <item lang="en" id="sphinx_holidays.orphan"><![CDATA[Orphan]]></item>
+        <item lang="ro" id="sphinx_holidays.orphan"><![CDATA[Orfan]]></item>
+        <item lang="en" id="sphinx_holidays.product"><![CDATA[Product]]></item>
+        <item lang="ro" id="sphinx_holidays.product"><![CDATA[Produs]]></item>
+        <item lang="en" id="sphinx_holidays.unclassified"><![CDATA[Unclassified]]></item>
+        <item lang="ro" id="sphinx_holidays.unclassified"><![CDATA[Neclasificat]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_activate"><![CDATA[Activate Selected]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_activate"><![CDATA[Activează Selectate]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_deactivate"><![CDATA[Deactivate Selected]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_deactivate"><![CDATA[Dezactivează Selectate]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_delete"><![CDATA[Delete Selected]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_delete"><![CDATA[Șterge Selectate]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_sync_images"><![CDATA[Sync Images]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_sync_images"><![CDATA[Sincronizează Imagini]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Are you sure you want to delete the selected hotels?]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Sigur doriți să ștergeți hotelurile selectate?]]></item>
+        <item lang="en" id="sphinx_holidays.images_synced"><![CDATA[Images synced]]></item>
+        <item lang="ro" id="sphinx_holidays.images_synced"><![CDATA[Imagini sincronizate]]></item>
+        <item lang="en" id="sphinx_holidays.hotels_updated"><![CDATA[Hotels updated]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels_updated"><![CDATA[Hoteluri actualizate]]></item>
+        <item lang="en" id="sphinx_holidays.hotels_deleted"><![CDATA[Hotels deleted]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels_deleted"><![CDATA[Hoteluri șterse]]></item>
+        <item lang="en" id="sphinx_holidays.no_hotels_selected"><![CDATA[No hotels selected]]></item>
+        <item lang="ro" id="sphinx_holidays.no_hotels_selected"><![CDATA[Niciun hotel selectat]]></item>
+        <item lang="en" id="sphinx_holidays.all_classifications"><![CDATA[All classifications]]></item>
+        <item lang="ro" id="sphinx_holidays.all_classifications"><![CDATA[Toate clasificările]]></item>
+        <item lang="en" id="sphinx_holidays.all_property_types"><![CDATA[All types]]></item>
+        <item lang="ro" id="sphinx_holidays.all_property_types"><![CDATA[Toate tipurile]]></item>
+        <item lang="en" id="sphinx_holidays.all_link_statuses"><![CDATA[All]]></item>
+        <item lang="ro" id="sphinx_holidays.all_link_statuses"><![CDATA[Toate]]></item>
         <item lang="en" id="sphinx_holidays.expand"><![CDATA[Expand]]></item>
         <item lang="ro" id="sphinx_holidays.expand"><![CDATA[Expandează]]></item>
         <item lang="en" id="sphinx_holidays.collapse"><![CDATA[Restrânge]]></item>

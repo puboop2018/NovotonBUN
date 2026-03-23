@@ -45,6 +45,15 @@
                      max-height:400px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
             </div>
 
+            {* ── View Mode Toggle ── *}
+            <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
+                    <input type="checkbox" id="wl_filter_whitelisted" onchange="toggleWhitelistFilter(this.checked)" />
+                    <span>{__("sphinx_holidays.show_whitelisted_only")}</span>
+                </label>
+                <span id="wl_filter_count" style="font-size: 11px; color: #888;"></span>
+            </div>
+
             {* Country List *}
             <form id="whitelist_form" method="post" action="{"sphinx_holidays.save_whitelist"|fn_url}">
             <input type="hidden" name="security_hash" value="{$security_hash}" />
@@ -170,6 +179,48 @@
     {/foreach}
 
     {literal}
+
+    // ─── Whitelisted-only filter ───
+
+    var whitelistFilterActive = false;
+
+    window.toggleWhitelistFilter = function(checked) {
+        whitelistFilterActive = checked;
+        applyWhitelistFilter();
+    };
+
+    function applyWhitelistFilter() {
+        var countryItems = document.querySelectorAll('.wl-country');
+        var totalCount = countryItems.length;
+        var visibleCount = 0;
+
+        var searchVal = document.getElementById('wl_search').value.toLowerCase().trim();
+
+        countryItems.forEach(function(el) {
+            var countryId = parseInt(el.dataset.countryId);
+            var isWhitelisted = !!state[countryId];
+
+            if (whitelistFilterActive && !isWhitelisted) {
+                el.style.display = 'none';
+            } else {
+                var name = el.dataset.name || '';
+                if (searchVal && name.indexOf(searchVal) === -1) {
+                    el.style.display = 'none';
+                } else {
+                    el.style.display = '';
+                    visibleCount++;
+                }
+            }
+        });
+
+        var countEl = document.getElementById('wl_filter_count');
+        if (whitelistFilterActive) {
+            var whitelistedTotal = Object.keys(state).length;
+            countEl.textContent = 'Showing ' + whitelistedTotal + ' of ' + totalCount + ' countries';
+        } else {
+            countEl.textContent = '';
+        }
+    }
 
     // ─── Country expand/collapse ───
 
@@ -368,6 +419,7 @@
         }
         updateBadge(countryId);
         updateSummary();
+        applyWhitelistFilter();
     };
 
     window.onSelectAllChildren = function(cb, countryId) {
@@ -571,6 +623,7 @@
         document.querySelectorAll('[id^="wl_badge_"]').forEach(function(el) { el.innerHTML = ''; });
 
         updateSummary();
+        applyWhitelistFilter();
     };
 
     // ─── Search: countries + regions/cities via AJAX ───
@@ -582,12 +635,8 @@
         searchInput.addEventListener('input', function() {
             var q = this.value.toLowerCase().trim();
 
-            // Always filter countries instantly
-            var countryItems = document.querySelectorAll('.wl-country');
-            countryItems.forEach(function(el) {
-                var name = el.dataset.name || '';
-                el.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
-            });
+            // Filter countries (respects both search and whitelisted-only toggle)
+            applyWhitelistFilter();
 
             // AJAX search for regions/cities (debounced)
             clearTimeout(searchTimeout);

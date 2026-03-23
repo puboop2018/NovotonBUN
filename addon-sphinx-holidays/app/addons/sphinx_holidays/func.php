@@ -115,6 +115,82 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'en' => 'Settings',
             'ro' => 'Setări',
         ],
+        'sphinx_holidays.show_whitelisted_only' => [
+            'en' => 'Show whitelisted only',
+            'ro' => 'Arată doar cele din whitelist',
+        ],
+        'sphinx_holidays.classification' => [
+            'en' => 'Classification',
+            'ro' => 'Clasificare',
+        ],
+        'sphinx_holidays.link_status' => [
+            'en' => 'Link Status',
+            'ro' => 'Status Legătură',
+        ],
+        'sphinx_holidays.linked' => [
+            'en' => 'Linked',
+            'ro' => 'Legat',
+        ],
+        'sphinx_holidays.orphan' => [
+            'en' => 'Orphan',
+            'ro' => 'Orfan',
+        ],
+        'sphinx_holidays.product' => [
+            'en' => 'Product',
+            'ro' => 'Produs',
+        ],
+        'sphinx_holidays.unclassified' => [
+            'en' => 'Unclassified',
+            'ro' => 'Neclasificat',
+        ],
+        'sphinx_holidays.bulk_activate' => [
+            'en' => 'Activate Selected',
+            'ro' => 'Activează Selectate',
+        ],
+        'sphinx_holidays.bulk_deactivate' => [
+            'en' => 'Deactivate Selected',
+            'ro' => 'Dezactivează Selectate',
+        ],
+        'sphinx_holidays.bulk_delete' => [
+            'en' => 'Delete Selected',
+            'ro' => 'Șterge Selectate',
+        ],
+        'sphinx_holidays.bulk_sync_images' => [
+            'en' => 'Sync Images',
+            'ro' => 'Sincronizează Imagini',
+        ],
+        'sphinx_holidays.bulk_delete_confirm' => [
+            'en' => 'Are you sure you want to delete the selected hotels?',
+            'ro' => 'Sigur doriți să ștergeți hotelurile selectate?',
+        ],
+        'sphinx_holidays.images_synced' => [
+            'en' => 'Images synced',
+            'ro' => 'Imagini sincronizate',
+        ],
+        'sphinx_holidays.hotels_updated' => [
+            'en' => 'Hotels updated',
+            'ro' => 'Hoteluri actualizate',
+        ],
+        'sphinx_holidays.hotels_deleted' => [
+            'en' => 'Hotels deleted',
+            'ro' => 'Hoteluri șterse',
+        ],
+        'sphinx_holidays.no_hotels_selected' => [
+            'en' => 'No hotels selected',
+            'ro' => 'Niciun hotel selectat',
+        ],
+        'sphinx_holidays.all_classifications' => [
+            'en' => 'All classifications',
+            'ro' => 'Toate clasificările',
+        ],
+        'sphinx_holidays.all_property_types' => [
+            'en' => 'All types',
+            'ro' => 'Toate tipurile',
+        ],
+        'sphinx_holidays.all_link_statuses' => [
+            'en' => 'All',
+            'ro' => 'Toate',
+        ],
     ];
 
     foreach ($keys as $name => $translations) {
@@ -809,4 +885,117 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
 
     if (file_exists($temp_file)) { unlink($temp_file); }
     return false;
+}
+
+/**
+ * Get hotels with filtering, sorting, and pagination (fn_get_products pattern).
+ *
+ * @param array $params Search/filter/sort parameters from $_REQUEST
+ * @return array{0: array, 1: array} [$hotels, $search_params]
+ */
+function fn_sphinx_holidays_get_hotels(array $params = []): array
+{
+    $default_params = [
+        'page'           => 1,
+        'items_per_page' => (int) \Tygh\Registry::get('settings.Appearance.admin_elements_per_page') ?: 50,
+        'sort_by'        => 'name',
+        'sort_order'     => 'asc',
+        'country_code'   => '',
+        'region_id'      => 0,
+        'destination_id' => 0,
+        'sync_status'    => '',
+        'classification' => '',
+        'property_type'  => '',
+        'link_status'    => '',
+        'q'              => '',
+    ];
+
+    $params = array_merge($default_params, array_intersect_key($params, $default_params));
+    $params['page'] = max(1, (int) $params['page']);
+    $params['items_per_page'] = max(1, (int) $params['items_per_page']);
+    $params['region_id'] = (int) $params['region_id'];
+    $params['destination_id'] = (int) $params['destination_id'];
+
+    // Sortings map: allowed sort columns
+    $sortings = [
+        'hotel_id'       => 'h.hotel_id',
+        'name'           => 'h.name',
+        'classification' => 'h.classification',
+        'country_code'   => 'h.country_code',
+        'sync_status'    => 'h.sync_status',
+        'last_synced_at' => 'h.last_synced_at',
+        'property_type'  => 'h.property_type',
+    ];
+
+    $sort_by = isset($sortings[$params['sort_by']]) ? $params['sort_by'] : 'name';
+    $sort_order = strtolower($params['sort_order']) === 'desc' ? 'DESC' : 'ASC';
+    $sort_column = $sortings[$sort_by];
+
+    $params['sort_by'] = $sort_by;
+    $params['sort_order'] = strtolower($sort_order);
+    $params['sort_order_toggle'] = ($sort_order === 'ASC') ? 'desc' : 'asc';
+
+    // Build WHERE condition
+    $condition = '';
+
+    if ($params['country_code'] !== '') {
+        $condition .= db_quote(" AND h.country_code = ?s", $params['country_code']);
+    }
+    if ($params['region_id'] > 0) {
+        $condition .= db_quote(" AND h.region_id = ?i", $params['region_id']);
+    }
+    if ($params['destination_id'] > 0) {
+        $condition .= db_quote(" AND h.destination_id = ?i", $params['destination_id']);
+    }
+    if ($params['sync_status'] !== '') {
+        $condition .= db_quote(" AND h.sync_status = ?s", $params['sync_status']);
+    }
+    if ($params['classification'] !== '') {
+        $classification = (int) $params['classification'];
+        if ($classification === 0) {
+            $condition .= " AND (h.classification IS NULL OR h.classification = 0)";
+        } else {
+            $condition .= db_quote(" AND h.classification = ?i", $classification);
+        }
+    }
+    if ($params['property_type'] !== '') {
+        $condition .= db_quote(" AND h.property_type = ?s", $params['property_type']);
+    }
+    if ($params['link_status'] === 'linked') {
+        $condition .= " AND h.product_id IS NOT NULL AND h.product_id > 0";
+    } elseif ($params['link_status'] === 'orphan') {
+        $condition .= " AND (h.product_id IS NULL OR h.product_id = 0)";
+    }
+    if ($params['q'] !== '') {
+        $escaped = addcslashes($params['q'], '%_\\');
+        $condition .= db_quote(" AND h.name LIKE ?l", '%' . $escaped . '%');
+    }
+
+    // Total count
+    $params['total_items'] = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:sphinx_hotels h WHERE 1 ?p",
+        $condition
+    );
+
+    // Pagination
+    $offset = ($params['page'] - 1) * $params['items_per_page'];
+
+    // Select listing columns (prefixed with alias)
+    $listing_cols = 'h.hotel_id, h.product_id, h.name, h.classification, h.property_type, '
+        . 'h.destination_id, h.destination_name, h.region_id, h.region_name, '
+        . 'h.country_code, h.country_name, h.latitude, h.longitude, '
+        . 'h.image_url, h.is_recommended, h.is_adults_only, h.rating, h.rating_count, '
+        . 'h.sync_status, h.last_synced_at, h.created_at, h.updated_at, h.product_skip_reason';
+
+    $hotels = db_get_array(
+        "SELECT {$listing_cols} FROM ?:sphinx_hotels h"
+        . " WHERE 1 ?p"
+        . " ORDER BY {$sort_column} {$sort_order}"
+        . " LIMIT ?i, ?i",
+        $condition,
+        $offset,
+        $params['items_per_page']
+    );
+
+    return [$hotels, $params];
 }

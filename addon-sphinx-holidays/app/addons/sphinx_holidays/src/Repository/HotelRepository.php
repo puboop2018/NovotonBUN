@@ -480,4 +480,69 @@ class HotelRepository
             $condition
         );
     }
+
+    /**
+     * Bulk update sync_status for a list of hotel IDs.
+     *
+     * @param string[] $hotelIds Hotel IDs to update
+     * @param string $status Target status (active, inactive, error)
+     * @return int Number of rows affected
+     */
+    public function bulkUpdateStatus(array $hotelIds, string $status): int
+    {
+        if (empty($hotelIds) || !in_array($status, ['active', 'inactive', 'error'], true)) {
+            return 0;
+        }
+
+        return (int) db_query(
+            "UPDATE ?:sphinx_hotels SET sync_status = ?s WHERE hotel_id IN (?a)",
+            $status,
+            $hotelIds
+        );
+    }
+
+    /**
+     * Bulk delete hotels by ID.
+     *
+     * @param string[] $hotelIds Hotel IDs to delete
+     * @return int Number of rows deleted
+     */
+    public function bulkDelete(array $hotelIds): int
+    {
+        if (empty($hotelIds)) {
+            return 0;
+        }
+
+        return (int) db_query(
+            "DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)",
+            $hotelIds
+        );
+    }
+
+    /**
+     * Get distinct classification values present in the data.
+     *
+     * @return int[]
+     */
+    public function getDistinctClassifications(): array
+    {
+        return array_map(
+            'intval',
+            db_get_fields(
+                "SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification"
+            )
+        );
+    }
+
+    /**
+     * Get distinct property_type values present in the data.
+     *
+     * @return string[]
+     */
+    public function getDistinctPropertyTypes(): array
+    {
+        return db_get_fields(
+            "SELECT DISTINCT property_type FROM ?:sphinx_hotels WHERE property_type IS NOT NULL AND property_type != '' ORDER BY property_type"
+        );
+    }
 }
