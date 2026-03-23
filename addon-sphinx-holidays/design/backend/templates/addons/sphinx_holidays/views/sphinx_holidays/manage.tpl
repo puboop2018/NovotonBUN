@@ -108,6 +108,12 @@
             <div class="stat-value">{$unlinked_hotels|default:0}</div>
             <div class="stat-label">{__("sphinx_holidays.unlinked_hotels")}</div>
         </div>
+        {if $skipped_hotels > 0}
+        <div class="stat-card" style="border-top: 3px solid #dc3545;">
+            <div class="stat-value" style="color: #dc3545;">{$skipped_hotels}</div>
+            <div class="stat-label">{__("sphinx_holidays.skipped_hotels")}</div>
+        </div>
+        {/if}
     </div>
 
     {if $unlinked_hotels > 0}
@@ -116,6 +122,15 @@
             <button type="submit" class="btn btn-primary"
                     onclick="return confirm('{__("sphinx_holidays.create_products_confirm")|escape:javascript}');">
                 <i class="icon-plus"></i> {__("sphinx_holidays.create_products")}
+            </button>
+        </form>
+    {/if}
+    {if $skipped_hotels > 0}
+        <form action="{""|fn_url}" method="post" style="display:inline; margin-left: 8px;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.retry_skipped" />
+            <button type="submit" class="btn btn-warning"
+                    onclick="return confirm('{__("sphinx_holidays.retry_skipped_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.retry_skipped")}
             </button>
         </form>
     {/if}

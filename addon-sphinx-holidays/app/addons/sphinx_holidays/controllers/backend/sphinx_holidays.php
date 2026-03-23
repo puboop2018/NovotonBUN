@@ -105,6 +105,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
     }
 
+    if ($mode === 'retry_skipped') {
+        $hotelRepo = Container::getHotelRepository();
+        $reset = $hotelRepo->resetSkipped();
+
+        if ($reset > 0) {
+            fn_set_notification('N', __('notice'), __('sphinx_holidays.skipped_reset', ['[count]' => $reset]));
+        } else {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_skipped_hotels'));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+    }
+
     if ($mode === 'save_whitelist') {
         $whitelist = $_REQUEST['whitelist'] ?? [];
 
@@ -308,7 +321,8 @@ if ($mode === 'manage') {
 
     // Product stats
     $linkedCount = $hotelRepo->countLinked();
-    $unlinkedCount = $totalHotels - $linkedCount;
+    $skippedCount = $hotelRepo->countSkipped();
+    $unlinkedCount = $totalHotels - $linkedCount - $skippedCount;
 
     // API status
     $isConfigured = ConfigProvider::isConfigured();
@@ -327,6 +341,7 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('hotel_last_synced', $hotelLastSynced);
     Tygh::$app['view']->assign('linked_products', $linkedCount);
     Tygh::$app['view']->assign('unlinked_hotels', $unlinkedCount);
+    Tygh::$app['view']->assign('skipped_hotels', $skippedCount);
     Tygh::$app['view']->assign('selected_countries', $selectedCountries);
     Tygh::$app['view']->assign('is_configured', $isConfigured);
     Tygh::$app['view']->assign('sync_logs', $syncLogs);
