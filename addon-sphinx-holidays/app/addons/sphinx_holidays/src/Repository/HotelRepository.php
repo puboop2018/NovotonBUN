@@ -291,8 +291,11 @@ class HotelRepository
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
         $cols = $this->aliasedListingColumns();
 
+        // Product creation needs TEXT/JSON columns excluded from LISTING_COLUMNS
+        $extraCols = ', h.description, h.short_description, h.facilities_json, h.boards_json';
+
         return db_get_array(
-            "SELECT {$cols} FROM ?:sphinx_hotels h
+            "SELECT {$cols}{$extraCols} FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active'
                AND (h.product_id IS NULL OR h.product_id = 0)
                AND h.product_skip_reason IS NULL ?p
