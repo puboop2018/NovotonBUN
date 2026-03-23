@@ -115,7 +115,7 @@ class AddProductsCommand extends AbstractSyncCommand
         if ($stats['total'] === 0) {
             $skippedCount = $hotelRepo->countSkipped();
             if ($skippedCount > 0) {
-                $byReason = $this->getSkippedBreakdown($hotelRepo);
+                $byReason = $this->getSkippedBreakdown();
                 $this->output("No eligible hotels found, but {$skippedCount} hotel(s) were previously skipped:");
                 foreach ($byReason as $reason => $count) {
                     $this->output("  - {$reason}: {$count}");
@@ -139,7 +139,7 @@ class AddProductsCommand extends AbstractSyncCommand
      *
      * @return array<string, int> reason => count
      */
-    private function getSkippedBreakdown(mixed $hotelRepo): array
+    private function getSkippedBreakdown(): array
     {
         $rows = db_get_array(
             "SELECT product_skip_reason, COUNT(*) AS cnt

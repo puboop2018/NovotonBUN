@@ -112,7 +112,9 @@ class HotelSyncService extends AbstractSyncService
         $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
 
         // Preload destination hierarchy for country/region/city resolution during sync
-        $this->destRepo->loadParentLookup();
+        if (!$this->destRepo->loadParentLookup()) {
+            $this->output('WARNING: sphinx_destinations is empty — country/region enrichment will use sync context only. Run destination sync first for best results.');
+        }
 
         // Fetch and sync hotels per country
         foreach ($countryCodes as $countryCode) {
