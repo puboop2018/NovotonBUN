@@ -136,7 +136,13 @@ try {
         $result = $dispatcher->dispatch($mode, $_REQUEST);
 
         $success = $result['success'] ?? false;
-        echo "\n[" . date('Y-m-d H:i:s') . "] Cron job " . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
+        $busy = $result['busy'] ?? false;
+
+        if ($busy) {
+            echo "\n[" . date('Y-m-d H:i:s') . "] " . ($result['message'] ?? "Mode '{$mode}' is already running.") . "\n";
+        } else {
+            echo "\n[" . date('Y-m-d H:i:s') . "] Cron job " . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
+        }
 
         if (!empty($result['error'])) {
             echo "Error: " . $result['error'] . "\n";
