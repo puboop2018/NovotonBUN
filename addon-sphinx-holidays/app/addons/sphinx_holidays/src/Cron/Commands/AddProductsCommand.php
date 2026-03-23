@@ -106,7 +106,6 @@ class AddProductsCommand extends AbstractSyncCommand
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
         $factory = Container::getProductFactory();
-        $template = ConfigProvider::getProductCategoryTemplate();
 
         $countryCode = $params['country'] ?? $state['country'] ?? '';
         $limit = (int) ($params['limit'] ?? 0);
@@ -156,7 +155,7 @@ class AddProductsCommand extends AbstractSyncCommand
                 $hotelId = $hotel['hotel_id'];
                 $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
 
-                $result = $factory->createFromHotel($hotel, $hierarchy, $template);
+                $result = $factory->createFromHotel($hotel, $hierarchy);
 
                 $this->output("[{$hotelId}] {$hotel['name']} ... " . strtoupper($result['status'])
                     . ($result['product_id'] ? " (ID: {$result['product_id']})" : '')
@@ -215,7 +214,7 @@ class AddProductsCommand extends AbstractSyncCommand
     }
 
     /**
-     * Diagnose category creation: walk the path step by step, show SQL results.
+     * Diagnose category creation: check root category + country sub-category.
      * Does NOT create anything — read-only diagnostic.
      *
      * Usage: &cron_mode=add_products&debug=1
@@ -224,7 +223,6 @@ class AddProductsCommand extends AbstractSyncCommand
     {
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
-        $template = ConfigProvider::getProductCategoryTemplate();
 
         $this->output('=== CATEGORY CREATION DIAGNOSTIC ===');
         $this->output('');
@@ -236,34 +234,64 @@ class AddProductsCommand extends AbstractSyncCommand
         // 2. Show active languages
         $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
         $this->output('Active languages: ' . implode(', ', $languages));
-
-        // 3. Show category template
-        $this->output("Category template: '{$template}'");
         $this->output('');
 
-        // 4. Show all existing categories
-        $this->output('--- Existing CS-Cart categories ---');
-        $cats = db_get_array(
-            "SELECT c.category_id, c.parent_id, c.status, cd.category, cd.lang_code
-             FROM ?:categories c
-             JOIN ?:category_descriptions cd ON cd.category_id = c.category_id
-             ORDER BY c.parent_id, c.category_id"
-        );
-        foreach ($cats as $cat) {
-            $indent = $cat['parent_id'] > 0 ? '  ' : '';
-            $this->output("{$indent}[{$cat['category_id']}] parent={$cat['parent_id']} lang={$cat['lang_code']} status={$cat['status']} name=\"{$cat['category']}\"");
+        // 3. Show configured root category IDs
+        $rootIds = [
+            'hotels'      => ConfigProvider::getHotelsCategoryId(),
+            'packages'    => ConfigProvider::getPackagesCategoryId(),
+            'circuits'    => ConfigProvider::getCircuitsCategoryId(),
+            'experiences' => ConfigProvider::getExperiencesCategoryId(),
+        ];
+        $this->output('--- Root Category IDs (from addon settings) ---');
+        foreach ($rootIds as $type => $id) {
+            $name = $id > 0 ? (string) db_get_field(
+                "SELECT category FROM ?:category_descriptions WHERE category_id = ?i AND lang_code = ?s",
+                $id, $cartLang
+            ) : '(not set)';
+            $status = $id > 0 ? ($name ? 'OK' : 'MISSING in DB') : 'NOT CONFIGURED';
+            $this->output("  {$type}: category_id={$id} name=\"{$name}\" [{$status}]");
         }
         $this->output('');
 
-        // 5. Load destination hierarchy and show it
+        // 4. Show feature IDs for region/city
+        $this->output('--- Feature IDs (from travel_core settings) ---');
+        $regionFeatureId = (int) \Tygh\Registry::get('addons.travel_core.feature_id_region');
+        $cityFeatureId = (int) \Tygh\Registry::get('addons.travel_core.feature_id_city');
+        $this->output("  feature_id_region = {$regionFeatureId}" . ($regionFeatureId > 0 ? ' (OK)' : ' (NOT CONFIGURED)'));
+        $this->output("  feature_id_city = {$cityFeatureId}" . ($cityFeatureId > 0 ? ' (OK)' : ' (NOT CONFIGURED)'));
+        $this->output('');
+
+        // 5. Show existing sub-categories under hotel root
+        $hotelRootId = $rootIds['hotels'];
+        if ($hotelRootId > 0) {
+            $this->output("--- Country sub-categories under hotels root (ID={$hotelRootId}) ---");
+            $subs = db_get_array(
+                "SELECT c.category_id, cd.category, c.status
+                 FROM ?:categories c
+                 JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
+                 WHERE c.parent_id = ?i
+                 ORDER BY cd.category",
+                $cartLang, $hotelRootId
+            );
+            if (empty($subs)) {
+                $this->output('  (none yet — will be created on first add_products run)');
+            } else {
+                foreach ($subs as $sub) {
+                    $this->output("  [{$sub['category_id']}] \"{$sub['category']}\" status={$sub['status']}");
+                }
+            }
+            $this->output('');
+        }
+
+        // 6. Load destination hierarchy
         $destRepo->loadParentLookup();
 
-        // 6. Pick first few unlinked hotels and walk their category paths
+        // 7. Pick first few unlinked hotels and show how they would be categorized
         $countryCode = $params['country'] ?? '';
         $hotels = $hotelRepo->findUnlinked($countryCode, 3);
 
         if (empty($hotels)) {
-            // Also check skipped hotels
             $hotels = db_get_array(
                 "SELECT hotel_id, name, destination_id, country_code, country_name, region_name, destination_name, product_skip_reason
                  FROM ?:sphinx_hotels
@@ -280,6 +308,7 @@ class AddProductsCommand extends AbstractSyncCommand
             return ['success' => true, 'stats' => ['action' => 'debug']];
         }
 
+        $factory = Container::getProductFactory();
         foreach ($hotels as $hotel) {
             $hotelId = $hotel['hotel_id'];
             $this->output("--- Hotel [{$hotelId}] {$hotel['name']} ---");
@@ -296,57 +325,32 @@ class AddProductsCommand extends AbstractSyncCommand
             $hierarchy = $hierarchyMap[(int) $hotel['destination_id']] ?? [];
             $this->output('  hierarchy: ' . json_encode($hierarchy));
 
-            // Build category path
-            $factory = Container::getProductFactory();
-            $path = $factory->buildCategoryPath($hotel, $hierarchy, $template);
-            $this->output("  category_path = \"{$path}\"");
+            // Show resolved values
+            $countryName = $factory->resolveCountryName($hotel, $hierarchy);
+            $this->output("  resolved_country = \"{$countryName}\"");
 
-            if ($path === '') {
-                $this->output('  SKIP: empty path');
+            if ($countryName === '') {
+                $this->output('  SKIP: no country resolved');
                 continue;
             }
 
-            // Walk path step by step (READ ONLY — same SQL as fn_travel_core_get_or_create_category)
-            $parts = array_filter(array_map('trim', explode('/', $path)));
-            $parentId = 0;
-            $allFound = true;
-
-            foreach ($parts as $part) {
-                $catId = (int) db_get_field(
+            // Check if country sub-category exists under root
+            if ($hotelRootId > 0) {
+                $countryCatId = (int) db_get_field(
                     "SELECT c.category_id FROM ?:categories c
                      JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
-                     WHERE c.parent_id = ?i AND cd.category = ?s
-                     LIMIT 1",
-                    $cartLang, $parentId, $part
+                     WHERE c.parent_id = ?i AND cd.category = ?s LIMIT 1",
+                    $cartLang, $hotelRootId, $countryName
                 );
-
-                if ($catId > 0) {
-                    $this->output("  STEP \"{$part}\" parent_id={$parentId} => FOUND category_id={$catId}");
-                    $parentId = $catId;
+                if ($countryCatId > 0) {
+                    $this->output("  category: root({$hotelRootId}) -> \"{$countryName}\"({$countryCatId}) => FOUND");
                 } else {
-                    $this->output("  STEP \"{$part}\" parent_id={$parentId} => NOT FOUND (would need fn_update_category)");
-                    $allFound = false;
-
-                    // Check if it exists with a different lang_code
-                    $altMatch = db_get_row(
-                        "SELECT c.category_id, cd.lang_code FROM ?:categories c
-                         JOIN ?:category_descriptions cd ON cd.category_id = c.category_id
-                         WHERE c.parent_id = ?i AND cd.category = ?s
-                         LIMIT 1",
-                        $parentId, $part
-                    );
-                    if ($altMatch) {
-                        $this->output("    BUT exists with lang_code='{$altMatch['lang_code']}' as category_id={$altMatch['category_id']}");
-                    }
-                    break;
+                    $this->output("  category: root({$hotelRootId}) -> \"{$countryName}\" => NOT FOUND (will be created)");
                 }
             }
 
-            if ($allFound) {
-                $this->output("  RESULT: path fully resolved => leaf category_id={$parentId}");
-            } else {
-                $this->output("  RESULT: path BROKEN — fn_update_category() would be called here");
-            }
+            $this->output("  region -> product feature: \"{$hotel['region_name']}\"");
+            $this->output("  city -> product feature: \"{$hotel['destination_name']}\"");
             $this->output('');
         }
 

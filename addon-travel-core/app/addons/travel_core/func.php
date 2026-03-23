@@ -97,6 +97,8 @@ function fn_settings_variants_addons_travel_core_feature_id_meals(): array { ret
 function fn_settings_variants_addons_travel_core_feature_id_room_type(): array { return fn_travel_core_get_feature_variants(); }
 function fn_settings_variants_addons_travel_core_feature_id_property_type(): array { return fn_travel_core_get_feature_variants(); }
 function fn_settings_variants_addons_travel_core_feature_id_location(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_region(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_city(): array { return fn_travel_core_get_feature_variants(); }
 
 /**
  * Variants function for the default_currency addon setting.

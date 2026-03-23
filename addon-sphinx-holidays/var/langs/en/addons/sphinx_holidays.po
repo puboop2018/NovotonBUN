@@ -73,16 +73,36 @@ msgid "Product Mapping"
 msgstr "Product Mapping"
 
 msgctxt "SettingsOptions::sphinx_holidays::hotels_category_id"
-msgid "CS-Cart category ID for Sphinx hotels"
-msgstr "CS-Cart category ID for Sphinx hotels"
+msgid "CS-Cart category ID for hotels"
+msgstr "CS-Cart category ID for hotels"
+
+msgctxt "SettingsTooltips::sphinx_holidays::hotels_category_id"
+msgid "Root category under which hotel products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which hotel products are created. Country sub-categories are generated automatically."
 
 msgctxt "SettingsOptions::sphinx_holidays::packages_category_id"
-msgid "CS-Cart category ID for Sphinx packages"
-msgstr "CS-Cart category ID for Sphinx packages"
+msgid "CS-Cart category ID for packages"
+msgstr "CS-Cart category ID for packages"
 
-msgctxt "SettingsOptions::sphinx_holidays::product_category_template"
-msgid "Category path template ({country}, {region}, {city} placeholders)"
-msgstr "Category path template ({country}, {region}, {city} placeholders)"
+msgctxt "SettingsTooltips::sphinx_holidays::packages_category_id"
+msgid "Root category under which package products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which package products are created. Country sub-categories are generated automatically."
+
+msgctxt "SettingsOptions::sphinx_holidays::circuits_category_id"
+msgid "CS-Cart category ID for circuits"
+msgstr "CS-Cart category ID for circuits"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuits_category_id"
+msgid "Root category for circuit products (mapped to /api/v1/static/circuits). Country sub-categories are generated automatically."
+msgstr "Root category for circuit products (mapped to /api/v1/static/circuits). Country sub-categories are generated automatically."
+
+msgctxt "SettingsOptions::sphinx_holidays::experiences_category_id"
+msgid "CS-Cart category ID for experiences"
+msgstr "CS-Cart category ID for experiences"
+
+msgctxt "SettingsTooltips::sphinx_holidays::experiences_category_id"
+msgid "Root category for experience products (mapped to /api/v1/static/experiences). Country sub-categories are generated automatically."
+msgstr "Root category for experience products (mapped to /api/v1/static/experiences). Country sub-categories are generated automatically."
 
 msgctxt "SettingsOptions::sphinx_holidays::product_languages"
 msgid "Product languages"

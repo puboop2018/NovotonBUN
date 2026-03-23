@@ -81,6 +81,16 @@ class ConfigProvider
         return (int) self::getSetting('packages_category_id', 0);
     }
 
+    public static function getCircuitsCategoryId(): int
+    {
+        return (int) self::getSetting('circuits_category_id', 0);
+    }
+
+    public static function getExperiencesCategoryId(): int
+    {
+        return (int) self::getSetting('experiences_category_id', 0);
+    }
+
     public static function getMaxRetries(): int
     {
         return max(0, (int) self::getSetting('api_max_retries', 3));
@@ -114,17 +124,6 @@ class ConfigProvider
     public static function getCronAccessKey(): string
     {
         return (string) self::getSetting('cron_access_key');
-    }
-
-    /**
-     * Get the category path template for product creation.
-     *
-     * Supports placeholders: {country}, {region}, {city}
-     * Default: "Hotels/{country}/{region}/{city}"
-     */
-    public static function getProductCategoryTemplate(): string
-    {
-        return (string) self::getSetting('product_category_template', 'Hotels/{country}/{region}/{city}');
     }
 
     /**

@@ -95,13 +95,13 @@ function fn_sphinx_holidays_post_install(): bool
 function fn_sphinx_holidays_seed_language_keys(): void
 {
     $keys = [
-        'sphinx_holidays.product_category_template' => [
-            'en' => 'Category path template',
-            'ro' => 'Sablon cale categorie',
+        'sphinx_holidays.circuits_category_id' => [
+            'en' => 'CS-Cart category ID for circuits',
+            'ro' => 'ID categorie CS-Cart pentru circuite',
         ],
-        'sphinx_holidays.product_category_template.tooltip' => [
-            'en' => 'Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion.',
-            'ro' => 'Sablon pentru crearea automata a categoriilor CS-Cart la crearea produselor. Placeholder-e: {country}, {region}, {city}. Exemplu: Hotels/{country}/{region}/{city} creeaza Hotels > Grecia > Creta > Heraklion.',
+        'sphinx_holidays.experiences_category_id' => [
+            'en' => 'CS-Cart category ID for experiences',
+            'ro' => 'ID categorie CS-Cart pentru experiențe',
         ],
         'sphinx_holidays.product_languages' => [
             'en' => 'Product languages',

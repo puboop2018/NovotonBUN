@@ -12,7 +12,6 @@
         var largeFields = [
             'api_base_url',
             'ignore_domains',
-            'product_category_template',
             'cron_access_key'
         ];
 
