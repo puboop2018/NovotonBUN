@@ -141,3 +141,65 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
 
     return $category_id;
 }
+
+/**
+ * Render an SEO template by replacing {{placeholder}} tokens with data values.
+ *
+ * Supports scalar values and arrays (arrays are joined as comma-separated,
+ * limited to the first 3 items). Leftover unreplaced tokens are removed.
+ *
+ * @param string $pattern       Template string with {{placeholder}} tokens
+ * @param array  $placeholders  Key => value map (keys without braces)
+ * @return string Rendered string, trimmed
+ */
+function fn_travel_core_render_seo_template(string $pattern, array $placeholders): string
+{
+    if ($pattern === '') {
+        return '';
+    }
+
+    $search = [];
+    $replace = [];
+
+    foreach ($placeholders as $key => $value) {
+        $search[] = '{{' . $key . '}}';
+        if (is_array($value)) {
+            $replace[] = implode(', ', array_slice(array_filter(array_map('trim', $value)), 0, 3));
+        } else {
+            $replace[] = (string) $value;
+        }
+    }
+
+    $result = str_replace($search, $replace, $pattern);
+
+    // Remove any leftover unreplaced {{...}} tokens
+    $result = preg_replace('/\{\{[a-z_]+\}\}/', '', $result);
+
+    // Collapse multiple spaces and trim
+    return trim(preg_replace('/\s{2,}/', ' ', $result));
+}
+
+/**
+ * Render an SEO template and convert the result to a URL-safe slug.
+ *
+ * @param string $pattern       Template string with {{placeholder}} tokens
+ * @param array  $placeholders  Key => value map (keys without braces)
+ * @return string URL-safe slug
+ */
+function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): string
+{
+    $rendered = fn_travel_core_render_seo_template($pattern, $placeholders);
+    if ($rendered === '') {
+        return '';
+    }
+
+    // Use CS-Cart's built-in SEO name generator if available
+    if (function_exists('fn_generate_seo_name')) {
+        return fn_generate_seo_name($rendered);
+    }
+
+    // Fallback: basic slug generation
+    $slug = mb_strtolower($rendered, 'UTF-8');
+    $slug = preg_replace('/[^a-z0-9\-]+/', '-', $slug);
+    return trim($slug, '-');
+}

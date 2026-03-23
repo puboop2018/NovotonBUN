@@ -100,21 +100,30 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
-        // Resolve city name for page title
-        $cityName = ($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? '');
+        // Build placeholder map for SEO templates
+        $placeholders = self::buildPlaceholders($hotel, $hierarchy);
 
-        // Create CS-Cart product
+        // Resolve full description: use template if configured, otherwise raw API description
+        $descTemplate = ConfigProvider::getSeoFullDescription();
+        $fullDescription = $descTemplate !== ''
+            ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
+            : ($hotel['description'] ?? '');
+
+        // Create CS-Cart product using SEO templates
         $productData = [
-            'product'           => $hotel['name'],
+            'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
             'product_code'      => $productCode,
             'price'             => 0,
             'status'            => 'A',
             'company_id'        => Registry::get('runtime.company_id') ?: 1,
             'main_category'     => $categoryId,
             'category_ids'      => [$categoryId],
-            'full_description'  => $hotel['description'] ?? '',
+            'full_description'  => $fullDescription,
             'short_description' => $hotel['short_description'] ?? '',
-            'page_title'        => $hotel['name'] . ($cityName ? ' - ' . $cityName : ''),
+            'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
+            'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
+            'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
+            'seo_name'          => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
         ];
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
@@ -130,12 +139,12 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
         foreach ($otherLanguages as $lc) {
             db_query(
-                "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
-                 VALUES (?i, ?s, ?s, ?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
+                 VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s",
                 $productId, $lc,
-                $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $productData['page_title'],
-                $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $productData['page_title']
+                $productData['product'], $fullDescription, $hotel['short_description'] ?? '', $productData['page_title'], $productData['meta_description'], $productData['meta_keywords'],
+                $productData['product'], $fullDescription, $hotel['short_description'] ?? '', $productData['page_title'], $productData['meta_description'], $productData['meta_keywords']
             );
         }
 
@@ -161,5 +170,57 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     {
         $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
         return $countryName ?: ($hotel['country_code'] ?? '');
+    }
+
+    /**
+     * Build the placeholder map for SEO template rendering from Sphinx hotel data.
+     *
+     * @param array $hotel     Hotel row from sphinx_hotels table
+     * @param array $hierarchy Destination hierarchy (country, region, city)
+     * @return array<string, string|array> Key => value map (keys without braces)
+     */
+    private static function buildPlaceholders(array $hotel, array $hierarchy): array
+    {
+        $cityName = ($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? '');
+        $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
+
+        // Extract facility names from JSON
+        $facilities = [];
+        if (!empty($hotel['facilities_json'])) {
+            $facilitiesData = is_string($hotel['facilities_json']) ? json_decode($hotel['facilities_json'], true) : $hotel['facilities_json'];
+            if (is_array($facilitiesData)) {
+                foreach ($facilitiesData as $f) {
+                    $name = is_array($f) ? ($f['name'] ?? $f['title'] ?? '') : (string) $f;
+                    if ($name !== '') {
+                        $facilities[] = $name;
+                    }
+                }
+            }
+        }
+
+        // Extract board names from JSON
+        $boards = [];
+        if (!empty($hotel['boards_json'])) {
+            $boardsData = is_string($hotel['boards_json']) ? json_decode($hotel['boards_json'], true) : $hotel['boards_json'];
+            if (is_array($boardsData)) {
+                $boards = array_map('strval', $boardsData);
+            }
+        }
+
+        return [
+            'name'           => $hotel['name'] ?? '',
+            'classification' => $hotel['classification'] ?? '',
+            'city'           => $cityName,
+            'country'        => $countryName,
+            'region'         => $hotel['region_name'] ?? '',
+            'property_type'  => $hotel['property_type'] ?? 'hotel',
+            'description'    => $hotel['description'] ?? '',
+            'rating'         => $hotel['rating'] ?? '',
+            'facilities'     => $facilities,
+            'boards'         => $boards,
+            'latitude'       => $hotel['latitude'] ?? '',
+            'longitude'      => $hotel['longitude'] ?? '',
+            'image_url'      => $hotel['image_url'] ?? '',
+        ];
     }
 }

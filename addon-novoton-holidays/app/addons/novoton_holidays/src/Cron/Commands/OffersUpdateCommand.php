@@ -5,6 +5,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class OffersUpdateCommand extends AbstractCronCommand
@@ -114,12 +115,6 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
             $raw_name = $existing['hotel_name'] ?? $hotel_name;
             $display_name = fn_novoton_holidays_format_hotel_display_name($raw_name);
-            $page_title = fn_novoton_holidays_build_hotel_title(
-                $display_name,
-                $existing['city'] ?? '',
-                $existing['country'] ?? $country,
-                $current_year
-            );
 
             $description = '';
             try {
@@ -131,17 +126,32 @@ class OffersUpdateCommand extends AbstractCronCommand
                 fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to get description for hotel {$hotel_id}", 'error' => $e->getMessage()]);
             }
 
+            // Build placeholder map for SEO templates
+            $hotel_data_for_seo = array_merge($existing ?? [], [
+                'hotel_name' => $raw_name,
+                'country'    => $existing['country'] ?? $country,
+            ]);
+            $placeholders = $this->buildPlaceholders($hotel_data_for_seo, $display_name, $description);
+
+            // Resolve full description
+            $descTemplate = ConfigProvider::getSeoFullDescription();
+            $full_description = $descTemplate !== ''
+                ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
+                : $description;
+
             $product_data = [
-                'product' => $display_name,
-                'product_code' => $product_code,
-                'price' => 0,
-                'status' => 'D',
-                'company_id' => Registry::get('runtime.company_id') ?: 1,
-                'main_category' => $category_id,
-                'category_ids' => [$category_id],
-                'full_description' => $description,
-                'page_title' => $page_title,
-                'meta_description' => $page_title,
+                'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: $display_name,
+                'product_code'     => $product_code,
+                'price'            => 0,
+                'status'           => 'D',
+                'company_id'       => Registry::get('runtime.company_id') ?: 1,
+                'main_category'    => $category_id,
+                'category_ids'     => [$category_id],
+                'full_description' => $full_description,
+                'page_title'       => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
+                'meta_description' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
+                'meta_keywords'    => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
+                'seo_name'         => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
             ];
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
@@ -198,5 +208,38 @@ class OffersUpdateCommand extends AbstractCronCommand
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotelId}", 'error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Build the placeholder map for SEO template rendering.
+     */
+    private function buildPlaceholders(array $hotel, string $displayName, string $description = ''): array
+    {
+        $facilities = [];
+        if (!empty($hotel['hotel_id'])) {
+            $facilities = db_get_fields(
+                "SELECT f.facility_name_en FROM ?:novoton_hotel_facilities hf
+                 JOIN ?:novoton_facilities f ON f.facility_id = hf.facility_id
+                 WHERE hf.hotel_id = ?s AND f.facility_name_en != ''
+                 LIMIT 5",
+                $hotel['hotel_id']
+            ) ?: [];
+        }
+
+        return [
+            'name'          => $displayName,
+            'raw_name'      => $hotel['hotel_name'] ?? '',
+            'city'          => $hotel['city'] ?? '',
+            'country'       => $hotel['country'] ?? '',
+            'region'        => $hotel['region'] ?? '',
+            'star_rating'   => $hotel['star_rating'] ?? '',
+            'hotel_type'    => $hotel['hotel_type'] ?? '',
+            'property_type' => $hotel['property_type'] ?? 'hotel',
+            'year'          => date('Y'),
+            'description'   => $description,
+            'facilities'    => $facilities,
+            'latitude'      => $hotel['latitude'] ?? '',
+            'longitude'     => $hotel['longitude'] ?? '',
+        ];
     }
 }

@@ -63,9 +63,6 @@ class ProductFactory implements ProductFactoryInterface
             ? fn_novoton_holidays_format_hotel_display_name($hotelName)
             : $hotelName;
 
-        // Build page title
-        $pageTitle = self::buildHotelTitle($displayName, $city, $country, date('Y'));
-
         // Fetch description
         $description = '';
         try {
@@ -77,18 +74,29 @@ class ProductFactory implements ProductFactoryInterface
             // Ignore description fetch errors
         }
 
-        // Create product
+        // Build placeholder map for SEO templates
+        $placeholders = self::buildNovotonPlaceholders($hotel, $displayName, $description);
+
+        // Resolve full description: use template if configured, otherwise raw API description
+        $descTemplate = ConfigProvider::getSeoFullDescription();
+        $fullDescription = $descTemplate !== ''
+            ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
+            : $description;
+
+        // Create product using SEO templates
         $productData = [
-            'product' => $displayName,
-            'product_code' => $productCode,
-            'price' => 0,
-            'status' => 'D',
-            'company_id' => ConfigProvider::getCompanyId(),
-            'main_category' => $categoryId,
-            'category_ids' => [$categoryId],
-            'full_description' => $description,
-            'page_title' => $pageTitle,
-            'meta_description' => $pageTitle,
+            'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders) ?: $displayName,
+            'product_code'     => $productCode,
+            'price'            => 0,
+            'status'           => 'D',
+            'company_id'       => ConfigProvider::getCompanyId(),
+            'main_category'    => $categoryId,
+            'category_ids'     => [$categoryId],
+            'full_description' => $fullDescription,
+            'page_title'       => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
+            'meta_description' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
+            'meta_keywords'    => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
+            'seo_name'         => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
         ];
 
         $productId = fn_update_product($productData, 0, CART_LANGUAGE);
@@ -178,5 +186,44 @@ class ProductFactory implements ProductFactoryInterface
         }
 
         return 1;
+    }
+
+    /**
+     * Build the placeholder map for SEO template rendering from Novoton hotel data.
+     *
+     * @param array  $hotel       Hotel row from novoton_hotels table
+     * @param string $displayName Formatted display name (Title Case, with property type)
+     * @param string $description API description text
+     * @return array<string, string|array> Key => value map (keys without braces)
+     */
+    private static function buildNovotonPlaceholders(array $hotel, string $displayName, string $description = ''): array
+    {
+        // Load facility names from DB
+        $facilities = [];
+        if (!empty($hotel['hotel_id'])) {
+            $facilities = db_get_fields(
+                "SELECT f.facility_name_en FROM ?:novoton_hotel_facilities hf
+                 JOIN ?:novoton_facilities f ON f.facility_id = hf.facility_id
+                 WHERE hf.hotel_id = ?s AND f.facility_name_en != ''
+                 LIMIT 5",
+                $hotel['hotel_id']
+            ) ?: [];
+        }
+
+        return [
+            'name'          => $displayName,
+            'raw_name'      => $hotel['hotel_name'] ?? '',
+            'city'          => $hotel['city'] ?? '',
+            'country'       => $hotel['country'] ?? '',
+            'region'        => $hotel['region'] ?? '',
+            'star_rating'   => $hotel['star_rating'] ?? '',
+            'hotel_type'    => $hotel['hotel_type'] ?? '',
+            'property_type' => $hotel['property_type'] ?? 'hotel',
+            'year'          => date('Y'),
+            'description'   => $description,
+            'facilities'    => $facilities,
+            'latitude'      => $hotel['latitude'] ?? '',
+            'longitude'     => $hotel['longitude'] ?? '',
+        ];
     }
 }
