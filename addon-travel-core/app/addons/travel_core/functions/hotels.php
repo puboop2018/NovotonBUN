@@ -53,6 +53,9 @@ function fn_travel_core_get_or_create_category(string $path): int
         $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
 
         if ($category_id <= 0) {
+            fn_log_event('general', 'runtime', [
+                'message' => "travel_core: fn_update_category() returned 0 for part='{$part}', parent_id={$parent_id}, path='{$path}'",
+            ]);
             return 0;
         }
 

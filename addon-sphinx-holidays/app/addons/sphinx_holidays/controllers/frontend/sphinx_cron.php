@@ -34,6 +34,37 @@ declare(strict_types=1);
  *   - The flock-based execution lock prevents two syncs running simultaneously
  *   - status=1 and reset=1 bypass the flock (safe to call while sync is running)
  *
+ * ── Add Products URLs (create CS-Cart products from unlinked hotels) ──
+ *
+ * Run/resume (processes unlinked hotels, skips already-linked ones):
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products
+ *
+ * Filter by country:
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&country=TR
+ *
+ * Limit number of hotels to process:
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&limit=500
+ *
+ * Retry previously skipped hotels (all reasons):
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&retry_skipped=1
+ *
+ * Retry only hotels skipped for invalid country:
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&retry_skipped=invalid_country
+ *
+ * Check progress without running (bypasses execution lock):
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&status=1
+ *
+ * Clear state and start fresh (bypasses execution lock):
+ *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=add_products&reset=1
+ *
+ * Behavior:
+ *   - State is saved to a JSON file after each batch of 200 hotels
+ *   - findUnlinked() naturally skips already-linked hotels (implicit resume)
+ *   - If the browser is closed mid-run, next call continues where it left off
+ *   - State older than 6 hours with no activity is auto-cleared
+ *   - Hotels that fail category creation are marked with product_skip_reason='category_failed'
+ *   - Use retry_skipped=1 to reset skip reasons and make hotels eligible again
+ *
  * ── Hotel Sync URLs ────────────────────────────────────────────────────
  *
  *   index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels
