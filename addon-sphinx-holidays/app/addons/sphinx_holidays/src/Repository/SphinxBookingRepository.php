@@ -49,7 +49,7 @@ class SphinxBookingRepository
              LIMIT 1",
             $hotel_id, $check_in, $check_out, $holder_name
         );
-        return $id ? (int) $id : null;
+        return $id !== false && $id !== '' ? (int) $id : null;
     }
 
     /**
@@ -59,21 +59,15 @@ class SphinxBookingRepository
     {
         $data = self::filterNullValues($data);
 
-        db_query("START TRANSACTION");
-        try {
+        return $this->withTransaction(function () use ($data): int {
             $booking_id = (int) db_query("INSERT INTO ?:sphinx_bookings ?e", $data);
 
             if ($booking_id > 0) {
                 $this->syncToTravelBookings($booking_id, $data);
             }
 
-            db_query("COMMIT");
-        } catch (\Throwable $e) {
-            db_query("ROLLBACK");
-            throw $e;
-        }
-
-        return $booking_id;
+            return $booking_id;
+        });
     }
 
     /**
@@ -83,8 +77,7 @@ class SphinxBookingRepository
     {
         $data = self::filterNullValues($data);
 
-        db_query("START TRANSACTION");
-        try {
+        return $this->withTransaction(function () use ($booking_id, $data): bool {
             $result = (bool) db_query(
                 "UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i",
                 $data, $booking_id
@@ -94,13 +87,8 @@ class SphinxBookingRepository
                 $this->syncUpdateToTravelBookings($booking_id, $data);
             }
 
-            db_query("COMMIT");
-        } catch (\Throwable $e) {
-            db_query("ROLLBACK");
-            throw $e;
-        }
-
-        return $result;
+            return $result;
+        });
     }
 
     /**
@@ -162,20 +150,13 @@ class SphinxBookingRepository
      */
     public function delete(int $booking_id): bool
     {
-        db_query("START TRANSACTION");
-        try {
+        return $this->withTransaction(function () use ($booking_id): bool {
             db_query(
                 "DELETE FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
                 (string) $booking_id
             );
-            $result = (bool) db_query("DELETE FROM ?:sphinx_bookings WHERE booking_id = ?i", $booking_id);
-            db_query("COMMIT");
-        } catch (\Throwable $e) {
-            db_query("ROLLBACK");
-            throw $e;
-        }
-
-        return $result;
+            return (bool) db_query("DELETE FROM ?:sphinx_bookings WHERE booking_id = ?i", $booking_id);
+        });
     }
 
     /**
@@ -209,7 +190,7 @@ class SphinxBookingRepository
     {
         $guests_json = $data['guests_data'] ?? '{}';
         if (!is_string($guests_json)) {
-            $guests_json = json_encode($guests_json);
+            $guests_json = json_encode($guests_json) ?: '{}';
         }
 
         $travel_record = [
@@ -280,6 +261,26 @@ class SphinxBookingRepository
             "UPDATE ?:travel_bookings SET ?u WHERE provider = 'sphinx' AND provider_booking_id = ?s",
             $travelUpdate, (string) $booking_id
         );
+    }
+
+    /**
+     * Execute a callback inside a database transaction.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @return T
+     */
+    private function withTransaction(callable $callback): mixed
+    {
+        db_query("START TRANSACTION");
+        try {
+            $result = $callback();
+            db_query("COMMIT");
+            return $result;
+        } catch (\Throwable $e) {
+            db_query("ROLLBACK");
+            throw $e;
+        }
     }
 
     /**

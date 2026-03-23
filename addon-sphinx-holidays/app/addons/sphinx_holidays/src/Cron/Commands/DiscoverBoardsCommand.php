@@ -33,6 +33,8 @@ use function fn_log_event;
  */
 class DiscoverBoardsCommand
 {
+    use StatefulCommandTrait;
+
     private ?\Closure $outputCallback = null;
 
     /** State file name stored in DIR_CACHE */
@@ -456,102 +458,6 @@ class DiscoverBoardsCommand
         return $allResults;
     }
 
-    // ─── State file I/O (follows Novoton StateManager pattern, simplified) ───
-
-    private function getStatePath(): string
-    {
-        $cacheDir = defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir() . '/';
-        return $cacheDir . self::STATE_FILE_NAME;
-    }
-
-    private function loadState(): array
-    {
-        $path = $this->getStatePath();
-        if (!file_exists($path)) {
-            return self::DEFAULT_STATE;
-        }
-
-        $content = @file_get_contents($path);
-        if ($content === false) {
-            return self::DEFAULT_STATE;
-        }
-
-        $decoded = json_decode($content, true);
-        if (!is_array($decoded)) {
-            return self::DEFAULT_STATE;
-        }
-
-        // Handle checksummed format
-        if (isset($decoded['_checksum'], $decoded['_data'])) {
-            $expected = $decoded['_checksum'];
-            $actual = md5(json_encode($decoded['_data']));
-            if ($expected !== $actual) {
-                // Corrupted — start fresh
-                return self::DEFAULT_STATE;
-            }
-            $state = $decoded['_data'];
-        } else {
-            $state = $decoded;
-        }
-
-        return is_array($state) ? array_merge(self::DEFAULT_STATE, $state) : self::DEFAULT_STATE;
-    }
-
-    /**
-     * Save state atomically (write to tmp, rename).
-     */
-    private function saveState(array $state): void
-    {
-        $path = $this->getStatePath();
-
-        $data = json_encode($state);
-        if ($data === false) {
-            return;
-        }
-
-        // Wrap with checksum for corruption detection
-        $wrapped = json_encode([
-            '_checksum' => md5($data),
-            '_data'     => $state,
-        ]);
-
-        $tmpPath = $path . '.tmp';
-        if (@file_put_contents($tmpPath, $wrapped, LOCK_EX) === false) {
-            return;
-        }
-
-        @rename($tmpPath, $path);
-    }
-
-    private function clearState(): void
-    {
-        $path = $this->getStatePath();
-        foreach (['', '.tmp'] as $suffix) {
-            $file = $path . $suffix;
-            if (file_exists($file)) {
-                @unlink($file);
-            }
-        }
-    }
-
-    /**
-     * Check if state is stale (no activity for STALE_HOURS).
-     */
-    private function isStale(array $state): bool
-    {
-        if ($state['status'] !== 'in_progress') {
-            return false;
-        }
-
-        $lastRun = $state['last_run_at'] ?? $state['started_at'] ?? null;
-        if ($lastRun === null) {
-            return true;
-        }
-
-        $ageHours = (time() - strtotime($lastRun)) / 3600;
-        return $ageHours > self::STALE_HOURS;
-    }
-
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private function resolveCountryCodes(array $params): array
@@ -563,21 +469,6 @@ class DiscoverBoardsCommand
         }
 
         return ConfigProvider::getSelectedCountryCodes();
-    }
-
-    private function formatDuration(int $seconds): string
-    {
-        if ($seconds < 60) {
-            return "{$seconds}s";
-        }
-        if ($seconds < 3600) {
-            $m = (int) floor($seconds / 60);
-            $s = $seconds % 60;
-            return "{$m}m {$s}s";
-        }
-        $h = (int) floor($seconds / 3600);
-        $m = (int) floor(($seconds % 3600) / 60);
-        return "{$h}h {$m}m";
     }
 
     private function output(string $message): void

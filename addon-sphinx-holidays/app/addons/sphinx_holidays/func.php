@@ -843,7 +843,11 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    $image_info = @getimagesize($temp_file);
+    try {
+        $image_info = getimagesize($temp_file);
+    } catch (\Throwable $e) {
+        $image_info = false;
+    }
     if (!$image_info) {
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;

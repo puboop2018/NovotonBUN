@@ -19,6 +19,20 @@ class HotelRepository
         image_url, is_recommended, is_adults_only, rating, rating_count,
         sync_status, last_synced_at, created_at, updated_at';
 
+    private const STATUS_ACTIVE = 'active';
+    private const STATUS_INACTIVE = 'inactive';
+    private const STATUS_ERROR = 'error';
+
+    private const VALID_STATUSES = [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_ERROR];
+
+    /**
+     * Get LISTING_COLUMNS prefixed with a table alias.
+     */
+    private function aliasedListingColumns(string $alias = 'h'): string
+    {
+        return preg_replace('/\b(\w+)\b/', $alias . '.$1', self::LISTING_COLUMNS);
+    }
+
     /**
      * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
      *
@@ -153,7 +167,7 @@ class HotelRepository
 
         $offset = ($page - 1) * $perPage;
 
-        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
+        $cols = $this->aliasedListingColumns();
         $items = db_get_array(
             "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE 1 ?p
@@ -275,7 +289,7 @@ class HotelRepository
         }
 
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
-        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
+        $cols = $this->aliasedListingColumns();
 
         return db_get_array(
             "SELECT {$cols} FROM ?:sphinx_hotels h
@@ -342,7 +356,7 @@ class HotelRepository
     {
         $updated = 0;
         foreach ($boardsByHotel as $hotelId => $boards) {
-            $json = !empty($boards) ? json_encode(array_values(array_unique($boards))) : '[]';
+            $json = !empty($boards) ? (json_encode(array_values(array_unique($boards))) ?: '[]') : '[]';
             db_query(
                 "UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s",
                 $json, (string) $hotelId
@@ -490,7 +504,7 @@ class HotelRepository
      */
     public function bulkUpdateStatus(array $hotelIds, string $status): int
     {
-        if (empty($hotelIds) || !in_array($status, ['active', 'inactive', 'error'], true)) {
+        if (empty($hotelIds) || !in_array($status, self::VALID_STATUSES, true)) {
             return 0;
         }
 
