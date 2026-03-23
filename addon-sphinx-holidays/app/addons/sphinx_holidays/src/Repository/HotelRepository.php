@@ -427,13 +427,15 @@ class HotelRepository
      * @param string $countryCode Country code to scope the update
      * @return int Number of rows marked inactive
      */
+    /**
+     * @deprecated Use markInactiveBefore() instead — scales to 100k+ hotels without memory issues.
+     */
     public function markInactiveExcept(array $activeIds, string $countryCode): int
     {
         if (empty($activeIds) || $countryCode === '') {
             return 0;
         }
 
-        // Build a safe IN clause
         $placeholders = implode(',', array_fill(0, count($activeIds), '?s'));
         $params = array_merge([$countryCode], $activeIds);
 
@@ -441,6 +443,31 @@ class HotelRepository
             "UPDATE ?:sphinx_hotels SET sync_status = 'inactive'
              WHERE country_code = ?s AND sync_status = 'active' AND hotel_id NOT IN ($placeholders)",
             ...$params
+        );
+    }
+
+    /**
+     * Mark hotels as inactive if they weren't touched since the given timestamp.
+     *
+     * Replaces markInactiveExcept() for scalability: uses a single indexed WHERE clause
+     * instead of NOT IN (100k IDs). Works because upsertBatch() sets last_synced_at = NOW()
+     * on every hotel it touches, so any hotel with last_synced_at < $syncStartedAt was not
+     * in the API response and is therefore stale.
+     *
+     * @param string $syncStartedAt Timestamp recorded before sync started (Y-m-d H:i:s)
+     * @param string $countryCode Country code to scope the update
+     * @return int Number of rows marked inactive
+     */
+    public function markInactiveBefore(string $syncStartedAt, string $countryCode): int
+    {
+        if ($countryCode === '') {
+            return 0;
+        }
+
+        return (int) db_query(
+            "UPDATE ?:sphinx_hotels SET sync_status = 'inactive'
+             WHERE country_code = ?s AND sync_status = 'active' AND last_synced_at < ?s",
+            $countryCode, $syncStartedAt
         );
     }
 

@@ -156,7 +156,8 @@ class HotelSyncService extends AbstractSyncService
 
         $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
 
-        $activeIds = [];
+        // Record sync start time for stale detection (replaces $activeIds array)
+        $syncStartedAt = date('Y-m-d H:i:s');
 
         // Chunk destination IDs to avoid URL length overflow.
         // Large ID lists create query strings that can exceed server limits.
@@ -214,7 +215,6 @@ class HotelSyncService extends AbstractSyncService
                     }
 
                     $pageBatch[] = $normalized;
-                    $activeIds[] = $normalized['hotel_id'];
                     $stats['total']++;
                 }
 
@@ -244,8 +244,9 @@ class HotelSyncService extends AbstractSyncService
         }
 
         // Only mark stale hotels on full sync — incremental returns only changed items
+        // Uses timestamp comparison instead of NOT IN (id_list) to avoid memory/SQL limits at scale
         if ($updatedSince === null) {
-            $inactive = $this->hotelRepo->markInactiveExcept($activeIds, $countryCode);
+            $inactive = $this->hotelRepo->markInactiveBefore($syncStartedAt, $countryCode);
             if ($inactive > 0) {
                 $this->output("    Marked {$inactive} stale hotel(s) as inactive");
             }
