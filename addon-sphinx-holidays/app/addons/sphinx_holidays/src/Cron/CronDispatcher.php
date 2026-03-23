@@ -89,8 +89,8 @@ class CronDispatcher
             ];
         }
 
-        // Status/reset are non-destructive read-only ops — skip the lock
-        $isReadOnly = !empty($params['status']) || !empty($params['reset']);
+        // Status/reset/debug are non-destructive read-only ops — skip the lock
+        $isReadOnly = !empty($params['status']) || !empty($params['reset']) || !empty($params['debug']);
 
         // Acquire file lock to prevent concurrent execution of the same mode
         $lockFp = null;

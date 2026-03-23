@@ -71,6 +71,8 @@ function fn_sphinx_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:sphinx_sync_log");
     db_query("DROP TABLE IF EXISTS ?:sphinx_bookings");
     db_query("DROP TABLE IF EXISTS ?:sphinx_package_routes");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_experiences");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_circuits");
     db_query("DROP TABLE IF EXISTS ?:sphinx_destinations");
     db_query("DROP TABLE IF EXISTS ?:sphinx_hotels");
 
