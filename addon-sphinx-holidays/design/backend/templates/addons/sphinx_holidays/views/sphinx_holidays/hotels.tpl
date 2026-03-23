@@ -36,9 +36,9 @@
                 <option value="">{__("sphinx_holidays.all_classifications")}</option>
                 {foreach from=$distinct_classifications item=cl}
                     {if $cl == 0}
-                        <option value="0" {if $search.classification === '0'}selected{/if}>{__("sphinx_holidays.unclassified")}</option>
+                        <option value="0" {if $search.classification == '0' && $search.classification != ''}selected{/if}>{__("sphinx_holidays.unclassified")}</option>
                     {else}
-                        <option value="{$cl}" {if $search.classification == $cl && $search.classification !== ''}selected{/if}>{$cl}&#9733;</option>
+                        <option value="{$cl}" {if $search.classification == $cl && $search.classification != ''}selected{/if}>{$cl}&#9733;</option>
                     {/if}
                 {/foreach}
             </select>
@@ -49,7 +49,7 @@
             <select name="property_type">
                 <option value="">{__("sphinx_holidays.all_property_types")}</option>
                 {foreach from=$distinct_property_types item=pt}
-                    <option value="{$pt}" {if $search.property_type == $pt}selected{/if}>{$pt}</option>
+                    <option value="{$pt|escape:html}" {if $search.property_type == $pt}selected{/if}>{$pt|escape:html}</option>
                 {/foreach}
             </select>
         </div>
@@ -85,35 +85,15 @@
 </div>
 {/capture}
 
-{* ── Bulk Actions Gear Menu ── *}
-{capture name="buttons"}
-    {capture name="tools_list"}
-        <li><a href="#" onclick="document.getElementById('sphinx_bulk_action').value='active'; document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_update_hotels"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-            <i class="icon-ok"></i> {__("sphinx_holidays.bulk_activate")}
-        </a></li>
-        <li><a href="#" onclick="document.getElementById('sphinx_bulk_action').value='inactive'; document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_update_hotels"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-            <i class="icon-off"></i> {__("sphinx_holidays.bulk_deactivate")}
-        </a></li>
-        <li><a href="#" onclick="document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_sync_images"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-            <i class="icon-picture"></i> {__("sphinx_holidays.bulk_sync_images")}
-        </a></li>
-        <li class="divider"></li>
-        <li><a href="#" onclick="if(confirm('{__("sphinx_holidays.bulk_delete_confirm")|escape:"javascript"}')) {ldelim} document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_delete_hotels"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); {rdelim} return false;">
-            <i class="icon-trash"></i> {__("sphinx_holidays.bulk_delete")}
-        </a></li>
-    {/capture}
-    {dropdown content=$smarty.capture.tools_list}
-{/capture}
 
 {* ── Main Content ── *}
 {capture name="mainbox"}
 
 {include file="common/pagination.tpl" save_current_url=true}
 
-{* Build sort URL base preserving all current filters *}
-{$sort_url_base = "sphinx_holidays.hotels?country_code=`$search.country_code|escape:url`&region_id=`$search.region_id`&destination_id=`$search.destination_id`&sync_status=`$search.sync_status|escape:url`&classification=`$search.classification|escape:url`&property_type=`$search.property_type|escape:url`&link_status=`$search.link_status|escape:url`&q=`$search.q|escape:url`&items_per_page=`$search.items_per_page`"}
+{* $sort_url_base is built in the controller with proper URL encoding *}
 
-<form action="{""|fn_url}" method="post" name="sphinx_bulk_form" id="sphinx_bulk_form">
+<form action="{"sphinx_holidays.bulk_update_hotels"|fn_url}" method="post" name="sphinx_bulk_form" id="sphinx_bulk_form">
 <input type="hidden" name="security_hash" value="{$security_hash}" />
 <input type="hidden" name="bulk_status" value="active" id="sphinx_bulk_action" />
 
@@ -276,6 +256,23 @@
         {/foreach}
     </tbody>
 </table>
+{* ── Bulk Action Buttons ── *}
+<div class="well well-small" style="margin-top: 10px;">
+    <strong>{__("sphinx_holidays.with_selected")}:</strong>
+    <a href="#" class="btn btn-mini btn-success" onclick="document.getElementById('sphinx_bulk_action').value='active'; document.getElementById('sphinx_bulk_form').submit(); return false;">
+        <i class="icon-ok"></i> {__("sphinx_holidays.bulk_activate")}
+    </a>
+    <a href="#" class="btn btn-mini btn-warning" onclick="document.getElementById('sphinx_bulk_action').value='inactive'; document.getElementById('sphinx_bulk_form').submit(); return false;">
+        <i class="icon-ban-circle"></i> {__("sphinx_holidays.bulk_deactivate")}
+    </a>
+    <a href="#" class="btn btn-mini" onclick="document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_sync_images"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); return false;">
+        <i class="icon-picture"></i> {__("sphinx_holidays.bulk_sync_images")}
+    </a>
+    <a href="#" class="btn btn-mini btn-danger" onclick="if(confirm('{__("sphinx_holidays.bulk_delete_confirm")|escape:"javascript"}')) {ldelim} document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_delete_hotels"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); {rdelim} return false;">
+        <i class="icon-trash"></i> {__("sphinx_holidays.bulk_delete")}
+    </a>
+</div>
+
 {else}
     <p class="no-items">{__("sphinx_holidays.no_hotels")}</p>
 {/if}
@@ -378,5 +375,4 @@
     title="{__('sphinx_holidays.hotels')}"
     content=$smarty.capture.mainbox
     sidebar=$smarty.capture.sidebar
-    buttons=$smarty.capture.buttons
 }

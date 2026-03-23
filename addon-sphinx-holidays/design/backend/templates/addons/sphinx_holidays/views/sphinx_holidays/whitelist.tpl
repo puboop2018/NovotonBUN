@@ -216,7 +216,7 @@
         var countEl = document.getElementById('wl_filter_count');
         if (whitelistFilterActive) {
             var whitelistedTotal = Object.keys(state).length;
-            countEl.textContent = 'Showing ' + whitelistedTotal + ' of ' + totalCount + ' countries';
+            countEl.textContent = whitelistedTotal + ' / ' + totalCount;
         } else {
             countEl.textContent = '';
         }

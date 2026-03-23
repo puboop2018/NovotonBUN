@@ -715,6 +715,8 @@
         <item lang="ro" id="sphinx_holidays.all_property_types"><![CDATA[Toate tipurile]]></item>
         <item lang="en" id="sphinx_holidays.all_link_statuses"><![CDATA[All]]></item>
         <item lang="ro" id="sphinx_holidays.all_link_statuses"><![CDATA[Toate]]></item>
+        <item lang="en" id="sphinx_holidays.with_selected"><![CDATA[With selected]]></item>
+        <item lang="ro" id="sphinx_holidays.with_selected"><![CDATA[Cu cele selectate]]></item>
         <item lang="en" id="sphinx_holidays.expand"><![CDATA[Expand]]></item>
         <item lang="ro" id="sphinx_holidays.expand"><![CDATA[Expandează]]></item>
         <item lang="en" id="sphinx_holidays.collapse"><![CDATA[Restrânge]]></item>

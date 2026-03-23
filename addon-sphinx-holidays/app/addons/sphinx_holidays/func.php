@@ -191,6 +191,10 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'en' => 'All',
             'ro' => 'Toate',
         ],
+        'sphinx_holidays.with_selected' => [
+            'en' => 'With selected',
+            'ro' => 'Cu cele selectate',
+        ],
     ];
 
     foreach ($keys as $name => $translations) {

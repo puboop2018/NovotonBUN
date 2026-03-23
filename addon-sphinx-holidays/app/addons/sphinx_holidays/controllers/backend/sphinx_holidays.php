@@ -382,8 +382,24 @@ if ($mode === 'manage') {
     $distinctClassifications = $hotelRepo->getDistinctClassifications();
     $distinctPropertyTypes = $hotelRepo->getDistinctPropertyTypes();
 
+    // Build sort URL base preserving all current filter params (safe URL encoding)
+    $sortFilterParams = array_filter([
+        'country_code'   => $search['country_code'],
+        'region_id'      => $search['region_id'] ?: null,
+        'destination_id' => $search['destination_id'] ?: null,
+        'sync_status'    => $search['sync_status'],
+        'classification' => $search['classification'],
+        'property_type'  => $search['property_type'],
+        'link_status'    => $search['link_status'],
+        'q'              => $search['q'],
+        'items_per_page' => $search['items_per_page'],
+    ], static fn($v) => $v !== '' && $v !== null);
+    $sortUrlBase = 'sphinx_holidays.hotels?' . http_build_query($sortFilterParams);
+
     Tygh::$app['view']->assign('hotels', $hotels);
     Tygh::$app['view']->assign('search', $search);
+    Tygh::$app['view']->assign('total_items', $search['total_items']);
+    Tygh::$app['view']->assign('sort_url_base', $sortUrlBase);
     Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
     Tygh::$app['view']->assign('distinct_classifications', $distinctClassifications);
     Tygh::$app['view']->assign('distinct_property_types', $distinctPropertyTypes);
