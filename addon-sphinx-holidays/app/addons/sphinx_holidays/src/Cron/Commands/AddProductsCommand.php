@@ -176,6 +176,14 @@ class AddProductsCommand extends AbstractSyncCommand
             // Save state after every batch (critical for resume)
             $state['last_run_at'] = date('Y-m-d H:i:s');
             $this->saveState($state);
+
+            // Clear CS-Cart internal caches to prevent OOM on large runs
+            // fn_update_product() accumulates registry/cache data per product
+            \Tygh\Registry::del('runtime.product_descriptions');
+            \Tygh\Registry::del('seo_cache');
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
         }
 
         FeatureMapper::clearCache();
