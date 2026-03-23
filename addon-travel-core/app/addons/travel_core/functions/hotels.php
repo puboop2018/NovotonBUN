@@ -43,18 +43,25 @@ function fn_travel_core_get_or_create_category(string $path): int
             continue;
         }
 
+        // Inherit company_id from parent category (required in frontend/cron context
+        // where Registry::get('runtime.company_id') may not be set)
+        $company_id = ($parent_id > 0)
+            ? (int) db_get_field("SELECT company_id FROM ?:categories WHERE category_id = ?i", $parent_id)
+            : 0;
+
         // Create new category
         $category_data = [
-            'category'  => $part,
-            'parent_id' => $parent_id,
-            'status'    => 'A',
+            'category'   => $part,
+            'parent_id'  => $parent_id,
+            'company_id' => $company_id,
+            'status'     => 'A',
         ];
 
         $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
 
         if ($category_id <= 0) {
             fn_log_event('general', 'runtime', [
-                'message' => "travel_core: fn_update_category() returned 0 for part='{$part}', parent_id={$parent_id}, path='{$path}'",
+                'message' => "travel_core: fn_update_category() returned 0 for part='{$part}', parent_id={$parent_id}, company_id={$company_id}, path='{$path}'",
             ]);
             return 0;
         }
@@ -109,18 +116,26 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
         return $category_id;
     }
 
+    // Inherit company_id from parent category (required in frontend/cron context
+    // where Registry::get('runtime.company_id') may not be set)
+    $company_id = (int) db_get_field(
+        "SELECT company_id FROM ?:categories WHERE category_id = ?i",
+        $parent_id
+    );
+
     // Create new category under parent
     $category_data = [
-        'category'  => $name,
-        'parent_id' => $parent_id,
-        'status'    => 'A',
+        'category'   => $name,
+        'parent_id'  => $parent_id,
+        'company_id' => $company_id,
+        'status'     => 'A',
     ];
 
     $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
 
     if ($category_id <= 0) {
         fn_log_event('general', 'runtime', [
-            'message' => "travel_core: fn_update_category() returned 0 for name='{$name}', parent_id={$parent_id}",
+            'message' => "travel_core: fn_update_category() returned 0 for name='{$name}', parent_id={$parent_id}, company_id={$company_id}",
         ]);
         return 0;
     }

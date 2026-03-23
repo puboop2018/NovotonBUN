@@ -90,7 +90,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         }
 
         $cacheKey = $rootCategoryId . '/' . $countryName;
-        if (!isset($this->categoryCache[$cacheKey])) {
+        if (empty($this->categoryCache[$cacheKey])) {
             $this->categoryCache[$cacheKey] = fn_travel_core_get_or_create_child_category($rootCategoryId, $countryName);
         }
         $categoryId = $this->categoryCache[$cacheKey];
