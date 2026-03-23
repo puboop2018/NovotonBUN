@@ -32,8 +32,28 @@ abstract class AbstractSyncCommand
 
         $rl = $stats['rate_limit'] ?? [];
         if (isset($rl['remaining'], $rl['limit'])) {
-            ($this->outputCallback)("Rate limit: {$rl['remaining']}/{$rl['limit']} requests remaining.");
+            $msg = "Rate limit: {$rl['remaining']}/{$rl['limit']} requests remaining.";
+            $resetIn = $rl['reset_in'] ?? null;
+            if ($resetIn !== null && $resetIn > 0) {
+                $msg .= ' Resets in ' . $this->formatResetTime($resetIn) . '.';
+            }
+            ($this->outputCallback)($msg);
         }
+    }
+
+    private function formatResetTime(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return "{$seconds}s";
+        }
+        $m = (int) floor($seconds / 60);
+        $s = $seconds % 60;
+        if ($m < 60) {
+            return $s > 0 ? "{$m}m {$s}s" : "{$m}m";
+        }
+        $h = (int) floor($m / 60);
+        $m = $m % 60;
+        return $m > 0 ? "{$h}h {$m}m" : "{$h}h";
     }
 
     protected function wrapResult(array $stats): array

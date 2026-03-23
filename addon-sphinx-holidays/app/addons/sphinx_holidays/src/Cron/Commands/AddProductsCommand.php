@@ -12,12 +12,19 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  *
  * Thin orchestrator: loads batches of unlinked hotels, resolves destination
  * hierarchies, then delegates per-hotel product creation to SphinxProductFactory.
+ *
+ * Usage:
+ *   php cron.php access_key=KEY mode=add_products
+ *   php cron.php access_key=KEY mode=add_products country=TR
+ *   php cron.php access_key=KEY mode=add_products retry_skipped=1
+ *   php cron.php access_key=KEY mode=add_products retry_skipped=1 country=TR
+ *   php cron.php access_key=KEY mode=add_products retry_skipped=invalid_country
  */
 class AddProductsCommand extends AbstractSyncCommand
 {
     public static function getDescription(): string
     {
-        return 'Create CS-Cart products from unlinked Sphinx hotels';
+        return 'Create CS-Cart products from unlinked Sphinx hotels (retry_skipped=1 to retry previously skipped)';
     }
 
     public function execute(array $params = []): array
@@ -30,6 +37,16 @@ class AddProductsCommand extends AbstractSyncCommand
         $countryCode = $params['country'] ?? '';
         $limit = (int) ($params['limit'] ?? 0);
         $batchSize = (int) ($params['batch_size'] ?? 200);
+        $retrySkipped = $params['retry_skipped'] ?? '';
+
+        // Handle retry_skipped: reset product_skip_reason so hotels become eligible again
+        if ($retrySkipped !== '') {
+            $reason = ($retrySkipped === '1') ? '' : $retrySkipped;
+            $reset = $hotelRepo->resetSkipped($countryCode, $reason);
+            $filter = $countryCode !== '' ? " for country {$countryCode}" : '';
+            $reasonFilter = $reason !== '' ? " with reason '{$reason}'" : '';
+            $this->output("Reset {$reset} previously skipped hotels{$filter}{$reasonFilter}. They are now eligible for product creation.");
+        }
 
         $factory->loadValidCountryCodes();
 
@@ -94,12 +111,49 @@ class AddProductsCommand extends AbstractSyncCommand
 
         FeatureMapper::clearCache();
 
+        // Diagnostic: if nothing was processed, check for skipped hotels
+        if ($stats['total'] === 0) {
+            $skippedCount = $hotelRepo->countSkipped();
+            if ($skippedCount > 0) {
+                $byReason = $this->getSkippedBreakdown();
+                $this->output("No eligible hotels found, but {$skippedCount} hotel(s) were previously skipped:");
+                foreach ($byReason as $reason => $count) {
+                    $this->output("  - {$reason}: {$count}");
+                }
+                $this->output("Run with retry_skipped=1 to make them eligible again.");
+                $this->output("  Example: php cron.php access_key=KEY mode=add_products retry_skipped=1");
+            }
+        }
+
         if ($stats['invalid_country'] > 0) {
             $this->output("WARNING: {$stats['invalid_country']} hotels skipped — country codes not in CS-Cart. Check sync health log.");
+            $this->output("After enabling the missing countries in CS-Cart, run: mode=add_products retry_skipped=invalid_country");
         }
         $this->output("Done: {$stats['added']} added, {$stats['skipped']} skipped, {$stats['failed']} failed, {$stats['invalid_country']} invalid country.");
 
         return ['success' => true, 'stats' => $stats];
+    }
+
+    /**
+     * Get breakdown of skipped hotels by reason.
+     *
+     * @return array<string, int> reason => count
+     */
+    private function getSkippedBreakdown(): array
+    {
+        $rows = db_get_array(
+            "SELECT product_skip_reason, COUNT(*) AS cnt
+             FROM ?:sphinx_hotels
+             WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
+             GROUP BY product_skip_reason
+             ORDER BY cnt DESC"
+        );
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['product_skip_reason']] = (int) $row['cnt'];
+        }
+        return $result;
     }
 
     private function output(string $message): void

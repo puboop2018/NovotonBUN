@@ -620,6 +620,16 @@
         <item lang="ro" id="sphinx_holidays.no_unlinked_hotels"><![CDATA[Nu s-au găsit hoteluri neasociate. Toate hotelurile au deja produse.]]></item>
         <item lang="en" id="sphinx_holidays.skipped_invalid_country"><![CDATA[skipped — invalid country code]]></item>
         <item lang="ro" id="sphinx_holidays.skipped_invalid_country"><![CDATA[omise — cod de țară invalid]]></item>
+        <item lang="en" id="sphinx_holidays.skipped_hotels"><![CDATA[Skipped hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.skipped_hotels"><![CDATA[Hoteluri omise]]></item>
+        <item lang="en" id="sphinx_holidays.retry_skipped"><![CDATA[Retry skipped hotels]]></item>
+        <item lang="ro" id="sphinx_holidays.retry_skipped"><![CDATA[Reîncearcă hotelurile omise]]></item>
+        <item lang="en" id="sphinx_holidays.retry_skipped_confirm"><![CDATA[This will reset all skipped hotels so they can be processed again. Continue?]]></item>
+        <item lang="ro" id="sphinx_holidays.retry_skipped_confirm"><![CDATA[Aceasta va reseta toate hotelurile omise pentru a fi procesate din nou. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.skipped_reset"><![CDATA[[count] skipped hotel(s) have been reset and are now eligible for product creation.]]></item>
+        <item lang="ro" id="sphinx_holidays.skipped_reset"><![CDATA[[count] hotel(uri) omise au fost resetate și sunt acum eligibile pentru crearea de produse.]]></item>
+        <item lang="en" id="sphinx_holidays.no_skipped_hotels"><![CDATA[No skipped hotels found.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_skipped_hotels"><![CDATA[Nu s-au găsit hoteluri omise.]]></item>
         <item lang="en" id="sphinx_holidays.product_category_template"><![CDATA[Category path template]]></item>
         <item lang="ro" id="sphinx_holidays.product_category_template"><![CDATA[Șablon cale categorie]]></item>
         <item lang="en" id="sphinx_holidays.product_category_template.tooltip"><![CDATA[Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion. Category paths are cached per unique combination within each cron run to avoid redundant lookups.]]></item>

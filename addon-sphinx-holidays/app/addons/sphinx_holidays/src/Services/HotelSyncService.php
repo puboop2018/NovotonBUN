@@ -111,6 +111,11 @@ class HotelSyncService extends AbstractSyncService
 
         $this->output('Found ' . count($destinationIds) . ' destination(s) to sync hotels for');
 
+        // Preload destination hierarchy for country/region/city resolution during sync
+        if (!$this->destRepo->loadParentLookup()) {
+            $this->output('WARNING: sphinx_destinations is empty — country/region enrichment will use sync context only. Run destination sync first for best results.');
+        }
+
         // Fetch and sync hotels per country
         foreach ($countryCodes as $countryCode) {
             $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
@@ -151,7 +156,8 @@ class HotelSyncService extends AbstractSyncService
 
         $this->output("  {$countryCode}: syncing from " . count($destinationIds) . ' destination(s)...');
 
-        $activeIds = [];
+        // Record sync start time for stale detection (replaces $activeIds array)
+        $syncStartedAt = date('Y-m-d H:i:s');
 
         // Chunk destination IDs to avoid URL length overflow.
         // Large ID lists create query strings that can exceed server limits.
@@ -209,17 +215,15 @@ class HotelSyncService extends AbstractSyncService
                     }
 
                     $pageBatch[] = $normalized;
-                    $activeIds[] = $normalized['hotel_id'];
                     $stats['total']++;
-
-                    if (count($pageBatch) >= self::UPSERT_BATCH_SIZE) {
-                        $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
-                        $pageBatch = [];
-                    }
                 }
 
-                if (!empty($pageBatch)) {
-                    $stats['synced'] += $this->hotelRepo->upsertBatch($pageBatch);
+                // Batch-resolve country/region/city from destination hierarchy
+                $pageBatch = $this->enrichFromHierarchy($pageBatch, $countryCode);
+
+                // Upsert in sub-batches
+                foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {
+                    $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
                 if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['skipped'])) {
@@ -240,8 +244,9 @@ class HotelSyncService extends AbstractSyncService
         }
 
         // Only mark stale hotels on full sync — incremental returns only changed items
+        // Uses timestamp comparison instead of NOT IN (id_list) to avoid memory/SQL limits at scale
         if ($updatedSince === null) {
-            $inactive = $this->hotelRepo->markInactiveExcept($activeIds, $countryCode);
+            $inactive = $this->hotelRepo->markInactiveBefore($syncStartedAt, $countryCode);
             if ($inactive > 0) {
                 $this->output("    Marked {$inactive} stale hotel(s) as inactive");
             }
@@ -352,5 +357,51 @@ class HotelSyncService extends AbstractSyncService
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
         ];
+    }
+
+    /**
+     * Enrich a batch of normalized hotels with country/region data from the destination hierarchy.
+     *
+     * Uses the preloaded parentLookup (in-memory, no DB queries) to resolve country_code,
+     * country_name, and region_name from each hotel's destination_id. Falls back to the
+     * sync context $countryCode when destinations haven't been synced yet.
+     *
+     * @param array[] $hotels Normalized hotel rows
+     * @param string $countryCode Sync context country code (fallback)
+     * @return array[] Hotels with enriched country/region data
+     */
+    private function enrichFromHierarchy(array $hotels, string $countryCode): array
+    {
+        if (empty($hotels)) {
+            return $hotels;
+        }
+
+        // Collect unique destination IDs for batch resolution
+        $destIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
+        $hierarchyMap = !empty($destIds) ? $this->destRepo->resolveHierarchies($destIds) : [];
+
+        foreach ($hotels as &$hotel) {
+            $destId = (int) $hotel['destination_id'];
+            $hierarchy = $hierarchyMap[$destId] ?? [];
+
+            // Primary: derive from destination hierarchy
+            if (!empty($hierarchy['country_code'])) {
+                $hotel['country_code'] = $hierarchy['country_code'];
+            }
+            if (!empty($hierarchy['country'])) {
+                $hotel['country_name'] = $hierarchy['country'];
+            }
+            if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
+                $hotel['region_name'] = $hierarchy['region'];
+            }
+
+            // Fallback: sync context country code (when destinations aren't synced yet)
+            if ($hotel['country_code'] === '') {
+                $hotel['country_code'] = $countryCode;
+            }
+        }
+        unset($hotel);
+
+        return $hotels;
     }
 }

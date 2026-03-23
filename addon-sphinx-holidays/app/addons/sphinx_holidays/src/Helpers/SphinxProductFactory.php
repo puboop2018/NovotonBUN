@@ -92,7 +92,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         }
 
         // Resolve city name for page title
-        $cityName = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
+        $cityName = ($hierarchy['city'] ?? '') ?: $hotel['destination_name'];
 
         // Create CS-Cart product
         $productData = [
@@ -150,9 +150,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
      */
     public function buildCategoryPath(array $hotel, array $hierarchy, string $template): string
     {
-        $countryName = $hotel['country_name'] ?: ($hierarchy['country'] ?? '');
-        $regionName  = $hotel['region_name'] ?: ($hierarchy['region'] ?? '');
-        $cityName    = $hotel['destination_name'] ?: ($hierarchy['city'] ?? '');
+        $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
+        $regionName  = ($hierarchy['region'] ?? '') ?: ($hotel['region_name'] ?? '');
+        $cityName    = ($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? '');
 
         $effectiveCountry = $countryName ?: ($hotel['country_code'] ?? '');
         if ($effectiveCountry === '') {

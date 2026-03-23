@@ -195,6 +195,26 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'en' => 'With selected',
             'ro' => 'Cu cele selectate',
         ],
+        'sphinx_holidays.skipped_hotels' => [
+            'en' => 'Skipped hotels',
+            'ro' => 'Hoteluri omise',
+        ],
+        'sphinx_holidays.retry_skipped' => [
+            'en' => 'Retry skipped hotels',
+            'ro' => 'Reîncearcă hotelurile omise',
+        ],
+        'sphinx_holidays.retry_skipped_confirm' => [
+            'en' => 'This will reset all skipped hotels so they can be processed again. Continue?',
+            'ro' => 'Aceasta va reseta toate hotelurile omise pentru a fi procesate din nou. Continuați?',
+        ],
+        'sphinx_holidays.skipped_reset' => [
+            'en' => '[count] skipped hotel(s) have been reset and are now eligible for product creation.',
+            'ro' => '[count] hotel(uri) omise au fost resetate și sunt acum eligibile pentru crearea de produse.',
+        ],
+        'sphinx_holidays.no_skipped_hotels' => [
+            'en' => 'No skipped hotels found.',
+            'ro' => 'Nu s-au găsit hoteluri omise.',
+        ],
     ];
 
     foreach ($keys as $name => $translations) {
