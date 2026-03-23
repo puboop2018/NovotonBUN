@@ -103,6 +103,22 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         // Build placeholder map for SEO templates
         $placeholders = self::buildPlaceholders($hotel, $hierarchy);
 
+        $productName = fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders);
+
+        // Deduplicate: if a product with the same name exists in the same category, link to it
+        $dupeProductId = (int) db_get_field(
+            "SELECT p.product_id FROM ?:products p
+             JOIN ?:product_descriptions pd ON pd.product_id = p.product_id AND pd.lang_code = ?s
+             JOIN ?:products_categories pc ON pc.product_id = p.product_id AND pc.category_id = ?i
+             WHERE pd.product = ?s
+             LIMIT 1",
+            CART_LANGUAGE, $categoryId, $productName
+        );
+        if ($dupeProductId > 0) {
+            $this->hotelRepo->linkToProduct($hotelId, $dupeProductId);
+            return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate name'];
+        }
+
         // Resolve full description: use template if configured, otherwise raw API description
         $descTemplate = ConfigProvider::getSeoFullDescription();
         $fullDescription = $descTemplate !== ''
@@ -111,7 +127,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Create CS-Cart product using SEO templates
         $productData = [
-            'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+            'product'           => $productName,
             'product_code'      => $productCode,
             'price'             => 0,
             'status'            => 'A',
