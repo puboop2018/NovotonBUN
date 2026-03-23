@@ -208,6 +208,14 @@ class HotelSyncService extends AbstractSyncService
                         continue;
                     }
 
+                    // Inject country_code and country_name from sync context when API omits them
+                    if ($normalized['country_code'] === '') {
+                        $normalized['country_code'] = $countryCode;
+                    }
+                    if ($normalized['country_name'] === '' && $countryCode !== '') {
+                        $normalized['country_name'] = $this->resolveCountryName($countryCode);
+                    }
+
                     $pageBatch[] = $normalized;
                     $activeIds[] = $normalized['hotel_id'];
                     $stats['total']++;
@@ -352,5 +360,36 @@ class HotelSyncService extends AbstractSyncService
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
         ];
+    }
+
+    /** @var array<string, string> country_code => country_name cache */
+    private array $countryNameCache = [];
+
+    /**
+     * Resolve a country name from its ISO-2 code using CS-Cart's country descriptions
+     * or the sphinx_destinations table as fallback.
+     */
+    private function resolveCountryName(string $countryCode): string
+    {
+        if (isset($this->countryNameCache[$countryCode])) {
+            return $this->countryNameCache[$countryCode];
+        }
+
+        // Try CS-Cart country descriptions first
+        $name = (string) db_get_field(
+            "SELECT country FROM ?:country_descriptions WHERE code = ?s AND lang_code = ?s LIMIT 1",
+            $countryCode, CART_LANGUAGE
+        );
+
+        // Fallback: sphinx_destinations country-level entry
+        if ($name === '') {
+            $name = (string) db_get_field(
+                "SELECT name FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
+                $countryCode
+            );
+        }
+
+        $this->countryNameCache[$countryCode] = $name;
+        return $name;
     }
 }
