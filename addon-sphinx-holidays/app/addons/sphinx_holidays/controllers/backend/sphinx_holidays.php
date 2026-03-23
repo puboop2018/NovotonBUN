@@ -361,6 +361,8 @@ if ($mode === 'manage') {
         'cleanup'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
         'discover_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=discover_boards",
         'assign_boards'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
+        'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
+        'sync_images'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
     ];
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);

@@ -137,7 +137,14 @@ class ConfigProvider
      */
     public static function getProductLanguages(): array
     {
-        $value = (string) self::getSetting('product_languages', 'ro');
+        $value = self::getSetting('product_languages', 'ro');
+
+        // CS-Cart may return an array (multiple checkboxes) or a comma-separated string
+        if (is_array($value)) {
+            return array_filter(array_map('trim', $value));
+        }
+
+        $value = (string) $value;
         if (empty($value)) {
             return [];
         }

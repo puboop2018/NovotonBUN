@@ -233,6 +233,20 @@
                     <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.assign_boards}</code></td>
                     <td><a href="{$cron_urls.assign_boards}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
+                <tr>
+                    <td><strong>update_products</strong></td>
+                    <td>Push changed hotel data to CS-Cart products</td>
+                    <td><code>0 6 * * *</code> (daily, after hotels)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.update_products}</code></td>
+                    <td><a href="{$cron_urls.update_products}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>sync_images</strong></td>
+                    <td>Download and attach hotel images to CS-Cart products</td>
+                    <td><code>0 4 * * *</code> (daily, after add_products)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
+                    <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
             </tbody>
         </table>
 

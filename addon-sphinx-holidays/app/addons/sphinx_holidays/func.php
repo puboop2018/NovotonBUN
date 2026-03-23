@@ -917,8 +917,13 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    $result = \Tygh\Http::get($image_url, [], [
-        'write_to_file' => $temp_file
+    // Sphinx API requires auth header for watermark-free images
+    $download_url = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url);
+    $headers = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders();
+
+    $result = \Tygh\Http::get($download_url, [], [
+        'write_to_file' => $temp_file,
+        'headers'       => $headers,
     ]);
 
     if (empty($result) || !file_exists($temp_file) || filesize($temp_file) < 1000) {
