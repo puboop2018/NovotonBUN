@@ -102,7 +102,8 @@ class CronDispatcher
                 fclose($lockFp);
                 return [
                     'success' => false,
-                    'error' => "Mode '{$mode}' is already running. Try again later. Use &status=1 to check progress or &reset=1 to clear stale state.",
+                    'busy' => true,
+                    'message' => "Mode '{$mode}' is already running. Try again later. Use &status=1 to check progress or &reset=1 to clear stale state.",
                 ];
             }
         }

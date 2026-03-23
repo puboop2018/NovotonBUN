@@ -87,6 +87,8 @@ class FullSyncCommand
 
             if ($success) {
                 $totalSuccess++;
+            } elseif ($result['busy'] ?? false) {
+                $this->output("[INFO] {$mode} is already running, skipped.");
             } else {
                 $totalFailed++;
                 $error = $result['error'] ?? $result['stats']['error'] ?? 'unknown error';
