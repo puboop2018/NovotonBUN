@@ -73,16 +73,36 @@ msgid "Product Mapping"
 msgstr "Mapare Produse"
 
 msgctxt "SettingsOptions::sphinx_holidays::hotels_category_id"
-msgid "CS-Cart category ID for Sphinx hotels"
-msgstr "ID categorie CS-Cart pentru hoteluri Sphinx"
+msgid "CS-Cart category ID for hotels"
+msgstr "ID categorie CS-Cart pentru hoteluri"
+
+msgctxt "SettingsTooltips::sphinx_holidays::hotels_category_id"
+msgid "Root category under which hotel products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse hoteliere. Sub-categoriile pe țări se creează automat."
 
 msgctxt "SettingsOptions::sphinx_holidays::packages_category_id"
-msgid "CS-Cart category ID for Sphinx packages"
-msgstr "ID categorie CS-Cart pentru pachete Sphinx"
+msgid "CS-Cart category ID for packages"
+msgstr "ID categorie CS-Cart pentru pachete"
 
-msgctxt "SettingsOptions::sphinx_holidays::product_category_template"
-msgid "Category path template ({country}, {region}, {city} placeholders)"
-msgstr "Șablon cale categorie ({country}, {region}, {city})"
+msgctxt "SettingsTooltips::sphinx_holidays::packages_category_id"
+msgid "Root category under which package products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse pachete. Sub-categoriile pe țări se creează automat."
+
+msgctxt "SettingsOptions::sphinx_holidays::circuits_category_id"
+msgid "CS-Cart category ID for circuits"
+msgstr "ID categorie CS-Cart pentru circuite"
+
+msgctxt "SettingsTooltips::sphinx_holidays::circuits_category_id"
+msgid "Root category for circuit products (mapped to /api/v1/static/circuits). Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse circuite (mapat la /api/v1/static/circuits). Sub-categoriile pe țări se creează automat."
+
+msgctxt "SettingsOptions::sphinx_holidays::experiences_category_id"
+msgid "CS-Cart category ID for experiences"
+msgstr "ID categorie CS-Cart pentru experiențe"
+
+msgctxt "SettingsTooltips::sphinx_holidays::experiences_category_id"
+msgid "Root category for experience products (mapped to /api/v1/static/experiences). Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse experiențe (mapat la /api/v1/static/experiences). Sub-categoriile pe țări se creează automat."
 
 msgctxt "SettingsOptions::sphinx_holidays::product_languages"
 msgid "Product languages"

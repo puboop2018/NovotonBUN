@@ -68,13 +68,23 @@ class UpdateProductsCommand
                 $hotelId = $hotel['hotel_id'];
                 $productId = (int) $hotel['product_id'];
 
-                $pageTitle = $hotel['name'] . ($hotel['destination_name'] ? ' - ' . $hotel['destination_name'] : '');
+                // Build placeholder map for SEO templates
+                $placeholders = self::buildPlaceholders($hotel);
+
+                // Resolve full description: use template if configured, otherwise raw API description
+                $descTemplate = ConfigProvider::getSeoFullDescription();
+                $fullDescription = $descTemplate !== ''
+                    ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
+                    : ($hotel['description'] ?? '');
 
                 $product_data = [
-                    'product'           => $hotel['name'],
-                    'full_description'  => $hotel['description'] ?? '',
+                    'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+                    'full_description'  => $fullDescription,
                     'short_description' => $hotel['short_description'] ?? '',
-                    'page_title'        => $pageTitle,
+                    'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
+                    'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
+                    'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
+                    'seo_name'          => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
                 ];
 
                 // Use configured languages (addon setting) instead of all active
@@ -88,12 +98,12 @@ class UpdateProductsCommand
                     $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
                     foreach ($otherLanguages as $lc) {
                         db_query(
-                            "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title)
-                             VALUES (?i, ?s, ?s, ?s, ?s, ?s)
-                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s",
+                            "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
+                             VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
+                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s",
                             $productId, $lc,
-                            $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $pageTitle,
-                            $hotel['name'], $hotel['description'] ?? '', $hotel['short_description'] ?? '', $pageTitle
+                            $product_data['product'], $fullDescription, $hotel['short_description'] ?? '', $product_data['page_title'], $product_data['meta_description'], $product_data['meta_keywords'],
+                            $product_data['product'], $fullDescription, $hotel['short_description'] ?? '', $product_data['page_title'], $product_data['meta_description'], $product_data['meta_keywords']
                         );
                     }
                 }
@@ -154,6 +164,7 @@ class UpdateProductsCommand
         return db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
                     h.description, h.short_description, h.destination_name,
+                    h.country_name, h.region_name, h.rating, h.latitude, h.longitude,
                     h.facilities_json, h.boards_json
              FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active'
@@ -162,6 +173,50 @@ class UpdateProductsCommand
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
             $condition, $limitClause
         );
+    }
+
+    /**
+     * Build the placeholder map for SEO template rendering.
+     */
+    private static function buildPlaceholders(array $hotel): array
+    {
+        // Extract facility names from JSON
+        $facilities = [];
+        if (!empty($hotel['facilities_json'])) {
+            $facilitiesData = is_string($hotel['facilities_json']) ? json_decode($hotel['facilities_json'], true) : $hotel['facilities_json'];
+            if (is_array($facilitiesData)) {
+                foreach ($facilitiesData as $f) {
+                    $name = is_array($f) ? ($f['name'] ?? $f['title'] ?? '') : (string) $f;
+                    if ($name !== '') {
+                        $facilities[] = $name;
+                    }
+                }
+            }
+        }
+
+        // Extract board names from JSON
+        $boards = [];
+        if (!empty($hotel['boards_json'])) {
+            $boardsData = is_string($hotel['boards_json']) ? json_decode($hotel['boards_json'], true) : $hotel['boards_json'];
+            if (is_array($boardsData)) {
+                $boards = array_map('strval', $boardsData);
+            }
+        }
+
+        return [
+            'name'           => $hotel['name'] ?? '',
+            'classification' => $hotel['classification'] ?? '',
+            'city'           => $hotel['destination_name'] ?? '',
+            'country'        => $hotel['country_name'] ?? '',
+            'region'         => $hotel['region_name'] ?? '',
+            'property_type'  => $hotel['property_type'] ?? 'hotel',
+            'description'    => $hotel['description'] ?? '',
+            'rating'         => $hotel['rating'] ?? '',
+            'facilities'     => $facilities,
+            'boards'         => $boards,
+            'latitude'       => $hotel['latitude'] ?? '',
+            'longitude'      => $hotel['longitude'] ?? '',
+        ];
     }
 
     private function output(string $message): void

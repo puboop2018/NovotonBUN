@@ -71,6 +71,8 @@ function fn_sphinx_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:sphinx_sync_log");
     db_query("DROP TABLE IF EXISTS ?:sphinx_bookings");
     db_query("DROP TABLE IF EXISTS ?:sphinx_package_routes");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_experiences");
+    db_query("DROP TABLE IF EXISTS ?:sphinx_circuits");
     db_query("DROP TABLE IF EXISTS ?:sphinx_destinations");
     db_query("DROP TABLE IF EXISTS ?:sphinx_hotels");
 
@@ -95,13 +97,13 @@ function fn_sphinx_holidays_post_install(): bool
 function fn_sphinx_holidays_seed_language_keys(): void
 {
     $keys = [
-        'sphinx_holidays.product_category_template' => [
-            'en' => 'Category path template',
-            'ro' => 'Sablon cale categorie',
+        'sphinx_holidays.circuits_category_id' => [
+            'en' => 'CS-Cart category ID for circuits',
+            'ro' => 'ID categorie CS-Cart pentru circuite',
         ],
-        'sphinx_holidays.product_category_template.tooltip' => [
-            'en' => 'Template for auto-creating nested CS-Cart categories during product creation. Placeholders: {country}, {region}, {city}. Example: Hotels/{country}/{region}/{city} creates Hotels > Greece > Crete > Heraklion.',
-            'ro' => 'Sablon pentru crearea automata a categoriilor CS-Cart la crearea produselor. Placeholder-e: {country}, {region}, {city}. Exemplu: Hotels/{country}/{region}/{city} creeaza Hotels > Grecia > Creta > Heraklion.',
+        'sphinx_holidays.experiences_category_id' => [
+            'en' => 'CS-Cart category ID for experiences',
+            'ro' => 'ID categorie CS-Cart pentru experiențe',
         ],
         'sphinx_holidays.product_languages' => [
             'en' => 'Product languages',
@@ -214,6 +216,67 @@ function fn_sphinx_holidays_seed_language_keys(): void
         'sphinx_holidays.no_skipped_hotels' => [
             'en' => 'No skipped hotels found.',
             'ro' => 'Nu s-au găsit hoteluri omise.',
+        ],
+        // SEO Templates section
+        'sphinx_holidays.seo_templates' => [
+            'en' => 'SEO Templates',
+            'ro' => 'Șabloane SEO',
+        ],
+        'sphinx_holidays.seo_templates_header' => [
+            'en' => 'SEO Template Patterns',
+            'ro' => 'Șabloane SEO',
+        ],
+        'sphinx_holidays.seo_placeholders_info' => [
+            'en' => 'Available placeholders',
+            'ro' => 'Placeholder-e disponibile',
+        ],
+        'sphinx_holidays.seo_product_name' => [
+            'en' => 'Product name pattern',
+            'ro' => 'Șablon nume produs',
+        ],
+        'sphinx_holidays.seo_product_name.tooltip' => [
+            'en' => 'Template for the product name. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+            'ro' => 'Șablon pentru numele produsului. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+        ],
+        'sphinx_holidays.seo_page_title' => [
+            'en' => 'Page title pattern',
+            'ro' => 'Șablon titlu pagină',
+        ],
+        'sphinx_holidays.seo_page_title.tooltip' => [
+            'en' => 'Template for the HTML page title (SEO). Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+            'ro' => 'Șablon pentru titlul paginii HTML (SEO). Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+        ],
+        'sphinx_holidays.seo_meta_description' => [
+            'en' => 'Meta description pattern',
+            'ro' => 'Șablon meta descriere',
+        ],
+        'sphinx_holidays.seo_meta_description.tooltip' => [
+            'en' => 'Template for the meta description tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+            'ro' => 'Șablon pentru tag-ul meta description. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+        ],
+        'sphinx_holidays.seo_meta_keywords' => [
+            'en' => 'Meta keywords pattern',
+            'ro' => 'Șablon meta cuvinte cheie',
+        ],
+        'sphinx_holidays.seo_meta_keywords.tooltip' => [
+            'en' => 'Template for the meta keywords tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+            'ro' => 'Șablon pentru tag-ul meta keywords. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}',
+        ],
+        'sphinx_holidays.seo_name_slug' => [
+            'en' => 'SEO URL slug pattern',
+            'ro' => 'Șablon URL SEO (slug)',
+        ],
+        'sphinx_holidays.seo_name_slug.tooltip' => [
+            'en' => 'Template for the SEO-friendly URL slug. Result is automatically sanitized. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}',
+            'ro' => 'Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}',
+        ],
+        'sphinx_holidays.seo_full_description' => [
+            'en' => 'Full description pattern (optional)',
+            'ro' => 'Șablon descriere completă (opțional)',
+        ],
+        'sphinx_holidays.seo_full_description.tooltip' => [
+            'en' => 'Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}',
+            'ro' => 'Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}',
         ],
     ];
 

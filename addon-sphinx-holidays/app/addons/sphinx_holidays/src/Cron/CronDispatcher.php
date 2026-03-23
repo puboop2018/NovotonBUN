@@ -89,16 +89,22 @@ class CronDispatcher
             ];
         }
 
-        // Acquire file lock to prevent concurrent execution of the same mode
-        $lockFile = $this->getLockPath($mode);
-        $lockFp = fopen($lockFile, 'w');
+        // Status/reset/debug are non-destructive read-only ops — skip the lock
+        $isReadOnly = !empty($params['status']) || !empty($params['reset']) || !empty($params['debug']);
 
-        if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
-            fclose($lockFp);
-            return [
-                'success' => false,
-                'error' => "Mode '{$mode}' is already running. Try again later.",
-            ];
+        // Acquire file lock to prevent concurrent execution of the same mode
+        $lockFp = null;
+        if (!$isReadOnly) {
+            $lockFile = $this->getLockPath($mode);
+            $lockFp = fopen($lockFile, 'w');
+
+            if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
+                fclose($lockFp);
+                return [
+                    'success' => false,
+                    'error' => "Mode '{$mode}' is already running. Try again later. Use &status=1 to check progress or &reset=1 to clear stale state.",
+                ];
+            }
         }
 
         try {

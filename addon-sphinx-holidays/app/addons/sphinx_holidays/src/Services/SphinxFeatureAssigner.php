@@ -31,7 +31,12 @@ class SphinxFeatureAssigner
         'property_type' => 'feature_id_property_type',
         'resort'        => 'feature_id_location',
         'board'         => 'feature_id_meals',
+        'region'        => 'feature_id_region',
+        'city'          => 'feature_id_city',
     ];
+
+    /** @var array<string, int> featureId:variantName → variant_id cache */
+    private array $locationVariantCache = [];
 
     public function __construct(SphinxNormalizer $normalizer)
     {
@@ -48,6 +53,8 @@ class SphinxFeatureAssigner
         $this->assignResort($productId, $hotel);
         $this->assignFacilities($productId, $hotel);
         $this->assignBoards($productId, $hotel);
+        $this->assignRegion($productId, $hotel);
+        $this->assignCity($productId, $hotel);
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -262,6 +269,82 @@ class SphinxFeatureAssigner
                 $featureId, $productId, (int) $vid
             );
         }
+    }
+
+    /**
+     * Assign region as a select-box product feature.
+     * Variants are created dynamically from region names.
+     */
+    private function assignRegion(int $productId, array $hotel): void
+    {
+        $regionName = trim((string) ($hotel['region_name'] ?? ''));
+        if ($regionName === '') {
+            return;
+        }
+
+        $featureId = $this->getFeatureId('region');
+        if (!$featureId) {
+            return;
+        }
+
+        $variantId = $this->getOrCreateLocationVariant($featureId, $regionName);
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Assign city (destination) as a select-box product feature.
+     * Variants are created dynamically from city/destination names.
+     */
+    private function assignCity(int $productId, array $hotel): void
+    {
+        $cityName = trim((string) ($hotel['destination_name'] ?? ''));
+        if ($cityName === '') {
+            return;
+        }
+
+        $featureId = $this->getFeatureId('city');
+        if (!$featureId) {
+            return;
+        }
+
+        $variantId = $this->getOrCreateLocationVariant($featureId, $cityName);
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Get or create a feature variant by name for location-type features.
+     * Caches lookups to avoid repeated DB queries within a batch.
+     */
+    private function getOrCreateLocationVariant(int $featureId, string $name): int
+    {
+        $cacheKey = $featureId . ':' . $name;
+        if (isset($this->locationVariantCache[$cacheKey])) {
+            return $this->locationVariantCache[$cacheKey];
+        }
+
+        // Look for existing variant by name
+        $variantId = (int) db_get_field(
+            "SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
+             WHERE pf.variant = ?s AND pf.lang_code = ?s
+             AND pf.variant_id IN (SELECT variant_id FROM ?:product_feature_variants WHERE feature_id = ?i)
+             LIMIT 1",
+            $name, CART_LANGUAGE, $featureId
+        );
+
+        if ($variantId <= 0) {
+            // Create new variant — same name for both EN and RO (geographic names are the same)
+            $variantId = $this->createVariant($featureId, $name, $name);
+        }
+
+        if ($variantId > 0) {
+            $this->locationVariantCache[$cacheKey] = $variantId;
+        }
+
+        return $variantId;
     }
 
     // --- Private helpers ---

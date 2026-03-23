@@ -81,6 +81,16 @@ class ConfigProvider
         return (int) self::getSetting('packages_category_id', 0);
     }
 
+    public static function getCircuitsCategoryId(): int
+    {
+        return (int) self::getSetting('circuits_category_id', 0);
+    }
+
+    public static function getExperiencesCategoryId(): int
+    {
+        return (int) self::getSetting('experiences_category_id', 0);
+    }
+
     public static function getMaxRetries(): int
     {
         return max(0, (int) self::getSetting('api_max_retries', 3));
@@ -114,17 +124,6 @@ class ConfigProvider
     public static function getCronAccessKey(): string
     {
         return (string) self::getSetting('cron_access_key');
-    }
-
-    /**
-     * Get the category path template for product creation.
-     *
-     * Supports placeholders: {country}, {region}, {city}
-     * Default: "Hotels/{country}/{region}/{city}"
-     */
-    public static function getProductCategoryTemplate(): string
-    {
-        return (string) self::getSetting('product_category_template', 'Hotels/{country}/{region}/{city}');
     }
 
     /**
@@ -295,6 +294,40 @@ class ConfigProvider
                 }
             }
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SEO TEMPLATES
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static function getSeoProductName(): string
+    {
+        return (string) self::getSetting('seo_product_name', '{{name}}');
+    }
+
+    public static function getSeoPageTitle(): string
+    {
+        return (string) self::getSetting('seo_page_title', '{{name}} {{classification}}* - {{city}}, {{country}}');
+    }
+
+    public static function getSeoMetaDescription(): string
+    {
+        return (string) self::getSetting('seo_meta_description', 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}. View rates and availability.');
+    }
+
+    public static function getSeoMetaKeywords(): string
+    {
+        return (string) self::getSetting('seo_meta_keywords', '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star');
+    }
+
+    public static function getSeoNameSlug(): string
+    {
+        return (string) self::getSetting('seo_name_slug', '{{name}}-{{city}}-{{country}}');
+    }
+
+    public static function getSeoFullDescription(): string
+    {
+        return (string) self::getSetting('seo_full_description', '');
     }
 
     private static function getSetting(string $key, mixed $default = ''): mixed

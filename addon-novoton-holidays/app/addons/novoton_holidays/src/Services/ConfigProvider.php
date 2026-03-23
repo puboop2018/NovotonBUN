@@ -421,4 +421,36 @@ class ConfigProvider
     {
         return (int) (Registry::get('runtime.company_id') ?: 1);
     }
+
+    // ── SEO Templates ──
+
+    public static function getSeoProductName(): string
+    {
+        return (string) (self::settings()['seo_product_name'] ?? '{{name}}');
+    }
+
+    public static function getSeoPageTitle(): string
+    {
+        return (string) (self::settings()['seo_page_title'] ?? '{{name}} - {{city}}, {{country}} {{year}}');
+    }
+
+    public static function getSeoMetaDescription(): string
+    {
+        return (string) (self::settings()['seo_meta_description'] ?? 'Rezervă cazare la {{name}} în {{city}}, {{country}}. Hotel de {{star_rating}} stele cu {{facilities}}. Vezi tarife și disponibilitate.');
+    }
+
+    public static function getSeoMetaKeywords(): string
+    {
+        return (string) (self::settings()['seo_meta_keywords'] ?? '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} stele');
+    }
+
+    public static function getSeoNameSlug(): string
+    {
+        return (string) (self::settings()['seo_name_slug'] ?? '{{name}}-{{city}}-{{country}}');
+    }
+
+    public static function getSeoFullDescription(): string
+    {
+        return (string) (self::settings()['seo_full_description'] ?? '');
+    }
 }

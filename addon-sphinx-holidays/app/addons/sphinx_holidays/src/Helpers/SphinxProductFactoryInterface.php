@@ -11,23 +11,21 @@ interface SphinxProductFactoryInterface
     /**
      * Create a CS-Cart product from a Sphinx hotel row.
      *
-     * Handles dedup check, category creation, product creation,
-     * multi-language descriptions, feature assignment, and hotel linking.
+     * Category structure: Root Category (from settings) → Country (dynamic).
+     * Region and City are assigned as product features, not categories.
      *
-     * @param array  $hotel     Hotel row from sphinx_hotels
-     * @param array  $hierarchy Resolved hierarchy: ['city' => ..., 'region' => ..., 'country' => ...]
-     * @param string $template  Category path template with {country}/{region}/{city} placeholders
+     * @param array $hotel     Hotel row from sphinx_hotels
+     * @param array $hierarchy Resolved hierarchy: ['city' => ..., 'region' => ..., 'country' => ...]
      * @return array{status: string, product_id: int, reason: string} Status is 'added', 'linked', 'skipped', or 'failed'
      */
-    public function createFromHotel(array $hotel, array $hierarchy, string $template): array;
+    public function createFromHotel(array $hotel, array $hierarchy): array;
 
     /**
-     * Build a category path from hotel data and hierarchy.
+     * Resolve the country name from hotel data and hierarchy.
      *
-     * @param array  $hotel     Hotel row
-     * @param array  $hierarchy Resolved hierarchy
-     * @param string $template  Category path template
-     * @return string Resolved category path (e.g. "Hotels/Greece/Crete/Heraklion")
+     * @param array $hotel     Hotel row
+     * @param array $hierarchy Resolved hierarchy
+     * @return string Country name, or empty string if unresolvable
      */
-    public function buildCategoryPath(array $hotel, array $hierarchy, string $template): string;
+    public function resolveCountryName(array $hotel, array $hierarchy): string;
 }

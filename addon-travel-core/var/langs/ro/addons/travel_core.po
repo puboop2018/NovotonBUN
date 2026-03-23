@@ -60,6 +60,22 @@ msgctxt "SettingsTooltips::travel_core::feature_id_location"
 msgid "Product feature ID used for location/destination"
 msgstr "ID-ul caracteristicii de produs folosit pentru locație/destinație"
 
+msgctxt "SettingsOptions::travel_core::feature_id_region"
+msgid "CS-Cart Feature ID: Region"
+msgstr "ID Caracteristică CS-Cart: Regiune"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_region"
+msgid "Product feature ID for region filter (e.g. Antalya, Transilvania). Variants are created automatically."
+msgstr "ID caracteristică produs pentru filtru regiune (ex. Antalya, Transilvania). Variantele se creează automat."
+
+msgctxt "SettingsOptions::travel_core::feature_id_city"
+msgid "CS-Cart Feature ID: City"
+msgstr "ID Caracteristică CS-Cart: Oraș"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_city"
+msgid "Product feature ID for city filter (e.g. Lara, Brașov). Variants are created automatically."
+msgstr "ID caracteristică produs pentru filtru oraș (ex. Lara, Brașov). Variantele se creează automat."
+
 msgctxt "SettingsOptions::travel_core::providers_header"
 msgid "Active Providers"
 msgstr "Furnizori Activi"
