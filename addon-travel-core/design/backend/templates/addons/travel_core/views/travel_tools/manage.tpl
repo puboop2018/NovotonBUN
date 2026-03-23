@@ -42,7 +42,7 @@
                         </form>
                         {if $job.url}
                         <a href="{$job.url}" target="_blank" class="btn btn-small" style="margin-top: 4px;" title="{__("travel_core.tools_open_cron_url")}">
-                            <i class="icon-external-link"></i>
+                            <i class="icon-external-link"></i> {__("travel_core.tools_open_cron_url")}
                         </a>
                         {/if}
                     </td>

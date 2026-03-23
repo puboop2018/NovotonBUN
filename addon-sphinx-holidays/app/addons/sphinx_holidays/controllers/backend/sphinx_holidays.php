@@ -19,8 +19,6 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -40,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @set_time_limit(0);
 
         $api = Container::getApi();
-        $repository = new DestinationRepository();
+        $repository = Container::getDestinationRepository();
         $service = new DestinationSyncService($api, $repository);
 
         $result = $service->sync();
@@ -63,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @set_time_limit(0);
 
         $api = Container::getApi();
-        $hotelRepo = new HotelRepository();
-        $destRepo = new DestinationRepository();
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
@@ -80,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'add_products') {
-        $hotelRepo = new HotelRepository();
+        $hotelRepo = Container::getHotelRepository();
         $unlinked = $hotelRepo->findUnlinked('', 1);
 
         if (empty($unlinked)) {
@@ -139,6 +137,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
+
+    if ($mode === 'bulk_update_hotels') {
+        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
+        $status = $_REQUEST['bulk_status'] ?? '';
+
+        if (empty($hotelIds) || !is_array($hotelIds)) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+        }
+
+        $hotelRepo = Container::getHotelRepository();
+        $affected = $hotelRepo->bulkUpdateStatus($hotelIds, $status);
+        fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_updated') . ': ' . $affected);
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+    }
+
+    if ($mode === 'bulk_delete_hotels') {
+        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
+
+        if (empty($hotelIds) || !is_array($hotelIds)) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+        }
+
+        $hotelRepo = Container::getHotelRepository();
+        $affected = $hotelRepo->bulkDelete($hotelIds);
+        fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_deleted') . ': ' . $affected);
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+    }
+
+    if ($mode === 'bulk_sync_images') {
+        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
+
+        if (empty($hotelIds) || !is_array($hotelIds)) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+        }
+
+        @set_time_limit(0);
+
+        $hotelRepo = Container::getHotelRepository();
+        $synced = 0;
+
+        foreach ($hotelIds as $hotelId) {
+            $hotel = $hotelRepo->getById((string) $hotelId);
+            if ($hotel === null || empty($hotel['product_id']) || empty($hotel['image_url'])) {
+                continue;
+            }
+            if (fn_sphinx_holidays_add_product_image((int) $hotel['product_id'], $hotel['image_url'])) {
+                $synced++;
+            }
+        }
+
+        fn_set_notification('N', __('notice'), __('sphinx_holidays.images_synced') . ': ' . $synced);
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+    }
 }
 
 // ─── AJAX JSON handlers ───
@@ -150,7 +207,7 @@ if ($mode === 'get_regions') {
         echo json_encode(['regions' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $regions = $destRepo->getRegionsByCountry($country_code);
     echo json_encode(['regions' => $regions]);
     exit;
@@ -163,7 +220,7 @@ if ($mode === 'get_cities') {
         echo json_encode(['cities' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $cities = $destRepo->getCitiesByParent($region_id);
     echo json_encode(['cities' => $cities]);
     exit;
@@ -176,7 +233,7 @@ if ($mode === 'get_destinations_tree') {
         echo json_encode(['tree' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $regions = $destRepo->getRegionsByCountry($country_code);
     $tree = [];
     foreach ($regions as $region) {
@@ -217,7 +274,7 @@ if ($mode === 'search_destinations') {
         echo json_encode(['results' => []]);
         exit;
     }
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $results = $destRepo->search($q, 30);
     $formatted = [];
     foreach ($results as $r) {
@@ -236,8 +293,8 @@ if ($mode === 'search_destinations') {
 // ─── GET handlers ───
 
 if ($mode === 'manage') {
-    $destRepo = new DestinationRepository();
-    $hotelRepo = new HotelRepository();
+    $destRepo = Container::getDestinationRepository();
+    $hotelRepo = Container::getHotelRepository();
 
     // Destination stats
     $countsByType = $destRepo->getCountsByType();
@@ -289,13 +346,12 @@ if ($mode === 'manage') {
         'cleanup'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
         'discover_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=discover_boards",
         'assign_boards'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
-        'exchange_rates'  => $base_url . "index.php?dispatch=travel_cron.run&access_key=" . \Tygh\Registry::get('addons.travel_core.cron_access_key') . "&cron_mode=exchange_rates",
     ];
     Tygh::$app['view']->assign('cron_urls', $cron_urls);
     Tygh::$app['view']->assign('cron_key', $cron_key);
 
 } elseif ($mode === 'destinations') {
-    $repository = new DestinationRepository();
+    $repository = Container::getDestinationRepository();
 
     $params = [
         'type'      => $_REQUEST['type'] ?? '',
@@ -319,38 +375,37 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('total_items', $total);
 
 } elseif ($mode === 'hotels') {
-    $hotelRepo = new HotelRepository();
+    [$hotels, $search] = fn_sphinx_holidays_get_hotels($_REQUEST);
 
-    $params = [
-        'country_code'   => $_REQUEST['country_code'] ?? '',
-        'destination_id' => (int) ($_REQUEST['destination_id'] ?? 0),
-        'region_id'      => (int) ($_REQUEST['region_id'] ?? 0),
-        'sync_status'    => $_REQUEST['sync_status'] ?? '',
-        'q'              => $_REQUEST['q'] ?? '',
-        'page'           => max(1, (int) ($_REQUEST['page'] ?? 1)),
-        'items_per_page' => (int) ($_REQUEST['items_per_page'] ?? 50),
-    ];
-
-    $result = $hotelRepo->getFiltered(
-        $params['country_code'],
-        $params['destination_id'],
-        $params['region_id'],
-        $params['sync_status'],
-        $params['q'],
-        $params['page'],
-        $params['items_per_page']
-    );
-
-    // Get distinct countries for filter dropdown
+    $hotelRepo = Container::getHotelRepository();
     $distinctCountries = $hotelRepo->getDistinctCountries();
+    $distinctClassifications = $hotelRepo->getDistinctClassifications();
+    $distinctPropertyTypes = $hotelRepo->getDistinctPropertyTypes();
 
-    Tygh::$app['view']->assign('hotels', $result['items']);
-    Tygh::$app['view']->assign('search', $params);
-    Tygh::$app['view']->assign('total_items', $result['total']);
+    // Build sort URL base preserving all current filter params (safe URL encoding)
+    $sortFilterParams = array_filter([
+        'country_code'   => $search['country_code'],
+        'region_id'      => $search['region_id'] ?: null,
+        'destination_id' => $search['destination_id'] ?: null,
+        'sync_status'    => $search['sync_status'],
+        'classification' => $search['classification'],
+        'property_type'  => $search['property_type'],
+        'link_status'    => $search['link_status'],
+        'q'              => $search['q'],
+        'items_per_page' => $search['items_per_page'],
+    ], static fn($v) => $v !== '' && $v !== null);
+    $sortUrlBase = 'sphinx_holidays.hotels?' . http_build_query($sortFilterParams);
+
+    Tygh::$app['view']->assign('hotels', $hotels);
+    Tygh::$app['view']->assign('search', $search);
+    Tygh::$app['view']->assign('total_items', $search['total_items']);
+    Tygh::$app['view']->assign('sort_url_base', $sortUrlBase);
     Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
+    Tygh::$app['view']->assign('distinct_classifications', $distinctClassifications);
+    Tygh::$app['view']->assign('distinct_property_types', $distinctPropertyTypes);
 
 } elseif ($mode === 'whitelist') {
-    $destRepo = new DestinationRepository();
+    $destRepo = Container::getDestinationRepository();
     $countsByType = $destRepo->getCountsByType();
     $totalDestinations = $destRepo->getTotal();
 

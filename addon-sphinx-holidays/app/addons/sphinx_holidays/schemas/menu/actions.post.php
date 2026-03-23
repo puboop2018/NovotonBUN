@@ -31,6 +31,11 @@ $tabs = [
         'text'     => __('sphinx_holidays.destination_whitelist'),
         'position' => 200,
     ],
+    'sphinx_settings' => [
+        'href'     => 'addons.update&addon=sphinx_holidays&selected_section=settings',
+        'text'     => __('sphinx_holidays.addon_settings'),
+        'position' => 900,
+    ],
 ];
 
 // Apply same tabs to all pages (DRY)

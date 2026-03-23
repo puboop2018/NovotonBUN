@@ -8,106 +8,153 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory;
+use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactoryInterface;
 
 /**
  * Sphinx Holidays dependency injection container.
  *
  * Lazily instantiates and caches service instances.
+ * Supports factory overrides for testing via override().
+ *
+ * Usage:
+ *   $destRepo = Container::getDestinationRepository();
+ *   $factory  = Container::getProductFactory();
  */
 class Container
 {
-    private static ?SphinxHttpClient $httpClient = null;
-    private static ?SphinxApi $api = null;
-    private static ?SphinxNormalizer $normalizer = null;
-    private static ?SphinxFeatureAssigner $featureAssigner = null;
+    /** @var array<string, object> Resolved singleton instances */
+    private static array $instances = [];
+
+    /** @var array<string, callable> Factory overrides for testing */
+    private static array $overrides = [];
+
+    // ── Resolve helper ──
+
+    /**
+     * Resolve a service by ID, using override factory if registered.
+     *
+     * @param string   $id      Service identifier
+     * @param callable $factory Default factory returning the instance
+     * @return object
+     */
+    private static function resolve(string $id, callable $factory): object
+    {
+        if (isset(self::$overrides[$id])) {
+            return self::$instances[$id] ??= (self::$overrides[$id])();
+        }
+
+        return self::$instances[$id] ??= $factory();
+    }
+
+    /**
+     * Override a factory for testing.
+     *
+     * @param string   $id      Service identifier (e.g. 'destinationRepository')
+     * @param callable $factory Factory returning the mock/stub
+     */
+    public static function override(string $id, callable $factory): void
+    {
+        self::$overrides[$id] = $factory;
+        unset(self::$instances[$id]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // API / INFRASTRUCTURE
+    // ═══════════════════════════════════════════════════════════════════
 
     public static function getHttpClient(): SphinxHttpClient
     {
-        if (self::$httpClient === null) {
-            self::$httpClient = new SphinxHttpClient(
-                ConfigProvider::getApiBaseUrl(),
-                ConfigProvider::getApiKey(),
-                ConfigProvider::getMaxRetries(),
-                ConfigProvider::getRetryDelayMs(),
-                ConfigProvider::getRetryMultiplier(),
-                ConfigProvider::getCircuitBreakerThreshold(),
-                ConfigProvider::getCircuitBreakerTimeout(),
-                ConfigProvider::isDebugLogging()
-            );
-        }
-
-        return self::$httpClient;
+        /** @var SphinxHttpClient */
+        return self::resolve('httpClient', static fn() => new SphinxHttpClient(
+            ConfigProvider::getApiBaseUrl(),
+            ConfigProvider::getApiKey(),
+            ConfigProvider::getMaxRetries(),
+            ConfigProvider::getRetryDelayMs(),
+            ConfigProvider::getRetryMultiplier(),
+            ConfigProvider::getCircuitBreakerThreshold(),
+            ConfigProvider::getCircuitBreakerTimeout(),
+            ConfigProvider::isDebugLogging()
+        ));
     }
 
     public static function getApi(): SphinxApi
     {
-        if (self::$api === null) {
-            self::$api = new SphinxApi(self::getHttpClient());
-        }
-
-        return self::$api;
+        /** @var SphinxApi */
+        return self::resolve('api', static fn() => new SphinxApi(self::getHttpClient()));
     }
 
     public static function getNormalizer(): SphinxNormalizer
     {
-        if (self::$normalizer === null) {
-            self::$normalizer = new SphinxNormalizer();
-        }
-
-        return self::$normalizer;
+        /** @var SphinxNormalizer */
+        return self::resolve('normalizer', static fn() => new SphinxNormalizer());
     }
 
     public static function getFeatureAssigner(): SphinxFeatureAssigner
     {
-        if (self::$featureAssigner === null) {
-            self::$featureAssigner = new SphinxFeatureAssigner(self::getNormalizer());
-        }
-
-        return self::$featureAssigner;
+        /** @var SphinxFeatureAssigner */
+        return self::resolve('featureAssigner', static fn() => new SphinxFeatureAssigner(self::getNormalizer()));
     }
 
-    private static ?SphinxBookingRepository $bookingRepo = null;
-    private static ?SecurityService $securityService = null;
-    private static ?PreOrderPriceVerifier $preOrderPriceVerifier = null;
+    // ═══════════════════════════════════════════════════════════════════
+    // REPOSITORIES
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static function getDestinationRepository(): DestinationRepository
+    {
+        /** @var DestinationRepository */
+        return self::resolve('destinationRepository', static fn() => new DestinationRepository());
+    }
+
+    public static function getHotelRepository(): HotelRepository
+    {
+        /** @var HotelRepository */
+        return self::resolve('hotelRepository', static fn() => new HotelRepository());
+    }
 
     public static function getBookingRepository(): SphinxBookingRepository
     {
-        if (self::$bookingRepo === null) {
-            self::$bookingRepo = new SphinxBookingRepository();
-        }
+        /** @var SphinxBookingRepository */
+        return self::resolve('bookingRepository', static fn() => new SphinxBookingRepository());
+    }
 
-        return self::$bookingRepo;
+    // ═══════════════════════════════════════════════════════════════════
+    // SERVICES / HELPERS
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static function getProductFactory(): SphinxProductFactoryInterface
+    {
+        /** @var SphinxProductFactoryInterface */
+        return self::resolve('productFactory', static fn() => new SphinxProductFactory(
+            self::getHotelRepository(),
+            self::getFeatureAssigner()
+        ));
     }
 
     public static function getSecurityService(): SecurityService
     {
-        if (self::$securityService === null) {
-            self::$securityService = new SecurityService();
-        }
-
-        return self::$securityService;
+        /** @var SecurityService */
+        return self::resolve('securityService', static fn() => new SecurityService());
     }
 
     public static function getPreOrderPriceVerifier(): PreOrderPriceVerifier
     {
-        if (self::$preOrderPriceVerifier === null) {
-            self::$preOrderPriceVerifier = new PreOrderPriceVerifier();
-        }
-
-        return self::$preOrderPriceVerifier;
+        /** @var PreOrderPriceVerifier */
+        return self::resolve('preOrderPriceVerifier', static fn() => new PreOrderPriceVerifier());
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LIFECYCLE
+    // ═══════════════════════════════════════════════════════════════════
 
     /**
      * Reset all cached instances (for testing).
      */
     public static function reset(): void
     {
-        self::$httpClient = null;
-        self::$api = null;
-        self::$normalizer = null;
-        self::$featureAssigner = null;
-        self::$bookingRepo = null;
-        self::$securityService = null;
-        self::$preOrderPriceVerifier = null;
+        self::$instances = [];
+        self::$overrides = [];
     }
 }

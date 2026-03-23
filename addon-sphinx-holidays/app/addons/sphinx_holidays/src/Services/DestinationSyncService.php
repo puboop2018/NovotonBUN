@@ -60,6 +60,7 @@ class DestinationSyncService extends AbstractSyncService
 
         $page = 1;
         $skipped = 0;
+        $skippedDetails = [];
         $debuggedKeys = false;
 
         // Stream-and-upsert: fetch each page and upsert immediately
@@ -104,7 +105,13 @@ class DestinationSyncService extends AbstractSyncService
                     $rawId = $item['id'] ?? $item['destination_id'] ?? '?';
                     $rawName = $item['name'] ?? $item['title'] ?? $item['label'] ?? '(none)';
                     $rawType = $item['type'] ?? $item['destination_type'] ?? '?';
-                    $this->output("  SKIP #{$skipped}: id={$rawId}, name=\"{$rawName}\", type={$rawType}");
+                    $rawParent = $item['parent_id'] ?? $item['parent'] ?? '?';
+                    $reason = ((int)($item['id'] ?? $item['destination_id'] ?? 0)) <= 0
+                        ? 'invalid ID (0 or negative)'
+                        : 'empty name';
+                    $detail = "id={$rawId}, name=\"{$rawName}\", type={$rawType}, parent_id={$rawParent}, reason={$reason}";
+                    $skippedDetails[] = $detail;
+                    $this->output("  SKIP #{$skipped}: {$detail}");
                 }
             }
 
@@ -137,7 +144,13 @@ class DestinationSyncService extends AbstractSyncService
         }
 
         if ($skipped > 0) {
-            $this->output("{$skipped} destination(s) skipped (empty name or invalid ID).");
+            $this->output('');
+            $this->output("=== SKIPPED DESTINATIONS SUMMARY ({$skipped} total) ===");
+            foreach ($skippedDetails as $i => $detail) {
+                $this->output('  ' . ($i + 1) . '. ' . $detail);
+            }
+            $this->output('=== END SKIPPED SUMMARY ===');
+            $this->output('');
         }
         $this->output("Sync complete: {$stats['synced']}/{$stats['total']} destinations synced ({$stats['sync_mode']}).");
 

@@ -58,7 +58,7 @@ if ($mode === 'manage') {
             ? $base_url . "index.php?dispatch=travel_cron.run&access_key={$cron_key}&cron_mode=exchange_rates"
             : '',
         'schedule'    => __('travel_core.cron_schedule_daily'),
-        'cpanel'      => '0 6 * * *',
+        'cpanel'      => '5 13 * * *',
         'run_action'  => 'run_exchange_rates',
     ];
 

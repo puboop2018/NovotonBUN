@@ -10,6 +10,17 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
  */
 class DestinationRepository
 {
+    /** Destination types that map to the "city" level in the hierarchy. */
+    private const CITY_LEVEL_TYPES = ['city', 'destination', 'resort'];
+
+    /**
+     * Lightweight parent lookup cache: id → [name, type, parent_id].
+     * Loaded once via loadParentLookup(), reused across resolveHierarchies() calls.
+     *
+     * @var array<int, array{name: string, type: string, parent_id: int}>|null
+     */
+    private ?array $parentLookup = null;
+
     /**
      * Upsert a batch of destinations (INSERT ... ON DUPLICATE KEY UPDATE).
      *
@@ -257,29 +268,25 @@ class DestinationRepository
     }
 
     /**
-     * Build full_path breadcrumbs for all destinations by walking parent_id chains.
+     * Load destination rows in chunks, keyed by destination_id.
      *
-     * Generates paths like "Athens, Attica, Greece, Europe" for disambiguation.
-     * Called after destination sync completes.
+     * Generic chunk-loader for building in-memory lookups without loading
+     * all 200k+ rows in a single query. ~80 bytes/row × 200k ≈ 16 MB.
      *
-     * Processes in chunks to avoid loading 200k+ rows into memory at once.
-     * Only loads a lightweight parent lookup (id → name, parent_id) which is
-     * needed for the chain walk, but processes updates in bounded batches.
-     *
-     * @return int Number of paths updated
+     * @param array<string> $columns Columns to select (must include destination_id)
+     * @param callable      $mapper  fn(array $row): array — transforms each row into the stored value
+     * @return array<int, array> Keyed by destination_id
      */
-    public function buildFullPaths(): int
+    private function loadChunked(array $columns, callable $mapper): array
     {
-        // Build a lightweight parent lookup: id → [name, parent_id]
-        // At ~80 bytes per row × 200k rows ≈ 16 MB — acceptable for the chain walk.
-        // We avoid loading full rows (with full_path, country_code, etc.) to save memory.
-        $parentLookup = [];
+        $lookup = [];
         $chunkSize = 10000;
         $offset = 0;
+        $cols = implode(', ', $columns);
 
         while (true) {
             $chunk = db_get_array(
-                "SELECT destination_id, name, parent_id FROM ?:sphinx_destinations ORDER BY destination_id LIMIT ?i, ?i",
+                "SELECT {$cols} FROM ?:sphinx_destinations ORDER BY destination_id LIMIT ?i, ?i",
                 $offset,
                 $chunkSize
             );
@@ -289,10 +296,7 @@ class DestinationRepository
             }
 
             foreach ($chunk as $row) {
-                $parentLookup[(int) $row['destination_id']] = [
-                    'name'      => $row['name'],
-                    'parent_id' => (int) $row['parent_id'],
-                ];
+                $lookup[(int) $row['destination_id']] = $mapper($row);
             }
 
             if (count($chunk) < $chunkSize) {
@@ -300,6 +304,27 @@ class DestinationRepository
             }
             $offset += $chunkSize;
         }
+
+        return $lookup;
+    }
+
+    /**
+     * Build full_path breadcrumbs for all destinations by walking parent_id chains.
+     *
+     * Generates paths like "Athens, Attica, Greece, Europe" for disambiguation.
+     * Called after destination sync completes.
+     *
+     * @return int Number of paths updated
+     */
+    public function buildFullPaths(): int
+    {
+        $parentLookup = $this->loadChunked(
+            ['destination_id', 'name', 'parent_id'],
+            static fn(array $row): array => [
+                'name'      => $row['name'],
+                'parent_id' => (int) $row['parent_id'],
+            ]
+        );
 
         if (empty($parentLookup)) {
             return 0;
@@ -351,6 +376,82 @@ class DestinationRepository
              WHERE d.type = 'continent'
              ORDER BY d.name ASC"
         );
+    }
+
+    /**
+     * Load the full destination parent lookup into memory.
+     *
+     * Call once before processing batches; reused by resolveHierarchies().
+     *
+     * @return bool True if lookup has data, false if sphinx_destinations is empty
+     */
+    public function loadParentLookup(): bool
+    {
+        if ($this->parentLookup !== null) {
+            return !empty($this->parentLookup);
+        }
+
+        $this->parentLookup = $this->loadChunked(
+            ['destination_id', 'name', 'type', 'parent_id'],
+            static fn(array $row): array => [
+                'name'      => $row['name'],
+                'type'      => $row['type'],
+                'parent_id' => (int) $row['parent_id'],
+            ]
+        );
+
+        return !empty($this->parentLookup);
+    }
+
+    /**
+     * Resolve destination hierarchies for a set of destination IDs.
+     *
+     * Walks each destination's parent_id chain to extract city, region, and country names.
+     * Requires loadParentLookup() to have been called first.
+     *
+     * @param array<int> $destinationIds List of destination IDs to resolve
+     * @return array<int, array{city: string, region: string, country: string}> Keyed by destination_id
+     */
+    public function resolveHierarchies(array $destinationIds): array
+    {
+        if (empty($destinationIds) || empty($this->parentLookup)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($destinationIds as $destId) {
+            $destId = (int) $destId;
+            $hierarchy = ['city' => '', 'region' => '', 'country' => ''];
+
+            $currentId = $destId;
+            $visited = [];
+
+            // Walk up parent chain (max depth ~5: destination → city → region → country → continent)
+            while ($currentId > 0 && isset($this->parentLookup[$currentId]) && !isset($visited[$currentId])) {
+                $visited[$currentId] = true;
+                $node = $this->parentLookup[$currentId];
+                $type = $node['type'];
+
+                if (in_array($type, self::CITY_LEVEL_TYPES, true)) {
+                    // First city-level node wins (the hotel's own destination)
+                    if ($hierarchy['city'] === '') {
+                        $hierarchy['city'] = $node['name'];
+                    }
+                } elseif ($type === 'region') {
+                    if ($hierarchy['region'] === '') {
+                        $hierarchy['region'] = $node['name'];
+                    }
+                } elseif ($type === 'country') {
+                    $hierarchy['country'] = $node['name'];
+                }
+
+                $currentId = (int) $node['parent_id'];
+            }
+
+            $result[$destId] = $hierarchy;
+        }
+
+        return $result;
     }
 
     /**

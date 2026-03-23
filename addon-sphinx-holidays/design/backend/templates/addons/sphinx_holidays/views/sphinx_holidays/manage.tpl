@@ -191,13 +191,6 @@
                     <td><a href="{$cron_urls.order_status}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
-                    <td><strong>exchange_rates</strong></td>
-                    <td>Update BNR exchange rates (shared via Travel Core)</td>
-                    <td><code>5 13 * * *</code> (daily at 13:05)</td>
-                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.exchange_rates}</code></td>
-                    <td><a href="{$cron_urls.exchange_rates}" target="_blank" class="btn btn-mini">Run</a></td>
-                </tr>
-                <tr>
                     <td><strong>cache_refresh</strong></td>
                     <td>Refresh cached search results</td>
                     <td><code>*/30 * * * *</code> (every 30 min)</td>
