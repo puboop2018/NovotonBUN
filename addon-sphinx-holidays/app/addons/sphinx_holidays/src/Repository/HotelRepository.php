@@ -58,13 +58,13 @@ class HotelRepository
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      description, short_description, image_url,
-                     images_json, facilities_json,
+                     images_json, facilities_json, is_adults_only,
                      sync_status, last_synced_at)
                  VALUES (?s, ?s, ?i, ?s,
                      ?i, ?s, ?i, ?s,
                      ?s, ?s, ?d, ?d,
                      ?s, ?s, ?s,
-                     ?s, ?s,
+                     ?s, ?s, ?s,
                      'active', ?s)
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),
@@ -83,6 +83,7 @@ class HotelRepository
                     image_url = VALUES(image_url),
                     images_json = VALUES(images_json),
                     facilities_json = VALUES(facilities_json),
+                    is_adults_only = VALUES(is_adults_only),
                     sync_status = 'active',
                     last_synced_at = VALUES(last_synced_at),
                     product_skip_reason = IF(
@@ -118,6 +119,7 @@ class HotelRepository
                 (string) ($hotel['image_url'] ?? ''),
                 $hotel['images_json'] ?? '[]',
                 $hotel['facilities_json'] ?? '[]',
+                (string) ($hotel['is_adults_only'] ?? 'N'),
                 date('Y-m-d H:i:s')
             );
 

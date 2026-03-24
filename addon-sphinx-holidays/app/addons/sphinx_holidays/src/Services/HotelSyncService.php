@@ -338,6 +338,9 @@ class HotelSyncService extends AbstractSyncService
             $classification = 0;
         }
 
+        // Detect adults-only from hotel name (API doesn't provide a dedicated field)
+        $isAdultsOnly = preg_match('/\badults?\s*only\b/i', $name) ? 'Y' : 'N';
+
         return [
             'hotel_id'          => $id,
             'name'              => $name,
@@ -356,6 +359,7 @@ class HotelSyncService extends AbstractSyncService
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
+            'is_adults_only'    => $isAdultsOnly,
         ];
     }
 
