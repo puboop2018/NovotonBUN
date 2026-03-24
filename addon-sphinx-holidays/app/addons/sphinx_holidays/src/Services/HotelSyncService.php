@@ -339,7 +339,8 @@ class HotelSyncService extends AbstractSyncService
         }
 
         // Detect adults-only from hotel name (API doesn't provide a dedicated field)
-        $isAdultsOnly = preg_match('/\badults?\s*only\b/i', $name) ? 'Y' : 'N';
+        // Matches: "Adults Only", "Adult Only", "+18", "+16", "(18+)", "(16+)"
+        $isAdultsOnly = preg_match('/\badults?\s*only\b|\(\s*\+\s*1[68]\s*\)|\(\s*1[68]\s*\+\s*\)/i', $name) ? 'Y' : 'N';
 
         return [
             'hotel_id'          => $id,
