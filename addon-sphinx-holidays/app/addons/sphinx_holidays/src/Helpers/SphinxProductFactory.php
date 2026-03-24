@@ -100,20 +100,38 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
-        // Deduplicate: if another hotel with the same name AND same destination
-        // already has a product, link to it (same hotel, different API entry)
+        // Deduplicate: same hotel can appear under different destination_ids
+        // (e.g. dest 233 vs 3713 both = Antalya). Check by:
+        // 1) same name + same destination_id, OR
+        // 2) same name + same latitude/longitude (non-zero)
         $destId = (int) ($hotel['destination_id'] ?? 0);
-        $dupeProductId = (int) db_get_field(
-            "SELECT product_id FROM ?:sphinx_hotels
-             WHERE name = ?s AND destination_id = ?i
-               AND product_id IS NOT NULL AND product_id > 0
-               AND hotel_id != ?s
-             LIMIT 1",
-            $hotel['name'], $destId, $hotelId
-        );
+        $lat = (float) ($hotel['latitude'] ?? 0);
+        $lng = (float) ($hotel['longitude'] ?? 0);
+
+        $dupeConditions = "name = ?s AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s";
+        $dupeParams = [$hotel['name'], $hotelId];
+
+        if ($lat != 0.0 && $lng != 0.0) {
+            // Match by name + exact coordinates (most reliable for same physical hotel)
+            $dupeProductId = (int) db_get_field(
+                "SELECT product_id FROM ?:sphinx_hotels
+                 WHERE {$dupeConditions} AND latitude = ?d AND longitude = ?d
+                 LIMIT 1",
+                ...[...$dupeParams, $lat, $lng]
+            );
+        } else {
+            // No coordinates — fall back to name + destination_id
+            $dupeProductId = (int) db_get_field(
+                "SELECT product_id FROM ?:sphinx_hotels
+                 WHERE {$dupeConditions} AND destination_id = ?i
+                 LIMIT 1",
+                ...[...$dupeParams, $destId]
+            );
+        }
+
         if ($dupeProductId > 0) {
             $this->hotelRepo->linkToProduct($hotelId, $dupeProductId);
-            return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate name+destination'];
+            return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate hotel'];
         }
 
         // Build placeholder map for SEO templates
