@@ -100,24 +100,26 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
+        // Deduplicate: if another hotel with the same name AND same destination
+        // already has a product, link to it (same hotel, different API entry)
+        $destId = (int) ($hotel['destination_id'] ?? 0);
+        $dupeProductId = (int) db_get_field(
+            "SELECT product_id FROM ?:sphinx_hotels
+             WHERE name = ?s AND destination_id = ?i
+               AND product_id IS NOT NULL AND product_id > 0
+               AND hotel_id != ?s
+             LIMIT 1",
+            $hotel['name'], $destId, $hotelId
+        );
+        if ($dupeProductId > 0) {
+            $this->hotelRepo->linkToProduct($hotelId, $dupeProductId);
+            return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate name+destination'];
+        }
+
         // Build placeholder map for SEO templates
         $placeholders = self::buildPlaceholders($hotel, $hierarchy);
 
         $productName = fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders);
-
-        // Deduplicate: if a product with the same name exists in the same category, link to it
-        $dupeProductId = (int) db_get_field(
-            "SELECT p.product_id FROM ?:products p
-             JOIN ?:product_descriptions pd ON pd.product_id = p.product_id AND pd.lang_code = ?s
-             JOIN ?:products_categories pc ON pc.product_id = p.product_id AND pc.category_id = ?i
-             WHERE pd.product = ?s
-             LIMIT 1",
-            CART_LANGUAGE, $categoryId, $productName
-        );
-        if ($dupeProductId > 0) {
-            $this->hotelRepo->linkToProduct($hotelId, $dupeProductId);
-            return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate name'];
-        }
 
         // Resolve full description: use template if configured, otherwise raw API description
         $descTemplate = ConfigProvider::getSeoFullDescription();
