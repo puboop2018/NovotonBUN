@@ -165,6 +165,10 @@ function fn_travel_core_seed_feature_map(): void
         ['property_type', 'boarding_house', 'Boarding House', 'Pensiune'],
         ['property_type', 'cabin',          'Cabin',          'Cabană'],
 
+        // Travel group — target audience / travel style
+        ['travel_group', 'adults_only',     'Adults Only',      'Exclusiv pentru adulți'],
+        ['travel_group', 'family_friendly', 'Family Friendly',  'Potrivit pentru familii'],
+
         // Facilities — canonical codes shared across providers.
         // Each row can have its own cscart_feature_id (admin-assigned via UI).
         // Food & Drink

@@ -85,6 +85,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="feature_id_travel_group">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
                     <item id="providers_header">
                         <type>header</type>
                         <variants/>

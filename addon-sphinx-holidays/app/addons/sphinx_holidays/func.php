@@ -558,6 +558,12 @@ function fn_sphinx_holidays_seed_aliases(): void
 
     $seedAliasGroup('facility', $facilityAliases, 'exact');
 
+    // Travel group aliases — map is_adults_only values to canonical codes
+    $travelGroupAliases = [
+        'Y' => 'adults_only',
+    ];
+    $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
+
     // Clear resolve cache after batch alias inserts
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }

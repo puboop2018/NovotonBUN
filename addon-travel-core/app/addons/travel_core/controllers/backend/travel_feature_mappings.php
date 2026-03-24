@@ -21,7 +21,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility'];
+$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group'];
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

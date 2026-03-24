@@ -33,6 +33,7 @@ class SphinxFeatureAssigner
         'board'         => 'feature_id_meals',
         'region'        => 'feature_id_region',
         'city'          => 'feature_id_city',
+        'travel_group'  => 'feature_id_travel_group',
     ];
 
     /** @var array<string, int> featureId:variantName → variant_id cache */
@@ -55,6 +56,7 @@ class SphinxFeatureAssigner
         $this->assignBoards($productId, $hotel);
         $this->assignRegion($productId, $hotel);
         $this->assignCity($productId, $hotel);
+        $this->assignTravelGroup($productId, $hotel);
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -310,6 +312,37 @@ class SphinxFeatureAssigner
         }
 
         $variantId = $this->getOrCreateLocationVariant($featureId, $cityName);
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Assign travel group feature (e.g. "Adults Only") from is_adults_only flag.
+     *
+     * Uses S-type (Select Box) assignment since a hotel belongs to one travel group.
+     * The admin maps canonical code 'adults_only' → CS-Cart feature "Grup de călătorie"
+     * → variant "exclusiv pentru adulţi" via the Feature Mappings UI.
+     */
+    private function assignTravelGroup(int $productId, array $hotel): void
+    {
+        $isAdultsOnly = ($hotel['is_adults_only'] ?? 'N');
+        if ($isAdultsOnly !== 'Y') {
+            return;
+        }
+
+        $featureId = $this->getFeatureId('travel_group');
+        if (!$featureId) {
+            return;
+        }
+
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', 'Y');
+        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
+
+        if ($variantId <= 0 && $mapping) {
+            $variantId = $this->autoCreateVariant($featureId, $mapping);
+        }
+
         if ($variantId > 0) {
             $this->assignSelectBoxValue($productId, $featureId, $variantId);
         }
