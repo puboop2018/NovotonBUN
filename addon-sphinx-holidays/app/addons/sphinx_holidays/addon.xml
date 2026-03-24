@@ -665,6 +665,12 @@
         <item lang="ro" id="sphinx_holidays.active"><![CDATA[Activ]]></item>
         <item lang="en" id="sphinx_holidays.inactive"><![CDATA[Inactive]]></item>
         <item lang="ro" id="sphinx_holidays.inactive"><![CDATA[Inactiv]]></item>
+        <item lang="en" id="sphinx_holidays.active_hint"><![CDATA[Hotel is present in the latest API sync and available for booking]]></item>
+        <item lang="ro" id="sphinx_holidays.active_hint"><![CDATA[Hotelul este prezent în ultima sincronizare API și disponibil pentru rezervări]]></item>
+        <item lang="en" id="sphinx_holidays.inactive_hint"><![CDATA[Hotel was not found in the latest API sync — no longer available from the provider]]></item>
+        <item lang="ro" id="sphinx_holidays.inactive_hint"><![CDATA[Hotelul nu a fost găsit în ultima sincronizare API — nu mai este disponibil de la furnizor]]></item>
+        <item lang="en" id="sphinx_holidays.error_hint"><![CDATA[Hotel encountered an error during sync]]></item>
+        <item lang="ro" id="sphinx_holidays.error_hint"><![CDATA[Hotelul a întâmpinat o eroare în timpul sincronizării]]></item>
         <item lang="en" id="sphinx_holidays.all_statuses"><![CDATA[All statuses]]></item>
         <item lang="ro" id="sphinx_holidays.all_statuses"><![CDATA[Toate stările]]></item>
         <item lang="en" id="sphinx_holidays.search_hotels"><![CDATA[Search hotels]]></item>

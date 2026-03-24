@@ -324,7 +324,7 @@ class HotelSyncService extends AbstractSyncService
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? '');
+        $name = html_entity_decode((string) ($raw['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         if ($name === '') {
             return null;
         }
@@ -355,8 +355,8 @@ class HotelSyncService extends AbstractSyncService
             'country_name'      => (string) ($raw['country_name'] ?? ''),
             'latitude'          => (float) ($raw['latitude'] ?? 0),
             'longitude'         => (float) ($raw['longitude'] ?? 0),
-            'description'       => (string) ($raw['description'] ?? ''),
-            'short_description' => (string) ($raw['short_description'] ?? ''),
+            'description'       => html_entity_decode((string) ($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'short_description' => html_entity_decode((string) ($raw['short_description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
