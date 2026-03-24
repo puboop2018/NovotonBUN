@@ -317,26 +317,29 @@ class SphinxFeatureAssigner
         }
     }
 
+    /** Facility canonical codes that indicate a family-friendly hotel */
+    private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting'];
+
     /**
-     * Assign travel group feature (e.g. "Adults Only") from is_adults_only flag.
+     * Assign travel group feature: "Adults Only" or "Family Friendly".
      *
-     * Uses S-type (Select Box) assignment since a hotel belongs to one travel group.
-     * The admin maps canonical code 'adults_only' → CS-Cart feature "Grup de călătorie"
-     * → variant "exclusiv pentru adulţi" via the Feature Mappings UI.
+     * Priority: adults_only wins (explicit flag). Otherwise, if the hotel has
+     * family-oriented facilities (family_rooms, kids_menu, babysitting) it is
+     * inferred as family_friendly. Uses S-type (Select Box) — one value per product.
      */
     private function assignTravelGroup(int $productId, array $hotel): void
     {
-        $isAdultsOnly = ($hotel['is_adults_only'] ?? 'N');
-        if ($isAdultsOnly !== 'Y') {
-            return;
-        }
-
         $featureId = $this->getFeatureId('travel_group');
         if (!$featureId) {
             return;
         }
 
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', 'Y');
+        $groupCode = $this->detectTravelGroup($hotel);
+        if ($groupCode === null) {
+            return;
+        }
+
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', $groupCode);
         $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
 
         if ($variantId <= 0 && $mapping) {
@@ -346,6 +349,57 @@ class SphinxFeatureAssigner
         if ($variantId > 0) {
             $this->assignSelectBoxValue($productId, $featureId, $variantId);
         }
+    }
+
+    /**
+     * Detect travel group from hotel data.
+     *
+     * @return string|null Alias key for FeatureMapper ('Y' = adults_only, 'family' = family_friendly)
+     */
+    private function detectTravelGroup(array $hotel): ?string
+    {
+        // Adults-only takes priority (explicit flag)
+        if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
+            return 'Y';
+        }
+
+        // Infer family-friendly from facilities
+        if ($this->hasFamilyFacilities($hotel)) {
+            return 'family';
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if the hotel has any family-oriented facilities in its facilities_json.
+     */
+    private function hasFamilyFacilities(array $hotel): bool
+    {
+        $facilitiesJson = $hotel['facilities_json'] ?? null;
+        if (empty($facilitiesJson)) {
+            return false;
+        }
+
+        $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
+        if (!is_array($facilities)) {
+            return false;
+        }
+
+        // Build a set of canonical codes present in this hotel's facilities
+        foreach ($facilities as $facility) {
+            $facilityId = (string) ($facility['id'] ?? '');
+            if ($facilityId === '') {
+                continue;
+            }
+
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            if ($mapping && in_array($mapping['canonical_code'] ?? '', self::FAMILY_FACILITY_CODES, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
