@@ -198,11 +198,8 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
-                </items>
-            </section>
 
-            <section id="seo_templates">
-                <items>
+                    <!-- SEO Templates -->
                     <item id="seo_templates_header">
                         <type>header</type>
                         <variants/>
@@ -213,12 +210,12 @@
                         <variants/>
                     </item>
                     <item id="seo_product_name">
-                        <type>textarea</type>
+                        <type>input</type>
                         <default_value>{{name}}</default_value>
                         <variants/>
                     </item>
                     <item id="seo_page_title">
-                        <type>textarea</type>
+                        <type>input</type>
                         <default_value>{{name}} {{classification}}* - {{city}}, {{country}}</default_value>
                         <variants/>
                     </item>
@@ -228,12 +225,12 @@
                         <variants/>
                     </item>
                     <item id="seo_meta_keywords">
-                        <type>textarea</type>
+                        <type>input</type>
                         <default_value>{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star</default_value>
                         <variants/>
                     </item>
                     <item id="seo_name_slug">
-                        <type>textarea</type>
+                        <type>input</type>
                         <default_value>{{name}}-{{city}}-{{country}}</default_value>
                         <variants/>
                     </item>
