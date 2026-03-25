@@ -64,10 +64,6 @@ msgctxt "SettingsOptions::sphinx_holidays::commission"
 msgid "Commission percentage"
 msgstr "Procentaj comision"
 
-msgctxt "SettingsOptions::sphinx_holidays::round_prices"
-msgid "Round prices to whole numbers"
-msgstr "Rotunjește prețurile la numere întregi"
-
 msgctxt "SettingsOptions::sphinx_holidays::product_header"
 msgid "Product Mapping"
 msgstr "Mapare Produse"

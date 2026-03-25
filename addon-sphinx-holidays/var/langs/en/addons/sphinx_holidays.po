@@ -64,10 +64,6 @@ msgctxt "SettingsOptions::sphinx_holidays::commission"
 msgid "Commission percentage"
 msgstr "Commission percentage"
 
-msgctxt "SettingsOptions::sphinx_holidays::round_prices"
-msgid "Round prices to whole numbers"
-msgstr "Round prices to whole numbers"
-
 msgctxt "SettingsOptions::sphinx_holidays::product_header"
 msgid "Product Mapping"
 msgstr "Product Mapping"

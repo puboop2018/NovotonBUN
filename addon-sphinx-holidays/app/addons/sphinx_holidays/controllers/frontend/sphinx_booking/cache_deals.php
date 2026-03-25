@@ -29,8 +29,7 @@ try {
 
     $api = Container::getApi();
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
-    $service = new CacheEndpointService($api, $commission, $roundPrices);
+    $service = new CacheEndpointService($api, $commission);
 
     $deals = ($type === 'packages')
         ? $service->getPackageDeals($filters)

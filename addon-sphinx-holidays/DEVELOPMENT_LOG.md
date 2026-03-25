@@ -344,7 +344,6 @@ curl "https://domain.com/index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=
 | `search_poll_interval` | input | 2 | Search polling interval (seconds) |
 | `search_max_polls` | input | 30 | Max polls before timeout |
 | `commission` | input | 0 | Commission percentage |
-| `round_prices` | checkbox | N | Round prices to whole numbers |
 | `hotels_category_id` | input | 0 | CS-Cart category for hotels |
 | `packages_category_id` | input | 0 | CS-Cart category for packages |
 | `api_max_retries` | input | 3 | API failure retry count |

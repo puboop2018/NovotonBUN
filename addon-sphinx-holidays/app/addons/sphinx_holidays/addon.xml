@@ -109,11 +109,6 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
-                    <item id="round_prices">
-                        <type>checkbox</type>
-                        <default_value>N</default_value>
-                        <variants/>
-                    </item>
 
                     <!-- Product Mapping Header -->
                     <item id="product_header">
@@ -557,9 +552,7 @@
         <item lang="ro" id="sphinx_holidays.pricing_header"><![CDATA[Prețuri]]></item>
         <item lang="en" id="sphinx_holidays.commission"><![CDATA[Commission percentage]]></item>
         <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
-        <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
-        <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
-        <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Creation & Mapping]]></item>
+<item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Creation & Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Creare & Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
         <item lang="ro" id="sphinx_holidays.hotels_category_id"><![CDATA[ID categorie CS-Cart pentru hoteluri Sphinx]]></item>
