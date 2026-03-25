@@ -99,11 +99,6 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
-                    <item id="round_prices">
-                        <type>checkbox</type>
-                        <default_value>Y</default_value>
-                        <variants/>
-                    </item>
                     <item id="api_currency">
                         <type>selectbox</type>
                         <default_value>EUR</default_value>
