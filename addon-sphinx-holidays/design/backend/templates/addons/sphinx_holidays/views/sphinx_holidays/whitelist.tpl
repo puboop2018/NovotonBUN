@@ -304,22 +304,41 @@
             }
             var regionChecked = isAll || selectedChildren.has(regionId) ? ' checked' : '';
 
+            // Auto-expand regions that have selected cities
+            var shouldExpand = isAll;
+            if (!shouldExpand && region.children.length > 0) {
+                shouldExpand = region.children.some(function(c) {
+                    return selectedChildren.has(c.destination_id);
+                });
+            }
+
             // Region header
             html += '<div class="wl-region-block" style="margin-bottom:12px; width:100%;">';
             html += '<div style="display:flex; align-items:center; gap:6px; padding:4px 8px; background:#e8f4fd; border-left:3px solid #2196F3; border-radius:0 4px 4px 0; margin-bottom:4px;">';
+            // Toggle arrow for expanding/collapsing cities
+            if (region.children.length > 0) {
+                html += '<span id="wl_arrow_' + countryId + '_' + regionId + '" ' +
+                    'onclick="toggleRegionCities(' + countryId + ',' + regionId + ')" ' +
+                    'style="cursor:pointer; font-size:13px; font-weight:bold; width:18px; height:18px; line-height:18px; display:inline-block; text-align:center; user-select:none; color:#1565C0; background:#d0e8f7; border-radius:3px;">' +
+                    (shouldExpand ? '\u2212' : '+') + '</span>';
+            } else {
+                html += '<span style="width:14px; display:inline-block;"></span>';
+            }
             html += '<input type="checkbox" class="wl-child-cb wl-region-cb" value="' + regionId + '" ' +
                 'data-country="' + countryId + '" data-region-id="' + regionId + '"' + regionChecked +
                 ' onchange="onRegionToggle(this,' + countryId + ',' + regionId + ')" />';
             html += '<span style="font-weight:600; font-size:13px; color:#1565C0;">' + region.name + '</span>';
             html += '<span style="font-size:10px; padding:1px 6px; background:#2196F3; color:#fff; border-radius:3px; text-transform:uppercase;">Region</span>';
             if (region.children.length > 0) {
-                html += '<span style="font-size:11px; color:#888; margin-left:auto;">' + region.children.length + ' cities</span>';
+                html += '<span onclick="toggleRegionCities(' + countryId + ',' + regionId + ')" ' +
+                    'style="font-size:11px; color:#888; margin-left:auto; cursor:pointer;">' + region.children.length + ' cities</span>';
             }
             html += '</div>';
 
-            // Cities under this region
+            // Cities under this region (collapsed by default, auto-expanded if any selected)
             if (region.children.length > 0) {
-                html += '<div style="display:flex; flex-wrap:wrap; gap:3px 14px; padding-left:24px;">';
+                var displayStyle = shouldExpand ? 'flex' : 'none';
+                html += '<div id="wl_cities_' + countryId + '_' + regionId + '" style="display:' + displayStyle + '; flex-wrap:wrap; gap:3px 14px; padding-left:24px;">';
                 region.children.forEach(function(city) {
                     var cityChecked = isAll || selectedChildren.has(city.destination_id) ? ' checked' : '';
                     html += '<label style="display:inline-flex; align-items:center; gap:3px; min-width:160px; font-size:12px; color:#444; cursor:pointer;">' +
@@ -335,6 +354,21 @@
         });
         grid.innerHTML = html;
     }
+
+    // ─── Toggle region cities visibility ───
+
+    window.toggleRegionCities = function(countryId, regionId) {
+        var el = document.getElementById('wl_cities_' + countryId + '_' + regionId);
+        var arrow = document.getElementById('wl_arrow_' + countryId + '_' + regionId);
+        if (!el) return;
+        if (el.style.display === 'none') {
+            el.style.display = 'flex';
+            if (arrow) arrow.textContent = '\u2212';
+        } else {
+            el.style.display = 'none';
+            if (arrow) arrow.textContent = '+';
+        }
+    };
 
     // ─── Region toggle: select/deselect all cities in region ───
 
@@ -353,9 +387,13 @@
             region.children.forEach(function(city) {
                 state[countryId].children.add(city.destination_id);
             });
-            // Check all city checkboxes
+            // Check all city checkboxes and auto-expand
             var cityCbs = document.querySelectorAll('.wl-city-cb[data-region="' + regionId + '"]');
             cityCbs.forEach(function(c) { c.checked = true; });
+            var citiesDiv = document.getElementById('wl_cities_' + countryId + '_' + regionId);
+            var arrow = document.getElementById('wl_arrow_' + countryId + '_' + regionId);
+            if (citiesDiv) { citiesDiv.style.display = 'flex'; }
+            if (arrow) { arrow.textContent = '\u2212'; }
         } else {
             // Remove region + all its cities
             state[countryId].children.delete(regionId);
@@ -424,15 +462,26 @@
 
     window.onSelectAllChildren = function(cb, countryId) {
         var countryCb = document.querySelector('.wl-country-cb[value="' + countryId + '"]');
+        var grid = document.getElementById('wl_grid_' + countryId);
         if (cb.checked) {
             countryCb.checked = true;
             state[countryId] = { type: 'all', children: new Set() };
             var childCbs = document.querySelectorAll('.wl-child-cb[data-country="' + countryId + '"]');
             childCbs.forEach(function(c) { c.checked = true; });
+            // Expand all region cities
+            if (grid) {
+                grid.querySelectorAll('[id^="wl_cities_' + countryId + '_"]').forEach(function(d) { d.style.display = 'flex'; });
+                grid.querySelectorAll('[id^="wl_arrow_' + countryId + '_"]').forEach(function(a) { a.textContent = '\u2212'; });
+            }
         } else {
             state[countryId] = { type: 'specific', children: new Set() };
             var childCbs = document.querySelectorAll('.wl-child-cb[data-country="' + countryId + '"]');
             childCbs.forEach(function(c) { c.checked = false; });
+            // Collapse all region cities
+            if (grid) {
+                grid.querySelectorAll('[id^="wl_cities_' + countryId + '_"]').forEach(function(d) { d.style.display = 'none'; });
+                grid.querySelectorAll('[id^="wl_arrow_' + countryId + '_"]').forEach(function(a) { a.textContent = '+'; });
+            }
         }
         updateBadge(countryId);
         updateSummary();
