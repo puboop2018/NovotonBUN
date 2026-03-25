@@ -1040,6 +1040,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     $params['items_per_page'] = max(1, (int) $params['items_per_page']);
     $params['region_id'] = (int) $params['region_id'];
     $params['destination_id'] = (int) $params['destination_id'];
+    $params['q'] = trim((string) $params['q']);
 
     // Sortings map: allowed sort columns
     $sortings = [
