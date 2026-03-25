@@ -90,15 +90,6 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
-                    <item id="providers_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="active_providers">
-                        <type>input</type>
-                        <default_value>novoton</default_value>
-                        <variants/>
-                    </item>
                     <item id="currency_header">
                         <type>header</type>
                         <variants/>

@@ -84,18 +84,6 @@ msgctxt "SettingsTooltips::travel_core::feature_id_travel_group"
 msgid "Product feature ID for travel group type (e.g. Adults Only, Family Friendly). Mapped via Feature Mappings UI."
 msgstr "ID caracteristică produs pentru tipul grupului de călătorie (ex. Exclusiv pentru adulți, Potrivit pentru familii). Se configurează din Feature Mappings."
 
-msgctxt "SettingsOptions::travel_core::providers_header"
-msgid "Active Providers"
-msgstr "Furnizori Activi"
-
-msgctxt "SettingsOptions::travel_core::active_providers"
-msgid "Active providers (comma-separated)"
-msgstr "Furnizori activi (separați prin virgulă)"
-
-msgctxt "SettingsTooltips::travel_core::active_providers"
-msgid "Comma-separated list of active travel provider addon names (e.g. novoton,sphinx)"
-msgstr "Lista de furnizori activi, separați prin virgulă (ex. novoton,sphinx)"
-
 msgctxt "SettingsOptions::travel_core::currency_header"
 msgid "Currency"
 msgstr "Monedă"
