@@ -18,7 +18,7 @@ interface GuestDataNormalizerInterface
      * @param array|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
      * @return array Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
-    public function normalize($raw): array;
+    public function normalize(array|string $raw): array;
 
     /**
      * Decode a JSON string or pass through an array unchanged.
@@ -26,7 +26,7 @@ interface GuestDataNormalizerInterface
      * @param array|string $raw
      * @return array
      */
-    public function decode($raw): array;
+    public function decode(array|string $raw): array;
 
     /**
      * Encode canonical guest data to JSON for database storage.
@@ -36,7 +36,7 @@ interface GuestDataNormalizerInterface
      * @param array|string $data Guest data in any format
      * @return string JSON string in canonical keyed format
      */
-    public function toJson($data): string;
+    public function toJson(array|string $data): string;
 
     /**
      * Detect whether data is already in the canonical keyed format.
