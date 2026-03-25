@@ -205,7 +205,7 @@
                     {if $hotel.image_url}
                         <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; flex-shrink:0;" loading="lazy" />
                     {else}
-                        <div class="no-image" style="width:40px; height:40px;">
+                        <div class="no-image" style="width:40px; height:40px; flex-shrink:0; margin:0;">
                             <span class="cs-icon glyph-image" title="{__("no_image")}"></span>
                         </div>
                     {/if}
