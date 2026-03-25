@@ -21,7 +21,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility'];
+$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group'];
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -109,31 +109,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resolved = 0;
         $failed = 0;
 
+        // Group unmapped rows by cscart_feature_id for batch lookup
+        $byFeature = [];
         foreach ($unmapped as $mapping) {
-            $featureId = (int) $mapping['cscart_feature_id'];
-            $nameEn = trim($mapping['display_name_en'] ?? '');
-            $mapId = (int) $mapping['map_id'];
-
-            if ($featureId <= 0 || $nameEn === '') {
-                $failed++;
-                continue;
-            }
-
-            // Try name-match against existing CS-Cart variants
-            $variantId = db_get_field(
-                "SELECT v.variant_id
-                 FROM ?:product_feature_variants v
-                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = 'en' AND vd.variant = ?s
-                 LIMIT 1",
-                $featureId, $nameEn
-            );
-
-            if ($variantId) {
-                db_query("UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i", (int) $variantId, $mapId);
-                $resolved++;
+            $fid = (int) $mapping['cscart_feature_id'];
+            if ($fid > 0) {
+                $byFeature[$fid][] = $mapping;
             } else {
                 $failed++;
+            }
+        }
+
+        // Batch-load variant names per feature_id (N queries → F queries)
+        foreach ($byFeature as $featureId => $mappings) {
+            $variantNameToId = db_get_hash_single_array(
+                "SELECT vd.variant, v.variant_id
+                 FROM ?:product_feature_variants v
+                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
+                 WHERE v.feature_id = ?i AND vd.lang_code = 'en'",
+                ['variant', 'variant_id'],
+                $featureId
+            );
+
+            foreach ($mappings as $mapping) {
+                $nameEn = trim($mapping['display_name_en'] ?? '');
+                if ($nameEn === '') {
+                    $failed++;
+                    continue;
+                }
+
+                $variantId = $variantNameToId[$nameEn] ?? null;
+                if ($variantId) {
+                    db_query("UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
+                        (int) $variantId, (int) $mapping['map_id']);
+                    $resolved++;
+                } else {
+                    $failed++;
+                }
             }
         }
 
@@ -198,7 +210,8 @@ if ($mode == 'manage') {
 
     $where = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    $query = "SELECT m.*, COUNT(a.alias_id) as alias_count
+    $query = "SELECT m.*, COUNT(a.alias_id) as alias_count,
+                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
               FROM ?:travel_feature_map m
               LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
               {$where}
@@ -251,12 +264,18 @@ if ($mode == 'manage') {
         $grouped[$m['feature_type']][] = $m;
     }
 
-    // Stats
+    // Stats (consolidated into 2 queries instead of 4)
+    $mapStats = db_get_row(
+        "SELECT COUNT(*) AS total,
+                SUM(status = 'A') AS active,
+                SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
+         FROM ?:travel_feature_map"
+    );
     $stats = [
-        'total' => db_get_field("SELECT COUNT(*) FROM ?:travel_feature_map"),
-        'active' => db_get_field("SELECT COUNT(*) FROM ?:travel_feature_map WHERE status = 'A'"),
-        'unmapped' => db_get_field("SELECT COUNT(*) FROM ?:travel_feature_map WHERE cscart_variant_id IS NULL OR cscart_variant_id = 0"),
-        'aliases' => db_get_field("SELECT COUNT(*) FROM ?:travel_api_alias"),
+        'total'    => (int) ($mapStats['total'] ?? 0),
+        'active'   => (int) ($mapStats['active'] ?? 0),
+        'unmapped' => (int) ($mapStats['unmapped'] ?? 0),
+        'aliases'  => (int) db_get_field("SELECT COUNT(*) FROM ?:travel_api_alias"),
     ];
 
     Tygh::$app['view']->assign('mappings', $mappings);

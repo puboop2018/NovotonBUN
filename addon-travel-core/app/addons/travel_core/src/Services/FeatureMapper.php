@@ -131,6 +131,29 @@ class FeatureMapper
         self::$cache = [];
     }
 
+    /** Feature type → travel_core addon setting key */
+    private const FEATURE_SETTING_KEYS = [
+        'stars'         => 'feature_id_property_rating',
+        'property_type' => 'feature_id_property_type',
+        'resort'        => 'feature_id_location',
+        'board'         => 'feature_id_meals',
+        'region'        => 'feature_id_region',
+        'city'          => 'feature_id_city',
+        'travel_group'  => 'feature_id_travel_group',
+    ];
+
+    /**
+     * Get CS-Cart feature_id for a travel feature type from addon settings.
+     *
+     * @return int feature_id or 0 if not configured
+     */
+    public static function getFeatureId(string $featureType): int
+    {
+        $settingKey = self::FEATURE_SETTING_KEYS[$featureType]
+                      ?? ('feature_id_' . $featureType);
+        return (int) \Tygh\Registry::get('addons.travel_core.' . $settingKey);
+    }
+
     /**
      * Get all canonical codes for a feature type.
      *

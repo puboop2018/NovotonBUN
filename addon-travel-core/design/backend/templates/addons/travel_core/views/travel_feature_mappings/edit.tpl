@@ -192,7 +192,7 @@ function loadVariants(featureId) {
     }
 
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '{""|fn_url}' + '&dispatch=travel_feature_mappings.get_variants&feature_id=' + featureId, true);
+    xhr.open('GET', '{"travel_feature_mappings.get_variants"|fn_url}' + '&feature_id=' + featureId, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             var variants = JSON.parse(xhr.responseText);

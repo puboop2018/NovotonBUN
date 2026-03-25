@@ -201,10 +201,16 @@
 
             {* Name + thumbnail *}
             <td>
-                {$hotel.name|escape:html}
-                {if $hotel.image_url}
-                    <img src="{$hotel.image_url|escape:html}" alt="" style="height:20px; margin-left:5px; vertical-align:middle; border-radius:2px;" loading="lazy" />
-                {/if}
+                <div style="display:flex; align-items:center; gap:8px;">
+                    {if $hotel.image_url}
+                        <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; flex-shrink:0;" loading="lazy" />
+                    {else}
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#f0f0f0; border-radius:3px; flex-shrink:0;">
+                            <i class="icon-picture" style="color:#ccc;"></i>
+                        </span>
+                    {/if}
+                    <span>{$hotel.name|escape:html}</span>
+                </div>
             </td>
 
             {* Classification *}
@@ -242,11 +248,11 @@
             {* Status *}
             <td>
                 {if $hotel.sync_status == 'active'}
-                    <span class="label label-success">{__("sphinx_holidays.active")}</span>
+                    <span class="label label-success" title="{__("sphinx_holidays.active_hint")}">{__("sphinx_holidays.active")}</span>
                 {elseif $hotel.sync_status == 'inactive'}
-                    <span class="label label-warning">{__("sphinx_holidays.inactive")}</span>
+                    <span class="label label-warning" title="{__("sphinx_holidays.inactive_hint")}">{__("sphinx_holidays.inactive")}</span>
                 {else}
-                    <span class="label label-important">{__("error")}</span>
+                    <span class="label label-important" title="{__("sphinx_holidays.error_hint")}">{__("error")}</span>
                 {/if}
             </td>
 

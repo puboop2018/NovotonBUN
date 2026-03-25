@@ -76,6 +76,14 @@ msgctxt "SettingsTooltips::travel_core::feature_id_city"
 msgid "Product feature ID for city filter (e.g. Lara, Brașov). Variants are created automatically."
 msgstr "ID caracteristică produs pentru filtru oraș (ex. Lara, Brașov). Variantele se creează automat."
 
+msgctxt "SettingsOptions::travel_core::feature_id_travel_group"
+msgid "CS-Cart Feature ID: Travel Group"
+msgstr "ID Caracteristică CS-Cart: Grup de călătorie"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_travel_group"
+msgid "Product feature ID for travel group type (e.g. Adults Only, Family Friendly). Mapped via Feature Mappings UI."
+msgstr "ID caracteristică produs pentru tipul grupului de călătorie (ex. Exclusiv pentru adulți, Potrivit pentru familii). Se configurează din Feature Mappings."
+
 msgctxt "SettingsOptions::travel_core::providers_header"
 msgid "Active Providers"
 msgstr "Furnizori Activi"

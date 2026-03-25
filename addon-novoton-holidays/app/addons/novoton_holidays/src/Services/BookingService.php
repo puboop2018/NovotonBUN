@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -66,7 +65,7 @@ class BookingService implements BookingServiceInterface
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
-        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+        $this->debug = ConfigProvider::isDebugLogging();
     }
     
     /**

@@ -323,3 +323,54 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
 
     return $return_details ? $result : true;
 }
+
+/**
+ * Format exchange rate update result as plain-text output.
+ *
+ * Shared by cron.php and travel_cron controller to avoid duplicating
+ * the same formatting logic in multiple entry points.
+ *
+ * @param array $result Result array from fn_travel_core_update_exchange_rates()
+ * @return string Formatted plain-text output
+ */
+function fn_travel_core_format_exchange_rate_output(array $result): string
+{
+    $lines = [];
+
+    $lines[] = "Status: " . (($result['success'] ?? false) ? 'SUCCESS' : 'FAILED');
+    $lines[] = "Message: " . ($result['message'] ?? 'Unknown');
+
+    if (!empty($result['publishing_date'])) {
+        $lines[] = "Publishing Date: " . $result['publishing_date'];
+    }
+
+    if (!empty($result['bnr_rates'])) {
+        $lines[] = '';
+        $lines[] = 'BNR Rates (RON-based):';
+        foreach ($result['bnr_rates'] as $currency => $rate) {
+            $lines[] = "  {$currency}: {$rate}";
+        }
+    }
+
+    if (!empty($result['coefficients'])) {
+        $lines[] = '';
+        $lines[] = "Calculated Coefficients (EUR-based, commission: " . ($result['commission'] ?? 0) . "%):";
+        foreach ($result['coefficients'] as $currency => $coefficient) {
+            $lines[] = "  {$currency}: {$coefficient}";
+        }
+    }
+
+    if (!empty($result['updates'])) {
+        $lines[] = '';
+        $lines[] = 'Update Results:';
+        foreach ($result['updates'] as $currency => $update) {
+            if ($update['success']) {
+                $lines[] = "  {$currency}: " . ($update['old_rate'] ?? '-') . " -> " . ($update['new_rate'] ?? '-');
+            } else {
+                $lines[] = "  {$currency}: FAILED - " . ($update['error'] ?? 'Unknown');
+            }
+        }
+    }
+
+    return implode("\n", $lines);
+}

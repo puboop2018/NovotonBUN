@@ -69,40 +69,7 @@ if ($mode === 'exchange_rates') {
         $result = ['success' => false, 'message' => 'No response from exchange rate service'];
     }
 
-    echo "Status: " . (($result['success'] ?? false) ? 'SUCCESS' : 'FAILED') . "\n";
-    echo "Message: " . ($result['message'] ?? 'Unknown') . "\n";
-
-    if (!empty($result['publishing_date'])) {
-        echo "Publishing Date: " . $result['publishing_date'] . "\n";
-    }
-    echo "\n";
-
-    if (!empty($result['bnr_rates'])) {
-        echo "BNR Rates (RON-based):\n";
-        foreach ($result['bnr_rates'] as $currency => $rate) {
-            echo "  {$currency}: {$rate}\n";
-        }
-        echo "\n";
-    }
-
-    if (!empty($result['coefficients'])) {
-        echo "Calculated Coefficients (EUR-based, commission: " . ($result['commission'] ?? 0) . "%):\n";
-        foreach ($result['coefficients'] as $currency => $coefficient) {
-            echo "  {$currency}: {$coefficient}\n";
-        }
-        echo "\n";
-    }
-
-    if (!empty($result['updates'])) {
-        echo "Update Results:\n";
-        foreach ($result['updates'] as $currency => $update) {
-            if ($update['success']) {
-                echo "  {$currency}: " . ($update['old_rate'] ?? '-') . " -> " . ($update['new_rate'] ?? '-') . "\n";
-            } else {
-                echo "  {$currency}: FAILED - " . ($update['error'] ?? 'Unknown') . "\n";
-            }
-        }
-    }
+    echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 
     $exitCode = ($result['success'] ?? false) ? 0 : 1;
     echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";

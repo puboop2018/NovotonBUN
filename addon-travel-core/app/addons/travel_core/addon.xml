@@ -85,6 +85,11 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="feature_id_travel_group">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
                     <item id="providers_header">
                         <type>header</type>
                         <variants/>
@@ -360,6 +365,8 @@
         <item lang="ro" id="travel_core.fm_unmapped"><![CDATA[Nemapate]]></item>
         <item lang="en" id="travel_core.fm_aliases"><![CDATA[Aliases]]></item>
         <item lang="ro" id="travel_core.fm_aliases"><![CDATA[Alias-uri]]></item>
+        <item lang="en" id="travel_core.fm_sources"><![CDATA[Sources]]></item>
+        <item lang="ro" id="travel_core.fm_sources"><![CDATA[Surse]]></item>
         <item lang="en" id="travel_core.fm_entries"><![CDATA[entries]]></item>
         <item lang="ro" id="travel_core.fm_entries"><![CDATA[înregistrări]]></item>
         <item lang="en" id="travel_core.fm_feature_type"><![CDATA[Feature Type]]></item>

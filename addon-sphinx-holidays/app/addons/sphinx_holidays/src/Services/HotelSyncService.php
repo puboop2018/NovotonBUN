@@ -324,7 +324,7 @@ class HotelSyncService extends AbstractSyncService
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? '');
+        $name = html_entity_decode((string) ($raw['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         if ($name === '') {
             return null;
         }
@@ -337,6 +337,10 @@ class HotelSyncService extends AbstractSyncService
         if ($classification < 0 || $classification > 5) {
             $classification = 0;
         }
+
+        // Detect adults-only from hotel name (API doesn't provide a dedicated field)
+        // Matches: "Adults Only", "Adult Only", "+18", "+16", "(18+)", "(16+)"
+        $isAdultsOnly = preg_match('/\badults?\s*only\b|\(\s*\+\s*1[68]\s*\)|\(\s*1[68]\s*\+\s*\)/i', $name) ? 'Y' : 'N';
 
         return [
             'hotel_id'          => $id,
@@ -351,11 +355,12 @@ class HotelSyncService extends AbstractSyncService
             'country_name'      => (string) ($raw['country_name'] ?? ''),
             'latitude'          => (float) ($raw['latitude'] ?? 0),
             'longitude'         => (float) ($raw['longitude'] ?? 0),
-            'description'       => (string) ($raw['description'] ?? ''),
-            'short_description' => (string) ($raw['short_description'] ?? ''),
+            'description'       => html_entity_decode((string) ($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'short_description' => html_entity_decode((string) ($raw['short_description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
+            'is_adults_only'    => $isAdultsOnly,
         ];
     }
 
@@ -393,6 +398,9 @@ class HotelSyncService extends AbstractSyncService
             }
             if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
                 $hotel['region_name'] = $hierarchy['region'];
+            }
+            if (!empty($hierarchy['region_id']) && (int) $hotel['region_id'] === 0) {
+                $hotel['region_id'] = (int) $hierarchy['region_id'];
             }
 
             // Fallback: sync context country code (when destinations aren't synced yet)

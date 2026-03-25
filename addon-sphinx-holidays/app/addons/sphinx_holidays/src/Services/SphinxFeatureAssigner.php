@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
@@ -25,16 +24,6 @@ class SphinxFeatureAssigner
 
     private SphinxNormalizer $normalizer;
 
-    /** Feature type → travel_core addon setting key for cscart_feature_id */
-    private const FEATURE_SETTINGS = [
-        'stars'         => 'feature_id_property_rating',
-        'property_type' => 'feature_id_property_type',
-        'resort'        => 'feature_id_location',
-        'board'         => 'feature_id_meals',
-        'region'        => 'feature_id_region',
-        'city'          => 'feature_id_city',
-    ];
-
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
@@ -55,6 +44,7 @@ class SphinxFeatureAssigner
         $this->assignBoards($productId, $hotel);
         $this->assignRegion($productId, $hotel);
         $this->assignCity($productId, $hotel);
+        $this->assignTravelGroup($productId, $hotel);
     }
 
     private function assignStarRating(int $productId, array $hotel): void
@@ -175,30 +165,7 @@ class SphinxFeatureAssigner
 
         // Diff-based sync per feature_id
         foreach ($wantedByFeature as $featureId => $wantedVariants) {
-            $wantedVariants = array_unique($wantedVariants);
-
-            $currentVariants = array_map('intval', db_get_fields(
-                "SELECT variant_id FROM ?:product_features_values
-                 WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-                $featureId, $productId
-            ));
-
-            // Add new variants
-            foreach ($wantedVariants as $vid) {
-                if (!in_array($vid, $currentVariants, true)) {
-                    $this->assignCheckboxValue($productId, $featureId, $vid);
-                }
-            }
-
-            // Remove stale variants
-            $stale = array_diff($currentVariants, $wantedVariants);
-            foreach ($stale as $vid) {
-                db_query(
-                    "DELETE FROM ?:product_features_values
-                     WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                    $featureId, $productId, (int) $vid
-                );
-            }
+            $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
         }
     }
 
@@ -229,13 +196,6 @@ class SphinxFeatureAssigner
             return;
         }
 
-        // Get current variant_ids for diff
-        $currentVariants = array_map('intval', db_get_fields(
-            "SELECT variant_id FROM ?:product_features_values
-             WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-            $featureId, $productId
-        ));
-
         // Resolve wanted variant_ids from canonical codes
         $wantedVariants = [];
         foreach ($boards as $code) {
@@ -253,22 +213,7 @@ class SphinxFeatureAssigner
             }
         }
 
-        // Add new variants
-        foreach ($wantedVariants as $vid) {
-            if (!in_array($vid, $currentVariants, true)) {
-                $this->assignCheckboxValue($productId, $featureId, $vid);
-            }
-        }
-
-        // Remove stale variants
-        $stale = array_diff($currentVariants, $wantedVariants);
-        foreach ($stale as $vid) {
-            db_query(
-                "DELETE FROM ?:product_features_values
-                 WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                $featureId, $productId, (int) $vid
-            );
-        }
+        $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
     }
 
     /**
@@ -315,6 +260,91 @@ class SphinxFeatureAssigner
         }
     }
 
+    /** Facility canonical codes that indicate a family-friendly hotel */
+    private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting'];
+
+    /**
+     * Assign travel group feature: "Adults Only" or "Family Friendly".
+     *
+     * Priority: adults_only wins (explicit flag). Otherwise, if the hotel has
+     * family-oriented facilities (family_rooms, kids_menu, babysitting) it is
+     * inferred as family_friendly. Uses S-type (Select Box) — one value per product.
+     */
+    private function assignTravelGroup(int $productId, array $hotel): void
+    {
+        $featureId = $this->getFeatureId('travel_group');
+        if (!$featureId) {
+            return;
+        }
+
+        $groupCode = $this->detectTravelGroup($hotel);
+        if ($groupCode === null) {
+            return;
+        }
+
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', $groupCode);
+        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
+
+        if ($variantId <= 0 && $mapping) {
+            $variantId = $this->autoCreateVariant($featureId, $mapping);
+        }
+
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Detect travel group from hotel data.
+     *
+     * @return string|null Alias key for FeatureMapper ('Y' = adults_only, 'family' = family_friendly)
+     */
+    private function detectTravelGroup(array $hotel): ?string
+    {
+        // Adults-only takes priority (explicit flag)
+        if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
+            return 'Y';
+        }
+
+        // Infer family-friendly from facilities
+        if ($this->hasFamilyFacilities($hotel)) {
+            return 'family';
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if the hotel has any family-oriented facilities in its facilities_json.
+     */
+    private function hasFamilyFacilities(array $hotel): bool
+    {
+        $facilitiesJson = $hotel['facilities_json'] ?? null;
+        if (empty($facilitiesJson)) {
+            return false;
+        }
+
+        $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
+        if (!is_array($facilities)) {
+            return false;
+        }
+
+        // Build a set of canonical codes present in this hotel's facilities
+        foreach ($facilities as $facility) {
+            $facilityId = (string) ($facility['id'] ?? '');
+            if ($facilityId === '') {
+                continue;
+            }
+
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            if ($mapping && in_array($mapping['canonical_code'] ?? '', self::FAMILY_FACILITY_CODES, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Get or create a feature variant by name for location-type features.
      * Caches lookups to avoid repeated DB queries within a batch.
@@ -351,11 +381,7 @@ class SphinxFeatureAssigner
 
     private function getFeatureId(string $featureType): int
     {
-        $settingKey = self::FEATURE_SETTINGS[$featureType] ?? null;
-        if (!$settingKey) {
-            return 0;
-        }
-        return (int) Registry::get('addons.travel_core.' . $settingKey);
+        return FeatureMapper::getFeatureId($featureType);
     }
 
     /**

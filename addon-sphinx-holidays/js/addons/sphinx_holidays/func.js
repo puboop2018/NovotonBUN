@@ -12,7 +12,11 @@
         var largeFields = [
             'api_base_url',
             'ignore_domains',
-            'cron_access_key'
+            'cron_access_key',
+            'seo_product_name',
+            'seo_page_title',
+            'seo_meta_keywords',
+            'seo_name_slug'
         ];
 
         $.each(largeFields, function(i, field) {
@@ -47,6 +51,16 @@
 
         $.each(shortFields, function(i, field) {
             $settings.find('[id^="addon_option_sphinx_holidays_' + field + '"]').addClass('input-text-short');
+        });
+
+        // --- Textarea fields: meta description, full description ---
+        var textareaFields = [
+            'seo_meta_description',
+            'seo_full_description'
+        ];
+
+        $.each(textareaFields, function(i, field) {
+            $settings.find('[id^="addon_option_sphinx_holidays_' + field + '"]').addClass('input-textarea');
         });
     });
 }(Tygh, Tygh.$));

@@ -95,7 +95,7 @@
                     <th>{__("travel_core.fm_display_ro")}</th>
                     <th>{__("travel_core.fm_cs_feature")}</th>
                     <th width="80">{__("travel_core.fm_variant")}</th>
-                    <th width="60">{__("travel_core.fm_aliases")}</th>
+                    <th width="120">{__("travel_core.fm_sources")}</th>
                     <th width="60">{__("status")}</th>
                     <th width="80">{__("tools")}</th>
                 </tr>
@@ -123,7 +123,14 @@
                         {/if}
                     </td>
                     <td>
-                        <span class="label">{$m.alias_count}</span>
+                        {if $m.api_sources}
+                            {foreach from=","|explode:$m.api_sources item=src}
+                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}">{$src}</span>
+                            {/foreach}
+                            <span class="muted">({$m.alias_count})</span>
+                        {else}
+                            <span class="muted">&mdash;</span>
+                        {/if}
                     </td>
                     <td>
                         {if $m.status == 'A'}

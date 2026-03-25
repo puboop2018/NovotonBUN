@@ -411,7 +411,7 @@ class DestinationRepository
      * Requires loadParentLookup() to have been called first.
      *
      * @param array<int> $destinationIds List of destination IDs to resolve
-     * @return array<int, array{city: string, region: string, country: string, country_code: string}> Keyed by destination_id
+     * @return array<int, array{city: string, region: string, region_id: int, country: string, country_code: string}> Keyed by destination_id
      */
     public function resolveHierarchies(array $destinationIds): array
     {
@@ -422,7 +422,7 @@ class DestinationRepository
         $result = [];
         foreach ($destinationIds as $destId) {
             $destId = (int) $destId;
-            $hierarchy = ['city' => '', 'region' => '', 'country' => '', 'country_code' => ''];
+            $hierarchy = ['city' => '', 'region' => '', 'region_id' => 0, 'country' => '', 'country_code' => ''];
 
             $currentId = $destId;
             $visited = [];
@@ -441,6 +441,7 @@ class DestinationRepository
                 } elseif ($type === 'region') {
                     if ($hierarchy['region'] === '') {
                         $hierarchy['region'] = $node['name'];
+                        $hierarchy['region_id'] = $currentId;
                     }
                 } elseif ($type === 'country') {
                     $hierarchy['country'] = $node['name'];

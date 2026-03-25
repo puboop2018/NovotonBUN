@@ -253,37 +253,8 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         return;
     }
 
-    foreach ($boardAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'board' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
-        }
-    }
-
-    foreach ($roomAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'room_type' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
-        }
-    }
-
     // Star rating aliases (Novoton uses simple '1'-'5' codes, same as canonical)
     $starAliases = ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5'];
-    foreach ($starAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'stars' AND canonical_code = ?s",
-            $canonicalCode
-        );
-        if ($mapId > 0) {
-            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
-        }
-    }
 
     // Property type aliases (Novoton canonical codes match travel_core)
     $propertyTypeAliases = [
@@ -298,15 +269,26 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         'boarding_house' => 'boarding_house',
         'cabin'          => 'cabin',
     ];
-    foreach ($propertyTypeAliases as $apiValue => $canonicalCode) {
-        $mapId = (int) db_get_field(
-            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'property_type' AND canonical_code = ?s",
-            $canonicalCode
+
+    // Batch-load canonical_code → map_id per feature type (4 queries instead of ~43)
+    $seedAliasGroup = static function (string $featureType, array $aliases, string $matchType = 'exact') use ($featureMapper): void {
+        $allMaps = db_get_hash_single_array(
+            "SELECT canonical_code, map_id FROM ?:travel_feature_map WHERE feature_type = ?s",
+            ['canonical_code', 'map_id'],
+            $featureType
         );
-        if ($mapId > 0) {
-            $featureMapper::addAlias('novoton', $apiValue, $mapId, 'exact');
+        foreach ($aliases as $apiValue => $canonicalCode) {
+            $mapId = (int) ($allMaps[$canonicalCode] ?? 0);
+            if ($mapId > 0) {
+                $featureMapper::addAlias('novoton', (string) $apiValue, $mapId, $matchType);
+            }
         }
-    }
+    };
+
+    $seedAliasGroup('board', $boardAliases, 'exact');
+    $seedAliasGroup('room_type', $roomAliases, 'exact');
+    $seedAliasGroup('stars', $starAliases, 'exact');
+    $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
 
     // Clear resolve cache after batch alias inserts
     $featureMapper::clearCache();
