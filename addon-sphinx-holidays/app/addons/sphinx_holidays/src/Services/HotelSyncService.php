@@ -106,7 +106,7 @@ class HotelSyncService extends AbstractSyncService
         }
 
         // Fetch and sync hotels per country (with per-country incremental timestamps)
-        foreach ($countryCodes as $countryCode) {
+        foreach (array_keys($destinationIds) as $countryCode) {
             $updatedSince = null;
             if (!$fullSync) {
                 $lastSynced = $this->hotelRepo->getLastSyncedAt($countryCode);
@@ -265,46 +265,37 @@ class HotelSyncService extends AbstractSyncService
      * @param int[] $extraDestIds Additional specific destination IDs (e.g. region/city)
      * @return array<string, int[]> Country code => [destination_id, ...]
      */
-    private function resolveDestinationIds(array $countryCodes, array $extraDestIds = []): array
+    private function resolveDestinationIds(array $countryCodes, array $allowedDestIds = []): array
     {
         $result = [];
 
-        // Resolve by country code
-        foreach ($countryCodes as $code) {
-            $ids = db_get_fields(
-                "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
-                $code
+        if (!empty($allowedDestIds)) {
+            // Group the already-resolved whitelist destination IDs by country code.
+            // These IDs come from ConfigProvider::getAllowedDestinationIds() which
+            // correctly respects selection_type ('all' vs 'specific').
+            $rows = db_get_array(
+                "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)",
+                $allowedDestIds
             );
 
-            if (!empty($ids)) {
-                $result[$code] = array_map('intval', $ids);
+            foreach ($rows as $row) {
+                $cc = $row['country_code'] ?: 'CUSTOM';
+                $result[$cc][] = (int) $row['destination_id'];
             }
-        }
 
-        // Add specific destination IDs with their children
-        if (!empty($extraDestIds)) {
-            foreach ($extraDestIds as $destId) {
-                $row = db_get_row(
-                    "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
-                    $destId
+            foreach ($result as $cc => $ids) {
+                $result[$cc] = array_values(array_unique($ids));
+            }
+        } elseif (!empty($countryCodes)) {
+            // Fallback: when called with explicit country codes (no whitelist IDs),
+            // include all destinations for those countries.
+            foreach ($countryCodes as $code) {
+                $ids = db_get_fields(
+                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
+                    $code
                 );
-                if ($row) {
-                    $cc = $row['country_code'] ?: 'CUSTOM';
-                    if (!isset($result[$cc])) {
-                        $result[$cc] = [];
-                    }
-                    $result[$cc][] = (int) $row['destination_id'];
-
-                    // Also include all children of this destination
-                    $children = db_get_fields(
-                        "SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id = ?i",
-                        $destId
-                    );
-                    foreach ($children as $childId) {
-                        $result[$cc][] = (int) $childId;
-                    }
-
-                    $result[$cc] = array_unique($result[$cc]);
+                if (!empty($ids)) {
+                    $result[$code] = array_map('intval', $ids);
                 }
             }
         }
