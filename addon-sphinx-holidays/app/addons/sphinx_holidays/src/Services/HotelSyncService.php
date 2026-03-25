@@ -388,6 +388,9 @@ class HotelSyncService extends AbstractSyncService
             if (!empty($hierarchy['country'])) {
                 $hotel['country_name'] = $hierarchy['country'];
             }
+            if (!empty($hierarchy['city']) && $hotel['destination_name'] === '') {
+                $hotel['destination_name'] = $hierarchy['city'];
+            }
             if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
                 $hotel['region_name'] = $hierarchy['region'];
             }
