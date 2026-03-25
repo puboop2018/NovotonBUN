@@ -109,11 +109,6 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
-                    <item id="round_prices">
-                        <type>checkbox</type>
-                        <default_value>N</default_value>
-                        <variants/>
-                    </item>
 
                     <!-- Product Mapping Header -->
                     <item id="product_header">
@@ -198,15 +193,13 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
-
-                    <!-- SEO Templates -->
-                    <item id="seo_templates_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
+                </items>
+            </section>
+            <section id="seo_templates">
+                <items>
                     <item id="seo_placeholders_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated.</default_value>
+                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
                         <variants/>
                     </item>
                     <item id="seo_product_name">
@@ -557,9 +550,7 @@
         <item lang="ro" id="sphinx_holidays.pricing_header"><![CDATA[Prețuri]]></item>
         <item lang="en" id="sphinx_holidays.commission"><![CDATA[Commission percentage]]></item>
         <item lang="ro" id="sphinx_holidays.commission"><![CDATA[Procentaj comision]]></item>
-        <item lang="en" id="sphinx_holidays.round_prices"><![CDATA[Round prices to whole numbers]]></item>
-        <item lang="ro" id="sphinx_holidays.round_prices"><![CDATA[Rotunjește prețurile la numere întregi]]></item>
-        <item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Creation & Mapping]]></item>
+<item lang="en" id="sphinx_holidays.product_header"><![CDATA[Product Creation & Mapping]]></item>
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Creare & Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
         <item lang="ro" id="sphinx_holidays.hotels_category_id"><![CDATA[ID categorie CS-Cart pentru hoteluri Sphinx]]></item>

@@ -68,7 +68,7 @@ class ConfigProvider
 
     public static function shouldRoundPrices(): bool
     {
-        return self::getSetting('round_prices') === 'Y';
+        return Registry::get('addons.travel_core.round_prices') === 'Y';
     }
 
     public static function getHotelsCategoryId(): int

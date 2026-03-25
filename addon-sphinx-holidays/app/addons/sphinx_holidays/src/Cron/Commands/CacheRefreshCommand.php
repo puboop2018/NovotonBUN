@@ -37,9 +37,8 @@ class CacheRefreshCommand
         try {
             $api = Container::getApi();
             $commission = ConfigProvider::getCommission();
-            $roundPrices = ConfigProvider::shouldRoundPrices();
 
-            $service = new CacheEndpointService($api, $commission, $roundPrices);
+            $service = new CacheEndpointService($api, $commission);
             $stats = $service->refreshAll();
 
             $this->output("Cache refresh complete: {$stats['hotels_count']} hotels, {$stats['packages_count']} packages, {$stats['errors']} errors");

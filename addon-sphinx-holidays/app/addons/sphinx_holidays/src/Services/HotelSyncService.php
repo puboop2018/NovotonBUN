@@ -80,16 +80,6 @@ class HotelSyncService extends AbstractSyncService
             return $stats;
         }
 
-        // Determine sync mode
-        $updatedSince = null;
-        if (!$fullSync) {
-            $lastSynced = $this->hotelRepo->getLastSyncedAt();
-            if ($lastSynced !== null) {
-                $updatedSince = $lastSynced;
-                $stats['sync_mode'] = 'incremental';
-            }
-        }
-
         $labels = [];
         if (!empty($countryCodes)) {
             $labels[] = 'countries: ' . implode(', ', $countryCodes);
@@ -97,8 +87,7 @@ class HotelSyncService extends AbstractSyncService
         if (!empty($extraDestinationIds)) {
             $labels[] = 'destination IDs: ' . implode(', ', $extraDestinationIds);
         }
-        $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
-        $this->output("Hotel sync starting ({$modeLabel}) for " . implode('; ', $labels));
+        $this->output("Hotel sync starting for " . implode('; ', $labels));
 
         // Get destination IDs for selected countries (all types under those countries)
         $destinationIds = $this->resolveDestinationIds($countryCodes, $extraDestinationIds);
@@ -116,8 +105,18 @@ class HotelSyncService extends AbstractSyncService
             $this->output('WARNING: sphinx_destinations is empty — country/region enrichment will use sync context only. Run destination sync first for best results.');
         }
 
-        // Fetch and sync hotels per country
+        // Fetch and sync hotels per country (with per-country incremental timestamps)
         foreach ($countryCodes as $countryCode) {
+            $updatedSince = null;
+            if (!$fullSync) {
+                $lastSynced = $this->hotelRepo->getLastSyncedAt($countryCode);
+                if ($lastSynced !== null) {
+                    $updatedSince = $lastSynced;
+                }
+            }
+            $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
+            $this->output("  {$countryCode}: sync mode: {$modeLabel}");
+
             $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
             $stats['total'] += $countryStats['total'];
             $stats['synced'] += $countryStats['synced'];
@@ -129,8 +128,10 @@ class HotelSyncService extends AbstractSyncService
             }
         }
 
+        // Set overall sync_mode label based on what actually happened
+        $stats['sync_mode'] = $fullSync ? 'full' : 'per-country incremental';
         $stats['success'] = ($stats['synced'] > 0 || $stats['total'] === 0);
-        $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped ({$stats['sync_mode']}).");
+        $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped.");
 
         return $stats;
     }

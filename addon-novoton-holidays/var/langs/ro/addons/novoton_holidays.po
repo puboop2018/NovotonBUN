@@ -2173,10 +2173,6 @@ msgctxt "SettingsOptions::novoton_holidays::products_header"
 msgid "Product Settings"
 msgstr "Setări Produse"
 
-msgctxt "SettingsOptions::novoton_holidays::round_prices"
-msgid "Round hotel prices"
-msgstr "Rotunjire prețuri hotel"
-
 msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Afișare Formular Rezervare pe Paginile Produselor"

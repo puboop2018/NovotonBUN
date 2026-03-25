@@ -120,8 +120,7 @@ class ConfigProvider
 
     public static function isRoundPrices(): bool
     {
-        $val = self::settings()['round_prices'] ?? 'Y';
-        return $val === 'Y' || $val === true;
+        return Registry::get('addons.travel_core.round_prices') === 'Y';
     }
 
     public static function isTestBooking(): bool

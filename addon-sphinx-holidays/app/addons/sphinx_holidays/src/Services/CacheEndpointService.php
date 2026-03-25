@@ -17,16 +17,14 @@ class CacheEndpointService
 {
     private SphinxApi $api;
     private float $commission;
-    private bool $roundPrices;
 
     /** Cache TTL for deals in seconds (default 4 hours) */
     private const DEALS_CACHE_TTL = 14400;
 
-    public function __construct(SphinxApi $api, float $commission = 0, bool $roundPrices = false)
+    public function __construct(SphinxApi $api, float $commission = 0)
     {
         $this->api = $api;
         $this->commission = $commission;
-        $this->roundPrices = $roundPrices;
     }
 
     /**
@@ -124,7 +122,8 @@ class CacheEndpointService
     {
         $calculator = null;
         if ($this->commission > 0) {
-            $calculator = new CommissionCalculator($this->commission, $this->roundPrices);
+            $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
+            $calculator = new CommissionCalculator($this->commission, $roundPrices);
         }
 
         $deals = [];

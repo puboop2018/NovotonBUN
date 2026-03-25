@@ -72,10 +72,6 @@ msgctxt "SettingsTooltips::novoton_holidays::commission"
 msgid "Percentage to add to API prices"
 msgstr "Percentage to add to API prices"
 
-msgctxt "SettingsOptions::novoton_holidays::round_prices"
-msgid "Round hotel prices"
-msgstr "Round hotel prices"
-
 msgctxt "SettingsOptions::novoton_holidays::api_currency"
 msgid "API prices currency"
 msgstr "API prices currency"

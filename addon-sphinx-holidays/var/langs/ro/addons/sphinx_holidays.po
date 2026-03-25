@@ -4,6 +4,14 @@ msgstr "Project-Id-Version: cs-cart-latest\n"
 "Language-Team: Romanian\n"
 "Language: ro_RO"
 
+msgctxt "SettingsSections::sphinx_holidays::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsSections::sphinx_holidays::seo_templates"
+msgid "SEO Templates"
+msgstr "Șabloane SEO"
+
 msgctxt "Addons::name::sphinx_holidays"
 msgid "Sphinx Holidays"
 msgstr "Sphinx Holidays"
@@ -63,10 +71,6 @@ msgstr "Prețuri"
 msgctxt "SettingsOptions::sphinx_holidays::commission"
 msgid "Commission percentage"
 msgstr "Procentaj comision"
-
-msgctxt "SettingsOptions::sphinx_holidays::round_prices"
-msgid "Round prices to whole numbers"
-msgstr "Rotunjește prețurile la numere întregi"
 
 msgctxt "SettingsOptions::sphinx_holidays::product_header"
 msgid "Product Mapping"
@@ -185,45 +189,45 @@ msgid "Product name template"
 msgstr "Șablon nume produs"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_product_name"
-msgid "Template for the product name. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Șablon pentru numele produsului. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the product name."
+msgstr "Șablon pentru numele produsului."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_page_title"
 msgid "Page title template"
 msgstr "Șablon titlu pagină"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_page_title"
-msgid "Template for the HTML page title (SEO). Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Șablon pentru titlul paginii HTML (SEO). Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the HTML page title (SEO)."
+msgstr "Șablon pentru titlul paginii HTML (SEO)."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_meta_description"
 msgid "Meta description template"
 msgstr "Șablon meta descriere"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_meta_description"
-msgid "Template for the meta description tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Șablon pentru tag-ul meta description. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the meta description tag."
+msgstr "Șablon pentru tag-ul meta description."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_meta_keywords"
 msgid "Meta keywords template"
 msgstr "Șablon meta cuvinte cheie"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_meta_keywords"
-msgid "Template for the meta keywords tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Șablon pentru tag-ul meta keywords. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the meta keywords tag."
+msgstr "Șablon pentru tag-ul meta keywords."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_name_slug"
 msgid "SEO URL slug template"
 msgstr "Șablon URL SEO (slug)"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_name_slug"
-msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}"
-msgstr "Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}"
+msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized."
+msgstr "Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_full_description"
 msgid "Full description template (optional)"
 msgstr "Șablon descriere completă (opțional)"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
-msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}"
-msgstr "Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală. Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}"
+msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+msgstr "Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală."
