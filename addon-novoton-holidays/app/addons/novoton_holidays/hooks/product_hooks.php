@@ -151,9 +151,9 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
     $product['is_hotel_product'] = true;
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
-    // Prices from packages table
+    // Prices from packages table — assign to Smarty view, NOT to $product.
+    // Stuffing large nested arrays into $product causes Smarty stack overflow.
     $prices = fn_novoton_holidays_get_hotel_prices($product['product_id'], false, $hotel_id);
-    $product['novoton_prices'] = $prices;
 
     // Last sync timestamp
     $hotelRepo = Container::getInstance()->hotelRepository();
@@ -229,8 +229,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
         $hotel_id = _nvt_extract_hotel_id($product_data['product_code']);
 
         if (!empty($hotel_id)) {
-            $product_data['hotel_id']       = $hotel_id;
-            $product_data['hotel_packages'] = fn_novoton_holidays_get_hotel_prices($product_data['product_id'], false, $hotel_id);
+            $product_data['hotel_id'] = $hotel_id;
         }
 
         $product_data['is_hotel_product'] = true;
