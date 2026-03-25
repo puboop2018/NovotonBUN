@@ -100,6 +100,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Auto-resolve unmapped variants by name-matching
     if ($mode == 'resolve_variants') {
+
+        // Step 1: Auto-populate cscart_feature_id from addon settings for entries that don't have one
+        $featureTypes = db_get_fields(
+            "SELECT DISTINCT feature_type FROM ?:travel_feature_map WHERE cscart_feature_id = 0 OR cscart_feature_id IS NULL"
+        );
+        foreach ($featureTypes as $ft) {
+            $fid = FeatureMapper::getFeatureId($ft);
+            if ($fid > 0) {
+                db_query(
+                    "UPDATE ?:travel_feature_map SET cscart_feature_id = ?i WHERE feature_type = ?s AND (cscart_feature_id = 0 OR cscart_feature_id IS NULL)",
+                    $fid, $ft
+                );
+            }
+        }
+
+        // Step 2: Query entries that have a feature_id but no variant yet
         $unmapped = db_get_array(
             "SELECT * FROM ?:travel_feature_map
              WHERE (cscart_variant_id IS NULL OR cscart_variant_id = 0)
@@ -138,7 +154,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
+                // Pass 1: exact match
                 $variantId = $variantNameToId[$nameEn] ?? null;
+
+                // Pass 2: case-insensitive match
+                if (!$variantId) {
+                    $nameEnLower = mb_strtolower($nameEn);
+                    foreach ($variantNameToId as $vName => $vId) {
+                        if (mb_strtolower($vName) === $nameEnLower) {
+                            $variantId = $vId;
+                            break;
+                        }
+                    }
+                }
+
                 if ($variantId) {
                     db_query("UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
                         (int) $variantId, (int) $mapping['map_id']);
