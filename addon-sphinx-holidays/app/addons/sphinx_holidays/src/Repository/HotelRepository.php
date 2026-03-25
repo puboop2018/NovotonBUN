@@ -246,11 +246,18 @@ class HotelRepository
     }
 
     /**
-     * Get last hotel sync timestamp.
+     * Get last hotel sync timestamp, optionally per country.
      */
-    public function getLastSyncedAt(): ?string
+    public function getLastSyncedAt(?string $countryCode = null): ?string
     {
-        $val = db_get_field("SELECT MAX(last_synced_at) FROM ?:sphinx_hotels");
+        if ($countryCode !== null) {
+            $val = db_get_field(
+                "SELECT MAX(last_synced_at) FROM ?:sphinx_hotels WHERE country_code = ?s",
+                $countryCode
+            );
+        } else {
+            $val = db_get_field("SELECT MAX(last_synced_at) FROM ?:sphinx_hotels");
+        }
         return $val ?: null;
     }
 
