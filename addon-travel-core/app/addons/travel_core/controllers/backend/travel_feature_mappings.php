@@ -210,7 +210,8 @@ if ($mode == 'manage') {
 
     $where = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    $query = "SELECT m.*, COUNT(a.alias_id) as alias_count
+    $query = "SELECT m.*, COUNT(a.alias_id) as alias_count,
+                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
               FROM ?:travel_feature_map m
               LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
               {$where}
