@@ -193,15 +193,13 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
-
-                    <!-- SEO Templates -->
-                    <item id="seo_templates_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
+                </items>
+            </section>
+            <section id="seo_templates">
+                <items>
                     <item id="seo_placeholders_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated.</default_value>
+                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
                         <variants/>
                     </item>
                     <item id="seo_product_name">

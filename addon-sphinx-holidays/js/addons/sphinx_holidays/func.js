@@ -62,5 +62,8 @@
         $.each(textareaFields, function(i, field) {
             $settings.find('[id^="addon_option_sphinx_holidays_' + field + '"]').addClass('input-textarea');
         });
+
+        // Remove redundant size="30" from SEO template inputs (CSS class controls width)
+        $settings.find('[id^="addon_option_sphinx_holidays_seo_"]').removeAttr('size');
     });
 }(Tygh, Tygh.$));

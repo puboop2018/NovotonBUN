@@ -4,6 +4,14 @@ msgstr "Project-Id-Version: cs-cart-latest\n"
 "Language-Team: English\n"
 "Language: en_US"
 
+msgctxt "SettingsSections::sphinx_holidays::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsSections::sphinx_holidays::seo_templates"
+msgid "SEO Templates"
+msgstr "SEO Templates"
+
 msgctxt "Addons::name::sphinx_holidays"
 msgid "Sphinx Holidays"
 msgstr "Sphinx Holidays"
@@ -181,45 +189,45 @@ msgid "Product name template"
 msgstr "Product name template"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_product_name"
-msgid "Template for the product name. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Template for the product name. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the product name."
+msgstr "Template for the product name."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_page_title"
 msgid "Page title template"
 msgstr "Page title template"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_page_title"
-msgid "Template for the HTML page title (SEO). Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Template for the HTML page title (SEO). Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the HTML page title (SEO)."
+msgstr "Template for the HTML page title (SEO)."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_meta_description"
 msgid "Meta description template"
 msgstr "Meta description template"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_meta_description"
-msgid "Template for the meta description tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Template for the meta description tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the meta description tag."
+msgstr "Template for the meta description tag."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_meta_keywords"
 msgid "Meta keywords template"
 msgstr "Meta keywords template"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_meta_keywords"
-msgid "Template for the meta keywords tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
-msgstr "Template for the meta keywords tag. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{rating}}, {{facilities}}, {{boards}}"
+msgid "Template for the meta keywords tag."
+msgstr "Template for the meta keywords tag."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_name_slug"
 msgid "SEO URL slug template"
 msgstr "SEO URL slug template"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_name_slug"
-msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}"
-msgstr "Template for the SEO-friendly URL slug. Result is automatically sanitized. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}"
+msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized."
+msgstr "Template for the SEO-friendly URL slug. Result is automatically sanitized."
 
 msgctxt "SettingsOptions::sphinx_holidays::seo_full_description"
 msgid "Full description template (optional)"
 msgstr "Full description template (optional)"
 
 msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
-msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}"
-msgstr "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is. Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{facilities}}"
+msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+msgstr "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
