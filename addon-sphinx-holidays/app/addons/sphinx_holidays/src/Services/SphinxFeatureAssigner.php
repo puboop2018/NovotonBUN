@@ -25,17 +25,6 @@ class SphinxFeatureAssigner
 
     private SphinxNormalizer $normalizer;
 
-    /** Feature type → travel_core addon setting key for cscart_feature_id */
-    private const FEATURE_SETTINGS = [
-        'stars'         => 'feature_id_property_rating',
-        'property_type' => 'feature_id_property_type',
-        'resort'        => 'feature_id_location',
-        'board'         => 'feature_id_meals',
-        'region'        => 'feature_id_region',
-        'city'          => 'feature_id_city',
-        'travel_group'  => 'feature_id_travel_group',
-    ];
-
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
@@ -177,30 +166,7 @@ class SphinxFeatureAssigner
 
         // Diff-based sync per feature_id
         foreach ($wantedByFeature as $featureId => $wantedVariants) {
-            $wantedVariants = array_unique($wantedVariants);
-
-            $currentVariants = array_map('intval', db_get_fields(
-                "SELECT variant_id FROM ?:product_features_values
-                 WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-                $featureId, $productId
-            ));
-
-            // Add new variants
-            foreach ($wantedVariants as $vid) {
-                if (!in_array($vid, $currentVariants, true)) {
-                    $this->assignCheckboxValue($productId, $featureId, $vid);
-                }
-            }
-
-            // Remove stale variants
-            $stale = array_diff($currentVariants, $wantedVariants);
-            foreach ($stale as $vid) {
-                db_query(
-                    "DELETE FROM ?:product_features_values
-                     WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                    $featureId, $productId, (int) $vid
-                );
-            }
+            $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
         }
     }
 
@@ -231,13 +197,6 @@ class SphinxFeatureAssigner
             return;
         }
 
-        // Get current variant_ids for diff
-        $currentVariants = array_map('intval', db_get_fields(
-            "SELECT variant_id FROM ?:product_features_values
-             WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
-            $featureId, $productId
-        ));
-
         // Resolve wanted variant_ids from canonical codes
         $wantedVariants = [];
         foreach ($boards as $code) {
@@ -255,22 +214,7 @@ class SphinxFeatureAssigner
             }
         }
 
-        // Add new variants
-        foreach ($wantedVariants as $vid) {
-            if (!in_array($vid, $currentVariants, true)) {
-                $this->assignCheckboxValue($productId, $featureId, $vid);
-            }
-        }
-
-        // Remove stale variants
-        $stale = array_diff($currentVariants, $wantedVariants);
-        foreach ($stale as $vid) {
-            db_query(
-                "DELETE FROM ?:product_features_values
-                 WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                $featureId, $productId, (int) $vid
-            );
-        }
+        $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
     }
 
     /**
@@ -438,11 +382,7 @@ class SphinxFeatureAssigner
 
     private function getFeatureId(string $featureType): int
     {
-        $settingKey = self::FEATURE_SETTINGS[$featureType] ?? null;
-        if (!$settingKey) {
-            return 0;
-        }
-        return (int) Registry::get('addons.travel_core.' . $settingKey);
+        return FeatureMapper::getFeatureId($featureType);
     }
 
     /**

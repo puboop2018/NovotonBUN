@@ -112,6 +112,45 @@ trait CsCartFeatureAssignment
     }
 
     /**
+     * Diff-based sync for M-type (multiple checkbox) features.
+     *
+     * Compares wanted variant_ids against current DB state:
+     * adds new variants, removes stale ones.
+     *
+     * @param int   $productId
+     * @param int   $featureId
+     * @param int[] $wantedVariantIds  The full set of variant_ids that should be assigned
+     * @return int  Count of variants now assigned (added + kept)
+     */
+    private function syncCheckboxValues(int $productId, int $featureId, array $wantedVariantIds): int
+    {
+        $wantedVariantIds = array_unique(array_filter($wantedVariantIds));
+
+        $currentVariants = array_map('intval', db_get_fields(
+            "SELECT variant_id FROM ?:product_features_values
+             WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
+            $featureId, $productId
+        ));
+
+        $toAdd = array_diff($wantedVariantIds, $currentVariants);
+        $toRemove = array_diff($currentVariants, $wantedVariantIds);
+
+        foreach ($toRemove as $vid) {
+            db_query(
+                "DELETE FROM ?:product_features_values
+                 WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
+                $featureId, $productId, (int) $vid
+            );
+        }
+
+        foreach ($toAdd as $vid) {
+            $this->assignCheckboxValue($productId, $featureId, (int) $vid);
+        }
+
+        return count($toAdd) + count(array_intersect($wantedVariantIds, $currentVariants));
+    }
+
+    /**
      * Create a CS-Cart product feature variant + descriptions for all active languages.
      *
      * @param int    $featureId CS-Cart feature_id

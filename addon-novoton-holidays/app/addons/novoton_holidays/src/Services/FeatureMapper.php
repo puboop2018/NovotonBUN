@@ -23,6 +23,7 @@ class FeatureMapper
     use CsCartFeatureAssignment {
         assignSelectBoxValue as private assignSelectBox;
         assignCheckboxValue as private assignCheckbox;
+        syncCheckboxValues as private syncCheckboxes;
         createVariant as private createVariantFromTrait;
     }
 
@@ -301,66 +302,16 @@ class FeatureMapper
             return 0;
         }
 
-        // Diff-based sync: add new, remove stale
-        $currentVariantIds = db_get_fields(
-            "SELECT DISTINCT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id > 0",
-            $featureId,
-            $productId
-        );
-        $currentVariantIds = array_map('intval', $currentVariantIds);
-
-        $toAdd = array_diff($newVariantIds, $currentVariantIds);
-        $toRemove = array_diff($currentVariantIds, $newVariantIds);
-
-        foreach ($toRemove as $staleVariantId) {
-            db_query(
-                "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                $featureId, $productId, $staleVariantId
-            );
-        }
-
-        $count = 0;
-        foreach ($toAdd as $variantId) {
-            foreach ($this->getActiveLanguages() as $langCode) {
-                db_query(
-                    "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
-                    [
-                        'feature_id' => $featureId,
-                        'product_id' => $productId,
-                        'variant_id' => $variantId,
-                        'value'      => '',
-                        'value_int'  => $variantId,
-                        'lang_code'  => $langCode,
-                    ],
-                    $variantId
-                );
-            }
-            $count++;
-        }
-
-        return $count + count(array_intersect($newVariantIds, $currentVariantIds));
+        return $this->syncCheckboxes($productId, $featureId, $newVariantIds);
     }
 
     // =========================================================================
     // Private methods
     // =========================================================================
 
-    /**
-     * Get feature_id from travel_core setting for a given core feature type.
-     *
-     * Maps core feature types to their actual setting key names where they differ:
-     *   'stars' → feature_id_property_rating
-     *   'board' → feature_id_meals
-     */
     private function getCoreFeatureId(string $coreFeatureType): int
     {
-        $settingMap = [
-            'stars' => 'feature_id_property_rating',
-            'board' => 'feature_id_meals',
-        ];
-
-        $settingName = $settingMap[$coreFeatureType] ?? ('feature_id_' . $coreFeatureType);
-        return (int) \Tygh\Registry::get('addons.travel_core.' . $settingName);
+        return \Tygh\Addons\TravelCore\Services\FeatureMapper::getFeatureId($coreFeatureType);
     }
 
     /**
@@ -582,7 +533,6 @@ class FeatureMapper
      */
     private function assignMultipleCheckboxes(int $productId, string $featureType, int $featureId, array $providerCodes, string $provider): int
     {
-        $count = 0;
         $newVariantIds = [];
 
         // Resolve all provider codes to variant IDs
@@ -602,51 +552,7 @@ class FeatureMapper
             }
         }
 
-        // Get current variant IDs on the product for this feature
-        $currentVariantIds = db_get_fields(
-            "SELECT DISTINCT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id > 0",
-            $featureId,
-            $productId
-        );
-        $currentVariantIds = array_map('intval', $currentVariantIds);
-
-        // Calculate diff
-        $toAdd = array_diff($newVariantIds, $currentVariantIds);
-        $toRemove = array_diff($currentVariantIds, $newVariantIds);
-
-        // Remove stale variants
-        foreach ($toRemove as $staleVariantId) {
-            db_query(
-                "DELETE FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND variant_id = ?i",
-                $featureId,
-                $productId,
-                $staleVariantId
-            );
-        }
-
-        // Add new variants
-        foreach ($toAdd as $variantId) {
-            foreach ($this->getActiveLanguages() as $langCode) {
-                db_query(
-                    "INSERT INTO ?:product_features_values ?e ON DUPLICATE KEY UPDATE variant_id = ?i",
-                    [
-                        'feature_id' => $featureId,
-                        'product_id' => $productId,
-                        'variant_id' => $variantId,
-                        'value' => '',
-                        'value_int' => $variantId,
-                        'lang_code' => $langCode,
-                    ],
-                    $variantId
-                );
-            }
-            $count++;
-        }
-
-        // Count existing that are still valid
-        $count += count(array_intersect($newVariantIds, $currentVariantIds));
-
-        return $count;
+        return $this->syncCheckboxes($productId, $featureId, $newVariantIds);
     }
 
     /**
