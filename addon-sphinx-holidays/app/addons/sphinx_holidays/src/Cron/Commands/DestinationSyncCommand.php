@@ -24,7 +24,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
     use StatefulCommandTrait;
 
     private const STATE_FILE_NAME = 'sphinx_destination_sync_state.json';
-    private const STALE_HOURS = 6;
+    private const STALE_HOURS = 0.5; // 30 minutes — full sync takes ~7 min
     private const DEFAULT_STATE = [
         'status'       => 'idle',
         'started_at'   => null,
