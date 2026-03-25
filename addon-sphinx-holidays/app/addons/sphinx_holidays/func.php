@@ -746,8 +746,7 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
     $hotel = db_get_row(
         "SELECT hotel_id, classification, property_type,
                 destination_id, destination_name, region_id, region_name,
-                country_code, country_name, latitude, longitude,
-                facilities_json, boards_json
+                country_code, country_name, latitude, longitude
          FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
@@ -758,7 +757,10 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
         $product_data['hotel_name'] = $product_data['product'] ?? ('Hotel ' . $hotel['hotel_id']);
         $product_data['star_rating'] = $hotel['classification'];
         $product_data['travel_provider'] = 'sphinx';
-        $product_data['sphinx_hotel'] = $hotel;
+        // Assign hotel data to Smarty view directly — NOT to $product_data.
+        // Stuffing large nested arrays into $product causes Smarty's Data class
+        // to overflow PHP's stack limit during variable scope resolution.
+        \Tygh\Tygh::$app['view']->assign('sphinx_hotel_data', $hotel);
     }
 }
 
