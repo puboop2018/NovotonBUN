@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 
 class CacheService implements CacheServiceInterface
 {
@@ -33,7 +32,7 @@ class CacheService implements CacheServiceInterface
     {
         $this->storage = $storage;
         $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
-        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+        $this->debug = ConfigProvider::isDebugLogging();
         
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {

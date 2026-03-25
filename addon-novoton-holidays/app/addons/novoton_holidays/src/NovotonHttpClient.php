@@ -144,6 +144,8 @@ class NovotonHttpClient implements HttpClientInterface
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
             curl_setopt($ch, CURLOPT_REFERER, Constants::IMAGE_BASE_URL);
+            // Intentionally higher than Constants::API_CONNECT_TIMEOUT/API_TIMEOUT —
+            // Novoton API can be slow for search/verify endpoints with complex room configs.
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
             curl_setopt($ch, CURLOPT_TIMEOUT, 120);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);

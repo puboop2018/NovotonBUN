@@ -100,7 +100,7 @@
     {* Debug Output *}
     {if $novoton_debug}
     <div class="novoton-debug-panel" style="background: #f8f8f8; border: 2px solid #e74c3c; padding: 15px; margin-bottom: 20px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 500px; overflow-y: auto; border-radius: 8px;">
-        <h4 style="color: #e74c3c; margin-top: 0;">[T] DEBUG MODE</h4>
+        <h4 style="color: #e74c3c; margin-top: 0;">DEBUG MODE</h4>
         {foreach from=$novoton_debug item=line}
 {$line|default:''}
 {/foreach}

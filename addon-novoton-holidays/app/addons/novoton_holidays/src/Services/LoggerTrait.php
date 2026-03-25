@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 
 trait LoggerTrait
 {
@@ -32,7 +31,7 @@ trait LoggerTrait
      */
     protected function initLogger(string $prefix = ''): void
     {
-        $this->debugEnabled = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+        $this->debugEnabled = ConfigProvider::isDebugLogging();
         $this->logPrefix = $prefix ?: (new \ReflectionClass($this))->getShortName();
     }
     
