@@ -127,6 +127,7 @@
                             {foreach from=","|explode:$m.api_sources item=src}
                                 <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}">{$src}</span>
                             {/foreach}
+                            <span class="muted">({$m.alias_count})</span>
                         {else}
                             <span class="muted">&mdash;</span>
                         {/if}
