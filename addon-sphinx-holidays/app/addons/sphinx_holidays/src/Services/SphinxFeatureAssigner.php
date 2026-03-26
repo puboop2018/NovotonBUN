@@ -142,6 +142,7 @@ class SphinxFeatureAssigner
 
         // Resolve all facilities and group wanted variant_ids by feature_id
         $wantedByFeature = [];
+        $unmapped = [];
         foreach ($facilities as $facility) {
             $facilityId = (string) ($facility['id'] ?? '');
             if ($facilityId === '') {
@@ -150,14 +151,23 @@ class SphinxFeatureAssigner
 
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
             if (!$mapping) {
+                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
                 continue;
             }
 
             $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
             $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
 
-            if ($featureId <= 0 || $variantId <= 0) {
+            if ($featureId <= 0) {
+                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
                 continue;
+            }
+            if ($variantId <= 0 && $mapping) {
+                $variantId = $this->autoCreateVariant($featureId, $mapping);
+                if ($variantId <= 0) {
+                    $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
+                    continue;
+                }
             }
 
             $wantedByFeature[$featureId][] = $variantId;
@@ -166,6 +176,12 @@ class SphinxFeatureAssigner
         // Diff-based sync per feature_id
         foreach ($wantedByFeature as $featureId => $wantedVariants) {
             $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
+        }
+
+        if (!empty($unmapped)) {
+            fn_log_event('general', 'runtime', [
+                'message' => "Sphinx: product {$productId} has " . count($unmapped) . " unmapped facilities: " . implode(', ', array_slice($unmapped, 0, 10)),
+            ]);
         }
     }
 
