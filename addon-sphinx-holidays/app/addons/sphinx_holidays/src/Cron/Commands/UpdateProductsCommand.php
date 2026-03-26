@@ -77,6 +77,10 @@ class UpdateProductsCommand
                     ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
                     : ($hotel['description'] ?? '');
 
+                // Generate SEO slug, ensuring uniqueness (exclude current product from collision check)
+                $seoSlug = fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders);
+                $seoSlug = self::ensureUniqueSeoName($seoSlug, $hotelId, $productId);
+
                 $product_data = [
                     'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
                     'full_description'  => $fullDescription,
@@ -84,7 +88,7 @@ class UpdateProductsCommand
                     'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
                     'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
                     'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-                    'seo_name'          => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
+                    'seo_name'          => $seoSlug,
                 ];
 
                 // Use configured languages (addon setting) instead of all active
@@ -217,6 +221,28 @@ class UpdateProductsCommand
             'latitude'       => $hotel['latitude'] ?? '',
             'longitude'      => $hotel['longitude'] ?? '',
         ];
+    }
+
+    /**
+     * Ensure an SEO slug is unique, excluding the current product's own entry.
+     */
+    private static function ensureUniqueSeoName(string $slug, string $hotelId, int $productId): string
+    {
+        if ($slug === '') {
+            return '';
+        }
+
+        $exists = db_get_field(
+            "SELECT name FROM ?:seo_names WHERE name = ?s AND type = 'p' AND object_id != ?i LIMIT 1",
+            $slug,
+            $productId
+        );
+
+        if ($exists) {
+            return $slug . '-' . $hotelId;
+        }
+
+        return $slug;
     }
 
     private function output(string $message): void
