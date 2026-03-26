@@ -1013,9 +1013,18 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    // Sphinx API requires auth header for watermark-free images
-    $download_url = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url);
-    $headers = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders();
+    // Only add auth headers + watermark param for images hosted on the Sphinx API domain.
+    // CDN-hosted images (e.g. b-cdn.net) are public and don't need/accept auth.
+    $apiHost = parse_url(\Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getApiBaseUrl(), PHP_URL_HOST);
+    $imageHost = parse_url($image_url, PHP_URL_HOST);
+    $isApiHosted = ($apiHost && $imageHost && str_contains($imageHost, $apiHost));
+
+    $download_url = $isApiHosted
+        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url)
+        : $image_url;
+    $headers = $isApiHosted
+        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders()
+        : [];
 
     // Use direct cURL — CS-Cart's Http::get ignores custom headers and returns
     // empty string with write_to_file, which caused all downloads to fail.
