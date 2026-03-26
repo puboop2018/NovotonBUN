@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
-        @set_time_limit(0);
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
 
         $api = Container::getApi();
         $repository = Container::getDestinationRepository();
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
-        @set_time_limit(0);
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
 
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
@@ -191,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
 
-        @set_time_limit(0);
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
 
         $hotelRepo = Container::getHotelRepository();
         $synced = 0;
