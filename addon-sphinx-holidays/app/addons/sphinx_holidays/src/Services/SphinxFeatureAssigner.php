@@ -163,7 +163,15 @@ class SphinxFeatureAssigner
                 continue;
             }
             if ($variantId <= 0 && $mapping) {
-                $variantId = $this->autoCreateVariant($featureId, $mapping);
+                // Only auto-create if this feature already has at least one variant,
+                // proving it's a correctly configured facility feature in CS-Cart.
+                $hasVariants = (int) db_get_field(
+                    "SELECT COUNT(*) FROM ?:product_feature_variants WHERE feature_id = ?i LIMIT 1",
+                    $featureId
+                );
+                if ($hasVariants > 0) {
+                    $variantId = $this->autoCreateVariant($featureId, $mapping);
+                }
                 if ($variantId <= 0) {
                     $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
                     continue;
