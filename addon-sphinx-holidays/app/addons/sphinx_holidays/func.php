@@ -113,6 +113,22 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'en' => 'Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.',
             'ro' => 'Selectati pentru care limbi CS-Cart sa se creeze descrierile produselor hoteliere. Hotelurile vor aparea in magazin doar pentru limbile selectate.',
         ],
+        'sphinx_holidays.product_code_prefix' => [
+            'en' => 'Product code prefix',
+            'ro' => 'Prefix cod produs',
+        ],
+        'sphinx_holidays.product_code_prefix.tooltip' => [
+            'en' => 'Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345).',
+            'ro' => 'Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).',
+        ],
+        'sphinx_holidays.skip_no_description' => [
+            'en' => 'Skip hotels without description',
+            'ro' => 'Omite hoteluri fără descriere',
+        ],
+        'sphinx_holidays.skip_no_description.tooltip' => [
+            'en' => 'Do not create CS-Cart products for hotels that have an empty description from the API.',
+            'ro' => 'Nu crea produse CS-Cart pentru hoteluri care nu au descriere din API.',
+        ],
         'sphinx_holidays.addon_settings' => [
             'en' => 'Settings',
             'ro' => 'Setări',
