@@ -69,7 +69,7 @@ try {
     if (empty($product_id) && !empty($hotel_id)) {
         $product_id = (int)db_get_field(
             "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            'SPX' . $hotel_id
+            \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix() . $hotel_id
         );
     }
 

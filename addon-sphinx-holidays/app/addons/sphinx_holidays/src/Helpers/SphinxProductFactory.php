@@ -53,7 +53,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
         $hotelId = $hotel['hotel_id'];
-        $productCode = 'SPX' . $hotelId;
+        $productCode = ConfigProvider::getProductCodePrefix() . $hotelId;
 
         // Country code validation
         $cc = $hotel['country_code'] ?? '';

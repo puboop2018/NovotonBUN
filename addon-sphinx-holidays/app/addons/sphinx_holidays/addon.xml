@@ -140,6 +140,11 @@
                         <default_value>ro</default_value>
                         <variants/>
                     </item>
+                    <item id="product_code_prefix">
+                        <type>input</type>
+                        <default_value>SPX</default_value>
+                        <variants/>
+                    </item>
                     <item id="skip_no_description">
                         <type>checkbox</type>
                         <default_value>N</default_value>
@@ -581,6 +586,10 @@
         <item lang="en" id="sphinx_holidays.cron_access_key"><![CDATA[Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
         <item lang="ro" id="sphinx_holidays.cron_access_key"><![CDATA[Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
 
+        <item lang="en" id="sphinx_holidays.product_code_prefix"><![CDATA[Product code prefix]]></item>
+        <item lang="ro" id="sphinx_holidays.product_code_prefix"><![CDATA[Prefix cod produs]]></item>
+        <item lang="en" id="sphinx_holidays.product_code_prefix.tooltip"><![CDATA[Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345).]]></item>
+        <item lang="ro" id="sphinx_holidays.product_code_prefix.tooltip"><![CDATA[Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).]]></item>
         <item lang="en" id="sphinx_holidays.skip_no_description"><![CDATA[Skip hotels without description (do not create products for hotels with empty description)]]></item>
         <item lang="ro" id="sphinx_holidays.skip_no_description"><![CDATA[Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)]]></item>
 

@@ -732,14 +732,8 @@ function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth
  */
 function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code): void
 {
-    if (empty($product_data['product_code'])) {
-        return;
-    }
-
-    $code = $product_data['product_code'];
-    if (str_starts_with($code, 'SPX')) {
-        $hotel_id = substr($code, 3);
-    } else {
+    $hotel_id = _sphinx_extract_hotel_id($product_data['product_code'] ?? '');
+    if ($hotel_id === '') {
         return;
     }
 
@@ -771,16 +765,8 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
  */
 function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
-    if (empty($product['product_code'])) {
-        return;
-    }
-
-    $code = $product['product_code'];
-    if (str_starts_with($code, 'SPX')) {
-        $hotel_id = substr($code, 3);
-    } elseif (str_starts_with($code, 'SPH_')) {
-        $hotel_id = substr($code, 4);
-    } else {
+    $hotel_id = _sphinx_extract_hotel_id($product['product_code'] ?? '');
+    if ($hotel_id === '') {
         \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
         return;
     }
@@ -809,13 +795,32 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
 function fn_sphinx_holidays_get_product_tabs_post($product_id, &$tabs): void
 {
     $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
-    if (str_starts_with($code, 'SPX') || str_starts_with($code, 'SPH_')) {
+    if (_sphinx_extract_hotel_id($code) !== '') {
         foreach ($tabs as $key => $tab) {
             if (($tab['addon'] ?? '') === 'novoton_holidays') {
                 unset($tabs[$key]);
             }
         }
     }
+}
+
+/**
+ * Extract hotel ID from a product code using the configured prefix.
+ *
+ * @return string Hotel ID or empty string if not a Sphinx product
+ */
+function _sphinx_extract_hotel_id(string $productCode): string
+{
+    if ($productCode === '') {
+        return '';
+    }
+
+    $prefix = \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix();
+    if ($prefix !== '' && str_starts_with($productCode, $prefix)) {
+        return substr($productCode, strlen($prefix));
+    }
+
+    return '';
 }
 
 /**
