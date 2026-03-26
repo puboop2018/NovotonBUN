@@ -93,13 +93,13 @@ class CronDispatcher
         $isReadOnly = !empty($params['status']) || !empty($params['reset']) || !empty($params['debug']);
 
         // Acquire file lock to prevent concurrent execution of the same mode
+        $lockFile = null;
         $lockFp = null;
         if (!$isReadOnly) {
             $lockFile = $this->getLockPath($mode);
-            $lockFp = fopen($lockFile, 'w');
+            $lockFp = $this->acquireLock($lockFile);
 
-            if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
-                fclose($lockFp);
+            if ($lockFp === false) {
                 return [
                     'success' => false,
                     'busy' => true,
@@ -116,13 +116,17 @@ class CronDispatcher
             $class = self::$modes[$mode];
             $command = new $class();
 
-            // Set output callback to echo progress
-            $command->setOutputCallback(function (string $message) {
+            // Set output callback to echo progress and keep lock file fresh
+            $command->setOutputCallback(function (string $message) use ($lockFile) {
                 echo $message . "\n";
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
                 flush();
+                // Touch lock file so stale detection doesn't kill active sync
+                if ($lockFile !== null) {
+                    @touch($lockFile);
+                }
             });
 
             $result = $command->execute($params);
@@ -136,6 +140,45 @@ class CronDispatcher
         }
 
         return $result;
+    }
+
+    /**
+     * Acquire an exclusive file lock with stale lock detection.
+     *
+     * If the lock is held by another process but the lock file hasn't been
+     * touched in 30+ minutes, assume the holder died and force-acquire.
+     *
+     * @return resource|false File handle on success, false if lock is held
+     */
+    private function acquireLock(string $lockFile)
+    {
+        $fp = @fopen($lockFile, 'w');
+        if (!$fp) {
+            return false;
+        }
+
+        if (flock($fp, LOCK_EX | LOCK_NB)) {
+            return $fp;
+        }
+
+        fclose($fp);
+
+        // Check for stale lock (holder process may have died)
+        if (file_exists($lockFile)) {
+            $lockAge = time() - (int) filemtime($lockFile);
+            if ($lockAge > 1800) { // 30 minutes
+                @unlink($lockFile);
+                $fp = @fopen($lockFile, 'w');
+                if ($fp && flock($fp, LOCK_EX | LOCK_NB)) {
+                    return $fp;
+                }
+                if ($fp) {
+                    fclose($fp);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

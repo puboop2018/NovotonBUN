@@ -8,9 +8,6 @@
             return;
         }
 
-        // active_providers: comma-separated list -> large
-        $settings.find('[id^="addon_option_travel_core_active_providers"]').addClass('input-text-large');
-
         // cron_access_key: security token -> large
         $settings.find('[id^="addon_option_travel_core_cron_access_key"]').addClass('input-text-large');
 
