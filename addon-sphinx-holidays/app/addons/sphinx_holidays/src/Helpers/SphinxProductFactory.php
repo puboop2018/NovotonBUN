@@ -146,6 +146,10 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             : ($hotel['description'] ?? '');
 
         // Create CS-Cart product using SEO templates
+        // Generate base SEO slug, then ensure uniqueness by appending hotel_id if needed
+        $seoSlug = fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders);
+        $seoSlug = self::ensureUniqueSeoName($seoSlug, $hotelId);
+
         $productData = [
             'product'           => $productName,
             'product_code'      => $productCode,
@@ -159,7 +163,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
             'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
             'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-            'seo_name'          => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
+            'seo_name'          => $seoSlug,
         ];
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
@@ -258,5 +262,29 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'longitude'      => $hotel['longitude'] ?? '',
             'image_url'      => $hotel['image_url'] ?? '',
         ];
+    }
+
+    /**
+     * Ensure an SEO slug is unique in the seo_names table.
+     *
+     * If the slug already exists, appends the hotel_id to make it unique.
+     * This prevents CS-Cart from generating "-en" suffix notices on the frontend.
+     */
+    private static function ensureUniqueSeoName(string $slug, string $hotelId): string
+    {
+        if ($slug === '') {
+            return '';
+        }
+
+        $exists = db_get_field(
+            "SELECT name FROM ?:seo_names WHERE name = ?s AND type = 'p' LIMIT 1",
+            $slug
+        );
+
+        if ($exists) {
+            return $slug . '-' . $hotelId;
+        }
+
+        return $slug;
     }
 }

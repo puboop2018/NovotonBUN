@@ -266,6 +266,7 @@ class HotelRepository
      */
     public function search(string $query, int $limit = 20): array
     {
+        $query = trim($query);
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
             "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",

@@ -927,12 +927,35 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     $download_url = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url);
     $headers = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders();
 
-    $result = \Tygh\Http::get($download_url, [], [
-        'write_to_file' => $temp_file,
-        'headers'       => $headers,
+    // Use direct cURL — CS-Cart's Http::get ignores custom headers and returns
+    // empty string with write_to_file, which caused all downloads to fail.
+    $fp = fopen($temp_file, 'wb');
+    if (!$fp) {
+        if (file_exists($temp_file)) { unlink($temp_file); }
+        return false;
+    }
+
+    $ch = curl_init($download_url);
+    curl_setopt_array($ch, [
+        CURLOPT_FILE           => $fp,
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
     ]);
 
-    if (empty($result) || !file_exists($temp_file) || filesize($temp_file) < 1000) {
+    curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    fclose($fp);
+
+    if ($httpCode !== 200 || !file_exists($temp_file) || filesize($temp_file) < 1000) {
+        if ($httpCode !== 200) {
+            error_log("sphinx_holidays: image download failed HTTP {$httpCode} for {$download_url}" . ($curlError ? " ({$curlError})" : ''));
+        }
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -1017,6 +1040,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     $params['items_per_page'] = max(1, (int) $params['items_per_page']);
     $params['region_id'] = (int) $params['region_id'];
     $params['destination_id'] = (int) $params['destination_id'];
+    $params['q'] = trim((string) $params['q']);
 
     // Sortings map: allowed sort columns
     $sortings = [
