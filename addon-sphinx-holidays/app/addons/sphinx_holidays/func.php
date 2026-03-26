@@ -850,11 +850,18 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
         return;
     }
 
+    // Assign to both Smarty view AND $product array to ensure availability
+    // in all template scopes (product hooks, product tabs, blocks)
     $view = \Tygh\Tygh::$app['view'];
     $view->assign('is_sphinx_hotel', true);
     $view->assign('sphinx_hotel_id', $hotel_id);
     $view->assign('show_sphinx_booking_form', true);
     $view->assign('sphinx_booking_form_position', 'before_tabs');
+
+    $product['is_sphinx_hotel'] = true;
+    $product['sphinx_hotel_id'] = $hotel_id;
+    $product['show_sphinx_booking_form'] = true;
+    $product['sphinx_booking_form_position'] = 'before_tabs';
 }
 
 /**
