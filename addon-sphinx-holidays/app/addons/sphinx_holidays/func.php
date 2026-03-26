@@ -223,8 +223,40 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'ro' => 'Șabloane SEO',
         ],
         'sphinx_holidays.seo_placeholders_info' => [
-            'en' => 'Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-            'ro' => 'Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Array-urile (facilities, boards) afișează primele 3 valori separate prin virgulă. Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}.',
+            'en' => '<div style="float:right;width:320px;margin:-10px 0 15px 20px;padding:12px 16px;background:#f0f6ff;border:1px solid #c5d9f0;border-radius:6px;font-size:12px;line-height:1.6">'
+                . '<strong style="font-size:13px;display:block;margin-bottom:6px">Available Placeholders</strong>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{name}}</code> Hotel name<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{classification}}</code> Star rating<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{city}}</code> City / resort<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{country}}</code> Country name<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{region}}</code> Region name<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{property_type}}</code> hotel/villa/apt<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{description}}</code> API description<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{rating}}</code> Guest rating<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{facilities}}</code> Top 3 facilities<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{boards}}</code> Meal plans<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{latitude}}</code> <code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{longitude}}</code> GPS<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{image_url}}</code> Main image URL'
+                . '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #c5d9f0;font-style:italic;color:#555">'
+                . 'Example:<br>Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}}'
+                . '</div></div>',
+            'ro' => '<div style="float:right;width:320px;margin:-10px 0 15px 20px;padding:12px 16px;background:#f0f6ff;border:1px solid #c5d9f0;border-radius:6px;font-size:12px;line-height:1.6">'
+                . '<strong style="font-size:13px;display:block;margin-bottom:6px">Placeholder-e Disponibile</strong>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{name}}</code> Nume hotel<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{classification}}</code> Clasificare stele<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{city}}</code> Oraș / stațiune<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{country}}</code> Nume țară<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{region}}</code> Nume regiune<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{property_type}}</code> hotel/vilă/apt<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{description}}</code> Descriere API<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{rating}}</code> Rating oaspeți<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{facilities}}</code> Top 3 facilități<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{boards}}</code> Tipuri masă<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{latitude}}</code> <code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{longitude}}</code> GPS<br>'
+                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{image_url}}</code> URL imagine principală'
+                . '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #c5d9f0;font-style:italic;color:#555">'
+                . 'Exemplu:<br>Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele'
+                . '</div></div>',
         ],
         'sphinx_holidays.seo_product_name' => [
             'en' => 'Product name pattern',
