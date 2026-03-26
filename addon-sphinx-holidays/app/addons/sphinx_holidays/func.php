@@ -223,8 +223,8 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'ro' => 'Șabloane SEO',
         ],
         'sphinx_holidays.seo_placeholders_info' => [
-            'en' => 'Available placeholders',
-            'ro' => 'Placeholder-e disponibile',
+            'en' => 'Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'ro' => 'Placeholder-e disponibile: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Array-urile (facilities, boards) afișează primele 3 valori separate prin virgulă. Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}.',
         ],
         'sphinx_holidays.seo_product_name' => [
             'en' => 'Product name pattern',
