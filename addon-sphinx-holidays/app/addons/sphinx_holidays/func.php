@@ -803,6 +803,22 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
 }
 
 /**
+ * Hook: get_product_tabs_post
+ * Hide the Novoton "Hotel Prices" tab on Sphinx hotel product pages.
+ */
+function fn_sphinx_holidays_get_product_tabs_post($product_id, &$tabs): void
+{
+    $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+    if (str_starts_with($code, 'SPX') || str_starts_with($code, 'SPH_')) {
+        foreach ($tabs as $key => $tab) {
+            if (($tab['addon'] ?? '') === 'novoton_holidays') {
+                unset($tabs[$key]);
+            }
+        }
+    }
+}
+
+/**
  * Hook: user_login_post
  * Link session-based sphinx bookings to the logged-in user.
  */

@@ -67,6 +67,7 @@ fn_register_hooks(
     'calculate_cart_items',                     // Preserve stored price for Sphinx bookings
     'get_product_data_post',                   // Attach hotel data to Sphinx products
     'gather_additional_product_data_post',     // Pass booking form config to templates
+    'get_product_tabs_post',                   // Hide Novoton "Hotel Prices" tab on Sphinx products
     'user_login_post',                         // Link session bookings to logged-in user
     'create_user_post',                        // Link bookings to newly registered users
     'get_order_info',                          // Admin notification for failed bookings
