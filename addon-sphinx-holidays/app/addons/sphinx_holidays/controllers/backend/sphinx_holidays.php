@@ -119,7 +119,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'save_whitelist') {
-        $whitelist = $_REQUEST['whitelist'] ?? [];
+        // Accept JSON payload (single field) to avoid PHP max_input_vars limit
+        $whitelistJson = $_REQUEST['whitelist_json'] ?? '';
+        $whitelist = !empty($whitelistJson) ? json_decode($whitelistJson, true) : ($_REQUEST['whitelist'] ?? []);
 
         db_query("START TRANSACTION");
         try {
