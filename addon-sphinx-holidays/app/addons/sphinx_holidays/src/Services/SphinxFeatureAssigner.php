@@ -163,13 +163,17 @@ class SphinxFeatureAssigner
                 continue;
             }
             if ($variantId <= 0 && $mapping) {
-                // Only auto-create if this feature already has at least one variant,
-                // proving it's a correctly configured facility feature in CS-Cart.
-                $hasVariants = (int) db_get_field(
-                    "SELECT COUNT(*) FROM ?:product_feature_variants WHERE feature_id = ?i LIMIT 1",
+                // Only auto-create if at least one OTHER facility mapping for the same
+                // cscart_feature_id already has a variant — proving this is the correct
+                // CS-Cart feature for facilities (not a stale/wrong mapping).
+                $hasMappedSibling = (int) db_get_field(
+                    "SELECT COUNT(*) FROM ?:travel_feature_map
+                     WHERE feature_type = 'facility' AND cscart_feature_id = ?i
+                       AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
+                     LIMIT 1",
                     $featureId
                 );
-                if ($hasVariants > 0) {
+                if ($hasMappedSibling > 0) {
                     $variantId = $this->autoCreateVariant($featureId, $mapping);
                 }
                 if ($variantId <= 0) {
