@@ -7,9 +7,9 @@
  * compilation if the modifier isn't found in plugin directories.
  *}
 
-{* Skip for Sphinx hotel products — they use the booking engine, not price tables *}
-{if $is_sphinx_hotel}
-    {* Return empty content so CS-Cart hides the tab *}
+{* Only show for Novoton hotel products *}
+{if !$is_hotel_product && !$product.is_hotel_product}
+    {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
 {else}
 
 {style src="css/addons/novoton_holidays/styles.css"}
@@ -680,5 +680,5 @@
 
 </div>
 
-{/if}{* /is_sphinx_hotel *}
+{/if}{* /is_hotel_product *}
 
