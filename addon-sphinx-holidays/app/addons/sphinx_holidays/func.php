@@ -223,41 +223,33 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'ro' => 'Șabloane SEO',
         ],
         'sphinx_holidays.seo_placeholders_info' => [
-            'en' => '<div style="float:right;width:320px;margin:-10px 0 15px 20px;padding:12px 16px;background:#f0f6ff;border:1px solid #c5d9f0;border-radius:6px;font-size:12px;line-height:1.6">'
-                . '<strong style="font-size:13px;display:block;margin-bottom:6px">Available Placeholders</strong>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{name}}</code> Hotel name<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{classification}}</code> Star rating<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{city}}</code> City / resort<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{country}}</code> Country name<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{region}}</code> Region name<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{property_type}}</code> hotel/villa/apt<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{description}}</code> API description<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{rating}}</code> Guest rating<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{facilities}}</code> Top 3 facilities<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{boards}}</code> Meal plans<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{latitude}}</code> <code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{longitude}}</code> GPS<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{image_url}}</code> Main image URL'
-                . '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #c5d9f0;font-style:italic;color:#555">'
-                . 'Example:<br>Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}}'
-                . '</div></div>',
-            'ro' => '<div style="float:right;width:320px;margin:-10px 0 15px 20px;padding:12px 16px;background:#f0f6ff;border:1px solid #c5d9f0;border-radius:6px;font-size:12px;line-height:1.6">'
-                . '<strong style="font-size:13px;display:block;margin-bottom:6px">Placeholder-e Disponibile</strong>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{name}}</code> Nume hotel<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{classification}}</code> Clasificare stele<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{city}}</code> Oraș / stațiune<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{country}}</code> Nume țară<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{region}}</code> Nume regiune<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{property_type}}</code> hotel/vilă/apt<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{description}}</code> Descriere API<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{rating}}</code> Rating oaspeți<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{facilities}}</code> Top 3 facilități<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{boards}}</code> Tipuri masă<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{latitude}}</code> <code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{longitude}}</code> GPS<br>'
-                . '<code style="background:#e0ecf8;padding:1px 4px;border-radius:3px">{{image_url}}</code> URL imagine principală'
-                . '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #c5d9f0;font-style:italic;color:#555">'
-                . 'Exemplu:<br>Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele'
-                . '</div></div>',
+            'en' => 'Use the placeholders listed in the sidebar to build your SEO templates.',
+            'ro' => 'Folosiți placeholder-ele din bara laterală pentru a construi șabloanele SEO.',
         ],
+        // Sidebar placeholder reference (used in settings/seo_templates.tpl)
+        'sphinx_holidays.available_placeholders' => [
+            'en' => 'Available Placeholders',
+            'ro' => 'Placeholder-e Disponibile',
+        ],
+        'sphinx_holidays.placeholders_hint' => [
+            'en' => 'Use these tags in your SEO templates:',
+            'ro' => 'Folosiți aceste tag-uri în șabloanele SEO:',
+        ],
+        'sphinx_holidays.placeholders_example' => [
+            'en' => 'Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'ro' => 'Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}.',
+        ],
+        'sphinx_holidays.ph_name' => ['en' => 'Hotel name', 'ro' => 'Nume hotel'],
+        'sphinx_holidays.ph_classification' => ['en' => 'Star rating', 'ro' => 'Clasificare stele'],
+        'sphinx_holidays.ph_city' => ['en' => 'City / resort', 'ro' => 'Oraș / stațiune'],
+        'sphinx_holidays.ph_country' => ['en' => 'Country', 'ro' => 'Țară'],
+        'sphinx_holidays.ph_region' => ['en' => 'Region', 'ro' => 'Regiune'],
+        'sphinx_holidays.ph_property_type' => ['en' => 'Hotel / villa / apt', 'ro' => 'Hotel / vilă / apt'],
+        'sphinx_holidays.ph_description' => ['en' => 'API description', 'ro' => 'Descriere API'],
+        'sphinx_holidays.ph_rating' => ['en' => 'Guest rating', 'ro' => 'Rating oaspeți'],
+        'sphinx_holidays.ph_facilities' => ['en' => 'Top 3 facilities', 'ro' => 'Top 3 facilități'],
+        'sphinx_holidays.ph_boards' => ['en' => 'Meal plans', 'ro' => 'Tipuri masă'],
+        'sphinx_holidays.ph_image_url' => ['en' => 'Main image URL', 'ro' => 'URL imagine principală'],
         'sphinx_holidays.seo_product_name' => [
             'en' => 'Product name pattern',
             'ro' => 'Șablon nume produs',
