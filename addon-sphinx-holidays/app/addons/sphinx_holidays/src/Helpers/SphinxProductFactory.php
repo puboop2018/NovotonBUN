@@ -100,6 +100,15 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
+        // Skip hotels without description if setting is enabled
+        if (ConfigProvider::shouldSkipNoDescription()) {
+            $description = trim((string) ($hotel['description'] ?? ''));
+            if ($description === '') {
+                $this->hotelRepo->markSkipped($hotelId, 'no_description');
+                return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no description'];
+            }
+        }
+
         // Deduplicate: same hotel can appear under different IDs from different suppliers.
         // Three-tier detection — each tier checks if a duplicate already has a CS-Cart product.
         $destId = (int) ($hotel['destination_id'] ?? 0);

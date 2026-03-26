@@ -140,6 +140,11 @@
                         <default_value>ro</default_value>
                         <variants/>
                     </item>
+                    <item id="skip_no_description">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -575,6 +580,9 @@
         <item lang="ro" id="sphinx_holidays.cron_header"><![CDATA[Setări Cron]]></item>
         <item lang="en" id="sphinx_holidays.cron_access_key"><![CDATA[Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
         <item lang="ro" id="sphinx_holidays.cron_access_key"><![CDATA[Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
+
+        <item lang="en" id="sphinx_holidays.skip_no_description"><![CDATA[Skip hotels without description (do not create products for hotels with empty description)]]></item>
+        <item lang="ro" id="sphinx_holidays.skip_no_description"><![CDATA[Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)]]></item>
 
         <item lang="en" id="sphinx_holidays.debug_header"><![CDATA[Debug]]></item>
         <item lang="ro" id="sphinx_holidays.debug_header"><![CDATA[Depanare]]></item>
