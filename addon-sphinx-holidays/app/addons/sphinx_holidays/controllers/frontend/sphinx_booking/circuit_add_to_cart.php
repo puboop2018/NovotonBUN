@@ -90,7 +90,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // Resolve product_id — circuits use SPX{circuit_id} product code
     $product_id = (int)($bookingData['product_id'] ?? 0);
     if (empty($product_id)) {
-        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", 'SPX' . $circuit_id);
+        $product_id = (int)db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix() . $circuit_id);
     }
     if (empty($product_id)) {
         fn_set_notification('E', __('error'), __('sphinx_holidays.product_not_found', ['[default]' => 'Circuit product not found.']));

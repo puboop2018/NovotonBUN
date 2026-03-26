@@ -6,6 +6,6 @@
 {if $is_sphinx_hotel && $show_sphinx_booking_form && $sphinx_booking_form_position == 'after_description'}
     {include file="addons/sphinx_holidays/blocks/booking_engine.tpl"
         hotel_id=$sphinx_hotel_id
-        product_id=$smarty.request.product_id
+        product_id=$product.product_id
     }
 {/if}

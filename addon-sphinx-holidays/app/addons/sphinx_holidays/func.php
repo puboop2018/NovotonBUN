@@ -223,9 +223,33 @@ function fn_sphinx_holidays_seed_language_keys(): void
             'ro' => 'Șabloane SEO',
         ],
         'sphinx_holidays.seo_placeholders_info' => [
-            'en' => 'Available placeholders',
-            'ro' => 'Placeholder-e disponibile',
+            'en' => 'Use the placeholders listed in the sidebar to build your SEO templates.',
+            'ro' => 'Folosiți placeholder-ele din bara laterală pentru a construi șabloanele SEO.',
         ],
+        // Sidebar placeholder reference (used in settings/seo_templates.tpl)
+        'sphinx_holidays.available_placeholders' => [
+            'en' => 'Available Placeholders',
+            'ro' => 'Placeholder-e Disponibile',
+        ],
+        'sphinx_holidays.placeholders_hint' => [
+            'en' => 'Use these tags in your SEO templates:',
+            'ro' => 'Folosiți aceste tag-uri în șabloanele SEO:',
+        ],
+        'sphinx_holidays.placeholders_example' => [
+            'en' => 'Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'ro' => 'Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}.',
+        ],
+        'sphinx_holidays.ph_name' => ['en' => 'Hotel name', 'ro' => 'Nume hotel'],
+        'sphinx_holidays.ph_classification' => ['en' => 'Star rating', 'ro' => 'Clasificare stele'],
+        'sphinx_holidays.ph_city' => ['en' => 'City / resort', 'ro' => 'Oraș / stațiune'],
+        'sphinx_holidays.ph_country' => ['en' => 'Country', 'ro' => 'Țară'],
+        'sphinx_holidays.ph_region' => ['en' => 'Region', 'ro' => 'Regiune'],
+        'sphinx_holidays.ph_property_type' => ['en' => 'Hotel / villa / apt', 'ro' => 'Hotel / vilă / apt'],
+        'sphinx_holidays.ph_description' => ['en' => 'API description', 'ro' => 'Descriere API'],
+        'sphinx_holidays.ph_rating' => ['en' => 'Guest rating', 'ro' => 'Rating oaspeți'],
+        'sphinx_holidays.ph_facilities' => ['en' => 'Top 3 facilities', 'ro' => 'Top 3 facilități'],
+        'sphinx_holidays.ph_boards' => ['en' => 'Meal plans', 'ro' => 'Tipuri masă'],
+        'sphinx_holidays.ph_image_url' => ['en' => 'Main image URL', 'ro' => 'URL imagine principală'],
         'sphinx_holidays.seo_product_name' => [
             'en' => 'Product name pattern',
             'ro' => 'Șablon nume produs',
@@ -732,14 +756,8 @@ function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth
  */
 function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code): void
 {
-    if (empty($product_data['product_code'])) {
-        return;
-    }
-
-    $code = $product_data['product_code'];
-    if (str_starts_with($code, 'SPX')) {
-        $hotel_id = substr($code, 3);
-    } else {
+    $hotel_id = _sphinx_extract_hotel_id($product_data['product_code'] ?? '');
+    if ($hotel_id === '') {
         return;
     }
 
@@ -771,16 +789,8 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
  */
 function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
-    if (empty($product['product_code'])) {
-        return;
-    }
-
-    $code = $product['product_code'];
-    if (str_starts_with($code, 'SPX')) {
-        $hotel_id = substr($code, 3);
-    } elseif (str_starts_with($code, 'SPH_')) {
-        $hotel_id = substr($code, 4);
-    } else {
+    $hotel_id = _sphinx_extract_hotel_id($product['product_code'] ?? '');
+    if ($hotel_id === '') {
         \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
         return;
     }
@@ -800,6 +810,41 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
     $view->assign('sphinx_hotel_id', $hotel_id);
     $view->assign('show_sphinx_booking_form', true);
     $view->assign('sphinx_booking_form_position', 'before_tabs');
+}
+
+/**
+ * Hook: get_product_tabs_post
+ * Hide the Novoton "Hotel Prices" tab on Sphinx hotel product pages.
+ */
+function fn_sphinx_holidays_get_product_tabs_post($product_id, &$tabs): void
+{
+    $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+    if (_sphinx_extract_hotel_id($code) !== '') {
+        foreach ($tabs as $key => $tab) {
+            if (($tab['addon'] ?? '') === 'novoton_holidays') {
+                unset($tabs[$key]);
+            }
+        }
+    }
+}
+
+/**
+ * Extract hotel ID from a product code using the configured prefix.
+ *
+ * @return string Hotel ID or empty string if not a Sphinx product
+ */
+function _sphinx_extract_hotel_id(string $productCode): string
+{
+    if ($productCode === '') {
+        return '';
+    }
+
+    $prefix = \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix();
+    if ($prefix !== '' && str_starts_with($productCode, $prefix)) {
+        return substr($productCode, strlen($prefix));
+    }
+
+    return '';
 }
 
 /**

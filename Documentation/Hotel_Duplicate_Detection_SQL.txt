@@ -1,0 +1,118 @@
+Hotel Duplicate Detection SQL Queries
+======================================
+Date: 2026-03-26
+Context: The Sphinx API returns the same physical hotel under different
+supplier IDs. These duplicates share the same name, region, and/or coordinates.
+
+Table prefix: cscart_ (adjust if different)
+
+=========================================================================
+1. DUPLICATES BY EXACT NAME + REGION
+=========================================================================
+-- Finds hotels with identical name and region (most common pattern)
+-- Example results: "Avenue Venus" x6, "Residence Ambient" x6
+
+SELECT name, region_name, country_code, COUNT(*) AS cnt,
+       GROUP_CONCAT(hotel_id ORDER BY hotel_id) AS hotel_ids,
+       GROUP_CONCAT(IFNULL(product_id, 'NULL') ORDER BY hotel_id) AS product_ids
+FROM cscart_sphinx_hotels
+WHERE sync_status = 'active'
+GROUP BY name, region_name, country_code
+HAVING cnt > 1
+ORDER BY cnt DESC;
+
+
+=========================================================================
+2. DUPLICATES BY EXACT NAME + COORDINATES
+=========================================================================
+-- Finds hotels with identical name AND identical lat/lng
+-- Most reliable: same building from different suppliers
+
+SELECT name, latitude, longitude, COUNT(*) AS cnt,
+       GROUP_CONCAT(hotel_id ORDER BY hotel_id) AS hotel_ids,
+       GROUP_CONCAT(IFNULL(product_id, 'NULL') ORDER BY hotel_id) AS product_ids
+FROM cscart_sphinx_hotels
+WHERE sync_status = 'active' AND latitude != 0 AND longitude != 0
+GROUP BY name, latitude, longitude
+HAVING cnt > 1
+ORDER BY cnt DESC;
+
+
+=========================================================================
+3. DUPLICATES BY COORDINATES ONLY (same building, any name)
+=========================================================================
+-- Catches cases where suppliers use slightly different names
+-- for the exact same GPS location
+
+SELECT latitude, longitude, COUNT(*) AS cnt,
+       GROUP_CONCAT(CONCAT(hotel_id, ':', name) ORDER BY hotel_id SEPARATOR ' | ') AS hotels,
+       GROUP_CONCAT(IFNULL(product_id, 'NULL') ORDER BY hotel_id) AS product_ids
+FROM cscart_sphinx_hotels
+WHERE sync_status = 'active' AND latitude != 0 AND longitude != 0
+GROUP BY latitude, longitude
+HAVING cnt > 1
+ORDER BY cnt DESC;
+
+
+=========================================================================
+4. SUMMARY: HOW MANY DUPLICATE GROUPS EXIST
+=========================================================================
+
+-- By name + region
+SELECT COUNT(*) AS duplicate_groups,
+       SUM(cnt) AS total_duplicate_rows,
+       SUM(cnt) - COUNT(*) AS excess_rows_to_remove
+FROM (
+    SELECT name, region_name, COUNT(*) AS cnt
+    FROM cscart_sphinx_hotels
+    WHERE sync_status = 'active'
+    GROUP BY name, region_name
+    HAVING cnt > 1
+) t;
+
+-- By name + coordinates
+SELECT COUNT(*) AS duplicate_groups,
+       SUM(cnt) AS total_duplicate_rows,
+       SUM(cnt) - COUNT(*) AS excess_rows_to_remove
+FROM (
+    SELECT name, latitude, longitude, COUNT(*) AS cnt
+    FROM cscart_sphinx_hotels
+    WHERE sync_status = 'active' AND latitude != 0 AND longitude != 0
+    GROUP BY name, latitude, longitude
+    HAVING cnt > 1
+) t;
+
+
+=========================================================================
+5. FIND DUPLICATE CS-CART PRODUCTS (multiple hotels linked to different products)
+=========================================================================
+-- Shows cases where duplicate hotels created separate CS-Cart products
+-- These are the products that need to be merged/removed
+
+SELECT name, region_name, country_code,
+       COUNT(DISTINCT product_id) AS distinct_products,
+       COUNT(*) AS hotel_count,
+       GROUP_CONCAT(DISTINCT product_id ORDER BY product_id) AS unique_product_ids,
+       GROUP_CONCAT(hotel_id ORDER BY hotel_id) AS hotel_ids
+FROM cscart_sphinx_hotels
+WHERE sync_status = 'active' AND product_id IS NOT NULL AND product_id > 0
+GROUP BY name, region_name, country_code
+HAVING distinct_products > 1
+ORDER BY distinct_products DESC;
+
+
+=========================================================================
+6. KNOWN DUPLICATE EXAMPLES (from investigation 2026-03-26)
+=========================================================================
+-- Avenue Venus: 6 supplier IDs, 2 CS-Cart products (10060, 10061)
+--   hotel_ids: 606, 678, 679, 680, 689, 690
+--
+-- Residence Ambient: 6 supplier IDs, 1 CS-Cart product (14369)
+--   hotel_ids: 1, 45004, 45005, 45006, 45007, 45008
+--   Note: dedup partially worked here (all linked to same product)
+--
+-- Brasov Holiday Apartments: 5 supplier IDs, 1 CS-Cart product (10270)
+--   hotel_ids: 143, 1577, 1628, 323, 79
+--
+-- Radisson Blu Aurum Hotel Brasov: 4 supplier IDs, 2 CS-Cart products (14282, 14283)
+--   hotel_ids: 152, 1586, 1636, 337

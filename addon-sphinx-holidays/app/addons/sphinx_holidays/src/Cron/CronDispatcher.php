@@ -8,6 +8,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\DeduplicateCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
@@ -43,6 +44,7 @@ class CronDispatcher
         'update_products' => UpdateProductsCommand::class,
         'sync_images'     => SyncImagesCommand::class,
         'cleanup'         => CleanupCommand::class,
+        'deduplicate'     => DeduplicateCommand::class,
         'full'            => FullSyncCommand::class,
     ];
 

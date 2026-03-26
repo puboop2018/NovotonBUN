@@ -53,7 +53,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
         $hotelId = $hotel['hotel_id'];
-        $productCode = 'SPX' . $hotelId;
+        $productCode = ConfigProvider::getProductCodePrefix() . $hotelId;
 
         // Country code validation
         $cc = $hotel['country_code'] ?? '';
@@ -100,32 +100,59 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
-        // Deduplicate: same hotel can appear under different destination_ids
-        // (e.g. dest 233 vs 3713 both = Antalya). Check by:
-        // 1) same name + same destination_id, OR
-        // 2) same name + same latitude/longitude (non-zero)
+        // Skip hotels without description if setting is enabled
+        if (ConfigProvider::shouldSkipNoDescription()) {
+            $description = trim((string) ($hotel['description'] ?? ''));
+            if ($description === '') {
+                $this->hotelRepo->markSkipped($hotelId, 'no_description');
+                return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no description'];
+            }
+        }
+
+        // Deduplicate: same hotel can appear under different IDs from different suppliers.
+        // Three-tier detection — each tier checks if a duplicate already has a CS-Cart product.
         $destId = (int) ($hotel['destination_id'] ?? 0);
         $lat = (float) ($hotel['latitude'] ?? 0);
         $lng = (float) ($hotel['longitude'] ?? 0);
+        $regionId = (int) ($hotel['region_id'] ?? 0);
+        $propType = (string) ($hotel['property_type'] ?? 'hotel');
+        $classif = (int) ($hotel['classification'] ?? 0);
 
-        $dupeConditions = "name = ?s AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s";
-        $dupeParams = [$hotel['name'], $hotelId];
+        $dupeProductId = 0;
 
-        if ($lat != 0.0 && $lng != 0.0) {
-            // Match by name + exact coordinates (most reliable for same physical hotel)
+        // Tier 1: name + property_type + classification + region_id + country_code
+        if ($dupeProductId === 0 && $regionId > 0 && $cc !== '') {
             $dupeProductId = (int) db_get_field(
                 "SELECT product_id FROM ?:sphinx_hotels
-                 WHERE {$dupeConditions} AND latitude = ?d AND longitude = ?d
+                 WHERE name = ?s AND property_type = ?s AND classification = ?i
+                   AND region_id = ?i AND country_code = ?s
+                   AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
                  LIMIT 1",
-                ...[...$dupeParams, $lat, $lng]
+                $hotel['name'], $propType, $classif, $regionId, $cc, $hotelId
             );
-        } else {
-            // No coordinates — fall back to name + destination_id
+        }
+
+        // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m)
+        if ($dupeProductId === 0 && $lat != 0.0 && $lng != 0.0) {
             $dupeProductId = (int) db_get_field(
                 "SELECT product_id FROM ?:sphinx_hotels
-                 WHERE {$dupeConditions} AND destination_id = ?i
+                 WHERE name = ?s
+                   AND ROUND(latitude, 3) = ROUND(?d, 3) AND ROUND(longitude, 3) = ROUND(?d, 3)
+                   AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
                  LIMIT 1",
-                ...[...$dupeParams, $destId]
+                $hotel['name'], $lat, $lng, $hotelId
+            );
+        }
+
+        // Tier 3: name + property_type + classification + destination_id (fallback)
+        if ($dupeProductId === 0 && $destId > 0) {
+            $dupeProductId = (int) db_get_field(
+                "SELECT product_id FROM ?:sphinx_hotels
+                 WHERE name = ?s AND property_type = ?s AND classification = ?i
+                   AND destination_id = ?i
+                   AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
+                 LIMIT 1",
+                $hotel['name'], $propType, $classif, $destId, $hotelId
             );
         }
 

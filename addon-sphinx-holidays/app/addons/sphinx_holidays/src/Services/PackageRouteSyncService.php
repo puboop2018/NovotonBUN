@@ -18,6 +18,9 @@ class PackageRouteSyncService extends AbstractSyncService
     private const UPSERT_BATCH_SIZE = 100;
     private const PER_PAGE = 1000;
 
+    /** @var array<int, string> In-memory cache: destination_id → country_code */
+    private array $countryCodeCache = [];
+
     public function __construct(SphinxApi $api)
     {
         parent::__construct($api);
@@ -45,14 +48,16 @@ class PackageRouteSyncService extends AbstractSyncService
 
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
-        $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
-        if (empty($allowedDestIds)) {
+        // Package routes use region/resort-level arrival IDs that may not appear
+        // in the city-level whitelist. Filter by country code instead.
+        $allowedCountryCodes = ConfigProvider::getSelectedCountryCodes();
+        if (empty($allowedCountryCodes)) {
             $stats['error'] = 'No sync targets configured. Configure destinations in Sphinx Holidays > Whitelist.';
             $this->output('ERROR: ' . $stats['error']);
             return $stats;
         }
 
-        $this->output('Package route sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+        $this->output('Package route sync starting (filtering by countries: ' . implode(', ', $allowedCountryCodes) . ')...');
 
         $allRoutes = [];
         $filtered = 0;
@@ -79,8 +84,9 @@ class PackageRouteSyncService extends AbstractSyncService
                     continue;
                 }
 
-                // Client-side filtering: skip routes whose arrival destination is outside sync targets
-                if (!in_array($normalized['arrival_id'], $allowedDestIds, true)) {
+                // Filter by country: resolve arrival destination's country code
+                $arrivalCountry = $this->resolveCountryCode($normalized['arrival_id']);
+                if ($arrivalCountry === '' || !in_array($arrivalCountry, $allowedCountryCodes, true)) {
                     $filtered++;
                     continue;
                 }
@@ -146,6 +152,21 @@ class PackageRouteSyncService extends AbstractSyncService
             'duration'        => (int) ($raw['duration'] ?? 0),
             'last_synced_at'  => date('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * Resolve a destination ID to its country code via the sphinx_destinations table.
+     * Results are cached in memory (package routes have a small set of unique arrival IDs).
+     */
+    private function resolveCountryCode(int $destinationId): string
+    {
+        if (!isset($this->countryCodeCache[$destinationId])) {
+            $this->countryCodeCache[$destinationId] = (string) db_get_field(
+                "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
+                $destinationId
+            );
+        }
+        return $this->countryCodeCache[$destinationId];
     }
 
     /**

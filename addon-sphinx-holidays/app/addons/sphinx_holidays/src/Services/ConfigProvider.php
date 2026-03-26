@@ -127,6 +127,22 @@ class ConfigProvider
     }
 
     /**
+     * Get the product code prefix for Sphinx hotel products (e.g. 'SPX').
+     */
+    public static function getProductCodePrefix(): string
+    {
+        return (string) self::getSetting('product_code_prefix', 'SPX');
+    }
+
+    /**
+     * Whether to skip creating products for hotels without a description.
+     */
+    public static function shouldSkipNoDescription(): bool
+    {
+        return self::getSetting('skip_no_description', 'N') === 'Y';
+    }
+
+    /**
      * Get the configured languages for hotel product descriptions.
      *
      * CS-Cart stores "multiple checkboxes" values as comma-separated string.
