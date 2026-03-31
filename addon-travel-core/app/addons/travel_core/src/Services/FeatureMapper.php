@@ -64,6 +64,7 @@ class FeatureMapper
     public static function clearCache(): void
     {
         self::$cache = [];
+        self::$trackedUnmapped = [];
     }
 
     /**
@@ -101,6 +102,40 @@ class FeatureMapper
 
         return $result;
     }
+
+    /**
+     * Track an unmapped API value so admins can see what's missing.
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE to increment hotel_count
+     * and refresh last_seen_at. Lightweight — one query per unique miss.
+     *
+     * @param string $apiSource   Provider name ('sphinx', 'novoton')
+     * @param string $featureType Feature type ('facility', 'board', etc.)
+     * @param string $apiValue    Raw value from the API that had no match
+     * @param string $apiLabel    Optional human-readable name (e.g. facility name from API)
+     */
+    public static function trackUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): void
+    {
+        // Deduplicate within the same request to avoid repeated DB writes
+        $dedupeKey = $apiSource . '|' . $featureType . '|' . $apiValue;
+        if (isset(self::$trackedUnmapped[$dedupeKey])) {
+            return;
+        }
+        self::$trackedUnmapped[$dedupeKey] = true;
+
+        db_query(
+            "INSERT INTO ?:travel_unmapped_values (api_source, feature_type, api_value, api_label, hotel_count)
+             VALUES (?s, ?s, ?s, ?s, 1)
+             ON DUPLICATE KEY UPDATE
+                hotel_count = hotel_count + 1,
+                api_label = IF(?s != '', ?s, api_label)",
+            $apiSource, $featureType, $apiValue, $apiLabel,
+            $apiLabel, $apiLabel
+        );
+    }
+
+    /** @var array Per-request deduplication for trackUnmapped() */
+    private static array $trackedUnmapped = [];
 
     /**
      * Get display name for a canonical code (language-aware).

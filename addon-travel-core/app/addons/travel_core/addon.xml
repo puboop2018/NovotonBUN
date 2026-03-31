@@ -156,6 +156,21 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
+        <!-- Unmapped API values — auto-collected when resolve() finds no match -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
+                `unmapped_id`    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `api_source`     VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx, eurosite',
+                `feature_type`   VARCHAR(50)  NOT NULL COMMENT 'facility, board, room_type, etc.',
+                `api_value`      VARCHAR(191) NOT NULL COMMENT 'Raw value from the API',
+                `api_label`      VARCHAR(255) DEFAULT NULL COMMENT 'Human-readable name if available',
+                `hotel_count`    INT UNSIGNED DEFAULT 1 COMMENT 'Number of hotels with this value',
+                `first_seen_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+                `last_seen_at`   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY `uq_source_type_value` (`api_source`, `feature_type`, `api_value`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
         <!-- Shared bookings table (provider-agnostic view) -->
         <item>
             CREATE TABLE IF NOT EXISTS `?:travel_bookings` (
