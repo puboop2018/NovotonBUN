@@ -1,0 +1,61 @@
+section,item,details
+ARCHITECTURE COMPARISON,,
+,Sphinx mapping system,"travel_feature_map + travel_api_alias (travel_core shared tables)"
+,Sphinx facility source,"Hardcoded 101 Sphinx IDs → 96 canonical codes in fn_sphinx_holidays_seed_aliases()"
+,Sphinx facility source file,addon-sphinx-holidays/app/addons/sphinx_holidays/func.php:449-577
+,Sphinx assignment service,SphinxFeatureAssigner.php → uses FeatureMapper::resolve()
+,Novoton mapping system,"hotel_feature_mappings (own table, separate from travel_core)"
+,Novoton facility source,"From API function 26 → novoton_facilities table (31 known facilities)"
+,Novoton facility source file,addon-novoton-holidays/functions/hotels.php:566-617
+,Novoton assignment service,FeatureMapper.php (586 lines) → uses FeatureMappingRepository
+,Novoton seed function,fn_novoton_holidays_seed_feature_mappings() → hotels.php:906-1091
+,,
+NOVOTON travel_api_alias STATUS,,
+,Board aliases seeded,YES — 18 aliases (AI/FB/HB/BB/RO/SC/UAI variants) in install.php:209-230
+,Room type aliases seeded,YES — 8 aliases (SGL/DBL/TWIN/TRP/QUAD/SUITE/APT/STUDIO) in install.php:233-242
+,Stars aliases seeded,YES — 5 aliases (1-5) in install.php:257
+,Property type aliases seeded,YES — 10 aliases in install.php:260-271
+,Facility aliases seeded,NO — NOT seeded. Novoton uses hotel_feature_mappings instead
+,Travel group aliases seeded,NO — NOT seeded. Novoton hardcodes adults_only in seed_feature_mappings
+,,
+GAPS AND ISSUES,,
+,GAP 1 — Novoton facilities NOT in travel_api_alias,"Novoton's 31 facility IDs have no aliases in travel_api_alias. They bypass travel_core entirely and go through hotel_feature_mappings"
+,GAP 2 — No canonical code mapping for Novoton facilities,"Novoton facility IDs (from API) are stored as-is in hotel_feature_mappings.provider_code without mapping to canonical codes like 'pool' or 'wifi'"
+,GAP 3 — Different feature type granularity,"Novoton splits facilities into 4 types (hotel_facility/room_facility/travel_group/beach_access). Sphinx uses single 'facility' type with per-code cscart_feature_id"
+,GAP 4 — No cross-provider facility matching,"Same physical amenity (e.g. WiFi) has different IDs in each provider with no linkage between them"
+,GAP 5 — family_friendly not used by Novoton,"travel_core has canonical code 'family_friendly' and Sphinx seeds alias. Novoton does not use it"
+,GAP 6 — Novoton facility_type classification is manual,"Admin must manually reclassify facilities from default 'hotel_facility' to room_facility/travel_group/beach_access"
+,,
+DUPLICATE SPHINX IDs (multiple IDs → same canonical code),,
+,front_desk_24h,"Sphinx IDs: 59 + 155"
+,wake_up_service,"Sphinx IDs: 156 + 170"
+,conference_rooms,"Sphinx IDs: 128 + 172"
+,business_centre,"Sphinx IDs: 105 + 195"
+,air_conditioning,"Sphinx IDs: 124 + 157"
+,,
+CS-CART FEATURE GROUPS (proposed grouping for unified mapping),,
+,Hotel Amenities,"pool, spa, fitness, restaurant, bar, garden, terrace, casino, aqua_park, cafe, outdoor_furniture, relaxation_area, game_room, bowling, squash, massage, full_body_massage, non_smoking, smoking_area, non_smoking_rooms, no_smoking_all, security_24h, security_alarm, fire_extinguishers, co_detector, card_access, cctv_common, cctv_outside, smoke_alarm, key_access, shared_lounge, sun_terrace"
+,Room Amenities,"air_conditioning, heating, free_wifi, tv, fan, desk, shower, view, minibar, toilet, towels, bed_linen, slippers, telephone, hair_dryer, alarm_clock, toilet_paper, flat_screen_tv, soundproofing, dressing_room, cable_channels, carpet, free_toiletries, private_bathroom, private_entrance, safe, internet, games_puzzles, bedside_socket, mosquito_net, fridge, wine_champagne, wardrobe, washer, ski_storage, soundproof_rooms"
+,Services,"front_desk_24h, tour_desk, currency_exchange, luggage_storage, safety_deposit_box, dry_cleaning, ironing_service, laundry, daily_housekeeping, meeting_facilities, business_centre, fax, conference_rooms, wake_up_service, express_checkin, invoice_available, room_service, breakfast_in_room, airport_transfer"
+,Parking & Transport,"free_parking, secured_parking, parking, transfer_service, car_rental, bike_rental"
+,Beach & Location,"ski, hiking, cycling, tennis, horse_riding, ski_school, bike_tours, walking_tours"
+,Family & Accessibility,"family_rooms, kids_menu, pets_allowed, babysitting, strollers, disabled_access, stairs_only"
+,,
+KEY DATABASE TABLES,,
+,travel_feature_map,"Canonical hub — 102+ facility codes. File: addon-travel-core/addon.xml"
+,travel_api_alias,"Per-provider aliases. Sphinx: 101 facility aliases. Novoton: 0 facility aliases"
+,hotel_feature_mappings,"Novoton-only. Maps provider_code → cs_cart_feature_id. File: addon-novoton-holidays/addon.xml"
+,novoton_facilities,"Novoton facility catalog from API. 31 known facilities with facility_type classification"
+,novoton_hotel_facilities,"Junction: hotel_id ↔ facility_id"
+,,
+KEY SOURCE FILES,,
+,Travel Core seed,addon-travel-core/app/addons/travel_core/func.php:128-306
+,Travel Core FeatureMapper,addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
+,Sphinx alias seed,addon-sphinx-holidays/app/addons/sphinx_holidays/func.php:325-591
+,Sphinx FeatureAssigner,addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
+,Novoton alias seed (board/room/stars/property only),addon-novoton-holidays/functions/install.php:200-295
+,Novoton feature mapping seed,addon-novoton-holidays/functions/hotels.php:906-1091
+,Novoton FeatureMapper,addon-novoton-holidays/src/Services/FeatureMapper.php
+,Novoton FeatureMappingRepository,addon-novoton-holidays/src/Repository/FeatureMappingRepository.php
+,Novoton FacilityRepository,addon-novoton-holidays/src/Repository/FacilityRepository.php
+,Novoton Constants,addon-novoton-holidays/app/addons/novoton_holidays/Constants.php

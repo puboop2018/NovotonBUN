@@ -294,6 +294,30 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'stairs_only',         'Upper Floors by Stairs Only','Etaje superioare accesibile doar pe scări'],
         // Smoking Policy
         ['facility', 'no_smoking_all',      'No Smoking Everywhere',    'Fumatul interzis în toate spațiile'],
+
+        // Novoton-specific facilities (canonical codes shared across providers)
+        // Wellness & Recreation
+        ['facility', 'sauna',               'Sauna',                    'Saună'],
+        ['facility', 'entertainment',       'Entertainment',            'Divertisment'],
+        ['facility', 'balneology',          'Balneology',               'Balneologie'],
+        // Room Amenities
+        ['facility', 'kitchenette',         'Kitchenette',              'Chicineta'],
+        ['facility', 'bathtub',             'Bathtub',                  'Cadă de baie'],
+        // Family & Accessibility
+        ['facility', 'kids_club',           'Kids Club',                'Club pentru copii'],
+        ['facility', 'kids_pool',           "Children's Pool",          'Piscină pentru copii'],
+        ['facility', 'playground',          'Playground',               'Loc de joacă'],
+        ['facility', 'baby_crib',           'Baby Crib',                'Pătuț pentru bebeluși'],
+        // Beach & Location
+        ['facility', 'free_beach_equipment','Free Umbrella & Sunbed',   'Umbrelă și șezlong gratuit'],
+        ['facility', 'beach_bar',           'Beach Bar',                'Bar pe plajă'],
+        ['facility', 'blue_flag_beach',     'Blue Flag Beach',          'Plajă cu Steag Albastru'],
+        ['facility', 'first_line',          'First Line',               'Prima linie'],
+        // Parking & Transport
+        ['facility', 'ski_lift_transfer',   'Transport to Ski Lift',    'Transport la telescaun'],
+        ['facility', 'ev_charger',          'Electric Car Charger',     'Stație încărcare mașini electrice'],
+        // Sustainability
+        ['facility', 'travel_sustainable',  'Travel Sustainable',       'Turism sustenabil'],
     ];
 
     foreach ($seeds as [$featureType, $canonicalCode, $nameEn, $nameRo]) {
