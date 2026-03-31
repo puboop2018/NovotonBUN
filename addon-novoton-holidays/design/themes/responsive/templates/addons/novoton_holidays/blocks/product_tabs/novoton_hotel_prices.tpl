@@ -7,6 +7,11 @@
  * compilation if the modifier isn't found in plugin directories.
  *}
 
+{* Only show for Novoton hotel products *}
+{if !$is_hotel_product && !$product.is_hotel_product}
+    {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
+{else}
+
 {style src="css/addons/novoton_holidays/styles.css"}
 
 <div class="novoton-hotel-prices" id="novoton_prices_tab">
@@ -672,6 +677,8 @@
             <p><small>{__("novoton_holidays.prices_coming_soon")}</small></p>
         </div>
     {/if}
-    
+
 </div>
+
+{/if}{* /is_hotel_product *}
 

@@ -25,7 +25,7 @@
             </div>
             <div class="span6 text-right">
                 {if $booking.provider_display.status_label}
-                    {$booking.provider_display.status_label nofilter}
+                    {$booking.provider_display.status_label|escape:'html'}
                 {elseif $booking.status == 'confirmed'}
                     <span class="label label-success label-large">Confirmed</span>
                 {elseif $booking.status == 'pending'}

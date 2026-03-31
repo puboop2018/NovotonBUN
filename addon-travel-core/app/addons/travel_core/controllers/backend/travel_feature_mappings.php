@@ -247,19 +247,7 @@ if ($mode == 'manage') {
               GROUP BY m.map_id
               ORDER BY m.feature_type, m.position, m.canonical_code";
 
-    switch (count($params)) {
-        case 0:
-            $mappings = db_get_array($query);
-            break;
-        case 1:
-            $mappings = db_get_array($query, $params[0]);
-            break;
-        case 2:
-            $mappings = db_get_array($query, $params[0], $params[1]);
-            break;
-        default:
-            $mappings = db_get_array($query);
-    }
+    $mappings = db_get_array($query, ...$params);
 
     // Resolve variant names for display
     $variantIds = array_filter(array_unique(array_column($mappings, 'cscart_variant_id')));

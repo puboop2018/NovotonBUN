@@ -96,209 +96,7 @@ function fn_sphinx_holidays_post_install(): bool
  */
 function fn_sphinx_holidays_seed_language_keys(): void
 {
-    $keys = [
-        'sphinx_holidays.circuits_category_id' => [
-            'en' => 'CS-Cart category ID for circuits',
-            'ro' => 'ID categorie CS-Cart pentru circuite',
-        ],
-        'sphinx_holidays.experiences_category_id' => [
-            'en' => 'CS-Cart category ID for experiences',
-            'ro' => 'ID categorie CS-Cart pentru experiențe',
-        ],
-        'sphinx_holidays.product_languages' => [
-            'en' => 'Product languages',
-            'ro' => 'Limbi produse',
-        ],
-        'sphinx_holidays.product_languages.tooltip' => [
-            'en' => 'Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.',
-            'ro' => 'Selectati pentru care limbi CS-Cart sa se creeze descrierile produselor hoteliere. Hotelurile vor aparea in magazin doar pentru limbile selectate.',
-        ],
-        'sphinx_holidays.addon_settings' => [
-            'en' => 'Settings',
-            'ro' => 'Setări',
-        ],
-        'sphinx_holidays.show_whitelisted_only' => [
-            'en' => 'Show whitelisted only',
-            'ro' => 'Arată doar cele din whitelist',
-        ],
-        'sphinx_holidays.classification' => [
-            'en' => 'Classification',
-            'ro' => 'Clasificare',
-        ],
-        'sphinx_holidays.link_status' => [
-            'en' => 'Link Status',
-            'ro' => 'Status Legătură',
-        ],
-        'sphinx_holidays.linked' => [
-            'en' => 'Linked',
-            'ro' => 'Legat',
-        ],
-        'sphinx_holidays.orphan' => [
-            'en' => 'Orphan',
-            'ro' => 'Orfan',
-        ],
-        'sphinx_holidays.product' => [
-            'en' => 'Product',
-            'ro' => 'Produs',
-        ],
-        'sphinx_holidays.unclassified' => [
-            'en' => 'Unclassified',
-            'ro' => 'Neclasificat',
-        ],
-        'sphinx_holidays.bulk_activate' => [
-            'en' => 'Activate Selected',
-            'ro' => 'Activează Selectate',
-        ],
-        'sphinx_holidays.bulk_deactivate' => [
-            'en' => 'Deactivate Selected',
-            'ro' => 'Dezactivează Selectate',
-        ],
-        'sphinx_holidays.bulk_delete' => [
-            'en' => 'Delete Selected',
-            'ro' => 'Șterge Selectate',
-        ],
-        'sphinx_holidays.bulk_sync_images' => [
-            'en' => 'Sync Images',
-            'ro' => 'Sincronizează Imagini',
-        ],
-        'sphinx_holidays.bulk_delete_confirm' => [
-            'en' => 'Are you sure you want to delete the selected hotels?',
-            'ro' => 'Sigur doriți să ștergeți hotelurile selectate?',
-        ],
-        'sphinx_holidays.images_synced' => [
-            'en' => 'Images synced',
-            'ro' => 'Imagini sincronizate',
-        ],
-        'sphinx_holidays.hotels_updated' => [
-            'en' => 'Hotels updated',
-            'ro' => 'Hoteluri actualizate',
-        ],
-        'sphinx_holidays.hotels_deleted' => [
-            'en' => 'Hotels deleted',
-            'ro' => 'Hoteluri șterse',
-        ],
-        'sphinx_holidays.no_hotels_selected' => [
-            'en' => 'No hotels selected',
-            'ro' => 'Niciun hotel selectat',
-        ],
-        'sphinx_holidays.all_classifications' => [
-            'en' => 'All classifications',
-            'ro' => 'Toate clasificările',
-        ],
-        'sphinx_holidays.all_property_types' => [
-            'en' => 'All types',
-            'ro' => 'Toate tipurile',
-        ],
-        'sphinx_holidays.all_link_statuses' => [
-            'en' => 'All',
-            'ro' => 'Toate',
-        ],
-        'sphinx_holidays.with_selected' => [
-            'en' => 'With selected',
-            'ro' => 'Cu cele selectate',
-        ],
-        'sphinx_holidays.skipped_hotels' => [
-            'en' => 'Skipped hotels',
-            'ro' => 'Hoteluri omise',
-        ],
-        'sphinx_holidays.retry_skipped' => [
-            'en' => 'Retry skipped hotels',
-            'ro' => 'Reîncearcă hotelurile omise',
-        ],
-        'sphinx_holidays.retry_skipped_confirm' => [
-            'en' => 'This will reset all skipped hotels so they can be processed again. Continue?',
-            'ro' => 'Aceasta va reseta toate hotelurile omise pentru a fi procesate din nou. Continuați?',
-        ],
-        'sphinx_holidays.skipped_reset' => [
-            'en' => '[count] skipped hotel(s) have been reset and are now eligible for product creation.',
-            'ro' => '[count] hotel(uri) omise au fost resetate și sunt acum eligibile pentru crearea de produse.',
-        ],
-        'sphinx_holidays.no_skipped_hotels' => [
-            'en' => 'No skipped hotels found.',
-            'ro' => 'Nu s-au găsit hoteluri omise.',
-        ],
-        // SEO Templates section
-        'sphinx_holidays.seo_templates' => [
-            'en' => 'SEO Templates',
-            'ro' => 'Șabloane SEO',
-        ],
-        'sphinx_holidays.seo_placeholders_info' => [
-            'en' => 'Use the placeholders listed in the sidebar to build your SEO templates.',
-            'ro' => 'Folosiți placeholder-ele din bara laterală pentru a construi șabloanele SEO.',
-        ],
-        // Sidebar placeholder reference (used in settings/seo_templates.tpl)
-        'sphinx_holidays.available_placeholders' => [
-            'en' => 'Available Placeholders',
-            'ro' => 'Placeholder-e Disponibile',
-        ],
-        'sphinx_holidays.placeholders_hint' => [
-            'en' => 'Use these tags in your SEO templates:',
-            'ro' => 'Folosiți aceste tag-uri în șabloanele SEO:',
-        ],
-        'sphinx_holidays.placeholders_example' => [
-            'en' => 'Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-            'ro' => 'Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}.',
-        ],
-        'sphinx_holidays.ph_name' => ['en' => 'Hotel name', 'ro' => 'Nume hotel'],
-        'sphinx_holidays.ph_classification' => ['en' => 'Star rating', 'ro' => 'Clasificare stele'],
-        'sphinx_holidays.ph_city' => ['en' => 'City / resort', 'ro' => 'Oraș / stațiune'],
-        'sphinx_holidays.ph_country' => ['en' => 'Country', 'ro' => 'Țară'],
-        'sphinx_holidays.ph_region' => ['en' => 'Region', 'ro' => 'Regiune'],
-        'sphinx_holidays.ph_property_type' => ['en' => 'Hotel / villa / apt', 'ro' => 'Hotel / vilă / apt'],
-        'sphinx_holidays.ph_description' => ['en' => 'API description', 'ro' => 'Descriere API'],
-        'sphinx_holidays.ph_rating' => ['en' => 'Guest rating', 'ro' => 'Rating oaspeți'],
-        'sphinx_holidays.ph_facilities' => ['en' => 'Top 3 facilities', 'ro' => 'Top 3 facilități'],
-        'sphinx_holidays.ph_boards' => ['en' => 'Meal plans', 'ro' => 'Tipuri masă'],
-        'sphinx_holidays.ph_image_url' => ['en' => 'Main image URL', 'ro' => 'URL imagine principală'],
-        'sphinx_holidays.seo_product_name' => [
-            'en' => 'Product name pattern',
-            'ro' => 'Șablon nume produs',
-        ],
-        'sphinx_holidays.seo_product_name.tooltip' => [
-            'en' => 'Template for the product name.',
-            'ro' => 'Șablon pentru numele produsului.',
-        ],
-        'sphinx_holidays.seo_page_title' => [
-            'en' => 'Page title pattern',
-            'ro' => 'Șablon titlu pagină',
-        ],
-        'sphinx_holidays.seo_page_title.tooltip' => [
-            'en' => 'Template for the HTML page title (SEO).',
-            'ro' => 'Șablon pentru titlul paginii HTML (SEO).',
-        ],
-        'sphinx_holidays.seo_meta_description' => [
-            'en' => 'Meta description pattern',
-            'ro' => 'Șablon meta descriere',
-        ],
-        'sphinx_holidays.seo_meta_description.tooltip' => [
-            'en' => 'Template for the meta description tag.',
-            'ro' => 'Șablon pentru tag-ul meta description.',
-        ],
-        'sphinx_holidays.seo_meta_keywords' => [
-            'en' => 'Meta keywords pattern',
-            'ro' => 'Șablon meta cuvinte cheie',
-        ],
-        'sphinx_holidays.seo_meta_keywords.tooltip' => [
-            'en' => 'Template for the meta keywords tag.',
-            'ro' => 'Șablon pentru tag-ul meta keywords.',
-        ],
-        'sphinx_holidays.seo_name_slug' => [
-            'en' => 'SEO URL slug pattern',
-            'ro' => 'Șablon URL SEO (slug)',
-        ],
-        'sphinx_holidays.seo_name_slug.tooltip' => [
-            'en' => 'Template for the SEO-friendly URL slug. Result is automatically sanitized.',
-            'ro' => 'Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat.',
-        ],
-        'sphinx_holidays.seo_full_description' => [
-            'en' => 'Full description pattern (optional)',
-            'ro' => 'Șablon descriere completă (opțional)',
-        ],
-        'sphinx_holidays.seo_full_description.tooltip' => [
-            'en' => 'Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is.',
-            'ro' => 'Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală.',
-        ],
-    ];
+    $keys = require __DIR__ . '/lang_keys.php';
 
     foreach ($keys as $name => $translations) {
         foreach ($translations as $lang_code => $value) {
@@ -805,11 +603,18 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
         return;
     }
 
+    // Assign to both Smarty view AND $product array to ensure availability
+    // in all template scopes (product hooks, product tabs, blocks)
     $view = \Tygh\Tygh::$app['view'];
     $view->assign('is_sphinx_hotel', true);
     $view->assign('sphinx_hotel_id', $hotel_id);
     $view->assign('show_sphinx_booking_form', true);
     $view->assign('sphinx_booking_form_position', 'before_tabs');
+
+    $product['is_sphinx_hotel'] = true;
+    $product['sphinx_hotel_id'] = $hotel_id;
+    $product['show_sphinx_booking_form'] = true;
+    $product['sphinx_booking_form_position'] = 'before_tabs';
 }
 
 /**
@@ -968,9 +773,18 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    // Sphinx API requires auth header for watermark-free images
-    $download_url = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url);
-    $headers = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders();
+    // Only add auth headers + watermark param for images hosted on the Sphinx API domain.
+    // CDN-hosted images (e.g. b-cdn.net) are public and don't need/accept auth.
+    $apiHost = parse_url(\Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getApiBaseUrl(), PHP_URL_HOST);
+    $imageHost = parse_url($image_url, PHP_URL_HOST);
+    $isApiHosted = ($apiHost && $imageHost && str_contains($imageHost, $apiHost));
+
+    $download_url = $isApiHosted
+        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url)
+        : $image_url;
+    $headers = $isApiHosted
+        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders()
+        : [];
 
     // Use direct cURL — CS-Cart's Http::get ignores custom headers and returns
     // empty string with write_to_file, which caused all downloads to fail.

@@ -156,6 +156,7 @@ class DiscoverBoardsCommand
     {
         $maxTime = max(60, (int) ($params['max_time'] ?? self::DEFAULT_MAX_TIME));
         $unlimited = !empty($params['unlimited']);
+        $debug = !empty($params['debug']);
         $startTime = time();
 
         $api = Container::getApi();
@@ -219,27 +220,47 @@ class DiscoverBoardsCommand
             // Poll for results
             $destOffers = $this->pollResults($api, $cursor);
 
+            if ($debug) {
+                $this->output("  [DEBUG] dest={$destId}: search returned " . count($destOffers) . " offers");
+            }
+
             if (!empty($destOffers)) {
                 $state['offers_found'] += count($destOffers);
 
                 // Get known hotel_ids for this destination
                 $knownHotels = $hotelRepo->getHotelIdsByDestination((int) $destId);
 
+                if ($debug) {
+                    $this->output("  [DEBUG] dest={$destId}: " . count($knownHotels) . " known hotels in DB");
+                    // Show first 3 offer hotel_ids vs first 3 known hotel_ids for comparison
+                    $offerIds = array_unique(array_slice(array_column($destOffers, 'hotel_id'), 0, 5));
+                    $knownIds = array_slice(array_keys($knownHotels), 0, 5);
+                    $this->output("  [DEBUG] API offer hotel_ids (sample): " . json_encode($offerIds) . " (types: " . implode(',', array_map('gettype', $offerIds)) . ")");
+                    $this->output("  [DEBUG] DB known hotel_ids (sample): " . json_encode($knownIds) . " (types: " . implode(',', array_map('gettype', $knownIds)) . ")");
+                }
+
                 // Extract and normalize boards, then update DB immediately per destination
                 $boardsByHotel = [];
+                $debugSkipNoId = 0;
+                $debugSkipUnknown = 0;
+                $debugSkipNoMeal = 0;
+                $debugSkipNormalize = 0;
                 foreach ($destOffers as $offer) {
                     $hotelId = (string) ($offer['hotel_id'] ?? '');
                     if ($hotelId === '' || !isset($knownHotels[$hotelId])) {
+                        if ($hotelId === '') { $debugSkipNoId++; } else { $debugSkipUnknown++; }
                         continue;
                     }
 
                     $rawMeal = $offer['meal_type_name'] ?? $offer['meal_name'] ?? $offer['board_name'] ?? '';
                     if ($rawMeal === '') {
+                        $debugSkipNoMeal++;
                         continue;
                     }
 
                     $canonicalCode = $normalizer->normalizeBoardCode($rawMeal);
                     if ($canonicalCode === null) {
+                        $debugSkipNormalize++;
                         continue;
                     }
 
@@ -253,10 +274,21 @@ class DiscoverBoardsCommand
                     $state['boards_found'][$canonicalCode] = ($state['boards_found'][$canonicalCode] ?? 0) + 1;
                 }
 
+                if ($debug) {
+                    $this->output("  [DEBUG] dest={$destId}: matched=" . count($boardsByHotel) . " hotels, skip_no_id={$debugSkipNoId}, skip_unknown={$debugSkipUnknown}, skip_no_meal={$debugSkipNoMeal}, skip_normalize={$debugSkipNormalize}");
+                    if (!empty($boardsByHotel)) {
+                        foreach (array_slice($boardsByHotel, 0, 3, true) as $hid => $codes) {
+                            $this->output("  [DEBUG]   hotel {$hid} => " . json_encode($codes));
+                        }
+                    }
+                }
+
                 // Update DB immediately for this destination (not batched at the end)
                 if (!empty($boardsByHotel)) {
                     $state['hotels_updated'] += $hotelRepo->updateBoardsBatch($boardsByHotel);
                 }
+            } elseif ($debug) {
+                $this->output("  [DEBUG] dest={$destId}: 0 offers (empty search result)");
             }
 
             $offset++;

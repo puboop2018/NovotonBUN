@@ -13,6 +13,9 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class NovotonXmlParser implements XmlParserInterface
 {
+    private const STREAMING_THRESHOLD = 1_000_000;
+    private const OPTIMIZATION_THRESHOLD = 100_000;
+
     /**
      * Clean XML entities
      * Only encode bare ampersands that would break XML parsing.
@@ -71,14 +74,14 @@ class NovotonXmlParser implements XmlParserInterface
         $size = strlen($xmlString);
 
         // For very large responses (>1MB), use optimized streaming flags
-        if ($size > 1000000) {
+        if ($size > self::STREAMING_THRESHOLD) {
             return $this->parseStreaming($xmlString);
         }
 
         $prevLibxml = libxml_use_internal_errors(true);
 
         $options = LIBXML_NOCDATA | LIBXML_NONET;
-        if ($size > 100000) {
+        if ($size > self::OPTIMIZATION_THRESHOLD) {
             $options |= LIBXML_COMPACT | LIBXML_NOBLANKS;
         }
 

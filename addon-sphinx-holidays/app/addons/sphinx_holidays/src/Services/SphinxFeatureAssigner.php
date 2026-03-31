@@ -142,6 +142,7 @@ class SphinxFeatureAssigner
 
         // Resolve all facilities and group wanted variant_ids by feature_id
         $wantedByFeature = [];
+        $unmapped = [];
         foreach ($facilities as $facility) {
             $facilityId = (string) ($facility['id'] ?? '');
             if ($facilityId === '') {
@@ -150,14 +151,35 @@ class SphinxFeatureAssigner
 
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
             if (!$mapping) {
+                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
                 continue;
             }
 
             $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
             $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
 
-            if ($featureId <= 0 || $variantId <= 0) {
+            if ($featureId <= 0) {
+                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
                 continue;
+            }
+            if ($variantId <= 0 && $mapping) {
+                // Only auto-create if at least one OTHER facility mapping for the same
+                // cscart_feature_id already has a variant — proving this is the correct
+                // CS-Cart feature for facilities (not a stale/wrong mapping).
+                $hasMappedSibling = (int) db_get_field(
+                    "SELECT COUNT(*) FROM ?:travel_feature_map
+                     WHERE feature_type = 'facility' AND cscart_feature_id = ?i
+                       AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
+                     LIMIT 1",
+                    $featureId
+                );
+                if ($hasMappedSibling > 0) {
+                    $variantId = $this->autoCreateVariant($featureId, $mapping);
+                }
+                if ($variantId <= 0) {
+                    $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
+                    continue;
+                }
             }
 
             $wantedByFeature[$featureId][] = $variantId;
@@ -166,6 +188,12 @@ class SphinxFeatureAssigner
         // Diff-based sync per feature_id
         foreach ($wantedByFeature as $featureId => $wantedVariants) {
             $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
+        }
+
+        if (!empty($unmapped)) {
+            fn_log_event('general', 'runtime', [
+                'message' => "Sphinx: product {$productId} has " . count($unmapped) . " unmapped facilities: " . implode(', ', array_slice($unmapped, 0, 10)),
+            ]);
         }
     }
 

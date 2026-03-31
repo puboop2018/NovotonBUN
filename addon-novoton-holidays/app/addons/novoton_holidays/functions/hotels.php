@@ -19,7 +19,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
  * @return array Normalized package data
  */
-function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details = false): array
+function fn_novoton_holidays_normalize_package(array $pkg, bool $include_priceinfo_details = false): array
 {
     $packageData = [
         'IdCont' => $pkg['package_id'],

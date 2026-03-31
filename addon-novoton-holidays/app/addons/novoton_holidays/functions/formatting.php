@@ -22,7 +22,7 @@ use Tygh\Registry;
  * @param string|int $date Date string or timestamp
  * @return string Formatted date
  */
-function fn_novoton_holidays_format_date($date): string
+function fn_novoton_holidays_format_date(string|int $date): string
 {
     if (empty($date)) {
         return '';
@@ -61,7 +61,7 @@ function fn_novoton_holidays_format_date($date): string
  * @param string $boardId Board code (AI, HB, FB, etc.)
  * @return string Formatted board name
  */
-function fn_novoton_holidays_format_board_name($boardId): string
+function fn_novoton_holidays_format_board_name(string $boardId): string
 {
     return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($boardId);
 }
@@ -80,7 +80,7 @@ function fn_novoton_holidays_format_board_name($boardId): string
  * @param string $roomType Room type from hotelinfo API (e.g., "DBL", "APP", "SGL")
  * @return string Formatted room display name
  */
-function fn_novoton_holidays_format_room_type($roomId, $roomType = ''): string
+function fn_novoton_holidays_format_room_type(string $roomId, string $roomType = ''): string
 {
     return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($roomId, $roomType);
 }

@@ -121,6 +121,17 @@ class AddProductsCommand extends AbstractSyncCommand
             $this->output("Reset {$reset} previously skipped hotels{$filter}{$reasonFilter}. They are now eligible for product creation.");
         }
 
+        // Pre-flight: check required configuration before processing any hotels
+        $rootCategoryId = ConfigProvider::getHotelsCategoryId();
+        if ($rootCategoryId <= 0) {
+            $this->output('ERROR: hotels_category_id is not configured. Set a root category in Sphinx Holidays > Settings > Product Creation & Mapping.');
+            $this->clearState();
+            return ['success' => false, 'stats' => [
+                'added' => 0, 'skipped' => 0, 'failed' => 0, 'invalid_country' => 0, 'total' => 0,
+                'error' => 'hotels_category_id not configured',
+            ]];
+        }
+
         $factory->loadValidCountryCodes();
 
         if (!$destRepo->loadParentLookup()) {
