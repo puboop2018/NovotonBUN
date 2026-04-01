@@ -14,7 +14,7 @@ use Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface;
  */
 class GuestDataService implements GuestDataServiceInterface
 {
-    private GuestDataNormalizer $normalizer;
+    private readonly GuestDataNormalizer $normalizer;
 
     public function __construct(?GuestDataNormalizer $normalizer = null)
     {

@@ -53,20 +53,14 @@ class DateHelper
         $year = date('Y', $timestamp);
         $dayOfWeek = (int)date('w', $timestamp);
 
-        switch ($format) {
-            case 'full':
-                return self::$roDays[$dayOfWeek] . ', ' . $day . ' ' . self::$roMonths[$month] . ' ' . $year;
-            case 'medium':
-                return $day . ' ' . self::$roMonths[$month] . ' ' . $year;
-            case 'short':
-                return $day . ' ' . self::$roMonthsShort[$month] . ' ' . $year;
-            case 'day_month':
-                return $day . ' ' . self::$roMonths[$month];
-            case 'day_month_short':
-                return $day . ' ' . self::$roMonthsShort[$month];
-            default:
-                return date('d.m.Y', $timestamp);
-        }
+        return match ($format) {
+            'full'            => self::$roDays[$dayOfWeek] . ', ' . $day . ' ' . self::$roMonths[$month] . ' ' . $year,
+            'medium'          => $day . ' ' . self::$roMonths[$month] . ' ' . $year,
+            'short'           => $day . ' ' . self::$roMonthsShort[$month] . ' ' . $year,
+            'day_month'       => $day . ' ' . self::$roMonths[$month],
+            'day_month_short' => $day . ' ' . self::$roMonthsShort[$month],
+            default           => date('d.m.Y', $timestamp),
+        };
     }
 
     /**
