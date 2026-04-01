@@ -252,25 +252,34 @@ class ConfigProvider
     private static function resolveWhitelistEntries(array $entries): array
     {
         $allIds = [];
+        $countryLookupIds = [];
 
+        // Collect all destination IDs and identify which need country expansion
         foreach ($entries as $entry) {
             $destId = (int) $entry['destination_id'];
-            $selType = $entry['selection_type'];
             $allIds[] = $destId;
 
-            if ($selType === 'all') {
-                // This is a country with "all children" — include every destination under it
-                $countryCode = db_get_field(
-                    "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
-                    $destId
+            if ($entry['selection_type'] === 'all') {
+                $countryLookupIds[] = $destId;
+            }
+        }
+
+        // Batch-fetch country codes for all "all" entries (1 query instead of N)
+        if (!empty($countryLookupIds)) {
+            $destToCountry = db_get_hash_single_array(
+                "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)",
+                ['destination_id', 'country_code'],
+                $countryLookupIds
+            );
+
+            $countryCodes = array_unique(array_filter(array_values($destToCountry)));
+            if (!empty($countryCodes)) {
+                // Batch-fetch all child destinations for these countries (1 query instead of N)
+                $childIds = db_get_fields(
+                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN (?a)",
+                    $countryCodes
                 );
-                if (!empty($countryCode)) {
-                    $childIds = db_get_fields(
-                        "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
-                        $countryCode
-                    );
-                    $allIds = array_merge($allIds, array_map('intval', $childIds));
-                }
+                $allIds = array_merge($allIds, array_map('intval', $childIds));
             }
         }
 
