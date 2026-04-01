@@ -321,11 +321,20 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         '31' => 'first_line',            // First line
     ];
 
+    // Travel group aliases (Novoton passes literal string 'adults_only')
+    $travelGroupAliases = [
+        'adults_only' => 'adults_only',
+    ];
+
     $seedAliasGroup('board', $boardAliases, 'exact');
     $seedAliasGroup('room_type', $roomAliases, 'exact');
     $seedAliasGroup('stars', $starAliases, 'exact');
     $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
     $seedAliasGroup('facility', $facilityAliases, 'exact');
+    $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
+
+    // Resort aliases are dynamic — auto-registered by FeatureMapper::handleUnmapped()
+    // when new city names appear from the API (no pre-seeding needed)
 
     // Clear resolve cache after batch alias inserts
     $featureMapper::clearCache();

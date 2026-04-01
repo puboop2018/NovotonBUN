@@ -206,20 +206,20 @@ class FeatureMapper
             return false;
         }
 
-        $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve(
+        $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveWithVariant(
             $apiSource, $coreFeatureType, $providerCode
         );
         if (!$mapping) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::handleUnmapped(
+                $apiSource, $coreFeatureType, $providerCode
+            );
             return false;
         }
 
-        $featureId = $this->getCoreFeatureId($coreFeatureType);
-        if ($featureId <= 0) {
-            return false;
-        }
+        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
 
-        $variantId = $this->ensureCoreVariantExists($mapping, $featureId);
-        if ($variantId <= 0) {
+        if ($featureId <= 0 || $variantId <= 0) {
             return false;
         }
 
@@ -263,46 +263,42 @@ class FeatureMapper
             return 0;
         }
 
-        $featureId = $this->getCoreFeatureId($coreFeatureType);
-        if ($featureId <= 0) {
-            return 0;
-        }
-
-        $csFeatureType = db_get_field(
-            "SELECT feature_type FROM ?:product_features WHERE feature_id = ?i", $featureId
-        );
-
-        // S-type: only the last code wins
-        if ($csFeatureType === 'S') {
-            $lastCode = end($providerCodes);
-            return $this->assignFeatureViaCore($productId, $coreFeatureType, $lastCode, $apiSource) ? 1 : 0;
-        }
-
-        if ($csFeatureType !== 'M') {
-            return 0;
-        }
-
-        // M-type: resolve all codes to variant IDs via travel_core
-        $newVariantIds = [];
+        // Resolve all codes via travel_core and group by cscart_feature_id
+        // This handles cases where codes in the same feature_type map to different CS-Cart features
+        // (e.g. facility codes: pool → Hotel Amenities, wifi → Room Amenities)
+        $wantedByFeature = [];
         foreach ($providerCodes as $code) {
-            $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve(
+            $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveWithVariant(
                 $apiSource, $coreFeatureType, $code
             );
             if (!$mapping) {
+                \Tygh\Addons\TravelCore\Services\FeatureMapper::handleUnmapped(
+                    $apiSource, $coreFeatureType, $code
+                );
                 continue;
             }
 
-            $variantId = $this->ensureCoreVariantExists($mapping, $featureId);
-            if ($variantId > 0) {
-                $newVariantIds[] = $variantId;
+            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+            if ($featureId <= 0 || $variantId <= 0) {
+                continue;
             }
+
+            $wantedByFeature[$featureId][] = $variantId;
         }
 
-        if (empty($newVariantIds)) {
+        if (empty($wantedByFeature)) {
             return 0;
         }
 
-        return $this->syncCheckboxes($productId, $featureId, $newVariantIds);
+        // Diff-based sync per feature_id
+        $totalAssigned = 0;
+        foreach ($wantedByFeature as $featureId => $variantIds) {
+            $totalAssigned += $this->syncCheckboxes($productId, $featureId, array_unique($variantIds));
+        }
+
+        return $totalAssigned;
     }
 
     // =========================================================================

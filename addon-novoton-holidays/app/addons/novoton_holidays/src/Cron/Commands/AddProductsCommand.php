@@ -247,31 +247,31 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Facilities — each facility's feature_type drives which CS-Cart feature it maps to
-        $facilitiesByType = $facilityRepo->getForHotelGroupedByType($hotelId);
-        foreach ($facilitiesByType as $featureType => $facilities) {
-            $codes = [];
-            foreach ($facilities as $f) {
-                $code = $normalizer->normalizeFacilityCode($f['facility_id']);
+        // Facilities — resolved via travel_core canonical mapping (travel_feature_map + travel_api_alias)
+        $allFacilityIds = $facilityRepo->getIdsForHotel($hotelId);
+        if (!empty($allFacilityIds)) {
+            $facilityCodes = [];
+            foreach ($allFacilityIds as $fid) {
+                $code = $normalizer->normalizeFacilityCode($fid);
                 if ($code !== null) {
-                    $codes[] = $code;
+                    $facilityCodes[] = $code;
                 }
             }
-            if (!empty($codes)) {
-                $featureMapper->assignMultipleToProduct($productId, $featureType, array_unique($codes));
+            if (!empty($facilityCodes)) {
+                $featureMapper->assignMultipleViaCore($productId, 'facility', array_unique($facilityCodes));
             }
         }
 
-        // Travel Group: adults-only detection (virtual code, not a facility)
+        // Travel Group: adults-only detection — via travel_core mapping
         if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
-            $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_TRAVEL_GROUP, 'adults_only');
+            $featureMapper->assignFeatureViaCore($productId, 'travel_group', 'adults_only');
         }
 
-        // Resort / City
+        // Resort / City — via travel_core mapping (dynamic: auto-registers unknown values)
         if (!empty($hotel['city'])) {
             $resortCode = $normalizer->normalizeResort($hotel['city']);
             if ($resortCode !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_RESORT, $resortCode);
+                $featureMapper->assignFeatureViaCore($productId, 'resort', $resortCode);
             }
         }
 
