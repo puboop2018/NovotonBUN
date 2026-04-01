@@ -459,6 +459,14 @@
         <item lang="ro" id="travel_core.fm_alias_added"><![CDATA[Alias-ul a fost adăugat cu succes]]></item>
         <item lang="en" id="travel_core.fm_alias_deleted"><![CDATA[Alias deleted]]></item>
         <item lang="ro" id="travel_core.fm_alias_deleted"><![CDATA[Alias-ul a fost șters]]></item>
+        <item lang="en" id="travel_core.fm_back_dashboard"><![CDATA[Back to Dashboard]]></item>
+        <item lang="ro" id="travel_core.fm_back_dashboard"><![CDATA[Înapoi la Tablou]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_values"><![CDATA[Unmapped API Values]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_values"><![CDATA[Valori API Nemapate]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_promoted"><![CDATA[Unmapped value promoted to mapping successfully]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_promoted"><![CDATA[Valoarea nemapată a fost promovată ca mapare cu succes]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Failed to promote unmapped value]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Promovarea valorii nemapate a eșuat]]></item>
 
         <!-- Tools & Cron -->
         <item lang="en" id="travel_core.tools_and_cron"><![CDATA[Tools & Cron]]></item>

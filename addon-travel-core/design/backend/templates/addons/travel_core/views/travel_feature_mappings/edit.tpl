@@ -109,11 +109,43 @@
         </div>
     </div>
 
+    <hr>
+
+    {* Metadata (read-only) *}
+    <div class="control-group">
+        <label class="control-label">Source:</label>
+        <div class="controls">
+            <span class="label {if $mapping.mapping_source == 'seed'}label-info{elseif $mapping.mapping_source == 'auto'}label-warning{else}label-success{/if}">
+                {$mapping.mapping_source|default:'seed'}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">Variant Lock:</label>
+        <div class="controls">
+            {if $mapping.variant_source == 'manual'}
+                <span class="label label-important"><i class="icon-lock"></i> Manual — auto-resolve will not overwrite</span>
+            {else}
+                <span class="label label-default"><i class="icon-unlock"></i> Auto — can be auto-resolved</span>
+            {/if}
+        </div>
+    </div>
+
+    {if $mapping.last_used_at}
+    <div class="control-group">
+        <label class="control-label">Last Used:</label>
+        <div class="controls">
+            <span class="muted">{$mapping.last_used_at}</span>
+        </div>
+    </div>
+    {/if}
+
     <div class="buttons-container">
         <button type="submit" class="btn btn-primary">
             <i class="icon-ok"></i> {__("save")}
         </button>
-        <a href="{"travel_feature_mappings.manage"|fn_url}" class="btn">{__("cancel")}</a>
+        <a href="{"travel_feature_mappings.manage?feature_type=`$mapping.feature_type`"|fn_url}" class="btn">{__("cancel")}</a>
     </div>
 </form>
 
