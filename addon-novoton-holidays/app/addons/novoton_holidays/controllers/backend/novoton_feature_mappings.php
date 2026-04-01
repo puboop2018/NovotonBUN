@@ -29,7 +29,7 @@ $repo = $container->featureMappingRepository();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update mapping
-    if ($mode == 'update') {
+    if ($mode === 'update') {
         $mappingId = (int) ($_REQUEST['mapping_id'] ?? 0);
         if ($mappingId > 0 && !empty($_REQUEST['mapping_data'])) {
             $data = $_REQUEST['mapping_data'];
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Bulk update (toggle active, delete)
-    if ($mode == 'bulk_update') {
+    if ($mode === 'bulk_update') {
         $action = $_REQUEST['dispatch_extra'] ?? '';
         $ids = $_REQUEST['mapping_ids'] ?? [];
 
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Re-seed mappings
-    if ($mode == 'reseed') {
+    if ($mode === 'reseed') {
         $result = fn_novoton_holidays_seed_feature_mappings();
         $seeded = $result['seeded'] ?? 0;
         $skipped = $result['skipped'] ?? 0;
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Auto-resolve unmapped variants (name-match + create)
-    if ($mode == 'resolve_variants') {
+    if ($mode === 'resolve_variants') {
         $featureMapper = $container->featureMapper();
 
         // Get all active mappings where variant is unresolved and not manually locked
@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── GET: Manage (list) ──
-if ($mode == 'manage') {
+if ($mode === 'manage') {
     $featureTypeFilter = $_REQUEST['feature_type'] ?? '';
     $sourceFilter = $_REQUEST['source'] ?? '';
     $activeFilter = $_REQUEST['active'] ?? '';
@@ -272,7 +272,7 @@ if ($mode == 'manage') {
 }
 
 // ── GET: Edit single mapping ──
-if ($mode == 'edit') {
+if ($mode === 'edit') {
     $mappingId = (int) ($_REQUEST['mapping_id'] ?? 0);
 
     if ($mappingId <= 0) {

@@ -19,7 +19,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
  * @return array Normalized package data
  */
-function fn_novoton_holidays_normalize_package($pkg, $include_priceinfo_details = false): array
+function fn_novoton_holidays_normalize_package(array $pkg, bool $include_priceinfo_details = false): array
 {
     $packageData = [
         'IdCont' => $pkg['package_id'],
@@ -205,7 +205,7 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
  * @param bool $force Force refresh from database
  * @return array|null Hotel data with extracted rooms/boards/ages, or null
  */
-function fn_novoton_holidays_get_hotel_data($hotel_id, $force = false): ?array
+function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $force = false): ?array
 {
     $cache = &_novoton_hotel_data_cache();
 
@@ -362,7 +362,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
  * @param string $package_id Package ID (IdCont)
  * @return array|null Priceinfo data or null
  */
-function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?array
+function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $package_id): ?array
 {
     if ($hotel_id === null || $package_id === null) {
         return null;
@@ -392,7 +392,7 @@ function fn_novoton_holidays_get_package_priceinfo($hotel_id, $package_id): ?arr
  * @param string $package_name Package name
  * @return array|null Priceinfo data or null
  */
-function fn_novoton_holidays_get_package_priceinfo_by_name($hotel_id, $package_name): ?array
+function fn_novoton_holidays_get_package_priceinfo_by_name(string $hotel_id, string $package_name): ?array
 {
     if ($hotel_id === null || $package_name === null) {
         return null;
@@ -465,7 +465,7 @@ function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
  * @param int $product_id Product ID
  * @return string|null Hotel ID or null
  */
-function fn_novoton_holidays_get_hotel_id_by_product($product_id): ?string
+function fn_novoton_holidays_get_hotel_id_by_product(int $product_id): ?string
 {
     $result = db_get_field(
         "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i",
@@ -480,7 +480,7 @@ function fn_novoton_holidays_get_hotel_id_by_product($product_id): ?string
  * @param string $path Category path (e.g., "Bulgaria/Golden Sands")
  * @return int Category ID
  */
-function fn_novoton_holidays_get_or_create_category($path): int
+function fn_novoton_holidays_get_or_create_category(string $path): int
 {
     return fn_travel_core_get_or_create_category($path);
 }
@@ -492,7 +492,7 @@ function fn_novoton_holidays_get_or_create_category($path): int
  * @param string $country Country name (default: BULGARIA)
  * @return array Result with counts
  */
-function fn_novoton_holidays_sync_resorts_list($country = \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY): array
+function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY): array
 {
     $country = (string) ($country ?? \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY);
 
@@ -622,7 +622,7 @@ function fn_novoton_holidays_sync_facilities_list(): array
  * @param string $hotel_id Hotel ID
  * @return bool Success
  */
-function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
+function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
 {
     if ($hotel_id === null || $hotel_id === '') {
         return false;
@@ -678,7 +678,7 @@ function fn_novoton_holidays_sync_hotel_facilities($hotel_id): bool
  * @param string $lang Language code (en/ro)
  * @return array Facilities list
  */
-function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): array
+function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang = 'en'): array
 {
     if ($hotel_id === null || $hotel_id === '') {
         return [];
@@ -706,7 +706,7 @@ function fn_novoton_holidays_get_hotel_facilities($hotel_id, $lang = 'en'): arra
  * @param string $lang Language code (en/ro)
  * @return array Facilities list
  */
-function fn_novoton_holidays_get_hotel_facilities_by_type($hotel_id, $facility_type, $lang = 'en'): array
+function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, string $facility_type, string $lang = 'en'): array
 {
     if ($hotel_id === null || $hotel_id === '') {
         return [];
@@ -774,7 +774,7 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
  * @param int $star_rating Star rating (1-5)
  * @return bool Success
  */
-function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating): bool
+function fn_novoton_holidays_assign_property_rating_feature(int $product_id, string|int $star_rating): bool
 {
     if ($star_rating < 1 || $star_rating > 5) {
         return false;
@@ -803,7 +803,7 @@ function fn_novoton_holidays_assign_property_rating_feature($product_id, $star_r
  * @param bool $is_main Whether this is the main product image
  * @return bool Success status
  */
-function fn_novoton_holidays_add_product_image($product_id, $image_url, $is_main = false): bool
+function fn_novoton_holidays_add_product_image(int $product_id, string $image_url, bool $is_main = false): bool
 {
     if (empty($product_id) || empty($image_url)) {
         return false;

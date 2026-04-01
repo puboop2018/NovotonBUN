@@ -39,7 +39,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Mode: export_hotel_features_csv
  * Generate and immediately download CSV file with hotel features
  */
-if ($mode == 'export_hotel_features_csv') {
+if ($mode === 'export_hotel_features_csv') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -70,7 +70,7 @@ if ($mode == 'export_hotel_features_csv') {
  * Mode: export_hotel_features_xml
  * Generate XML file with hotel features for CS-Cart import
  */
-if ($mode == 'export_hotel_features_xml') {
+if ($mode === 'export_hotel_features_xml') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -98,7 +98,7 @@ if ($mode == 'export_hotel_features_xml') {
  * Mode: download_hotel_features_xml
  * Download the generated XML file (static filename)
  */
-if ($mode == 'download_hotel_features_xml') {
+if ($mode === 'download_hotel_features_xml') {
     $file_path = fn_get_files_dir_path() . 'novoton_reports/novoton_hotel_features.xml';
 
     if (!file_exists($file_path)) {
@@ -117,7 +117,7 @@ if ($mode == 'download_hotel_features_xml') {
  * Mode: test_api
  * Test API connection and credentials — delegates to DiagnosticsService
  */
-if ($mode == 'test_api') {
+if ($mode === 'test_api') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -172,7 +172,7 @@ if ($mode == 'test_api') {
  * Mode: test_formats
  * Test room type and board name formatting (pure presentation, no service needed)
  */
-if ($mode == 'test_formats') {
+if ($mode === 'test_formats') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -206,7 +206,7 @@ if ($mode == 'test_formats') {
  * Mode: test_hotel_list
  * Test hotel list API call — delegates to DiagnosticsService
  */
-if ($mode == 'test_hotel_list') {
+if ($mode === 'test_hotel_list') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -249,7 +249,7 @@ if ($mode == 'test_hotel_list') {
  * Mode: test_room_price
  * Test room price API call — delegates to DiagnosticsService
  */
-if ($mode == 'test_room_price') {
+if ($mode === 'test_room_price') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -314,7 +314,7 @@ if ($mode == 'test_room_price') {
  * Mode: test_search
  * Test availability search API — delegates to DiagnosticsService
  */
-if ($mode == 'test_search') {
+if ($mode === 'test_search') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -380,7 +380,7 @@ if ($mode == 'test_search') {
  * Mode: test_facilities
  * Test facilities sync — delegates to DiagnosticsService
  */
-if ($mode == 'test_facilities') {
+if ($mode === 'test_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -420,7 +420,7 @@ if ($mode == 'test_facilities') {
  * Mode: test_hotel_request
  * Diagnostic page for hotel info request (uses Smarty templates, kept as-is)
  */
-if ($mode == 'test_hotel_request') {
+if ($mode === 'test_hotel_request') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
     // Pass all form values back to template so they persist after submission (sanitized for XSS)
@@ -458,7 +458,7 @@ if ($mode == 'test_hotel_request') {
  * Mode: test_alternative_rs
  * Test alternative search (uses Smarty templates, kept as-is)
  */
-if ($mode == 'test_alternative_rs') {
+if ($mode === 'test_alternative_rs') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
     $id_num = $_REQUEST['id_num'] ?? '';
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
@@ -496,7 +496,7 @@ if ($mode == 'test_alternative_rs') {
  * Mode: test_product
  * Test single product price data — delegates to DiagnosticsService
  */
-if ($mode == 'test_product') {
+if ($mode === 'test_product') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -576,7 +576,7 @@ if ($mode == 'test_product') {
  * Mode: cron_export_hotel_features
  * Cron job to export hotel features CSV
  */
-if ($mode == 'cron_export_hotel_features') {
+if ($mode === 'cron_export_hotel_features') {
     $expected_key = ConfigProvider::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
 
@@ -613,7 +613,7 @@ if ($mode == 'cron_export_hotel_features') {
  * Mode: get_hotel_features_csv
  * Direct download with API key authentication
  */
-if ($mode == 'get_hotel_features_csv') {
+if ($mode === 'get_hotel_features_csv') {
     $expected_key = ConfigProvider::getCronAccessKey();
     $provided_key = $_REQUEST['access_key'] ?? '';
 

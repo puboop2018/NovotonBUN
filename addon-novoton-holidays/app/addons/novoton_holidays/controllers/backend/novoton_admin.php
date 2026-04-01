@@ -17,7 +17,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Update prices manually
-if ($mode == 'update_prices') {
+if ($mode === 'update_prices') {
     
     if (!empty($_REQUEST['single_product']) && !empty($_REQUEST['product_id'])) {
         // Update single product
@@ -75,7 +75,7 @@ if ($mode == 'update_prices') {
 }
 
 // View sync logs
-if ($mode == 'sync_logs') {
+if ($mode === 'sync_logs') {
     
     $logs = db_get_array(
         "SELECT * FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 50"
@@ -85,7 +85,7 @@ if ($mode == 'sync_logs') {
 }
 
 // View bookings
-if ($mode == 'bookings') {
+if ($mode === 'bookings') {
 
     $condition = '';
 
@@ -123,7 +123,7 @@ if ($mode == 'bookings') {
 }
 
 // View booking details
-if ($mode == 'booking_details') {
+if ($mode === 'booking_details') {
 
     $bookingId = (int)($_REQUEST['booking_id'] ?? 0);
 
@@ -160,7 +160,7 @@ if ($mode == 'booking_details') {
 }
 
 // Download log file
-if ($mode == 'download_log') {
+if ($mode === 'download_log') {
     
     $logFile = $_REQUEST['log_file'] ?? '';
     
@@ -197,7 +197,7 @@ if ($mode == 'download_log') {
 }
 
 // Export bookings
-if ($mode == 'export_bookings') {
+if ($mode === 'export_bookings') {
     
     $bookings = db_get_array(
         "SELECT b.*, o.email, o.status as order_status 
@@ -235,7 +235,7 @@ if ($mode == 'export_bookings') {
 }
 
 // Test API connection
-if ($mode == 'test_api') {
+if ($mode === 'test_api') {
     
     $api = _nvt_api();
     
@@ -257,7 +257,7 @@ if ($mode == 'test_api') {
 // ================================================
 // A73: AJAX handler for running cron tasks from admin
 // ================================================
-if ($mode == 'run_cron') {
+if ($mode === 'run_cron') {
     header('Content-Type: application/json');
     
     // Accept 'cron_mode' or legacy 'task' parameter for the cron job to run
