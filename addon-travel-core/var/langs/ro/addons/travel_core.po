@@ -84,6 +84,30 @@ msgctxt "SettingsTooltips::travel_core::feature_id_travel_group"
 msgid "Product feature ID for travel group type (e.g. Adults Only, Family Friendly). Mapped via Feature Mappings UI."
 msgstr "ID caracteristică produs pentru tipul grupului de călătorie (ex. Exclusiv pentru adulți, Potrivit pentru familii). Se configurează din Feature Mappings."
 
+msgctxt "SettingsOptions::travel_core::feature_id_hotel_facility"
+msgid "CS-Cart Feature ID: Hotel Facilities"
+msgstr "ID Caracteristică CS-Cart: Facilități Hotel"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_hotel_facility"
+msgid "Product feature ID for hotel facilities (pool, spa, fitness, etc.). Multiple checkbox type."
+msgstr "ID caracteristică produs pentru facilități hotel (piscină, spa, fitness, etc.). Tip checkbox multiplu."
+
+msgctxt "SettingsOptions::travel_core::feature_id_room_facility"
+msgid "CS-Cart Feature ID: Room Facilities"
+msgstr "ID Caracteristică CS-Cart: Facilități Cameră"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_room_facility"
+msgid "Product feature ID for room facilities (WiFi, AC, minibar, etc.). Multiple checkbox type."
+msgstr "ID caracteristică produs pentru facilități cameră (WiFi, AC, minibar, etc.). Tip checkbox multiplu."
+
+msgctxt "SettingsOptions::travel_core::feature_id_beach_access"
+msgid "CS-Cart Feature ID: Beach Access"
+msgstr "ID Caracteristică CS-Cart: Acces Plajă"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_beach_access"
+msgid "Product feature ID for beach access features (first line, blue flag, etc.). Multiple checkbox type."
+msgstr "ID caracteristică produs pentru acces plajă (prima linie, steag albastru, etc.). Tip checkbox multiplu."
+
 msgctxt "SettingsOptions::travel_core::currency_header"
 msgid "Currency"
 msgstr "Monedă"

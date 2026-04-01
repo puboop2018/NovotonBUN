@@ -151,7 +151,7 @@ class SphinxFeatureAssigner
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
             if (!$mapping) {
                 $facilityName = $facility['name'] ?? '';
-                FeatureMapper::trackUnmapped(self::API_SOURCE, 'facility', $facilityId, $facilityName);
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $facilityId, $facilityName);
                 continue;
             }
 

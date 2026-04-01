@@ -54,8 +54,43 @@ function fn_travel_core_uninstall(): bool
  */
 function fn_travel_core_post_install(): bool
 {
+    fn_travel_core_ensure_schema();
     fn_travel_core_seed_feature_map();
     return true;
+}
+
+/**
+ * Ensure travel_feature_map has all required columns (safe for re-installs).
+ */
+function fn_travel_core_ensure_schema(): void
+{
+    $columns = db_get_fields("SHOW COLUMNS FROM ?:travel_feature_map");
+    $columnSet = array_flip($columns);
+
+    if (!isset($columnSet['variant_source'])) {
+        db_query("ALTER TABLE ?:travel_feature_map ADD COLUMN `variant_source` ENUM('auto','manual') DEFAULT 'auto' COMMENT 'manual = admin-locked' AFTER `cscart_variant_id`");
+    }
+    if (!isset($columnSet['mapping_source'])) {
+        db_query("ALTER TABLE ?:travel_feature_map ADD COLUMN `mapping_source` ENUM('seed','auto','manual') DEFAULT 'seed' COMMENT 'How this row was created' AFTER `variant_source`");
+    }
+    if (!isset($columnSet['last_used_at'])) {
+        db_query("ALTER TABLE ?:travel_feature_map ADD COLUMN `last_used_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time resolve() matched this row' AFTER `status`");
+    }
+
+    // Ensure travel_unmapped_values table exists
+    db_query(
+        "CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
+            `unmapped_id`    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `api_source`     VARCHAR(50)  NOT NULL,
+            `feature_type`   VARCHAR(50)  NOT NULL,
+            `api_value`      VARCHAR(191) NOT NULL,
+            `api_label`      VARCHAR(255) DEFAULT NULL,
+            `hotel_count`    INT UNSIGNED DEFAULT 1,
+            `first_seen_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+            `last_seen_at`   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `uq_source_type_value` (`api_source`, `feature_type`, `api_value`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
 }
 
 /**
@@ -100,6 +135,9 @@ function fn_settings_variants_addons_travel_core_feature_id_location(): array { 
 function fn_settings_variants_addons_travel_core_feature_id_region(): array { return fn_travel_core_get_feature_variants(); }
 function fn_settings_variants_addons_travel_core_feature_id_city(): array { return fn_travel_core_get_feature_variants(); }
 function fn_settings_variants_addons_travel_core_feature_id_travel_group(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_hotel_facility(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_room_facility(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_beach_access(): array { return fn_travel_core_get_feature_variants(); }
 
 /**
  * Variants function for the default_currency addon setting.

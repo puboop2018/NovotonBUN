@@ -21,7 +21,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group'];
+$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -45,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (isset($data['cscart_variant_id'])) {
                 $updateData['cscart_variant_id'] = (int) $data['cscart_variant_id'] ?: null;
+                // Mark as manually set to prevent auto-overwrite
+                if ((int) ($data['cscart_variant_id'] ?? 0) > 0) {
+                    $updateData['variant_source'] = 'manual';
+                }
             }
             if (isset($data['position'])) {
                 $updateData['position'] = (int) $data['position'];
@@ -98,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
     }
 
-    // Auto-resolve unmapped variants by name-matching
+    // Auto-resolve unmapped variants by name-matching + auto-create
     if ($mode == 'resolve_variants') {
 
         // Step 1: Auto-populate cscart_feature_id from addon settings for entries that don't have one
@@ -116,13 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Step 2: Query entries that have a feature_id but no variant yet
+        // Exclude manually locked mappings (variant_source='manual')
         $unmapped = db_get_array(
             "SELECT * FROM ?:travel_feature_map
              WHERE (cscart_variant_id IS NULL OR cscart_variant_id = 0)
-             AND cscart_feature_id > 0 AND status = 'A'"
+             AND cscart_feature_id > 0 AND status = 'A'
+             AND (variant_source IS NULL OR variant_source != 'manual')"
         );
 
         $resolved = 0;
+        $created = 0;
         $failed = 0;
 
         // Group unmapped rows by cscart_feature_id for batch lookup
@@ -136,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Batch-load variant names per feature_id (N queries → F queries)
+        // Batch-load variant names per feature_id
         foreach ($byFeature as $featureId => $mappings) {
             $variantNameToId = db_get_hash_single_array(
                 "SELECT vd.variant, v.variant_id
@@ -154,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
+                $variantId = null;
+
                 // Pass 1: exact match
                 $variantId = $variantNameToId[$nameEn] ?? null;
 
@@ -168,19 +177,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                // Pass 3: normalized match (strip punctuation, collapse whitespace)
+                if (!$variantId) {
+                    $normalizedTarget = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
+                    foreach ($variantNameToId as $vName => $vId) {
+                        $normalizedExisting = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
+                        if ($normalizedExisting === $normalizedTarget) {
+                            $variantId = $vId;
+                            break;
+                        }
+                    }
+                }
+
                 if ($variantId) {
-                    db_query("UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
-                        (int) $variantId, (int) $mapping['map_id']);
+                    FeatureMapper::updateVariantId((int) $mapping['map_id'], (int) $variantId, 'auto');
                     $resolved++;
                 } else {
-                    $failed++;
+                    // Auto-create the variant
+                    $nameRo = trim($mapping['display_name_ro'] ?? '') ?: $nameEn;
+                    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+                    if (empty($languages)) {
+                        $languages = ['en'];
+                    }
+
+                    $newVariantId = (int) db_query(
+                        "INSERT INTO ?:product_feature_variants ?e",
+                        ['feature_id' => $featureId, 'position' => 0]
+                    );
+
+                    if ($newVariantId > 0) {
+                        foreach ($languages as $langCode) {
+                            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
+                            db_query(
+                                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
+                                 VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
+                                $newVariantId, $langCode, $variantName, $variantName
+                            );
+                        }
+                        FeatureMapper::updateVariantId((int) $mapping['map_id'], $newVariantId, 'auto');
+                        // Add to local cache so subsequent mappings can match
+                        $variantNameToId[$nameEn] = $newVariantId;
+                        $created++;
+                    } else {
+                        $failed++;
+                    }
                 }
             }
         }
 
         FeatureMapper::clearCache();
         fn_set_notification('N', __('notice'), __('travel_core.fm_variants_resolved', [
-            '[resolved]' => $resolved,
+            '[resolved]' => $resolved + $created,
             '[failed]' => $failed,
         ]));
 

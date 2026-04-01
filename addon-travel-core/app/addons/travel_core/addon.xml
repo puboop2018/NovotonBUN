@@ -90,6 +90,21 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="feature_id_hotel_facility">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_room_facility">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_beach_access">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
                     <item id="currency_header">
                         <type>header</type>
                         <variants/>
@@ -128,15 +143,18 @@
         <item>
             CREATE TABLE IF NOT EXISTS `?:travel_feature_map` (
                 `map_id`            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `feature_type`      VARCHAR(50)  NOT NULL COMMENT 'board, room_type, stars, property_type, location',
-                `canonical_code`    VARCHAR(100) NOT NULL COMMENT 'AI, DBL, 5, hotel, sunny_beach',
+                `feature_type`      VARCHAR(50)  NOT NULL COMMENT 'board, room_type, stars, property_type, facility, travel_group',
+                `canonical_code`    VARCHAR(100) NOT NULL COMMENT 'AI, DBL, 5, hotel, pool',
                 `display_name_en`   VARCHAR(255) NOT NULL COMMENT 'All Inclusive',
                 `display_name_ro`   VARCHAR(255) NOT NULL COMMENT 'All Inclusive',
                 `cscart_feature_id` INT          DEFAULT NULL COMMENT 'FK to ?:product_features',
                 `cscart_variant_id` INT          DEFAULT NULL COMMENT 'FK to ?:product_feature_variants',
+                `variant_source`    ENUM('auto','manual') DEFAULT 'auto' COMMENT 'manual = admin-locked, prevents auto-overwrite',
+                `mapping_source`    ENUM('seed','auto','manual') DEFAULT 'seed' COMMENT 'How this row was created',
                 `geoname_id`        INT          DEFAULT NULL COMMENT 'For auto-matching Sphinx destinations',
                 `position`          INT          DEFAULT 0,
                 `status`            CHAR(1)      DEFAULT 'A' COMMENT 'A=active, D=disabled',
+                `last_used_at`      TIMESTAMP    DEFAULT NULL COMMENT 'Last time resolve() matched this row',
                 UNIQUE KEY `uq_type_code` (`feature_type`, `canonical_code`),
                 KEY `idx_feature_type` (`feature_type`),
                 KEY `idx_cscart_variant` (`cscart_variant_id`)
