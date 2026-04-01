@@ -53,7 +53,7 @@
     <div class="row-fluid" style="margin-bottom: 15px;">
         {assign var="card_count" value=0}
         {foreach from=$type_stats key=ft item=stat}
-            {if $card_count > 0 && $card_count % 3 == 0}
+            {if $card_count > 0 and $card_count % 3 == 0}
                 </div><div class="row-fluid" style="margin-bottom: 15px;">
             {/if}
             <div class="span4">
@@ -92,8 +92,8 @@
                     {* Provider badges *}
                     {if $stat.providers}
                         <div style="margin-top: 6px;">
-                            {foreach from=","|explode:$stat.providers item=src}
-                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 10px;">{$src|upper|truncate:1:""}</span>
+                            {foreach from=$stat.providers|explode:"," item=src}
+                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 10px;">{$src|upper|truncate:1:"":true}</span>
                             {/foreach}
                         </div>
                     {/if}
@@ -163,7 +163,7 @@
         <input type="hidden" name="dispatch" value="travel_feature_mappings.manage" />
         <input type="hidden" name="feature_type" value="{$search.feature_type}" />
 
-        <input type="text" name="q" value="{$search.q}" placeholder="Search code or name..." class="input-medium" style="margin-right: 8px;" />
+        <input type="text" name="q" value="{$search.q|escape:'html'}" placeholder="Search code or name..." class="input-medium" style="margin-right: 8px;" />
 
         <select name="status" style="width: 100px; margin-right: 8px;">
             <option value="">{__("status")}: {__("all")}</option>
@@ -220,7 +220,7 @@
                     <td>{$m.display_name_ro|truncate:30:"..."|default:'-'}</td>
                     <td>
                         {if $m.cscart_variant_id > 0}
-                            <span class="label label-success" title="{$m.variant_name}">
+                            <span class="label label-success" title="{$m.variant_name|escape:'html'}">
                                 {if $m.variant_source == 'manual'}<i class="icon-lock" title="Admin locked"></i>{/if}
                                 #{$m.cscart_variant_id}
                             </span>
@@ -230,8 +230,8 @@
                     </td>
                     <td>
                         {if $m.api_sources}
-                            {foreach from=","|explode:$m.api_sources item=src}
-                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;" title="{$src}">{$src|upper|truncate:1:""}</span>
+                            {foreach from=$m.api_sources|explode:"," item=src}
+                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;" title="{$src}">{$src|upper|truncate:1:"":true}</span>
                             {/foreach}
                         {else}
                             <span class="muted">&mdash;</span>

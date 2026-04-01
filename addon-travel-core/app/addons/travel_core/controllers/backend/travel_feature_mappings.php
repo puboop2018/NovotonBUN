@@ -368,38 +368,39 @@ if ($mode == 'manage') {
         if ($itemsPerPage <= 0) {
             $itemsPerPage = (int) Registry::get('settings.Appearance.admin_elements_per_page') ?: 25;
         }
+        $itemsPerPage = min($itemsPerPage, 250); // Cap at 250
 
-        // Build WHERE conditions
-        $conditions = ["m.feature_type = ?s"];
-        $conditionValues = [$featureTypeFilter];
+        // Build WHERE condition using db_quote() (CS-Cart standard pattern)
+        $condition = db_quote(" AND m.feature_type = ?s", $featureTypeFilter);
 
         if ($statusFilter === 'A' || $statusFilter === 'D') {
-            $conditions[] = "m.status = ?s";
-            $conditionValues[] = $statusFilter;
+            $condition .= db_quote(" AND m.status = ?s", $statusFilter);
         }
 
         if ($sourceFilter !== '' && in_array($sourceFilter, ['seed', 'auto', 'manual'], true)) {
-            $conditions[] = "m.mapping_source = ?s";
-            $conditionValues[] = $sourceFilter;
+            $condition .= db_quote(" AND m.mapping_source = ?s", $sourceFilter);
         }
 
         if ($searchQuery !== '') {
-            $conditions[] = "(m.canonical_code LIKE ?l OR m.display_name_en LIKE ?l OR m.display_name_ro LIKE ?l)";
-            $conditionValues[] = '%' . $searchQuery . '%';
-            $conditionValues[] = '%' . $searchQuery . '%';
-            $conditionValues[] = '%' . $searchQuery . '%';
+            $escaped = addcslashes($searchQuery, '%_\\');
+            $condition .= db_quote(
+                " AND (m.canonical_code LIKE ?l OR m.display_name_en LIKE ?l OR m.display_name_ro LIKE ?l)",
+                '%' . $escaped . '%', '%' . $escaped . '%', '%' . $escaped . '%'
+            );
         }
-
-        $where = 'WHERE ' . implode(' AND ', $conditions);
 
         // Total count (for pagination)
         $totalItems = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:travel_feature_map m {$where}",
-            ...$conditionValues
+            "SELECT COUNT(*) FROM ?:travel_feature_map m WHERE 1 ?p",
+            $condition
         );
 
         // Offset
         $offset = ($page - 1) * $itemsPerPage;
+        if ($offset >= $totalItems && $totalItems > 0) {
+            $page = 1;
+            $offset = 0;
+        }
 
         // Fetch paginated data
         $mappings = db_get_array(
@@ -407,11 +408,11 @@ if ($mode == 'manage') {
                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
              FROM ?:travel_feature_map m
              LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
-             {$where}
+             WHERE 1 ?p
              GROUP BY m.map_id
              ORDER BY m.position, m.canonical_code
              LIMIT ?i, ?i",
-            ...array_merge($conditionValues, [$offset, $itemsPerPage])
+            $condition, $offset, $itemsPerPage
         );
 
         // Resolve variant + feature names for display
@@ -487,26 +488,21 @@ if ($mode == 'unmapped') {
     $sourceFilter = $_REQUEST['api_source'] ?? '';
     $typeFilter = $_REQUEST['feature_type'] ?? '';
 
-    $conditions = [];
-    $conditionValues = [];
-
+    // Build condition using db_quote() (CS-Cart standard pattern)
+    $condition = '';
     if ($sourceFilter !== '') {
-        $conditions[] = "api_source = ?s";
-        $conditionValues[] = $sourceFilter;
+        $condition .= db_quote(" AND api_source = ?s", $sourceFilter);
     }
     if ($typeFilter !== '') {
-        $conditions[] = "feature_type = ?s";
-        $conditionValues[] = $typeFilter;
+        $condition .= db_quote(" AND feature_type = ?s", $typeFilter);
     }
 
-    $where = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
-
-    $totalItems = (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values {$where}", ...$conditionValues);
+    $totalItems = (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values WHERE 1 ?p", $condition);
     $offset = ($page - 1) * $itemsPerPage;
 
     $unmapped = db_get_array(
-        "SELECT * FROM ?:travel_unmapped_values {$where} ORDER BY hotel_count DESC, last_seen_at DESC LIMIT ?i, ?i",
-        ...array_merge($conditionValues, [$offset, $itemsPerPage])
+        "SELECT * FROM ?:travel_unmapped_values WHERE 1 ?p ORDER BY hotel_count DESC, last_seen_at DESC LIMIT ?i, ?i",
+        $condition, $offset, $itemsPerPage
     );
 
     $search = [

@@ -61,12 +61,12 @@
             <tr>
                 <td>
                     <span class="label {if $u.api_source == 'sphinx'}label-info{elseif $u.api_source == 'novoton'}label-warning{else}label-default{/if}">
-                        {$u.api_source}
+                        {$u.api_source|escape:'html'}
                     </span>
                 </td>
-                <td><code>{$u.feature_type}</code></td>
-                <td><code>{$u.api_value}</code></td>
-                <td>{$u.api_label|default:'-'}</td>
+                <td><code>{$u.feature_type|escape:'html'}</code></td>
+                <td><code>{$u.api_value|escape:'html'}</code></td>
+                <td>{$u.api_label|escape:'html'|default:'-'}</td>
                 <td><span class="label">{$u.hotel_count}</span></td>
                 <td style="font-size: 11px; color: #999;">{$u.first_seen_at|date_format:"%Y-%m-%d"}</td>
                 <td style="font-size: 11px; color: #999;">{$u.last_seen_at|date_format:"%Y-%m-%d"}</td>
@@ -74,7 +74,7 @@
                     <form action="{"travel_feature_mappings.map_unmapped"|fn_url}" method="post" style="display: inline;">
                         <input type="hidden" name="security_hash" value="{$security_hash}">
                         <input type="hidden" name="unmapped_id" value="{$u.unmapped_id}">
-                        <button type="submit" class="btn btn-mini btn-success" title="Create mapping + alias" onclick="return confirm('Create mapping for {$u.api_source} {$u.feature_type} = {$u.api_value}?');">
+                        <button type="submit" class="btn btn-mini btn-success" title="Create mapping + alias" onclick="return confirm('Create mapping for {$u.api_source|escape:'javascript'} {$u.feature_type|escape:'javascript'} = {$u.api_value|escape:'javascript'}?');">
                             <i class="icon-plus"></i> Map
                         </button>
                     </form>
