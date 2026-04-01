@@ -305,40 +305,6 @@ class FeatureMapper
     // Private methods
     // =========================================================================
 
-    private function getCoreFeatureId(string $coreFeatureType): int
-    {
-        return \Tygh\Addons\TravelCore\Services\FeatureMapper::getFeatureId($coreFeatureType);
-    }
-
-    /**
-     * Ensure a travel_core mapping has a CS-Cart variant_id.
-     * Auto-creates the variant if not yet resolved.
-     *
-     * @return int variant_id or 0 on failure
-     */
-    private function ensureCoreVariantExists(array $mapping, int $featureId): int
-    {
-        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
-
-        if ($variantId <= 0) {
-            $variantId = $this->createCsCartVariant([
-                'cs_cart_feature_id' => $featureId,
-                'display_name_en'    => $mapping['display_name_en'] ?? '',
-                'display_name_ro'    => $mapping['display_name_ro'] ?? '',
-                'position'           => 0,
-            ]);
-            if ($variantId > 0) {
-                db_query(
-                    "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
-                    $variantId, (int) $mapping['map_id']
-                );
-                \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
-            }
-        }
-
-        return $variantId;
-    }
-
     /**
      * Ensure the CS-Cart variant exists.
      *

@@ -72,18 +72,18 @@ class FeatureMapper
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', 'facility', etc.)
      * @param string $apiValue    Raw value from the API
-     * @return array|null {map_id, canonical_code, display_name_en, display_name_ro, cscart_variant_id, variant_source}
+     * @return array|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
      */
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array
     {
-        $cacheKey = $apiSource . '|' . $featureType . '|' . $apiValue;
+        $cacheKey = $apiSource . "\0" . $featureType . "\0" . $apiValue;
 
         if (array_key_exists($cacheKey, self::$cache)) {
             return self::$cache[$cacheKey];
         }
 
         $result = db_get_row(
-            "SELECT m.map_id, m.canonical_code, m.display_name_en, m.display_name_ro,
+            "SELECT m.map_id, m.feature_type, m.canonical_code, m.display_name_en, m.display_name_ro,
                     m.cscart_feature_id, m.cscart_variant_id, m.variant_source
              FROM ?:travel_api_alias a
              JOIN ?:travel_feature_map m ON m.map_id = a.map_id
@@ -103,14 +103,17 @@ class FeatureMapper
         );
 
         if ($result) {
-            // Update last_used_at (fire-and-forget, not on every call — only on cache miss)
-            db_query("UPDATE ?:travel_feature_map SET last_used_at = NOW() WHERE map_id = ?i", $result['map_id']);
+            // Batch last_used_at updates — collect map_ids and flush at clearCache()
+            self::$usedMapIds[(int) $result['map_id']] = true;
         }
 
         self::$cache[$cacheKey] = $result ?: null;
 
-        return $result;
+        return self::$cache[$cacheKey];
     }
+
+    /** @var array<int, true> Map IDs used in this request, flushed by clearCache() */
+    private static array $usedMapIds = [];
 
     // ── Resolve with variant auto-creation ──
 
@@ -155,8 +158,12 @@ class FeatureMapper
     {
         $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
         $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-        $mapId = (int) $mapping['map_id'];
+        $mapId = (int) ($mapping['map_id'] ?? 0);
         $variantSource = $mapping['variant_source'] ?? 'auto';
+
+        if ($mapId <= 0) {
+            return 0;
+        }
 
         if ($featureId <= 0) {
             // Try to get feature_id from settings
@@ -293,8 +300,8 @@ class FeatureMapper
     private static function normalizeName(string $name): string
     {
         $name = mb_strtolower($name, 'UTF-8');
-        $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name);
-        return trim(preg_replace('/\s+/', ' ', $name));
+        $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name) ?? $name;
+        return trim(preg_replace('/\s+/', ' ', $name) ?? $name);
     }
 
     // ── Unmapped value handling ──
@@ -346,8 +353,13 @@ class FeatureMapper
             ? $apiLabel
             : mb_convert_case($apiValue, MB_CASE_TITLE, 'UTF-8');
 
-        // Use api_value as canonical code (sanitized)
+        // Use api_value as canonical code (sanitized: lowercase, non-alnum → underscore, collapse)
         $canonicalCode = preg_replace('/[^a-z0-9_]/', '_', strtolower(trim($apiValue)));
+        if ($canonicalCode === null || $canonicalCode === '') {
+            return null;
+        }
+        // Collapse multiple underscores and trim trailing ones
+        $canonicalCode = trim(preg_replace('/_+/', '_', $canonicalCode) ?? '', '_');
         if ($canonicalCode === '') {
             return null;
         }
@@ -399,7 +411,7 @@ class FeatureMapper
      */
     public static function trackUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): void
     {
-        $dedupeKey = $apiSource . '|' . $featureType . '|' . $apiValue;
+        $dedupeKey = $apiSource . "\0" . $featureType . "\0" . $apiValue;
         if (isset(self::$trackedUnmapped[$dedupeKey])) {
             return;
         }
@@ -438,6 +450,13 @@ class FeatureMapper
      */
     public static function clearCache(): void
     {
+        // Batch-flush last_used_at updates (one query instead of N)
+        if (!empty(self::$usedMapIds)) {
+            $ids = array_keys(self::$usedMapIds);
+            db_query("UPDATE ?:travel_feature_map SET last_used_at = NOW() WHERE map_id IN (?n)", $ids);
+            self::$usedMapIds = [];
+        }
+
         self::$cache = [];
         self::$trackedUnmapped = [];
     }
@@ -450,7 +469,11 @@ class FeatureMapper
     public static function toVariantId(string $apiSource, string $featureType, string $apiValue): ?int
     {
         $mapping = self::resolve($apiSource, $featureType, $apiValue);
-        return $mapping ? ($mapping['cscart_variant_id'] ? (int) $mapping['cscart_variant_id'] : null) : null;
+        if ($mapping === null) {
+            return null;
+        }
+        $vid = (int) ($mapping['cscart_variant_id'] ?? 0);
+        return $vid > 0 ? $vid : null;
     }
 
     /**
