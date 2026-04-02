@@ -18,7 +18,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 class HotelAvailabilitySearcher
 {
     /** @var SearchServiceInterface */
-    private SearchServiceInterface $searchService;
+    private readonly SearchServiceInterface $searchService;
 
     /** @var bool */
     private bool $debug;

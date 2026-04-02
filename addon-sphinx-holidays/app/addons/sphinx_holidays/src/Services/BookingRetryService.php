@@ -18,8 +18,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 class BookingRetryService
 {
-    private SphinxApi $api;
-    private SphinxBookingRepository $repo;
+    private readonly SphinxApi $api;
+    private readonly SphinxBookingRepository $repo;
 
     public function __construct(SphinxApi $api, SphinxBookingRepository $repo)
     {

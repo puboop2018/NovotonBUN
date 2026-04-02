@@ -12,7 +12,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class PricingApiClient extends ApiClientBase
 {
-    private CommissionCalculator $commissionCalculator;
+    private readonly CommissionCalculator $commissionCalculator;
 
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_PRICE_INFO,

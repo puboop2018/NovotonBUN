@@ -13,6 +13,7 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -372,20 +373,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Helper: provider-specific scan configuration
+// Helper: provider-specific scan configuration (from TravelProviderRegistry)
 function _travel_fm_get_scan_config(string $provider): ?array
 {
-    $configs = [
-        'sphinx' => [
-            'table'    => 'sphinx_hotels',
-            'id_col'   => 'hotel_id',
-            'json_col' => 'facilities_json',
-        ],
-        // Future providers can be added here:
-        // 'eurosite' => ['table' => 'eurosite_hotels', 'id_col' => 'hotel_id', 'json_col' => 'facilities_json'],
-    ];
-
-    return $configs[$provider] ?? null;
+    return TravelProviderRegistry::getScanConfig($provider);
 }
 
 // ── GET: Manage (dashboard or paginated list) ──
@@ -454,12 +445,16 @@ if ($mode == 'manage') {
             'beach_access'  => 'Beach Access',
         ];
 
+        // Providers with scan config (for "Scan Facilities" dropdown)
+        $scanProviders = array_keys(TravelProviderRegistry::getAllScanConfigs());
+
         Tygh::$app['view']->assign('view_mode', 'dashboard');
         Tygh::$app['view']->assign('type_stats', $typeStats);
         Tygh::$app['view']->assign('type_labels', $typeLabels);
         Tygh::$app['view']->assign('unmapped_count', $unmappedCount);
         Tygh::$app['view']->assign('mapping_stats', $stats);
         Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
+        Tygh::$app['view']->assign('scan_providers', $scanProviders);
 
     } else {
         // ── List mode (feature_type selected, paginated) ──

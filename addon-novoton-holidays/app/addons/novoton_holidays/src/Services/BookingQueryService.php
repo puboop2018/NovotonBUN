@@ -24,8 +24,8 @@ use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
 class BookingQueryService
 {
-    private BookingRepositoryInterface $bookingRepository;
-    private GuestDataNormalizer $guestDataNormalizer;
+    private readonly BookingRepositoryInterface $bookingRepository;
+    private readonly GuestDataNormalizer $guestDataNormalizer;
 
     public function __construct(
         BookingRepositoryInterface $bookingRepository,

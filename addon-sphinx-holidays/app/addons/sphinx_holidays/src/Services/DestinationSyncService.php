@@ -16,7 +16,7 @@ class DestinationSyncService extends AbstractSyncService
     private const UPSERT_BATCH_SIZE = 100;
     private const PER_PAGE = 1000;
 
-    private DestinationRepository $repository;
+    private readonly DestinationRepository $repository;
 
     public function __construct(SphinxApi $api, DestinationRepository $repository)
     {

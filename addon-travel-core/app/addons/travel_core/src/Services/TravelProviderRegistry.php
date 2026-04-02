@@ -120,6 +120,51 @@ class TravelProviderRegistry
     }
 
     /**
+     * Register facility scan configuration for a provider.
+     *
+     * @param string $name    Provider name ('sphinx', 'novoton', etc.)
+     * @param string $table   Database table containing hotel data
+     * @param string $idCol   Column name for hotel ID
+     * @param string $jsonCol Column name containing facilities JSON array
+     */
+    public static function setScanConfig(string $name, string $table, string $idCol, string $jsonCol): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$providers[$name]['scan_config'] = [
+                'table'    => $table,
+                'id_col'   => $idCol,
+                'json_col' => $jsonCol,
+            ];
+        }
+    }
+
+    /**
+     * Get facility scan configuration for a provider.
+     *
+     * @return array{table: string, id_col: string, json_col: string}|null
+     */
+    public static function getScanConfig(string $name): ?array
+    {
+        return self::$providers[$name]['scan_config'] ?? null;
+    }
+
+    /**
+     * Get all providers that have scan configuration registered.
+     *
+     * @return array<string, array{table: string, id_col: string, json_col: string}>
+     */
+    public static function getAllScanConfigs(): array
+    {
+        $configs = [];
+        foreach (self::$providers as $name => $provider) {
+            if (!empty($provider['scan_config'])) {
+                $configs[$name] = $provider['scan_config'];
+            }
+        }
+        return $configs;
+    }
+
+    /**
      * Check if a provider is registered.
      */
     public static function has(string $name): bool

@@ -22,7 +22,7 @@ class SphinxFeatureAssigner
 
     private const API_SOURCE = 'sphinx';
 
-    private SphinxNormalizer $normalizer;
+    private readonly SphinxNormalizer $normalizer;
 
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];

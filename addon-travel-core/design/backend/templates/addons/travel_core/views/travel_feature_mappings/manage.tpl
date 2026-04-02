@@ -124,7 +124,9 @@
                 <form action="{"travel_feature_mappings.scan_facilities"|fn_url}" method="post" class="form-inline" style="display: inline;">
                     <input type="hidden" name="security_hash" value="{$security_hash}">
                     <select name="scan_provider" style="width: 120px; margin: 0 5px;">
-                        <option value="sphinx">Sphinx</option>
+                        {foreach from=$scan_providers item=sp}
+                            <option value="{$sp|escape:'html'}">{$sp|upper|escape:'html'}</option>
+                        {/foreach}
                     </select>
                     <select name="batch_size" style="width: 80px; margin-right: 5px;">
                         <option value="250">250</option>
