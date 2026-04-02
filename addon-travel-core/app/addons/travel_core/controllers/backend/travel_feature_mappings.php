@@ -15,6 +15,9 @@ use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
+/** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
+$repo = FeatureMapper::getRepository();
+
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
@@ -59,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!empty($updateData)) {
-                db_query("UPDATE ?:travel_feature_map SET ?u WHERE map_id = ?i", $updateData, $mapId);
+                $repo->updateMapping($mapId, $updateData);
                 FeatureMapper::clearCache();
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mapping_updated'));
             }
@@ -78,15 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ids = array_map('intval', $ids);
 
             if ($action === 'activate') {
-                db_query("UPDATE ?:travel_feature_map SET status = 'A' WHERE map_id IN (?n)", $ids);
+                $repo->bulkUpdateStatus($ids, 'A');
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_activated', ['[count]' => count($ids)]));
             } elseif ($action === 'deactivate') {
-                db_query("UPDATE ?:travel_feature_map SET status = 'D' WHERE map_id IN (?n)", $ids);
+                $repo->bulkUpdateStatus($ids, 'D');
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_deactivated', ['[count]' => count($ids)]));
             } elseif ($action === 'delete') {
-                // Delete aliases first, then the mapping
-                db_query("DELETE FROM ?:travel_api_alias WHERE map_id IN (?n)", $ids);
-                db_query("DELETE FROM ?:travel_feature_map WHERE map_id IN (?n)", $ids);
+                $repo->deleteMappings($ids);
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_deleted', ['[count]' => count($ids)]));
             }
             FeatureMapper::clearCache();
@@ -107,27 +108,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode == 'resolve_variants') {
 
         // Step 1: Auto-populate cscart_feature_id from addon settings for entries that don't have one
-        $featureTypes = db_get_fields(
-            "SELECT DISTINCT feature_type FROM ?:travel_feature_map WHERE cscart_feature_id = 0 OR cscart_feature_id IS NULL"
-        );
+        $featureTypes = $repo->getFeatureTypesWithoutFeatureId();
         foreach ($featureTypes as $ft) {
             $fid = FeatureMapper::getFeatureId($ft);
             if ($fid > 0) {
-                db_query(
-                    "UPDATE ?:travel_feature_map SET cscart_feature_id = ?i WHERE feature_type = ?s AND (cscart_feature_id = 0 OR cscart_feature_id IS NULL)",
-                    $fid, $ft
-                );
+                $repo->bulkSetFeatureId($ft, $fid);
             }
         }
 
         // Step 2: Query entries that have a feature_id but no variant yet
         // Exclude manually locked mappings (variant_source='manual')
-        $unmapped = db_get_array(
-            "SELECT * FROM ?:travel_feature_map
-             WHERE (cscart_variant_id IS NULL OR cscart_variant_id = 0)
-             AND cscart_feature_id > 0 AND status = 'A'
-             AND (variant_source IS NULL OR variant_source != 'manual')"
-        );
+        $unmapped = $repo->getUnresolvedMappings();
 
         $resolved = 0;
         $created = 0;
@@ -259,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aliasId = (int) ($_REQUEST['alias_id'] ?? 0);
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
         if ($aliasId > 0) {
-            db_query("DELETE FROM ?:travel_api_alias WHERE alias_id = ?i", $aliasId);
+            $repo->deleteAlias($aliasId);
             FeatureMapper::clearCache();
             fn_set_notification('N', __('notice'), __('travel_core.fm_alias_deleted'));
         }
@@ -270,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'map_unmapped') {
         $unmappedId = (int) ($_REQUEST['unmapped_id'] ?? 0);
         if ($unmappedId > 0) {
-            $row = db_get_row("SELECT * FROM ?:travel_unmapped_values WHERE unmapped_id = ?i", $unmappedId);
+            $row = $repo->getUnmappedById($unmappedId);
             if ($row) {
                 $mapId = FeatureMapper::registerUnmapped(
                     $row['api_source'], $row['feature_type'], $row['api_value'], $row['api_label'] ?? ''
@@ -350,10 +341,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isComplete = count($hotels) < $batchSize || $processedSoFar >= $totalHotels;
 
         if ($isComplete) {
-            $unmappedTotal = (int) db_get_field(
-                "SELECT COUNT(*) FROM ?:travel_unmapped_values WHERE api_source = ?s AND feature_type = 'facility'",
-                $provider
-            );
+            $condition = db_quote(" AND api_source = ?s AND feature_type = 'facility'", $provider);
+            $unmappedResult = $repo->getPaginatedUnmapped($condition, 0, 0);
+            $unmappedTotal = $unmappedResult['total'];
             fn_set_notification('N', __('notice'), __('travel_core.fm_scan_complete', [
                 '[provider]' => $provider,
                 '[hotels]' => $processedSoFar,
@@ -390,19 +380,7 @@ if ($mode == 'manage') {
     if (!$featureTypeFilter || !in_array($featureTypeFilter, $validFeatureTypes, true)) {
 
         // Per-type stats for dashboard cards
-        $typeStats = db_get_hash_array(
-            "SELECT m.feature_type,
-                    COUNT(*) AS total,
-                    SUM(m.status = 'A') AS active,
-                    SUM(m.cscart_variant_id IS NULL OR m.cscart_variant_id = 0) AS unmapped,
-                    SUM(m.mapping_source = 'auto') AS auto_registered,
-                    GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) AS providers
-             FROM ?:travel_feature_map m
-             LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
-             GROUP BY m.feature_type
-             ORDER BY FIELD(m.feature_type, 'facility', 'board', 'resort', 'stars', 'property_type', 'travel_group', 'room_type', 'region', 'city', 'beach_access')",
-            'feature_type'
-        );
+        $typeStats = $repo->getTypeStats();
 
         // Enrich with configured feature IDs
         foreach ($typeStats as $ft => &$stat) {
@@ -415,21 +393,10 @@ if ($mode == 'manage') {
         unset($stat);
 
         // Unmapped values count
-        $unmappedCount = (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values");
+        $unmappedCount = $repo->getUnmappedCount();
 
         // Global stats
-        $globalStats = db_get_row(
-            "SELECT COUNT(*) AS total,
-                    SUM(status = 'A') AS active,
-                    SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
-             FROM ?:travel_feature_map"
-        );
-        $stats = [
-            'total'    => (int) ($globalStats['total'] ?? 0),
-            'active'   => (int) ($globalStats['active'] ?? 0),
-            'unmapped' => (int) ($globalStats['unmapped'] ?? 0),
-            'aliases'  => (int) db_get_field("SELECT COUNT(*) FROM ?:travel_api_alias"),
-        ];
+        $stats = $repo->getGlobalStats();
 
         // Human-readable labels for feature types
         $typeLabels = [
@@ -486,31 +453,20 @@ if ($mode == 'manage') {
             );
         }
 
-        // Total count (for pagination)
-        $totalItems = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:travel_feature_map m WHERE 1 ?p",
-            $condition
-        );
-
         // Offset
         $offset = ($page - 1) * $itemsPerPage;
+
+        // Fetch paginated data via repository
+        $paginatedResult = $repo->getPaginatedMappings($condition, $offset, $itemsPerPage);
+        $mappings = $paginatedResult['items'];
+        $totalItems = $paginatedResult['total'];
+
         if ($offset >= $totalItems && $totalItems > 0) {
             $page = 1;
             $offset = 0;
+            $paginatedResult = $repo->getPaginatedMappings($condition, $offset, $itemsPerPage);
+            $mappings = $paginatedResult['items'];
         }
-
-        // Fetch paginated data
-        $mappings = db_get_array(
-            "SELECT m.*, COUNT(a.alias_id) as alias_count,
-                    GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
-             FROM ?:travel_feature_map m
-             LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
-             WHERE 1 ?p
-             GROUP BY m.map_id
-             ORDER BY m.position, m.canonical_code
-             LIMIT ?i, ?i",
-            $condition, $offset, $itemsPerPage
-        );
 
         // Resolve variant + feature names for display
         $variantIds = array_filter(array_unique(array_column($mappings, 'cscart_variant_id')));
@@ -538,13 +494,7 @@ if ($mode == 'manage') {
         unset($m);
 
         // Type-level stats for header
-        $typeStats = db_get_row(
-            "SELECT COUNT(*) AS total,
-                    SUM(status = 'A') AS active,
-                    SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
-             FROM ?:travel_feature_map WHERE feature_type = ?s",
-            $featureTypeFilter
-        );
+        $typeStats = $repo->getTypeStatsSingle($featureTypeFilter);
 
         // Human-readable labels
         $typeLabels = [
@@ -594,13 +544,11 @@ if ($mode == 'unmapped') {
         $condition .= db_quote(" AND feature_type = ?s", $typeFilter);
     }
 
-    $totalItems = (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values WHERE 1 ?p", $condition);
     $offset = ($page - 1) * $itemsPerPage;
 
-    $unmapped = db_get_array(
-        "SELECT * FROM ?:travel_unmapped_values WHERE 1 ?p ORDER BY hotel_count DESC, last_seen_at DESC LIMIT ?i, ?i",
-        $condition, $offset, $itemsPerPage
-    );
+    $paginatedUnmapped = $repo->getPaginatedUnmapped($condition, $offset, $itemsPerPage);
+    $unmapped = $paginatedUnmapped['items'];
+    $totalItems = $paginatedUnmapped['total'];
 
     $search = [
         'api_source'     => $sourceFilter,
@@ -639,7 +587,7 @@ if ($mode == 'edit') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
     }
 
-    $mapping = db_get_row("SELECT * FROM ?:travel_feature_map WHERE map_id = ?i", $mapId);
+    $mapping = $repo->getMappingById($mapId);
     if (empty($mapping)) {
         fn_set_notification('E', __('error'), __('travel_core.fm_mapping_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
@@ -669,10 +617,7 @@ if ($mode == 'edit') {
     }
 
     // Load aliases for this mapping
-    $aliases = db_get_array(
-        "SELECT * FROM ?:travel_api_alias WHERE map_id = ?i ORDER BY api_source, api_value",
-        $mapId
-    );
+    $aliases = $repo->getAliasesForMapping($mapId);
 
     Tygh::$app['view']->assign('mapping', $mapping);
     Tygh::$app['view']->assign('all_features', $allFeatures);

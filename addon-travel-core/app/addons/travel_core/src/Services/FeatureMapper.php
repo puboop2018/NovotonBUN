@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\FeatureMapperInterface;
+use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
+use Tygh\Addons\TravelCore\Repository\FeatureMapRepository;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -11,6 +13,9 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  *
  * Resolves API-specific values (e.g., "Mic dejun", "AI", "Twin Room with Sea View")
  * to canonical codes using the travel_feature_map + travel_api_alias tables.
+ *
+ * Static facade pattern: all public methods remain static for backward compatibility.
+ * DB operations are delegated to FeatureMapRepository for testability.
  *
  * Supports:
  * - Multi-pass fuzzy matching (exact > prefix > contains)
@@ -31,6 +36,9 @@ class FeatureMapper implements FeatureMapperInterface
 
     /** @var self|null Singleton for instance methods (variant creation uses the trait) */
     private static ?self $instance = null;
+
+    /** @var FeatureMapRepositoryInterface|null Injectable repository (defaults to FeatureMapRepository) */
+    private static ?FeatureMapRepositoryInterface $repository = null;
 
     /**
      * Strict feature types: unknown codes are logged + skipped, never auto-registered.
@@ -62,6 +70,27 @@ class FeatureMapper implements FeatureMapperInterface
         'beach_access'   => 'feature_id_beach_access',
     ];
 
+    // ── Repository access ──
+
+    /**
+     * Get the repository instance (lazy-initialized).
+     */
+    public static function getRepository(): FeatureMapRepositoryInterface
+    {
+        if (self::$repository === null) {
+            self::$repository = new FeatureMapRepository();
+        }
+        return self::$repository;
+    }
+
+    /**
+     * Inject a custom repository (for testing).
+     */
+    public static function setRepository(?FeatureMapRepositoryInterface $repository): void
+    {
+        self::$repository = $repository;
+    }
+
     // ── Core resolve ──
 
     /**
@@ -83,32 +112,14 @@ class FeatureMapper implements FeatureMapperInterface
             return self::$cache[$cacheKey];
         }
 
-        $result = db_get_row(
-            "SELECT m.map_id, m.feature_type, m.canonical_code, m.display_name_en, m.display_name_ro,
-                    m.cscart_feature_id, m.cscart_variant_id, m.variant_source
-             FROM ?:travel_api_alias a
-             JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND m.feature_type = ?s AND m.status = 'A'
-               AND (
-                   a.api_value = ?s
-                   OR (a.match_type = 'prefix' AND ?s LIKE CONCAT(a.api_value, '%'))
-                   OR (a.match_type = 'contains' AND ?s LIKE CONCAT('%', a.api_value, '%'))
-               )
-             ORDER BY FIELD(
-                 CASE WHEN a.api_value = ?s THEN 'exact' ELSE a.match_type END,
-                 'exact', 'prefix', 'contains'
-             ), LENGTH(a.api_value) DESC
-             LIMIT 1",
-            $apiSource, $featureType,
-            $apiValue, $apiValue, $apiValue, $apiValue
-        );
+        $result = self::getRepository()->findByAlias($apiSource, $featureType, $apiValue);
 
         if ($result) {
             // Batch last_used_at updates — collect map_ids and flush at clearCache()
             self::$usedMapIds[(int) $result['map_id']] = true;
         }
 
-        self::$cache[$cacheKey] = $result ?: null;
+        self::$cache[$cacheKey] = $result;
 
         return self::$cache[$cacheKey];
     }
@@ -147,7 +158,6 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Ensure a CS-Cart variant exists for a mapping row.
      *
-     * Ported from Novoton's FeatureMapper::ensureVariantExists().
      * 1. If stored variant_id exists in CS-Cart, use it.
      * 2. If variant_source='manual', never auto-resolve (admin locked).
      * 3. Try 3-pass name matching against existing CS-Cart variants.
@@ -161,6 +171,7 @@ class FeatureMapper implements FeatureMapperInterface
         $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
         $mapId = (int) ($mapping['map_id'] ?? 0);
         $variantSource = $mapping['variant_source'] ?? 'auto';
+        $repo = self::getRepository();
 
         if ($mapId <= 0) {
             return 0;
@@ -172,7 +183,7 @@ class FeatureMapper implements FeatureMapperInterface
             if ($featureType !== '') {
                 $featureId = self::getFeatureId($featureType);
                 if ($featureId > 0) {
-                    db_query("UPDATE ?:travel_feature_map SET cscart_feature_id = ?i WHERE map_id = ?i", $featureId, $mapId);
+                    $repo->updateFeatureId($mapId, $featureId);
                 }
             }
             if ($featureId <= 0) {
@@ -223,7 +234,7 @@ class FeatureMapper implements FeatureMapperInterface
     }
 
     /**
-     * 3-pass variant name matching (ported from Novoton).
+     * 3-pass variant name matching.
      *
      * Per language (EN first, then RO fallback):
      *   1. Exact match
@@ -367,23 +378,14 @@ class FeatureMapper implements FeatureMapperInterface
 
         // Determine cscart_feature_id from addon settings
         $featureId = self::getFeatureId($featureType);
+        $repo = self::getRepository();
 
         // Insert mapping row
-        $mapId = (int) db_query(
-            "INSERT IGNORE INTO ?:travel_feature_map
-             (feature_type, canonical_code, display_name_en, display_name_ro,
-              cscart_feature_id, mapping_source, status)
-             VALUES (?s, ?s, ?s, ?s, ?i, 'auto', 'A')",
-            $featureType, $canonicalCode, $effectiveLabel, $effectiveLabel,
-            $featureId ?: null
-        );
+        $mapId = $repo->insertMapping($featureType, $canonicalCode, $effectiveLabel, $effectiveLabel, $featureId ?: null);
 
         if ($mapId <= 0) {
             // Row may already exist (INSERT IGNORE), fetch existing map_id
-            $mapId = (int) db_get_field(
-                "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = ?s AND canonical_code = ?s",
-                $featureType, $canonicalCode
-            );
+            $mapId = $repo->findMapId($featureType, $canonicalCode);
         }
 
         if ($mapId <= 0) {
@@ -394,10 +396,7 @@ class FeatureMapper implements FeatureMapperInterface
         self::addAlias($apiSource, $apiValue, $mapId, 'exact');
 
         // Remove from unmapped_values since it's now mapped
-        db_query(
-            "DELETE FROM ?:travel_unmapped_values WHERE api_source = ?s AND feature_type = ?s AND api_value = ?s",
-            $apiSource, $featureType, $apiValue
-        );
+        $repo->deleteUnmapped($apiSource, $featureType, $apiValue);
 
         self::$cache = [];
 
@@ -418,15 +417,7 @@ class FeatureMapper implements FeatureMapperInterface
         }
         self::$trackedUnmapped[$dedupeKey] = true;
 
-        db_query(
-            "INSERT INTO ?:travel_unmapped_values (api_source, feature_type, api_value, api_label, hotel_count)
-             VALUES (?s, ?s, ?s, ?s, 1)
-             ON DUPLICATE KEY UPDATE
-                hotel_count = hotel_count + 1,
-                api_label = IF(?s != '', ?s, api_label)",
-            $apiSource, $featureType, $apiValue, $apiLabel,
-            $apiLabel, $apiLabel
-        );
+        self::getRepository()->trackUnmapped($apiSource, $featureType, $apiValue, $apiLabel);
     }
 
     // ── Variant ID management ──
@@ -436,10 +427,7 @@ class FeatureMapper implements FeatureMapperInterface
      */
     public static function updateVariantId(int $mapId, int $variantId, string $source = 'auto'): void
     {
-        db_query(
-            "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i, variant_source = ?s WHERE map_id = ?i",
-            $variantId, $source, $mapId
-        );
+        self::getRepository()->updateVariantId($mapId, $variantId, $source);
         self::$cache = [];
     }
 
@@ -453,8 +441,7 @@ class FeatureMapper implements FeatureMapperInterface
     {
         // Batch-flush last_used_at updates (one query instead of N)
         if (!empty(self::$usedMapIds)) {
-            $ids = array_keys(self::$usedMapIds);
-            db_query("UPDATE ?:travel_feature_map SET last_used_at = NOW() WHERE map_id IN (?n)", $ids);
+            self::getRepository()->batchUpdateLastUsed(array_keys(self::$usedMapIds));
             self::$usedMapIds = [];
         }
 
@@ -504,12 +491,7 @@ class FeatureMapper implements FeatureMapperInterface
      */
     public static function getDisplayName(string $featureType, string $canonicalCode, string $lang = 'en'): string
     {
-        $column = $lang === 'ro' ? 'display_name_ro' : 'display_name_en';
-
-        return (string) db_get_field(
-            "SELECT `{$column}` FROM ?:travel_feature_map WHERE feature_type = ?s AND canonical_code = ?s AND status = 'A'",
-            $featureType, $canonicalCode
-        );
+        return self::getRepository()->getDisplayName($featureType, $canonicalCode, $lang);
     }
 
     /**
@@ -517,14 +499,7 @@ class FeatureMapper implements FeatureMapperInterface
      */
     public static function addAlias(string $apiSource, string $apiValue, int $mapId, string $matchType = 'exact'): void
     {
-        db_query(
-            "INSERT INTO ?:travel_api_alias (map_id, api_source, api_value, match_type)
-             VALUES (?i, ?s, ?s, ?s)
-             ON DUPLICATE KEY UPDATE map_id = ?i, match_type = ?s",
-            $mapId, $apiSource, $apiValue, $matchType,
-            $mapId, $matchType
-        );
-
+        self::getRepository()->upsertAlias($apiSource, $apiValue, $mapId, $matchType);
         self::$cache = [];
     }
 
@@ -547,14 +522,7 @@ class FeatureMapper implements FeatureMapperInterface
      */
     public static function allCodes(string $featureType): array
     {
-        return db_get_hash_array(
-            "SELECT canonical_code, map_id, display_name_en, display_name_ro, cscart_variant_id
-             FROM ?:travel_feature_map
-             WHERE feature_type = ?s AND status = 'A'
-             ORDER BY position, canonical_code",
-            'canonical_code',
-            $featureType
-        );
+        return self::getRepository()->allCodes($featureType);
     }
 
     /**
