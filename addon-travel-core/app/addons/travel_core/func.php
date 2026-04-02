@@ -204,12 +204,17 @@ function fn_travel_core_seed_feature_map(): void
         ['property_type', 'boarding_house', 'Boarding House', 'Pensiune'],
         ['property_type', 'cabin',          'Cabin',          'Cabană'],
 
-        // Travel group — target audience / travel style
+        // Travel group — target audience / travel style (M-type: hotel can have multiple)
         ['travel_group', 'adults_only',     'Adults Only',      'Exclusiv pentru adulți'],
         ['travel_group', 'family_friendly', 'Family Friendly',  'Potrivit pentru familii'],
+        ['travel_group', 'pets_friendly',   'Pets Allowed',     'Acceptă animale de companie'],
 
         // Facilities — canonical codes shared across providers.
-        // Each row can have its own cscart_feature_id (admin-assigned via UI).
+        // Each row has its own cscart_feature_id (admin-assigned via UI).
+        // The admin controls which CS-Cart feature (Hotel Amenities vs Room Amenities)
+        // each facility maps to. Grouping is visual only in the dashboard.
+        //
+        // Hotel Facilities — amenities of the property
         // Food & Drink
         ['facility', 'kids_menu',           "Kid's Menu",               'Meniu masă pentru copii'],
         ['facility', 'water_bottle',        'Bottle of Water',          'Sticlă de apă'],
@@ -240,6 +245,9 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'ski_school',          'Ski School',               'Școală de schi'],
         ['facility', 'bike_rental',         'Bicycle Rental',           'Închiriere de biciclete'],
         ['facility', 'relaxation_area',     'Relaxation Area',          'Zonă de relaxare'],
+        ['facility', 'sauna',               'Sauna',                    'Saună'],
+        ['facility', 'entertainment',       'Entertainment',            'Divertisment'],
+        ['facility', 'balneology',          'Balneology',               'Balneologie'],
         // Parking & Transport
         ['facility', 'free_parking',        'Free Parking',             'Parcare gratuită'],
         ['facility', 'secured_parking',     'Secured Parking',          'Parcare securizată'],
@@ -249,6 +257,8 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'bike_tours',          'Bicycle Tours',            'Tururi cu bicicleta'],
         ['facility', 'walking_tours',       'Walking Tours',            'Tururi de mers pe jos'],
         ['facility', 'parking',             'Parking',                  'Parcare'],
+        ['facility', 'ski_lift_transfer',   'Transport to Ski Lift',    'Transport la telescaun'],
+        ['facility', 'ev_charger',          'Electric Car Charger',     'Stație încărcare mașini electrice'],
         // Front Desk & Services
         ['facility', 'front_desk_24h',      '24-Hour Front Desk',       'Recepție non-stop'],
         ['facility', 'tour_desk',           'Tour Desk',                'Birou de turism'],
@@ -269,12 +279,44 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'babysitting',         'Babysitting/Child Services','Babysitting/servicii copii'],
         ['facility', 'cafe',                'On-site Café',             'Cafenea la proprietate'],
         ['facility', 'invoice_available',   'Invoice Available',        'Factură disponibilă'],
-        // Room Amenities
+        // Outdoor
+        ['facility', 'outdoor_furniture',   'Outdoor Furniture',        'Mobilier exterior'],
+        ['facility', 'garden',              'Garden',                   'Grădină'],
+        ['facility', 'terrace',             'Terrace',                  'Terasă'],
+        ['facility', 'sun_terrace',         'Sun Terrace',              'Terasă la soare'],
+        // Security
+        ['facility', 'security_24h',        '24-Hour Security',         'Securitate non-stop'],
+        ['facility', 'security_alarm',      'Security Alarm',           'Alarmă de securitate'],
+        ['facility', 'fire_extinguishers',  'Fire Extinguishers',       'Extinctoare'],
+        ['facility', 'co_detector',         'Carbon Monoxide Detector', 'Detector de monoxid de carbon'],
+        ['facility', 'card_access',         'Card Access',              'Acces cu cardul'],
+        ['facility', 'cctv_common',         'CCTV in Common Areas',     'Camere supraveghere zone comune'],
+        ['facility', 'cctv_outside',        'CCTV Outside Property',    'Camere supraveghere exterior'],
+        ['facility', 'smoke_alarm',         'Smoke Alarm',              'Alarmă de fum'],
+        ['facility', 'key_access',          'Key Access',               'Acces cu cheia'],
+        // Policies & Groups
         ['facility', 'pets_allowed',        'Pets Allowed',             'Animale de companie permise'],
         ['facility', 'non_smoking',         'Non-smoking Throughout',   'Interzis fumatul'],
         ['facility', 'smoking_area',        'Smoking Area',             'Zonă pentru fumători'],
         ['facility', 'non_smoking_rooms',   'Non-smoking Rooms',        'Camere pentru nefumători'],
+        ['facility', 'no_smoking_all',      'No Smoking Everywhere',    'Fumatul interzis în toate spațiile'],
         ['facility', 'family_rooms',        'Family Rooms',             'Camere de familie'],
+        ['facility', 'disabled_access',     'Facilities for Disabled',  'Facilități pentru persoane cu dizabilități'],
+        ['facility', 'stairs_only',         'Upper Floors by Stairs Only','Etaje superioare accesibile doar pe scări'],
+        ['facility', 'shared_lounge',       'Shared Lounge/TV Area',    'Lounge/cameră cu TV comună'],
+        // Family & Kids
+        ['facility', 'kids_club',           'Kids Club',                'Club pentru copii'],
+        ['facility', 'kids_pool',           "Children's Pool",          'Piscină pentru copii'],
+        ['facility', 'playground',          'Playground',               'Loc de joacă'],
+        // Beach & Location
+        ['facility', 'free_beach_equipment','Free Umbrella & Sunbed',   'Umbrelă și șezlong gratuit'],
+        ['facility', 'beach_bar',           'Beach Bar',                'Bar pe plajă'],
+        ['facility', 'blue_flag_beach',     'Blue Flag Beach',          'Plajă cu Steag Albastru'],
+        ['facility', 'first_line',          'First Line',               'Prima linie'],
+        // Sustainability
+        ['facility', 'travel_sustainable',  'Travel Sustainable',       'Turism sustenabil'],
+
+        // Room Facilities — in-room amenities (WiFi, AC, TV, minibar, etc.)
         ['facility', 'air_conditioning',    'Air Conditioning',         'Aer condiționat'],
         ['facility', 'heating',             'Heating',                  'Încălzire'],
         ['facility', 'free_wifi',           'Free Wi-Fi',               'Wi-Fi gratuit'],
@@ -296,6 +338,7 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'toilet_paper',        'Toilet Paper',             'Hârtie igienică'],
         ['facility', 'flat_screen_tv',      'Flat-screen TV',           'TV cu ecran plat'],
         ['facility', 'soundproofing',       'Soundproofing',            'Izolare fonică'],
+        ['facility', 'soundproof_rooms',    'Soundproof Rooms',         'Camere izolate fonic'],
         ['facility', 'dressing_room',       'Dressing Room',            'Dressing'],
         ['facility', 'cable_channels',      'Cable Channels',           'Canale prin cablu'],
         ['facility', 'carpet',              'Carpet',                   'Mochetă'],
@@ -310,52 +353,9 @@ function fn_travel_core_seed_feature_map(): void
         ['facility', 'fridge',              'Fridge',                   'Frigider'],
         ['facility', 'wine_champagne',      'Wine/Champagne',           'Vin/Șampanie'],
         ['facility', 'wardrobe',            'Wardrobe/Closet',          'Garderobă sau dulap'],
-        ['facility', 'shared_lounge',       'Shared Lounge/TV Area',    'Lounge/cameră cu TV comună'],
-        // Outdoor
-        ['facility', 'outdoor_furniture',   'Outdoor Furniture',        'Mobilier exterior'],
-        ['facility', 'garden',              'Garden',                   'Grădină'],
-        ['facility', 'terrace',             'Terrace',                  'Terasă'],
-        ['facility', 'sun_terrace',         'Sun Terrace',              'Terasă la soare'],
-        // Security
-        ['facility', 'security_24h',        '24-Hour Security',         'Securitate non-stop'],
-        ['facility', 'soundproof_rooms',    'Soundproof Rooms',         'Camere izolate fonic'],
-        ['facility', 'security_alarm',      'Security Alarm',           'Alarmă de securitate'],
-        ['facility', 'fire_extinguishers',  'Fire Extinguishers',       'Extinctoare'],
-        ['facility', 'co_detector',         'Carbon Monoxide Detector', 'Detector de monoxid de carbon'],
-        ['facility', 'card_access',         'Card Access',              'Acces cu cardul'],
-        ['facility', 'cctv_common',         'CCTV in Common Areas',     'Camere supraveghere zone comune'],
-        ['facility', 'cctv_outside',        'CCTV Outside Property',    'Camere supraveghere exterior'],
-        ['facility', 'smoke_alarm',         'Smoke Alarm',              'Alarmă de fum'],
-        ['facility', 'key_access',          'Key Access',               'Acces cu cheia'],
-        // Accessibility
-        ['facility', 'disabled_access',     'Facilities for Disabled',  'Facilități pentru persoane cu dizabilități'],
-        ['facility', 'stairs_only',         'Upper Floors by Stairs Only','Etaje superioare accesibile doar pe scări'],
-        // Smoking Policy
-        ['facility', 'no_smoking_all',      'No Smoking Everywhere',    'Fumatul interzis în toate spațiile'],
-
-        // Novoton-specific facilities (canonical codes shared across providers)
-        // Wellness & Recreation
-        ['facility', 'sauna',               'Sauna',                    'Saună'],
-        ['facility', 'entertainment',       'Entertainment',            'Divertisment'],
-        ['facility', 'balneology',          'Balneology',               'Balneologie'],
-        // Room Amenities
         ['facility', 'kitchenette',         'Kitchenette',              'Chicineta'],
         ['facility', 'bathtub',             'Bathtub',                  'Cadă de baie'],
-        // Family & Accessibility
-        ['facility', 'kids_club',           'Kids Club',                'Club pentru copii'],
-        ['facility', 'kids_pool',           "Children's Pool",          'Piscină pentru copii'],
-        ['facility', 'playground',          'Playground',               'Loc de joacă'],
         ['facility', 'baby_crib',           'Baby Crib',                'Pătuț pentru bebeluși'],
-        // Beach & Location
-        ['facility', 'free_beach_equipment','Free Umbrella & Sunbed',   'Umbrelă și șezlong gratuit'],
-        ['facility', 'beach_bar',           'Beach Bar',                'Bar pe plajă'],
-        ['facility', 'blue_flag_beach',     'Blue Flag Beach',          'Plajă cu Steag Albastru'],
-        ['facility', 'first_line',          'First Line',               'Prima linie'],
-        // Parking & Transport
-        ['facility', 'ski_lift_transfer',   'Transport to Ski Lift',    'Transport la telescaun'],
-        ['facility', 'ev_charger',          'Electric Car Charger',     'Stație încărcare mașini electrice'],
-        // Sustainability
-        ['facility', 'travel_sustainable',  'Travel Sustainable',       'Turism sustenabil'],
     ];
 
     foreach ($seeds as [$featureType, $canonicalCode, $nameEn, $nameRo]) {

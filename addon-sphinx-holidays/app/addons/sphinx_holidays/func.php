@@ -579,10 +579,11 @@ function fn_sphinx_holidays_seed_aliases(): void
     $seedAliasGroup('facility', $facilityAliases, 'exact');
 
     // Travel group aliases — map hotel attributes to canonical codes.
-    // 'Y' = is_adults_only flag, 'family' = inferred from family facilities.
+    // 'Y' = is_adults_only flag, 'family' = inferred from family facilities, 'pets' = inferred from pets_allowed.
     $travelGroupAliases = [
         'Y'      => 'adults_only',
         'family' => 'family_friendly',
+        'pets'   => 'pets_friendly',
     ];
     $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
 

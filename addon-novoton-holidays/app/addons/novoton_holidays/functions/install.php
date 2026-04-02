@@ -321,9 +321,11 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         '31' => 'first_line',            // First line
     ];
 
-    // Travel group aliases (Novoton passes literal string 'adults_only')
+    // Travel group aliases (Novoton passes literal canonical codes)
     $travelGroupAliases = [
-        'adults_only' => 'adults_only',
+        'adults_only'     => 'adults_only',
+        'family_friendly' => 'family_friendly',
+        'pets_friendly'   => 'pets_friendly',
     ];
 
     $seedAliasGroup('board', $boardAliases, 'exact');
