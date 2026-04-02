@@ -18,6 +18,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\PackageRouteSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
+use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 
 /**
  * Dispatches cron jobs by mode name.
@@ -25,7 +26,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
  * Each mode maps to a Command class that implements execute().
  * Concurrency protection via file locks prevents two instances of the same mode from running simultaneously.
  */
-class CronDispatcher
+class CronDispatcher implements CronDispatcherInterface
 {
     /**
      * Map of mode => command class.

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Contracts\FeatureMapperInterface;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -18,7 +19,7 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  * - Auto-creation of CS-Cart variants
  * - Manual lock (variant_source='manual') to prevent auto-overwrite
  */
-class FeatureMapper
+class FeatureMapper implements FeatureMapperInterface
 {
     use CsCartFeatureAssignment;
 

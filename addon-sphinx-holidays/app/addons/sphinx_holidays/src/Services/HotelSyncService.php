@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\Contracts\HotelSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 
 /**
@@ -22,7 +23,7 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
  *   4. Batch upsert into sphinx_hotels
  *   5. Mark stale hotels as inactive
  */
-class HotelSyncService extends AbstractSyncService
+class HotelSyncService extends AbstractSyncService implements HotelSyncServiceInterface
 {
     private const UPSERT_BATCH_SIZE = 100;
     private const DEST_CHUNK_SIZE = 200;

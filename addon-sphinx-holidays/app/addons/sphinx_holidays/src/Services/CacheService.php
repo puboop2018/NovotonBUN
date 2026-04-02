@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\CacheServiceInterface;
+
 /**
  * Cache service using the sphinx_cache table.
  *
  * Provides key-value caching with TTL for short-lived data (search results).
  * NOT for static data (destinations/hotels) — those use dedicated DB tables.
  */
-class CacheService
+class CacheService implements CacheServiceInterface
 {
     /**
      * Get a cached value by key.

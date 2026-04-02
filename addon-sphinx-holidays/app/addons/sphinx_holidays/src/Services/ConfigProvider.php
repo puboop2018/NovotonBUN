@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
 use Tygh\Registry;
 
 /**
@@ -11,7 +12,7 @@ use Tygh\Registry;
  * Centralizes access to all addon settings with type-safe getters
  * and sensible defaults.
  */
-class ConfigProvider
+class ConfigProvider implements ConfigProviderInterface
 {
     private const ADDON_ID = 'sphinx_holidays';
 

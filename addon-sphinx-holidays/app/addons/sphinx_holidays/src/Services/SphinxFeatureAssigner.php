@@ -5,6 +5,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -16,7 +17,7 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  * Much simpler than Novoton's FeatureMapper — no separate mapping table,
  * no strict/dynamic modes, no FeatureMappingRepositoryInterface.
  */
-class SphinxFeatureAssigner
+class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 {
     use CsCartFeatureAssignment;
 

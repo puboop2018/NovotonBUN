@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\SphinxHolidays\Contracts\DestinationSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 
 /**
@@ -11,7 +12,7 @@ use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
  *
  * Handles pagination, normalization, and sync-log tracking.
  */
-class DestinationSyncService extends AbstractSyncService
+class DestinationSyncService extends AbstractSyncService implements DestinationSyncServiceInterface
 {
     private const UPSERT_BATCH_SIZE = 100;
     private const PER_PAGE = 1000;
