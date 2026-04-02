@@ -29,8 +29,6 @@ use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
-use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepository;
-use Tygh\Addons\NovotonHolidays\Repository\FeatureMappingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
@@ -131,11 +129,6 @@ class Container
     public function hotelPackageRepository(): HotelPackageRepositoryInterface
     {
         return $this->resolve('hotelPackageRepository', fn() => new HotelPackageRepository());
-    }
-
-    public function featureMappingRepository(): FeatureMappingRepositoryInterface
-    {
-        return $this->resolve('featureMappingRepository', fn() => new FeatureMappingRepository());
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -256,9 +249,7 @@ class Container
 
     public function featureMapper(): FeatureMapper
     {
-        return $this->resolve('featureMapper', fn() => new FeatureMapper(
-            $this->featureMappingRepository()
-        ));
+        return $this->resolve('featureMapper', fn() => new FeatureMapper());
     }
 
     public function novotonNormalizer(): ProviderNormalizerInterface
