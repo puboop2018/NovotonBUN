@@ -116,16 +116,39 @@
         {/foreach}
     </div>
 
-    {* Unmapped Values Link *}
-    {if $unmapped_count > 0}
-        <div class="well well-small">
-            <i class="icon-exclamation-sign text-warning"></i>
-            <strong>{$unmapped_count}</strong> unmapped API values detected
-            <a href="{"travel_feature_mappings.unmapped"|fn_url}" class="btn btn-mini btn-warning" style="margin-left: 10px;">
-                View unmapped &rarr;
-            </a>
+    {* Scan Facilities + Unmapped Values *}
+    <div class="well well-small">
+        <div class="row-fluid">
+            <div class="span6">
+                <strong>{__("travel_core.fm_scan_facilities")}:</strong>
+                <form action="{"travel_feature_mappings.scan_facilities"|fn_url}" method="post" class="form-inline" style="display: inline;">
+                    <input type="hidden" name="security_hash" value="{$security_hash}">
+                    <select name="scan_provider" style="width: 120px; margin: 0 5px;">
+                        <option value="sphinx">Sphinx</option>
+                    </select>
+                    <select name="batch_size" style="width: 80px; margin-right: 5px;">
+                        <option value="250">250</option>
+                        <option value="500" selected>500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                    <button type="submit" class="btn btn-mini btn-info" onclick="return confirm('{__("travel_core.fm_scan_confirm")}');">
+                        <i class="icon-search"></i> Scan
+                    </button>
+                </form>
+            </div>
+            <div class="span6 text-right">
+                {if $unmapped_count > 0}
+                    <i class="icon-exclamation-sign text-warning"></i>
+                    <strong>{$unmapped_count}</strong> unmapped values
+                    <a href="{"travel_feature_mappings.unmapped"|fn_url}" class="btn btn-mini btn-warning" style="margin-left: 5px;">
+                        View &rarr;
+                    </a>
+                {else}
+                    <span class="text-success"><i class="icon-ok"></i> All facilities mapped</span>
+                {/if}
+            </div>
         </div>
-    {/if}
+    </div>
 
 {else}
 

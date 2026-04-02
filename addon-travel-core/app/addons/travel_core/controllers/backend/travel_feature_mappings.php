@@ -266,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Promote unmapped value to a real mapping
-    if ($mode == 'map_unmapped') {
+    if ($mode === 'map_unmapped') {
         $unmappedId = (int) ($_REQUEST['unmapped_id'] ?? 0);
         if ($unmappedId > 0) {
             $row = db_get_row("SELECT * FROM ?:travel_unmapped_values WHERE unmapped_id = ?i", $unmappedId);
@@ -283,7 +283,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_set_notification('E', __('error'), __('travel_core.fm_unmapped_promote_failed'));
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.unmapped'];
     }
+
+    // Batch scan provider hotel facilities → populate travel_unmapped_values
+    if ($mode === 'scan_facilities') {
+        $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
+        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+        $offset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
+
+        if ($provider === '') {
+            fn_set_notification('E', __('error'), 'No provider specified.');
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
+        }
+
+        // Provider-specific: determine source table and JSON column
+        $scanConfig = _travel_fm_get_scan_config($provider);
+        if (!$scanConfig) {
+            fn_set_notification('E', __('error'), "Provider '{$provider}' does not support facility scanning.");
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
+        }
+
+        // Count total hotels (only on first batch)
+        $totalHotels = (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:{$scanConfig['table']} WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]'"
+        );
+
+        // Fetch batch of hotels
+        $hotels = db_get_array(
+            "SELECT {$scanConfig['id_col']}, {$scanConfig['json_col']} FROM ?:{$scanConfig['table']} " .
+            "WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]' " .
+            "ORDER BY {$scanConfig['id_col']} LIMIT ?i, ?i",
+            $offset, $batchSize
+        );
+
+        $newUnmapped = 0;
+        $totalFacilities = 0;
+
+        foreach ($hotels as $hotel) {
+            $facilities = json_decode($hotel[$scanConfig['json_col']], true);
+            if (!is_array($facilities)) {
+                continue;
+            }
+
+            foreach ($facilities as $facility) {
+                $facilityId = (string) ($facility['id'] ?? '');
+                $facilityName = (string) ($facility['name'] ?? '');
+                if ($facilityId === '') {
+                    continue;
+                }
+                $totalFacilities++;
+
+                // Check if already mapped
+                $mapping = FeatureMapper::resolve($provider, 'facility', $facilityId);
+                if (!$mapping) {
+                    // Track as unmapped (increments hotel_count if already exists)
+                    FeatureMapper::trackUnmapped($provider, 'facility', $facilityId, $facilityName);
+                    $newUnmapped++;
+                }
+            }
+        }
+
+        // Clear resolve cache to free memory between batches
+        FeatureMapper::clearCache();
+
+        $processedSoFar = $offset + count($hotels);
+        $isComplete = count($hotels) < $batchSize || $processedSoFar >= $totalHotels;
+
+        if ($isComplete) {
+            $unmappedTotal = (int) db_get_field(
+                "SELECT COUNT(*) FROM ?:travel_unmapped_values WHERE api_source = ?s AND feature_type = 'facility'",
+                $provider
+            );
+            fn_set_notification('N', __('notice'), __('travel_core.fm_scan_complete', [
+                '[provider]' => $provider,
+                '[hotels]' => $processedSoFar,
+                '[unmapped]' => $unmappedTotal,
+            ]));
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.unmapped&api_source=' . $provider . '&feature_type=facility'];
+        }
+
+        // Not complete — redirect back with progress to continue
+        $redirectUrl = 'travel_feature_mappings.scan_progress'
+            . '&scan_provider=' . $provider
+            . '&scan_offset=' . $processedSoFar
+            . '&scan_total=' . $totalHotels
+            . '&batch_size=' . $batchSize;
+
+        return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
     }
+}
+
+// Helper: provider-specific scan configuration
+function _travel_fm_get_scan_config(string $provider): ?array
+{
+    $configs = [
+        'sphinx' => [
+            'table'    => 'sphinx_hotels',
+            'id_col'   => 'hotel_id',
+            'json_col' => 'facilities_json',
+        ],
+        // Future providers can be added here:
+        // 'eurosite' => ['table' => 'eurosite_hotels', 'id_col' => 'hotel_id', 'json_col' => 'facilities_json'],
+    ];
+
+    return $configs[$provider] ?? null;
 }
 
 // ── GET: Manage (dashboard or paginated list) ──
@@ -515,6 +617,22 @@ if ($mode == 'unmapped') {
 
     Tygh::$app['view']->assign('unmapped_values', $unmapped);
     Tygh::$app['view']->assign('search', $search);
+}
+
+// ── GET: Scan progress (intermediate page between batches) ──
+if ($mode == 'scan_progress') {
+    $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
+    $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
+    $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
+    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+
+    $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
+
+    Tygh::$app['view']->assign('scan_provider', $provider);
+    Tygh::$app['view']->assign('scan_offset', $scanOffset);
+    Tygh::$app['view']->assign('scan_total', $scanTotal);
+    Tygh::$app['view']->assign('scan_percent', $percent);
+    Tygh::$app['view']->assign('batch_size', $batchSize);
 }
 
 // ── GET: Edit single mapping ──

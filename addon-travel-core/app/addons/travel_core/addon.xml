@@ -467,6 +467,12 @@
         <item lang="ro" id="travel_core.fm_unmapped_promoted"><![CDATA[Valoarea nemapată a fost promovată ca mapare cu succes]]></item>
         <item lang="en" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Failed to promote unmapped value]]></item>
         <item lang="ro" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Promovarea valorii nemapate a eșuat]]></item>
+        <item lang="en" id="travel_core.fm_scan_facilities"><![CDATA[Scan Facilities]]></item>
+        <item lang="ro" id="travel_core.fm_scan_facilities"><![CDATA[Scanare Facilități]]></item>
+        <item lang="en" id="travel_core.fm_scan_confirm"><![CDATA[Scan all hotels for unmapped facility IDs? This may take a few minutes for large datasets.]]></item>
+        <item lang="ro" id="travel_core.fm_scan_confirm"><![CDATA[Scanați toate hotelurile pentru facilități nemapate? Poate dura câteva minute pentru seturi mari de date.]]></item>
+        <item lang="en" id="travel_core.fm_scan_complete"><![CDATA[Scan complete: [provider] — [hotels] hotels scanned, [unmapped] unmapped facilities found.]]></item>
+        <item lang="ro" id="travel_core.fm_scan_complete"><![CDATA[Scanare completă: [provider] — [hotels] hoteluri scanate, [unmapped] facilități nemapate găsite.]]></item>
 
         <!-- Tools & Cron -->
         <item lang="en" id="travel_core.tools_and_cron"><![CDATA[Tools & Cron]]></item>
