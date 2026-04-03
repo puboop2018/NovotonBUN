@@ -8,8 +8,8 @@ use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 /**
  * Novoton implementation of BookingAdminProviderInterface.
  *
- * Provides Novoton-specific display data and actions for the
- * unified travel_bookings admin interface.
+ * Provides Novoton-specific display data, actions, and POST handlers
+ * for the unified travel_bookings admin interface.
  *
  * @package NovotonHolidays
  * @since   2.8.0
@@ -70,7 +70,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $oldStatus = $booking['novoton_status'] ?? $booking['status'] ?? '';
 
         if (function_exists('fn_novoton_holidays_check_reservation_status')) {
-            $result = fn_novoton_holidays_check_reservation_status($bookingId);
+            fn_novoton_holidays_check_reservation_status($bookingId);
         } else {
             return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Status check function not available'];
         }
@@ -98,11 +98,12 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             $actions[] = [
                 'name' => 'check_status',
                 'label' => 'Check Status',
-                'url' => 'novoton_bookings.resinfo',
+                'url' => 'travel_bookings.provider_action',
                 'method' => 'POST',
                 'css_class' => 'btn-default',
                 'icon' => 'icon-refresh',
                 'booking_id' => $providerBookingId,
+                'extra_params' => ['provider_action' => 'resinfo'],
             ];
         }
 
@@ -111,7 +112,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             $actions[] = [
                 'name' => 'alternatives',
                 'label' => 'Alternatives',
-                'url' => 'novoton_bookings.alternatives?booking_id=' . $providerBookingId,
+                'url' => 'travel_bookings.view&booking_id=' . $providerBookingId . '&tab=alternatives',
                 'method' => 'GET',
                 'css_class' => 'btn-primary',
                 'icon' => 'icon-list',
@@ -119,11 +120,159 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             ];
         }
 
+        // Cleanup orphans (global action, not per-booking)
+        // This is surfaced as a bulk action in the manage view, not per-row
+
         return $actions;
     }
 
     public function getProviderViewUrl(string $providerBookingId): ?string
     {
-        return 'novoton_bookings.view?booking_id=' . $providerBookingId;
+        return 'travel_bookings.view?booking_id=' . $providerBookingId;
+    }
+
+    public function handleAction(string $action, array $request): array
+    {
+        switch ($action) {
+            case 'resinfo':
+                return $this->handleResinfo($request);
+
+            case 'request_alternatives':
+                return $this->handleRequestAlternatives($request);
+
+            case 'check_all_status':
+                return $this->handleCheckAllStatus();
+
+            case 'cleanup_orphans':
+                return $this->handleCleanupOrphans();
+
+            case 'update_novoton_id':
+                return $this->handleUpdateNovotonId($request);
+
+            default:
+                return [
+                    'redirect' => 'travel_bookings.manage',
+                    'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => "Unknown Novoton action: {$action}"],
+                ];
+        }
+    }
+
+    public function getProviderTabs(array $booking): array
+    {
+        $tabs = [];
+        $bookingId = $booking['provider_booking_id'] ?? $booking['booking_id'] ?? '';
+        $display = $booking['provider_display'] ?? [];
+        $novotonStatus = $display['novoton_status'] ?? '';
+
+        // Alternatives tab for ST/RQ bookings or if alternatives were previously requested
+        if (in_array($novotonStatus, ['ST', 'RQ'], true) || !empty($display['alternatives_requested'])) {
+            $tabs[] = [
+                'name' => 'alternatives',
+                'label' => 'Alternatives',
+                'dispatch' => 'travel_bookings.view&booking_id=' . $bookingId . '&tab=alternatives',
+                'ajax' => false,
+            ];
+        }
+
+        return $tabs;
+    }
+
+    // ── Provider-specific action handlers ──
+
+    private function handleResinfo(array $request): array
+    {
+        $bookingId = (int) ($request['booking_id'] ?? 0);
+        if ($bookingId > 0) {
+            fn_novoton_holidays_check_reservation_status($bookingId);
+        }
+
+        return [
+            'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+            'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.status_checked')],
+        ];
+    }
+
+    private function handleRequestAlternatives(array $request): array
+    {
+        $bookingId = (int) ($request['booking_id'] ?? 0);
+
+        if ($bookingId > 0) {
+            $result = fn_novoton_holidays_request_alternatives($bookingId);
+
+            if (!empty($result['success'])) {
+                return [
+                    'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+                    'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.alternatives_found', ['[count]' => 1])],
+                ];
+            }
+
+            return [
+                'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+                'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => __('novoton_holidays.no_alternatives')],
+            ];
+        }
+
+        return ['redirect' => 'travel_bookings.manage'];
+    }
+
+    private function handleCheckAllStatus(): array
+    {
+        $results = fn_novoton_holidays_cron_resinfo();
+
+        return [
+            'redirect' => 'travel_bookings.manage&provider=novoton',
+            'notification' => [
+                'type' => 'N',
+                'title' => __('notice'),
+                'message' => __('novoton_holidays.bulk_status_checked', [
+                    '[checked]' => $results['checked'] ?? 0,
+                    '[changed]' => $results['changed'] ?? 0,
+                ]),
+            ],
+        ];
+    }
+
+    private function handleCleanupOrphans(): array
+    {
+        $bookingRepo = Container::getInstance()->bookingRepository();
+        $count = $bookingRepo->countOrphans(24);
+
+        if ($count > 0) {
+            $bookingRepo->deleteOrphans(24);
+            return [
+                'redirect' => 'travel_bookings.manage&provider=novoton',
+                'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => "Cleaned up {$count} orphan booking(s) older than 24 hours."],
+            ];
+        }
+
+        return [
+            'redirect' => 'travel_bookings.manage&provider=novoton',
+            'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => 'No orphan bookings to clean up.'],
+        ];
+    }
+
+    private function handleUpdateNovotonId(array $request): array
+    {
+        $bookingId = (int) ($request['booking_id'] ?? 0);
+        $novotonInvoiceId = isset($request['novoton_invoice_id'])
+            ? preg_replace('/[^a-zA-Z0-9\-_]/', '', trim($request['novoton_invoice_id']))
+            : '';
+
+        if ($bookingId > 0) {
+            $bookingRepo = Container::getInstance()->bookingRepository();
+            $bookingRepo->update($bookingId, ['novoton_invoice_id' => $novotonInvoiceId]);
+
+            // If ID provided, check status
+            if (!empty($novotonInvoiceId)) {
+                fn_novoton_holidays_check_reservation_status($bookingId);
+            }
+
+            return [
+                'redirect' => 'travel_bookings.view&booking_id=' . $bookingId,
+                'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => 'Novoton ID updated'],
+            ];
+        }
+
+        return ['redirect' => 'travel_bookings.manage'];
     }
 }

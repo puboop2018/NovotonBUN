@@ -12,6 +12,7 @@ declare(strict_types=1);
  *   - view: View a single booking's details
  *   - bulk_check_status (POST): Trigger status sync for a provider
  *   - check_status (POST): Check status of a single booking
+ *   - provider_action (POST): Delegate provider-specific action via handleAction()
  *
  * @package TravelCore
  * @since 1.0.0
@@ -123,6 +124,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage'];
+    }
+
+    // Provider-specific actions delegated via BookingAdminProviderInterface::handleAction()
+    if ($mode === 'provider_action') {
+        $provider = $_REQUEST['provider'] ?? '';
+        $providerAction = $_REQUEST['provider_action'] ?? '';
+
+        if (!empty($provider) && !empty($providerAction)) {
+            $adminProvider = TravelProviderRegistry::getBookingAdminProvider($provider);
+            if ($adminProvider !== null) {
+                $result = $adminProvider->handleAction($providerAction, $_REQUEST);
+
+                if (!empty($result['notification'])) {
+                    $n = $result['notification'];
+                    fn_set_notification($n['type'] ?? 'N', $n['title'] ?? '', $n['message'] ?? '');
+                }
+
+                $redirect = $result['redirect'] ?? 'travel_bookings.manage';
+                return [CONTROLLER_STATUS_REDIRECT, $redirect];
+            } else {
+                fn_set_notification('W', __('warning'), "No admin provider registered for '{$provider}'.");
+            }
+        }
+
         return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage'];
     }
 }
@@ -252,5 +278,16 @@ if ($mode === 'manage') {
         Tygh::$app['view']->assign('order', $order);
     }
 
+    // Get provider-specific tabs
+    $providerTabs = [];
+    $providerName = $booking['provider'] ?? '';
+    if (!empty($providerName)) {
+        $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
+        if ($adminProvider !== null) {
+            $providerTabs = $adminProvider->getProviderTabs($booking);
+        }
+    }
+
     Tygh::$app['view']->assign('booking', $booking);
+    Tygh::$app['view']->assign('provider_tabs', $providerTabs);
 }
