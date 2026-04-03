@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron;
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
@@ -46,6 +47,7 @@ class CronDispatcher implements CronDispatcherInterface
         'sync_images'     => SyncImagesCommand::class,
         'cleanup'         => CleanupCommand::class,
         'deduplicate'     => DeduplicateCommand::class,
+        'audit_facilities' => AuditFacilitiesCommand::class,
         'full'            => FullSyncCommand::class,
     ];
 

@@ -37,8 +37,6 @@
         {$current_product_id = $product_id}
     {elseif $travel_search_params.product_id}
         {$current_product_id = $travel_search_params.product_id}
-    {elseif $smarty.request.product_id}
-        {$current_product_id = $smarty.request.product_id}
     {else}
         {$current_product_id = ''}
     {/if}

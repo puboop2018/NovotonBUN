@@ -641,20 +641,19 @@
     window.submitWhitelist = function() {
         var form = document.getElementById('whitelist_form');
         var container = document.getElementById('wl_hidden_inputs');
-        container.innerHTML = '';
-        var idx = 0;
+        // Send as single JSON string to avoid PHP max_input_vars limit
+        // (selecting a region with 500+ cities would create 1000+ POST variables)
+        var entries = [];
         for (var countryId in state) {
-            container.innerHTML += '<input type="hidden" name="whitelist[' + idx + '][destination_id]" value="' + countryId + '" />';
-            container.innerHTML += '<input type="hidden" name="whitelist[' + idx + '][selection_type]" value="' + state[countryId].type + '" />';
-            idx++;
+            entries.push({ destination_id: parseInt(countryId), selection_type: state[countryId].type });
             if (state[countryId].type === 'specific') {
                 state[countryId].children.forEach(function(childId) {
-                    container.innerHTML += '<input type="hidden" name="whitelist[' + idx + '][destination_id]" value="' + childId + '" />';
-                    container.innerHTML += '<input type="hidden" name="whitelist[' + idx + '][selection_type]" value="specific" />';
-                    idx++;
+                    entries.push({ destination_id: parseInt(childId), selection_type: 'specific' });
                 });
             }
         }
+        container.innerHTML = '<input type="hidden" name="whitelist_json" value="" />';
+        container.querySelector('input').value = JSON.stringify(entries);
         form.submit();
     };
 

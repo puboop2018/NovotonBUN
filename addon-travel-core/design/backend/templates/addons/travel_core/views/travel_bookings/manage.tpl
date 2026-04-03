@@ -217,7 +217,7 @@
                 <td>
                     {* Use provider-specific status label if available *}
                     {if $booking.provider_display.status_label}
-                        {$booking.provider_display.status_label nofilter}
+                        {$booking.provider_display.status_label|escape:'html'}
                     {elseif $booking.status == 'confirmed'}
                         <span class="label label-success">Confirmed</span>
                     {elseif $booking.status == 'pending'}
