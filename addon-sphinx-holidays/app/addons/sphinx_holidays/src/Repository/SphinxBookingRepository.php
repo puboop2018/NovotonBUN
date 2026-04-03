@@ -284,6 +284,40 @@ class SphinxBookingRepository
     }
 
     /**
+     * Direct update to sphinx_bookings only (bypasses travel_bookings sync).
+     * Use for fields that only exist in sphinx_bookings (e.g., payment_terms_json).
+     */
+    public function updateDirect(int $booking_id, array $data): bool
+    {
+        $data = self::filterNullValues($data);
+        return (bool) db_query(
+            "UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i",
+            $data, $booking_id
+        );
+    }
+
+    /**
+     * Find bookings eligible for status check (linked to order, non-terminal, recent).
+     *
+     * @param array $terminalStatuses Statuses to exclude
+     * @param int $daysBack How many days back to look
+     * @return array
+     */
+    public function findForStatusCheck(array $terminalStatuses, int $daysBack = 90): array
+    {
+        return db_get_array(
+            "SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
+             FROM ?:sphinx_bookings
+             WHERE order_id > 0
+               AND status NOT IN (?a)
+               AND created_at > DATE_SUB(NOW(), INTERVAL ?i DAY)
+             ORDER BY created_at DESC",
+            $terminalStatuses,
+            $daysBack
+        );
+    }
+
+    /**
      * Filter null values to prevent PHP 8.1+ deprecation warnings.
      */
     private static function filterNullValues(array $data): array

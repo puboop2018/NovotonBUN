@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CacheServiceInterface;
+use Tygh\Addons\SphinxHolidays\Repository\SphinxCacheRepository;
 
 /**
  * Cache service using the sphinx_cache table.
@@ -13,6 +14,13 @@ use Tygh\Addons\SphinxHolidays\Contracts\CacheServiceInterface;
  */
 class CacheService implements CacheServiceInterface
 {
+    private static ?SphinxCacheRepository $repo = null;
+
+    private static function repo(): SphinxCacheRepository
+    {
+        return self::$repo ??= new SphinxCacheRepository();
+    }
+
     /**
      * Get a cached value by key.
      *
@@ -25,10 +33,7 @@ class CacheService implements CacheServiceInterface
             self::cleanup();
         }
 
-        $row = db_get_row(
-            "SELECT cache_data, expires_at FROM ?:sphinx_cache WHERE cache_key = ?s",
-            $key
-        );
+        $row = self::repo()->findByKey($key);
 
         if (!$row || (int) $row['expires_at'] < time()) {
             return null;
@@ -52,14 +57,7 @@ class CacheService implements CacheServiceInterface
             return;
         }
 
-        db_query(
-            "INSERT INTO ?:sphinx_cache (cache_key, cache_data, expires_at)
-             VALUES (?s, ?s, ?i)
-             ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expires_at = VALUES(expires_at)",
-            $key,
-            $encoded,
-            time() + $ttl
-        );
+        self::repo()->upsert($key, $encoded, time() + $ttl);
     }
 
     /**
@@ -67,7 +65,7 @@ class CacheService implements CacheServiceInterface
      */
     public static function delete(string $key): void
     {
-        db_query("DELETE FROM ?:sphinx_cache WHERE cache_key = ?s", $key);
+        self::repo()->deleteByKey($key);
     }
 
     /**
@@ -75,7 +73,7 @@ class CacheService implements CacheServiceInterface
      */
     public static function cleanup(): void
     {
-        db_query("DELETE FROM ?:sphinx_cache WHERE expires_at < ?i", time());
+        self::repo()->deleteExpired();
     }
 
     /**

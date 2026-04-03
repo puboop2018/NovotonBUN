@@ -22,27 +22,36 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
 class PriceInfoService implements PriceInfoServiceInterface
 {
-    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
-    private $api;
+    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
 
-    /** @var float Commission percentage */
-    private $commission;
+    private float $commission;
 
-    /** @var bool Debug mode */
-    private $debug = false;
+    private bool $debug = false;
+
+    private HotelPackageRepositoryInterface $packageRepo;
+
+    private HotelRepositoryInterface $hotelRepo;
 
     /**
      * Constructor
      */
-    public function __construct()
-    {
+    public function __construct(
+        ?HotelPackageRepositoryInterface $packageRepo = null,
+        ?HotelRepositoryInterface $hotelRepo = null
+    ) {
         $this->api = fn_novoton_holidays_get_api();
         $this->commission = ConfigProvider::getCommission();
         $this->debug = ConfigProvider::isDebugLogging();
+        $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
+        $this->hotelRepo = $hotelRepo ?? new HotelRepository();
     }
 
     /**
@@ -100,18 +109,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Get priceinfo from first package with data
-        $query = "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-                  WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL";
-        $params = [$hotelId];
-
-        if (!empty($packageName)) {
-            $query .= " AND package_name = ?s";
-            $params[] = $packageName;
-        }
-
-        $query .= " ORDER BY synced_at DESC LIMIT 1";
-
-        $priceinfoJson = db_get_field($query, ...$params);
+        $priceinfoJson = $this->packageRepo->getPriceinfoData($hotelId, $packageName ?: null);
 
         if (empty($priceinfoJson)) {
             return [];
@@ -139,10 +137,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             return null;
         }
 
-        return db_get_field(
-            "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-            $hotelId
-        );
+        return $this->packageRepo->getLastSyncedAt($hotelId);
     }
 
     /**
@@ -159,12 +154,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             return null;
         }
 
-        return db_get_field(
-            "SELECT package_name FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
+        return $this->packageRepo->getActivePackageName($hotelId);
     }
 
     /**
@@ -176,12 +166,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getSeasons(string $hotelId): array
     {
-        $priceinfoJson = db_get_field(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
+        $priceinfoJson = $this->packageRepo->getLatestPriceinfoData($hotelId);
 
         if (empty($priceinfoJson)) {
             return [];
@@ -221,12 +206,8 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getEarlyBooking(string $hotelId): array
     {
-        $priceinfoJson = db_get_field(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
+        $row = $this->packageRepo->findEarlyBookingPackage($hotelId);
+        $priceinfoJson = $row['priceinfo_data'] ?? null;
 
         if (empty($priceinfoJson)) {
             return [];
@@ -259,7 +240,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Sort by reduction DESC
-        usort($result, function($a, $b) {
+        usort($result, function ($a, $b) {
             return $b['reduction'] <=> $a['reduction'];
         });
 
@@ -318,10 +299,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Use @-suppressed query — if the column doesn't exist yet, db_get_field triggers
         // a PHP warning or throws. Either way we fall back to an empty price map.
         try {
-            $rawJson = @db_get_field(
-                "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
-                $hotelId
-            );
+            $rawJson = $this->hotelRepo->getCalendarPricesRaw($hotelId);
         } catch (\Throwable $e) {
             $rawJson = null;
         }
@@ -380,19 +358,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Column is added by setup_db() on addon install/upgrade.
         // Suppress errors if column doesn't exist yet.
         try {
-            if (!empty($rawPrices)) {
-                db_query(
-                    "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-                    json_encode($rawPrices, JSON_UNESCAPED_UNICODE),
-                    $hotelId
-                );
-            } else {
-                // Use explicit SQL NULL for JSON column (CS-Cart ?s converts null to '' which is invalid JSON)
-                db_query(
-                    "UPDATE ?:novoton_hotels SET calendar_prices_raw = NULL WHERE hotel_id = ?s",
-                    $hotelId
-                );
-            }
+            $hotelRepo = new HotelRepository();
+            $json = !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null;
+            $hotelRepo->setCalendarPricesRaw($hotelId, $json ?: null);
         } catch (\Throwable $e) {
             // Column doesn't exist yet — skip silently
         }
@@ -409,11 +377,8 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     private static function computeRawCalendarPrices(string $hotelId): array
     {
-        $allPriceinfoRows = db_get_fields(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL",
-            $hotelId
-        );
+        $packageRepo = new HotelPackageRepository();
+        $allPriceinfoRows = $packageRepo->getAllPriceinfoData($hotelId);
 
         if (empty($allPriceinfoRows)) {
             return [];

@@ -58,7 +58,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                     if (!empty($prices)) {
                         foreach ($prices as $p) {
                             $pv = (float)((string)$p);
-                            if ($pv > 0 && ($best_price == 0 || $pv < $best_price)) {
+                            if ($pv > 0 && ($best_price === 0.0 || $pv < $best_price)) {
                                 $best_price = $pv;
                             }
                         }
@@ -76,7 +76,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
             }
 
             // Batch update every 25 hotels
-            if (($idx + 1) % 25 == 0) {
+            if (($idx + 1) % 25 === 0) {
                 $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
                 $withPricesCount += count($withPricesIds);
                 $withoutPricesCount += count($withoutPricesIds);

@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
-use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
+use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -14,8 +14,10 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  * Uses travel_core/FeatureMapper for alias resolution and direct DB writes
  * for CS-Cart product_features_values assignment.
  *
- * Much simpler than Novoton's FeatureMapper — no separate mapping table,
- * no strict/dynamic modes, no FeatureMappingRepositoryInterface.
+ * Template method patterns eliminate duplication across feature types:
+ * - assignMappedSelectBox(): stars, property_type, resort
+ * - assignLocationFeature(): region, city
+ * - collectAndSyncCheckboxFeature(): boards, travel_group
  */
 class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 {
@@ -28,6 +30,12 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
+    /** @var array<string, array>|null Cached resolved facility data for current hotel */
+    private ?array $resolvedFacilitiesCache = null;
+
+    /** @var string|null Hash of the facilities_json that was cached */
+    private ?string $resolvedFacilitiesCacheKey = null;
+
     public function __construct(SphinxNormalizer $normalizer)
     {
         $this->normalizer = $normalizer;
@@ -38,6 +46,10 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      */
     public function assignAll(int $productId, array $hotel): void
     {
+        // Reset per-hotel facility cache
+        $this->resolvedFacilitiesCache = null;
+        $this->resolvedFacilitiesCacheKey = null;
+
         $this->assignStarRating($productId, $hotel);
         $this->assignPropertyType($productId, $hotel);
         $this->assignResort($productId, $hotel);
@@ -48,102 +60,134 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         $this->assignTravelGroup($productId, $hotel);
     }
 
-    private function assignStarRating(int $productId, array $hotel): void
-    {
-        $code = $this->normalizer->normalizeStarRating($hotel['classification'] ?? null);
-        if ($code === null) {
+    // ── Template methods ──
+
+    /**
+     * Assign a single selectbox feature via FeatureMapper resolution.
+     *
+     * Shared pattern for stars, property_type, resort.
+     *
+     * @param int     $productId   CS-Cart product ID
+     * @param string  $featureType Feature type key
+     * @param ?string $rawValue    Raw value from hotel data
+     * @param bool    $autoCreate  Auto-create variant if mapping exists but no variant
+     */
+    private function assignMappedSelectBox(
+        int $productId,
+        string $featureType,
+        ?string $rawValue,
+        bool $autoCreate = true
+    ): void {
+        if ($rawValue === null || $rawValue === '') {
             return;
         }
 
-        $featureId = $this->getFeatureId('stars');
-        if (!$featureId) {
+        $featureId = $this->getFeatureId($featureType);
+        if ($featureId <= 0) {
             return;
         }
 
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'stars', $code);
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, $featureType, $rawValue);
         $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
 
-        if ($variantId <= 0 && $mapping) {
+        if ($variantId <= 0 && $mapping && $autoCreate) {
             $variantId = $this->autoCreateVariant($featureId, $mapping);
         }
 
         if ($variantId > 0) {
             $this->assignSelectBoxValue($productId, $featureId, $variantId);
         }
-    }
-
-    private function assignPropertyType(int $productId, array $hotel): void
-    {
-        $code = $this->normalizer->normalizePropertyType($hotel['property_type'] ?? null);
-        if ($code === null) {
-            return;
-        }
-
-        $featureId = $this->getFeatureId('property_type');
-        if (!$featureId) {
-            return;
-        }
-
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'property_type', $code);
-        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
-
-        if ($variantId <= 0 && $mapping) {
-            $variantId = $this->autoCreateVariant($featureId, $mapping);
-        }
-
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
-        }
-    }
-
-    private function assignResort(int $productId, array $hotel): void
-    {
-        $code = $this->normalizer->normalizeResort($hotel['destination_name'] ?? null);
-        if ($code === null) {
-            return;
-        }
-
-        $featureId = $this->getFeatureId('resort');
-        if (!$featureId) {
-            return;
-        }
-
-        // Resort names are dynamic — may not have aliases seeded
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'resort', $code);
-        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
-
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
-        }
-        // If no mapping, skip — resort feature is optional
     }
 
     /**
-     * Assign facility features from facilities_json (diff-based sync).
+     * Assign a location-based feature (dynamic variant by name, no mapping).
      *
-     * Each facility canonical code in travel_feature_map carries its own cscart_feature_id,
-     * so different facilities can map to different CS-Cart features (e.g., "Hotel Facilities",
-     * "Room Amenities", "Accessibility"). The admin controls this via the travel_feature_mappings UI.
-     *
-     * Groups wanted variants by cscart_feature_id, then for each feature:
-     * adds new variants and removes stale ones — preventing accumulation
-     * of facilities that are no longer present in the API data.
+     * Shared pattern for region, city.
      */
-    private function assignFacilities(int $productId, array $hotel): void
+    private function assignLocationFeature(int $productId, string $featureType, ?string $locationName): void
+    {
+        if ($locationName === null || trim($locationName) === '') {
+            return;
+        }
+
+        $featureId = $this->getFeatureId($featureType);
+        if ($featureId <= 0) {
+            return;
+        }
+
+        $variantId = $this->getOrCreateLocationVariant($featureId, trim($locationName));
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
+    }
+
+    /**
+     * Resolve multiple codes via FeatureMapper and sync as checkbox values.
+     *
+     * Shared pattern for boards, travel_group.
+     *
+     * @param int      $productId   CS-Cart product ID
+     * @param string   $featureType Feature type key
+     * @param string[] $codes       Canonical codes to resolve
+     * @param bool     $autoCreate  Auto-create variants if mapping exists but no variant
+     */
+    private function collectAndSyncCheckboxFeature(
+        int $productId,
+        string $featureType,
+        array $codes,
+        bool $autoCreate = true
+    ): void {
+        $featureId = $this->getFeatureId($featureType);
+        if ($featureId <= 0) {
+            return;
+        }
+
+        $wantedVariants = [];
+        foreach ($codes as $code) {
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, $featureType, $code);
+            if (!$mapping) {
+                continue;
+            }
+
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            if ($variantId <= 0 && $autoCreate) {
+                $variantId = $this->autoCreateVariant($featureId, $mapping);
+            }
+            if ($variantId > 0) {
+                $wantedVariants[$variantId] = true;
+            }
+        }
+
+        $this->syncCheckboxValues($productId, $featureId, array_keys($wantedVariants));
+    }
+
+    /**
+     * Resolve all facility IDs from hotel JSON to mappings (cached per hotel).
+     *
+     * Used by assignFacilities(), getHotelFacilityCodes(), and detectTravelGroups()
+     * to avoid parsing and resolving the same facilities_json multiple times.
+     *
+     * @return array<int, array{id: string, name: string, mapping: array|null}>
+     */
+    private function resolveHotelFacilities(array $hotel): array
     {
         $facilitiesJson = $hotel['facilities_json'] ?? null;
         if (empty($facilitiesJson)) {
-            return;
+            return [];
+        }
+
+        // Cache check — avoid re-resolving for same hotel
+        $cacheKey = md5(is_string($facilitiesJson) ? $facilitiesJson : json_encode($facilitiesJson));
+        if ($this->resolvedFacilitiesCacheKey === $cacheKey && $this->resolvedFacilitiesCache !== null) {
+            return $this->resolvedFacilitiesCache;
         }
 
         $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
         if (!is_array($facilities)) {
-            return;
+            return [];
         }
 
-        // Resolve all facilities and group wanted variant_ids by feature_id
-        $wantedByFeature = [];
-        $unmapped = [];
+        $resolved = [];
         foreach ($facilities as $facility) {
             $facilityId = (string) ($facility['id'] ?? '');
             if ($facilityId === '') {
@@ -151,10 +195,88 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             }
 
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            $resolved[] = [
+                'id' => $facilityId,
+                'name' => (string) ($facility['name'] ?? ''),
+                'mapping' => $mapping,
+            ];
+        }
+
+        $this->resolvedFacilitiesCache = $resolved;
+        $this->resolvedFacilitiesCacheKey = $cacheKey;
+
+        return $resolved;
+    }
+
+    // ── Feature-specific methods (delegate to templates) ──
+
+    private function assignStarRating(int $productId, array $hotel): void
+    {
+        $code = $this->normalizer->normalizeStarRating($hotel['classification'] ?? null);
+        $this->assignMappedSelectBox($productId, 'stars', $code);
+    }
+
+    private function assignPropertyType(int $productId, array $hotel): void
+    {
+        $code = $this->normalizer->normalizePropertyType($hotel['property_type'] ?? null);
+        $this->assignMappedSelectBox($productId, 'property_type', $code);
+    }
+
+    private function assignResort(int $productId, array $hotel): void
+    {
+        $code = $this->normalizer->normalizeResort($hotel['destination_name'] ?? null);
+        $this->assignMappedSelectBox($productId, 'resort', $code, false);
+    }
+
+    private function assignRegion(int $productId, array $hotel): void
+    {
+        $this->assignLocationFeature($productId, 'region', $hotel['region_name'] ?? null);
+    }
+
+    private function assignCity(int $productId, array $hotel): void
+    {
+        $this->assignLocationFeature($productId, 'city', $hotel['destination_name'] ?? null);
+    }
+
+    private function assignBoards(int $productId, array $hotel): void
+    {
+        $boardsJson = $hotel['boards_json'] ?? null;
+        if (empty($boardsJson)) {
+            return;
+        }
+
+        $boards = is_string($boardsJson) ? json_decode($boardsJson, true) : $boardsJson;
+        if (!is_array($boards) || empty($boards)) {
+            return;
+        }
+
+        $this->collectAndSyncCheckboxFeature($productId, 'board', $boards);
+    }
+
+    /**
+     * Assign facility features from facilities_json (diff-based sync).
+     *
+     * Facilities are special: they can map to multiple CS-Cart features
+     * (e.g., "Hotel Facilities", "Room Amenities"), so they're grouped
+     * by cscart_feature_id before syncing. This is too complex for the
+     * generic collectAndSyncCheckboxFeature() template.
+     */
+    private function assignFacilities(int $productId, array $hotel): void
+    {
+        $resolved = $this->resolveHotelFacilities($hotel);
+        if (empty($resolved)) {
+            return;
+        }
+
+        $wantedByFeature = [];
+        $unmapped = [];
+
+        foreach ($resolved as $entry) {
+            $mapping = $entry['mapping'];
+
             if (!$mapping) {
-                $facilityName = $facility['name'] ?? '';
-                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $facilityId, $facilityName);
-                $unmapped[] = $facilityId . ':' . $facilityName;
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $entry['id'], $entry['name']);
+                $unmapped[] = $entry['id'] . ':' . $entry['name'];
                 continue;
             }
 
@@ -162,13 +284,12 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
 
             if ($featureId <= 0) {
-                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
+                $unmapped[] = $entry['id'] . ':' . $entry['name'];
                 continue;
             }
-            if ($variantId <= 0 && $mapping) {
-                // Only auto-create if at least one OTHER facility mapping for the same
-                // cscart_feature_id already has a variant — proving this is the correct
-                // CS-Cart feature for facilities (not a stale/wrong mapping).
+
+            if ($variantId <= 0) {
+                // Only auto-create if at least one sibling has a variant
                 $hasMappedSibling = (int) db_get_field(
                     "SELECT COUNT(*) FROM ?:travel_feature_map
                      WHERE feature_type = 'facility' AND cscart_feature_id = ?i
@@ -180,7 +301,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                     $variantId = $this->autoCreateVariant($featureId, $mapping);
                 }
                 if ($variantId <= 0) {
-                    $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
+                    $unmapped[] = $entry['id'] . ':' . $entry['name'];
                     continue;
                 }
             }
@@ -200,96 +321,24 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
     }
 
-    /**
-     * Assign board/meal features from boards_json (diff-based sync).
-     *
-     * boards_json contains canonical codes (e.g. ["AI", "HB", "BB"]) discovered
-     * by the discover_boards cron command from the cache API.
-     *
-     * Uses M-type (multiple checkboxes) assignment: a hotel can offer
-     * multiple board options simultaneously (e.g. All Inclusive + Half Board).
-     * Diff-based: adds new variants, removes stale ones.
-     */
-    private function assignBoards(int $productId, array $hotel): void
+    private function assignTravelGroup(int $productId, array $hotel): void
     {
-        $boardsJson = $hotel['boards_json'] ?? null;
-        if (empty($boardsJson)) {
+        $featureId = $this->getFeatureId('travel_group');
+        if ($featureId <= 0) {
             return;
         }
 
-        $boards = is_string($boardsJson) ? json_decode($boardsJson, true) : $boardsJson;
-        if (!is_array($boards) || empty($boards)) {
+        $groupCodes = $this->detectTravelGroups($hotel);
+
+        if (empty($groupCodes)) {
+            $this->syncCheckboxValues($productId, $featureId, []);
             return;
         }
 
-        $featureId = $this->getFeatureId('board');
-        if (!$featureId) {
-            return;
-        }
-
-        // Resolve wanted variant_ids from canonical codes
-        $wantedVariants = [];
-        foreach ($boards as $code) {
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'board', $code);
-            if (!$mapping) {
-                continue;
-            }
-
-            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
-            if ($variantId <= 0) {
-                $variantId = $this->autoCreateVariant($featureId, $mapping);
-            }
-            if ($variantId > 0) {
-                $wantedVariants[] = $variantId;
-            }
-        }
-
-        $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
+        $this->collectAndSyncCheckboxFeature($productId, 'travel_group', $groupCodes);
     }
 
-    /**
-     * Assign region as a select-box product feature.
-     * Variants are created dynamically from region names.
-     */
-    private function assignRegion(int $productId, array $hotel): void
-    {
-        $regionName = trim((string) ($hotel['region_name'] ?? ''));
-        if ($regionName === '') {
-            return;
-        }
-
-        $featureId = $this->getFeatureId('region');
-        if (!$featureId) {
-            return;
-        }
-
-        $variantId = $this->getOrCreateLocationVariant($featureId, $regionName);
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
-        }
-    }
-
-    /**
-     * Assign city (destination) as a select-box product feature.
-     * Variants are created dynamically from city/destination names.
-     */
-    private function assignCity(int $productId, array $hotel): void
-    {
-        $cityName = trim((string) ($hotel['destination_name'] ?? ''));
-        if ($cityName === '') {
-            return;
-        }
-
-        $featureId = $this->getFeatureId('city');
-        if (!$featureId) {
-            return;
-        }
-
-        $variantId = $this->getOrCreateLocationVariant($featureId, $cityName);
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
-        }
-    }
+    // ── Travel group detection ──
 
     /** Facility canonical codes that indicate a family-friendly hotel */
     private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting', 'kids_club', 'kids_pool', 'playground'];
@@ -298,70 +347,25 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     private const PETS_FACILITY_CODES = ['pets_allowed'];
 
     /**
-     * Assign travel group features (M-type: multiple checkboxes).
-     *
-     * A hotel can have multiple travel groups simultaneously:
-     * - adults_only: from explicit is_adults_only flag
-     * - family_friendly: inferred from family facilities
-     * - pets_friendly: inferred from pets_allowed facility
-     *
-     * Uses diff-based sync: adds new groups, removes stale ones.
-     */
-    private function assignTravelGroup(int $productId, array $hotel): void
-    {
-        $featureId = $this->getFeatureId('travel_group');
-        if (!$featureId) {
-            return;
-        }
-
-        $groupCodes = $this->detectTravelGroups($hotel);
-        if (empty($groupCodes)) {
-            // No groups — clear any existing assignments
-            $this->syncCheckboxValues($productId, $featureId, []);
-            return;
-        }
-
-        $wantedVariants = [];
-        foreach ($groupCodes as $code) {
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', $code);
-            $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
-
-            if ($variantId <= 0 && $mapping) {
-                $variantId = $this->autoCreateVariant($featureId, $mapping);
-            }
-
-            if ($variantId > 0) {
-                $wantedVariants[] = $variantId;
-            }
-        }
-
-        if (!empty($wantedVariants)) {
-            $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
-        }
-    }
-
-    /**
      * Detect all applicable travel groups from hotel data.
      *
-     * @return string[] Alias keys for FeatureMapper ('Y' = adults_only, 'family' = family_friendly, 'pets' = pets_friendly)
+     * @return string[] Codes for FeatureMapper ('Y' = adults_only, 'family', 'pets')
      */
     private function detectTravelGroups(array $hotel): array
     {
         $groups = [];
 
-        // Adults-only (explicit flag)
         if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
             $groups[] = 'Y';
         }
 
-        // Infer from facilities
-        $facilityCodesPresent = $this->getHotelFacilityCodes($hotel);
+        $facilityCodes = $this->getHotelFacilityCodes($hotel);
 
-        if (!empty(array_intersect($facilityCodesPresent, self::FAMILY_FACILITY_CODES))) {
+        if (!empty(array_intersect($facilityCodes, self::FAMILY_FACILITY_CODES))) {
             $groups[] = 'family';
         }
 
-        if (!empty(array_intersect($facilityCodesPresent, self::PETS_FACILITY_CODES))) {
+        if (!empty(array_intersect($facilityCodes, self::PETS_FACILITY_CODES))) {
             $groups[] = 'pets';
         }
 
@@ -375,31 +379,19 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      */
     private function getHotelFacilityCodes(array $hotel): array
     {
-        $facilitiesJson = $hotel['facilities_json'] ?? null;
-        if (empty($facilitiesJson)) {
-            return [];
-        }
-
-        $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
-        if (!is_array($facilities)) {
-            return [];
-        }
-
+        $resolved = $this->resolveHotelFacilities($hotel);
         $codes = [];
-        foreach ($facilities as $facility) {
-            $facilityId = (string) ($facility['id'] ?? '');
-            if ($facilityId === '') {
-                continue;
-            }
 
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
-            if ($mapping && !empty($mapping['canonical_code'])) {
-                $codes[] = $mapping['canonical_code'];
+        foreach ($resolved as $entry) {
+            if ($entry['mapping'] && !empty($entry['mapping']['canonical_code'])) {
+                $codes[] = $entry['mapping']['canonical_code'];
             }
         }
 
         return $codes;
     }
+
+    // ── Helpers ──
 
     /**
      * Get or create a feature variant by name for location-type features.
@@ -412,7 +404,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             return $this->locationVariantCache[$cacheKey];
         }
 
-        // Look for existing variant by name
         $variantId = (int) db_get_field(
             "SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
              WHERE pf.variant = ?s AND pf.lang_code = ?s
@@ -422,7 +413,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         );
 
         if ($variantId <= 0) {
-            // Create new variant — same name for both EN and RO (geographic names are the same)
             $variantId = $this->createVariant($featureId, $name, $name);
         }
 
@@ -433,8 +423,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         return $variantId;
     }
 
-    // --- Private helpers ---
-
     private function getFeatureId(string $featureType): int
     {
         return FeatureMapper::getFeatureId($featureType);
@@ -442,8 +430,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     /**
      * Auto-create a CS-Cart feature variant from mapping display names.
-     * Delegates to the shared trait for variant creation, then updates
-     * travel_feature_map with the new variant_id for future lookups.
      */
     private function autoCreateVariant(int $featureId, array $mapping): int
     {
@@ -452,7 +438,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
         $variantId = $this->createVariant($featureId, $nameEn, $nameRo);
 
-        // Update travel_feature_map with the new variant_id for future lookups
         if ($variantId > 0 && !empty($mapping['map_id'])) {
             db_query(
                 "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
@@ -464,6 +449,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         return $variantId;
     }
 
-    // assignSelectBoxValue(), assignCheckboxValue(), getActiveLanguages(),
+    // assignSelectBoxValue(), syncCheckboxValues(), getActiveLanguages(),
     // and createVariant() are provided by CsCartFeatureAssignment trait.
 }

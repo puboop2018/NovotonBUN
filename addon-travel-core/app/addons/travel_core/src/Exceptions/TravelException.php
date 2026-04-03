@@ -5,7 +5,7 @@ namespace Tygh\Addons\TravelCore\Exceptions;
 
 class TravelException extends \RuntimeException
 {
-    protected $context = [];
+    protected array $context = [];
 
     public function __construct(string $message = '', array $context = [], int $code = 0, ?\Throwable $previous = null)
     {

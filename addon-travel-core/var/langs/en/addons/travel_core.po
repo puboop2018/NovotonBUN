@@ -439,3 +439,159 @@ msgstr "Bookings"
 msgctxt "Languages::menu.travel_core_menu.travel_feature_mappings"
 msgid "Feature Mappings"
 msgstr "Feature Mappings"
+
+msgctxt "Languages::menu.travel_core_menu.travel_booking_styles"
+msgid "Appearance"
+msgstr "Appearance"
+
+msgctxt "SettingsSections::travel_core::appearance"
+msgid "Appearance"
+msgstr "Appearance"
+
+msgctxt "SettingsOptions::travel_core::color_primary"
+msgid "Primary Color"
+msgstr "Primary Color"
+
+msgctxt "SettingsOptions::travel_core::color_accent"
+msgid "Accent Color"
+msgstr "Accent Color"
+
+msgctxt "SettingsOptions::travel_core::color_text"
+msgid "Text Color"
+msgstr "Text Color"
+
+msgctxt "SettingsOptions::travel_core::color_text_light"
+msgid "Secondary Text"
+msgstr "Secondary Text"
+
+msgctxt "SettingsOptions::travel_core::color_bg"
+msgid "Field Background"
+msgstr "Field Background"
+
+msgctxt "SettingsOptions::travel_core::color_border"
+msgid "Border Color"
+msgstr "Border Color"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_bg"
+msgid "Button Background"
+msgstr "Button Background"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_hover"
+msgid "Button Hover"
+msgstr "Button Hover"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_text"
+msgid "Button Text"
+msgstr "Button Text"
+
+msgctxt "SettingsOptions::travel_core::color_cal_cheapest"
+msgid "Lowest Price Text"
+msgstr "Lowest Price Text"
+
+msgctxt "SettingsOptions::travel_core::color_cal_price"
+msgid "Price Text"
+msgstr "Price Text"
+
+msgctxt "SettingsOptions::travel_core::color_danger"
+msgid "Error / Validation"
+msgstr "Error / Validation"
+
+msgctxt "Languages::travel_core.appearance_settings"
+msgid "Booking Form Appearance"
+msgstr "Booking Form Appearance"
+
+msgctxt "Languages::travel_core.appearance_page_title"
+msgid "Booking Form Colors"
+msgstr "Booking Form Colors"
+
+msgctxt "Languages::travel_core.appearance_base_header"
+msgid "Base Styles"
+msgstr "Base Styles"
+
+msgctxt "Languages::travel_core.appearance_button_header"
+msgid "Search Button"
+msgstr "Search Button"
+
+msgctxt "Languages::travel_core.appearance_calendar_header"
+msgid "Calendar Prices"
+msgstr "Calendar Prices"
+
+msgctxt "Languages::travel_core.appearance_status_header"
+msgid "Status Colors"
+msgstr "Status Colors"
+
+msgctxt "Languages::travel_core.color_primary"
+msgid "Primary color"
+msgstr "Primary color"
+
+msgctxt "Languages::travel_core.color_accent"
+msgid "Accent / form border"
+msgstr "Accent / form border"
+
+msgctxt "Languages::travel_core.color_text"
+msgid "Text color"
+msgstr "Text color"
+
+msgctxt "Languages::travel_core.color_text_light"
+msgid "Secondary text"
+msgstr "Secondary text"
+
+msgctxt "Languages::travel_core.color_bg"
+msgid "Field background"
+msgstr "Field background"
+
+msgctxt "Languages::travel_core.color_border"
+msgid "Border color"
+msgstr "Border color"
+
+msgctxt "Languages::travel_core.color_search_btn_bg"
+msgid "Button background"
+msgstr "Button background"
+
+msgctxt "Languages::travel_core.color_search_btn_hover"
+msgid "Button hover"
+msgstr "Button hover"
+
+msgctxt "Languages::travel_core.color_search_btn_text"
+msgid "Button text color"
+msgstr "Button text color"
+
+msgctxt "Languages::travel_core.color_cal_cheapest"
+msgid "Lowest price text"
+msgstr "Lowest price text"
+
+msgctxt "Languages::travel_core.color_cal_price"
+msgid "Price text"
+msgstr "Price text"
+
+msgctxt "Languages::travel_core.color_danger"
+msgid "Error / validation"
+msgstr "Error / validation"
+
+msgctxt "Languages::travel_core.colors_saved"
+msgid "Appearance settings saved successfully."
+msgstr "Appearance settings saved successfully."
+
+msgctxt "Languages::travel_core.invalid_color_value"
+msgid "Invalid color value for [setting]. Must be a hex color like #003580."
+msgstr "Invalid color value for [setting]. Must be a hex color like #003580."
+
+msgctxt "Languages::travel_core.reset_to_default"
+msgid "Reset to default"
+msgstr "Reset to default"
+
+msgctxt "Languages::travel_core.theme_default"
+msgid "(theme default)"
+msgstr "(theme default)"
+
+msgctxt "Languages::travel_core.default"
+msgid "Default"
+msgstr "Default"
+
+msgctxt "Languages::travel_core.inherited_from_theme"
+msgid "Inherited from theme"
+msgstr "Inherited from theme"
+
+msgctxt "Languages::travel_core.appearance_preview"
+msgid "Live Preview"
+msgstr "Live Preview"

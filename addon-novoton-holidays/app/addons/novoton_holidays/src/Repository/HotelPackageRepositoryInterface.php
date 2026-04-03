@@ -97,4 +97,33 @@ interface HotelPackageRepositoryInterface
      * @return array
      */
     public function findForListing(string $hotelId): array;
+
+    /**
+     * Get priceinfo_data for a hotel, optionally filtered by package name.
+     *
+     * @return string|null JSON priceinfo_data or null
+     */
+    public function getPriceinfoData(string $hotelId, ?string $packageName = null): ?string;
+
+    /**
+     * Get the most recent synced_at timestamp for a hotel's packages.
+     */
+    public function getLastSyncedAt(string $hotelId): ?string;
+
+    /**
+     * Get the package name of the most recently synced package with priceinfo data.
+     */
+    public function getActivePackageName(string $hotelId): ?string;
+
+    /**
+     * Get the priceinfo_data from the most recently synced package.
+     */
+    public function getLatestPriceinfoData(string $hotelId): ?string;
+
+    /**
+     * Get all priceinfo_data rows for a hotel (non-null only).
+     *
+     * @return string[] Array of JSON priceinfo_data strings
+     */
+    public function getAllPriceinfoData(string $hotelId): array;
 }

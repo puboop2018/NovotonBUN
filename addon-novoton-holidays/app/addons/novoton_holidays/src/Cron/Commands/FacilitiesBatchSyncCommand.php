@@ -40,7 +40,7 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $this->output("");
 
         $sync = new BatchedHotelFacilitiesSync();
-        $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         // Apply configuration from request params
         if (!empty($this->params['batch_size'])) {

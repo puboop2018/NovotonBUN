@@ -13,8 +13,8 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
-use Tygh\Addons\NovotonHolidays\Services\GuestDataNormalizer;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 

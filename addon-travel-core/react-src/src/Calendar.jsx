@@ -215,7 +215,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 const key = toDateKey(monthInfo.year, monthInfo.month, d);
                 const date = new Date(monthInfo.year, monthInfo.month, d, 12, 0, 0);
                 if (date >= today && prices[key] !== undefined) {
-                    allPrices.push(Number(prices[key]));
+                    const p = Number(prices[key]);
+                    if (isFinite(p) && p > 0) allPrices.push(p);
                 }
             }
         }

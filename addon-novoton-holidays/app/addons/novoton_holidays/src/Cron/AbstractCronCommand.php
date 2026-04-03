@@ -9,11 +9,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 abstract class AbstractCronCommand
 {
-    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
-    protected $api;
+    protected \Tygh\Addons\NovotonHolidays\NovotonApi $api;
 
-    /** @var \Tygh\Addons\NovotonHolidays\Helpers\SyncLogger */
-    protected $logger;
+    protected ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
 
     /** @var array */
     protected array $params = [];

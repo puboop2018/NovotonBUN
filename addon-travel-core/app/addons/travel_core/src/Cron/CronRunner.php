@@ -20,8 +20,8 @@ class CronRunner
     private CronDispatcherInterface $dispatcher;
     private ?string $defaultMode;
 
-    /** @var callable|null Optional error callback: fn(\Exception $e): void */
-    private $onError;
+    /** @var callable(\Exception): void|null */
+    private mixed $onError;
 
     public function __construct(
         string $addonLabel,

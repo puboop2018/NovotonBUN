@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Repository\PackageRouteRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
 /**
@@ -161,10 +162,8 @@ class PackageRouteSyncService extends AbstractSyncService
     private function resolveCountryCode(int $destinationId): string
     {
         if (!isset($this->countryCodeCache[$destinationId])) {
-            $this->countryCodeCache[$destinationId] = (string) db_get_field(
-                "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
-                $destinationId
-            );
+            $repo = new PackageRouteRepository();
+            $this->countryCodeCache[$destinationId] = $repo->getCountryCodeForDestination($destinationId);
         }
         return $this->countryCodeCache[$destinationId];
     }
@@ -174,18 +173,10 @@ class PackageRouteSyncService extends AbstractSyncService
      */
     private function upsertBatch(array $batch): int
     {
+        $repo = new PackageRouteRepository();
         $affected = 0;
         foreach ($batch as $row) {
-            $existing = db_get_field(
-                "SELECT route_id FROM ?:sphinx_package_routes WHERE transport_type = ?s AND departure_id = ?i AND arrival_id = ?i AND duration = ?i",
-                $row['transport_type'], $row['departure_id'], $row['arrival_id'], $row['duration']
-            );
-
-            if ($existing) {
-                db_query("UPDATE ?:sphinx_package_routes SET ?u WHERE route_id = ?i", $row, (int) $existing);
-            } else {
-                db_query("INSERT INTO ?:sphinx_package_routes ?e", $row);
-            }
+            $repo->upsert($row);
             $affected++;
         }
         return $affected;

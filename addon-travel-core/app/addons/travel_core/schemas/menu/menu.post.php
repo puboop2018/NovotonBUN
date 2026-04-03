@@ -26,6 +26,12 @@ $schema['central']['travel_core'] = [
             'position' => 200,
             'title' => __('travel_core.feature_mappings'),
         ],
+        'travel_booking_styles' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'travel_booking_styles.manage',
+            'position' => 250,
+            'title' => __('travel_core.appearance_settings'),
+        ],
         'travel_tools' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'travel_tools.manage',

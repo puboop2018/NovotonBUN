@@ -6,7 +6,6 @@ namespace Tygh\Addons\TravelCore\Services;
 use Tygh\Addons\TravelCore\Contracts\FeatureMapperInterface;
 use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
 use Tygh\Addons\TravelCore\Repository\FeatureMapRepository;
-use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
  * Feature mapper service.
@@ -26,16 +25,14 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  */
 class FeatureMapper implements FeatureMapperInterface
 {
-    use CsCartFeatureAssignment;
-
     /** @var array Per-request in-memory cache for resolve() results */
     private static array $cache = [];
 
     /** @var array Per-request deduplication for trackUnmapped() */
     private static array $trackedUnmapped = [];
 
-    /** @var self|null Singleton for instance methods (variant creation uses the trait) */
-    private static ?self $instance = null;
+    /** @var VariantResolver|null Lazy-initialized variant resolver */
+    private static ?VariantResolver $variantResolver = null;
 
     /** @var FeatureMapRepositoryInterface|null Injectable repository (defaults to FeatureMapRepository) */
     private static ?FeatureMapRepositoryInterface $repository = null;
@@ -147,173 +144,12 @@ class FeatureMapper implements FeatureMapperInterface
             return null;
         }
 
-        $variantId = self::getInstance()->ensureVariantExists($mapping);
+        $variantId = self::getVariantResolver()->ensureVariantExists($mapping);
         if ($variantId > 0) {
             $mapping['cscart_variant_id'] = $variantId;
         }
 
         return $mapping;
-    }
-
-    /**
-     * Ensure a CS-Cart variant exists for a mapping row.
-     *
-     * 1. If stored variant_id exists in CS-Cart, use it.
-     * 2. If variant_source='manual', never auto-resolve (admin locked).
-     * 3. Try 3-pass name matching against existing CS-Cart variants.
-     * 4. Auto-create the variant if no match found.
-     *
-     * @return int variant_id or 0
-     */
-    private function ensureVariantExists(array $mapping): int
-    {
-        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
-        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-        $mapId = (int) ($mapping['map_id'] ?? 0);
-        $variantSource = $mapping['variant_source'] ?? 'auto';
-        $repo = self::getRepository();
-
-        if ($mapId <= 0) {
-            return 0;
-        }
-
-        if ($featureId <= 0) {
-            // Try to get feature_id from settings
-            $featureType = $mapping['feature_type'] ?? '';
-            if ($featureType !== '') {
-                $featureId = self::getFeatureId($featureType);
-                if ($featureId > 0) {
-                    $repo->updateFeatureId($mapId, $featureId);
-                }
-            }
-            if ($featureId <= 0) {
-                return 0;
-            }
-        }
-
-        // Check if stored variant still exists in CS-Cart
-        if ($variantId > 0) {
-            $exists = db_get_field(
-                "SELECT variant_id FROM ?:product_feature_variants WHERE variant_id = ?i AND feature_id = ?i",
-                $variantId, $featureId
-            );
-            if ($exists) {
-                return $variantId;
-            }
-            // Variant was deleted — if manually set, don't auto-resolve
-            if ($variantSource === 'manual') {
-                return 0;
-            }
-        }
-
-        // Never auto-resolve manually locked mappings
-        if ($variantSource === 'manual') {
-            return $variantId;
-        }
-
-        // Try 3-pass name match against existing CS-Cart variants
-        $matched = $this->findVariantByName($mapping, $featureId);
-        if ($matched > 0) {
-            self::updateVariantId($mapId, $matched, 'auto');
-            return $matched;
-        }
-
-        // Auto-create the variant
-        $nameEn = trim($mapping['display_name_en'] ?? '');
-        $nameRo = trim($mapping['display_name_ro'] ?? '');
-        if ($nameEn === '') {
-            return 0;
-        }
-
-        $variantId = $this->createVariant($featureId, $nameEn, $nameRo);
-        if ($variantId > 0) {
-            self::updateVariantId($mapId, $variantId, 'auto');
-        }
-
-        return $variantId;
-    }
-
-    /**
-     * 3-pass variant name matching.
-     *
-     * Per language (EN first, then RO fallback):
-     *   1. Exact match
-     *   2. Case-insensitive match via LOWER()
-     *   3. Normalized match — strips non-alphanumeric chars and collapses whitespace
-     *
-     * @return int Matched variant_id or 0
-     */
-    private function findVariantByName(array $mapping, int $featureId): int
-    {
-        $nameEn = trim($mapping['display_name_en'] ?? '');
-        $nameRo = trim($mapping['display_name_ro'] ?? '');
-
-        if ($featureId <= 0 || $nameEn === '') {
-            return 0;
-        }
-
-        $candidates = [['en', $nameEn]];
-        if ($nameRo !== '' && $nameRo !== $nameEn) {
-            $candidates[] = ['ro', $nameRo];
-        }
-
-        foreach ($candidates as [$lang, $name]) {
-            // Pass 1: Exact match
-            $variantId = db_get_field(
-                "SELECT v.variant_id
-                 FROM ?:product_feature_variants v
-                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = ?s AND vd.variant = ?s
-                 LIMIT 1",
-                $featureId, $lang, $name
-            );
-            if ($variantId) {
-                return (int) $variantId;
-            }
-
-            // Pass 2: Case-insensitive match
-            $variantId = db_get_field(
-                "SELECT v.variant_id
-                 FROM ?:product_feature_variants v
-                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = ?s AND LOWER(vd.variant) = LOWER(?s)
-                 LIMIT 1",
-                $featureId, $lang, $name
-            );
-            if ($variantId) {
-                return (int) $variantId;
-            }
-
-            // Pass 3: Normalized match — strips punctuation, collapses whitespace
-            $normalized = self::normalizeName($name);
-            $rows = db_get_array(
-                "SELECT v.variant_id, vd.variant
-                 FROM ?:product_feature_variants v
-                 JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = ?s",
-                $featureId, $lang
-            );
-            foreach ($rows as $row) {
-                if (self::normalizeName($row['variant']) === $normalized) {
-                    return (int) $row['variant_id'];
-                }
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Normalize a variant name for fuzzy comparison.
-     *
-     * Lowercases, strips non-alphanumeric/non-space chars, and collapses whitespace.
-     * e.g. "All-Inclusive (Premium)" => "all inclusive premium"
-     */
-    private static function normalizeName(string $name): string
-    {
-        $name = mb_strtolower($name, 'UTF-8');
-        $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name) ?? $name;
-        return trim(preg_replace('/\s+/', ' ', $name) ?? $name);
     }
 
     // ── Unmapped value handling ──
@@ -526,13 +362,21 @@ class FeatureMapper implements FeatureMapperInterface
     }
 
     /**
-     * Get singleton instance for methods that need the CsCartFeatureAssignment trait.
+     * Get the VariantResolver instance (lazy-initialized).
      */
-    private static function getInstance(): self
+    public static function getVariantResolver(): VariantResolver
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
+        if (self::$variantResolver === null) {
+            self::$variantResolver = new VariantResolver(self::getRepository());
         }
-        return self::$instance;
+        return self::$variantResolver;
+    }
+
+    /**
+     * Inject a custom VariantResolver (for testing).
+     */
+    public static function setVariantResolver(?VariantResolver $resolver): void
+    {
+        self::$variantResolver = $resolver;
     }
 }

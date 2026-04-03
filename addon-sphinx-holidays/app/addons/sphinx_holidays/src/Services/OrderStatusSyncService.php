@@ -247,7 +247,7 @@ class OrderStatusSyncService
 
         if (!empty($updates)) {
             // Direct update to sphinx_bookings only (these fields don't exist in travel_bookings)
-            db_query("UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i", $updates, $bookingId);
+            $this->repo->updateDirect($bookingId, $updates);
         }
     }
 
@@ -293,15 +293,7 @@ class OrderStatusSyncService
      */
     private function getBookingsToCheck(): array
     {
-        return db_get_array(
-            "SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
-             FROM ?:sphinx_bookings
-             WHERE order_id > 0
-               AND status NOT IN (?a)
-               AND created_at > DATE_SUB(NOW(), INTERVAL 90 DAY)
-             ORDER BY created_at DESC",
-            [TravelConstants::STATUS_CANCELLED]
-        );
+        return $this->repo->findForStatusCheck([TravelConstants::STATUS_CANCELLED]);
     }
 
     /**

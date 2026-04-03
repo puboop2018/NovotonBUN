@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -17,14 +18,16 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 class BookingAdminProvider implements BookingAdminProviderInterface
 {
+    private SphinxBookingRepository $repo;
+
+    public function __construct(?SphinxBookingRepository $repo = null)
+    {
+        $this->repo = $repo ?? new SphinxBookingRepository();
+    }
+
     public function getDisplayData(string $providerBookingId): array
     {
-        $booking = db_get_row(
-            "SELECT booking_id, offer_id, api_booking_ref, base_price, status,
-                    payment_terms_json, cancellation_fees_json, last_status_check
-             FROM ?:sphinx_bookings WHERE booking_id = ?i",
-            (int) $providerBookingId
-        );
+        $booking = $this->repo->findById((int) $providerBookingId);
 
         if (empty($booking)) {
             return [];
@@ -91,7 +94,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $result = $service->checkSingle($bookingId);
 
         // Update last_status_check timestamp
-        db_query("UPDATE ?:sphinx_bookings SET last_status_check = NOW() WHERE booking_id = ?i", $bookingId);
+        $this->repo->updateDirect($bookingId, ['last_status_check' => date('Y-m-d H:i:s')]);
 
         return $result;
     }

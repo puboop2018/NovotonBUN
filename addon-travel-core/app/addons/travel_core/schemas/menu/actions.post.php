@@ -22,6 +22,11 @@ $tabs = [
         'text'     => __('travel_core.feature_mappings'),
         'position' => 200,
     ],
+    'travel_booking_styles' => [
+        'href'     => 'travel_booking_styles.manage',
+        'text'     => __('travel_core.appearance_settings'),
+        'position' => 250,
+    ],
     'travel_tools' => [
         'href'     => 'travel_tools.manage',
         'text'     => __('travel_core.tools_and_cron'),
@@ -35,6 +40,7 @@ $pages = [
     'travel_bookings.view',
     'travel_feature_mappings.manage',
     'travel_feature_mappings.edit',
+    'travel_booking_styles.manage',
     'travel_tools.manage',
 ];
 

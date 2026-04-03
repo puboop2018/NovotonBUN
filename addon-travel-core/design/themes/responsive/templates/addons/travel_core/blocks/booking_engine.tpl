@@ -53,6 +53,26 @@
     {/if}
 {/if}
 
+{* ── Runtime color overrides from admin Appearance Settings ── *}
+{* Only emit properties that have a non-empty value; empty = use LESS/theme default *}
+{capture name="_tc_style"}{strip}
+{if $addons.travel_core.color_primary}--nvt-primary:{$addons.travel_core.color_primary|escape:'html'};{/if}
+{if $addons.travel_core.color_accent}--nvt-accent:{$addons.travel_core.color_accent|escape:'html'};{/if}
+{if $addons.travel_core.color_text}--nvt-text:{$addons.travel_core.color_text|escape:'html'};{/if}
+{if $addons.travel_core.color_text_light}--nvt-text-light:{$addons.travel_core.color_text_light|escape:'html'};{/if}
+{if $addons.travel_core.color_bg}--nvt-bg:{$addons.travel_core.color_bg|escape:'html'};{/if}
+{if $addons.travel_core.color_border}--nvt-border:{$addons.travel_core.color_border|escape:'html'};{/if}
+{if $addons.travel_core.color_search_btn_bg}--nvt-search-btn-bg:{$addons.travel_core.color_search_btn_bg|escape:'html'};{/if}
+{if $addons.travel_core.color_search_btn_hover}--nvt-search-btn-hover:{$addons.travel_core.color_search_btn_hover|escape:'html'};{/if}
+{if $addons.travel_core.color_search_btn_text}--nvt-search-btn-text:{$addons.travel_core.color_search_btn_text|escape:'html'};{/if}
+{if $addons.travel_core.color_cal_cheapest}--nvt-cal-cheapest-color:{$addons.travel_core.color_cal_cheapest|escape:'html'};{/if}
+{if $addons.travel_core.color_cal_price}--nvt-cal-price-color:{$addons.travel_core.color_cal_price|escape:'html'};{/if}
+{if $addons.travel_core.color_danger}--nvt-danger:{$addons.travel_core.color_danger|escape:'html'};{/if}
+{/strip}{/capture}
+{if $smarty.capture._tc_style|trim}
+<style>:root { {$smarty.capture._tc_style nofilter} }</style>
+{/if}
+
 {* Container for React component *}
 <div id="travel-booking-root"
      data-travel-booking
@@ -72,12 +92,17 @@
      data-rooms="{$travel_search_params.num_rooms|default:$travel_search_params.rooms|default:1}"
      data-rooms-data='{$travel_search_params.rooms_data_json|default:"[]"|escape:"html"}'
      {/if}
-     {if $show_calendar_prices == 'Y' && $calendar_prices_json != '{}'}data-calendar-prices='{$calendar_prices_json nofilter}'
+     {if $show_calendar_prices == 'Y' && $calendar_prices_json != '{}'}data-calendar-prices='{$calendar_prices_json|escape:"html"}'
      data-calendar-prices-currency="{$calendar_prices_currency|escape:'html'}"
      {/if}
      data-translations='{ldelim}"availability":"{__("travel_core.availability")}","checkInDate":"{__("travel_core.check_in_date")}","checkOutDate":"{__("travel_core.check_out_date")}","checkIn":"{__("travel_core.check_in")}","checkOut":"{__("travel_core.check_out")}","selectDatesMessage":"{__("travel_core.select_dates_message")}","search":"{__("travel_core.search")}","changeSearch":"{__("travel_core.change_search")}","applyChanges":"{__("travel_core.apply_changes")}","adult":"{__("travel_core.adult")}","adults":"{__("travel_core.adults")}","child":"{__("travel_core.child")}","children":"{__("travel_core.children")}","rooms":"{__("travel_core.rooms")}","room":"{__("travel_core.room")}","done":"{__("travel_core.done")}","addRoom":"{__("travel_core.add_room")}","adultsLabel":"{__("travel_core.adults_label")}","childrenLabel":"{__("travel_core.children_label")}","nightsStay":"{__("travel_core.nights_stay")}","nightStay":"{__("travel_core.night_stay")}","night":"{__("travel_core.night")}","nights":"{__("travel_core.nights")}","childrenAges":"{__("travel_core.childrens_ages")}","childAge":"{__("travel_core.child_age")}","selectAge":"{__("travel_core.select_age")}","yearsOld":"{__("travel_core.years_old")}","yearOld":"{__("travel_core.year_old")}","selected":"{__("travel_core.selected")}","selectedSingular":"{__("travel_core.selected_singular")}","selectCheckOut":"{__("travel_core.select_check_out")}","january":"{__("travel_core.january")}","february":"{__("travel_core.february")}","march":"{__("travel_core.march")}","april":"{__("travel_core.april")}","may":"{__("travel_core.may")}","june":"{__("travel_core.june")}","july":"{__("travel_core.july")}","august":"{__("travel_core.august")}","september":"{__("travel_core.september")}","october":"{__("travel_core.october")}","november":"{__("travel_core.november")}","december":"{__("travel_core.december")}","mon":"{__("travel_core.mon")}","tue":"{__("travel_core.tue")}","wed":"{__("travel_core.wed")}","thu":"{__("travel_core.thu")}","fri":"{__("travel_core.fri")}","sat":"{__("travel_core.sat")}","sun":"{__("travel_core.sun")}","remove":"{__("travel_core.remove")}","pleaseEnterDates":"{__("travel_core.please_enter_dates")}","selectCheckIn":"{__("travel_core.select_check_in")}","selectMissingAges":"{__("travel_core.select_missing_ages")}","selectAgeForOneChild":"{__("travel_core.select_age_for_one_child")}","selectAgeForChildren":"{__("travel_core.select_age_for_children")}","calendarPriceFooter":"{__("travel_core.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}"{rdelim}'>
+    {* Skeleton loader — matches form shape while React loads *}
     <div class="travel-loading-state">
-        <span>{__("travel_core.loading_booking_form")|default:"Loading booking form..."}</span>
+        <div class="nvt-skeleton-row">
+            <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
+            <div class="nvt-skeleton-field"></div>
+            <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+        </div>
     </div>
 </div>
 

@@ -123,4 +123,64 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
             $hotelId
         );
     }
+
+    public function getPriceinfoData(string $hotelId, ?string $packageName = null): ?string
+    {
+        if ($packageName !== null) {
+            $data = db_get_field(
+                "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+                 WHERE hotel_id = ?s AND package_name = ?s
+                 ORDER BY synced_at DESC LIMIT 1",
+                $hotelId, $packageName
+            );
+        } else {
+            $data = db_get_field(
+                "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+                 WHERE hotel_id = ?s
+                 ORDER BY synced_at DESC LIMIT 1",
+                $hotelId
+            );
+        }
+        return ($data !== false && $data !== '') ? (string) $data : null;
+    }
+
+    public function getLastSyncedAt(string $hotelId): ?string
+    {
+        $val = db_get_field(
+            "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
+            $hotelId
+        );
+        return ($val !== false && $val !== '') ? (string) $val : null;
+    }
+
+    public function getActivePackageName(string $hotelId): ?string
+    {
+        $val = db_get_field(
+            "SELECT package_name FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
+            $hotelId
+        );
+        return ($val !== false && $val !== '') ? (string) $val : null;
+    }
+
+    public function getLatestPriceinfoData(string $hotelId): ?string
+    {
+        $val = db_get_field(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+             ORDER BY synced_at DESC LIMIT 1",
+            $hotelId
+        );
+        return ($val !== false && $val !== '') ? (string) $val : null;
+    }
+
+    public function getAllPriceinfoData(string $hotelId): array
+    {
+        return db_get_fields(
+            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL",
+            $hotelId
+        );
+    }
 }

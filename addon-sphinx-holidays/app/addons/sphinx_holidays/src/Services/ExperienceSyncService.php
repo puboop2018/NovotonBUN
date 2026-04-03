@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Repository\ExperienceRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
 /**
@@ -161,14 +162,10 @@ class ExperienceSyncService extends AbstractSyncService
 
     private function upsertBatch(array $batch): int
     {
+        $repo = new ExperienceRepository();
         $affected = 0;
         foreach ($batch as $row) {
-            $existing = db_get_field("SELECT experience_id FROM ?:sphinx_experiences WHERE experience_id = ?i", $row['experience_id']);
-            if ($existing) {
-                db_query("UPDATE ?:sphinx_experiences SET ?u WHERE experience_id = ?i", $row, $row['experience_id']);
-            } else {
-                db_query("INSERT INTO ?:sphinx_experiences ?e", $row);
-            }
+            $repo->upsert((int) $row['experience_id'], $row);
             $affected++;
         }
         return $affected;

@@ -26,6 +26,15 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     }
 
     /**
+     * Create a new alternative request and return its ID.
+     */
+    public function create(array $data): int
+    {
+        db_query("INSERT INTO ?:novoton_alternative_requests ?e", $data);
+        return (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    /**
      * Find pending requests older than N hours (for API polling).
      */
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array
@@ -39,6 +48,21 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
             TravelConstants::STATUS_PENDING,
             $hours,
             $limit
+        );
+    }
+
+    /**
+     * Find pending requests that have a Novoton API reference.
+     */
+    public function findPendingWithApiRef(): array
+    {
+        return db_get_array(
+            "SELECT request_id, novoton_request_id, hotel_name, contact_email
+             FROM ?:novoton_alternative_requests
+             WHERE status = ?s
+               AND novoton_request_id != ''
+               AND novoton_request_id IS NOT NULL",
+            TravelConstants::STATUS_PENDING
         );
     }
 

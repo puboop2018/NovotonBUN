@@ -1,6 +1,9 @@
 const path = require('path');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 module.exports = {
+    devtool: isProduction ? 'source-map' : 'eval-source-map',
     entry: {
         'react19-bundle': './src/index.jsx',
     },

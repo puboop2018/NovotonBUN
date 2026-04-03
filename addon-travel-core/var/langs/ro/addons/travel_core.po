@@ -439,3 +439,159 @@ msgstr "Rezervări"
 msgctxt "Languages::menu.travel_core_menu.travel_feature_mappings"
 msgid "Feature Mappings"
 msgstr "Mapări Caracteristici"
+
+msgctxt "Languages::menu.travel_core_menu.travel_booking_styles"
+msgid "Appearance"
+msgstr "Aspect vizual"
+
+msgctxt "SettingsSections::travel_core::appearance"
+msgid "Appearance"
+msgstr "Aspect vizual"
+
+msgctxt "SettingsOptions::travel_core::color_primary"
+msgid "Primary Color"
+msgstr "Culoare principală"
+
+msgctxt "SettingsOptions::travel_core::color_accent"
+msgid "Accent Color"
+msgstr "Culoare accent"
+
+msgctxt "SettingsOptions::travel_core::color_text"
+msgid "Text Color"
+msgstr "Culoare text"
+
+msgctxt "SettingsOptions::travel_core::color_text_light"
+msgid "Secondary Text"
+msgstr "Text secundar"
+
+msgctxt "SettingsOptions::travel_core::color_bg"
+msgid "Field Background"
+msgstr "Fundal câmpuri"
+
+msgctxt "SettingsOptions::travel_core::color_border"
+msgid "Border Color"
+msgstr "Culoare bordură"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_bg"
+msgid "Button Background"
+msgstr "Fundal buton"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_hover"
+msgid "Button Hover"
+msgstr "Buton hover"
+
+msgctxt "SettingsOptions::travel_core::color_search_btn_text"
+msgid "Button Text"
+msgstr "Text buton"
+
+msgctxt "SettingsOptions::travel_core::color_cal_cheapest"
+msgid "Lowest Price Text"
+msgstr "Text preț minim"
+
+msgctxt "SettingsOptions::travel_core::color_cal_price"
+msgid "Price Text"
+msgstr "Text preț"
+
+msgctxt "SettingsOptions::travel_core::color_danger"
+msgid "Error / Validation"
+msgstr "Eroare / Validare"
+
+msgctxt "Languages::travel_core.appearance_settings"
+msgid "Booking Form Appearance"
+msgstr "Aspect formular rezervare"
+
+msgctxt "Languages::travel_core.appearance_page_title"
+msgid "Booking Form Colors"
+msgstr "Culori formular rezervare"
+
+msgctxt "Languages::travel_core.appearance_base_header"
+msgid "Base Styles"
+msgstr "Stiluri de bază"
+
+msgctxt "Languages::travel_core.appearance_button_header"
+msgid "Search Button"
+msgstr "Buton căutare"
+
+msgctxt "Languages::travel_core.appearance_calendar_header"
+msgid "Calendar Prices"
+msgstr "Prețuri calendar"
+
+msgctxt "Languages::travel_core.appearance_status_header"
+msgid "Status Colors"
+msgstr "Culori status"
+
+msgctxt "Languages::travel_core.color_primary"
+msgid "Primary color"
+msgstr "Culoare principală"
+
+msgctxt "Languages::travel_core.color_accent"
+msgid "Accent / form border"
+msgstr "Accent / bordură formular"
+
+msgctxt "Languages::travel_core.color_text"
+msgid "Text color"
+msgstr "Culoare text"
+
+msgctxt "Languages::travel_core.color_text_light"
+msgid "Secondary text"
+msgstr "Text secundar"
+
+msgctxt "Languages::travel_core.color_bg"
+msgid "Field background"
+msgstr "Fundal câmpuri"
+
+msgctxt "Languages::travel_core.color_border"
+msgid "Border color"
+msgstr "Culoare bordură"
+
+msgctxt "Languages::travel_core.color_search_btn_bg"
+msgid "Button background"
+msgstr "Fundal buton"
+
+msgctxt "Languages::travel_core.color_search_btn_hover"
+msgid "Button hover"
+msgstr "Buton hover"
+
+msgctxt "Languages::travel_core.color_search_btn_text"
+msgid "Button text color"
+msgstr "Culoare text buton"
+
+msgctxt "Languages::travel_core.color_cal_cheapest"
+msgid "Lowest price text"
+msgstr "Text preț minim"
+
+msgctxt "Languages::travel_core.color_cal_price"
+msgid "Price text"
+msgstr "Text preț"
+
+msgctxt "Languages::travel_core.color_danger"
+msgid "Error / validation"
+msgstr "Eroare / validare"
+
+msgctxt "Languages::travel_core.colors_saved"
+msgid "Appearance settings saved successfully."
+msgstr "Setările de aspect au fost salvate cu succes."
+
+msgctxt "Languages::travel_core.invalid_color_value"
+msgid "Invalid color value for [setting]. Must be a hex color like #003580."
+msgstr "Valoare de culoare invalidă pentru [setting]. Trebuie să fie un cod hex precum #003580."
+
+msgctxt "Languages::travel_core.reset_to_default"
+msgid "Reset to default"
+msgstr "Resetare la implicit"
+
+msgctxt "Languages::travel_core.theme_default"
+msgid "(theme default)"
+msgstr "(implicit temă)"
+
+msgctxt "Languages::travel_core.default"
+msgid "Default"
+msgstr "Implicit"
+
+msgctxt "Languages::travel_core.inherited_from_theme"
+msgid "Inherited from theme"
+msgstr "Moștenit din temă"
+
+msgctxt "Languages::travel_core.appearance_preview"
+msgid "Live Preview"
+msgstr "Previzualizare"

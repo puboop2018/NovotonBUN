@@ -31,7 +31,7 @@ $validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility'
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update mapping
-    if ($mode == 'update') {
+    if ($mode === 'update') {
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
         if ($mapId > 0 && !empty($_REQUEST['mapping_data'])) {
             $data = $_REQUEST['mapping_data'];
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Bulk update (toggle status, delete)
-    if ($mode == 'bulk_update') {
+    if ($mode === 'bulk_update') {
         $action = $_REQUEST['dispatch_extra'] ?? '';
         $ids = $_REQUEST['map_ids'] ?? [];
 
@@ -98,14 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Re-seed canonical codes
-    if ($mode == 'reseed') {
+    if ($mode === 'reseed') {
         fn_travel_core_seed_feature_map();
         fn_set_notification('N', __('notice'), __('travel_core.fm_reseeded'));
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
     }
 
     // Auto-resolve unmapped variants by name-matching + auto-create
-    if ($mode == 'resolve_variants') {
+    if ($mode === 'resolve_variants') {
 
         // Step 1: Auto-populate cscart_feature_id from addon settings for entries that don't have one
         $featureTypes = $repo->getFeatureTypesWithoutFeatureId();
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Add alias
-    if ($mode == 'add_alias') {
+    if ($mode === 'add_alias') {
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
         $apiSource = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['api_source'] ?? '')));
         $apiValue = (string) ($_REQUEST['api_value'] ?? '');
@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Delete alias
-    if ($mode == 'delete_alias') {
+    if ($mode === 'delete_alias') {
         $aliasId = (int) ($_REQUEST['alias_id'] ?? 0);
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
         if ($aliasId > 0) {
@@ -370,7 +370,7 @@ function _travel_fm_get_scan_config(string $provider): ?array
 }
 
 // ── GET: Manage (dashboard or paginated list) ──
-if ($mode == 'manage') {
+if ($mode === 'manage') {
     $featureTypeFilter = $_REQUEST['feature_type'] ?? '';
     $statusFilter = $_REQUEST['status'] ?? '';
     $sourceFilter = $_REQUEST['mapping_source'] ?? '';
@@ -525,7 +525,7 @@ if ($mode == 'manage') {
 }
 
 // ── GET: Unmapped values ──
-if ($mode == 'unmapped') {
+if ($mode === 'unmapped') {
     $page = max(1, (int) ($_REQUEST['page'] ?? 1));
     $itemsPerPage = (int) ($_REQUEST['items_per_page'] ?? 0);
     if ($itemsPerPage <= 0) {
@@ -563,7 +563,7 @@ if ($mode == 'unmapped') {
 }
 
 // ── GET: Scan progress (intermediate page between batches) ──
-if ($mode == 'scan_progress') {
+if ($mode === 'scan_progress') {
     $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
     $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
     $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
@@ -579,7 +579,7 @@ if ($mode == 'scan_progress') {
 }
 
 // ── GET: Edit single mapping ──
-if ($mode == 'edit') {
+if ($mode === 'edit') {
     $mapId = (int) ($_REQUEST['map_id'] ?? 0);
 
     if ($mapId <= 0) {
@@ -626,7 +626,7 @@ if ($mode == 'edit') {
 }
 
 // ── GET: AJAX — load variants for a feature (used by edit page) ──
-if ($mode == 'get_variants') {
+if ($mode === 'get_variants') {
     $featureId = (int) ($_REQUEST['feature_id'] ?? 0);
     $variants = [];
 

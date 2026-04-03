@@ -296,7 +296,7 @@ export default function GuestPicker({
                                                 value={age !== null && age !== undefined ? age : ''}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
-                                                    setChildAge(roomIdx, childIdx, val === '' ? null : parseInt(val));
+                                                    setChildAge(roomIdx, childIdx, val === '' ? null : parseInt(val, 10));
                                                 }}
                                                 aria-label={`${t('ageOfChild', 'Age of child')} ${childIdx + 1}, ${t('room', 'Room')} ${roomIdx + 1}`}
                                                 aria-invalid={error || undefined}

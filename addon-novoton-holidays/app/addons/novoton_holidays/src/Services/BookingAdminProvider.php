@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 
 /**
@@ -16,14 +18,16 @@ use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
  */
 class BookingAdminProvider implements BookingAdminProviderInterface
 {
+    private BookingRepositoryInterface $bookingRepo;
+
+    public function __construct(?BookingRepositoryInterface $bookingRepo = null)
+    {
+        $this->bookingRepo = $bookingRepo ?? new BookingRepository();
+    }
+
     public function getDisplayData(string $providerBookingId): array
     {
-        $booking = db_get_row(
-            "SELECT booking_id, novoton_invoice_id, novoton_status, novoton_confirm_id,
-                    base_price, api_price, status, alternatives_requested
-             FROM ?:novoton_bookings WHERE booking_id = ?i",
-            (int) $providerBookingId
-        );
+        $booking = $this->bookingRepo->findById((int) $providerBookingId);
 
         if (empty($booking)) {
             return [];
@@ -66,7 +70,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             return ['changed' => false, 'old_status' => '', 'new_status' => '', 'error' => 'Invalid booking ID'];
         }
 
-        $booking = db_get_row("SELECT status, novoton_status FROM ?:novoton_bookings WHERE booking_id = ?i", $bookingId);
+        $booking = $this->bookingRepo->findById($bookingId);
         $oldStatus = $booking['novoton_status'] ?? $booking['status'] ?? '';
 
         if (function_exists('fn_novoton_holidays_check_reservation_status')) {
@@ -75,7 +79,8 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Status check function not available'];
         }
 
-        $updatedBooking = db_get_row("SELECT status, novoton_status FROM ?:novoton_bookings WHERE booking_id = ?i", $bookingId);
+        BookingRepository::invalidateCache($bookingId);
+        $updatedBooking = $this->bookingRepo->findById($bookingId);
         $newStatus = $updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '';
 
         return [
@@ -128,7 +133,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     public function getProviderViewUrl(string $providerBookingId): ?string
     {
-        return 'travel_bookings.view?booking_id=' . $providerBookingId;
+        return 'travel_bookings.view?booking_id=' . (int) $providerBookingId;
     }
 
     public function handleAction(string $action, array $request): array
@@ -179,6 +184,22 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     // ── Provider-specific action handlers ──
 
+    /**
+     * Validate return_url to prevent open redirects.
+     * Only allows relative dispatch URLs (no scheme/host).
+     */
+    private function validateReturnUrl(string $url): string
+    {
+        if ($url === '') {
+            return '';
+        }
+        $parsed = parse_url($url);
+        if (!empty($parsed['scheme']) || !empty($parsed['host'])) {
+            return '';
+        }
+        return $url;
+    }
+
     private function handleResinfo(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
@@ -186,8 +207,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             fn_novoton_holidays_check_reservation_status($bookingId);
         }
 
+        $returnUrl = $this->validateReturnUrl((string) ($request['return_url'] ?? ''));
+
         return [
-            'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+            'redirect' => $returnUrl !== '' ? $returnUrl : 'travel_bookings.manage',
             'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.status_checked')],
         ];
     }
@@ -201,13 +224,13 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
             if (!empty($result['success'])) {
                 return [
-                    'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+                    'redirect' => $this->validateReturnUrl((string) ($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
                     'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.alternatives_found', ['[count]' => 1])],
                 ];
             }
 
             return [
-                'redirect' => !empty($request['return_url']) ? $request['return_url'] : 'travel_bookings.manage',
+                'redirect' => $this->validateReturnUrl((string) ($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
                 'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => __('novoton_holidays.no_alternatives')],
             ];
         }

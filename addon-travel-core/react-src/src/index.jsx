@@ -21,8 +21,13 @@ class ErrorBoundary extends Component {
         super(props);
         this.state = { hasError: false };
     }
-    static getDerivedStateFromError() {
-        return { hasError: true };
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+    componentDidCatch(error, info) {
+        if (typeof window !== 'undefined' && window.fn_log_event) {
+            window.fn_log_event('TravelBooking ErrorBoundary', error.message);
+        }
     }
     render() {
         if (this.state.hasError) {
@@ -76,9 +81,9 @@ function readConfig(el) {
         initialChildren:     num('children',       'children',     0),
         initialChildrenAges: str('children_ages',  'childrenAges'),
         initialRooms:        num('rooms',          'rooms',        1),
-        maxRooms:            parseInt(el.dataset.maxRooms)     || 12,
-        maxAdults:           parseInt(el.dataset.maxAdults)    || 9,
-        maxChildren:         parseInt(el.dataset.maxChildren)  || 4,
+        maxRooms:            parseInt(el.dataset.maxRooms, 10)     || 12,
+        maxAdults:           parseInt(el.dataset.maxAdults, 10)    || 9,
+        maxChildren:         parseInt(el.dataset.maxChildren, 10)  || 4,
         buttonText:          el.dataset.buttonText || '',
         roomsData:           url.get('rooms_data') || el.dataset.roomsData || '',
         calendarPrices,

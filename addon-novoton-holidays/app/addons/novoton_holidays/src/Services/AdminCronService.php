@@ -19,6 +19,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 
 class AdminCronService
 {
@@ -88,11 +89,7 @@ class AdminCronService
     public function checkPrices(): array
     {
         $hotelRepo = $this->container->hotelRepository();
-        $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
-             WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 7 DAY))
-             LIMIT 100"
-        );
+        $hotels = $hotelRepo->findNeedingPriceCheck();
 
         $checked = 0;
         $with_prices = 0;
@@ -328,7 +325,7 @@ class AdminCronService
         $logs_deleted = $syncLogRepo->trimToLatest(100);
         $this->output("Sync logs deleted: {$logs_deleted}");
 
-        $cache = db_query("DELETE FROM ?:novoton_cache WHERE expires_at < NOW()");
+        $cache = (new CacheRepository())->deleteExpired();
         $this->output("Cache entries deleted: {$cache}");
 
         return ['success' => true, 'message' => 'Cleanup complete'];

@@ -156,8 +156,8 @@ class PriceInfoFormatter
      */
     public static function formatAgeBandLabel(float $from, float $to): string
     {
-        $fromStr = ($from == floor($from)) ? (string)(int) $from : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
-        $toStr = ($to == floor($to)) ? (string)(int) $to : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
+        $fromStr = ($from === floor($from)) ? (string)(int) $from : str_replace('.', ',', rtrim(rtrim(number_format($from, 2, ',', ''), '0'), ','));
+        $toStr = ($to === floor($to)) ? (string)(int) $to : str_replace('.', ',', rtrim(rtrim(number_format($to, 2, ',', ''), '0'), ','));
 
         return $fromStr . '-' . $toStr;
     }

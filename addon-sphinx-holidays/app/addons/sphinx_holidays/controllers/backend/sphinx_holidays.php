@@ -155,12 +155,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'bulk_update_hotels') {
         $hotelIds = $_REQUEST['hotel_ids'] ?? [];
         $status = $_REQUEST['bulk_status'] ?? '';
+        $validStatuses = ['active', 'inactive', 'pending', 'error'];
 
         if (empty($hotelIds) || !is_array($hotelIds)) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
 
+        if (!in_array($status, $validStatuses, true)) {
+            fn_set_notification('E', __('error'), 'Invalid status value.');
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
+        }
+
+        $hotelIds = array_map('intval', $hotelIds);
         $hotelRepo = Container::getHotelRepository();
         $affected = $hotelRepo->bulkUpdateStatus($hotelIds, $status);
         fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_updated') . ': ' . $affected);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
 /**
@@ -166,14 +167,10 @@ class CircuitSyncService extends AbstractSyncService
 
     private function upsertBatch(array $batch): int
     {
+        $repo = new CircuitRepository();
         $affected = 0;
         foreach ($batch as $row) {
-            $existing = db_get_field("SELECT circuit_id FROM ?:sphinx_circuits WHERE circuit_id = ?i", $row['circuit_id']);
-            if ($existing) {
-                db_query("UPDATE ?:sphinx_circuits SET ?u WHERE circuit_id = ?i", $row, $row['circuit_id']);
-            } else {
-                db_query("INSERT INTO ?:sphinx_circuits ?e", $row);
-            }
+            $repo->upsert((int) $row['circuit_id'], $row);
             $affected++;
         }
         return $affected;
