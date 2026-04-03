@@ -26,6 +26,15 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     }
 
     /**
+     * Create a new alternative request and return its ID.
+     */
+    public function create(array $data): int
+    {
+        db_query("INSERT INTO ?:novoton_alternative_requests ?e", $data);
+        return (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    /**
      * Find pending requests older than N hours (for API polling).
      */
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array

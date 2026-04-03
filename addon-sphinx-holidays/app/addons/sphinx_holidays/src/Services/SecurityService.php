@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Repository\SphinxCacheRepository;
 use Tygh\Addons\TravelCore\Contracts\SecurityServiceInterface;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -121,10 +122,9 @@ class SecurityService implements SecurityServiceInterface
         $cacheKey = 'sphinx_rate_booking_' . md5($identifier);
         $now = time();
 
-        $data = db_get_field(
-            "SELECT cache_data FROM ?:sphinx_cache WHERE cache_key = ?s AND expires_at > NOW()",
-            $cacheKey
-        );
+        $cacheRepo = new SphinxCacheRepository();
+        $row = $cacheRepo->findByKey($cacheKey);
+        $data = ($row && (int) $row['expires_at'] > $now) ? $row['cache_data'] : null;
 
         $record = $data ? json_decode($data, true) : null;
 
@@ -138,11 +138,10 @@ class SecurityService implements SecurityServiceInterface
 
         $record['count']++;
 
-        db_query(
-            "REPLACE INTO ?:sphinx_cache SET cache_key = ?s, cache_data = ?s, expires_at = ?s, created_at = NOW()",
+        $cacheRepo->upsert(
             $cacheKey,
-            json_encode($record, JSON_UNESCAPED_UNICODE),
-            date('Y-m-d H:i:s', $record['reset'] + 60)
+            json_encode($record, JSON_UNESCAPED_UNICODE) ?: '',
+            $record['reset'] + 60
         );
 
         return true;

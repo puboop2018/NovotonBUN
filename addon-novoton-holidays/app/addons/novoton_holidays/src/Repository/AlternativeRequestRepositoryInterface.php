@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 interface AlternativeRequestRepositoryInterface
 {
     public function findById(int $request_id): ?array;
+    public function create(array $data): int;
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array;
     public function findPendingWithApiRef(): array;
     public function findUnnotified(int $limit = 20): array;

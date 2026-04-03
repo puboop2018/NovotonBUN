@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 
 /**
@@ -16,14 +18,16 @@ use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
  */
 class BookingAdminProvider implements BookingAdminProviderInterface
 {
+    private BookingRepositoryInterface $bookingRepo;
+
+    public function __construct(?BookingRepositoryInterface $bookingRepo = null)
+    {
+        $this->bookingRepo = $bookingRepo ?? new BookingRepository();
+    }
+
     public function getDisplayData(string $providerBookingId): array
     {
-        $booking = db_get_row(
-            "SELECT booking_id, novoton_invoice_id, novoton_status, novoton_confirm_id,
-                    base_price, api_price, status, alternatives_requested
-             FROM ?:novoton_bookings WHERE booking_id = ?i",
-            (int) $providerBookingId
-        );
+        $booking = $this->bookingRepo->findById((int) $providerBookingId);
 
         if (empty($booking)) {
             return [];
@@ -66,7 +70,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             return ['changed' => false, 'old_status' => '', 'new_status' => '', 'error' => 'Invalid booking ID'];
         }
 
-        $booking = db_get_row("SELECT status, novoton_status FROM ?:novoton_bookings WHERE booking_id = ?i", $bookingId);
+        $booking = $this->bookingRepo->findById($bookingId);
         $oldStatus = $booking['novoton_status'] ?? $booking['status'] ?? '';
 
         if (function_exists('fn_novoton_holidays_check_reservation_status')) {
@@ -75,7 +79,8 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Status check function not available'];
         }
 
-        $updatedBooking = db_get_row("SELECT status, novoton_status FROM ?:novoton_bookings WHERE booking_id = ?i", $bookingId);
+        BookingRepository::invalidateCache($bookingId);
+        $updatedBooking = $this->bookingRepo->findById($bookingId);
         $newStatus = $updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '';
 
         return [

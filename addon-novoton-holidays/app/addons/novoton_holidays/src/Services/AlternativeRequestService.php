@@ -21,20 +21,26 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
-    /** @var SecurityServiceInterface|null */
-    private $security;
+    private ?SecurityServiceInterface $security;
 
-    /** @var NovotonApi|null */
-    private $api;
+    private ?NovotonApi $api;
 
-    public function __construct(?SecurityServiceInterface $security = null, ?NovotonApi $api = null)
-    {
+    private AlternativeRequestRepositoryInterface $altRequestRepo;
+
+    public function __construct(
+        ?SecurityServiceInterface $security = null,
+        ?NovotonApi $api = null,
+        ?AlternativeRequestRepositoryInterface $altRequestRepo = null
+    ) {
         $this->security = $security;
         $this->api = $api;
+        $this->altRequestRepo = $altRequestRepo ?? new AlternativeRequestRepository();
     }
 
     /**
@@ -169,8 +175,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 'novoton_request_id' => $apiResult['id_num'] ?? '',
             ]);
 
-            db_query("INSERT INTO ?:novoton_alternative_requests ?e", $requestRecord);
-            $requestId = (int)db_get_field("SELECT LAST_INSERT_ID()");
+            $requestId = $this->altRequestRepo->create($requestRecord);
 
             // Send confirmation email
             $this->sendConfirmationEmail($contactEmail, [
@@ -209,8 +214,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 ''
             );
 
-            db_query("INSERT INTO ?:novoton_alternative_requests ?e", $requestRecord);
-            $requestId = (int)db_get_field("SELECT LAST_INSERT_ID()");
+            $requestId = $this->altRequestRepo->create($requestRecord);
 
             return [
                 'success' => false,

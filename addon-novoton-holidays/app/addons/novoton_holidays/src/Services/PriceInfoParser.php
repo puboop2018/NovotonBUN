@@ -14,26 +14,36 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+
 class PriceInfoParser
 {
-    /** @var array|null Priceinfo data */
-    private $priceinfo;
+    private ?array $priceinfo;
 
-    /** @var array|null Hotel info */
-    private $hotelinfo;
+    private ?array $hotelinfo;
 
-    /** @var array Code index for Code/Base resolution */
-    private $codeIndex = [];
+    private array $codeIndex = [];
 
-    /** @var array Hotel-specific child age bands */
-    private $childAgeBands = [];
+    private array $childAgeBands = [];
 
-    /** @var callable|null Logger function */
+    /** @var callable|null */
     private $logger;
 
-    public function __construct(?callable $logger = null)
-    {
+    private HotelPackageRepositoryInterface $packageRepo;
+
+    private HotelRepositoryInterface $hotelRepo;
+
+    public function __construct(
+        ?callable $logger = null,
+        ?HotelPackageRepositoryInterface $packageRepo = null,
+        ?HotelRepositoryInterface $hotelRepo = null
+    ) {
         $this->logger = $logger;
+        $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
+        $this->hotelRepo = $hotelRepo ?? new HotelRepository();
     }
 
     // -- Getters for parsed data ------------------------------------------
@@ -56,12 +66,8 @@ class PriceInfoParser
      */
     public function loadPriceInfo(string $hotelId, string $packageName): ?array
     {
-        $json = db_get_field(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND package_name = ?s",
-            $hotelId,
-            $packageName
-        );
+        $row = $this->packageRepo->findByHotelAndPackageName($hotelId, $packageName);
+        $json = $row['priceinfo_data'] ?? null;
 
         if (empty($json)) {
             return null;
@@ -76,10 +82,8 @@ class PriceInfoParser
      */
     public function loadHotelInfo(string $hotelId): ?array
     {
-        $json = db_get_field(
-            "SELECT hotel_data FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotelId
-        );
+        $hotel = $this->hotelRepo->findById($hotelId);
+        $json = $hotel['hotel_data'] ?? null;
 
         if (empty($json)) {
             return null;
