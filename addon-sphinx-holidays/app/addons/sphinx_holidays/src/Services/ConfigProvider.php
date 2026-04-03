@@ -159,14 +159,14 @@ class ConfigProvider implements ConfigProviderInterface
 
         // CS-Cart may return an array (multiple checkboxes) or a comma-separated string
         if (is_array($value)) {
-            return array_filter(array_map('trim', $value));
+            return array_values(array_filter(array_map('trim', $value)));
         }
 
         $value = (string) $value;
         if (empty($value)) {
             return [];
         }
-        return array_filter(array_map('trim', explode(',', $value)));
+        return array_values(array_filter(array_map('trim', explode(',', $value))));
     }
 
     /**

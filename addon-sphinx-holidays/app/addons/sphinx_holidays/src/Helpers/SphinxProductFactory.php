@@ -194,7 +194,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         ];
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
-        $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+        $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
 
         $productId = (int) fn_update_product($productData, 0, $primaryLang);
         if (!$productId) {
