@@ -139,7 +139,7 @@ class VariantResolver
                  LIMIT 1",
                 $featureId, $lang, $name
             );
-            if ($variantId) {
+            if ((int) $variantId > 0) {
                 return (int) $variantId;
             }
 
@@ -152,7 +152,7 @@ class VariantResolver
                  LIMIT 1",
                 $featureId, $lang, $name
             );
-            if ($variantId) {
+            if ((int) $variantId > 0) {
                 return (int) $variantId;
             }
 

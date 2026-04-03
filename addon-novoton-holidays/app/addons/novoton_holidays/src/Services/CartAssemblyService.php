@@ -126,7 +126,7 @@ class CartAssemblyService
             // Collect children ages from guests for this room
             $childAgesForRoom = [];
             foreach ($guestsData as $guest) {
-                if (isset($guest['room']) && $guest['room'] == $roomNum && ($guest['type'] ?? '') === 'child') {
+                if (isset($guest['room']) && (int) $guest['room'] === $roomNum && ($guest['type'] ?? '') === 'child') {
                     $childAgesForRoom[] = (int) ($guest['age'] ?? 0);
                 }
             }
