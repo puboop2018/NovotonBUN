@@ -55,19 +55,20 @@
 
 {* ── Runtime color overrides from admin Appearance Settings ── *}
 {* Only emit properties that have a non-empty value; empty = use LESS/theme default *}
+{$_tc = $addons.travel_core|default:[]}
 {capture name="_tc_style"}{strip}
-{if $addons.travel_core.color_primary}--nvt-primary:{$addons.travel_core.color_primary|escape:'html'};{/if}
-{if $addons.travel_core.color_accent}--nvt-accent:{$addons.travel_core.color_accent|escape:'html'};{/if}
-{if $addons.travel_core.color_text}--nvt-text:{$addons.travel_core.color_text|escape:'html'};{/if}
-{if $addons.travel_core.color_text_light}--nvt-text-light:{$addons.travel_core.color_text_light|escape:'html'};{/if}
-{if $addons.travel_core.color_bg}--nvt-bg:{$addons.travel_core.color_bg|escape:'html'};{/if}
-{if $addons.travel_core.color_border}--nvt-border:{$addons.travel_core.color_border|escape:'html'};{/if}
-{if $addons.travel_core.color_search_btn_bg}--nvt-search-btn-bg:{$addons.travel_core.color_search_btn_bg|escape:'html'};{/if}
-{if $addons.travel_core.color_search_btn_hover}--nvt-search-btn-hover:{$addons.travel_core.color_search_btn_hover|escape:'html'};{/if}
-{if $addons.travel_core.color_search_btn_text}--nvt-search-btn-text:{$addons.travel_core.color_search_btn_text|escape:'html'};{/if}
-{if $addons.travel_core.color_cal_cheapest}--nvt-cal-cheapest-color:{$addons.travel_core.color_cal_cheapest|escape:'html'};{/if}
-{if $addons.travel_core.color_cal_price}--nvt-cal-price-color:{$addons.travel_core.color_cal_price|escape:'html'};{/if}
-{if $addons.travel_core.color_danger}--nvt-danger:{$addons.travel_core.color_danger|escape:'html'};{/if}
+{if !empty($_tc.color_primary)}--nvt-primary:{$_tc.color_primary|escape:'html'};{/if}
+{if !empty($_tc.color_accent)}--nvt-accent:{$_tc.color_accent|escape:'html'};{/if}
+{if !empty($_tc.color_text)}--nvt-text:{$_tc.color_text|escape:'html'};{/if}
+{if !empty($_tc.color_text_light)}--nvt-text-light:{$_tc.color_text_light|escape:'html'};{/if}
+{if !empty($_tc.color_bg)}--nvt-bg:{$_tc.color_bg|escape:'html'};{/if}
+{if !empty($_tc.color_border)}--nvt-border:{$_tc.color_border|escape:'html'};{/if}
+{if !empty($_tc.color_search_btn_bg)}--nvt-search-btn-bg:{$_tc.color_search_btn_bg|escape:'html'};{/if}
+{if !empty($_tc.color_search_btn_hover)}--nvt-search-btn-hover:{$_tc.color_search_btn_hover|escape:'html'};{/if}
+{if !empty($_tc.color_search_btn_text)}--nvt-search-btn-text:{$_tc.color_search_btn_text|escape:'html'};{/if}
+{if !empty($_tc.color_cal_cheapest)}--nvt-cal-cheapest-color:{$_tc.color_cal_cheapest|escape:'html'};{/if}
+{if !empty($_tc.color_cal_price)}--nvt-cal-price-color:{$_tc.color_cal_price|escape:'html'};{/if}
+{if !empty($_tc.color_danger)}--nvt-danger:{$_tc.color_danger|escape:'html'};{/if}
 {/strip}{/capture}
 {if $smarty.capture._tc_style|trim}
 <style>:root { {$smarty.capture._tc_style nofilter} }</style>
