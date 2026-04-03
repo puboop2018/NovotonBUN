@@ -594,15 +594,15 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
         return;
     }
 
-    $exists = (int) db_get_field(
-        "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE hotel_id = ?s AND sync_status = 'active'",
+    // Check if hotel exists in sphinx_hotels (any sync_status — the booking form
+    // should render even for hotels not yet synced, as the search API is always available)
+    $hotelStatus = db_get_field(
+        "SELECT sync_status FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
 
-    if (!$exists) {
-        \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
-        return;
-    }
+    // Show booking form for any SPX-prefixed product, even if hotel isn't in local DB.
+    // The React form will handle API availability at search time.
 
     // Assign to both Smarty view AND $product array to ensure availability
     // in all template scopes (product hooks, product tabs, blocks)
