@@ -19,6 +19,9 @@ class PriceChangeDetector
     /** Default tolerance threshold (percentage). Changes below this are silent. */
     private const DEFAULT_TOLERANCE_PERCENT = 1.0;
 
+    /** Minimum absolute price difference to be considered significant (avoids floating-point noise). */
+    private const MIN_ABSOLUTE_DIFFERENCE = 0.01;
+
     /** Session key for storing price change alerts. */
     private const SESSION_KEY = 'travel_price_change_alerts';
 
@@ -46,7 +49,7 @@ class PriceChangeDetector
             : 0.0;
 
         $tolerance   = $this->getTolerancePercent();
-        $significant = $percent >= $tolerance && abs($difference) > 0.01;
+        $significant = $percent >= $tolerance && abs($difference) > self::MIN_ABSOLUTE_DIFFERENCE;
 
         if ($difference > 0) {
             $direction = 'increase';
@@ -84,8 +87,9 @@ class PriceChangeDetector
         if ($oldPrice <= 0) {
             return false;
         }
-        $percent = abs($newPrice - $oldPrice) / $oldPrice * 100;
-        return $percent >= $this->getTolerancePercent() && abs($newPrice - $oldPrice) > 0.01;
+        $absDiff = abs($newPrice - $oldPrice);
+        $percent = $absDiff / $oldPrice * 100;
+        return $percent >= $this->getTolerancePercent() && $absDiff > self::MIN_ABSOLUTE_DIFFERENCE;
     }
 
     /**

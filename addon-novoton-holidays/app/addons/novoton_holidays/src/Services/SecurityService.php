@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Registry;
 
 class SecurityService implements SecurityServiceInterface
 {

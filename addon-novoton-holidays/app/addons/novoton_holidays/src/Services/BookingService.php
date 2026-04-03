@@ -12,16 +12,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
-use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
+use Tygh\Tygh;
 
 class BookingService implements BookingServiceInterface
 {

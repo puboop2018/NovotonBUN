@@ -24,10 +24,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Tygh;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {

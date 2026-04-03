@@ -5,13 +5,13 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
-use Tygh\Addons\SphinxHolidays\SphinxApi;
-use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
-use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
-use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactoryInterface;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
+use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 
 /**
  * Sphinx Holidays dependency injection container.
