@@ -953,8 +953,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
         $condition .= " AND (h.product_id IS NULL OR h.product_id = 0)";
     }
     if ($params['q'] !== '') {
-        $escaped = addcslashes($params['q'], '%_\\');
-        $condition .= db_quote(" AND h.name LIKE ?l", '%' . $escaped . '%');
+        $condition .= db_quote(" AND h.name LIKE ?l", '%' . $params['q'] . '%');
     }
 
     // Total count
