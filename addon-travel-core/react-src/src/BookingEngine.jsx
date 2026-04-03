@@ -128,7 +128,7 @@ export default function BookingEngine({ config }) {
     const totalChildren = rooms.reduce((sum, r) => sum + r.children, 0);
     const nights = nightsBetween(checkIn, checkOut);
 
-    const guestSummary = (() => {
+    const guestSummary = useMemo(() => {
         const parts = [];
 
         const adultLabel = (totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults')).toLowerCase();
@@ -141,9 +141,9 @@ export default function BookingEngine({ config }) {
         parts.push(`${rooms.length} ${roomLabel}`);
 
         return parts.join(' \u00b7 ');
-    })();
+    }, [totalAdults, totalChildren, rooms.length]);
 
-    const dateDisplayText = (() => {
+    const dateDisplayText = useMemo(() => {
         if (checkIn && checkOut) {
             const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
             return `${formatDateShort(checkIn)} \u2192 ${formatDateShort(checkOut)} (${nights} ${nightLabel})`;
@@ -152,7 +152,7 @@ export default function BookingEngine({ config }) {
             return `${formatDateShort(checkIn)} \u2192 ...`;
         }
         return '';
-    })();
+    }, [checkIn, checkOut, nights]);
 
     // -----------------------------------------------------------------------
     // Handlers
@@ -191,7 +191,7 @@ export default function BookingEngine({ config }) {
             // Provider dispatch must be set via data-search-dispatch on the mount element
             const fallbackDispatch = provider ? `${provider}_booking.search` : '';
             if (!searchDispatch && !fallbackDispatch) {
-                console.error('[TravelBooking] data-search-dispatch and data-provider not set on mount element');
+                if (config.debug === 'true') console.warn('[TravelBooking] data-search-dispatch and data-provider not set on mount element');
             }
             params.set('dispatch', searchDispatch || fallbackDispatch);
             if (hotelId) params.set('hotel_id', hotelId);
@@ -226,9 +226,13 @@ export default function BookingEngine({ config }) {
 
         const fetchUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
         const maxRetries = 2;
+        const FETCH_TIMEOUT_MS = 30000;
 
         const attemptFetch = (attempt) => {
-            fetch(fetchUrl)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+            fetch(fetchUrl, { signal: controller.signal })
                 .then(r => {
                     if (!r.ok) throw new Error(`HTTP ${r.status}`);
                     return r.text();
@@ -301,14 +305,20 @@ export default function BookingEngine({ config }) {
                     setParamsChanged(false);
                     setIsSearching(false);
                 })
-                .catch(() => {
+                .catch((err) => {
+                    if (err.name === 'AbortError') {
+                        setIsSearching(false);
+                        setFetchError(t('searchTimeout', 'Search timed out. Please try again.'));
+                        return;
+                    }
                     if (attempt < maxRetries) {
                         retryTimerRef.current = setTimeout(() => attemptFetch(attempt + 1), 1000 * Math.pow(2, attempt));
                     } else {
                         setIsSearching(false);
                         setFetchError(t('searchFailed', 'Search failed. Please try again.'));
                     }
-                });
+                })
+                .finally(() => clearTimeout(timeoutId));
         };
 
         attemptFetch(0);
@@ -396,13 +406,13 @@ export default function BookingEngine({ config }) {
     // Main render
     // -----------------------------------------------------------------------
 
-    const searchBtnText = (() => {
+    const searchBtnText = useMemo(() => {
         if (isSearching) return t('searching', 'Searching...');
         if (buttonText) return buttonText;
         if (hasSearched && paramsChanged) return t('applyChanges', 'Apply changes');
         if (hasSearched) return t('changeSearch', 'Change search');
         return t('search', 'Search');
-    })();
+    }, [isSearching, buttonText, hasSearched, paramsChanged]);
 
     return (
         <div className="nvt-booking-engine" ref={engineRef}>

@@ -19,27 +19,28 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <input type="color"
                                id="picker_{$color.id}"
+                               data-css-var="{$color.var}"
                                value="{$color.value|default:$color.default|default:'#000000'}"
                                style="width: 40px; height: 34px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; padding: 2px;"
-                               onchange="document.getElementById('appearance_{$color.id}').value = this.value;" />
+                               oninput="document.getElementById('appearance_{$color.id}').value = this.value; travelUpdatePreview();"
+                               onchange="document.getElementById('appearance_{$color.id}').value = this.value; travelUpdatePreview();" />
 
                         <input type="text"
                                id="appearance_{$color.id}"
                                name="appearance[{$color.id}]"
+                               data-css-var="{$color.var}"
                                value="{$color.value}"
                                placeholder="{$color.default|default:__("travel_core.theme_default")}"
                                class="input-medium"
                                maxlength="7"
                                style="width: 100px; font-family: monospace;"
-                               onchange="var v = this.value.trim(); if (v && /^#[0-9a-fA-F]{ldelim}6{rdelim}$/.test(v)) document.getElementById('picker_{$color.id}').value = v;" />
+                               oninput="var v = this.value.trim(); if (v && /^#[0-9a-fA-F]{ldelim}6{rdelim}$/.test(v)) {ldelim} document.getElementById('picker_{$color.id}').value = v; travelUpdatePreview(); {rdelim}" />
 
-                        {if $color.value}
                         <a href="#" class="btn btn-mini"
                            title="{__("travel_core.reset_to_default")}"
-                           onclick="document.getElementById('appearance_{$color.id}').value = ''; document.getElementById('picker_{$color.id}').value = '{$color.default|default:"#000000"}'; return false;">
+                           onclick="document.getElementById('appearance_{$color.id}').value = ''; document.getElementById('picker_{$color.id}').value = '{$color.default|default:"#000000"}'; travelUpdatePreview(); return false;">
                             <i class="icon-refresh"></i>
                         </a>
-                        {/if}
                     </div>
                     <p class="muted" style="margin-top: 4px; font-size: 11px;">
                         CSS: <code>{$color.var}</code>
@@ -53,7 +54,97 @@
         {/if}
     {/foreach}
 
+    {* ── Live Preview ── *}
+    <div style="margin-top: 20px; padding: 20px; background: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 6px;">
+        <h4 style="margin-top: 0;">{__("travel_core.appearance_preview")}</h4>
+        <div id="travel-color-preview" style="
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            background: var(--preview-bg, #fff);
+            border-radius: 8px;
+            padding: 16px;
+        ">
+            {* Availability header mockup *}
+            <div style="margin-bottom: 10px;">
+                <span id="preview-title" style="font-size: 16px; font-weight: 700; color: var(--preview-primary, #003580);">
+                    {__("travel_core.availability")|default:"Check availability"}
+                </span>
+            </div>
+
+            {* Form row mockup *}
+            <div id="preview-form-row" style="
+                display: flex; gap: 3px; padding: 3px;
+                border: 3px solid var(--preview-accent, #febb02);
+                border-radius: 8px;
+                background: var(--preview-accent, #febb02);
+            ">
+                <div style="flex: 2; background: var(--preview-bg, #fff); border-radius: 5px; padding: 8px 12px;">
+                    <span style="font-size: 10px; text-transform: uppercase; color: var(--preview-text-light, #6b6b6b); font-weight: 600;">
+                        {__("travel_core.check_in")|default:"Check-in"} &mdash; {__("travel_core.check_out")|default:"Check-out"}
+                    </span><br>
+                    <span style="font-size: 13px; color: var(--preview-text, #1a1a1a);">15 Jul &rarr; 22 Jul</span>
+                </div>
+                <div style="flex: 1; background: var(--preview-bg, #fff); border-radius: 5px; padding: 8px 12px;">
+                    <span style="font-size: 10px; text-transform: uppercase; color: var(--preview-text-light, #6b6b6b); font-weight: 600;">
+                        {__("travel_core.rooms")|default:"Rooms"}
+                    </span><br>
+                    <span style="font-size: 13px; color: var(--preview-text, #1a1a1a);">2 {__("travel_core.adults")|default:"adults"}</span>
+                </div>
+                <div style="flex: 0.5; display: flex; align-items: stretch;">
+                    <div id="preview-btn" style="
+                        display: flex; align-items: center; justify-content: center;
+                        width: 100%; border-radius: 5px; font-weight: 600; font-size: 14px;
+                        background: var(--preview-search-btn-bg, #006ce4);
+                        color: var(--preview-search-btn-text, #fff);
+                        padding: 8px 16px;
+                    ">
+                        {__("travel_core.search")|default:"Search"}
+                    </div>
+                </div>
+            </div>
+
+            {* Calendar price mockup *}
+            <div style="margin-top: 12px; display: flex; gap: 12px; font-size: 12px;">
+                <span style="color: var(--preview-cal-cheapest, #2e7d32);">&#9679; 245 &euro; ({__("travel_core.default")|default:"lowest"})</span>
+                <span style="color: var(--preview-cal-price, #4B5563);">&#9679; 380 &euro;</span>
+                <span style="color: var(--preview-danger, #d32f2f);">&#9679; {__("travel_core.color_danger")|default:"Error text"}</span>
+            </div>
+        </div>
+    </div>
+
 </form>
+
+<script>
+function travelUpdatePreview() {ldelim}
+    var preview = document.getElementById('travel-color-preview');
+    if (!preview) return;
+    var map = {ldelim}
+        '--nvt-primary': '--preview-primary',
+        '--nvt-accent': '--preview-accent',
+        '--nvt-text': '--preview-text',
+        '--nvt-text-light': '--preview-text-light',
+        '--nvt-bg': '--preview-bg',
+        '--nvt-border': '--preview-border',
+        '--nvt-search-btn-bg': '--preview-search-btn-bg',
+        '--nvt-search-btn-hover': '--preview-search-btn-hover',
+        '--nvt-search-btn-text': '--preview-search-btn-text',
+        '--nvt-cal-cheapest-color': '--preview-cal-cheapest',
+        '--nvt-cal-price-color': '--preview-cal-price',
+        '--nvt-danger': '--preview-danger'
+    {rdelim};
+    document.querySelectorAll('input[type="color"][data-css-var]').forEach(function(picker) {ldelim}
+        var cssVar = picker.getAttribute('data-css-var');
+        var textInput = picker.parentNode.querySelector('input[type="text"]');
+        var value = textInput && textInput.value.trim() ? textInput.value.trim() : picker.value;
+        var previewVar = map[cssVar];
+        if (previewVar && value) {ldelim}
+            preview.style.setProperty(previewVar, value);
+        {rdelim}
+    {rdelim});
+{rdelim}
+// Initialize preview on page load
+document.addEventListener('DOMContentLoaded', travelUpdatePreview);
+</script>
 
 {/capture}
 

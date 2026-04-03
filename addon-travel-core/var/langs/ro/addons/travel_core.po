@@ -591,3 +591,7 @@ msgstr "Implicit"
 msgctxt "Languages::travel_core.inherited_from_theme"
 msgid "Inherited from theme"
 msgstr "Moștenit din temă"
+
+msgctxt "Languages::travel_core.appearance_preview"
+msgid "Live Preview"
+msgstr "Previzualizare"

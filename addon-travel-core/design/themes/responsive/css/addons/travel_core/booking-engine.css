@@ -52,10 +52,14 @@
 .nvt-form-row *,
 .nvt-form-row *:hover,
 .nvt-form-row *:focus,
-.nvt-form-row *:active,
-.nvt-form-row *:focus-visible {
+.nvt-form-row *:active {
     outline: none !important;
     box-shadow: none !important;
+}
+/* Restore visible focus for keyboard navigation (WCAG 2.4.7) */
+.nvt-booking-engine :focus-visible {
+    outline: 2px solid var(--nvt-primary, #003580) !important;
+    outline-offset: 2px;
 }
 /* Kill hover backgrounds on all buttons inside booking engine popups */
 .nvt-booking-engine button:hover,
@@ -63,6 +67,10 @@
 .nvt-booking-engine button:active {
     outline: none !important;
     box-shadow: none !important;
+}
+.nvt-booking-engine button:focus-visible {
+    outline: 2px solid var(--nvt-primary, #003580) !important;
+    outline-offset: 2px;
 }
 .nvt-field-input,
 .nvt-field-input:hover,
@@ -364,12 +372,12 @@ button.nvt-field-input:active {
 .nvt-calendar-day--empty {
     visibility: hidden;
 }
-/* No-price dates: subtly muted but still legible */
+/* No-price dates: muted via color (not opacity — preserves WCAG contrast) */
 .nvt-calendar-day--no-price {
-    opacity: 0.5;
+    color: var(--nvt-text-disabled, #999);
 }
 .nvt-calendar-day--no-price .nvt-calendar-day-price {
-    color: #999;
+    color: var(--nvt-text-disabled, #999);
 }
 
 /* Day number inside price-enabled cells */
@@ -979,5 +987,62 @@ button.nvt-field-input:active {
         right: 0;
         min-width: 0;
         width: 100%;
+    }
+}
+
+/* ---------- Skeleton loader (shown before React mounts) ---------- */
+
+.nvt-skeleton-row {
+    display: flex;
+    gap: 4px;
+    border-radius: var(--nvt-radius, 10px);
+    border: 3px solid #e5e5e5;
+    background: #e5e5e5;
+    padding: 3px;
+}
+.nvt-skeleton-field {
+    flex: 1;
+    height: 50px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: nvt-skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+.nvt-skeleton-field--wide {
+    flex: 2;
+}
+.nvt-skeleton-field--btn {
+    flex: 0.5;
+    background: linear-gradient(90deg, #d0d8e8 25%, #bcc5d6 50%, #d0d8e8 75%);
+    background-size: 200% 100%;
+    animation: nvt-skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes nvt-skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+/* Hide skeleton text fallback when skeleton row is present */
+.travel-loading-state span {
+    display: none;
+}
+
+/* ---------- Accessibility: Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .nvt-booking-engine *,
+    .nvt-booking-engine *::before,
+    .nvt-booking-engine *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+    .nvt-booking-engine {
+        display: none !important;
     }
 }

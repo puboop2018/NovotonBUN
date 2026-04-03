@@ -768,7 +768,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
         } catch (ApiException $e) {
             $this->bookingRepo->update($bookingId, [
-                'status' => 'failed',
+                'status' => TravelConstants::STATUS_FAILED,
                 'notes'  => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
             ]);
 
