@@ -137,81 +137,53 @@
             </section>
             <section id="appearance">
                 <items>
-                    <item id="appearance_base_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
                     <item id="color_primary">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_accent">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_text">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_text_light">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_bg">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_border">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
-                    </item>
-                    <item id="appearance_button_header">
-                        <type>header</type>
-                        <variants/>
                     </item>
                     <item id="color_search_btn_bg">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_search_btn_hover">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_search_btn_text">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
-                    </item>
-                    <item id="appearance_calendar_header">
-                        <type>header</type>
-                        <variants/>
                     </item>
                     <item id="color_cal_cheapest">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_cal_price">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
-                    </item>
-                    <item id="appearance_status_header">
-                        <type>header</type>
-                        <variants/>
                     </item>
                     <item id="color_danger">
-                        <type>input</type>
+                        <type>hidden</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                 </items>
             </section>

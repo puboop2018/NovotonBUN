@@ -4,8 +4,9 @@ declare(strict_types=1);
  * Travel Core - Booking Form Appearance Settings Controller
  *
  * Dedicated admin page for customizing the React booking engine colors.
- * Color values are stored as travel_core addon settings and injected at
- * runtime via inline CSS custom property overrides in booking_engine.tpl.
+ * Color values are stored as travel_core addon settings (hidden type in
+ * addon.xml) and injected at runtime via CSS custom properties in
+ * booking_engine.tpl.
  *
  * @package TravelCore
  * @since   1.2.0
@@ -13,6 +14,7 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Registry;
+use Tygh\Settings;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -21,7 +23,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Color setting definitions: setting_id => [CSS variable, default, label lang key].
+ * Color setting definitions: setting_id => [CSS variable, default].
  * Empty default = inherited from LESS/theme.
  */
 function _travel_styles_color_map(): array
@@ -49,13 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted = $_REQUEST['appearance'] ?? [];
         $colorMap = _travel_styles_color_map();
         $errors = [];
-
-        // Get the addon section_id for appearance settings
-        $sectionId = (int) db_get_field(
-            "SELECT object_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = (
-                SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'
-            )"
-        );
+        $saved = 0;
 
         foreach ($colorMap as $settingId => $info) {
             $value = trim((string) ($submitted[$settingId] ?? ''));
@@ -71,22 +67,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $value = strtolower($value);
             }
 
-            // Update via direct DB (standard CS-Cart pattern for addon settings)
+            // Use CS-Cart's Settings API — finds the setting by name within addon
             $objectId = (int) db_get_field(
-                "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
-                $settingId, $sectionId
+                "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id IN (
+                    SELECT object_id FROM ?:settings_sections WHERE name = 'appearance'
+                    AND parent_id IN (SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON')
+                )",
+                $settingId
             );
 
             if ($objectId > 0) {
-                db_query(
-                    "UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
-                    $value, $objectId
-                );
+                db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
+                $saved++;
             }
         }
 
-        // Clear settings cache so changes are visible immediately
+        // Clear ALL settings caches so changes appear immediately
         Registry::del('addons.travel_core');
+        Registry::del('settings');
+        if (class_exists('Tygh\\Settings')) {
+            Settings::instance()->clearCache();
+        }
+
+        // Force reload from DB
+        $addon_scheme = Registry::get('addons.travel_core');
+        if ($addon_scheme === null) {
+            // Rebuild addon settings cache
+            fn_get_addon_data('travel_core');
+        }
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
@@ -104,7 +112,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
-    $settings = Registry::get('addons.travel_core') ?? [];
+
+    // Read current values directly from DB to avoid stale cache
+    $currentValues = [];
+    foreach (array_keys($colorMap) as $settingId) {
+        $val = db_get_field(
+            "SELECT value FROM ?:settings_objects WHERE name = ?s AND section_id IN (
+                SELECT object_id FROM ?:settings_sections WHERE name = 'appearance'
+                AND parent_id IN (SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON')
+            )",
+            $settingId
+        );
+        $currentValues[$settingId] = ($val !== false) ? (string) $val : '';
+    }
 
     $color_groups = [
         'base' => [
@@ -141,7 +161,7 @@ if ($mode === 'manage') {
             'id'      => $id,
             'var'     => $cssVar,
             'default' => $default,
-            'value'   => $settings[$id] ?? '',
+            'value'   => $currentValues[$id] ?? '',
             'label'   => __('travel_core.' . $id),
         ];
     }
