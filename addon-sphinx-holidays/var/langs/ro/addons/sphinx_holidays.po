@@ -116,6 +116,22 @@ msgctxt "SettingsTooltips::sphinx_holidays::product_languages"
 msgid "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
 msgstr "Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate."
 
+msgctxt "SettingsOptions::sphinx_holidays::product_code_prefix"
+msgid "Product code prefix"
+msgstr "Prefix cod produs"
+
+msgctxt "SettingsTooltips::sphinx_holidays::product_code_prefix"
+msgid "Prefix added to hotel IDs to form the CS-Cart product code (e.g. SPX → SPX12345). Used to identify Sphinx hotel products."
+msgstr "Prefix adăugat la ID-urile hotelurilor pentru a forma codul de produs CS-Cart (ex. SPX → SPX12345). Folosit pentru identificarea produselor hoteliere Sphinx."
+
+msgctxt "SettingsOptions::sphinx_holidays::skip_no_description"
+msgid "Skip hotels without description"
+msgstr "Omite hotelurile fără descriere"
+
+msgctxt "SettingsTooltips::sphinx_holidays::skip_no_description"
+msgid "When enabled, the add_products cron will skip hotels that have no description text. This prevents creating empty product pages."
+msgstr "Când este activat, cron-ul add_products va omite hotelurile care nu au text descriptiv. Previne crearea de pagini de produs goale."
+
 msgctxt "SettingsOptions::sphinx_holidays::resilience_header"
 msgid "API Resilience"
 msgstr "Reziliență API"
