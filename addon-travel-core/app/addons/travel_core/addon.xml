@@ -90,6 +90,21 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+                    <item id="feature_id_hotel_facility">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_room_facility">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="feature_id_beach_access">
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
                     <item id="currency_header">
                         <type>header</type>
                         <variants/>
@@ -128,15 +143,18 @@
         <item>
             CREATE TABLE IF NOT EXISTS `?:travel_feature_map` (
                 `map_id`            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `feature_type`      VARCHAR(50)  NOT NULL COMMENT 'board, room_type, stars, property_type, location',
-                `canonical_code`    VARCHAR(100) NOT NULL COMMENT 'AI, DBL, 5, hotel, sunny_beach',
+                `feature_type`      VARCHAR(50)  NOT NULL COMMENT 'board, room_type, stars, property_type, facility, travel_group',
+                `canonical_code`    VARCHAR(100) NOT NULL COMMENT 'AI, DBL, 5, hotel, pool',
                 `display_name_en`   VARCHAR(255) NOT NULL COMMENT 'All Inclusive',
                 `display_name_ro`   VARCHAR(255) NOT NULL COMMENT 'All Inclusive',
                 `cscart_feature_id` INT          DEFAULT NULL COMMENT 'FK to ?:product_features',
                 `cscart_variant_id` INT          DEFAULT NULL COMMENT 'FK to ?:product_feature_variants',
+                `variant_source`    ENUM('auto','manual') DEFAULT 'auto' COMMENT 'manual = admin-locked, prevents auto-overwrite',
+                `mapping_source`    ENUM('seed','auto','manual') DEFAULT 'seed' COMMENT 'How this row was created',
                 `geoname_id`        INT          DEFAULT NULL COMMENT 'For auto-matching Sphinx destinations',
                 `position`          INT          DEFAULT 0,
                 `status`            CHAR(1)      DEFAULT 'A' COMMENT 'A=active, D=disabled',
+                `last_used_at`      TIMESTAMP    DEFAULT NULL COMMENT 'Last time resolve() matched this row',
                 UNIQUE KEY `uq_type_code` (`feature_type`, `canonical_code`),
                 KEY `idx_feature_type` (`feature_type`),
                 KEY `idx_cscart_variant` (`cscart_variant_id`)
@@ -153,6 +171,21 @@
                 `match_type` ENUM('exact','prefix','contains','regex') DEFAULT 'exact',
                 UNIQUE KEY `uq_source_value` (`api_source`, `api_value`),
                 KEY `idx_map` (`map_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Unmapped API values — auto-collected when resolve() finds no match -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
+                `unmapped_id`    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `api_source`     VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx, eurosite',
+                `feature_type`   VARCHAR(50)  NOT NULL COMMENT 'facility, board, room_type, etc.',
+                `api_value`      VARCHAR(191) NOT NULL COMMENT 'Raw value from the API',
+                `api_label`      VARCHAR(255) DEFAULT NULL COMMENT 'Human-readable name if available',
+                `hotel_count`    INT UNSIGNED DEFAULT 1 COMMENT 'Number of hotels with this value',
+                `first_seen_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+                `last_seen_at`   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY `uq_source_type_value` (`api_source`, `feature_type`, `api_value`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
@@ -426,6 +459,20 @@
         <item lang="ro" id="travel_core.fm_alias_added"><![CDATA[Alias-ul a fost adăugat cu succes]]></item>
         <item lang="en" id="travel_core.fm_alias_deleted"><![CDATA[Alias deleted]]></item>
         <item lang="ro" id="travel_core.fm_alias_deleted"><![CDATA[Alias-ul a fost șters]]></item>
+        <item lang="en" id="travel_core.fm_back_dashboard"><![CDATA[Back to Dashboard]]></item>
+        <item lang="ro" id="travel_core.fm_back_dashboard"><![CDATA[Înapoi la Tablou]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_values"><![CDATA[Unmapped API Values]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_values"><![CDATA[Valori API Nemapate]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_promoted"><![CDATA[Unmapped value promoted to mapping successfully]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_promoted"><![CDATA[Valoarea nemapată a fost promovată ca mapare cu succes]]></item>
+        <item lang="en" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Failed to promote unmapped value]]></item>
+        <item lang="ro" id="travel_core.fm_unmapped_promote_failed"><![CDATA[Promovarea valorii nemapate a eșuat]]></item>
+        <item lang="en" id="travel_core.fm_scan_facilities"><![CDATA[Scan Facilities]]></item>
+        <item lang="ro" id="travel_core.fm_scan_facilities"><![CDATA[Scanare Facilități]]></item>
+        <item lang="en" id="travel_core.fm_scan_confirm"><![CDATA[Scan all hotels for unmapped facility IDs? This may take a few minutes for large datasets.]]></item>
+        <item lang="ro" id="travel_core.fm_scan_confirm"><![CDATA[Scanați toate hotelurile pentru facilități nemapate? Poate dura câteva minute pentru seturi mari de date.]]></item>
+        <item lang="en" id="travel_core.fm_scan_complete"><![CDATA[Scan complete: [provider] — [hotels] hotels scanned, [unmapped] unmapped facilities found.]]></item>
+        <item lang="ro" id="travel_core.fm_scan_complete"><![CDATA[Scanare completă: [provider] — [hotels] hoteluri scanate, [unmapped] facilități nemapate găsite.]]></item>
 
         <!-- Tools & Cron -->
         <item lang="en" id="travel_core.tools_and_cron"><![CDATA[Tools & Cron]]></item>

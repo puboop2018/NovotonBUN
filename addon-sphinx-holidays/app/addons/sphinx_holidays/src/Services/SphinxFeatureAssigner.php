@@ -5,6 +5,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -16,13 +17,13 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  * Much simpler than Novoton's FeatureMapper — no separate mapping table,
  * no strict/dynamic modes, no FeatureMappingRepositoryInterface.
  */
-class SphinxFeatureAssigner
+class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 {
     use CsCartFeatureAssignment;
 
     private const API_SOURCE = 'sphinx';
 
-    private SphinxNormalizer $normalizer;
+    private readonly SphinxNormalizer $normalizer;
 
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
@@ -151,7 +152,9 @@ class SphinxFeatureAssigner
 
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
             if (!$mapping) {
-                $unmapped[] = $facilityId . ':' . ($facility['name'] ?? '');
+                $facilityName = $facility['name'] ?? '';
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $facilityId, $facilityName);
+                $unmapped[] = $facilityId . ':' . $facilityName;
                 continue;
             }
 
@@ -289,14 +292,20 @@ class SphinxFeatureAssigner
     }
 
     /** Facility canonical codes that indicate a family-friendly hotel */
-    private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting'];
+    private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting', 'kids_club', 'kids_pool', 'playground'];
+
+    /** Facility canonical codes that indicate a pet-friendly hotel */
+    private const PETS_FACILITY_CODES = ['pets_allowed'];
 
     /**
-     * Assign travel group feature: "Adults Only" or "Family Friendly".
+     * Assign travel group features (M-type: multiple checkboxes).
      *
-     * Priority: adults_only wins (explicit flag). Otherwise, if the hotel has
-     * family-oriented facilities (family_rooms, kids_menu, babysitting) it is
-     * inferred as family_friendly. Uses S-type (Select Box) — one value per product.
+     * A hotel can have multiple travel groups simultaneously:
+     * - adults_only: from explicit is_adults_only flag
+     * - family_friendly: inferred from family facilities
+     * - pets_friendly: inferred from pets_allowed facility
+     *
+     * Uses diff-based sync: adds new groups, removes stale ones.
      */
     private function assignTravelGroup(int $productId, array $hotel): void
     {
@@ -305,59 +314,78 @@ class SphinxFeatureAssigner
             return;
         }
 
-        $groupCode = $this->detectTravelGroup($hotel);
-        if ($groupCode === null) {
+        $groupCodes = $this->detectTravelGroups($hotel);
+        if (empty($groupCodes)) {
+            // No groups — clear any existing assignments
+            $this->syncCheckboxValues($productId, $featureId, []);
             return;
         }
 
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', $groupCode);
-        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
+        $wantedVariants = [];
+        foreach ($groupCodes as $code) {
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'travel_group', $code);
+            $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
 
-        if ($variantId <= 0 && $mapping) {
-            $variantId = $this->autoCreateVariant($featureId, $mapping);
+            if ($variantId <= 0 && $mapping) {
+                $variantId = $this->autoCreateVariant($featureId, $mapping);
+            }
+
+            if ($variantId > 0) {
+                $wantedVariants[] = $variantId;
+            }
         }
 
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        if (!empty($wantedVariants)) {
+            $this->syncCheckboxValues($productId, $featureId, $wantedVariants);
         }
     }
 
     /**
-     * Detect travel group from hotel data.
+     * Detect all applicable travel groups from hotel data.
      *
-     * @return string|null Alias key for FeatureMapper ('Y' = adults_only, 'family' = family_friendly)
+     * @return string[] Alias keys for FeatureMapper ('Y' = adults_only, 'family' = family_friendly, 'pets' = pets_friendly)
      */
-    private function detectTravelGroup(array $hotel): ?string
+    private function detectTravelGroups(array $hotel): array
     {
-        // Adults-only takes priority (explicit flag)
+        $groups = [];
+
+        // Adults-only (explicit flag)
         if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
-            return 'Y';
+            $groups[] = 'Y';
         }
 
-        // Infer family-friendly from facilities
-        if ($this->hasFamilyFacilities($hotel)) {
-            return 'family';
+        // Infer from facilities
+        $facilityCodesPresent = $this->getHotelFacilityCodes($hotel);
+
+        if (!empty(array_intersect($facilityCodesPresent, self::FAMILY_FACILITY_CODES))) {
+            $groups[] = 'family';
         }
 
-        return null;
+        if (!empty(array_intersect($facilityCodesPresent, self::PETS_FACILITY_CODES))) {
+            $groups[] = 'pets';
+        }
+
+        return $groups;
     }
 
     /**
-     * Check if the hotel has any family-oriented facilities in its facilities_json.
+     * Get all canonical facility codes present in a hotel's facilities_json.
+     *
+     * @return string[] Canonical codes (e.g. ['pool', 'pets_allowed', 'family_rooms'])
      */
-    private function hasFamilyFacilities(array $hotel): bool
+    private function getHotelFacilityCodes(array $hotel): array
     {
         $facilitiesJson = $hotel['facilities_json'] ?? null;
         if (empty($facilitiesJson)) {
-            return false;
+            return [];
         }
 
         $facilities = is_string($facilitiesJson) ? json_decode($facilitiesJson, true) : $facilitiesJson;
         if (!is_array($facilities)) {
-            return false;
+            return [];
         }
 
-        // Build a set of canonical codes present in this hotel's facilities
+        $codes = [];
         foreach ($facilities as $facility) {
             $facilityId = (string) ($facility['id'] ?? '');
             if ($facilityId === '') {
@@ -365,12 +393,12 @@ class SphinxFeatureAssigner
             }
 
             $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
-            if ($mapping && in_array($mapping['canonical_code'] ?? '', self::FAMILY_FACILITY_CODES, true)) {
-                return true;
+            if ($mapping && !empty($mapping['canonical_code'])) {
+                $codes[] = $mapping['canonical_code'];
             }
         }
 
-        return false;
+        return $codes;
     }
 
     /**

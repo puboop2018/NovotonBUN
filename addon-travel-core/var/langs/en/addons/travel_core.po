@@ -84,6 +84,30 @@ msgctxt "SettingsTooltips::travel_core::feature_id_travel_group"
 msgid "Product feature ID for travel group type (e.g. Adults Only, Family Friendly). Mapped via Feature Mappings UI."
 msgstr "Product feature ID for travel group type (e.g. Adults Only, Family Friendly). Mapped via Feature Mappings UI."
 
+msgctxt "SettingsOptions::travel_core::feature_id_hotel_facility"
+msgid "CS-Cart Feature ID: Hotel Facilities"
+msgstr "CS-Cart Feature ID: Hotel Facilities"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_hotel_facility"
+msgid "Product feature ID for hotel facilities (pool, spa, fitness, etc.). Multiple checkbox type."
+msgstr "Product feature ID for hotel facilities (pool, spa, fitness, etc.). Multiple checkbox type."
+
+msgctxt "SettingsOptions::travel_core::feature_id_room_facility"
+msgid "CS-Cart Feature ID: Room Facilities"
+msgstr "CS-Cart Feature ID: Room Facilities"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_room_facility"
+msgid "Product feature ID for room facilities (WiFi, AC, minibar, etc.). Multiple checkbox type."
+msgstr "Product feature ID for room facilities (WiFi, AC, minibar, etc.). Multiple checkbox type."
+
+msgctxt "SettingsOptions::travel_core::feature_id_beach_access"
+msgid "CS-Cart Feature ID: Beach Access"
+msgstr "CS-Cart Feature ID: Beach Access"
+
+msgctxt "SettingsTooltips::travel_core::feature_id_beach_access"
+msgid "Product feature ID for beach access features (first line, blue flag, etc.). Multiple checkbox type."
+msgstr "Product feature ID for beach access features (first line, blue flag, etc.). Multiple checkbox type."
+
 msgctxt "SettingsOptions::travel_core::currency_header"
 msgid "Currency"
 msgstr "Currency"

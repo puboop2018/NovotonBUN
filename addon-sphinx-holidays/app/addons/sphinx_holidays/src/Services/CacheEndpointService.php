@@ -15,7 +15,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
  */
 class CacheEndpointService
 {
-    private SphinxApi $api;
+    private readonly SphinxApi $api;
     private float $commission;
 
     /** Cache TTL for deals in seconds (default 4 hours) */

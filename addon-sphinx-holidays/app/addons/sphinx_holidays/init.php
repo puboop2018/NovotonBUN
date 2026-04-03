@@ -45,6 +45,9 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Services\BookingAdminProvider()
     );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setScanConfig(
+        'sphinx', 'sphinx_hotels', 'hotel_id', 'facilities_json'
+    );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
         'sphinx',
         function () {

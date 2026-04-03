@@ -24,8 +24,8 @@ class AdminCronService
 {
     use OutputWriterTrait;
 
-    private NovotonApi $api;
-    private Container $container;
+    private readonly NovotonApi $api;
+    private readonly Container $container;
 
     public function __construct(NovotonApi $api)
     {

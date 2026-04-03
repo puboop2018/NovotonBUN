@@ -37,14 +37,14 @@
     <div class="control-group">
         <label class="control-label" for="display_name_en">{__("travel_core.fm_display_en")}:</label>
         <div class="controls">
-            <input type="text" name="mapping_data[display_name_en]" id="display_name_en" value="{$mapping.display_name_en}" size="50" />
+            <input type="text" name="mapping_data[display_name_en]" id="display_name_en" value="{$mapping.display_name_en|escape:'html'}" size="50" />
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="display_name_ro">{__("travel_core.fm_display_ro")}:</label>
         <div class="controls">
-            <input type="text" name="mapping_data[display_name_ro]" id="display_name_ro" value="{$mapping.display_name_ro}" size="50" />
+            <input type="text" name="mapping_data[display_name_ro]" id="display_name_ro" value="{$mapping.display_name_ro|escape:'html'}" size="50" />
         </div>
     </div>
 
@@ -66,7 +66,7 @@
                     {elseif $f.feature_type == 'O'}{assign var="type_label" value="Date"}
                     {else}{assign var="type_label" value=$f.feature_type}{/if}
                     <option value="{$f.feature_id}" {if $mapping.cscart_feature_id == $f.feature_id}selected{/if}>
-                        {$f.description|default:"Feature"} #{$f.feature_id} ({$type_label})
+                        {$f.description|escape:'html'|default:"Feature"} #{$f.feature_id} ({$type_label})
                     </option>
                 {/foreach}
             </select>
@@ -109,11 +109,43 @@
         </div>
     </div>
 
+    <hr>
+
+    {* Metadata (read-only) *}
+    <div class="control-group">
+        <label class="control-label">Source:</label>
+        <div class="controls">
+            <span class="label {if $mapping.mapping_source == 'seed'}label-info{elseif $mapping.mapping_source == 'auto'}label-warning{else}label-success{/if}">
+                {$mapping.mapping_source|default:'seed'}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">Variant Lock:</label>
+        <div class="controls">
+            {if $mapping.variant_source == 'manual'}
+                <span class="label label-important"><i class="icon-lock"></i> Manual — auto-resolve will not overwrite</span>
+            {else}
+                <span class="label label-default"><i class="icon-unlock"></i> Auto — can be auto-resolved</span>
+            {/if}
+        </div>
+    </div>
+
+    {if $mapping.last_used_at}
+    <div class="control-group">
+        <label class="control-label">Last Used:</label>
+        <div class="controls">
+            <span class="muted">{$mapping.last_used_at|date_format:"%Y-%m-%d %H:%M"}</span>
+        </div>
+    </div>
+    {/if}
+
     <div class="buttons-container">
         <button type="submit" class="btn btn-primary">
             <i class="icon-ok"></i> {__("save")}
         </button>
-        <a href="{"travel_feature_mappings.manage"|fn_url}" class="btn">{__("cancel")}</a>
+        <a href="{"travel_feature_mappings.manage?feature_type=`$mapping.feature_type`"|fn_url}" class="btn">{__("cancel")}</a>
     </div>
 </form>
 
@@ -137,8 +169,8 @@
         {foreach from=$aliases item=alias}
         <tr>
             <td>{$alias.alias_id}</td>
-            <td><span class="label">{$alias.api_source}</span></td>
-            <td><code>{$alias.api_value}</code></td>
+            <td><span class="label">{$alias.api_source|escape:'html'}</span></td>
+            <td><code>{$alias.api_value|escape:'html'}</code></td>
             <td>{$alias.match_type}</td>
             <td>
                 <form action="{"travel_feature_mappings.delete_alias"|fn_url}" method="post" style="display:inline;">
@@ -196,11 +228,17 @@ function loadVariants(featureId) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             var variants = JSON.parse(xhr.responseText);
-            var html = '<option value="0">-- {__("travel_core.fm_not_mapped")} --</option>';
+            select.innerHTML = '';
+            var defaultOpt = document.createElement('option');
+            defaultOpt.value = '0';
+            defaultOpt.textContent = '-- {__("travel_core.fm_not_mapped")|escape:'javascript'} --';
+            select.appendChild(defaultOpt);
             for (var i = 0; i < variants.length; i++) {
-                html += '<option value="' + variants[i].variant_id + '">#' + variants[i].variant_id + ' &mdash; ' + variants[i].name + '</option>';
+                var opt = document.createElement('option');
+                opt.value = variants[i].variant_id;
+                opt.textContent = '#' + variants[i].variant_id + ' \u2014 ' + variants[i].name;
+                select.appendChild(opt);
             }
-            select.innerHTML = html;
         }
     };
     xhr.send();

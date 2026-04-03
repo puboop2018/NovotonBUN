@@ -16,7 +16,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 
 $altRequestRepo = _nvt_alternative_request_repo();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Check alternatives for a request
     if ($mode === 'check_alternatives' || $mode === 'alternative_rs') {

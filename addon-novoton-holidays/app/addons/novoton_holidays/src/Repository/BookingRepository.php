@@ -29,7 +29,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
-    private GuestDataNormalizer $guestDataNormalizer;
+    private readonly GuestDataNormalizer $guestDataNormalizer;
 
     public function __construct(?GuestDataNormalizer $guestDataNormalizer = null)
     {

@@ -13,6 +13,10 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+
+/** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
+$repo = FeatureMapper::getRepository();
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -21,7 +25,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group'];
+$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -45,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (isset($data['cscart_variant_id'])) {
                 $updateData['cscart_variant_id'] = (int) $data['cscart_variant_id'] ?: null;
+                // Mark as manually set to prevent auto-overwrite
+                if ((int) ($data['cscart_variant_id'] ?? 0) > 0) {
+                    $updateData['variant_source'] = 'manual';
+                }
             }
             if (isset($data['position'])) {
                 $updateData['position'] = (int) $data['position'];
@@ -54,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!empty($updateData)) {
-                db_query("UPDATE ?:travel_feature_map SET ?u WHERE map_id = ?i", $updateData, $mapId);
+                $repo->updateMapping($mapId, $updateData);
                 FeatureMapper::clearCache();
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mapping_updated'));
             }
@@ -73,15 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ids = array_map('intval', $ids);
 
             if ($action === 'activate') {
-                db_query("UPDATE ?:travel_feature_map SET status = 'A' WHERE map_id IN (?n)", $ids);
+                $repo->bulkUpdateStatus($ids, 'A');
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_activated', ['[count]' => count($ids)]));
             } elseif ($action === 'deactivate') {
-                db_query("UPDATE ?:travel_feature_map SET status = 'D' WHERE map_id IN (?n)", $ids);
+                $repo->bulkUpdateStatus($ids, 'D');
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_deactivated', ['[count]' => count($ids)]));
             } elseif ($action === 'delete') {
-                // Delete aliases first, then the mapping
-                db_query("DELETE FROM ?:travel_api_alias WHERE map_id IN (?n)", $ids);
-                db_query("DELETE FROM ?:travel_feature_map WHERE map_id IN (?n)", $ids);
+                $repo->deleteMappings($ids);
                 fn_set_notification('N', __('notice'), __('travel_core.fm_mappings_deleted', ['[count]' => count($ids)]));
             }
             FeatureMapper::clearCache();
@@ -98,31 +104,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
     }
 
-    // Auto-resolve unmapped variants by name-matching
+    // Auto-resolve unmapped variants by name-matching + auto-create
     if ($mode == 'resolve_variants') {
 
         // Step 1: Auto-populate cscart_feature_id from addon settings for entries that don't have one
-        $featureTypes = db_get_fields(
-            "SELECT DISTINCT feature_type FROM ?:travel_feature_map WHERE cscart_feature_id = 0 OR cscart_feature_id IS NULL"
-        );
+        $featureTypes = $repo->getFeatureTypesWithoutFeatureId();
         foreach ($featureTypes as $ft) {
             $fid = FeatureMapper::getFeatureId($ft);
             if ($fid > 0) {
-                db_query(
-                    "UPDATE ?:travel_feature_map SET cscart_feature_id = ?i WHERE feature_type = ?s AND (cscart_feature_id = 0 OR cscart_feature_id IS NULL)",
-                    $fid, $ft
-                );
+                $repo->bulkSetFeatureId($ft, $fid);
             }
         }
 
         // Step 2: Query entries that have a feature_id but no variant yet
-        $unmapped = db_get_array(
-            "SELECT * FROM ?:travel_feature_map
-             WHERE (cscart_variant_id IS NULL OR cscart_variant_id = 0)
-             AND cscart_feature_id > 0 AND status = 'A'"
-        );
+        // Exclude manually locked mappings (variant_source='manual')
+        $unmapped = $repo->getUnresolvedMappings();
 
         $resolved = 0;
+        $created = 0;
         $failed = 0;
 
         // Group unmapped rows by cscart_feature_id for batch lookup
@@ -136,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Batch-load variant names per feature_id (N queries → F queries)
+        // Batch-load variant names per feature_id
         foreach ($byFeature as $featureId => $mappings) {
             $variantNameToId = db_get_hash_single_array(
                 "SELECT vd.variant, v.variant_id
@@ -154,6 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
+                $variantId = null;
+
                 // Pass 1: exact match
                 $variantId = $variantNameToId[$nameEn] ?? null;
 
@@ -168,19 +169,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                // Pass 3: normalized match (strip punctuation, collapse whitespace)
+                if (!$variantId) {
+                    $normalizedTarget = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
+                    foreach ($variantNameToId as $vName => $vId) {
+                        $normalizedExisting = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
+                        if ($normalizedExisting === $normalizedTarget) {
+                            $variantId = $vId;
+                            break;
+                        }
+                    }
+                }
+
                 if ($variantId) {
-                    db_query("UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
-                        (int) $variantId, (int) $mapping['map_id']);
+                    FeatureMapper::updateVariantId((int) $mapping['map_id'], (int) $variantId, 'auto');
                     $resolved++;
                 } else {
-                    $failed++;
+                    // Auto-create the variant
+                    $nameRo = trim($mapping['display_name_ro'] ?? '') ?: $nameEn;
+                    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+                    if (empty($languages)) {
+                        $languages = ['en'];
+                    }
+
+                    $newVariantId = (int) db_query(
+                        "INSERT INTO ?:product_feature_variants ?e",
+                        ['feature_id' => $featureId, 'position' => 0]
+                    );
+
+                    if ($newVariantId > 0) {
+                        foreach ($languages as $langCode) {
+                            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
+                            db_query(
+                                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
+                                 VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
+                                $newVariantId, $langCode, $variantName, $variantName
+                            );
+                        }
+                        FeatureMapper::updateVariantId((int) $mapping['map_id'], $newVariantId, 'auto');
+                        // Add to local cache so subsequent mappings can match
+                        $variantNameToId[$nameEn] = $newVariantId;
+                        $created++;
+                    } else {
+                        $failed++;
+                    }
                 }
             }
         }
 
         FeatureMapper::clearCache();
         fn_set_notification('N', __('notice'), __('travel_core.fm_variants_resolved', [
-            '[resolved]' => $resolved,
+            '[resolved]' => $resolved + $created,
             '[failed]' => $failed,
         ]));
 
@@ -211,98 +250,332 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aliasId = (int) ($_REQUEST['alias_id'] ?? 0);
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
         if ($aliasId > 0) {
-            db_query("DELETE FROM ?:travel_api_alias WHERE alias_id = ?i", $aliasId);
+            $repo->deleteAlias($aliasId);
             FeatureMapper::clearCache();
             fn_set_notification('N', __('notice'), __('travel_core.fm_alias_deleted'));
         }
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.edit&map_id=' . $mapId];
     }
+
+    // Promote unmapped value to a real mapping
+    if ($mode === 'map_unmapped') {
+        $unmappedId = (int) ($_REQUEST['unmapped_id'] ?? 0);
+        if ($unmappedId > 0) {
+            $row = $repo->getUnmappedById($unmappedId);
+            if ($row) {
+                $mapId = FeatureMapper::registerUnmapped(
+                    $row['api_source'], $row['feature_type'], $row['api_value'], $row['api_label'] ?? ''
+                );
+                if ($mapId) {
+                    fn_set_notification('N', __('notice'), __('travel_core.fm_unmapped_promoted'));
+                    return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.edit&map_id=' . $mapId];
+                }
+            }
+        }
+        fn_set_notification('E', __('error'), __('travel_core.fm_unmapped_promote_failed'));
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.unmapped'];
+    }
+
+    // Batch scan provider hotel facilities → populate travel_unmapped_values
+    if ($mode === 'scan_facilities') {
+        $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
+        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+        $offset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
+
+        if ($provider === '') {
+            fn_set_notification('E', __('error'), 'No provider specified.');
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
+        }
+
+        // Provider-specific: determine source table and JSON column
+        $scanConfig = _travel_fm_get_scan_config($provider);
+        if (!$scanConfig) {
+            fn_set_notification('E', __('error'), "Provider '{$provider}' does not support facility scanning.");
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
+        }
+
+        // Count total hotels (only on first batch)
+        $totalHotels = (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:{$scanConfig['table']} WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]'"
+        );
+
+        // Fetch batch of hotels
+        $hotels = db_get_array(
+            "SELECT {$scanConfig['id_col']}, {$scanConfig['json_col']} FROM ?:{$scanConfig['table']} " .
+            "WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]' " .
+            "ORDER BY {$scanConfig['id_col']} LIMIT ?i, ?i",
+            $offset, $batchSize
+        );
+
+        $newUnmapped = 0;
+        $totalFacilities = 0;
+
+        foreach ($hotels as $hotel) {
+            $facilities = json_decode($hotel[$scanConfig['json_col']], true);
+            if (!is_array($facilities)) {
+                continue;
+            }
+
+            foreach ($facilities as $facility) {
+                $facilityId = (string) ($facility['id'] ?? '');
+                $facilityName = (string) ($facility['name'] ?? '');
+                if ($facilityId === '') {
+                    continue;
+                }
+                $totalFacilities++;
+
+                // Check if already mapped
+                $mapping = FeatureMapper::resolve($provider, 'facility', $facilityId);
+                if (!$mapping) {
+                    // Track as unmapped (increments hotel_count if already exists)
+                    FeatureMapper::trackUnmapped($provider, 'facility', $facilityId, $facilityName);
+                    $newUnmapped++;
+                }
+            }
+        }
+
+        // Clear resolve cache to free memory between batches
+        FeatureMapper::clearCache();
+
+        $processedSoFar = $offset + count($hotels);
+        $isComplete = count($hotels) < $batchSize || $processedSoFar >= $totalHotels;
+
+        if ($isComplete) {
+            $condition = db_quote(" AND api_source = ?s AND feature_type = 'facility'", $provider);
+            $unmappedResult = $repo->getPaginatedUnmapped($condition, 0, 0);
+            $unmappedTotal = $unmappedResult['total'];
+            fn_set_notification('N', __('notice'), __('travel_core.fm_scan_complete', [
+                '[provider]' => $provider,
+                '[hotels]' => $processedSoFar,
+                '[unmapped]' => $unmappedTotal,
+            ]));
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.unmapped&api_source=' . $provider . '&feature_type=facility'];
+        }
+
+        // Not complete — redirect back with progress to continue
+        $redirectUrl = 'travel_feature_mappings.scan_progress'
+            . '&scan_provider=' . $provider
+            . '&scan_offset=' . $processedSoFar
+            . '&scan_total=' . $totalHotels
+            . '&batch_size=' . $batchSize;
+
+        return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+    }
 }
 
-// ── GET: Manage (list) ──
+// Helper: provider-specific scan configuration (from TravelProviderRegistry)
+function _travel_fm_get_scan_config(string $provider): ?array
+{
+    return TravelProviderRegistry::getScanConfig($provider);
+}
+
+// ── GET: Manage (dashboard or paginated list) ──
 if ($mode == 'manage') {
     $featureTypeFilter = $_REQUEST['feature_type'] ?? '';
     $statusFilter = $_REQUEST['status'] ?? '';
+    $sourceFilter = $_REQUEST['mapping_source'] ?? '';
+    $searchQuery = trim((string) ($_REQUEST['q'] ?? ''));
 
-    $conditions = [];
-    $params = [];
+    // ── Dashboard mode (no feature_type selected) ──
+    if (!$featureTypeFilter || !in_array($featureTypeFilter, $validFeatureTypes, true)) {
 
-    if ($featureTypeFilter && in_array($featureTypeFilter, $validFeatureTypes, true)) {
-        $conditions[] = "m.feature_type = ?s";
-        $params[] = $featureTypeFilter;
+        // Per-type stats for dashboard cards
+        $typeStats = $repo->getTypeStats();
+
+        // Enrich with configured feature IDs
+        foreach ($typeStats as $ft => &$stat) {
+            $stat['feature_id'] = FeatureMapper::getFeatureId($ft);
+            $stat['total'] = (int) ($stat['total'] ?? 0);
+            $stat['active'] = (int) ($stat['active'] ?? 0);
+            $stat['unmapped'] = (int) ($stat['unmapped'] ?? 0);
+            $stat['auto_registered'] = (int) ($stat['auto_registered'] ?? 0);
+        }
+        unset($stat);
+
+        // Unmapped values count
+        $unmappedCount = $repo->getUnmappedCount();
+
+        // Global stats
+        $stats = $repo->getGlobalStats();
+
+        // Human-readable labels for feature types
+        $typeLabels = [
+            'facility'      => 'Facilities',
+            'board'         => 'Board / Meals',
+            'resort'        => 'Resorts & Cities',
+            'stars'         => 'Star Rating',
+            'property_type' => 'Property Type',
+            'travel_group'  => 'Travel Group',
+            'room_type'     => 'Room Type',
+            'region'        => 'Region',
+            'city'          => 'City',
+            'beach_access'  => 'Beach Access',
+        ];
+
+        // Providers with scan config (for "Scan Facilities" dropdown)
+        $scanProviders = array_keys(TravelProviderRegistry::getAllScanConfigs());
+
+        Tygh::$app['view']->assign('view_mode', 'dashboard');
+        Tygh::$app['view']->assign('type_stats', $typeStats);
+        Tygh::$app['view']->assign('type_labels', $typeLabels);
+        Tygh::$app['view']->assign('unmapped_count', $unmappedCount);
+        Tygh::$app['view']->assign('mapping_stats', $stats);
+        Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
+        Tygh::$app['view']->assign('scan_providers', $scanProviders);
+
+    } else {
+        // ── List mode (feature_type selected, paginated) ──
+
+        // Pagination params (CS-Cart standard)
+        $page = max(1, (int) ($_REQUEST['page'] ?? 1));
+        $itemsPerPage = (int) ($_REQUEST['items_per_page'] ?? 0);
+        if ($itemsPerPage <= 0) {
+            $itemsPerPage = (int) Registry::get('settings.Appearance.admin_elements_per_page') ?: 25;
+        }
+        $itemsPerPage = min($itemsPerPage, 250); // Cap at 250
+
+        // Build WHERE condition using db_quote() (CS-Cart standard pattern)
+        $condition = db_quote(" AND m.feature_type = ?s", $featureTypeFilter);
+
+        if ($statusFilter === 'A' || $statusFilter === 'D') {
+            $condition .= db_quote(" AND m.status = ?s", $statusFilter);
+        }
+
+        if ($sourceFilter !== '' && in_array($sourceFilter, ['seed', 'auto', 'manual'], true)) {
+            $condition .= db_quote(" AND m.mapping_source = ?s", $sourceFilter);
+        }
+
+        if ($searchQuery !== '') {
+            $escaped = addcslashes($searchQuery, '%_\\');
+            $condition .= db_quote(
+                " AND (m.canonical_code LIKE ?l OR m.display_name_en LIKE ?l OR m.display_name_ro LIKE ?l)",
+                '%' . $escaped . '%', '%' . $escaped . '%', '%' . $escaped . '%'
+            );
+        }
+
+        // Offset
+        $offset = ($page - 1) * $itemsPerPage;
+
+        // Fetch paginated data via repository
+        $paginatedResult = $repo->getPaginatedMappings($condition, $offset, $itemsPerPage);
+        $mappings = $paginatedResult['items'];
+        $totalItems = $paginatedResult['total'];
+
+        if ($offset >= $totalItems && $totalItems > 0) {
+            $page = 1;
+            $offset = 0;
+            $paginatedResult = $repo->getPaginatedMappings($condition, $offset, $itemsPerPage);
+            $mappings = $paginatedResult['items'];
+        }
+
+        // Resolve variant + feature names for display
+        $variantIds = array_filter(array_unique(array_column($mappings, 'cscart_variant_id')));
+        $variantNames = [];
+        if (!empty($variantIds)) {
+            $variantNames = db_get_hash_single_array(
+                "SELECT variant_id, variant FROM ?:product_feature_variant_descriptions WHERE variant_id IN (?n) AND lang_code = ?s",
+                ['variant_id', 'variant'], $variantIds, DESCR_SL
+            );
+        }
+
+        $featureIds = array_filter(array_unique(array_column($mappings, 'cscart_feature_id')));
+        $featureNames = [];
+        if (!empty($featureIds)) {
+            $featureNames = db_get_hash_single_array(
+                "SELECT feature_id, description FROM ?:product_features_descriptions WHERE feature_id IN (?n) AND lang_code = ?s",
+                ['feature_id', 'description'], $featureIds, DESCR_SL
+            );
+        }
+
+        foreach ($mappings as &$m) {
+            $m['variant_name'] = $variantNames[$m['cscart_variant_id']] ?? '';
+            $m['feature_name'] = $featureNames[$m['cscart_feature_id']] ?? '';
+        }
+        unset($m);
+
+        // Type-level stats for header
+        $typeStats = $repo->getTypeStatsSingle($featureTypeFilter);
+
+        // Human-readable labels
+        $typeLabels = [
+            'facility' => 'Facilities', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
+            'stars' => 'Star Rating', 'property_type' => 'Property Type', 'travel_group' => 'Travel Group',
+            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City', 'beach_access' => 'Beach Access',
+        ];
+
+        // CS-Cart pagination: assign $search with standard keys
+        $search = [
+            'feature_type'   => $featureTypeFilter,
+            'status'         => $statusFilter,
+            'mapping_source' => $sourceFilter,
+            'q'              => $searchQuery,
+            'page'           => $page,
+            'items_per_page' => $itemsPerPage,
+            'total_items'    => $totalItems,
+        ];
+
+        Tygh::$app['view']->assign('view_mode', 'list');
+        Tygh::$app['view']->assign('mappings', $mappings);
+        Tygh::$app['view']->assign('search', $search);
+        Tygh::$app['view']->assign('type_stats', $typeStats);
+        Tygh::$app['view']->assign('type_label', $typeLabels[$featureTypeFilter] ?? $featureTypeFilter);
+        Tygh::$app['view']->assign('configured_feature_id', FeatureMapper::getFeatureId($featureTypeFilter));
+        Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
+    }
+}
+
+// ── GET: Unmapped values ──
+if ($mode == 'unmapped') {
+    $page = max(1, (int) ($_REQUEST['page'] ?? 1));
+    $itemsPerPage = (int) ($_REQUEST['items_per_page'] ?? 0);
+    if ($itemsPerPage <= 0) {
+        $itemsPerPage = (int) Registry::get('settings.Appearance.admin_elements_per_page') ?: 25;
     }
 
-    if ($statusFilter === 'A' || $statusFilter === 'D') {
-        $conditions[] = "m.status = ?s";
-        $params[] = $statusFilter;
+    $sourceFilter = $_REQUEST['api_source'] ?? '';
+    $typeFilter = $_REQUEST['feature_type'] ?? '';
+
+    // Build condition using db_quote() (CS-Cart standard pattern)
+    $condition = '';
+    if ($sourceFilter !== '') {
+        $condition .= db_quote(" AND api_source = ?s", $sourceFilter);
+    }
+    if ($typeFilter !== '') {
+        $condition .= db_quote(" AND feature_type = ?s", $typeFilter);
     }
 
-    $where = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+    $offset = ($page - 1) * $itemsPerPage;
 
-    $query = "SELECT m.*, COUNT(a.alias_id) as alias_count,
-                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
-              FROM ?:travel_feature_map m
-              LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
-              {$where}
-              GROUP BY m.map_id
-              ORDER BY m.feature_type, m.position, m.canonical_code";
+    $paginatedUnmapped = $repo->getPaginatedUnmapped($condition, $offset, $itemsPerPage);
+    $unmapped = $paginatedUnmapped['items'];
+    $totalItems = $paginatedUnmapped['total'];
 
-    $mappings = db_get_array($query, ...$params);
-
-    // Resolve variant names for display
-    $variantIds = array_filter(array_unique(array_column($mappings, 'cscart_variant_id')));
-    $variantNames = [];
-    if (!empty($variantIds)) {
-        $variantNames = db_get_hash_single_array(
-            "SELECT variant_id, variant FROM ?:product_feature_variant_descriptions WHERE variant_id IN (?n) AND lang_code = ?s",
-            ['variant_id', 'variant'], $variantIds, DESCR_SL
-        );
-    }
-
-    // Resolve feature names for display
-    $featureIds = array_filter(array_unique(array_column($mappings, 'cscart_feature_id')));
-    $featureNames = [];
-    if (!empty($featureIds)) {
-        $featureNames = db_get_hash_single_array(
-            "SELECT feature_id, description FROM ?:product_features_descriptions WHERE feature_id IN (?n) AND lang_code = ?s",
-            ['feature_id', 'description'], $featureIds, DESCR_SL
-        );
-    }
-
-    foreach ($mappings as &$m) {
-        $m['variant_name'] = $variantNames[$m['cscart_variant_id']] ?? '';
-        $m['feature_name'] = $featureNames[$m['cscart_feature_id']] ?? '';
-    }
-    unset($m);
-
-    // Group by feature type for display
-    $grouped = [];
-    foreach ($mappings as $m) {
-        $grouped[$m['feature_type']][] = $m;
-    }
-
-    // Stats (consolidated into 2 queries instead of 4)
-    $mapStats = db_get_row(
-        "SELECT COUNT(*) AS total,
-                SUM(status = 'A') AS active,
-                SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
-         FROM ?:travel_feature_map"
-    );
-    $stats = [
-        'total'    => (int) ($mapStats['total'] ?? 0),
-        'active'   => (int) ($mapStats['active'] ?? 0),
-        'unmapped' => (int) ($mapStats['unmapped'] ?? 0),
-        'aliases'  => (int) db_get_field("SELECT COUNT(*) FROM ?:travel_api_alias"),
+    $search = [
+        'api_source'     => $sourceFilter,
+        'feature_type'   => $typeFilter,
+        'page'           => $page,
+        'items_per_page' => $itemsPerPage,
+        'total_items'    => $totalItems,
     ];
 
-    Tygh::$app['view']->assign('mappings', $mappings);
-    Tygh::$app['view']->assign('grouped_mappings', $grouped);
-    Tygh::$app['view']->assign('mapping_stats', $stats);
-    Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
-    Tygh::$app['view']->assign('search', [
-        'feature_type' => $featureTypeFilter,
-        'status' => $statusFilter,
-    ]);
+    Tygh::$app['view']->assign('unmapped_values', $unmapped);
+    Tygh::$app['view']->assign('search', $search);
+}
+
+// ── GET: Scan progress (intermediate page between batches) ──
+if ($mode == 'scan_progress') {
+    $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
+    $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
+    $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
+    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+
+    $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
+
+    Tygh::$app['view']->assign('scan_provider', $provider);
+    Tygh::$app['view']->assign('scan_offset', $scanOffset);
+    Tygh::$app['view']->assign('scan_total', $scanTotal);
+    Tygh::$app['view']->assign('scan_percent', $percent);
+    Tygh::$app['view']->assign('batch_size', $batchSize);
 }
 
 // ── GET: Edit single mapping ──
@@ -314,7 +587,7 @@ if ($mode == 'edit') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
     }
 
-    $mapping = db_get_row("SELECT * FROM ?:travel_feature_map WHERE map_id = ?i", $mapId);
+    $mapping = $repo->getMappingById($mapId);
     if (empty($mapping)) {
         fn_set_notification('E', __('error'), __('travel_core.fm_mapping_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
@@ -344,10 +617,7 @@ if ($mode == 'edit') {
     }
 
     // Load aliases for this mapping
-    $aliases = db_get_array(
-        "SELECT * FROM ?:travel_api_alias WHERE map_id = ?i ORDER BY api_source, api_value",
-        $mapId
-    );
+    $aliases = $repo->getAliasesForMapping($mapId);
 
     Tygh::$app['view']->assign('mapping', $mapping);
     Tygh::$app['view']->assign('all_features', $allFeatures);

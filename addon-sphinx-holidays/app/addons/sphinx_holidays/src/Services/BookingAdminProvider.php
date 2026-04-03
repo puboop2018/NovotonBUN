@@ -124,4 +124,19 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         // so link to the unified view
         return null;
     }
+
+    public function handleAction(string $action, array $request): array
+    {
+        // Sphinx has no provider-specific POST actions yet
+        return [
+            'redirect' => 'travel_bookings.manage',
+            'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => "Unknown Sphinx action: {$action}"],
+        ];
+    }
+
+    public function getProviderTabs(array $booking): array
+    {
+        // Sphinx has no provider-specific tabs
+        return [];
+    }
 }

@@ -247,31 +247,59 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Facilities — each facility's feature_type drives which CS-Cart feature it maps to
-        $facilitiesByType = $facilityRepo->getForHotelGroupedByType($hotelId);
-        foreach ($facilitiesByType as $featureType => $facilities) {
-            $codes = [];
-            foreach ($facilities as $f) {
-                $code = $normalizer->normalizeFacilityCode($f['facility_id']);
+        // Facilities — resolved via travel_core canonical mapping (travel_feature_map + travel_api_alias)
+        $allFacilityIds = $facilityRepo->getIdsForHotel($hotelId);
+        if (!empty($allFacilityIds)) {
+            $facilityCodes = [];
+            foreach ($allFacilityIds as $fid) {
+                $code = $normalizer->normalizeFacilityCode($fid);
                 if ($code !== null) {
-                    $codes[] = $code;
+                    $facilityCodes[] = $code;
                 }
             }
-            if (!empty($codes)) {
-                $featureMapper->assignMultipleToProduct($productId, $featureType, array_unique($codes));
+            if (!empty($facilityCodes)) {
+                $featureMapper->assignMultipleViaCore($productId, 'facility', array_unique($facilityCodes));
             }
         }
 
-        // Travel Group: adults-only detection (virtual code, not a facility)
+        // Travel Group (M-type: hotel can have multiple groups)
+        // Resolve all applicable groups, then assign as batch
+        $travelGroups = [];
+
         if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
-            $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_TRAVEL_GROUP, 'adults_only');
+            $travelGroups[] = 'adults_only';
         }
 
-        // Resort / City
+        // Infer family_friendly and pets_friendly from facility canonical codes
+        $resolvedFacilityCodes = [];
+        foreach ($allFacilityIds ?? [] as $fid) {
+            $code = $normalizer->normalizeFacilityCode($fid);
+            if ($code !== null) {
+                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve('novoton', 'facility', $code);
+                if ($mapping && !empty($mapping['canonical_code'])) {
+                    $resolvedFacilityCodes[] = $mapping['canonical_code'];
+                }
+            }
+        }
+
+        $familyCodes = ['family_rooms', 'kids_menu', 'babysitting', 'kids_club', 'kids_pool', 'playground'];
+        if (!empty(array_intersect($resolvedFacilityCodes, $familyCodes))) {
+            $travelGroups[] = 'family_friendly';
+        }
+
+        if (in_array('pets_allowed', $resolvedFacilityCodes, true)) {
+            $travelGroups[] = 'pets_friendly';
+        }
+
+        if (!empty($travelGroups)) {
+            $featureMapper->assignMultipleViaCore($productId, 'travel_group', $travelGroups);
+        }
+
+        // Resort / City — via travel_core mapping (dynamic: auto-registers unknown values)
         if (!empty($hotel['city'])) {
             $resortCode = $normalizer->normalizeResort($hotel['city']);
             if ($resortCode !== null) {
-                $featureMapper->assignFeatureToProduct($productId, Constants::FEATURE_TYPE_RESORT, $resortCode);
+                $featureMapper->assignFeatureViaCore($productId, 'resort', $resortCode);
             }
         }
 

@@ -823,7 +823,7 @@
                         <position>27</position>
                     </item>
                     <item id="feature_mappings">
-                        <href>novoton_feature_mappings.manage</href>
+                        <href>travel_feature_mappings.manage</href>
                         <position>29</position>
                     </item>
                     <item id="novoton_diagnostic">

@@ -19,8 +19,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 class OrderStatusSyncService
 {
-    private SphinxApi $api;
-    private SphinxBookingRepository $repo;
+    private readonly SphinxApi $api;
+    private readonly SphinxBookingRepository $repo;
 
     private ?\Closure $outputCallback = null;
 

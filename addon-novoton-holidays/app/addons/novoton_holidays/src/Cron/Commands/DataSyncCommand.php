@@ -117,15 +117,18 @@ class DataSyncCommand extends AbstractCronCommand
 
     /**
      * Run feature mapping seed/sync after reference data changes.
+     * Seeds canonical codes in travel_core and Novoton-specific aliases.
      */
     private function syncFeatureMappings(): void
     {
         try {
-            $result = fn_novoton_holidays_seed_feature_mappings();
-            $seeded = $result['seeded'] ?? 0;
-            if ($seeded > 0) {
-                $this->output("Feature mappings synced: {$seeded} rows updated.");
+            if (function_exists('fn_travel_core_seed_feature_map')) {
+                fn_travel_core_seed_feature_map();
             }
+            if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {
+                fn_novoton_holidays_seed_travel_aliases();
+            }
+            $this->output("Feature mappings synced via travel_core.");
         } catch (\Exception $e) {
             $this->output("Warning: Feature mapping sync failed: " . $e->getMessage());
         }

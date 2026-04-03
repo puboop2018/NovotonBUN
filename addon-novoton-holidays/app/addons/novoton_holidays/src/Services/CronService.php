@@ -20,7 +20,7 @@ use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 class CronService implements CronServiceInterface
 {
     private $api;
-    private BookingRepositoryInterface $bookingRepo;
+    private readonly BookingRepositoryInterface $bookingRepo;
     private $countries;
     private $output = [];
 

@@ -133,7 +133,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         }
 
         // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m)
-        if ($dupeProductId === 0 && $lat != 0.0 && $lng != 0.0) {
+        if ($dupeProductId === 0 && $lat !== 0.0 && $lng !== 0.0) {
             $dupeProductId = (int) db_get_field(
                 "SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s

@@ -28,7 +28,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
  * - components: status of each subsystem
  * - metrics: key performance indicators
  */
-if ($mode == 'health') {
+if ($mode === 'health') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, no-store, must-revalidate');
 
@@ -202,7 +202,7 @@ if ($mode == 'health') {
     exit;
 }
 
-if ($mode == 'check') {
+if ($mode === 'check') {
     
     header('Content-Type: text/plain; charset=utf-8');
     
@@ -370,7 +370,7 @@ if ($mode == 'check') {
         echo "   ? Enable it in Add-ons ? Manage add-ons\n\n";
     }
     
-    if ($issues == 0) {
+    if ($issues === 0) {
         echo "? No critical issues found!\n";
         echo "   If you're still having problems:\n";
         echo "   1. Clear cache: rm -rf var/cache/*\n";
@@ -387,6 +387,6 @@ if ($mode == 'check') {
     exit;
 }
 // Alias 'test' to 'check' for backward compatibility
-if ($mode == 'test') {
+if ($mode === 'test') {
     return [CONTROLLER_STATUS_REDIRECT, 'novoton_diagnostic.check'];
 }

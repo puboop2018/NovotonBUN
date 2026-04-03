@@ -12,7 +12,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
 class AvailabilityApiClient extends ApiClientBase
 {
-    private CommissionCalculator $commissionCalculator;
+    private readonly CommissionCalculator $commissionCalculator;
 
     public function __construct(
         NovotonHttpClient $httpClient,

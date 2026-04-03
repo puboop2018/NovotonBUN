@@ -12,6 +12,7 @@ declare(strict_types=1);
  *   - view: View a single booking's details
  *   - bulk_check_status (POST): Trigger status sync for a provider
  *   - check_status (POST): Check status of a single booking
+ *   - provider_action (POST): Delegate provider-specific action via handleAction()
  *
  * @package TravelCore
  * @since 1.0.0
@@ -92,28 +93,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $booking = db_get_row("SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i", $booking_id);
             if ($booking) {
                 $providerInfo = TravelProviderRegistry::get($booking['provider']);
-                if ($providerInfo && !empty($providerInfo['single_status_callback'])) {
-                    $result = call_user_func($providerInfo['single_status_callback'], $booking_id);
-                    if (!empty($result['changed'])) {
-                        fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
-                    } else {
-                        fn_set_notification('N', __('notice'), 'No status change detected.');
-                    }
-                } else {
-                    // Fallback: try BookingAdminProvider directly
-                    $adminProvider = TravelProviderRegistry::getBookingAdminProvider($booking['provider']);
-                    if ($adminProvider) {
-                        $pbId = (string) ($booking['provider_booking_id'] ?? $booking_id);
-                        $result = $adminProvider->checkStatus($pbId);
+                try {
+                    if ($providerInfo && !empty($providerInfo['single_status_callback'])) {
+                        $result = call_user_func($providerInfo['single_status_callback'], $booking_id);
                         if (!empty($result['changed'])) {
                             fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
                         } else {
-                            fn_set_notification('N', __('notice'), $result['error'] ?? 'No status change detected.');
+                            fn_set_notification('N', __('notice'), 'No status change detected.');
+                        }
+                    } else {
+                        // Fallback: try BookingAdminProvider directly
+                        $adminProvider = TravelProviderRegistry::getBookingAdminProvider($booking['provider']);
+                        if ($adminProvider) {
+                            $pbId = (string) ($booking['provider_booking_id'] ?? $booking_id);
+                            $result = $adminProvider->checkStatus($pbId);
+                            if (!empty($result['changed'])) {
+                                fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
+                            } else {
+                                fn_set_notification('N', __('notice'), $result['error'] ?? 'No status change detected.');
+                            }
                         }
                     }
+                } catch (\Throwable $e) {
+                    fn_set_notification('E', __('error'), 'Status check failed: ' . $e->getMessage());
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Booking status check failed',
+                        'booking_id' => $booking_id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         }
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage'];
+    }
+
+    // Provider-specific actions delegated via BookingAdminProviderInterface::handleAction()
+    if ($mode === 'provider_action') {
+        $provider = $_REQUEST['provider'] ?? '';
+        $providerAction = $_REQUEST['provider_action'] ?? '';
+
+        if (!empty($provider) && !empty($providerAction)) {
+            $adminProvider = TravelProviderRegistry::getBookingAdminProvider($provider);
+            if ($adminProvider !== null) {
+                $result = $adminProvider->handleAction($providerAction, $_REQUEST);
+
+                if (!empty($result['notification'])) {
+                    $n = $result['notification'];
+                    fn_set_notification($n['type'] ?? 'N', $n['title'] ?? '', $n['message'] ?? '');
+                }
+
+                $redirect = $result['redirect'] ?? 'travel_bookings.manage';
+                return [CONTROLLER_STATUS_REDIRECT, $redirect];
+            } else {
+                fn_set_notification('W', __('warning'), "No admin provider registered for '{$provider}'.");
+            }
+        }
+
         return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage'];
     }
 }
@@ -155,9 +190,16 @@ if ($mode === 'manage') {
         $condition .= db_quote(" AND tb.check_in <= ?s", $params['date_to']);
     }
 
-    // Sorting — whitelist allowed columns
-    $allowedSortBy = ['created_at', 'order_id', 'check_in', 'total_price', 'hotel_name', 'status'];
-    $sortBy = in_array($params['sort_by'], $allowedSortBy, true) ? $params['sort_by'] : 'created_at';
+    // Sorting — explicit column mapping prevents interpolation
+    $sortColumnMap = [
+        'created_at'  => 'tb.created_at',
+        'order_id'    => 'tb.order_id',
+        'check_in'    => 'tb.check_in',
+        'total_price' => 'tb.total_price',
+        'hotel_name'  => 'tb.hotel_name',
+        'status'      => 'tb.status',
+    ];
+    $sortColumn = $sortColumnMap[$params['sort_by']] ?? 'tb.created_at';
     $sortOrder = $params['sort_order'] === 'asc' ? 'ASC' : 'DESC';
 
     $total = (int)db_get_field(
@@ -171,7 +213,7 @@ if ($mode === 'manage') {
     $bookings = db_get_array(
         "SELECT tb.* FROM ?:travel_bookings tb
          WHERE 1 ?p
-         ORDER BY tb.{$sortBy} {$sortOrder}
+         ORDER BY " . $sortColumn . " " . $sortOrder . "
          LIMIT ?i, ?i",
         $condition, $offset, $limit
     );
@@ -236,5 +278,16 @@ if ($mode === 'manage') {
         Tygh::$app['view']->assign('order', $order);
     }
 
+    // Get provider-specific tabs
+    $providerTabs = [];
+    $providerName = $booking['provider'] ?? '';
+    if (!empty($providerName)) {
+        $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
+        if ($adminProvider !== null) {
+            $providerTabs = $adminProvider->getProviderTabs($booking);
+        }
+    }
+
     Tygh::$app['view']->assign('booking', $booking);
+    Tygh::$app['view']->assign('provider_tabs', $providerTabs);
 }

@@ -19,6 +19,15 @@ class HotelRepository
         image_url, is_recommended, is_adults_only, rating, rating_count,
         sync_status, last_synced_at, created_at, updated_at';
 
+    /** Explicit column list for safe aliasing (no regex needed). */
+    private const LISTING_COLUMN_NAMES = [
+        'hotel_id', 'product_id', 'name', 'classification', 'property_type',
+        'destination_id', 'destination_name', 'region_id', 'region_name',
+        'country_code', 'country_name', 'latitude', 'longitude',
+        'image_url', 'is_recommended', 'is_adults_only', 'rating', 'rating_count',
+        'sync_status', 'last_synced_at', 'created_at', 'updated_at',
+    ];
+
     private const STATUS_ACTIVE = 'active';
     private const STATUS_INACTIVE = 'inactive';
     private const STATUS_ERROR = 'error';
@@ -26,11 +35,14 @@ class HotelRepository
     private const VALID_STATUSES = [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_ERROR];
 
     /**
-     * Get LISTING_COLUMNS prefixed with a table alias.
+     * Get listing columns prefixed with a table alias.
      */
     private function aliasedListingColumns(string $alias = 'h'): string
     {
-        return preg_replace('/\b(\w+)\b/', $alias . '.$1', self::LISTING_COLUMNS);
+        return implode(', ', array_map(
+            static fn(string $col): string => $alias . '.' . $col,
+            self::LISTING_COLUMN_NAMES
+        ));
     }
 
     /**

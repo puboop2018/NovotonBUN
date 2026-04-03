@@ -32,7 +32,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
  * Mode: compare
  * Run price comparison
  */
-if ($mode == 'compare') {
+if ($mode === 'compare') {
     header('Content-Type: text/html; charset=utf-8');
 
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
@@ -982,7 +982,7 @@ if ($mode == 'compare') {
  * Mode: verify (deprecated - redirects to compare mode)
  * All verify functionality has been merged into compare mode as collapsible sections.
  */
-if ($mode == 'verify') {
+if ($mode === 'verify') {
     $url = fn_url('novoton_price_compare.compare');
     foreach (['hotel_id', 'package_name', 'room_id', 'board_id', 'check_in', 'nights'] as $param) {
         if (isset($_REQUEST[$param])) {
@@ -997,7 +997,7 @@ if ($mode == 'verify') {
  * Mode: get_packages (AJAX)
  * Return packages for a hotel as JSON
  */
-if ($mode == 'get_packages') {
+if ($mode === 'get_packages') {
     header('Content-Type: application/json; charset=utf-8');
 
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
@@ -1022,7 +1022,7 @@ if ($mode == 'get_packages') {
  * Mode: get_rooms (AJAX)
  * Return IdRoom values from hotelinfo for a hotel as JSON
  */
-if ($mode == 'get_rooms') {
+if ($mode === 'get_rooms') {
     header('Content-Type: application/json; charset=utf-8');
 
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
@@ -1076,7 +1076,7 @@ if ($mode == 'get_rooms') {
 /**
  * Default mode: Show comparison form
  */
-if (empty($mode) || $mode == 'manage') {
+if (empty($mode) || $mode === 'manage') {
     // Get list of hotels with packages
     $hotels = db_get_array(
         "SELECT DISTINCT h.hotel_id, h.hotel_name

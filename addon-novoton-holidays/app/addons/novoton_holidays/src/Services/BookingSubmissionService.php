@@ -31,9 +31,9 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
 class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
-    private BookingRepositoryInterface $bookingRepo;
-    private NovotonApiInterface $api;
-    private GuestDataNormalizer $guestDataNormalizer;
+    private readonly BookingRepositoryInterface $bookingRepo;
+    private readonly NovotonApiInterface $api;
+    private readonly GuestDataNormalizer $guestDataNormalizer;
 
     public function __construct(BookingRepositoryInterface $bookingRepo, NovotonApiInterface $api, ?GuestDataNormalizer $guestDataNormalizer = null)
     {

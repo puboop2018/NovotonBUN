@@ -36,7 +36,7 @@ $hotels_delegate = [
 ];
 
 // Hotels: add_hotels_as_products with &run= streams output and calls exit()
-if ($mode == 'add_hotels_as_products' && isset($_REQUEST['run'])) {
+if ($mode === 'add_hotels_as_products' && isset($_REQUEST['run'])) {
     $result = include __DIR__ . '/novoton_hotels.php';
     if (is_array($result)) { return $result; }
     // The run branch calls exit(), so we never reach here
@@ -86,7 +86,7 @@ foreach ($include_map as $entry) {
 // ============================================================================
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($mode == 'save_excluded_resorts') {
+    if ($mode === 'save_excluded_resorts') {
         if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
             return [CONTROLLER_STATUS_DENIED];
         }
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /**
  * Mode: fix_tab
  */
-if ($mode == 'fix_tab') {
+if ($mode === 'fix_tab') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -140,7 +140,7 @@ if ($mode == 'fix_tab') {
 /**
  * Mode: recompute_calendar_prices
  */
-if ($mode == 'recompute_calendar_prices') {
+if ($mode === 'recompute_calendar_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -182,7 +182,7 @@ if ($mode == 'recompute_calendar_prices') {
 /**
  * Mode: add_hotels_as_products (form display only; run branch delegated above)
  */
-if ($mode == 'add_hotels_as_products') {
+if ($mode === 'add_hotels_as_products') {
     try {
         $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
@@ -239,7 +239,7 @@ if ($mode == 'add_hotels_as_products') {
 /**
  * Mode: view_hotels_to_add
  */
-if ($mode == 'view_hotels_to_add') {
+if ($mode === 'view_hotels_to_add') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -249,7 +249,7 @@ if ($mode == 'view_hotels_to_add') {
 
     $hotelRepo = Container::getInstance()->hotelRepository();
 
-    if ($filter == 'packages') {
+    if ($filter === 'packages') {
         $hotels = db_get_array(
             "SELECT h.*, p.product_id as existing_product
              FROM ?:novoton_hotels h
@@ -299,7 +299,7 @@ if ($mode == 'view_hotels_to_add') {
 /**
  * Mode: list_facilities
  */
-if ($mode == 'list_facilities') {
+if ($mode === 'list_facilities') {
     $facilities = db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
     $count = count($facilities);
     $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
@@ -341,7 +341,7 @@ if ($mode == 'list_facilities') {
 /**
  * Mode: room_price
  */
-if ($mode == 'room_price') {
+if ($mode === 'room_price') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -385,7 +385,7 @@ if ($mode == 'room_price') {
 /**
  * Mode: test_hotel_request
  */
-if ($mode == 'test_hotel_request') {
+if ($mode === 'test_hotel_request') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
     Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
@@ -421,7 +421,7 @@ if ($mode == 'test_hotel_request') {
 /**
  * Mode: test_alternative_rs
  */
-if ($mode == 'test_alternative_rs') {
+if ($mode === 'test_alternative_rs') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
     $id_num = $_REQUEST['id_num'] ?? '';
     $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
@@ -463,7 +463,7 @@ if ($mode == 'test_alternative_rs') {
  * Mode: manage (default)
  * Dashboard with statistics and quick actions
  */
-if ($mode == 'manage' || empty($mode)) {
+if ($mode === 'manage' || empty($mode)) {
     $hotelRepo = Container::getInstance()->hotelRepository();
     $bookingRepo = Container::getInstance()->bookingRepository();
     $syncLogRepo = Container::getInstance()->syncLogRepository();
@@ -557,7 +557,7 @@ if ($mode == 'manage' || empty($mode)) {
 /**
  * Mode: hotels
  */
-if ($mode == 'hotels') {
+if ($mode === 'hotels') {
     $hotelRepo = Container::getInstance()->hotelRepository();
 
     $filters = [];
@@ -591,7 +591,7 @@ if ($mode == 'hotels') {
 /**
  * Mode: view_hotel
  */
-if ($mode == 'view_hotel') {
+if ($mode === 'view_hotel') {
     $hotel_id = $_REQUEST['hotel_id'] ?? '';
 
     if (empty($hotel_id)) {

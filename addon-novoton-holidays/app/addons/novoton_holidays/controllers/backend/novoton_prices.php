@@ -30,7 +30,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Mode: update_prices
  * Update product prices from Novoton API
  */
-if ($mode == 'update_prices') {
+if ($mode === 'update_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -89,7 +89,7 @@ if ($mode == 'update_prices') {
             $failed++;
         }
         
-        if ($updated > 0 && $updated % 10 == 0) {
+        if ($updated > 0 && $updated % 10 === 0) {
             flush();
         }
     }
@@ -111,7 +111,7 @@ if ($mode == 'update_prices') {
  * Queries room_price per resort (M API calls where M << N individual hotel
  * calls). Extracts <IdHotel> values via xpath on the parsed XML response.
  */
-if ($mode == 'check_prices') {
+if ($mode === 'check_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -381,7 +381,7 @@ if ($mode == 'check_prices') {
  * Slower (N API calls instead of M calls where M << N), but more accurate.
  * Use this to compare with resort-based results and identify discrepancies.
  */
-if ($mode == 'check_prices_hotel') {
+if ($mode === 'check_prices_hotel') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -499,7 +499,7 @@ if ($mode == 'check_prices_hotel') {
             $city = htmlspecialchars($hotel['city'] ?: '(no city)');
 
             // Progress indicator every 50 hotels
-            if ($hotel_num % 50 == 0 || $hotel_num == 1) {
+            if ($hotel_num % 50 === 0 || $hotel_num === 1) {
                 $elapsed = round(microtime(true) - $start_time, 1);
                 echo "<div class='progress'>[{$hotel_num}/{$total_hotels}] Elapsed: {$elapsed}s | With prices: {$with_prices} | No prices: {$no_prices}</div>\n";
                 flush();
@@ -545,14 +545,14 @@ if ($mode == 'check_prices_hotel') {
                     $no_prices++;
                     if ($no_prices <= 20) {
                         echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - invalid API response</span><br>\n";
-                    } elseif ($no_prices == 21) {
+                    } elseif ($no_prices === 21) {
                         echo "<span class='skip'>... (more hotels without prices)</span><br>\n";
                     }
                 } else {
                     $no_prices++;
                     if ($no_prices <= 20) {
                         echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - no prices</span><br>\n";
-                    } elseif ($no_prices == 21) {
+                    } elseif ($no_prices === 21) {
                         echo "<span class='skip'>... (more hotels without prices)</span><br>\n";
                     }
                 }
@@ -563,7 +563,7 @@ if ($mode == 'check_prices_hotel') {
             }
 
             // Flush periodically
-            if ($hotel_num % 10 == 0) {
+            if ($hotel_num % 10 === 0) {
                 flush();
             }
         }
@@ -608,7 +608,7 @@ if ($mode == 'check_prices_hotel') {
  * Mode: room_price
  * Check room prices for specific hotel
  */
-if ($mode == 'room_price') {
+if ($mode === 'room_price') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -649,7 +649,7 @@ if ($mode == 'room_price') {
  * Mode: download_active_prices_csv
  * Download CSV with hotels that have active prices
  */
-if ($mode == 'download_active_prices_csv') {
+if ($mode === 'download_active_prices_csv') {
     if (!fn_check_permissions('manage_catalog', 'view', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -687,7 +687,7 @@ if ($mode == 'download_active_prices_csv') {
  * Mode: cron_offers_update
  * Cron job to update offers/prices
  */
-if ($mode == 'cron_offers_update') {
+if ($mode === 'cron_offers_update') {
     // Verify access key
     $access_key = $_REQUEST['access_key'] ?? '';
     $expected_key = ConfigProvider::getCronAccessKey();

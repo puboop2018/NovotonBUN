@@ -18,85 +18,16 @@ require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Cron\CronRunner;
 
-// Authenticate
-$storedKey = ConfigProvider::getCronAccessKey();
+[$accessKey, $mode, $params] = CronRunner::parseArgs();
+CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Novoton Holidays');
+$mode = CronRunner::sanitizeMode($mode);
 
-$providedKey = $_GET['access_key'] ?? '';
-$mode = $_GET['mode'] ?? '';
+$api = _nvt_api();
+$dispatcher = new CronDispatcher($api, null);
 
-// Parse CLI arguments (key=value format, position-independent)
-if (isset($argv) && is_array($argv)) {
-    foreach ($argv as $i => $arg) {
-        if ($i === 0) continue; // skip script name
-        if (str_starts_with($arg, 'access_key=')) {
-            $providedKey = substr($arg, strlen('access_key='));
-        } elseif (str_starts_with($arg, 'mode=')) {
-            $mode = substr($arg, strlen('mode='));
-        }
-    }
-}
-
-if (empty($storedKey)) {
-    exit("ERROR: Cron Access Key not set in addon settings.\n");
-}
-if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
-    exit("ERROR: Invalid or missing API key.\n");
-}
-if (empty($mode)) {
-    $mode = 'full';
-}
-
-// Sanitize mode to prevent XSS when echoed
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
-
-echo "[" . date('Y-m-d H:i:s') . "] Novoton Cron Started - Mode: {$mode}\n";
-
-fn_log_event('novoton_holidays', 'cron_start', [
-    'timestamp' => time(),
-    'mode' => $mode,
-    'message' => 'Cron job started'
-]);
-
-// Classes are auto-loaded via PSR-4 autoloader registered in init.php
-
-try {
-    $api = _nvt_api();
-    $dispatcher = new CronDispatcher($api, null);
-
-    if (!$dispatcher->hasMode($mode)) {
-        echo "Unknown mode: {$mode}\n\n";
-        echo "Available modes:\n";
-        foreach (CronDispatcher::getAvailableModes() as $m => $desc) {
-            echo "  {$m} - {$desc}\n";
-        }
-        exit(1);
-    }
-
-    // Parse CLI params
-    $params = [];
-    if (isset($argv)) {
-        foreach ($argv as $arg) {
-            if (str_contains($arg, '=') && !str_starts_with($arg, 'access_key') && !str_starts_with($arg, 'mode')) {
-                [$k, $v] = explode('=', $arg, 2);
-                $params[$k] = $v;
-            }
-        }
-    }
-
-    $result = $dispatcher->dispatch($mode, $params);
-
-    echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
-
-} catch (\Exception $e) {
-    echo "ERROR: " . $e->getMessage() . "\n";
-
-    fn_log_event('novoton_holidays', 'cron_error', [
-        'timestamp' => time(),
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
-    ]);
-
+$onError = function (\Exception $e): void {
     $companyData = fn_get_company_data(0);
     $adminEmail = $companyData['company_users_department'] ?? '';
     if (!empty($adminEmail)) {
@@ -105,6 +36,7 @@ try {
             'time' => date('Y-m-d H:i:s'),
         ], 'Cron error notification');
     }
+};
 
-    exit(1);
-}
+$runner = new CronRunner('Novoton', $dispatcher, 'full', $onError);
+$runner->run($mode, $params);

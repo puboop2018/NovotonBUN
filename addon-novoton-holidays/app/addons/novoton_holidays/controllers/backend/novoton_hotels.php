@@ -41,7 +41,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Mode: add_hotels_as_products
  * Import hotels as CS-Cart products (run branch only — form display is in main controller)
  */
-if ($mode == 'add_hotels_as_products') {
+if ($mode === 'add_hotels_as_products') {
     // Permission check handled by schema in admin.post.php
     // NOTE: Form display (no &run) is handled by novoton_holidays.php main controller.
     // This sub-controller is only included when &run is set (import execution).
@@ -68,7 +68,7 @@ if ($mode == 'add_hotels_as_products') {
         $condition = "country = ?s AND has_room_price = 'Y'";
         $params = [$country];
         
-        if ($import_mode == 'new_only') {
+        if ($import_mode === 'new_only') {
             $condition .= " AND (product_id IS NULL OR product_id = 0)";
         }
         
@@ -99,7 +99,7 @@ if ($mode == 'add_hotels_as_products') {
             $hotel_name = htmlspecialchars($hotel['hotel_name']);
 
             // Skip if already has product and mode is new_only
-            if ($import_mode == 'new_only' && !empty($hotel['product_id'])) {
+            if ($import_mode === 'new_only' && !empty($hotel['product_id'])) {
                 echo "<span class='skip'>↷ Skipped (has product): {$hotel_name}</span><br>\n";
                 $skipped++;
                 continue;
@@ -146,7 +146,7 @@ if ($mode == 'add_hotels_as_products') {
                     $product_data['product'][$lang_code] = $title;
                 }
                 
-                if (!empty($hotel['product_id']) && $import_mode == 'update') {
+                if (!empty($hotel['product_id']) && $import_mode === 'update') {
                     // Update existing
                     fn_update_product($product_data, $hotel['product_id'], $selected_languages[0] ?? 'en');
                     $updated++;
@@ -178,7 +178,7 @@ if ($mode == 'add_hotels_as_products') {
                 echo "<span class='error'>✗ Error: {$hotel_name} - " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
             }
             
-            if (($added + $updated) > 0 && ($added + $updated) % 10 == 0) {
+            if (($added + $updated) > 0 && ($added + $updated) % 10 === 0) {
                 flush();
             }
         }
@@ -201,7 +201,7 @@ if ($mode == 'add_hotels_as_products') {
  * Mode: sync_facilities
  * Sync facilities from API
  */
-if ($mode == 'sync_facilities') {
+if ($mode === 'sync_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -221,7 +221,7 @@ if ($mode == 'sync_facilities') {
  * Mode: sync_hotel_facilities
  * Populate novoton_hotel_facilities junction table by calling the API for each hotel
  */
-if ($mode == 'sync_hotel_facilities') {
+if ($mode === 'sync_hotel_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -248,7 +248,7 @@ if ($mode == 'sync_hotel_facilities') {
  * Mode: save_facilities
  * Save facility feature type mappings and Romanian translations from admin form
  */
-if ($mode == 'save_facilities') {
+if ($mode === 'save_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -296,7 +296,7 @@ if ($mode == 'save_facilities') {
  * Mode: check_packages
  * Check hotel packages from API (hotelinfo) for all countries
  */
-if ($mode == 'check_packages') {
+if ($mode === 'check_packages') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
@@ -425,7 +425,7 @@ if ($mode == 'check_packages') {
                     echo "<span class='error'>&cross; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
                 }
 
-                if ($grand_total % 25 == 0) {
+                if ($grand_total % 25 === 0) {
                     echo "<div class='progress'>Progress: {$grand_total} hotels checked ({$with_packages} with packages)...</div>\n";
                     flush();
                 }

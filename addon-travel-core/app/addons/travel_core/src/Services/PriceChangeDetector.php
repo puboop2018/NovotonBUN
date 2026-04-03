@@ -23,7 +23,7 @@ class PriceChangeDetector
     private const SESSION_KEY = 'travel_price_change_alerts';
 
     /** @var float Custom tolerance, or 0 for default */
-    private float $tolerancePercent;
+    private readonly float $tolerancePercent;
 
     public function __construct(float $tolerancePercent = 0.0)
     {

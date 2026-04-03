@@ -49,4 +49,27 @@ interface BookingAdminProviderInterface
      * @return string|null URL, or null if no provider-specific view exists
      */
     public function getProviderViewUrl(string $providerBookingId): ?string;
+
+    /**
+     * Handle a provider-specific POST action from the unified booking UI.
+     *
+     * The unified controller delegates unknown POST modes to the provider's
+     * handleAction() method. Returns a redirect target or result array.
+     *
+     * @param string $action  The action name (e.g. 'request_alternatives', 'cleanup_orphans')
+     * @param array  $request The $_REQUEST data
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
+     */
+    public function handleAction(string $action, array $request): array;
+
+    /**
+     * Get provider-specific tab definitions for the unified booking view.
+     *
+     * Returns tab descriptors that the unified UI renders alongside the
+     * standard booking detail tabs (e.g. Novoton alternatives, order tab).
+     *
+     * @param array $booking The full booking row (with provider_display enrichment)
+     * @return array<int, array{name: string, label: string, dispatch: string, ajax: bool}>
+     */
+    public function getProviderTabs(array $booking): array;
 }

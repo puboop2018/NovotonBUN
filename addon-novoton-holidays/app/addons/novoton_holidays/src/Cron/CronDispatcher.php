@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
+use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+
 /**
  * Cron Command Dispatcher
  *
@@ -13,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron;
  * @package NovotonHolidays
  * @since 3.3.0
  */
-class CronDispatcher
+class CronDispatcher implements CronDispatcherInterface
 {
     /** @var array<string, class-string<AbstractCronCommand>> mode => command class */
     private static array $commandMap = [];
