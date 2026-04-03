@@ -135,8 +135,15 @@ class BookingService implements BookingServiceInterface
             'status' => TravelConstants::STATUS_PENDING,
         ];
 
-        // Check for duplicate booking
-        $existing_id = $this->findDuplicateBooking($booking_record);
+        // Check for duplicate booking (delegate to repository)
+        $existing = $this->bookingRepo->findExisting(
+            $booking_record['hotel_id'],
+            $booking_record['check_in'],
+            $booking_record['check_out'],
+            $booking_record['holder_name'],
+            1 // hours
+        );
+        $existing_id = $existing ? (int) $existing['booking_id'] : null;
 
         if ($existing_id) {
             // Update existing (routes through repository → syncs to travel_bookings)
@@ -281,32 +288,6 @@ class BookingService implements BookingServiceInterface
     public function calculateNights(string $check_in, string $check_out): int
     {
         return CartAssemblyService::calculateNights($check_in, $check_out);
-    }
-    
-    /**
-     * Find duplicate pending booking
-     * 
-     * @param array $booking_record Booking data
-     * @return int|null Existing booking ID or null
-     */
-    private function findDuplicateBooking(array $booking_record): ?int
-    {
-        $existing = db_get_field(
-            "SELECT booking_id FROM ?:novoton_bookings 
-             WHERE order_id = 0 
-             AND hotel_id = ?s 
-             AND check_in = ?s 
-             AND check_out = ?s 
-             AND holder_name = ?s
-             AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-             LIMIT 1",
-            $booking_record['hotel_id'],
-            $booking_record['check_in'],
-            $booking_record['check_out'],
-            $booking_record['holder_name']
-        );
-        
-        return $existing ? (int) $existing : null;
     }
     
     /**
