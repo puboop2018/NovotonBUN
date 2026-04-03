@@ -78,7 +78,7 @@ class TermsFormatter
             $tillDate = $term['till_date'] ?? '';
             $isLast = ($idx === count($terms) - 1);
 
-            if ($value === 'FREE' || $value == 0) {
+            if ($value === 'FREE' || (float) $value === 0.0) {
                 if (!empty($tillDate)) {
                     $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => self::formatDate($tillDate)]);
                 } else {

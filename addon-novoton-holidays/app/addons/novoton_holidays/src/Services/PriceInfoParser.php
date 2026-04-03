@@ -381,7 +381,7 @@ class PriceInfoParser
                     'bed_type' => 'REGULAR',
                     'age_type' => $ordinal . ' CHD ' . $ageBand,
                     'acc_type' => 'REGULAR',
-                    'by_1_ad' => ($adults == 1)
+                    'by_1_ad' => ($adults === 1)
                 ];
                 $rbUsed++;
             } else {
@@ -392,7 +392,7 @@ class PriceInfoParser
                     'bed_type' => 'EXTRA BED',
                     'age_type' => $ordinal . ' CHD ' . $ageBand,
                     'acc_type' => 'EXTRA BED',
-                    'by_1_ad' => ($adults == 1)
+                    'by_1_ad' => ($adults === 1)
                 ];
                 $ebUsed++;
             }

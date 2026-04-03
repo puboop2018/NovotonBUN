@@ -393,7 +393,7 @@ class DiscountCalculator
             $minStay = (int) ($entry['MinimumStay'] ?? 0);
             $type = PriceInfoFormatter::toScalar($entry['Type'] ?? '');
 
-            if ($perc == 0) {
+            if ($perc === 0.0) {
                 continue;
             }
 

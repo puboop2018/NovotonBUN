@@ -21,6 +21,7 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
@@ -157,7 +158,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 $hotelId, $hotelName, $checkIn, $checkOut, $nights,
                 $adults, $children, $numRooms,
                 $contactEmail, $contactPhone, $notes,
-                'pending',
+                TravelConstants::STATUS_PENDING,
                 $apiResult['xml_sent'] ?? '',
                 $apiResult['xml_response'] ?? '',
                 $apiResult['id_num'] ?? ''

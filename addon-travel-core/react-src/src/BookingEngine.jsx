@@ -64,7 +64,7 @@ export default function BookingEngine({ config }) {
         }
 
         const ages = initialChildrenAges
-            ? initialChildrenAges.split(',').map(a => parseInt(a.trim()))
+            ? initialChildrenAges.split(',').map(a => parseInt(a.trim(), 10))
             : [];
         const roomArr = [];
         const roomCount = Math.max(1, initialRooms);

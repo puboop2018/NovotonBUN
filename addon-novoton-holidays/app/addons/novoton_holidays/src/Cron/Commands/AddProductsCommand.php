@@ -163,7 +163,7 @@ class AddProductsCommand extends AbstractCronCommand
                             $count = 0;
                             foreach ($images->url as $url) {
                                 $image_url = $image_base_url . str_replace(' ', '%20', (string) $url);
-                                fn_novoton_holidays_add_product_image($product_id, $image_url, $count == 0);
+                                fn_novoton_holidays_add_product_image($product_id, $image_url, $count === 0);
                                 if (++$count >= 10) break;
                             }
                         }
