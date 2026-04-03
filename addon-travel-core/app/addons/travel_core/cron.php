@@ -21,34 +21,17 @@ if (!defined('AREA')) {
 require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Cron\CronRunner;
 
-// --- Parse arguments (CLI key=value or HTTP GET) ---
-$providedKey = $_GET['access_key'] ?? '';
-$mode = $_GET['mode'] ?? '';
-
-if (isset($argv) && is_array($argv)) {
-    foreach ($argv as $i => $arg) {
-        if ($i === 0) continue;
-        if (str_starts_with($arg, 'access_key=')) {
-            $providedKey = substr($arg, strlen('access_key='));
-        } elseif (str_starts_with($arg, 'mode=')) {
-            $mode = substr($arg, strlen('mode='));
-        }
-    }
-}
-
-// --- Authenticate ---
-$storedKey = Registry::get('addons.travel_core.cron_access_key');
-
-if (empty($storedKey)) {
-    exit("ERROR: Cron access key not set in Travel Core addon settings.\n");
-}
-if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
-    exit("ERROR: Invalid or missing access key.\n");
-}
+[$accessKey, $mode, $params] = CronRunner::parseArgs();
+CronRunner::authenticate(
+    Registry::get('addons.travel_core.cron_access_key'),
+    $accessKey,
+    'Travel Core'
+);
+$mode = CronRunner::sanitizeMode($mode);
 
 // --- Validate mode ---
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
 $supported_modes = ['exchange_rates'];
 
 if (empty($mode) || !in_array($mode, $supported_modes, true)) {
