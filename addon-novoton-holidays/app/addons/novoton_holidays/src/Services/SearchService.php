@@ -19,14 +19,11 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class SearchService implements SearchServiceInterface
 {
-    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
-    private $api;
-    
-    /** @var CacheServiceInterface */
-    private $cache;
-    
-    /** @var bool */
-    private $debug = false;
+    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+
+    private CacheServiceInterface $cache;
+
+    private bool $debug = false;
     
     /**
      * Constructor

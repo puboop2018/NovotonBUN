@@ -16,13 +16,11 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 class PriceInfoCalculator
 {
-    /** @var float Commission percentage */
-    private $commission;
+    private float $commission;
 
-    /** @var PriceInfoParser */
-    private $parser;
+    private PriceInfoParser $parser;
 
-    /** @var callable|null Logger function */
+    /** @var callable|null */
     private $logger;
 
     public function __construct(PriceInfoParser $parser, float $commission, ?callable $logger = null)

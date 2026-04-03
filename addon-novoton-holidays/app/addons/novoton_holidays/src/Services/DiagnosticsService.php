@@ -16,14 +16,14 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 
 class DiagnosticsService implements DiagnosticsServiceInterface
 {
-    /** @var NovotonApi|null */
-    private $api;
+    private ?NovotonApi $api;
 
-    /** @var array */
-    private $settings;
+    private array $settings;
 
     public function __construct(?NovotonApi $api = null)
     {
@@ -305,9 +305,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
         try {
             $result = fn_novoton_holidays_sync_facilities_list();
 
-            $facilities = db_get_array(
-                "SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en LIMIT 50"
-            );
+            $facilities = array_slice((new FacilityRepository())->findAll(), 0, 50);
 
             return [
                 'success' => !empty($result['success']),
@@ -385,9 +383,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $hotelData = json_decode(json_encode($hotelInfo), true);
 
             // Get DB packages
-            $packagesDb = db_get_array(
-                "SELECT package_name, has_early_booking, min_price, synced_at
-                 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $packagesDb = (new HotelPackageRepository())->findByHotelId(
                 $hotelId
             );
 

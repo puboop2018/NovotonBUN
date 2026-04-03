@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 
 class CacheService implements CacheServiceInterface
 {
@@ -22,17 +24,19 @@ class CacheService implements CacheServiceInterface
     private int $default_ttl = 300;
     private static array $memory_cache = [];
     private bool $debug = false;
-    
+    private CacheRepositoryInterface $cacheRepo;
+
     /**
      * Constructor
-     * 
+     *
      * @param string $storage Storage type ('file' or 'database')
      */
-    public function __construct(string $storage = 'file')
+    public function __construct(string $storage = 'file', ?CacheRepositoryInterface $cacheRepo = null)
     {
         $this->storage = $storage;
         $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
         $this->debug = ConfigProvider::isDebugLogging();
+        $this->cacheRepo = $cacheRepo ?? new CacheRepository();
         
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {
@@ -411,15 +415,12 @@ class CacheService implements CacheServiceInterface
      */
     private function getFromDatabase(string $key)
     {
-        $row = db_get_row(
-            "SELECT cache_data, expires_at FROM ?:novoton_cache WHERE cache_key = ?s",
-            $key
-        );
-        
+        $row = $this->cacheRepo->findByKey($key);
+
         if (!$row) {
             return null;
         }
-        
+
         // Check expiration (expires_at is INT UNSIGNED unix timestamp)
         if ((int) $row['expires_at'] < time()) {
             $this->deleteFromDatabase($key);
@@ -438,7 +439,7 @@ class CacheService implements CacheServiceInterface
             'data' => $data,
             'expires' => (int) $row['expires_at']
         ];
-        
+
         return $data;
     }
     
@@ -452,19 +453,8 @@ class CacheService implements CacheServiceInterface
      */
     private function setToDatabase(string $key, $value, int $expires): bool
     {
-        $data = [
-            'cache_key' => $key,
-            'cache_data' => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            'expires_at' => $expires,
-            'created_at' => time()
-        ];
-        
-        // Use REPLACE to handle both insert and update
-        db_query(
-            "REPLACE INTO ?:novoton_cache SET ?u",
-            $data
-        );
-        
+        $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->cacheRepo->upsert($key, $encoded ?: '', $expires);
         return true;
     }
     
@@ -476,7 +466,7 @@ class CacheService implements CacheServiceInterface
      */
     private function deleteFromDatabase(string $key): bool
     {
-        db_query("DELETE FROM ?:novoton_cache WHERE cache_key = ?s", $key);
+        $this->cacheRepo->deleteByKey($key);
         return true;
     }
     
@@ -488,14 +478,7 @@ class CacheService implements CacheServiceInterface
      */
     private function clearDatabaseCache(?string $prefix = null): int
     {
-        if ($prefix === null) {
-            $result = db_query("DELETE FROM ?:novoton_cache");
-        } else {
-            $result = db_query(
-                "DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l",
-                $prefix . '%'
-            );
-        }
+        $result = $this->cacheRepo->deleteAll($prefix);
         
         return $result;
     }
@@ -545,8 +528,7 @@ class CacheService implements CacheServiceInterface
             }
         } else {
             // Clean expired database cache
-            $count = db_query(
-                "DELETE FROM ?:novoton_cache WHERE expires_at < ?i", time()
+            $count = $this->cacheRepo->deleteExpired(
             );
         }
         
@@ -572,12 +554,8 @@ class CacheService implements CacheServiceInterface
             $stats['persistent_items'] = count($files);
             $stats['total_size'] = !empty($files) ? array_sum(array_map('filesize', $files)) : 0;
         } else {
-            $stats['persistent_items'] = db_get_field(
-                "SELECT COUNT(*) FROM ?:novoton_cache"
-            );
-            $stats['expired_items'] = db_get_field(
-                "SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < ?i", time()
-            );
+            $stats['persistent_items'] = $this->cacheRepo->countAll();
+            $stats['expired_items'] = $this->cacheRepo->countExpired();
         }
         
         return $stats;

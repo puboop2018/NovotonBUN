@@ -7,6 +7,7 @@ interface AlternativeRequestRepositoryInterface
 {
     public function findById(int $request_id): ?array;
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array;
+    public function findPendingWithApiRef(): array;
     public function findUnnotified(int $limit = 20): array;
     public function update(int $request_id, array $data): bool;
     public function markAlternativesFound(int $request_id, string $alternatives_json): bool;

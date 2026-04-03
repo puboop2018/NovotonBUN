@@ -33,4 +33,7 @@ interface HotelRepositoryInterface
     public function findByCountryForListing(string $country): array;
     public function getLatestPriceinfoData(string $hotel_id): ?string;
     public function getLatestPackageSyncedAt(string $hotel_id): ?string;
+    public function getCalendarPricesRaw(string $hotel_id): ?string;
+    public function setCalendarPricesRaw(string $hotel_id, ?string $json): void;
+    public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array;
 }

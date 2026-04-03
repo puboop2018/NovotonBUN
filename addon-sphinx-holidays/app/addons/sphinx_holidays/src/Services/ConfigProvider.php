@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
 use Tygh\Registry;
 
 /**
@@ -177,14 +178,7 @@ class ConfigProvider implements ConfigProviderInterface
     {
         self::migrateFromLegacySetting();
 
-        $whitelistCodes = db_get_fields(
-            "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
-             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-             WHERE d.country_code != ''
-             ORDER BY d.country_code"
-        );
-
-        return !empty($whitelistCodes) ? $whitelistCodes : [];
+        return (new DestinationWhitelistRepository())->getCountryCodes();
     }
 
     /**
@@ -230,7 +224,7 @@ class ConfigProvider implements ConfigProviderInterface
 
         self::migrateFromLegacySetting();
 
-        $whitelistEntries = db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
+        $whitelistEntries = (new DestinationWhitelistRepository())->findAll();
         if (!empty($whitelistEntries)) {
             $cached = self::resolveWhitelistEntries($whitelistEntries);
         } else {
@@ -267,20 +261,14 @@ class ConfigProvider implements ConfigProviderInterface
 
         // Batch-fetch country codes for all "all" entries (1 query instead of N)
         if (!empty($countryLookupIds)) {
-            $destToCountry = db_get_hash_single_array(
-                "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)",
-                ['destination_id', 'country_code'],
-                $countryLookupIds
-            );
+            $wlRepo = new DestinationWhitelistRepository();
+            $destToCountry = $wlRepo->getCountryCodesForDestinations($countryLookupIds);
 
             $countryCodes = array_unique(array_filter(array_values($destToCountry)));
             if (!empty($countryCodes)) {
                 // Batch-fetch all child destinations for these countries (1 query instead of N)
-                $childIds = db_get_fields(
-                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN (?a)",
-                    $countryCodes
-                );
-                $allIds = array_merge($allIds, array_map('intval', $childIds));
+                $childIds = $wlRepo->getDestinationIdsByCountry($countryCodes);
+                $allIds = array_merge($allIds, $childIds);
             }
         }
 
@@ -300,8 +288,9 @@ class ConfigProvider implements ConfigProviderInterface
         }
         $migrated = true;
 
-        $count = (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_destination_whitelist");
-        if ($count > 0) {
+        $wlRepo = new DestinationWhitelistRepository();
+
+        if ($wlRepo->count() > 0) {
             return; // Whitelist already has data, no migration needed
         }
 
@@ -313,17 +302,10 @@ class ConfigProvider implements ConfigProviderInterface
 
         foreach ($tokens as $token) {
             if (strlen($token) === 2 && ctype_alpha($token)) {
-                // Country code — find the country destination and add with selection_type='all'
                 $countryCode = strtoupper($token);
-                $countryDestId = (int) db_get_field(
-                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
-                    $countryCode
-                );
-                if ($countryDestId > 0) {
-                    db_query(
-                        "INSERT IGNORE INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, 'all')",
-                        $countryDestId
-                    );
+                $countryDestId = $wlRepo->findCountryDestination($countryCode);
+                if ($countryDestId !== null && $countryDestId > 0) {
+                    $wlRepo->insertIgnore($countryDestId);
                 }
             }
         }

@@ -20,35 +20,25 @@ use Tygh\Tygh;
 
 class BookingService implements BookingServiceInterface
 {
-    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
-    private $api;
+    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
 
-    /** @var \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface */
-    private $guestService;
+    private \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService;
 
-    /** @var RoomPriceServiceInterface */
-    private $priceService;
+    private RoomPriceServiceInterface $priceService;
 
-    /** @var BookingRepositoryInterface */
-    private $bookingRepo;
+    private BookingRepositoryInterface $bookingRepo;
 
-    /** @var HotelRepositoryInterface */
-    private $hotelRepo;
+    private HotelRepositoryInterface $hotelRepo;
 
-    /** @var GuestDataNormalizer */
-    private $guestDataNormalizer;
+    private GuestDataNormalizer $guestDataNormalizer;
 
-    /** @var CartAssemblyService */
-    private $cartAssembly;
+    private CartAssemblyService $cartAssembly;
 
-    /** @var RoomsDataParser */
-    private $roomsParser;
+    private RoomsDataParser $roomsParser;
 
-    /** @var PriceVerificationService */
-    private $priceVerifier;
+    private PriceVerificationService $priceVerifier;
 
-    /** @var bool */
-    private $debug = false;
+    private bool $debug = false;
 
     /**
      * Constructor — all dependencies must be injected explicitly.

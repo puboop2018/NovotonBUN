@@ -421,4 +421,39 @@ class HotelRepository implements HotelRepositoryInterface
 
         return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
     }
+
+    public function getCalendarPricesRaw(string $hotel_id): ?string
+    {
+        $val = @db_get_field(
+            "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotel_id
+        );
+        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
+    }
+
+    public function setCalendarPricesRaw(string $hotel_id, ?string $json): void
+    {
+        if ($json !== null) {
+            db_query(
+                "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
+                $json, $hotel_id
+            );
+        } else {
+            db_query(
+                "UPDATE ?:novoton_hotels SET calendar_prices_raw = NULL WHERE hotel_id = ?s",
+                $hotel_id
+            );
+        }
+    }
+
+    public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
+    {
+        return db_get_array(
+            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
+             WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i DAY))
+             LIMIT ?i",
+            $daysStale,
+            $limit
+        );
+    }
 }

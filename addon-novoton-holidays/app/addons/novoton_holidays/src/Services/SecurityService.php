@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -22,6 +24,13 @@ class SecurityService implements SecurityServiceInterface
 {
     /** @var int Rate limit window in seconds */
     private const RATE_LIMIT_WINDOW = 60;
+
+    private CacheRepositoryInterface $cacheRepo;
+
+    public function __construct(?CacheRepositoryInterface $cacheRepo = null)
+    {
+        $this->cacheRepo = $cacheRepo ?? new CacheRepository();
+    }
     
     /**
      * Validate booking data
@@ -476,29 +485,25 @@ class SecurityService implements SecurityServiceInterface
      */
     private function getRateLimitData(string $key): array
     {
-        $data = db_get_field(
-            "SELECT cache_data FROM ?:novoton_cache WHERE cache_key = ?s AND expires_at > NOW()",
-            $key
-        );
-        
-        if ($data) {
-            $decoded = json_decode($data, true);
+        $row = $this->cacheRepo->findByKey($key);
+
+        if ($row && (int) $row['expires_at'] > time()) {
+            $decoded = json_decode($row['cache_data'], true);
             return is_array($decoded) ? $decoded : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
         }
-        
+
         return ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
     }
-    
+
     /**
      * Set rate limit data in cache
      */
     private function setRateLimitData(string $key, array $data): void
     {
-        db_query(
-            "REPLACE INTO ?:novoton_cache SET cache_key = ?s, cache_data = ?s, expires_at = ?s, created_at = NOW()",
+        $this->cacheRepo->upsert(
             $key,
-            json_encode($data, JSON_UNESCAPED_UNICODE),
-            date('Y-m-d H:i:s', $data['reset'] + 60)
+            json_encode($data, JSON_UNESCAPED_UNICODE) ?: '',
+            $data['reset'] + 60
         );
     }
     

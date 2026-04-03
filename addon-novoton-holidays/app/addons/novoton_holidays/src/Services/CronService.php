@@ -15,19 +15,25 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
+use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
 class CronService implements CronServiceInterface
 {
-    private $api;
+    private NovotonApi $api;
     private readonly BookingRepositoryInterface $bookingRepo;
-    private $countries;
-    private $output = [];
+    private readonly AlternativeRequestRepositoryInterface $altRequestRepo;
+    private array $countries;
+    private array $output = [];
 
-    public function __construct(?BookingRepositoryInterface $bookingRepo = null)
-    {
+    public function __construct(
+        ?BookingRepositoryInterface $bookingRepo = null,
+        ?AlternativeRequestRepositoryInterface $altRequestRepo = null
+    ) {
         $this->api = new NovotonApi();
         $this->bookingRepo = $bookingRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
+        $this->altRequestRepo = $altRequestRepo ?? new AlternativeRequestRepository();
         $this->countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
     }
 
@@ -47,11 +53,7 @@ class CronService implements CronServiceInterface
             'details' => []
         ];
 
-        $bookings = db_get_array(
-            "SELECT booking_id, novoton_confirm_id, novoton_invoice_id, hotel_name, novoton_status
-             FROM ?:novoton_bookings
-             WHERE novoton_status = ?s AND status IN (?a)
-             ORDER BY created_at DESC LIMIT 50",
+        $bookings = $this->bookingRepo->findByNovotonStatus(
             Constants::NOVOTON_STATUS_ON_REQUEST,
             [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]
         );
@@ -133,13 +135,7 @@ class CronService implements CronServiceInterface
             'errors' => 0
         ];
 
-        $pending = db_get_array(
-            "SELECT request_id, novoton_request_id, hotel_name, contact_email
-             FROM ?:novoton_alternative_requests
-             WHERE status = ?s
-               AND novoton_request_id != ''
-               AND novoton_request_id IS NOT NULL",
-            TravelConstants::STATUS_PENDING
+        $pending = $this->altRequestRepo->findPendingWithApiRef(
         );
         // Decrypt encrypted PII (contact_email) for email sending
         $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
@@ -163,12 +159,9 @@ class CronService implements CronServiceInterface
                         ];
                     }
 
-                    db_query(
-                        "UPDATE ?:novoton_alternative_requests SET
-                         status = 'alternatives_found',
-                         alternatives_data = ?s
-                         WHERE request_id = ?i",
-                        json_encode($alternatives), $request['request_id']
+                    $this->altRequestRepo->markAlternativesFound(
+                        (int) $request['request_id'],
+                        json_encode($alternatives)
                     );
 
                     $results['found']++;
@@ -223,13 +216,7 @@ class CronService implements CronServiceInterface
                 'body' => $this->formatAlternativesEmail($request, $alternatives)
             ]);
 
-            db_query(
-                "UPDATE ?:novoton_alternative_requests SET
-                 status = 'notified',
-                 notified_at = NOW()
-                 WHERE request_id = ?i",
-                $request['request_id']
-            );
+            $this->altRequestRepo->markNotified((int) $request['request_id']);
         }
     }
 

@@ -43,6 +43,21 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     }
 
     /**
+     * Find pending requests that have a Novoton API reference.
+     */
+    public function findPendingWithApiRef(): array
+    {
+        return db_get_array(
+            "SELECT request_id, novoton_request_id, hotel_name, contact_email
+             FROM ?:novoton_alternative_requests
+             WHERE status = ?s
+               AND novoton_request_id != ''
+               AND novoton_request_id IS NOT NULL",
+            TravelConstants::STATUS_PENDING
+        );
+    }
+
+    /**
      * Find requests with alternatives found but not yet notified.
      */
     public function findUnnotified(int $limit = 20): array
