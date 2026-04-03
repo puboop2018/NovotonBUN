@@ -132,6 +132,14 @@ msgctxt "SettingsTooltips::sphinx_holidays::skip_no_description"
 msgid "When enabled, the add_products cron will skip hotels that have no description text. This prevents creating empty product pages."
 msgstr "When enabled, the add_products cron will skip hotels that have no description text. This prevents creating empty product pages."
 
+msgctxt "SettingsOptions::sphinx_holidays::skip_unrated_hotels"
+msgid "Skip unrated/unclassified hotels"
+msgstr "Skip unrated/unclassified hotels"
+
+msgctxt "SettingsTooltips::sphinx_holidays::skip_unrated_hotels"
+msgid "When enabled (default), hotels without a star classification (0 stars) will not be imported as products. Only hotels with 1-5 stars will be added."
+msgstr "When enabled (default), hotels without a star classification (0 stars) will not be imported as products. Only hotels with 1-5 stars will be added."
+
 msgctxt "SettingsOptions::sphinx_holidays::resilience_header"
 msgid "API Resilience"
 msgstr "API Resilience"

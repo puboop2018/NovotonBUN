@@ -150,6 +150,11 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <item id="skip_unrated_hotels">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">

@@ -145,6 +145,15 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Whether to skip creating products for hotels without a star classification (0 stars).
+     * Default: Y (enabled) — only hotels with 1-5 stars are imported.
+     */
+    public static function shouldSkipUnratedHotels(): bool
+    {
+        return self::getSetting('skip_unrated_hotels', 'Y') === 'Y';
+    }
+
+    /**
      * Get the configured languages for hotel product descriptions.
      *
      * CS-Cart stores "multiple checkboxes" values as comma-separated string.
