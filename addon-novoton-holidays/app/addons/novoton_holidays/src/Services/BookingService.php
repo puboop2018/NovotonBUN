@@ -12,15 +12,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
-use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Addons\TravelCore\ValueObjects\BoardType;
-use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 use Tygh\Tygh;
 
 class BookingService implements BookingServiceInterface
@@ -42,6 +37,15 @@ class BookingService implements BookingServiceInterface
 
     /** @var GuestDataNormalizer */
     private $guestDataNormalizer;
+
+    /** @var CartAssemblyService */
+    private $cartAssembly;
+
+    /** @var RoomsDataParser */
+    private $roomsParser;
+
+    /** @var PriceVerificationService */
+    private $priceVerifier;
 
     /** @var bool */
     private $debug = false;
@@ -65,6 +69,9 @@ class BookingService implements BookingServiceInterface
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
+        $this->cartAssembly = new CartAssemblyService();
+        $this->roomsParser = new RoomsDataParser();
+        $this->priceVerifier = new PriceVerificationService($api);
         $this->debug = ConfigProvider::isDebugLogging();
     }
     
@@ -83,14 +90,14 @@ class BookingService implements BookingServiceInterface
         $session_id = session_id();
         
         // Parse and validate data
-        $rooms_data = $this->parseRoomsData($bookingData);
+        $rooms_data = $this->roomsParser->parseRoomsData($bookingData);
         $guests_data = $this->guestService->parseGuestsData($bookingData);
-        
+
         // Extract room info for database columns
-        $room_info = $this->extractRoomInfo($rooms_data, $bookingData);
-        
+        $room_info = $this->roomsParser->extractRoomInfo($rooms_data, $bookingData);
+
         // Calculate totals
-        $totals = $this->calculateTotals($rooms_data);
+        $totals = $this->roomsParser->calculateTotals($rooms_data);
         
         // Get hotel info
         $hotel_info = $this->hotelRepo->findById($bookingData['hotel_id']);
@@ -231,7 +238,7 @@ class BookingService implements BookingServiceInterface
         $product = [
             'product_id' => $product_id,
             'amount' => 1,
-            'extra' => $this->buildCartExtra($booking, $bookingData),
+            'extra' => $this->cartAssembly->buildCartExtra($booking, $bookingData),
         ];
         
         // Add to cart
@@ -252,47 +259,6 @@ class BookingService implements BookingServiceInterface
         return true;
     }
     
-    /**
-     * Build cart extra data
-     * 
-     * @param array $booking Booking record
-     * @param array $bookingData Additional data
-     * @return array Cart extra
-     */
-    private function buildCartExtra(array $booking, array $bookingData): array
-    {
-        return [
-            'travel_booking' => true,
-            'novoton_booking' => true,
-            'novoton_booking_id' => $booking['booking_id'],
-            'hotel_id' => $booking['hotel_id'],
-            'hotel_name' => $booking['hotel_name'],
-            'hotel_city' => $bookingData['hotel_city'] ?? '',
-            'hotel_country' => $bookingData['hotel_country'] ?? Constants::DEFAULT_COUNTRY,
-            'package_name' => $booking['package_name'],
-            'room_id' => $booking['room_id'],
-            'room_name' => str_replace(['%2b', '%2B'], '+', $booking['room_id']),
-            'room_type_display' => $booking['room_type'],
-            'board_id' => $booking['board_id'],
-            'board_name' => $this->getBoardName($booking['board_id']),
-            'check_in' => $booking['check_in'],
-            'check_out' => $booking['check_out'],
-            'nights' => $booking['nights'],
-            'adults' => $booking['adults'],
-            'children' => $booking['children'],
-            'children_ages' => $booking['children_ages'],
-            'num_rooms' => $booking['num_rooms'],
-            'rooms_data' => $booking['rooms_data'],
-            'holder_name' => $booking['holder_name'],
-            'guest_name' => $booking['guest_name'],
-            'guests_data' => $booking['guests_data'],
-            'total_price' => $booking['total_price'],
-            'terms_of_payment' => $bookingData['terms_of_payment'] ?? '',
-            'terms_of_cancellation' => $bookingData['terms_of_cancellation'] ?? '',
-            'terms_of_payment_raw' => $bookingData['terms_of_payment_raw'] ?? '',
-            'terms_of_cancellation_raw' => $bookingData['terms_of_cancellation_raw'] ?? '',
-        ];
-    }
     
     /**
      * Parse rooms data from booking form
@@ -302,121 +268,7 @@ class BookingService implements BookingServiceInterface
      */
     public function parseRoomsData(array $bookingData): array
     {
-        $rooms_data = [];
-        
-        if (!empty($bookingData['rooms_data'])) {
-            $rooms_data = is_string($bookingData['rooms_data'])
-                ? json_decode($bookingData['rooms_data'], true)
-                : $bookingData['rooms_data'];
-        }
-        
-        // Create default room if empty
-        if (empty($rooms_data) || !is_array($rooms_data)) {
-            $rooms_data = [[
-                'room_id' => $bookingData['room_id'] ?? '',
-                'room_name' => RoomType::formatRoomLabel($bookingData['room_id'] ?? ''),
-                'board_id' => $bookingData['board_id'] ?? 'BB',
-                'adults' => (int) ($bookingData['adults'] ?? 2),
-                'children' => (int) ($bookingData['children'] ?? 0),
-                'childrenAges' => $this->parseChildrenAges($bookingData),
-                'price' => (float) ($bookingData['total_price'] ?? 0),
-            ]];
-        }
-        
-        return $rooms_data;
-    }
-    
-    /**
-     * Extract room info for database columns
-     * 
-     * @param array $rooms_data Rooms data
-     * @param array $bookingData Booking data fallback
-     * @return array Room info [room_id, room_type]
-     */
-    private function extractRoomInfo(array $rooms_data, array $bookingData): array
-    {
-        $room_ids = [];
-        $room_types = [];
-        
-        foreach ($rooms_data as $room) {
-            if (!empty($room['room_id'])) {
-                $room_ids[] = $room['room_id'];
-            }
-            if (!empty($room['room_name'])) {
-                $room_types[] = $room['room_name'];
-            } elseif (!empty($room['room_type_display'])) {
-                $room_types[] = $room['room_type_display'];
-            } elseif (!empty($room['room_id'])) {
-                $room_types[] = RoomType::formatRoomLabel($room['room_id']);
-            }
-        }
-        
-        // Fallback to bookingData
-        if (empty($room_ids) && !empty($bookingData['room_id'])) {
-            $room_ids[] = $bookingData['room_id'];
-            $room_types[] = RoomType::formatRoomLabel($bookingData['room_id']);
-        }
-        
-        return [
-            'room_id' => implode(', ', $room_ids),
-            'room_type' => implode(', ', $room_types),
-        ];
-    }
-    
-    /**
-     * Calculate totals from rooms data
-     * 
-     * @param array $rooms_data Rooms data
-     * @return array Totals [adults, children, ages, price]
-     */
-    private function calculateTotals(array $rooms_data): array
-    {
-        $totals = [
-            'adults' => 0,
-            'children' => 0,
-            'ages' => [],
-            'price' => 0,
-        ];
-        
-        foreach ($rooms_data as $room) {
-            $totals['adults'] += (int) ($room['adults'] ?? 0);
-            $totals['children'] += (int) ($room['children'] ?? 0);
-            $totals['price'] += (float) ($room['price'] ?? 0);
-            
-            if (!empty($room['childrenAges'])) {
-                foreach ($room['childrenAges'] as $age) {
-                    if ($age !== null && $age !== 'age_needed') {
-                        $totals['ages'][] = (int) $age;
-                    }
-                }
-            }
-        }
-        
-        return $totals;
-    }
-    
-    /**
-     * Parse children ages from booking data
-     * 
-     * @param array $bookingData Booking data
-     * @return array Ages
-     */
-    private function parseChildrenAges(array $bookingData): array
-    {
-        $ages = [];
-        
-        if (!empty($bookingData['children_ages'])) {
-            if (is_string($bookingData['children_ages'])) {
-                $ages = array_map('intval', array_filter(
-                    explode(',', $bookingData['children_ages']),
-                    function($v) { return $v !== ''; }
-                ));
-            } else {
-                $ages = (array)$bookingData['children_ages'];
-            }
-        }
-        
-        return $ages;
+        return $this->roomsParser->parseRoomsData($bookingData);
     }
     
     /**
@@ -428,14 +280,7 @@ class BookingService implements BookingServiceInterface
      */
     public function calculateNights(string $check_in, string $check_out): int
     {
-        $in = strtotime($check_in);
-        $out = strtotime($check_out);
-        
-        if (!$in || !$out || $out <= $in) {
-            return 0;
-        }
-        
-        return (int)(($out - $in) / 86400);
+        return CartAssemblyService::calculateNights($check_in, $check_out);
     }
     
     /**
@@ -465,19 +310,6 @@ class BookingService implements BookingServiceInterface
     }
     
     /**
-     * Get board name from ID
-     *
-     * Delegates to BoardType value object (single source of truth).
-     *
-     * @param string $board_id Board ID (e.g. "AI", "FB+", "ALL INCL")
-     * @return string Board display name
-     */
-    private function getBoardName(string $board_id): string
-    {
-        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
-    }
-    
-    /**
      * Verify price via room_price API and extract terms.
      *
      * Calls the Novoton room_price API with the given parameters,
@@ -489,64 +321,7 @@ class BookingService implements BookingServiceInterface
      */
     public function verifyPrice(array $params): array
     {
-        $priceParams = [
-            'hotel_id' => $params['hotel_id'],
-            'room_id' => $params['room_id'] ?? '',
-            'board_id' => $params['board_id'] ?? '',
-            'star_rating' => '',
-            'check_in' => $params['check_in'],
-            'check_out' => $params['check_out'],
-            'adults' => (int) ($params['adults'] ?? 2),
-            'children' => $params['children_ages'] ?? [],
-        ];
-
-        $priceData = $this->api->getRoomPrice($priceParams);
-
-        if (!$priceData || !isset($priceData->Price)) {
-            $this->log('Price verification failed', [
-                'hotel_id' => $params['hotel_id'],
-                'room_id' => $params['room_id'] ?? '',
-                'children_ages' => $params['children_ages'] ?? [],
-            ]);
-            return [
-                'success' => false,
-                'total_price' => 0,
-                'base_price' => 0,
-                'terms_of_payment' => '',
-                'terms_of_cancellation' => '',
-                'remark' => '',
-                'important' => '',
-                'error' => 'price_verification_failed',
-            ];
-        }
-
-        $rawPrice = (float) (string) $priceData->Price;
-        $totalPrice = $this->api->applyCommission($rawPrice);
-
-        // Extract terms
-        $termsOfPayment = '';
-        $termsOfCancellation = '';
-        if ($priceData instanceof \SimpleXMLElement) {
-            $tp = $priceData->xpath('//TermsOfPayment');
-            $tc = $priceData->xpath('//TermsOfCancellation');
-            if (!empty($tp[0])) {
-                $termsOfPayment = $tp[0]->asXML();
-            }
-            if (!empty($tc[0])) {
-                $termsOfCancellation = $tc[0]->asXML();
-            }
-        }
-
-        return [
-            'success' => true,
-            'total_price' => $totalPrice,
-            'base_price' => $rawPrice,
-            'terms_of_payment' => $termsOfPayment,
-            'terms_of_cancellation' => $termsOfCancellation,
-            'remark' => isset($priceData->remark) ? (string)$priceData->remark : '',
-            'important' => isset($priceData->Important) ? (string)$priceData->Important : '',
-            'error' => '',
-        ];
+        return $this->priceVerifier->verifyPrice($params);
     }
 
     /**
@@ -573,73 +348,9 @@ class BookingService implements BookingServiceInterface
         array $priceResult,
         array $roomsData
     ): array {
-        $boardId = $bookingData['board_id'] ?? 'BB';
-        $nights = $this->calculateNights($bookingData['check_in'], $bookingData['check_out']);
-        $guestNames = [];
-        $holderName = '';
-        foreach ($guestsData as $g) {
-            if (!empty($g['name'])) {
-                $guestNames[] = $g['name'];
-            }
-        }
-        $holderName = $guestNames[0] ?? '';
-        $guestList = implode(', ', $guestNames);
-
-        // Collect children ages from guests
-        $childAges = [];
-        foreach ($guestsData as $g) {
-            if (isset($g['type']) && $g['type'] === 'child' && isset($g['age'])) {
-                $childAges[] = (int) $g['age'];
-            }
-        }
-
-        $totalPrice = $priceResult['total_price'];
-
-        return [
-            'product_id' => $productId,
-            'amount' => 1,
-            'price' => $totalPrice,
-            'base_price' => $totalPrice,
-            'original_price' => $totalPrice,
-            'stored_price' => 'Y',
-            'extra' => [
-                'travel_booking' => true,
-                'novoton_booking' => true,
-                'novoton_booking_id' => $bookingId,
-                'hotel_id' => $bookingData['hotel_id'],
-                'hotel_name' => $hotelInfo['hotel_name'] ?? '',
-                'hotel_city' => $hotelInfo['city'] ?? '',
-                'hotel_region' => $hotelInfo['region'] ?? '',
-                'hotel_country' => $hotelInfo['country'] ?? Constants::DEFAULT_COUNTRY,
-                'package_name' => $bookingData['package_name'] ?? '',
-                'room_id' => $bookingData['room_id'],
-                'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
-                'room_type_display' => RoomType::formatRoomLabel($bookingData['room_id']),
-                'board_id' => $boardId,
-                'board_name' => BoardType::toDisplayName($boardId),
-                'check_in' => $bookingData['check_in'],
-                'check_out' => $bookingData['check_out'],
-                'nights' => $nights,
-                'adults' => (int) ($bookingData['adults'] ?? 2),
-                'children' => (int) ($bookingData['children'] ?? 0),
-                'children_ages' => !empty($childAges) ? implode(',', $childAges) : ($bookingData['children_ages'] ?? ''),
-                'num_rooms' => (int) ($bookingData['num_rooms'] ?? 1),
-                'rooms_data' => $roomsData,
-                'guest_names' => $guestList,
-                'holder_name' => $holderName,
-                'guests_data' => json_encode($guestsData),
-                'contact_email' => $bookingData['contact']['email'] ?? '',
-                'contact_phone' => $bookingData['contact']['phone'] ?? '',
-                'terms_of_payment' => TermsFormatter::formatPaymentTerms($priceResult['terms_of_payment']),
-                'terms_of_cancellation' => TermsFormatter::formatCancellationTerms($priceResult['terms_of_cancellation'], $bookingData['check_in']),
-                'terms_of_payment_raw' => $priceResult['terms_of_payment'],
-                'terms_of_cancellation_raw' => $priceResult['terms_of_cancellation'],
-                'remark' => $priceResult['remark'],
-                'important' => $priceResult['important'],
-                'total_price' => $totalPrice,
-                'currency' => ConfigProvider::getApiCurrency(),
-            ],
-        ];
+        return $this->cartAssembly->assembleCartProduct(
+            $productId, $bookingId, $bookingData, $hotelInfo, $guestsData, $priceResult, $roomsData
+        );
     }
 
     /**
@@ -654,50 +365,7 @@ class BookingService implements BookingServiceInterface
      */
     public function enrichRoomsData(array $roomsData, array $guestsData): array
     {
-        foreach ($roomsData as $roomIdx => &$room) {
-            $roomNum = $roomIdx + 1;
-
-            // Collect children ages from guests for this room
-            $childAgesForRoom = [];
-            foreach ($guestsData as $guest) {
-                if (isset($guest['room']) && $guest['room'] == $roomNum && ($guest['type'] ?? '') === 'child') {
-                    $childAgesForRoom[] = (int) ($guest['age'] ?? 0);
-                }
-            }
-
-            if (!empty($childAgesForRoom)) {
-                $room['childrenAges'] = $childAgesForRoom;
-            }
-
-            // Build display string for children ages
-            if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
-                $validAges = array_filter($room['childrenAges'], function ($age) {
-                    return $age !== null && $age !== '';
-                });
-                $room['children_ages_str'] = !empty($validAges)
-                    ? implode(', ', $validAges) . ' ' . __('novoton_holidays.years_old')
-                    : '';
-            } else {
-                $room['children_ages_str'] = '';
-            }
-
-            // Ensure room_type_display is set
-            if (empty($room['room_type_display']) && !empty($room['room_id'])) {
-                $room['room_type_display'] = RoomType::formatRoomLabel($room['room_id']);
-                $room['room_name'] = RoomType::formatRoomLabel($room['room_id']);
-            }
-
-            // Normalize room_id and room_name: restore + lost by URL decoding
-            if (!empty($room['room_id'])) {
-                $room['room_id'] = RoomType::normalizeRoomCode($room['room_id']);
-            }
-            if (!empty($room['room_name'])) {
-                $room['room_name'] = RoomType::normalizeRoomCode($room['room_name']);
-            }
-        }
-        unset($room);
-
-        return $roomsData;
+        return $this->cartAssembly->enrichRoomsData($roomsData, $guestsData);
     }
 
     /**
