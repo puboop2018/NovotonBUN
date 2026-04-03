@@ -23,6 +23,47 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
+ * Get (or create) the settings_sections object_id for the 'appearance' section.
+ */
+function _travel_styles_get_section_id(): int
+{
+    static $id = null;
+    if ($id !== null) {
+        return $id;
+    }
+
+    $parentId = (int) db_get_field(
+        "SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'"
+    );
+
+    if ($parentId <= 0) {
+        $id = 0;
+        return 0;
+    }
+
+    $id = (int) db_get_field(
+        "SELECT object_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
+        $parentId
+    );
+
+    // Create section if it doesn't exist (e.g., fresh install without addon reinstall)
+    if ($id <= 0) {
+        $id = (int) db_query(
+            "INSERT INTO ?:settings_sections ?e",
+            [
+                'parent_id' => $parentId,
+                'name'      => 'appearance',
+                'type'      => 'TAB',
+                'position'  => 20,
+                'edition_type' => 'ROOT',
+            ]
+        );
+    }
+
+    return $id;
+}
+
+/**
  * Color setting definitions: setting_id => [CSS variable, default].
  * Empty default = inherited from LESS/theme.
  */
@@ -67,18 +108,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $value = strtolower($value);
             }
 
-            // Use CS-Cart's Settings API — finds the setting by name within addon
-            $objectId = (int) db_get_field(
-                "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id IN (
-                    SELECT object_id FROM ?:settings_sections WHERE name = 'appearance'
-                    AND parent_id IN (SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON')
-                )",
-                $settingId
-            );
+            // Find the setting in CS-Cart's settings_objects table
+            $sectionId = _travel_styles_get_section_id();
+            if ($sectionId > 0) {
+                $objectId = (int) db_get_field(
+                    "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
+                    $settingId, $sectionId
+                );
 
-            if ($objectId > 0) {
-                db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
-                $saved++;
+                if ($objectId > 0) {
+                    db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
+                    $saved++;
+                } else {
+                    // Setting row missing (fresh install or schema change) — create it
+                    db_query("INSERT INTO ?:settings_objects ?e", [
+                        'name'       => $settingId,
+                        'section_id' => $sectionId,
+                        'section_tab_id' => 0,
+                        'type'       => 'H',
+                        'value'      => $value,
+                        'edition_type' => 'ROOT',
+                        'handler'    => '',
+                        'position'   => 0,
+                        'is_global'  => 'N',
+                        'object_type' => 'O',
+                    ]);
+                    $saved++;
+                }
             }
         }
 
@@ -114,16 +170,15 @@ if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
 
     // Read current values directly from DB to avoid stale cache
+    $sectionId = _travel_styles_get_section_id();
     $currentValues = [];
-    foreach (array_keys($colorMap) as $settingId) {
-        $val = db_get_field(
-            "SELECT value FROM ?:settings_objects WHERE name = ?s AND section_id IN (
-                SELECT object_id FROM ?:settings_sections WHERE name = 'appearance'
-                AND parent_id IN (SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON')
-            )",
-            $settingId
+    if ($sectionId > 0) {
+        $rows = db_get_hash_single_array(
+            "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'color_%'",
+            ['name', 'value'],
+            $sectionId
         );
-        $currentValues[$settingId] = ($val !== false) ? (string) $val : '';
+        $currentValues = is_array($rows) ? $rows : [];
     }
 
     $color_groups = [
