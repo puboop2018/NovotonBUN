@@ -37,6 +37,7 @@
 
     {* Guest entry form *}
     <form action="{"sphinx_booking.add_to_cart"|fn_url}" method="post" id="sphinx-booking-form">
+        <input type="hidden" name="security_hash" value="{$security_hash}" />
         <input type="hidden" name="offer_id" value="{$sphinx_booking_data.offer_id}">
         <input type="hidden" name="hotel_id" value="{$sphinx_booking_data.hotel_id}">
         <input type="hidden" name="product_id" value="{$sphinx_booking_data.product_id}">

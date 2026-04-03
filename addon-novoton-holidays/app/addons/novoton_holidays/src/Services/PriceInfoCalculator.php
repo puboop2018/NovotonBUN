@@ -280,7 +280,7 @@ class PriceInfoCalculator
             return null;
         }
 
-        usort($candidates, function($a, $b) {
+        usort($candidates, function ($a, $b) {
             return $b['fromDays'] <=> $a['fromDays'];
         });
 
@@ -314,8 +314,15 @@ class PriceInfoCalculator
      * When multiple rows share the same Code, the lookup prefers the row
      * matching the current row's IdRoom and IdBoard.
      */
-    private function resolvePrice(array $row, string $priceKey, array &$visited): float
+    private const MAX_RESOLVE_DEPTH = 10;
+
+    private function resolvePrice(array $row, string $priceKey, array &$visited, int $depth = 0): float
     {
+        if ($depth > self::MAX_RESOLVE_DEPTH) {
+            $this->log("Price resolution depth exceeded ({$depth}): possible circular Code/Base chain");
+            return 0.0;
+        }
+
         $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
         $memoKey = $code . ':' . $priceKey;
 
@@ -355,7 +362,7 @@ class PriceInfoCalculator
                     PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
                     PriceInfoFormatter::toScalar($row['IdBoard'] ?? '')
                 );
-                $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited);
+                $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited, $depth + 1);
                 return round($basePrice * ($percentValue / 100), 4);
             }
             return 0;

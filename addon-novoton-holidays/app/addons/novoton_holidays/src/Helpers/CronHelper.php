@@ -84,9 +84,9 @@ class CronHelper
             return;
         }
 
-        // Standalone CLI / cron entry point — direct output is acceptable
+        // Standalone CLI / cron entry point
         fwrite(STDERR, "ERROR: {$message}\n");
-        exit(1);
+        throw new \RuntimeException($message);
     }
 
     /**

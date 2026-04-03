@@ -35,7 +35,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("");
 
         $sync = new BatchedHotelInfoSync();
-        $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);
 
@@ -60,7 +60,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("");
 
         $sync = new BatchedPriceInfoSync();
-        $sync->setOutputCallback(function($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);
 

@@ -81,7 +81,6 @@ button.nvt-field-input:hover,
 button.nvt-field-input:focus,
 button.nvt-field-input:active {
     background: transparent !important;
-    background-color: transparent !important;
     border-color: inherit !important;
 }
 
@@ -129,7 +128,6 @@ button.nvt-field-input:active {
     text-align: left;
     font: inherit;
     color: inherit;
-    -webkit-user-select: text;
     user-select: text;
 }
 
@@ -164,7 +162,6 @@ button.nvt-field-input:active {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.4;
-    -webkit-user-select: text;
     user-select: text;
     cursor: text;
 }
@@ -308,9 +305,6 @@ button.nvt-field-input:active {
     gap: 2px;
 }
 /* When prices are displayed, switch from circles to rectangles with more room */
-.nvt-calendar-days--with-prices {
-    gap: 2px;
-}
 
 .nvt-calendar-day {
     display: flex;

@@ -430,6 +430,7 @@ export default function BookingEngine({ config }) {
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder={t('whereAreYouGoing', 'Where are you going?')}
+                                aria-label={t('whereAreYouGoing', 'Where are you going?')}
                             />
                         </div>
                     </div>

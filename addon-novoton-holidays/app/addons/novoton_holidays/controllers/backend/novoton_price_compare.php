@@ -983,14 +983,14 @@ if ($mode === 'compare') {
  * All verify functionality has been merged into compare mode as collapsible sections.
  */
 if ($mode === 'verify') {
-    $url = fn_url('novoton_price_compare.compare');
+    $params = [];
     foreach (['hotel_id', 'package_name', 'room_id', 'board_id', 'check_in', 'nights'] as $param) {
-        if (isset($_REQUEST[$param])) {
-            $url .= '&' . $param . '=' . urlencode((string)$_REQUEST[$param]);
+        if (isset($_REQUEST[$param]) && is_string($_REQUEST[$param])) {
+            $params[$param] = substr(trim($_REQUEST[$param]), 0, 100);
         }
     }
-    header('Location: ' . $url);
-    exit;
+    $query = !empty($params) ? '&' . http_build_query($params) : '';
+    return [CONTROLLER_STATUS_REDIRECT, 'novoton_price_compare.compare' . $query];
 }
 
 /**

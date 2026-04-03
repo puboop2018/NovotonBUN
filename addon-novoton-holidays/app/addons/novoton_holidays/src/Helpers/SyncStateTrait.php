@@ -48,7 +48,7 @@ trait SyncStateTrait
     {
         $dir = dirname($this->state_file);
         if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+            mkdir($dir, 0755, true);
         }
 
         $tmpFile = $this->state_file . '.tmp';
@@ -57,14 +57,19 @@ trait SyncStateTrait
             return;
         }
 
-        if (flock($fp, LOCK_EX)) {
-            fwrite($fp, json_encode($state, JSON_PRETTY_PRINT));
-            fflush($fp);
-            flock($fp, LOCK_UN);
+        try {
+            if (flock($fp, LOCK_EX)) {
+                fwrite($fp, json_encode($state, JSON_PRETTY_PRINT));
+                fflush($fp);
+                flock($fp, LOCK_UN);
+            }
+        } finally {
+            fclose($fp);
         }
-        fclose($fp);
 
-        rename($tmpFile, $this->state_file);
+        if (!rename($tmpFile, $this->state_file)) {
+            @unlink($tmpFile);
+        }
     }
 
     /**
@@ -89,7 +94,11 @@ trait SyncStateTrait
         if ($lastRun === null) {
             return true;
         }
-        return (time() - strtotime($lastRun)) > ($maxAgeHours * 3600);
+        $lastRunTime = strtotime($lastRun);
+        if ($lastRunTime === false) {
+            return true; // Treat unparseable timestamps as stale
+        }
+        return (time() - $lastRunTime) > ($maxAgeHours * 3600);
     }
 
     /**
