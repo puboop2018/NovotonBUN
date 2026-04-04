@@ -294,14 +294,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     }
 
     // Map IdAge to age_type label
-    $age_type_map = [
-        '1' => 'ADULT',
-        '2' => 'CHD 0-1.99',
-        '3' => 'CHD 2-11.99',
-        '4' => 'CHD 12-17.99',
-        'ADULT' => 'ADULT',
-        'ADULT ' => 'ADULT',
-    ];
+    $age_type_map = \Tygh\Addons\NovotonHolidays\Constants::AGE_TYPE_MAP;
 
     foreach ($season_prices as $sp) {
         $room_id = $sp['IdRoom'] ?? '';

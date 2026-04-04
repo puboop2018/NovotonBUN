@@ -206,6 +206,17 @@ final class Constants
         self::FEATURE_TYPE_RESORT,
     ];
 
+    // ========== Age Type Mapping (Novoton API IdAge → label) ==========
+
+    public const AGE_TYPE_MAP = [
+        '1' => 'ADULT',
+        '2' => 'CHD 0-1.99',
+        '3' => 'CHD 2-11.99',
+        '4' => 'CHD 12-17.99',
+        'ADULT' => 'ADULT',
+        'ADULT ' => 'ADULT',
+    ];
+
     // ========== Countries ==========
     
     public const COUNTRIES = [

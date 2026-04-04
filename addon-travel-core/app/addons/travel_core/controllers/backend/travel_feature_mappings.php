@@ -14,6 +14,7 @@ use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 /** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
 $repo = FeatureMapper::getRepository();
@@ -24,8 +25,8 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
-// Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'hotel_facility', 'room_facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
+// Valid feature types — derived from FeatureMapper to stay in sync automatically
+$validFeatureTypes = array_merge(FeatureMapper::STRICT_FEATURE_TYPES, FeatureMapper::DYNAMIC_FEATURE_TYPES);
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -279,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Batch scan provider hotel facilities → populate travel_unmapped_values
     if ($mode === 'scan_facilities') {
         $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
-        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
         $offset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
 
         if ($provider === '') {
@@ -569,7 +570,7 @@ if ($mode === 'scan_progress') {
     $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
     $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
     $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
-    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
 
     $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
 
