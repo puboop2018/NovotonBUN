@@ -468,17 +468,42 @@
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+        <!-- Upgrade: add contact/address columns to sphinx_hotels (added in hotel detail enrichment) -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `address` VARCHAR(500) DEFAULT NULL
+                COMMENT 'Street address from API'
+                AFTER `longitude`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `phone` VARCHAR(50) DEFAULT NULL
+                COMMENT 'Hotel phone number'
+                AFTER `address`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `email` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Hotel email address'
+                AFTER `phone`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `website` VARCHAR(500) DEFAULT NULL
+                COMMENT 'Hotel website URL'
+                AFTER `email`;
+        </item>
         <!-- Upgrade: add boards_json column to sphinx_hotels -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_hotels`
-                ADD COLUMN IF NOT EXISTS `boards_json` JSON DEFAULT NULL
+                ADD COLUMN `boards_json` JSON DEFAULT NULL
                 COMMENT 'Array of canonical board codes discovered from cache API'
                 AFTER `facilities_json`;
         </item>
         <!-- Upgrade: add full_path column to existing sphinx_destinations -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_destinations`
-                ADD COLUMN IF NOT EXISTS `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent'
+                ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent'
                 AFTER `country_code`;
         </item>
         <item for="upgrade">
@@ -488,12 +513,12 @@
         <!-- Upgrade: add rate_limit_hits column to sphinx_sync_log -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_sync_log`
-                ADD COLUMN IF NOT EXISTS `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`;
+                ADD COLUMN `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`;
         </item>
         <!-- Upgrade: add sync_mode column to sphinx_sync_log -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_sync_log`
-                ADD COLUMN IF NOT EXISTS `sync_mode` VARCHAR(20) DEFAULT 'full' AFTER `rate_limit_hits`;
+                ADD COLUMN `sync_mode` VARCHAR(20) DEFAULT 'full' AFTER `rate_limit_hits`;
         </item>
         <!-- Upgrade: add composite indexes to sphinx_hotels for findUnlinked and country aggregation -->
         <item for="upgrade">
@@ -511,19 +536,19 @@
         </item>
         <item for="upgrade">
             ALTER TABLE `?:sphinx_hotels`
-                ADD COLUMN IF NOT EXISTS `product_skip_reason` VARCHAR(50) DEFAULT NULL
+                ADD COLUMN `product_skip_reason` VARCHAR(50) DEFAULT NULL
                 COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)'
                 AFTER `product_id`;
         </item>
         <item for="upgrade">
             ALTER TABLE `?:sphinx_hotels`
-                ADD COLUMN IF NOT EXISTS `images_json` JSON DEFAULT NULL
+                ADD COLUMN `images_json` JSON DEFAULT NULL
                 COMMENT 'All image objects from API [{url, ...}, ...]'
                 AFTER `image_url`;
         </item>
         <item for="upgrade">
             ALTER TABLE `?:sphinx_hotels`
-                ADD COLUMN IF NOT EXISTS `product_needs_update` ENUM('Y','N') DEFAULT 'N'
+                ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N'
                 COMMENT 'Set to Y when API data differs from CS-Cart product'
                 AFTER `images_json`;
         </item>

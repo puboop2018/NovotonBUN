@@ -200,12 +200,12 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             db_query(
                 "INSERT INTO ?:novoton_hotel_packages
                  (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
-                 VALUES (?s, ?s, ?s, ?s, 'Y', ?s)
+                 VALUES (?s, ?s, ?s, ?s, 'Y', ?s) AS new_row
                  ON DUPLICATE KEY UPDATE
-                 package_name = VALUES(package_name),
-                 priceinfo_data = VALUES(priceinfo_data),
+                 package_name = new_row.package_name,
+                 priceinfo_data = new_row.priceinfo_data,
                  needs_price_compute = 'Y',
-                 synced_at = VALUES(synced_at)",
+                 synced_at = new_row.synced_at",
                 (string) $hotel_id,
                 (string) $packageId,
                 (string) $packageName,

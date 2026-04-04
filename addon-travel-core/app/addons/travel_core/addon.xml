@@ -138,51 +138,51 @@
             <section id="appearance">
                 <items>
                     <item id="color_primary">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_accent">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_text">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_text_light">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_bg">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_border">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_search_btn_bg">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_search_btn_hover">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_search_btn_text">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_cal_cheapest">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_cal_price">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                     <item id="color_danger">
-                        <type>hidden</type>
+                        <type>input</type>
                         <default_value></default_value>
                     </item>
                 </items>
@@ -272,6 +272,21 @@
                 KEY `idx_status` (`status`),
                 KEY `idx_check_in` (`check_in`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- Upgrade: make color settings visible in addon settings (hidden → input) -->
+        <item for="upgrade">
+            UPDATE ?:settings_objects
+               SET type = 'I'
+             WHERE type = 'H'
+               AND name LIKE 'color_%'
+               AND section_id IN (
+                   SELECT section_id FROM ?:settings_sections
+                    WHERE name = 'appearance'
+                      AND parent_id IN (
+                          SELECT section_id FROM ?:settings_sections
+                           WHERE name = 'travel_core' AND type = 'ADDON'
+                      )
+               );
         </item>
     </queries>
 

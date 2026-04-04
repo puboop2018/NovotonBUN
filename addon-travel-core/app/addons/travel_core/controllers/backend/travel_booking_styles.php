@@ -23,7 +23,10 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Get (or create) the settings_sections object_id for the 'appearance' section.
+ * Get the section_id for the 'appearance' tab under the travel_core addon settings.
+ *
+ * CS-Cart creates these rows from addon.xml during addon installation.
+ * We only read — never create rows in the core settings_sections table.
  */
 function _travel_styles_get_section_id(): int
 {
@@ -33,7 +36,7 @@ function _travel_styles_get_section_id(): int
     }
 
     $parentId = (int) db_get_field(
-        "SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'"
+        "SELECT section_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'"
     );
 
     if ($parentId <= 0) {
@@ -42,23 +45,9 @@ function _travel_styles_get_section_id(): int
     }
 
     $id = (int) db_get_field(
-        "SELECT object_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
+        "SELECT section_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
         $parentId
     );
-
-    // Create section if it doesn't exist (e.g., fresh install without addon reinstall)
-    if ($id <= 0) {
-        $id = (int) db_query(
-            "INSERT INTO ?:settings_sections ?e",
-            [
-                'parent_id' => $parentId,
-                'name'      => 'appearance',
-                'type'      => 'TAB',
-                'position'  => 20,
-                'edition_type' => 'ROOT',
-            ]
-        );
-    }
 
     return $id;
 }
