@@ -680,18 +680,16 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
     // Show booking form for any SPX-prefixed product, even if hotel isn't in local DB.
     // The React form will handle API availability at search time.
 
-    // Assign to both Smarty view AND $product array to ensure availability
-    // in all template scopes (product hooks, product tabs, blocks)
+    // Assign to Smarty view only — NOT to $product.
+    // Stuffing values into $product forces Smarty's Data::getVariable() to walk
+    // the entire $product scope chain on every $product.* template access, which
+    // overflows the call stack on product detail pages (zend.max_allowed_stack_size).
     $view = \Tygh\Tygh::$app['view'];
     $view->assign('is_sphinx_hotel', true);
     $view->assign('sphinx_hotel_id', $hotel_id);
     $view->assign('show_sphinx_booking_form', true);
     $view->assign('sphinx_booking_form_position', 'before_tabs');
-
-    $product['is_sphinx_hotel'] = true;
-    $product['sphinx_hotel_id'] = $hotel_id;
-    $product['show_sphinx_booking_form'] = true;
-    $product['sphinx_booking_form_position'] = 'before_tabs';
+    $view->assign('product_id', $product['product_id']);
 }
 
 /**
