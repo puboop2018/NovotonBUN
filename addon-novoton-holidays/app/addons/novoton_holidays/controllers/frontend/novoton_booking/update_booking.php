@@ -130,7 +130,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'guest_email' => $contact['email'] ?? '',
         'guest_phone' => $contact['phone'] ?? '',
         'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
-        'api_request' => json_encode($api_request),
+        'api_request' => json_encode($api_request, JSON_UNESCAPED_UNICODE),
     ]);
 
     // Update cart item if cart_id provided

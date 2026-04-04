@@ -441,7 +441,7 @@ function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
         $value = $term['value'] ?? null;
         $tillDate = $term['till_date'] ?? '';
         
-        if (($value === 'FREE' || $value == 0) && !empty($tillDate)) {
+        if (($value === 'FREE' || $value === 0 || $value === '0' || $value === 0.0) && !empty($tillDate)) {
             return $tillDate;
         }
     }

@@ -131,7 +131,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  * Extracted so the caller can wrap in try/catch without deeply nesting
  * the entire function body. Any \Throwable is caught by the caller.
  */
-function _nvt_populate_hotel_product_data(array &$product, array $addon_settings): void
+function _nvt_populate_hotel_product_data(array $product, array $addon_settings): void
 {
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
@@ -190,9 +190,9 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
 /**
  * Hook: after getting product data
  *
- * Wrapped in try/catch — this fires during controller phase, but any crash
- * prevents product data from loading correctly, which cascades to template
- * failures inside the {capture} block.
+ * No-op — hotel detection and data enrichment are handled entirely in
+ * gather_additional_product_data_post. This hook skeleton is kept for
+ * CS-Cart's hook registration system.
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
@@ -304,9 +304,9 @@ function _nvt_extract_hotel_id(string $product_code): ?string
 }
 
 /**
- * Load hotel info from cache and assign to product + Smarty.
+ * Load hotel info from cache and assign to Smarty view.
  */
-function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): void
+function _nvt_assign_hotel_info_to_product(array $product, string $hotel_id): void
 {
     $hotel_info = fn_novoton_holidays_get_hotel_data($hotel_id);
 

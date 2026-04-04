@@ -202,9 +202,10 @@ WHERE h.country_code IN ({$countries})
   AND h.facilities_json != '[]'
   AND a.alias_id IS NULL
 GROUP BY jt.id, jt.name
+AS new_row(api_source, feature_type, api_value, api_label, hotel_count)
 ON DUPLICATE KEY UPDATE
-    hotel_count = VALUES(hotel_count),
-    api_label = IF(VALUES(api_label) != '', VALUES(api_label), api_label);
+    hotel_count = new_row.hotel_count,
+    api_label = IF(new_row.api_label != '', new_row.api_label, cscart_travel_unmapped_values.api_label);
 SQL;
 
     echo "\n\n-- View results:\n";

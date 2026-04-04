@@ -18,6 +18,15 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\TravelConstants;
 
+    // --- Security: Rate limiting ---
+    $security = Container::getSecurityService();
+    $auth = Tygh::$app['session']['auth'] ?? [];
+    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : session_id();
+    if (!$security->checkBookingRateLimit($rate_limit_id)) {
+        fn_set_notification('E', __('error'), __('sphinx_holidays.rate_limit_exceeded', ['[default]' => 'Too many booking requests. Please try again later.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+
     $bookingData = $_REQUEST;
     $offer_id = trim($bookingData['offer_id'] ?? '');
     $hotel_id = trim($bookingData['hotel_id'] ?? '');
@@ -73,7 +82,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
 
     // Parse guest data
-    $guests = is_array($bookingData['guests'] ?? null) ? $bookingData['guests'] : [];
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
     $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
     $parsed_guests = _sphinx_parse_and_validate_guests($guests, $check_in);
@@ -89,7 +98,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
     $all_child_ages = [];
     foreach ($guests_data as $guest) {
-        if (isset($guest['type']) && $guest['type'] == 'child' && isset($guest['age'])) {
+        if (isset($guest['type']) && $guest['type'] === 'child' && isset($guest['age'])) {
             $all_child_ages[] = (int)$guest['age'];
         }
     }
@@ -106,7 +115,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $children = (int)($verifyResult['children'] ?? $bookingData['children'] ?? 0);
     $nights = 0;
     if (!empty($check_in) && !empty($check_out)) {
-        $nights = (int)round((strtotime($check_out) - strtotime($check_in)) / 86400);
+        $ci_ts = strtotime($check_in);
+        $co_ts = strtotime($check_out);
+        if ($ci_ts !== false && $co_ts !== false) {
+            $nights = (int)round(($co_ts - $ci_ts) / 86400);
+        }
     }
 
     // Create booking records
@@ -132,13 +145,13 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'board_id' => $boardId, 'check_in' => $check_in, 'check_out' => $check_out,
         'nights' => $nights, 'adults' => $adults, 'children' => $children,
         'children_ages' => $children_ages, 'num_rooms' => 1,
-        'rooms_data' => json_encode($rooms_data),
+        'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
         'guest_name' => $guest_list, 'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'base_price' => $basePrice, 'total_price' => $total_price,
         'currency' => $currency, 'status' => TravelConstants::STATUS_PENDING,
-        'api_response' => json_encode($verifyResult),
+        'api_response' => json_encode($verifyResult, JSON_UNESCAPED_UNICODE),
     ];
 
     if ($existing_booking_id !== null) {
@@ -164,7 +177,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'num_rooms' => 1, 'rooms_data' => $rooms_data,
         'guest_names' => $guest_list, 'holder_name' => $holder_name,
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
         'total_price' => $total_price, 'currency' => $currency,
     ];
