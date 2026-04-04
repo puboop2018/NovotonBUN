@@ -312,6 +312,11 @@ class BatchedPriceInfoSync
             $state['last_run_at'] = date('Y-m-d H:i:s');
             $this->saveState($state);
 
+            // Free memory accumulated during this batch (decoded JSON, API responses)
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
+
             // Progress output
             $percent = round($offset / max(1, $state['total']) * 100, 1);
             $this->output("--- Progress: {$offset}/{$state['total']} ({$percent}%) ---");
