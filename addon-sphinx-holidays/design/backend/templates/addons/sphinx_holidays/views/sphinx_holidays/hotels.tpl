@@ -1,4 +1,5 @@
 {script src="js/lib/select2/dist/js/select2.full.min.js"}
+{style src="js/lib/select2/dist/css/select2.min.css"}
 
 {* ── Sidebar: Filter Panel ── *}
 {capture name="sidebar"}
