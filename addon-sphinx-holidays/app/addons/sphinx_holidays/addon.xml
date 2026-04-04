@@ -468,6 +468,31 @@
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+        <!-- Upgrade: add contact/address columns to sphinx_hotels (added in hotel detail enrichment) -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `address` VARCHAR(500) DEFAULT NULL
+                COMMENT 'Street address from API'
+                AFTER `longitude`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `phone` VARCHAR(50) DEFAULT NULL
+                COMMENT 'Hotel phone number'
+                AFTER `address`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Hotel email address'
+                AFTER `phone`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN IF NOT EXISTS `website` VARCHAR(500) DEFAULT NULL
+                COMMENT 'Hotel website URL'
+                AFTER `email`;
+        </item>
         <!-- Upgrade: add boards_json column to sphinx_hotels -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_hotels`
