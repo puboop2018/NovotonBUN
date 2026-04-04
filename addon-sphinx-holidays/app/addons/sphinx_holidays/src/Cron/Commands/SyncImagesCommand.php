@@ -3,12 +3,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+
 /**
  * Cron command: download and attach images from Sphinx API to CS-Cart products.
  *
  * Finds hotels that have a linked product but no images in CS-Cart yet,
  * then downloads all images from images_json and attaches them via
  * fn_update_image_pairs().
+ *
+ * By default, only hotels from whitelisted countries are processed.
  *
  * Usage: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=sync_images
  */
@@ -36,6 +40,14 @@ class SyncImagesCommand
         $limit = (int) ($params['limit'] ?? 0);
         $batchSize = (int) ($params['batch_size'] ?? self::BATCH_SIZE);
 
+        // Resolve country filter: explicit param > whitelist > all
+        $countryCodes = [];
+        if ($countryCode !== '') {
+            $countryCodes = [$countryCode];
+        } else {
+            $countryCodes = ConfigProvider::getSelectedCountryCodes();
+        }
+
         $stats = [
             'hotels_processed' => 0,
             'images_added'     => 0,
@@ -47,7 +59,11 @@ class SyncImagesCommand
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
 
-        $this->output("Syncing images for hotels with linked products...");
+        if (!empty($countryCodes)) {
+            $this->output("Syncing images for hotels in whitelisted countries: " . implode(', ', $countryCodes));
+        } else {
+            $this->output("Syncing images for all hotels (no country whitelist configured)...");
+        }
 
         while (true) {
             $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
@@ -55,7 +71,7 @@ class SyncImagesCommand
                 break;
             }
 
-            $hotels = $this->findHotelsNeedingImages($countryCode, min($remaining, $effectiveBatch));
+            $hotels = $this->findHotelsNeedingImages($countryCodes, min($remaining, $effectiveBatch));
             if (empty($hotels)) {
                 break;
             }
@@ -127,11 +143,11 @@ class SyncImagesCommand
      *
      * LEFT JOINs ?:images_links to exclude products that already have images.
      */
-    private function findHotelsNeedingImages(string $countryCode, int $limit): array
+    private function findHotelsNeedingImages(array $countryCodes, int $limit): array
     {
         $condition = '';
-        if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+        if (!empty($countryCodes)) {
+            $condition .= db_quote(" AND h.country_code IN (?a)", $countryCodes);
         }
 
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
