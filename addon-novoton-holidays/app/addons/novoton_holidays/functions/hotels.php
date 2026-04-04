@@ -863,9 +863,11 @@ function fn_novoton_holidays_add_product_image(int $product_id, string $image_ur
         $icons = [];
         $detailed = [
             0 => [
-                'name' => $filename,
-                'path' => $temp_file,
-                'size' => filesize($temp_file)
+                'name'     => $filename,
+                'path'     => $temp_file,
+                'tmp_name' => $temp_file,
+                'size'     => filesize($temp_file),
+                'type'     => $image_info['mime'],
             ]
         ];
         

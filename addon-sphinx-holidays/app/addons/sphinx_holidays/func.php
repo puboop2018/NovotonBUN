@@ -845,6 +845,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
 
     $temp_file = fn_create_temp_file();
     if (!$temp_file) {
+        error_log("sphinx_holidays: fn_create_temp_file() returned empty for product #{$product_id}");
         return false;
     }
 
@@ -865,6 +866,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     // empty string with write_to_file, which caused all downloads to fail.
     $fp = fopen($temp_file, 'wb');
     if (!$fp) {
+        error_log("sphinx_holidays: fopen() failed for temp file '{$temp_file}' product #{$product_id}");
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -887,9 +889,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     fclose($fp);
 
     if ($httpCode !== 200 || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-        if ($httpCode !== 200) {
-            error_log("sphinx_holidays: image download failed HTTP {$httpCode} for {$download_url}" . ($curlError ? " ({$curlError})" : ''));
-        }
+        error_log("sphinx_holidays: image download failed for product #{$product_id}: HTTP {$httpCode}, size=" . (file_exists($temp_file) ? filesize($temp_file) : 'N/A') . ", url={$download_url}" . ($curlError ? " ({$curlError})" : ''));
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -900,6 +900,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         $image_info = false;
     }
     if (!$image_info) {
+        error_log("sphinx_holidays: getimagesize() failed for product #{$product_id}, file={$temp_file}, size=" . filesize($temp_file));
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -930,18 +931,27 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         $icons = [];
         $detailed = [
             0 => [
-                'name' => $filename,
-                'path' => $temp_file,
-                'size' => filesize($temp_file),
+                'name'     => $filename,
+                'path'     => $temp_file,
+                'tmp_name' => $temp_file,
+                'size'     => filesize($temp_file),
+                'type'     => $image_info['mime'],
             ],
         ];
 
         $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, 'product', $product_id);
 
         if (file_exists($temp_file)) { unlink($temp_file); }
-        return !empty($pair_ids);
+
+        if (empty($pair_ids)) {
+            error_log("sphinx_holidays: fn_update_image_pairs() returned empty for product #{$product_id}, file={$filename}, size=" . ($detailed[0]['size'] ?? '?') . ", mime={$image_info['mime']}");
+            return false;
+        }
+
+        return true;
     }
 
+    error_log("sphinx_holidays: fn_update_image_pairs() function not found");
     if (file_exists($temp_file)) { unlink($temp_file); }
     return false;
 }
