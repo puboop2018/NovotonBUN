@@ -205,18 +205,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $hotelRepo = Container::getHotelRepository();
         $synced = 0;
+        $skipped = [];
 
         foreach ($hotelIds as $hotelId) {
             $hotel = $hotelRepo->getById((string) $hotelId);
-            if ($hotel === null || empty($hotel['product_id']) || empty($hotel['image_url'])) {
+            if ($hotel === null) {
+                $skipped[] = "#{$hotelId}: not found";
                 continue;
             }
-            if (fn_sphinx_holidays_add_product_image((int) $hotel['product_id'], $hotel['image_url'])) {
-                $synced++;
+            if (empty($hotel['product_id'])) {
+                $skipped[] = "{$hotel['name']}: no linked product";
+                continue;
+            }
+
+            $productId = (int) $hotel['product_id'];
+            $imageUrls = [];
+
+            // Prefer images_json (full list) over image_url (single thumbnail)
+            $imagesJson = $hotel['images_json'] ?? '';
+            if ($imagesJson !== '' && $imagesJson !== '[]') {
+                $images = json_decode($imagesJson, true);
+                if (is_array($images)) {
+                    foreach ($images as $img) {
+                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        if ($url !== '') {
+                            $imageUrls[] = $url;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to image_url if images_json was empty
+            if (empty($imageUrls) && !empty($hotel['image_url'])) {
+                $imageUrls[] = $hotel['image_url'];
+            }
+
+            if (empty($imageUrls)) {
+                $skipped[] = "{$hotel['name']}: no image URLs in API data";
+                continue;
+            }
+
+            $hotelSynced = 0;
+            foreach ($imageUrls as $i => $url) {
+                $isMain = ($i === 0);
+                if (fn_sphinx_holidays_add_product_image($productId, $url, $isMain)) {
+                    $hotelSynced++;
+                }
+            }
+
+            if ($hotelSynced > 0) {
+                $synced += $hotelSynced;
+            } else {
+                $skipped[] = "{$hotel['name']}: image download failed";
             }
         }
 
-        fn_set_notification('N', __('notice'), __('sphinx_holidays.images_synced') . ': ' . $synced);
+        $msg = __('sphinx_holidays.images_synced') . ': ' . $synced;
+        if (!empty($skipped)) {
+            $msg .= '<br><br><strong>Skipped:</strong><br>' . implode('<br>', $skipped);
+        }
+        fn_set_notification($synced > 0 ? 'N' : 'W', $synced > 0 ? __('notice') : __('warning'), $msg);
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
     }
