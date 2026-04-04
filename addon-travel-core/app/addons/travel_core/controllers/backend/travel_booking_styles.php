@@ -4,8 +4,9 @@ declare(strict_types=1);
  * Travel Core - Booking Form Appearance Settings Controller
  *
  * Dedicated admin page for customizing the React booking engine colors.
- * Color values are stored as travel_core addon settings and injected at
- * runtime via inline CSS custom property overrides in booking_engine.tpl.
+ * Color values are stored as travel_core addon settings (hidden type in
+ * addon.xml) and injected at runtime via CSS custom properties in
+ * booking_engine.tpl.
  *
  * @package TravelCore
  * @since   1.2.0
@@ -13,6 +14,7 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Registry;
+use Tygh\Settings;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -21,7 +23,48 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Color setting definitions: setting_id => [CSS variable, default, label lang key].
+ * Get (or create) the settings_sections object_id for the 'appearance' section.
+ */
+function _travel_styles_get_section_id(): int
+{
+    static $id = null;
+    if ($id !== null) {
+        return $id;
+    }
+
+    $parentId = (int) db_get_field(
+        "SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'"
+    );
+
+    if ($parentId <= 0) {
+        $id = 0;
+        return 0;
+    }
+
+    $id = (int) db_get_field(
+        "SELECT object_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
+        $parentId
+    );
+
+    // Create section if it doesn't exist (e.g., fresh install without addon reinstall)
+    if ($id <= 0) {
+        $id = (int) db_query(
+            "INSERT INTO ?:settings_sections ?e",
+            [
+                'parent_id' => $parentId,
+                'name'      => 'appearance',
+                'type'      => 'TAB',
+                'position'  => 20,
+                'edition_type' => 'ROOT',
+            ]
+        );
+    }
+
+    return $id;
+}
+
+/**
+ * Color setting definitions: setting_id => [CSS variable, default].
  * Empty default = inherited from LESS/theme.
  */
 function _travel_styles_color_map(): array
@@ -49,13 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted = $_REQUEST['appearance'] ?? [];
         $colorMap = _travel_styles_color_map();
         $errors = [];
-
-        // Get the addon section_id for appearance settings
-        $sectionId = (int) db_get_field(
-            "SELECT object_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = (
-                SELECT object_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'
-            )"
-        );
+        $saved = 0;
 
         foreach ($colorMap as $settingId => $info) {
             $value = trim((string) ($submitted[$settingId] ?? ''));
@@ -71,22 +108,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $value = strtolower($value);
             }
 
-            // Update via direct DB (standard CS-Cart pattern for addon settings)
-            $objectId = (int) db_get_field(
-                "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
-                $settingId, $sectionId
-            );
-
-            if ($objectId > 0) {
-                db_query(
-                    "UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
-                    $value, $objectId
+            // Find the setting in CS-Cart's settings_objects table
+            $sectionId = _travel_styles_get_section_id();
+            if ($sectionId > 0) {
+                $objectId = (int) db_get_field(
+                    "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
+                    $settingId, $sectionId
                 );
+
+                if ($objectId > 0) {
+                    db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
+                    $saved++;
+                } else {
+                    // Setting row missing (fresh install or schema change) — create it
+                    db_query("INSERT INTO ?:settings_objects ?e", [
+                        'name'       => $settingId,
+                        'section_id' => $sectionId,
+                        'section_tab_id' => 0,
+                        'type'       => 'H',
+                        'value'      => $value,
+                        'edition_type' => 'ROOT',
+                        'handler'    => '',
+                        'position'   => 0,
+                        'is_global'  => 'N',
+                        'object_type' => 'O',
+                    ]);
+                    $saved++;
+                }
             }
         }
 
-        // Clear settings cache so changes are visible immediately
+        // Clear ALL settings caches so changes appear immediately
         Registry::del('addons.travel_core');
+        Registry::del('settings');
+        if (class_exists('Tygh\\Settings')) {
+            Settings::instance()->clearCache();
+        }
+
+        // Force reload from DB
+        $addon_scheme = Registry::get('addons.travel_core');
+        if ($addon_scheme === null) {
+            // Rebuild addon settings cache
+            fn_get_addon_data('travel_core');
+        }
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
@@ -104,7 +168,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
-    $settings = Registry::get('addons.travel_core') ?? [];
+
+    // Read current values directly from DB to avoid stale cache
+    $sectionId = _travel_styles_get_section_id();
+    $currentValues = [];
+    if ($sectionId > 0) {
+        $rows = db_get_hash_single_array(
+            "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'color_%'",
+            ['name', 'value'],
+            $sectionId
+        );
+        $currentValues = is_array($rows) ? $rows : [];
+    }
 
     $color_groups = [
         'base' => [
@@ -141,7 +216,7 @@ if ($mode === 'manage') {
             'id'      => $id,
             'var'     => $cssVar,
             'default' => $default,
-            'value'   => $settings[$id] ?? '',
+            'value'   => $currentValues[$id] ?? '',
             'label'   => __('travel_core.' . $id),
         ];
     }

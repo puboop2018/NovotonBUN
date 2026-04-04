@@ -20,17 +20,15 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 //=============================================================================
-// SANITIZE $_REQUEST / $_GET — flatten array params to comma-separated strings
+// SANITIZE $_REQUEST — flatten array params to comma-separated strings
 // to prevent "Array to string conversion" warnings in CS-Cart core dispatch.
 //=============================================================================
 foreach (['children_ages', 'ages'] as $_sphinx_param) {
-    foreach (['_REQUEST', '_GET'] as $_sphinx_sg_name) {
-        if (isset($GLOBALS[$_sphinx_sg_name][$_sphinx_param]) && is_array($GLOBALS[$_sphinx_sg_name][$_sphinx_param])) {
-            $GLOBALS[$_sphinx_sg_name][$_sphinx_param] = implode(',', array_map('intval', $GLOBALS[$_sphinx_sg_name][$_sphinx_param]));
-        }
+    if (isset($_REQUEST[$_sphinx_param]) && is_array($_REQUEST[$_sphinx_param])) {
+        $_REQUEST[$_sphinx_param] = implode(',', array_map('intval', $_REQUEST[$_sphinx_param]));
     }
 }
-unset($_sphinx_param, $_sphinx_sg_name);
+unset($_sphinx_param);
 
 //=============================================================================
 // UTILITY HELPERS

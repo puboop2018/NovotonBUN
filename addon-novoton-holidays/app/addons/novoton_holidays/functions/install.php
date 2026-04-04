@@ -208,8 +208,11 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     // Board/Meal aliases (Novoton XML API values)
     $boardAliases = [
         'AI'                   => 'AI',
+        'AIL'                  => 'AIL',
         'ALL INCL'             => 'AI',
         'ALL INCLUSIVE'        => 'AI',
+        'ALL INCLUSIVE LIGHT'  => 'AIL',
+        'ALL INCLUSIVE SOFT'   => 'AIL',
         'ALLINC'               => 'AI',
         'UAI'                  => 'UAI',
         'ULTRA ALL INCL'       => 'UAI',
@@ -285,14 +288,10 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         }
     };
 
-    // Facility aliases (Novoton API facility IDs → canonical codes)
-    // All 31 known Novoton facilities, except ID 27 (All Inclusive = board type, not a facility)
-    $facilityAliases = [
-        '1'  => 'free_beach_equipment',  // Free umbrella and sunbed
+    // Hotel facility aliases (Novoton API facility IDs → canonical codes)
+    $hotelFacilityAliases = [
         '2'  => 'free_parking',          // Parking
         '3'  => 'pets_allowed',          // Pets
-        '4'  => 'free_wifi',             // Wi-Fi
-        '5'  => 'ski_storage',           // ski wardrobe
         '6'  => 'entertainment',         // Entertainment
         '7'  => 'pool',                  // Outdoor swimming pool
         '8'  => 'pool',                  // Indoor swimming pool
@@ -301,39 +300,47 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         '11' => 'sauna',                 // Sauna
         '12' => 'fitness',               // Fitness
         '13' => 'balneology',            // Balneology
-        '14' => 'kitchenette',           // Kitchenette
         '15' => 'terrace',              // Terrace/Balcony
-        '16' => 'air_conditioning',      // Air conditioning/Heating
-        '17' => 'bathtub',              // Bathtub
         '18' => 'kids_club',            // Kids Club
         '19' => 'kids_menu',            // Childrens menu
         '20' => 'kids_pool',            // Childrens pool
         '21' => 'playground',           // Playground
-        '22' => 'baby_crib',            // Baby crib
         '23' => 'disabled_access',       // Suitable for people with disabilities
-        '24' => 'beach_bar',            // Beach bar
         '25' => 'ski_lift_transfer',     // Transport to the lift
         '26' => 'family_rooms',          // Suitable for families with children
         // 27 = All Inclusive — skipped (board type, not a facility)
-        '28' => 'blue_flag_beach',       // Blue Flag beach
         '29' => 'ev_charger',            // Electric Car Charger
         '30' => 'travel_sustainable',    // Travel Sustainable
+    ];
+
+    // Room facility aliases — in-room amenities
+    $roomFacilityAliases = [
+        '4'  => 'free_wifi',             // Wi-Fi
+        '5'  => 'ski_storage',           // ski wardrobe
+        '14' => 'kitchenette',           // Kitchenette
+        '16' => 'air_conditioning',      // Air conditioning/Heating
+        '17' => 'bathtub',              // Bathtub
+        '22' => 'baby_crib',            // Baby crib
+    ];
+
+    // Beach access aliases
+    $beachAccessAliases = [
+        '1'  => 'free_beach_equipment',  // Free umbrella and sunbed
+        '24' => 'beach_bar',            // Beach bar
+        '28' => 'blue_flag_beach',       // Blue Flag beach
         '31' => 'first_line',            // First line
     ];
 
-    // Travel group aliases (Novoton passes literal canonical codes)
-    $travelGroupAliases = [
-        'adults_only'     => 'adults_only',
-        'family_friendly' => 'family_friendly',
-        'pets_friendly'   => 'pets_friendly',
-    ];
+    // Travel groups are NOT seeded as aliases — they're derived from facilities
+    // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
 
     $seedAliasGroup('board', $boardAliases, 'exact');
     $seedAliasGroup('room_type', $roomAliases, 'exact');
     $seedAliasGroup('stars', $starAliases, 'exact');
     $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
-    $seedAliasGroup('facility', $facilityAliases, 'exact');
-    $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
+    $seedAliasGroup('hotel_facility', $hotelFacilityAliases, 'exact');
+    $seedAliasGroup('room_facility', $roomFacilityAliases, 'exact');
+    $seedAliasGroup('beach_access', $beachAccessAliases, 'exact');
 
     // Resort aliases are dynamic — auto-registered by FeatureMapper::handleUnmapped()
     // when new city names appear from the API (no pre-seeding needed)

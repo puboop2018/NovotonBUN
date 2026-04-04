@@ -110,22 +110,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
             $e->getLine()
         );
 
-        // Log the REAL error to a dedicated file (wrapped so logging never crashes the page)
-        try {
-            $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
-            if ($logDir) {
-                if (!is_dir($logDir)) {
-                    mkdir($logDir, 0775, true);
-                }
-                file_put_contents(
-                    $logDir . 'novoton_errors.log',
-                    date('Y-m-d H:i:s') . ' ' . $error_detail . "\n" . $e->getTraceAsString() . "\n\n",
-                    FILE_APPEND
-                );
-            }
-        } catch (\Throwable $logEx) {
-            // Silently ignore — logging must never break the product page
-        }
+        _nvt_log_error($error_detail, $e);
 
         // Assign safe defaults so templates don't crash on missing variables
         $view = \Tygh\Tygh::$app['view'];
@@ -153,7 +138,7 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
 
     // Prices from packages table — assign to Smarty view, NOT to $product.
     // Stuffing large nested arrays into $product causes Smarty stack overflow.
-    $prices = fn_novoton_holidays_get_hotel_prices($product['product_id'], false, $hotel_id);
+    $prices = fn_novoton_holidays_get_hotel_prices((int) $product['product_id'], false, $hotel_id);
 
     // Last sync timestamp
     $hotelRepo = Container::getInstance()->hotelRepository();
@@ -234,22 +219,7 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
 
         $product_data['is_hotel_product'] = true;
     } catch (\Throwable $e) {
-        // Log but don't crash — product page will work without hotel data
-        try {
-            $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
-            if ($logDir) {
-                if (!is_dir($logDir)) {
-                    mkdir($logDir, 0775, true);
-                }
-                file_put_contents(
-                    $logDir . 'novoton_errors.log',
-                    date('Y-m-d H:i:s') . ' get_product_data_post: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n",
-                    FILE_APPEND
-                );
-            }
-        } catch (\Throwable $logEx) {
-            // Silently ignore — logging must never break the product page
-        }
+        _nvt_log_error('get_product_data_post: ' . $e->getMessage(), $e);
     }
 }
 
@@ -269,6 +239,34 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
     // Unlink hotel record (the hotel stays, only the CS-Cart link is removed)
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotelRepo->unlinkProduct($product_id);
+}
+
+// ============================================================================
+// ERROR LOGGING
+// ============================================================================
+
+/**
+ * Log an error message to the dedicated novoton_errors.log file.
+ * Wrapped in try/catch so logging never crashes the calling code.
+ */
+function _nvt_log_error(string $message, ?\Throwable $e = null): void
+{
+    try {
+        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
+        if ($logDir) {
+            if (!is_dir($logDir)) {
+                mkdir($logDir, 0775, true);
+            }
+            $trace = $e ? "\n" . $e->getTraceAsString() : '';
+            file_put_contents(
+                $logDir . 'novoton_errors.log',
+                date('Y-m-d H:i:s') . ' ' . $message . $trace . "\n\n",
+                FILE_APPEND
+            );
+        }
+    } catch (\Throwable $logEx) {
+        // Logging must never crash the page
+    }
 }
 
 // ============================================================================

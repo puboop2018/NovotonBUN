@@ -20,7 +20,7 @@ class CronRunner
     private CronDispatcherInterface $dispatcher;
     private ?string $defaultMode;
 
-    /** @var callable(\Exception): void|null */
+    /** @var callable(\Throwable): void|null */
     private mixed $onError;
 
     public function __construct(
@@ -126,7 +126,7 @@ class CronRunner
 
             echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
             exit(0);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             echo "ERROR: " . $e->getMessage() . "\n";
 
             if (function_exists('fn_log_event')) {

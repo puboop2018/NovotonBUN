@@ -216,6 +216,10 @@ class BatchedHotelFacilitiesSync
                             "SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s",
                             $hotel_id
                         );
+
+                        // Re-derive travel groups if hotel has a linked product
+                        $this->refreshTravelGroups($hotel_id);
+
                         $this->output("OK ({$count} facilities)");
                         $state['synced']++;
                         $synced_this_run++;
@@ -454,6 +458,53 @@ class BatchedHotelFacilitiesSync
             'elapsed' => $this->formatDuration($elapsed),
             'eta' => $this->formatDuration((int)$eta_seconds),
         ];
+    }
+
+    /**
+     * Re-derive travel groups for a hotel's linked product after facility sync.
+     *
+     * Travel groups (adults_only, family_friendly, pets_friendly) are inferred
+     * from facility canonical codes — when facilities change, groups must update.
+     */
+    private function refreshTravelGroups(string $hotelId): void
+    {
+        $hotel = db_get_row(
+            "SELECT product_id, is_adults_only FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotelId
+        );
+
+        $productId = (int) ($hotel['product_id'] ?? 0);
+        if ($productId <= 0) {
+            return;
+        }
+
+        // Resolve canonical facility codes for this hotel
+        $facilityIds = db_get_fields(
+            "SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s",
+            $hotelId
+        );
+
+        $normalizer = new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer();
+        $resolvedCodes = [];
+        foreach ($facilityIds as $fid) {
+            $code = $normalizer->normalizeFacilityCode($fid);
+            if ($code !== null) {
+                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveFacility('novoton', $code);
+                if ($mapping && !empty($mapping['canonical_code'])) {
+                    $resolvedCodes[] = $mapping['canonical_code'];
+                }
+            }
+        }
+
+        $groups = \Tygh\Addons\TravelCore\Services\TravelGroupResolver::derive(
+            $resolvedCodes,
+            ($hotel['is_adults_only'] ?? 'N') === 'Y'
+        );
+
+        if (!empty($groups)) {
+            $featureMapper = new \Tygh\Addons\NovotonHolidays\Services\FeatureMapper();
+            $featureMapper->assignMultipleViaCore($productId, 'travel_group', $groups);
+        }
     }
 
 }

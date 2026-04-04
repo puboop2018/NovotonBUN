@@ -76,8 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($providerInfo && !empty($providerInfo['status_sync_callback'])) {
                 $result = call_user_func($providerInfo['status_sync_callback']);
                 if (is_array($result)) {
+                    $checked = $result['checked'] ?? $result['processed'] ?? 0;
+                    $changed = $result['changed'] ?? $result['updated'] ?? 0;
                     fn_set_notification('N', __('notice'),
-                        "Status sync for {$provider}: {$result['checked']} checked, {$result['changed']} changed."
+                        "Status sync for {$provider}: {$checked} checked, {$changed} changed."
                     );
                 }
             } else {

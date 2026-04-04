@@ -64,49 +64,6 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
     return $result;
 }
 
-/**
- * Shared implementation for all feature_id_* addon settings.
- * Returns all CS-Cart product features as "Feature Name #ID (Type)" for select dropdown.
- */
-function fn_novoton_holidays_get_feature_variants(): array
-{
-    $result = [0 => '-- Not configured --'];
-
-    $features = db_get_array(
-        "SELECT f.feature_id, f.feature_type, fd.description
-         FROM ?:product_features f
-         LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
-         WHERE f.status = 'A'
-         ORDER BY fd.description",
-        DESCR_SL
-    );
-
-    foreach ($features as $f) {
-        $typeLabel = match ($f['feature_type']) {
-            'M' => 'Multi',
-            'S' => 'Select',
-            'C' => 'Checkbox',
-            'T' => 'Text',
-            'N' => 'Number',
-            'O' => 'Date',
-            default => $f['feature_type'],
-        };
-        $result[$f['feature_id']] = ($f['description'] ?: 'Feature') . " #{$f['feature_id']} ({$typeLabel})";
-    }
-
-    return $result;
-}
-
-// CS-Cart auto-discovers variants functions by name: fn_settings_variants_addons_{addon}_{setting_id}
-function fn_settings_variants_addons_novoton_holidays_feature_id_property_rating(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_meals(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_hotel_facility(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_room_facility(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_resort(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_property_type(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_travel_group(): array { return fn_novoton_holidays_get_feature_variants(); }
-function fn_settings_variants_addons_novoton_holidays_feature_id_beach_access(): array { return fn_novoton_holidays_get_feature_variants(); }
-
 // ============================================================================
 // FUNCTION LOCATIONS
 // ============================================================================

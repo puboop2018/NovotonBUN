@@ -109,6 +109,15 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             }
         }
 
+        // Skip hotels without star classification (0 stars) if setting is enabled
+        if (ConfigProvider::shouldSkipUnratedHotels()) {
+            $classification = (int) ($hotel['classification'] ?? 0);
+            if ($classification < 1 || $classification > 5) {
+                $this->hotelRepo->markSkipped($hotelId, 'unrated');
+                return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no star classification'];
+            }
+        }
+
         // Deduplicate: same hotel can appear under different IDs from different suppliers.
         // Three-tier detection — each tier checks if a duplicate already has a CS-Cart product.
         $destId = (int) ($hotel['destination_id'] ?? 0);
@@ -194,7 +203,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         ];
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
-        $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+        $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
 
         $productId = (int) fn_update_product($productData, 0, $primaryLang);
         if (!$productId) {
@@ -288,6 +297,10 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'latitude'       => $hotel['latitude'] ?? '',
             'longitude'      => $hotel['longitude'] ?? '',
             'image_url'      => $hotel['image_url'] ?? '',
+            'address'        => $hotel['address'] ?? '',
+            'phone'          => $hotel['phone'] ?? '',
+            'email'          => $hotel['email'] ?? '',
+            'website'        => $hotel['website'] ?? '',
         ];
     }
 

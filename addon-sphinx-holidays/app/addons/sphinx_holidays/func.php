@@ -86,6 +86,7 @@ function fn_sphinx_holidays_uninstall(): bool
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
+    fn_sphinx_holidays_seed_region_mappings();
     fn_sphinx_holidays_seed_language_keys();
     return true;
 }
@@ -130,6 +131,8 @@ function fn_sphinx_holidays_seed_aliases(): void
     $boardAliases = [
         // Romanian free-text
         'All Inclusive'         => 'AI',
+        'All Inclusive Light'   => 'AIL',
+        'All Inclusive Soft'    => 'AIL',
         'ALL INCLUSIVE PLUS'    => 'AI',
         'Ultra All Inclusive'   => 'UAI',
         'Pensiune completa'    => 'FB',
@@ -241,10 +244,8 @@ function fn_sphinx_holidays_seed_aliases(): void
 
     $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
 
-    // Facility aliases — map Sphinx facility IDs to canonical codes.
-    // Each canonical code row in travel_feature_map carries its own cscart_feature_id,
-    // so the admin can assign any facility to any CS-Cart feature via the admin UI.
-    $facilityAliases = [
+    // Hotel facility aliases — property-level amenities
+    $hotelFacilityAliases = [
         // Food & Drink
         '1'   => 'kids_menu',
         '4'   => 'water_bottle',
@@ -308,12 +309,35 @@ function fn_sphinx_holidays_seed_aliases(): void
         '198' => 'invoice_available',
         '201' => 'express_checkin',
         '202' => 'babysitting',
-        // Room Amenities
+        // Outdoor
+        '72'  => 'outdoor_furniture',
+        '75'  => 'garden',
+        '76'  => 'terrace',
+        '77'  => 'sun_terrace',
+        // Security
+        '153' => 'security_24h',
+        '154' => 'soundproof_rooms',
+        '159' => 'security_alarm',
+        '166' => 'fire_extinguishers',
+        '171' => 'co_detector',
+        '173' => 'card_access',
+        '174' => 'cctv_common',
+        '175' => 'cctv_outside',
+        '176' => 'smoke_alarm',
+        '197' => 'key_access',
+        // Policies & Groups
         '111' => 'pets_allowed',
         '115' => 'non_smoking',
         '116' => 'smoking_area',
         '117' => 'non_smoking_rooms',
         '120' => 'family_rooms',
+        '118' => 'disabled_access',
+        '203' => 'stairs_only',
+        '204' => 'no_smoking_all',
+    ];
+
+    // Room facility aliases — in-room amenities
+    $roomFacilityAliases = [
         '124' => 'air_conditioning',
         '125' => 'heating',
         '126' => 'free_wifi',
@@ -351,41 +375,93 @@ function fn_sphinx_holidays_seed_aliases(): void
         '193' => 'wine_champagne',
         '194' => 'wardrobe',
         '200' => 'shared_lounge',
-        // Outdoor
-        '72'  => 'outdoor_furniture',
-        '75'  => 'garden',
-        '76'  => 'terrace',
-        '77'  => 'sun_terrace',
-        // Security
-        '153' => 'security_24h',
-        '154' => 'soundproof_rooms',
-        '159' => 'security_alarm',
-        '166' => 'fire_extinguishers',
-        '171' => 'co_detector',
-        '173' => 'card_access',
-        '174' => 'cctv_common',
-        '175' => 'cctv_outside',
-        '176' => 'smoke_alarm',
-        '197' => 'key_access',
-        // Accessibility
-        '118' => 'disabled_access',
-        '203' => 'stairs_only',
-        // Smoking Policy
-        '204' => 'no_smoking_all',
     ];
 
-    $seedAliasGroup('facility', $facilityAliases, 'exact');
-
-    // Travel group aliases — map hotel attributes to canonical codes.
-    // 'Y' = is_adults_only flag, 'family' = inferred from family facilities, 'pets' = inferred from pets_allowed.
-    $travelGroupAliases = [
-        'Y'      => 'adults_only',
-        'family' => 'family_friendly',
-        'pets'   => 'pets_friendly',
+    // Beach access aliases — beach & location amenities
+    $beachAccessAliases = [
+        // No Sphinx-specific beach IDs mapped yet; add here as they appear.
     ];
-    $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
+
+    $seedAliasGroup('hotel_facility', $hotelFacilityAliases, 'exact');
+    $seedAliasGroup('room_facility', $roomFacilityAliases, 'exact');
+    $seedAliasGroup('beach_access', $beachAccessAliases, 'exact');
+
+    // Travel groups are NOT seeded as aliases — they're derived from facilities
+    // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
 
     // Clear resolve cache after batch alias inserts
+    \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+}
+
+/**
+ * Seed whitelisted regions into travel_feature_map.
+ *
+ * For each region in the Destination Whitelist, creates a travel_feature_map row
+ * (feature_type='region') and a travel_api_alias linking the Sphinx destination_id.
+ * This allows SphinxFeatureAssigner::assignRegion() to resolve regions through
+ * the standard FeatureMapper pipeline instead of creating variants ad-hoc.
+ *
+ * Idempotent — uses INSERT IGNORE for map rows and addAlias() for aliases.
+ */
+function fn_sphinx_holidays_seed_region_mappings(): void
+{
+    if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+        return;
+    }
+
+    $tablePrefix = \Tygh\Registry::get('config.table_prefix');
+    $mapTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'travel_feature_map'
+    );
+    $whitelistTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'sphinx_destination_whitelist'
+    );
+    if (!$mapTableExists || !$whitelistTableExists) {
+        return;
+    }
+
+    // Get all whitelisted regions:
+    // 1) Regions under countries with selection_type='all' (all children included)
+    // 2) Regions explicitly whitelisted with selection_type='specific'
+    $regions = db_get_array(
+        "SELECT d.destination_id, d.name, d.country_code
+         FROM ?:sphinx_destinations d
+         JOIN ?:sphinx_destination_whitelist w ON w.destination_id = d.parent_id AND w.selection_type = 'all'
+         WHERE d.type = 'region'
+         UNION
+         SELECT d.destination_id, d.name, d.country_code
+         FROM ?:sphinx_destinations d
+         JOIN ?:sphinx_destination_whitelist w ON w.destination_id = d.destination_id AND w.selection_type = 'specific'
+         WHERE d.type = 'region'"
+    );
+
+    if (empty($regions)) {
+        return;
+    }
+
+    foreach ($regions as $region) {
+        $destId = (int) $region['destination_id'];
+        $canonicalCode = 'region_' . $destId;
+        $displayName = (string) $region['name'];
+
+        db_query(
+            "INSERT IGNORE INTO ?:travel_feature_map (feature_type, canonical_code, display_name_en, mapping_source, status)
+             VALUES ('region', ?s, ?s, 'auto', 'A')",
+            $canonicalCode, $displayName
+        );
+
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'region' AND canonical_code = ?s",
+            $canonicalCode
+        );
+
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $destId, $mapId, 'exact');
+        }
+    }
+
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }
 
@@ -594,15 +670,15 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
         return;
     }
 
-    $exists = (int) db_get_field(
-        "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE hotel_id = ?s AND sync_status = 'active'",
+    // Check if hotel exists in sphinx_hotels (any sync_status — the booking form
+    // should render even for hotels not yet synced, as the search API is always available)
+    $hotelStatus = db_get_field(
+        "SELECT sync_status FROM ?:sphinx_hotels WHERE hotel_id = ?s",
         $hotel_id
     );
 
-    if (!$exists) {
-        \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
-        return;
-    }
+    // Show booking form for any SPX-prefixed product, even if hotel isn't in local DB.
+    // The React form will handle API availability at search time.
 
     // Assign to both Smarty view AND $product array to ensure availability
     // in all template scopes (product hooks, product tabs, blocks)

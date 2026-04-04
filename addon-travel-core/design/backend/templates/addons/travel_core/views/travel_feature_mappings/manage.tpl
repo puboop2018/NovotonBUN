@@ -256,7 +256,9 @@
                     <td>
                         {if $m.api_sources}
                             {foreach from=$m.api_sources|explode:"," item=src}
-                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;" title="{$src}">{$src|upper|truncate:1:"":true}</span>
+                                {if $src|trim}
+                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;" title="{$src|escape:'html'}">{$src|escape:'html'}</span>
+                                {/if}
                             {/foreach}
                         {else}
                             <span class="muted">&mdash;</span>

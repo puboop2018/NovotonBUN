@@ -14,6 +14,7 @@ use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 /** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
 $repo = FeatureMapper::getRepository();
@@ -24,8 +25,8 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
-// Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
+// Valid feature types — derived from FeatureMapper to stay in sync automatically
+$validFeatureTypes = array_merge(FeatureMapper::STRICT_FEATURE_TYPES, FeatureMapper::DYNAMIC_FEATURE_TYPES);
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -279,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Batch scan provider hotel facilities → populate travel_unmapped_values
     if ($mode === 'scan_facilities') {
         $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
-        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+        $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
         $offset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
 
         if ($provider === '') {
@@ -324,11 +325,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $totalFacilities++;
 
-                // Check if already mapped
-                $mapping = FeatureMapper::resolve($provider, 'facility', $facilityId);
+                // Check if already mapped (facility could be hotel_facility, room_facility, or beach_access)
+                $mapping = FeatureMapper::resolveFacility($provider, $facilityId);
                 if (!$mapping) {
-                    // Track as unmapped (increments hotel_count if already exists)
-                    FeatureMapper::trackUnmapped($provider, 'facility', $facilityId, $facilityName);
+                    // Track as unmapped — default to hotel_facility
+                    FeatureMapper::trackUnmapped($provider, 'hotel_facility', $facilityId, $facilityName);
                     $newUnmapped++;
                 }
             }
@@ -341,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isComplete = count($hotels) < $batchSize || $processedSoFar >= $totalHotels;
 
         if ($isComplete) {
-            $condition = db_quote(" AND api_source = ?s AND feature_type = 'facility'", $provider);
+            $condition = db_quote(" AND api_source = ?s AND feature_type IN (?a)", $provider, FeatureMapper::FACILITY_TYPES);
             $unmappedResult = $repo->getPaginatedUnmapped($condition, 0, 0);
             $unmappedTotal = $unmappedResult['total'];
             fn_set_notification('N', __('notice'), __('travel_core.fm_scan_complete', [
@@ -400,16 +401,17 @@ if ($mode === 'manage') {
 
         // Human-readable labels for feature types
         $typeLabels = [
-            'facility'      => 'Facilities',
-            'board'         => 'Board / Meals',
-            'resort'        => 'Resorts & Cities',
-            'stars'         => 'Star Rating',
-            'property_type' => 'Property Type',
-            'travel_group'  => 'Travel Group',
-            'room_type'     => 'Room Type',
-            'region'        => 'Region',
-            'city'          => 'City',
-            'beach_access'  => 'Beach Access',
+            'hotel_facility' => 'Hotel Facilities',
+            'room_facility'  => 'Room Facilities',
+            'beach_access'   => 'Beach Access',
+            'board'          => 'Board / Meals',
+            'resort'         => 'Resorts & Cities',
+            'stars'          => 'Star Rating',
+            'property_type'  => 'Property Type',
+            'travel_group'   => 'Travel Group',
+            'room_type'      => 'Room Type',
+            'region'         => 'Region',
+            'city'           => 'City',
         ];
 
         // Providers with scan config (for "Scan Facilities" dropdown)
@@ -498,9 +500,10 @@ if ($mode === 'manage') {
 
         // Human-readable labels
         $typeLabels = [
-            'facility' => 'Facilities', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
+            'hotel_facility' => 'Hotel Facilities', 'room_facility' => 'Room Facilities',
+            'beach_access' => 'Beach Access', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
             'stars' => 'Star Rating', 'property_type' => 'Property Type', 'travel_group' => 'Travel Group',
-            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City', 'beach_access' => 'Beach Access',
+            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City',
         ];
 
         // CS-Cart pagination: assign $search with standard keys
@@ -567,7 +570,7 @@ if ($mode === 'scan_progress') {
     $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
     $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
     $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
-    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? 500), 50), 2000);
+    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
 
     $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
 

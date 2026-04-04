@@ -47,6 +47,12 @@ final class TravelConstants
     public const CURRENCY_BGN = 'BGN';
     public const CURRENCY_RON = 'RON';
 
+    // ========== Batch Processing ==========
+
+    public const BATCH_SIZE_MIN     = 50;
+    public const BATCH_SIZE_DEFAULT = 500;
+    public const BATCH_SIZE_MAX     = 2000;
+
     // ========== External URLs ==========
 
     public const BNR_RATES_URL = 'https://curs.bnr.ro/nbrfxrates.xml';

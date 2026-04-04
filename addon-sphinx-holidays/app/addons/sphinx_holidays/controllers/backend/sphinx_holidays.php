@@ -148,6 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
         }
 
+        // Seed whitelisted regions into Feature Mappings
+        fn_sphinx_holidays_seed_region_mappings();
+
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
@@ -202,18 +205,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $hotelRepo = Container::getHotelRepository();
         $synced = 0;
+        $skipped = [];
 
         foreach ($hotelIds as $hotelId) {
             $hotel = $hotelRepo->getById((string) $hotelId);
-            if ($hotel === null || empty($hotel['product_id']) || empty($hotel['image_url'])) {
+            if ($hotel === null) {
+                $skipped[] = "#{$hotelId}: not found";
                 continue;
             }
-            if (fn_sphinx_holidays_add_product_image((int) $hotel['product_id'], $hotel['image_url'])) {
-                $synced++;
+            if (empty($hotel['product_id'])) {
+                $skipped[] = "{$hotel['name']}: no linked product";
+                continue;
+            }
+
+            $productId = (int) $hotel['product_id'];
+            $imageUrls = [];
+
+            // Prefer images_json (full list) over image_url (single thumbnail)
+            $imagesJson = $hotel['images_json'] ?? '';
+            if ($imagesJson !== '' && $imagesJson !== '[]') {
+                $images = json_decode($imagesJson, true);
+                if (is_array($images)) {
+                    foreach ($images as $img) {
+                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        if ($url !== '') {
+                            $imageUrls[] = $url;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to image_url if images_json was empty
+            if (empty($imageUrls) && !empty($hotel['image_url'])) {
+                $imageUrls[] = $hotel['image_url'];
+            }
+
+            if (empty($imageUrls)) {
+                // Fetch fresh data from Sphinx API as fallback
+                $api = Container::getApi();
+                $fresh = $api->getHotel((string) $hotel['hotel_id']);
+                if (!empty($fresh['images']) && is_array($fresh['images'])) {
+                    foreach ($fresh['images'] as $img) {
+                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        if ($url !== '') {
+                            $imageUrls[] = $url;
+                        }
+                    }
+
+                    // Update DB with fresh image data so next sync doesn't need API call
+                    if (!empty($imageUrls)) {
+                        db_query(
+                            "UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s",
+                            $imageUrls[0],
+                            json_encode($fresh['images']),
+                            (string) $hotel['hotel_id']
+                        );
+                    }
+                }
+
+                if (empty($imageUrls)) {
+                    $skipped[] = "{$hotel['name']}: no images available (checked API)";
+                    continue;
+                }
+            }
+
+            $hotelSynced = 0;
+            foreach ($imageUrls as $i => $url) {
+                $isMain = ($i === 0);
+                if (fn_sphinx_holidays_add_product_image($productId, $url, $isMain)) {
+                    $hotelSynced++;
+                }
+            }
+
+            if ($hotelSynced > 0) {
+                $synced += $hotelSynced;
+            } else {
+                $skipped[] = "{$hotel['name']}: image download failed";
             }
         }
 
-        fn_set_notification('N', __('notice'), __('sphinx_holidays.images_synced') . ': ' . $synced);
+        $msg = __('sphinx_holidays.images_synced') . ': ' . $synced;
+        if (!empty($skipped)) {
+            $msg .= '<br><br><strong>Skipped:</strong><br>' . implode('<br>', $skipped);
+        }
+        fn_set_notification($synced > 0 ? 'N' : 'W', $synced > 0 ? __('notice') : __('warning'), $msg);
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
     }

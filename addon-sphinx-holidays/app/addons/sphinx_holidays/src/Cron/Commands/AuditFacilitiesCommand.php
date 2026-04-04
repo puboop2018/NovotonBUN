@@ -55,7 +55,7 @@ class AuditFacilitiesCommand
                 "SELECT a.alias_id, a.map_id, m.cscart_feature_id, m.cscart_variant_id, m.canonical_code
                  FROM ?:travel_api_alias a
                  JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-                 WHERE a.api_source = 'sphinx' AND a.feature_type = 'facility' AND a.api_value = ?s",
+                 WHERE a.api_source = 'sphinx' AND m.feature_type IN ('hotel_facility', 'room_facility', 'beach_access') AND a.api_value = ?s",
                 $fid
             );
 

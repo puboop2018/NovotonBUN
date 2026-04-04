@@ -335,6 +335,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         // Matches: "Adults Only", "Adult Only", "+18", "+16", "(18+)", "(16+)"
         $isAdultsOnly = preg_match('/\badults?\s*only\b|\(\s*\+\s*1[68]\s*\)|\(\s*1[68]\s*\+\s*\)/i', $name) ? 'Y' : 'N';
 
+        $address = $raw['address'] ?? [];
+
         return [
             'hotel_id'          => $id,
             'name'              => $name,
@@ -354,6 +356,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
             'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
             'is_adults_only'    => $isAdultsOnly,
+            'address'           => trim((string) ($address['street'] ?? '')),
+            'phone'             => trim((string) ($address['phone'] ?? '')),
+            'email'             => trim((string) ($address['email'] ?? '')),
+            'website'           => trim((string) ($address['website'] ?? '')),
+            'rating'            => isset($raw['rating']) ? (float) $raw['rating'] : null,
+            'rating_count'      => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
         ];
     }
 

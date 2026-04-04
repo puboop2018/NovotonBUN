@@ -50,7 +50,7 @@ class FeatureMapper implements FeatureMapperInterface
      * These grow organically as new hotels/facilities appear in API data.
      */
     public const DYNAMIC_FEATURE_TYPES = [
-        'facility', 'resort', 'region', 'city', 'beach_access',
+        'hotel_facility', 'room_facility', 'resort', 'region', 'city', 'beach_access',
     ];
 
     /** Feature type → travel_core addon setting key */
@@ -97,7 +97,7 @@ class FeatureMapper implements FeatureMapperInterface
      * and caches results in memory for the duration of the request.
      *
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
-     * @param string $featureType Feature type ('board', 'room_type', 'stars', 'facility', etc.)
+     * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
      * @param string $apiValue    Raw value from the API
      * @return array|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
      */
@@ -119,6 +119,27 @@ class FeatureMapper implements FeatureMapperInterface
         self::$cache[$cacheKey] = $result;
 
         return self::$cache[$cacheKey];
+    }
+
+    /** All facility sub-types */
+    public const FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
+
+    /**
+     * Resolve a facility API value across all facility sub-types.
+     *
+     * Facilities are split into hotel_facility, room_facility, and beach_access,
+     * but callers (API syncs, scans) don't know which sub-type a given facility
+     * belongs to. This tries each sub-type and returns the first match.
+     */
+    public static function resolveFacility(string $apiSource, string $apiValue): ?array
+    {
+        foreach (self::FACILITY_TYPES as $type) {
+            $result = self::resolve($apiSource, $type, $apiValue);
+            if ($result) {
+                return $result;
+            }
+        }
+        return null;
     }
 
     /** @var array<int, true> Map IDs used in this request, flushed by clearCache() */
@@ -150,6 +171,20 @@ class FeatureMapper implements FeatureMapperInterface
         }
 
         return $mapping;
+    }
+
+    /**
+     * resolveWithVariant across all facility sub-types.
+     */
+    public static function resolveWithVariantFacility(string $apiSource, string $apiValue): ?array
+    {
+        foreach (self::FACILITY_TYPES as $type) {
+            $result = self::resolveWithVariant($apiSource, $type, $apiValue);
+            if ($result) {
+                return $result;
+            }
+        }
+        return null;
     }
 
     // ── Unmapped value handling ──

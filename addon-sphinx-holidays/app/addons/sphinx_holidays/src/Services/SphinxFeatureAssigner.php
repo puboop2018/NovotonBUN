@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -194,7 +195,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                 continue;
             }
 
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            $mapping = FeatureMapper::resolveFacility(self::API_SOURCE, $facilityId);
             $resolved[] = [
                 'id' => $facilityId,
                 'name' => (string) ($facility['name'] ?? ''),
@@ -230,7 +231,34 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     private function assignRegion(int $productId, array $hotel): void
     {
-        $this->assignLocationFeature($productId, 'region', $hotel['region_name'] ?? null);
+        $regionId = (string) ($hotel['region_id'] ?? '');
+        if ($regionId === '' || $regionId === '0') {
+            return;
+        }
+
+        // Resolve through FeatureMapper (seeded from Destination Whitelist)
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'region', $regionId);
+        if (!$mapping) {
+            FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, $hotel['region_name'] ?? '');
+            return;
+        }
+
+        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+        if ($featureId <= 0) {
+            $featureId = $this->getFeatureId('region');
+        }
+        if ($featureId <= 0) {
+            return;
+        }
+
+        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+        if ($variantId <= 0) {
+            $variantId = $this->autoCreateVariant($featureId, $mapping);
+        }
+
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
     }
 
     private function assignCity(int $productId, array $hotel): void
@@ -275,7 +303,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             $mapping = $entry['mapping'];
 
             if (!$mapping) {
-                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $entry['id'], $entry['name']);
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'hotel_facility', $entry['id'], $entry['name']);
                 $unmapped[] = $entry['id'] . ':' . $entry['name'];
                 continue;
             }
@@ -292,7 +320,8 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                 // Only auto-create if at least one sibling has a variant
                 $hasMappedSibling = (int) db_get_field(
                     "SELECT COUNT(*) FROM ?:travel_feature_map
-                     WHERE feature_type = 'facility' AND cscart_feature_id = ?i
+                     WHERE feature_type IN ('hotel_facility', 'room_facility', 'beach_access')
+                       AND cscart_feature_id = ?i
                        AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
                      LIMIT 1",
                     $featureId
@@ -328,7 +357,11 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             return;
         }
 
-        $groupCodes = $this->detectTravelGroups($hotel);
+        $facilityCodes = $this->getHotelFacilityCodes($hotel);
+        $groupCodes = TravelGroupResolver::derive(
+            $facilityCodes,
+            ($hotel['is_adults_only'] ?? 'N') === 'Y'
+        );
 
         if (empty($groupCodes)) {
             $this->syncCheckboxValues($productId, $featureId, []);
@@ -336,40 +369,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
 
         $this->collectAndSyncCheckboxFeature($productId, 'travel_group', $groupCodes);
-    }
-
-    // ── Travel group detection ──
-
-    /** Facility canonical codes that indicate a family-friendly hotel */
-    private const FAMILY_FACILITY_CODES = ['family_rooms', 'kids_menu', 'babysitting', 'kids_club', 'kids_pool', 'playground'];
-
-    /** Facility canonical codes that indicate a pet-friendly hotel */
-    private const PETS_FACILITY_CODES = ['pets_allowed'];
-
-    /**
-     * Detect all applicable travel groups from hotel data.
-     *
-     * @return string[] Codes for FeatureMapper ('Y' = adults_only, 'family', 'pets')
-     */
-    private function detectTravelGroups(array $hotel): array
-    {
-        $groups = [];
-
-        if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
-            $groups[] = 'Y';
-        }
-
-        $facilityCodes = $this->getHotelFacilityCodes($hotel);
-
-        if (!empty(array_intersect($facilityCodes, self::FAMILY_FACILITY_CODES))) {
-            $groups[] = 'family';
-        }
-
-        if (!empty(array_intersect($facilityCodes, self::PETS_FACILITY_CODES))) {
-            $groups[] = 'pets';
-        }
-
-        return $groups;
     }
 
     /**
