@@ -1,3 +1,5 @@
+{script src="js/lib/select2/select2.min.js"}
+
 {* ── Sidebar: Filter Panel ── *}
 {capture name="sidebar"}
 <div class="sidebar-row">
@@ -75,7 +77,12 @@
 
         <div class="sidebar-field">
             <label>{__("name")}:</label>
-            <input type="text" name="q" value="{$search.q|escape:html}" size="20" placeholder="{__("sphinx_holidays.search_hotels")}" />
+            <input type="hidden" name="q" id="hotel_search_q" value="{$search.q|escape:html}" />
+            <select id="hotel_name_select2" style="width: 100%;">
+                {if $search.q}
+                    <option value="{$search.q|escape:html}" selected>{$search.q|escape:html}</option>
+                {/if}
+            </select>
         </div>
 
         <div class="sidebar-field">
@@ -371,6 +378,58 @@
             checkboxes[i].checked = source.checked;
         {rdelim}
     {rdelim};
+
+    // ─── Hotel name autocomplete (Select2 + AJAX) ───
+    if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {ldelim}
+        (function() {ldelim}
+            var $sel = $('#hotel_name_select2');
+            var $hidden = $('#hotel_search_q');
+
+            $sel.select2({ldelim}
+                ajax: {ldelim}
+                    url: '{"sphinx_holidays.search_hotels"|fn_url:"A"}',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {ldelim}
+                        return {ldelim} q: params.term {rdelim};
+                    {rdelim},
+                    processResults: function(data) {ldelim}
+                        return {ldelim}
+                            results: (data.results || []).map(function(r) {ldelim}
+                                var stars = r.classification > 0 ? ' ' + r.classification + '\u2605' : '';
+                                var loc = r.destination_name
+                                    ? r.destination_name + ', ' + r.country_code
+                                    : r.country_code;
+                                return {ldelim}
+                                    id: r.name,
+                                    text: r.name + stars + '  \u2014 ' + loc
+                                {rdelim};
+                            {rdelim})
+                        {rdelim};
+                    {rdelim},
+                    cache: true
+                {rdelim},
+                minimumInputLength: 2,
+                placeholder: '{__("sphinx_holidays.search_hotels")|escape:"javascript"}',
+                allowClear: true,
+                width: '100%'
+            {rdelim});
+
+            // On selection: copy name to hidden input and auto-submit form
+            $sel.on('select2:select', function(e) {ldelim}
+                $hidden.val(e.params.data.id);
+                document.getElementById('sphinx_hotels_filter_form').submit();
+            {rdelim});
+
+            // On clear: reset hidden input and auto-submit form
+            $sel.on('select2:unselecting', function() {ldelim}
+                $hidden.val('');
+                setTimeout(function() {ldelim}
+                    document.getElementById('sphinx_hotels_filter_form').submit();
+                {rdelim}, 50);
+            {rdelim});
+        {rdelim})();
+    {rdelim}
 
 {rdelim})();
 </script>

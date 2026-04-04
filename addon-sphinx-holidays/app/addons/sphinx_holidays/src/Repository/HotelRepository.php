@@ -305,6 +305,28 @@ class HotelRepository
     }
 
     /**
+     * Lightweight hotel name search for AJAX autocomplete.
+     * Returns only the columns needed for the Select2 dropdown display.
+     */
+    public function searchByName(string $query, int $limit = 20): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return [];
+        }
+        $escaped = addcslashes($query, '%_\\');
+        return db_get_array(
+            "SELECT hotel_id, name, classification, country_code, destination_name
+             FROM ?:sphinx_hotels
+             WHERE name LIKE ?l
+             ORDER BY country_code ASC, name ASC
+             LIMIT ?i",
+            '%' . $escaped . '%',
+            $limit
+        );
+    }
+
+    /**
      * Link a hotel to a CS-Cart product.
      */
     public function linkToProduct(string $hotelId, int $productId): void

@@ -386,6 +386,29 @@ if ($mode === 'search_destinations') {
     exit;
 }
 
+if ($mode === 'search_hotels') {
+    header('Content-Type: application/json; charset=utf-8');
+    $q = trim((string) ($_REQUEST['q'] ?? ''));
+    if (strlen($q) < 2) {
+        echo json_encode(['results' => []]);
+        exit;
+    }
+    $hotelRepo = Container::getHotelRepository();
+    $results = $hotelRepo->searchByName($q, 20);
+    $formatted = [];
+    foreach ($results as $r) {
+        $formatted[] = [
+            'hotel_id'         => $r['hotel_id'],
+            'name'             => $r['name'],
+            'classification'   => (int) $r['classification'],
+            'country_code'     => $r['country_code'] ?? '',
+            'destination_name' => $r['destination_name'] ?? '',
+        ];
+    }
+    echo json_encode(['results' => $formatted]);
+    exit;
+}
+
 // ─── GET handlers ───
 
 if ($mode === 'manage') {
