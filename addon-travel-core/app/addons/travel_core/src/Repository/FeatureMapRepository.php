@@ -15,14 +15,22 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 {
     // ── Resolve / lookup ──
 
+    /** Facility sub-types that the legacy 'facility' meta-type expands to */
+    private const FACILITY_SUB_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
+
     public function findByAlias(string $apiSource, string $featureType, string $apiValue): ?array
     {
+        // Legacy callers pass 'facility' — expand to all facility sub-types
+        $typeCondition = ($featureType === 'facility')
+            ? db_quote("m.feature_type IN (?a)", self::FACILITY_SUB_TYPES)
+            : db_quote("m.feature_type = ?s", $featureType);
+
         $result = db_get_row(
             "SELECT m.map_id, m.feature_type, m.canonical_code, m.display_name_en, m.display_name_ro,
                     m.cscart_feature_id, m.cscart_variant_id, m.variant_source
              FROM ?:travel_api_alias a
              JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND m.feature_type = ?s AND m.status = 'A'
+             WHERE a.api_source = ?s AND {$typeCondition} AND m.status = 'A'
                AND (
                    a.api_value = ?s
                    OR (a.match_type = 'prefix' AND ?s LIKE CONCAT(a.api_value, '%'))
@@ -33,7 +41,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
                  'exact', 'prefix', 'contains'
              ), LENGTH(a.api_value) DESC
              LIMIT 1",
-            $apiSource, $featureType,
+            $apiSource,
             $apiValue, $apiValue, $apiValue, $apiValue
         );
 
@@ -217,7 +225,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
              FROM ?:travel_feature_map m
              LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
              GROUP BY m.feature_type
-             ORDER BY FIELD(m.feature_type, 'facility', 'board', 'resort', 'stars', 'property_type', 'travel_group', 'room_type', 'region', 'city', 'beach_access')",
+             ORDER BY FIELD(m.feature_type, 'hotel_facility', 'room_facility', 'beach_access', 'board', 'resort', 'stars', 'property_type', 'travel_group', 'room_type', 'region', 'city')",
             'feature_type'
         );
     }

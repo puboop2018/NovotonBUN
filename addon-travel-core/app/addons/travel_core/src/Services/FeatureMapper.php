@@ -50,7 +50,7 @@ class FeatureMapper implements FeatureMapperInterface
      * These grow organically as new hotels/facilities appear in API data.
      */
     public const DYNAMIC_FEATURE_TYPES = [
-        'facility', 'resort', 'region', 'city', 'beach_access',
+        'hotel_facility', 'room_facility', 'resort', 'region', 'city', 'beach_access',
     ];
 
     /** Feature type → travel_core addon setting key */
@@ -164,6 +164,11 @@ class FeatureMapper implements FeatureMapperInterface
      */
     public static function handleUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): ?int
     {
+        // Legacy callers pass 'facility' — default to 'hotel_facility' for auto-registration
+        if ($featureType === 'facility') {
+            $featureType = 'hotel_facility';
+        }
+
         // Always track in unmapped_values for visibility
         self::trackUnmapped($apiSource, $featureType, $apiValue, $apiLabel);
 

@@ -293,7 +293,8 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                 // Only auto-create if at least one sibling has a variant
                 $hasMappedSibling = (int) db_get_field(
                     "SELECT COUNT(*) FROM ?:travel_feature_map
-                     WHERE feature_type = 'facility' AND cscart_feature_id = ?i
+                     WHERE feature_type IN ('hotel_facility', 'room_facility', 'beach_access')
+                       AND cscart_feature_id = ?i
                        AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
                      LIMIT 1",
                     $featureId

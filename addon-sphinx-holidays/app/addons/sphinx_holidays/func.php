@@ -243,10 +243,8 @@ function fn_sphinx_holidays_seed_aliases(): void
 
     $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
 
-    // Facility aliases — map Sphinx facility IDs to canonical codes.
-    // Each canonical code row in travel_feature_map carries its own cscart_feature_id,
-    // so the admin can assign any facility to any CS-Cart feature via the admin UI.
-    $facilityAliases = [
+    // Hotel facility aliases — property-level amenities
+    $hotelFacilityAliases = [
         // Food & Drink
         '1'   => 'kids_menu',
         '4'   => 'water_bottle',
@@ -310,12 +308,35 @@ function fn_sphinx_holidays_seed_aliases(): void
         '198' => 'invoice_available',
         '201' => 'express_checkin',
         '202' => 'babysitting',
-        // Room Amenities
+        // Outdoor
+        '72'  => 'outdoor_furniture',
+        '75'  => 'garden',
+        '76'  => 'terrace',
+        '77'  => 'sun_terrace',
+        // Security
+        '153' => 'security_24h',
+        '154' => 'soundproof_rooms',
+        '159' => 'security_alarm',
+        '166' => 'fire_extinguishers',
+        '171' => 'co_detector',
+        '173' => 'card_access',
+        '174' => 'cctv_common',
+        '175' => 'cctv_outside',
+        '176' => 'smoke_alarm',
+        '197' => 'key_access',
+        // Policies & Groups
         '111' => 'pets_allowed',
         '115' => 'non_smoking',
         '116' => 'smoking_area',
         '117' => 'non_smoking_rooms',
         '120' => 'family_rooms',
+        '118' => 'disabled_access',
+        '203' => 'stairs_only',
+        '204' => 'no_smoking_all',
+    ];
+
+    // Room facility aliases — in-room amenities
+    $roomFacilityAliases = [
         '124' => 'air_conditioning',
         '125' => 'heating',
         '126' => 'free_wifi',
@@ -353,30 +374,16 @@ function fn_sphinx_holidays_seed_aliases(): void
         '193' => 'wine_champagne',
         '194' => 'wardrobe',
         '200' => 'shared_lounge',
-        // Outdoor
-        '72'  => 'outdoor_furniture',
-        '75'  => 'garden',
-        '76'  => 'terrace',
-        '77'  => 'sun_terrace',
-        // Security
-        '153' => 'security_24h',
-        '154' => 'soundproof_rooms',
-        '159' => 'security_alarm',
-        '166' => 'fire_extinguishers',
-        '171' => 'co_detector',
-        '173' => 'card_access',
-        '174' => 'cctv_common',
-        '175' => 'cctv_outside',
-        '176' => 'smoke_alarm',
-        '197' => 'key_access',
-        // Accessibility
-        '118' => 'disabled_access',
-        '203' => 'stairs_only',
-        // Smoking Policy
-        '204' => 'no_smoking_all',
     ];
 
-    $seedAliasGroup('facility', $facilityAliases, 'exact');
+    // Beach access aliases — beach & location amenities
+    $beachAccessAliases = [
+        // No Sphinx-specific beach IDs mapped yet; add here as they appear.
+    ];
+
+    $seedAliasGroup('hotel_facility', $hotelFacilityAliases, 'exact');
+    $seedAliasGroup('room_facility', $roomFacilityAliases, 'exact');
+    $seedAliasGroup('beach_access', $beachAccessAliases, 'exact');
 
     // Travel groups are NOT seeded as aliases — they're derived from facilities
     // at runtime via TravelGroupResolver::derive(). No API value mapping needed.

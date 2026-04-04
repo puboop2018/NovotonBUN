@@ -25,7 +25,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 // Valid feature types for the shared mapping
-$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
+$validFeatureTypes = ['board', 'room_type', 'stars', 'property_type', 'hotel_facility', 'room_facility', 'travel_group', 'resort', 'region', 'city', 'beach_access'];
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -400,16 +400,17 @@ if ($mode === 'manage') {
 
         // Human-readable labels for feature types
         $typeLabels = [
-            'facility'      => 'Facilities',
-            'board'         => 'Board / Meals',
-            'resort'        => 'Resorts & Cities',
-            'stars'         => 'Star Rating',
-            'property_type' => 'Property Type',
-            'travel_group'  => 'Travel Group',
-            'room_type'     => 'Room Type',
-            'region'        => 'Region',
-            'city'          => 'City',
-            'beach_access'  => 'Beach Access',
+            'hotel_facility' => 'Hotel Facilities',
+            'room_facility'  => 'Room Facilities',
+            'beach_access'   => 'Beach Access',
+            'board'          => 'Board / Meals',
+            'resort'         => 'Resorts & Cities',
+            'stars'          => 'Star Rating',
+            'property_type'  => 'Property Type',
+            'travel_group'   => 'Travel Group',
+            'room_type'      => 'Room Type',
+            'region'         => 'Region',
+            'city'           => 'City',
         ];
 
         // Providers with scan config (for "Scan Facilities" dropdown)
