@@ -15,7 +15,7 @@ interface FeatureMapperInterface
      * Resolve an API value to a canonical mapping.
      *
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
-     * @param string $featureType Feature type ('board', 'room_type', 'stars', 'facility', etc.)
+     * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
      * @param string $apiValue    Raw value from the API
      * @return array|null Mapping row or null if unresolved
      */

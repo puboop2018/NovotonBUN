@@ -362,28 +362,4 @@ function fn_travel_core_seed_feature_map(): void
             $featureType, $canonicalCode, $nameEn, $nameRo
         );
     }
-
-    // Migration: re-type legacy 'facility' rows into the correct sub-types.
-    // Idempotent — only affects rows that still have the old generic type.
-    $roomCodes = [
-        'air_conditioning', 'heating', 'free_wifi', 'washer', 'ski_storage', 'tv', 'fan', 'desk',
-        'shower', 'view', 'minibar', 'toilet', 'towels', 'bed_linen', 'slippers', 'telephone',
-        'hair_dryer', 'alarm_clock', 'toilet_paper', 'flat_screen_tv', 'soundproofing',
-        'soundproof_rooms', 'dressing_room', 'cable_channels', 'carpet', 'free_toiletries',
-        'private_bathroom', 'private_entrance', 'safe', 'internet', 'games_puzzles',
-        'bedside_socket', 'mosquito_net', 'fridge', 'wine_champagne', 'wardrobe',
-        'kitchenette', 'bathtub', 'baby_crib',
-    ];
-    $beachCodes = ['free_beach_equipment', 'beach_bar', 'blue_flag_beach', 'first_line'];
-
-    db_query(
-        "UPDATE ?:travel_feature_map SET feature_type = 'room_facility' WHERE feature_type = 'facility' AND canonical_code IN (?a)",
-        $roomCodes
-    );
-    db_query(
-        "UPDATE ?:travel_feature_map SET feature_type = 'beach_access' WHERE feature_type = 'facility' AND canonical_code IN (?a)",
-        $beachCodes
-    );
-    // Everything remaining under 'facility' becomes 'hotel_facility'
-    db_query("UPDATE ?:travel_feature_map SET feature_type = 'hotel_facility' WHERE feature_type = 'facility'");
 }

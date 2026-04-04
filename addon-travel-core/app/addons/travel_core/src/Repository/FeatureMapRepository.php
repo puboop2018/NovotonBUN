@@ -15,22 +15,14 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 {
     // ── Resolve / lookup ──
 
-    /** Facility sub-types that the legacy 'facility' meta-type expands to */
-    private const FACILITY_SUB_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
-
     public function findByAlias(string $apiSource, string $featureType, string $apiValue): ?array
     {
-        // Legacy callers pass 'facility' — expand to all facility sub-types
-        $typeCondition = ($featureType === 'facility')
-            ? db_quote("m.feature_type IN (?a)", self::FACILITY_SUB_TYPES)
-            : db_quote("m.feature_type = ?s", $featureType);
-
         $result = db_get_row(
             "SELECT m.map_id, m.feature_type, m.canonical_code, m.display_name_en, m.display_name_ro,
                     m.cscart_feature_id, m.cscart_variant_id, m.variant_source
              FROM ?:travel_api_alias a
              JOIN ?:travel_feature_map m ON m.map_id = a.map_id
-             WHERE a.api_source = ?s AND {$typeCondition} AND m.status = 'A'
+             WHERE a.api_source = ?s AND m.feature_type = ?s AND m.status = 'A'
                AND (
                    a.api_value = ?s
                    OR (a.match_type = 'prefix' AND ?s LIKE CONCAT(a.api_value, '%'))
@@ -41,7 +33,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
                  'exact', 'prefix', 'contains'
              ), LENGTH(a.api_value) DESC
              LIMIT 1",
-            $apiSource,
+            $apiSource, $featureType,
             $apiValue, $apiValue, $apiValue, $apiValue
         );
 

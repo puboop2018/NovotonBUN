@@ -489,7 +489,7 @@ class BatchedHotelFacilitiesSync
         foreach ($facilityIds as $fid) {
             $code = $normalizer->normalizeFacilityCode($fid);
             if ($code !== null) {
-                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve('novoton', 'facility', $code);
+                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveFacility('novoton', $code);
                 if ($mapping && !empty($mapping['canonical_code'])) {
                     $resolvedCodes[] = $mapping['canonical_code'];
                 }

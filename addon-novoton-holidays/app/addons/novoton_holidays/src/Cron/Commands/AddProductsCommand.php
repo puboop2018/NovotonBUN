@@ -259,7 +259,7 @@ class AddProductsCommand extends AbstractCronCommand
                 }
             }
             if (!empty($facilityCodes)) {
-                $featureMapper->assignMultipleViaCore($productId, 'facility', array_unique($facilityCodes));
+                $featureMapper->assignFacilitiesViaCore($productId, array_unique($facilityCodes));
             }
         }
 
@@ -268,7 +268,7 @@ class AddProductsCommand extends AbstractCronCommand
         foreach ($allFacilityIds ?? [] as $fid) {
             $code = $normalizer->normalizeFacilityCode($fid);
             if ($code !== null) {
-                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolve('novoton', 'facility', $code);
+                $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveFacility('novoton', $code);
                 if ($mapping && !empty($mapping['canonical_code'])) {
                     $resolvedFacilityCodes[] = $mapping['canonical_code'];
                 }

@@ -69,7 +69,7 @@ class FeatureMapper
      * Resolves all codes, groups by cscart_feature_id, then syncs each group.
      * Handles codes mapping to different CS-Cart features (e.g. pool → Hotel Amenities, wifi → Room Amenities).
      *
-     * @param string   $coreFeatureType travel_core feature type (e.g. 'board', 'facility')
+     * @param string   $coreFeatureType travel_core feature type (e.g. 'board', 'hotel_facility')
      * @param string[] $providerCodes   Normalized provider codes
      * @return int Number of successfully assigned features
      */
@@ -113,6 +113,50 @@ class FeatureMapper
     }
 
     /**
+     * Assign facility codes across all facility sub-types (hotel_facility, room_facility, beach_access).
+     *
+     * Facility codes may belong to different sub-types, so this uses the
+     * cross-type resolver to find the correct mapping for each code.
+     *
+     * @param string[] $providerCodes Normalized provider codes (e.g. 'pool', 'free_wifi')
+     * @return int Number of successfully assigned features
+     */
+    public function assignFacilitiesViaCore(int $productId, array $providerCodes, string $apiSource = 'novoton'): int
+    {
+        $providerCodes = array_unique(array_filter(array_map('trim', $providerCodes)));
+        if (empty($providerCodes)) {
+            return 0;
+        }
+
+        $wantedByFeature = [];
+        foreach ($providerCodes as $code) {
+            $mapping = CoreFeatureMapper::resolveWithVariantFacility($apiSource, $code);
+            if (!$mapping) {
+                CoreFeatureMapper::handleUnmapped($apiSource, 'hotel_facility', $code);
+                continue;
+            }
+
+            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+
+            if ($featureId > 0 && $variantId > 0) {
+                $wantedByFeature[$featureId][] = $variantId;
+            }
+        }
+
+        if (empty($wantedByFeature)) {
+            return 0;
+        }
+
+        $totalAssigned = 0;
+        foreach ($wantedByFeature as $featureId => $variantIds) {
+            $totalAssigned += $this->syncCheckboxes($productId, $featureId, array_unique($variantIds));
+        }
+
+        return $totalAssigned;
+    }
+
+    /**
      * Get the CS-Cart feature name for a feature type.
      *
      * Uses travel_core's getFeatureId() to resolve the CS-Cart feature,
@@ -125,10 +169,10 @@ class FeatureMapper
             'property_rating' => 'stars',
             'meals'           => 'board',
             'property_type'   => 'property_type',
-            'hotel_facility'  => 'facility',
-            'room_facility'   => 'facility',
+            'hotel_facility'  => 'hotel_facility',
+            'room_facility'   => 'room_facility',
             'travel_group'    => 'travel_group',
-            'beach_access'    => 'facility',
+            'beach_access'    => 'beach_access',
             'resort'          => 'resort',
         ];
 

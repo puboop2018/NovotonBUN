@@ -324,11 +324,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $totalFacilities++;
 
-                // Check if already mapped
-                $mapping = FeatureMapper::resolve($provider, 'facility', $facilityId);
+                // Check if already mapped (facility could be hotel_facility, room_facility, or beach_access)
+                $mapping = FeatureMapper::resolveFacility($provider, $facilityId);
                 if (!$mapping) {
-                    // Track as unmapped (increments hotel_count if already exists)
-                    FeatureMapper::trackUnmapped($provider, 'facility', $facilityId, $facilityName);
+                    // Track as unmapped — default to hotel_facility
+                    FeatureMapper::trackUnmapped($provider, 'hotel_facility', $facilityId, $facilityName);
                     $newUnmapped++;
                 }
             }
@@ -341,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isComplete = count($hotels) < $batchSize || $processedSoFar >= $totalHotels;
 
         if ($isComplete) {
-            $condition = db_quote(" AND api_source = ?s AND feature_type = 'facility'", $provider);
+            $condition = db_quote(" AND api_source = ?s AND feature_type IN (?a)", $provider, FeatureMapper::FACILITY_TYPES);
             $unmappedResult = $repo->getPaginatedUnmapped($condition, 0, 0);
             $unmappedTotal = $unmappedResult['total'];
             fn_set_notification('N', __('notice'), __('travel_core.fm_scan_complete', [
@@ -499,9 +499,10 @@ if ($mode === 'manage') {
 
         // Human-readable labels
         $typeLabels = [
-            'facility' => 'Facilities', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
+            'hotel_facility' => 'Hotel Facilities', 'room_facility' => 'Room Facilities',
+            'beach_access' => 'Beach Access', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
             'stars' => 'Star Rating', 'property_type' => 'Property Type', 'travel_group' => 'Travel Group',
-            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City', 'beach_access' => 'Beach Access',
+            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City',
         ];
 
         // CS-Cart pagination: assign $search with standard keys

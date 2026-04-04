@@ -195,7 +195,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                 continue;
             }
 
-            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'facility', $facilityId);
+            $mapping = FeatureMapper::resolveFacility(self::API_SOURCE, $facilityId);
             $resolved[] = [
                 'id' => $facilityId,
                 'name' => (string) ($facility['name'] ?? ''),
@@ -276,7 +276,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             $mapping = $entry['mapping'];
 
             if (!$mapping) {
-                FeatureMapper::handleUnmapped(self::API_SOURCE, 'facility', $entry['id'], $entry['name']);
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'hotel_facility', $entry['id'], $entry['name']);
                 $unmapped[] = $entry['id'] . ':' . $entry['name'];
                 continue;
             }
