@@ -255,7 +255,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             "SELECT m.*, COUNT(a.alias_id) as alias_count,
                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
              FROM ?:travel_feature_map m
-             LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
+             LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id AND a.api_source != ''
              WHERE 1 ?p
              GROUP BY m.map_id
              ORDER BY m.position, m.canonical_code
