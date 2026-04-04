@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
+use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -262,15 +263,7 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        // Travel Group (M-type: hotel can have multiple groups)
-        // Resolve all applicable groups, then assign as batch
-        $travelGroups = [];
-
-        if (($hotel['is_adults_only'] ?? 'N') === 'Y') {
-            $travelGroups[] = 'adults_only';
-        }
-
-        // Infer family_friendly and pets_friendly from facility canonical codes
+        // Travel Group — derived from facility codes + hotel flags (not from API)
         $resolvedFacilityCodes = [];
         foreach ($allFacilityIds ?? [] as $fid) {
             $code = $normalizer->normalizeFacilityCode($fid);
@@ -282,15 +275,10 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
-        $familyCodes = ['family_rooms', 'kids_menu', 'babysitting', 'kids_club', 'kids_pool', 'playground'];
-        if (!empty(array_intersect($resolvedFacilityCodes, $familyCodes))) {
-            $travelGroups[] = 'family_friendly';
-        }
-
-        if (in_array('pets_allowed', $resolvedFacilityCodes, true)) {
-            $travelGroups[] = 'pets_friendly';
-        }
-
+        $travelGroups = TravelGroupResolver::derive(
+            $resolvedFacilityCodes,
+            ($hotel['is_adults_only'] ?? 'N') === 'Y'
+        );
         if (!empty($travelGroups)) {
             $featureMapper->assignMultipleViaCore($productId, 'travel_group', $travelGroups);
         }

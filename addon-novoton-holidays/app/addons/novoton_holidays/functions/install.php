@@ -324,19 +324,14 @@ function fn_novoton_holidays_seed_travel_aliases(): void
         '31' => 'first_line',            // First line
     ];
 
-    // Travel group aliases (Novoton passes literal canonical codes)
-    $travelGroupAliases = [
-        'adults_only'     => 'adults_only',
-        'family_friendly' => 'family_friendly',
-        'pets_friendly'   => 'pets_friendly',
-    ];
+    // Travel groups are NOT seeded as aliases — they're derived from facilities
+    // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
 
     $seedAliasGroup('board', $boardAliases, 'exact');
     $seedAliasGroup('room_type', $roomAliases, 'exact');
     $seedAliasGroup('stars', $starAliases, 'exact');
     $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
     $seedAliasGroup('facility', $facilityAliases, 'exact');
-    $seedAliasGroup('travel_group', $travelGroupAliases, 'exact');
 
     // Resort aliases are dynamic — auto-registered by FeatureMapper::handleUnmapped()
     // when new city names appear from the API (no pre-seeding needed)
