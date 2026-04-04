@@ -202,6 +202,10 @@ return [
     'sphinx_holidays.ph_facilities' => ['en' => 'Top 3 facilities', 'ro' => 'Top 3 facilități'],
     'sphinx_holidays.ph_boards' => ['en' => 'Meal plans', 'ro' => 'Tipuri masă'],
     'sphinx_holidays.ph_image_url' => ['en' => 'Main image URL', 'ro' => 'URL imagine principală'],
+    'sphinx_holidays.ph_address' => ['en' => 'Street address', 'ro' => 'Adresă stradă'],
+    'sphinx_holidays.ph_phone' => ['en' => 'Phone number', 'ro' => 'Număr telefon'],
+    'sphinx_holidays.ph_email' => ['en' => 'Email address', 'ro' => 'Adresă email'],
+    'sphinx_holidays.ph_website' => ['en' => 'Website URL', 'ro' => 'URL website'],
     'sphinx_holidays.seo_product_name' => [
         'en' => 'Product name pattern',
         'ro' => 'Șablon nume produs',
