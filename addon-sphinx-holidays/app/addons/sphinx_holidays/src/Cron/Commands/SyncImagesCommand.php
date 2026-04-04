@@ -8,13 +8,15 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 /**
  * Cron command: download and attach images from Sphinx API to CS-Cart products.
  *
- * Finds hotels that have a linked product but no images in CS-Cart yet,
- * then downloads all images from images_json and attaches them via
- * fn_update_image_pairs().
+ * Only processes hotels that:
+ * - Are linked to a CS-Cart product (product_id > 0)
+ * - Are in whitelisted countries
+ * - Have no images yet (unless &force=Y is passed)
  *
- * By default, only hotels from whitelisted countries are processed.
- *
- * Usage: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=sync_images
+ * Usage:
+ *   sync_images                — sync missing images for whitelisted countries
+ *   sync_images&country=GR    — sync missing images for Greece only
+ *   sync_images&force=Y       — re-sync all images (even if product already has images)
  */
 class SyncImagesCommand
 {
@@ -39,13 +41,22 @@ class SyncImagesCommand
         $countryCode = $params['country'] ?? '';
         $limit = (int) ($params['limit'] ?? 0);
         $batchSize = (int) ($params['batch_size'] ?? self::BATCH_SIZE);
+        $force = ($params['force'] ?? '') === 'Y';
 
-        // Resolve country filter: explicit param > whitelist > all
+        // Resolve country filter: explicit param > whitelist
         $countryCodes = [];
         if ($countryCode !== '') {
             $countryCodes = [$countryCode];
         } else {
             $countryCodes = ConfigProvider::getSelectedCountryCodes();
+        }
+
+        if (empty($countryCodes)) {
+            $this->output("ERROR: No whitelisted countries configured. Configure destination whitelist or pass &country=XX.");
+            return [
+                'success' => false,
+                'stats'   => ['error' => 'no_whitelisted_countries'],
+            ];
         }
 
         $stats = [
@@ -59,11 +70,8 @@ class SyncImagesCommand
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
 
-        if (!empty($countryCodes)) {
-            $this->output("Syncing images for hotels in whitelisted countries: " . implode(', ', $countryCodes));
-        } else {
-            $this->output("Syncing images for all hotels (no country whitelist configured)...");
-        }
+        $this->output("Syncing images for countries: " . implode(', ', $countryCodes)
+            . ($force ? ' (FORCE: re-syncing all, including products with existing images)' : ' (skipping products with existing images)'));
 
         while (true) {
             $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
@@ -71,7 +79,7 @@ class SyncImagesCommand
                 break;
             }
 
-            $hotels = $this->findHotelsNeedingImages($countryCodes, min($remaining, $effectiveBatch));
+            $hotels = $this->findHotels($countryCodes, min($remaining, $effectiveBatch), !$force);
             if (empty($hotels)) {
                 break;
             }
@@ -121,7 +129,6 @@ class SyncImagesCommand
         }
 
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
-        $stats['duration_ms'] = $durationMs;
 
         $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_added']} images added, {$stats['hotels_skipped']} skipped, {$stats['errors']} errors (" . round($durationMs / 1000, 1) . "s)");
 
@@ -139,15 +146,20 @@ class SyncImagesCommand
     }
 
     /**
-     * Find hotels that have a linked product but no images in CS-Cart yet.
+     * Find hotels with linked products that need image sync.
      *
-     * LEFT JOINs ?:images_links to exclude products that already have images.
+     * @param string[] $countryCodes  Whitelist country codes
+     * @param int      $limit         Max rows to return
+     * @param bool     $skipExisting  If true, LEFT JOINs images_links to skip products with images
      */
-    private function findHotelsNeedingImages(array $countryCodes, int $limit): array
+    private function findHotels(array $countryCodes, int $limit, bool $skipExisting): array
     {
-        $condition = '';
-        if (!empty($countryCodes)) {
-            $condition .= db_quote(" AND h.country_code IN (?a)", $countryCodes);
+        $join = '';
+        $condition = db_quote(" AND h.country_code IN (?a)", $countryCodes);
+
+        if ($skipExisting) {
+            $join = " LEFT JOIN ?:images_links il ON il.object_id = h.product_id AND il.object_type = 'product'";
+            $condition .= " AND il.pair_id IS NULL";
         }
 
         $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
@@ -155,11 +167,11 @@ class SyncImagesCommand
         return db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.images_json
              FROM ?:sphinx_hotels h
-             LEFT JOIN ?:images_links il ON il.object_id = h.product_id AND il.object_type = 'product'
+             {$join}
              WHERE h.sync_status = 'active'
                AND h.product_id IS NOT NULL AND h.product_id > 0
                AND h.images_json IS NOT NULL AND h.images_json != '[]'
-               AND il.pair_id IS NULL ?p
+               ?p
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
             $condition, $limitClause
         );
