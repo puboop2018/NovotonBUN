@@ -206,29 +206,6 @@ final class Constants
         self::FEATURE_TYPE_RESORT,
     ];
 
-    // ========== Addon Settings Keys (Feature Mapping) ==========
-
-    public const SETTING_FEATURE_ID_PROPERTY_RATING = 'addons.travel_core.feature_id_property_rating';
-    public const SETTING_FEATURE_ID_MEALS           = 'addons.travel_core.feature_id_meals';
-    public const SETTING_FEATURE_ID_HOTEL_FACILITY  = 'addons.novoton_holidays.feature_id_hotel_facility';
-    public const SETTING_FEATURE_ID_ROOM_FACILITY   = 'addons.novoton_holidays.feature_id_room_facility';
-    public const SETTING_FEATURE_ID_RESORT          = 'addons.novoton_holidays.feature_id_resort';
-    public const SETTING_FEATURE_ID_PROPERTY_TYPE   = 'addons.travel_core.feature_id_property_type';
-    public const SETTING_FEATURE_ID_TRAVEL_GROUP    = 'addons.novoton_holidays.feature_id_travel_group';
-    public const SETTING_FEATURE_ID_BEACH_ACCESS    = 'addons.novoton_holidays.feature_id_beach_access';
-
-    /** Maps feature_type -> addon setting key for the CS-Cart feature_id */
-    public const FEATURE_TYPE_TO_SETTING = [
-        self::FEATURE_TYPE_PROPERTY_RATING => self::SETTING_FEATURE_ID_PROPERTY_RATING,
-        self::FEATURE_TYPE_MEALS           => self::SETTING_FEATURE_ID_MEALS,
-        self::FEATURE_TYPE_HOTEL_FACILITY  => self::SETTING_FEATURE_ID_HOTEL_FACILITY,
-        self::FEATURE_TYPE_ROOM_FACILITY   => self::SETTING_FEATURE_ID_ROOM_FACILITY,
-        self::FEATURE_TYPE_RESORT          => self::SETTING_FEATURE_ID_RESORT,
-        self::FEATURE_TYPE_PROPERTY_TYPE   => self::SETTING_FEATURE_ID_PROPERTY_TYPE,
-        self::FEATURE_TYPE_TRAVEL_GROUP    => self::SETTING_FEATURE_ID_TRAVEL_GROUP,
-        self::FEATURE_TYPE_BEACH_ACCESS    => self::SETTING_FEATURE_ID_BEACH_ACCESS,
-    ];
-
     // ========== Countries ==========
     
     public const COUNTRIES = [

@@ -366,55 +366,6 @@
                     </item>
                 </items>
             </section>
-            <section id="feature_mapping">
-                <items>
-                    <item id="feature_mapping_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_property_rating">
-                        <type>selectbox</type>
-                        <default_value>4</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_meals">
-                        <type>selectbox</type>
-                        <default_value>6</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_hotel_facility">
-                        <type>selectbox</type>
-                        <default_value>13</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_room_facility">
-                        <type>selectbox</type>
-                        <default_value>7</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_resort">
-                        <type>selectbox</type>
-                        <default_value>2</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_property_type">
-                        <type>selectbox</type>
-                        <default_value>12</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_travel_group">
-                        <type>selectbox</type>
-                        <default_value>14</default_value>
-                        <variants/>
-                    </item>
-                    <item id="feature_id_beach_access">
-                        <type>selectbox</type>
-                        <default_value>3</default_value>
-                        <variants/>
-                    </item>
-                </items>
-            </section>
-
             <section id="seo_templates">
                 <items>
                     <item id="seo_templates_header">
