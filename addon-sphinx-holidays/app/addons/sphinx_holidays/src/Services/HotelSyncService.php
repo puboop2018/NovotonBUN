@@ -360,6 +360,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             'phone'             => trim((string) ($address['phone'] ?? '')),
             'email'             => trim((string) ($address['email'] ?? '')),
             'website'           => trim((string) ($address['website'] ?? '')),
+            'rating'            => isset($raw['rating']) ? (float) $raw['rating'] : null,
+            'rating_count'      => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
         ];
     }
 

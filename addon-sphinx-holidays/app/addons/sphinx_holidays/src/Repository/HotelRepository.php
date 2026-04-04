@@ -72,6 +72,7 @@ class HotelRepository
                      address, phone, email, website,
                      description, short_description, image_url,
                      images_json, facilities_json, is_adults_only,
+                     rating, rating_count,
                      sync_status, last_synced_at)
                  VALUES (?s, ?s, ?i, ?s,
                      ?i, ?s, ?i, ?s,
@@ -79,6 +80,7 @@ class HotelRepository
                      ?s, ?s, ?s, ?s,
                      ?s, ?s, ?s,
                      ?s, ?s, ?s,
+                     ?d, ?i,
                      'active', ?s)
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),
@@ -102,6 +104,8 @@ class HotelRepository
                     images_json = VALUES(images_json),
                     facilities_json = VALUES(facilities_json),
                     is_adults_only = VALUES(is_adults_only),
+                    rating = VALUES(rating),
+                    rating_count = VALUES(rating_count),
                     sync_status = 'active',
                     last_synced_at = VALUES(last_synced_at),
                     product_skip_reason = IF(
@@ -142,6 +146,8 @@ class HotelRepository
                 $hotel['images_json'] ?? '[]',
                 $hotel['facilities_json'] ?? '[]',
                 (string) ($hotel['is_adults_only'] ?? 'N'),
+                $hotel['rating'],
+                $hotel['rating_count'],
                 date('Y-m-d H:i:s')
             );
 
