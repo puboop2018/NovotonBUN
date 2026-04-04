@@ -871,7 +871,7 @@ function fn_novoton_holidays_add_product_image(int $product_id, string $image_ur
             ]
         ];
         
-        $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, 'product', $product_id);
+        $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, $product_id, 'product');
         
         if (file_exists($temp_file)) { unlink($temp_file); }
         return !empty($pair_ids);
