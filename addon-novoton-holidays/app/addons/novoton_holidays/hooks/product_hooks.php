@@ -133,16 +133,15 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  */
 function _nvt_populate_hotel_product_data(array &$product, array $addon_settings): void
 {
-    $product['is_hotel_product'] = true;
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
     // Prices from packages table — assign to Smarty view, NOT to $product.
     // Stuffing large nested arrays into $product causes Smarty stack overflow.
     $prices = fn_novoton_holidays_get_hotel_prices((int) $product['product_id'], false, $hotel_id);
 
-    // Last sync timestamp
+    // Last sync timestamp — local var only, NOT assigned to $product
     $hotelRepo = Container::getInstance()->hotelRepository();
-    $product['novoton_last_update'] = !empty($hotel_id)
+    $last_update = !empty($hotel_id)
         ? $hotelRepo->getLatestPackageSyncedAt($hotel_id)
         : null;
 
@@ -158,7 +157,7 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
 
     // Assign to Smarty
     \Tygh\Tygh::$app['view']->assign('prices', $prices);
-    \Tygh\Tygh::$app['view']->assign('last_update', $product['novoton_last_update']);
+    \Tygh\Tygh::$app['view']->assign('last_update', $last_update);
     \Tygh\Tygh::$app['view']->assign('product_id', $product['product_id']);
     \Tygh\Tygh::$app['view']->assign('hotel_id', $hotel_id);
     \Tygh\Tygh::$app['view']->assign('is_hotel_product', true);
@@ -201,26 +200,10 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
         return;
     }
 
-    try {
-        $addon_settings = ConfigProvider::all();
-        if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
-            return;
-        }
-
-        if (!_nvt_is_hotel_product($product_data, $addon_settings)) {
-            return;
-        }
-
-        $hotel_id = _nvt_extract_hotel_id($product_data['product_code']);
-
-        if (!empty($hotel_id)) {
-            $product_data['hotel_id'] = $hotel_id;
-        }
-
-        $product_data['is_hotel_product'] = true;
-    } catch (\Throwable $e) {
-        _nvt_log_error('get_product_data_post: ' . $e->getMessage(), $e);
-    }
+    // No-op: hotel detection and data enrichment are handled entirely in
+    // gather_additional_product_data_post. We no longer assign addon-specific
+    // keys to $product_data here to avoid polluting Smarty's $product scope
+    // chain, which causes Data::getVariable() stack overflow (see #41).
 }
 
 /**
@@ -360,7 +343,6 @@ function _nvt_assign_hotel_info_to_product(array &$product, string $hotel_id): v
 
     // Active package name
     $active_package = _nvt_resolve_active_package($hotel_info['packages'] ?? []);
-    $product['novoton_active_package'] = $active_package;
     \Tygh\Tygh::$app['view']->assign('active_package', $active_package);
 
     if (!empty($hotel_info['full_data'])) {
@@ -391,9 +373,9 @@ function _nvt_resolve_active_package(array $packages_data): string
 
 /**
  * Extract season dates and early-booking discounts from packages table
- * and assign to product + Smarty.
+ * and assign to Smarty view.
  */
-function _nvt_assign_season_and_early_booking(array &$product, string $hotel_id): void
+function _nvt_assign_season_and_early_booking(array $product, string $hotel_id): void
 {
     $hotelRepo = Container::getInstance()->hotelRepository();
     $package_data = $hotelRepo->getLatestPriceinfoData($hotel_id);
@@ -409,9 +391,6 @@ function _nvt_assign_season_and_early_booking(array &$product, string $hotel_id)
             $early_booking = _nvt_parse_early_booking($priceinfo);
         }
     }
-
-    $product['novoton_season_dates']  = $season_dates;
-    $product['novoton_early_booking'] = $early_booking;
 
     \Tygh\Tygh::$app['view']->assign('season_dates', $season_dates);
     \Tygh\Tygh::$app['view']->assign('early_booking', $early_booking);

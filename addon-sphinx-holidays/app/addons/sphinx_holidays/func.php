@@ -645,14 +645,9 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
     );
 
     if (!empty($hotel)) {
-        $product_data['hotel_id'] = $hotel['hotel_id'];
-        // Use CS-Cart product name (single source of truth); fall back to hotel_id if product was deleted
-        $product_data['hotel_name'] = $product_data['product'] ?? ('Hotel ' . $hotel['hotel_id']);
-        $product_data['star_rating'] = $hotel['classification'];
-        $product_data['travel_provider'] = 'sphinx';
-        // Assign hotel data to Smarty view directly — NOT to $product_data.
-        // Stuffing large nested arrays into $product causes Smarty's Data class
-        // to overflow PHP's stack limit during variable scope resolution.
+        // Assign hotel data to Smarty view only — NOT to $product_data.
+        // Any keys added to $product_data pollute Smarty's $product scope chain,
+        // causing Data::getVariable() stack overflow on product detail pages.
         \Tygh\Tygh::$app['view']->assign('sphinx_hotel_data', $hotel);
     }
 }
