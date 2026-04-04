@@ -214,7 +214,7 @@
                 <items>
                     <item id="seo_placeholders_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
+                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}, {{address}}, {{phone}}, {{email}}, {{website}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
                         <variants/>
                     </item>
                     <item id="seo_product_name">
@@ -270,6 +270,10 @@
                 `country_name`      VARCHAR(255) DEFAULT NULL,
                 `latitude`          DECIMAL(10,7) DEFAULT NULL,
                 `longitude`         DECIMAL(10,7) DEFAULT NULL,
+                `address`           VARCHAR(500) DEFAULT NULL COMMENT 'Street address from API',
+                `phone`             VARCHAR(50) DEFAULT NULL COMMENT 'Hotel phone number',
+                `email`             VARCHAR(255) DEFAULT NULL COMMENT 'Hotel email address',
+                `website`           VARCHAR(500) DEFAULT NULL COMMENT 'Hotel website URL',
                 `description`       TEXT DEFAULT NULL,
                 `short_description` TEXT DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,

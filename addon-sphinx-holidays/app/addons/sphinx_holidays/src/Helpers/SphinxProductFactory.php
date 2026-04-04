@@ -297,6 +297,10 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'latitude'       => $hotel['latitude'] ?? '',
             'longitude'      => $hotel['longitude'] ?? '',
             'image_url'      => $hotel['image_url'] ?? '',
+            'address'        => $hotel['address'] ?? '',
+            'phone'          => $hotel['phone'] ?? '',
+            'email'          => $hotel['email'] ?? '',
+            'website'        => $hotel['website'] ?? '',
         ];
     }
 
