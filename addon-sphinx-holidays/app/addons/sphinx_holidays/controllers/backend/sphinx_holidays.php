@@ -241,8 +241,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($imageUrls)) {
-                $skipped[] = "{$hotel['name']}: no image URLs in API data";
-                continue;
+                // Fetch fresh data from Sphinx API as fallback
+                $api = Container::getApi();
+                $fresh = $api->getHotel((string) $hotel['hotel_id']);
+                if (!empty($fresh['images']) && is_array($fresh['images'])) {
+                    foreach ($fresh['images'] as $img) {
+                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        if ($url !== '') {
+                            $imageUrls[] = $url;
+                        }
+                    }
+
+                    // Update DB with fresh image data so next sync doesn't need API call
+                    if (!empty($imageUrls)) {
+                        db_query(
+                            "UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s",
+                            $imageUrls[0],
+                            json_encode($fresh['images']),
+                            (string) $hotel['hotel_id']
+                        );
+                    }
+                }
+
+                if (empty($imageUrls)) {
+                    $skipped[] = "{$hotel['name']}: no images available (checked API)";
+                    continue;
+                }
             }
 
             $hotelSynced = 0;
