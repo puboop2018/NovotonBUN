@@ -54,6 +54,7 @@ class HotelListSyncCommand extends AbstractCronCommand
                 if (empty($hotel_id)) continue;
 
                 $hotelName = (string)($hotel->Hotel ?? '');
+                $hotelType = (string)($hotel->HotelType ?? '');
 
                 $hotelBatch[] = [
                     'hotel_id' => $hotel_id,
@@ -61,7 +62,8 @@ class HotelListSyncCommand extends AbstractCronCommand
                     'city' => (string)($hotel->City ?? ''),
                     'region' => (string)($hotel->Region ?? ''),
                     'country' => (string)($hotel->Country ?? $country),
-                    'hotel_type' => (string)($hotel->HotelType ?? ''),
+                    'hotel_type' => $hotelType,
+                    'star_rating' => self::parseStarRating($hotelType),
                     'property_type' => $detector->detect($hotelName),
                     'latitude' => (string)($hotel->Lat ?? ''),
                     'longitude' => (string)($hotel->Lng ?? ''),
@@ -80,8 +82,31 @@ class HotelListSyncCommand extends AbstractCronCommand
         $this->output("Total hotels: {$total}");
         $this->output("Synced: " . ($added + $updated) . " (new: {$added})");
 
+        // Ensure Novoton aliases exist in travel_api_alias (idempotent)
+        if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {
+            fn_novoton_holidays_seed_travel_aliases();
+        }
+
         $stats = ['total' => $total, 'added' => $added, 'updated' => $updated];
         $this->logComplete('hotel_list', $stats);
         return ['success' => true, 'stats' => $stats];
+    }
+
+    /**
+     * Parse star rating from hotel_type string.
+     * Common formats: "4*", "3* Sup", "5*", "Apart"
+     *
+     * @return int|null Star rating 1-5 or null if not parseable
+     */
+    private static function parseStarRating(string $hotelType): ?int
+    {
+        if ($hotelType === '') {
+            return null;
+        }
+        if (preg_match('/^(\d)/', $hotelType, $matches)) {
+            $stars = (int) $matches[1];
+            return ($stars >= 1 && $stars <= 5) ? $stars : null;
+        }
+        return null;
     }
 }
