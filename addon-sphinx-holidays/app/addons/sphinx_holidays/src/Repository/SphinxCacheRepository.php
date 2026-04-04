@@ -23,8 +23,8 @@ class SphinxCacheRepository
     {
         db_query(
             "INSERT INTO ?:sphinx_cache (cache_key, cache_data, expires_at)
-             VALUES (?s, ?s, ?i)
-             ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expires_at = VALUES(expires_at)",
+             VALUES (?s, ?s, ?i) AS new_row
+             ON DUPLICATE KEY UPDATE cache_data = new_row.cache_data, expires_at = new_row.expires_at",
             $key,
             $data,
             $expiresAt

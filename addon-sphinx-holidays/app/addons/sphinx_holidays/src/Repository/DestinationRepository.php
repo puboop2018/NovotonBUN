@@ -44,16 +44,17 @@ class DestinationRepository
                 "INSERT INTO ?:sphinx_destinations
                     (destination_id, name, type, parent_id, country_code, geoname_id, latitude, longitude, hotel_count, last_synced_at)
                  VALUES (?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)
+                 AS new_row
                  ON DUPLICATE KEY UPDATE
-                    name = VALUES(name),
-                    type = VALUES(type),
-                    parent_id = VALUES(parent_id),
-                    country_code = VALUES(country_code),
-                    geoname_id = VALUES(geoname_id),
-                    latitude = VALUES(latitude),
-                    longitude = VALUES(longitude),
-                    hotel_count = VALUES(hotel_count),
-                    last_synced_at = VALUES(last_synced_at)",
+                    name = new_row.name,
+                    type = new_row.type,
+                    parent_id = new_row.parent_id,
+                    country_code = new_row.country_code,
+                    geoname_id = new_row.geoname_id,
+                    latitude = new_row.latitude,
+                    longitude = new_row.longitude,
+                    hotel_count = new_row.hotel_count,
+                    last_synced_at = new_row.last_synced_at",
                 $id,
                 (string) ($dest['name'] ?? ''),
                 (string) ($dest['type'] ?? 'destination'),

@@ -207,15 +207,15 @@ class HotelSync
 
         $sql = "INSERT INTO ?:novoton_hotels
                 (hotel_id, hotel_name, city, country, hotel_type, star_rating, property_type, is_adults_only, hotel_list_synced_at, created_at)
-                VALUES " . implode(', ', $values) . "
+                VALUES " . implode(', ', $values) . " AS new_row
                 ON DUPLICATE KEY UPDATE
-                hotel_name = VALUES(hotel_name),
-                city = VALUES(city),
-                country = VALUES(country),
-                hotel_type = VALUES(hotel_type),
-                star_rating = VALUES(star_rating),
-                property_type = VALUES(property_type),
-                is_adults_only = VALUES(is_adults_only),
+                hotel_name = new_row.hotel_name,
+                city = new_row.city,
+                country = new_row.country,
+                hotel_type = new_row.hotel_type,
+                star_rating = new_row.star_rating,
+                property_type = new_row.property_type,
+                is_adults_only = new_row.is_adults_only,
                 hotel_list_synced_at = NOW()";
 
         db_query($sql);
@@ -505,10 +505,10 @@ class HotelSync
 
         $sql = "INSERT INTO ?:novoton_hotel_packages
                 (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
-                VALUES " . implode(', ', $values) . "
+                VALUES " . implode(', ', $values) . " AS new_row
                 ON DUPLICATE KEY UPDATE
-                package_name = VALUES(package_name),
-                priceinfo_data = VALUES(priceinfo_data),
+                package_name = new_row.package_name,
+                priceinfo_data = new_row.priceinfo_data,
                 needs_price_compute = 'Y',
                 synced_at = NOW()";
 

@@ -139,10 +139,10 @@ while ($offset < $totalHotels) {
 // Insert unmapped into travel_unmapped_values
 $insertStmt = $pdo->prepare("
     INSERT INTO {$prefix}travel_unmapped_values (api_source, feature_type, api_value, api_label, hotel_count)
-    VALUES ('sphinx', 'facility', ?, ?, ?)
+    VALUES ('sphinx', 'facility', ?, ?, ?) AS new_row
     ON DUPLICATE KEY UPDATE
-        hotel_count = VALUES(hotel_count),
-        api_label = IF(VALUES(api_label) != '', VALUES(api_label), api_label)
+        hotel_count = new_row.hotel_count,
+        api_label = IF(new_row.api_label != '', new_row.api_label, api_label)
 ");
 
 $newUnmapped = 0;
