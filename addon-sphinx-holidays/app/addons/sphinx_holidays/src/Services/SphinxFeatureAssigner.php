@@ -231,7 +231,34 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     private function assignRegion(int $productId, array $hotel): void
     {
-        $this->assignLocationFeature($productId, 'region', $hotel['region_name'] ?? null);
+        $regionId = (string) ($hotel['region_id'] ?? '');
+        if ($regionId === '' || $regionId === '0') {
+            return;
+        }
+
+        // Resolve through FeatureMapper (seeded from Destination Whitelist)
+        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'region', $regionId);
+        if (!$mapping) {
+            FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, $hotel['region_name'] ?? '');
+            return;
+        }
+
+        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+        if ($featureId <= 0) {
+            $featureId = $this->getFeatureId('region');
+        }
+        if ($featureId <= 0) {
+            return;
+        }
+
+        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+        if ($variantId <= 0) {
+            $variantId = $this->autoCreateVariant($featureId, $mapping);
+        }
+
+        if ($variantId > 0) {
+            $this->assignSelectBoxValue($productId, $featureId, $variantId);
+        }
     }
 
     private function assignCity(int $productId, array $hotel): void

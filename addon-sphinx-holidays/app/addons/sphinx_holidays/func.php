@@ -86,6 +86,7 @@ function fn_sphinx_holidays_uninstall(): bool
 function fn_sphinx_holidays_post_install(): bool
 {
     fn_sphinx_holidays_seed_aliases();
+    fn_sphinx_holidays_seed_region_mappings();
     fn_sphinx_holidays_seed_language_keys();
     return true;
 }
@@ -389,6 +390,78 @@ function fn_sphinx_holidays_seed_aliases(): void
     // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
 
     // Clear resolve cache after batch alias inserts
+    \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
+}
+
+/**
+ * Seed whitelisted regions into travel_feature_map.
+ *
+ * For each region in the Destination Whitelist, creates a travel_feature_map row
+ * (feature_type='region') and a travel_api_alias linking the Sphinx destination_id.
+ * This allows SphinxFeatureAssigner::assignRegion() to resolve regions through
+ * the standard FeatureMapper pipeline instead of creating variants ad-hoc.
+ *
+ * Idempotent — uses INSERT IGNORE for map rows and addAlias() for aliases.
+ */
+function fn_sphinx_holidays_seed_region_mappings(): void
+{
+    if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
+        return;
+    }
+
+    $tablePrefix = \Tygh\Registry::get('config.table_prefix');
+    $mapTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'travel_feature_map'
+    );
+    $whitelistTableExists = db_get_field(
+        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+        $tablePrefix . 'sphinx_destination_whitelist'
+    );
+    if (!$mapTableExists || !$whitelistTableExists) {
+        return;
+    }
+
+    // Get all whitelisted regions:
+    // 1) Regions under countries with selection_type='all' (all children included)
+    // 2) Regions explicitly whitelisted with selection_type='specific'
+    $regions = db_get_array(
+        "SELECT d.destination_id, d.name, d.country_code
+         FROM ?:sphinx_destinations d
+         JOIN ?:sphinx_destination_whitelist w ON w.destination_id = d.parent_id AND w.selection_type = 'all'
+         WHERE d.type = 'region'
+         UNION
+         SELECT d.destination_id, d.name, d.country_code
+         FROM ?:sphinx_destinations d
+         JOIN ?:sphinx_destination_whitelist w ON w.destination_id = d.destination_id AND w.selection_type = 'specific'
+         WHERE d.type = 'region'"
+    );
+
+    if (empty($regions)) {
+        return;
+    }
+
+    foreach ($regions as $region) {
+        $destId = (int) $region['destination_id'];
+        $canonicalCode = 'region_' . $destId;
+        $displayName = (string) $region['name'];
+
+        db_query(
+            "INSERT IGNORE INTO ?:travel_feature_map (feature_type, canonical_code, display_name_en, mapping_source, status)
+             VALUES ('region', ?s, ?s, 'auto', 'A')",
+            $canonicalCode, $displayName
+        );
+
+        $mapId = (int) db_get_field(
+            "SELECT map_id FROM ?:travel_feature_map WHERE feature_type = 'region' AND canonical_code = ?s",
+            $canonicalCode
+        );
+
+        if ($mapId > 0) {
+            \Tygh\Addons\TravelCore\Services\FeatureMapper::addAlias('sphinx', (string) $destId, $mapId, 'exact');
+        }
+    }
+
     \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 }
 

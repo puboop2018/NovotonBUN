@@ -148,6 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
         }
 
+        // Seed whitelisted regions into Feature Mappings
+        fn_sphinx_holidays_seed_region_mappings();
+
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
