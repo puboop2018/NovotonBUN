@@ -168,6 +168,7 @@ function fn_travel_core_seed_feature_map(): void
     $seeds = [
         // Board/Meal plans
         ['board', 'AI',  'All Inclusive',      'All Inclusive'],
+        ['board', 'AIL', 'All Inclusive Light', 'All Inclusive Light'],
         ['board', 'UAI', 'Ultra All Inclusive', 'Ultra All Inclusive'],
         ['board', 'FB',  'Full Board',         'Pensiune completă'],
         ['board', 'HB',  'Half Board',         'Demipensiune'],

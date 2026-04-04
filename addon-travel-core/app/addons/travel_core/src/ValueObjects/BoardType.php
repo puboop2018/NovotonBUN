@@ -15,6 +15,7 @@ namespace Tygh\Addons\TravelCore\ValueObjects;
 final class BoardType
 {
     public const ALL_INCLUSIVE       = 'AI';
+    public const ALL_INCLUSIVE_LIGHT = 'AIL';
     public const ULTRA_ALL_INCLUSIVE = 'UAI';
     public const FULL_BOARD          = 'FB';
     public const FULL_BOARD_PLUS     = 'FB+';
@@ -26,6 +27,7 @@ final class BoardType
 
     private const DISPLAY_NAMES = [
         self::ALL_INCLUSIVE       => 'All Inclusive',
+        self::ALL_INCLUSIVE_LIGHT => 'All Inclusive Light',
         self::ULTRA_ALL_INCLUSIVE => 'Ultra All Inclusive',
         self::FULL_BOARD          => 'Full Board',
         self::FULL_BOARD_PLUS     => 'Full Board Plus',
@@ -39,6 +41,8 @@ final class BoardType
     private const ALIASES = [
         'ALL INCL'              => self::ALL_INCLUSIVE,
         'ALL INCLUSIVE'         => self::ALL_INCLUSIVE,
+        'ALL INCLUSIVE LIGHT'   => self::ALL_INCLUSIVE_LIGHT,
+        'ALL INCLUSIVE SOFT'    => self::ALL_INCLUSIVE_LIGHT,
         'ALLINC'               => self::ALL_INCLUSIVE,
         'ULTRA ALL INCL'       => self::ULTRA_ALL_INCLUSIVE,
         'ULTRA ALL INCLUSIVE'   => self::ULTRA_ALL_INCLUSIVE,

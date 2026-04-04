@@ -130,6 +130,8 @@ function fn_sphinx_holidays_seed_aliases(): void
     $boardAliases = [
         // Romanian free-text
         'All Inclusive'         => 'AI',
+        'All Inclusive Light'   => 'AIL',
+        'All Inclusive Soft'    => 'AIL',
         'ALL INCLUSIVE PLUS'    => 'AI',
         'Ultra All Inclusive'   => 'UAI',
         'Pensiune completa'    => 'FB',

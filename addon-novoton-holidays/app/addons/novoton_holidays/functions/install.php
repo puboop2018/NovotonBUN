@@ -208,8 +208,11 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     // Board/Meal aliases (Novoton XML API values)
     $boardAliases = [
         'AI'                   => 'AI',
+        'AIL'                  => 'AIL',
         'ALL INCL'             => 'AI',
         'ALL INCLUSIVE'        => 'AI',
+        'ALL INCLUSIVE LIGHT'  => 'AIL',
+        'ALL INCLUSIVE SOFT'   => 'AIL',
         'ALLINC'               => 'AI',
         'UAI'                  => 'UAI',
         'ULTRA ALL INCL'       => 'UAI',

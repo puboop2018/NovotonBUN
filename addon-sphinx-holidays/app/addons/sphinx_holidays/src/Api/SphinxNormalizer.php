@@ -21,12 +21,17 @@ class SphinxNormalizer implements ProviderNormalizerInterface
      */
     private static array $unknownBoards = [];
 
-    /** Board code mapping: Sphinx meal names → canonical codes */
+    /** Board code mapping: Sphinx meal names → canonical codes.
+     *  Order matters for partial matching — more specific entries must come first. */
     private const BOARD_MAP = [
-        // Romanian
-        'all inclusive'         => 'AI',
-        'all inclusive plus'    => 'AI',
+        // All Inclusive variants (specific before generic for partial match)
         'ultra all inclusive'   => 'UAI',
+        'all inclusive light'   => 'AIL',
+        'all inclusive soft'    => 'AIL',
+        'all inclusive plus'    => 'AI',
+        'platinum all inclusive' => 'AI',
+        'all inclusive'         => 'AI',
+        // Romanian
         'pensiune completa'    => 'FB',
         'pensiune completă'    => 'FB',
         'demipensiune'         => 'HB',
@@ -42,7 +47,6 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         'room only'            => 'RO',
         'b&b'                  => 'BB',
         'buffet breakfast'     => 'BB',
-        'platinum all inclusive' => 'AI',
         'ro'                   => 'RO',
     ];
 
