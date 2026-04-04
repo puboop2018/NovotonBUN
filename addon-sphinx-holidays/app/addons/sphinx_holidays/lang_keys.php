@@ -63,6 +63,7 @@ return [
     'sphinx_holidays.cron_header' => ['en' => 'Cron Settings', 'ro' => 'Setări Cron'],
     'sphinx_holidays.cron_access_key' => ['en' => 'Cron access key', 'ro' => 'Cheie acces cron'],
     'sphinx_holidays.cron_access_key.tooltip' => ['en' => 'Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels', 'ro' => 'Cheie acces pentru URL cron: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels'],
+    'sphinx_holidays.cron_commands' => ['en' => 'Cron Commands', 'ro' => 'Comenzi Cron'],
     'sphinx_holidays.debug_header' => ['en' => 'Debug', 'ro' => 'Depanare'],
     'sphinx_holidays.debug_logging' => ['en' => 'Enable debug logging', 'ro' => 'Activează logare depanare'],
     'sphinx_holidays.addon_settings' => [
