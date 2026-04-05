@@ -112,6 +112,19 @@ function smarty_modifier_novoton_format_board($board_id)
 }
 
 /**
+ * Smarty modifier: {$hotel_id|nvt_hotel_tab_data}
+ * Returns large hotel data from PHP registry (prices, rooms, seasons etc.)
+ * without polluting the Smarty scope chain.
+ */
+function smarty_modifier_nvt_hotel_tab_data($hotel_id)
+{
+    if (empty($hotel_id)) {
+        return [];
+    }
+    return fn_nvt_get_hotel_tab_data((string) $hotel_id);
+}
+
+/**
  * Register Smarty modifiers explicitly as backup.
  * The smarty_modifier_{name} naming convention handles auto-discovery,
  * but explicit registration ensures CS-Cart's Smarty also knows about them.
@@ -130,6 +143,7 @@ function fn_novoton_holidays_register_smarty_modifiers()
             if ($smarty) {
                 $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
                 $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
+                $smarty->registerPlugin('modifier', 'nvt_hotel_tab_data', 'smarty_modifier_nvt_hotel_tab_data');
                 $registered = true;
             }
         }

@@ -225,12 +225,12 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
 
     // Pack everything into $product['nvt'] — accessed as $product.nvt.xxx in templates.
     // Do NOT use $view->assign() — it causes the Data.php:265 crash.
-    $product['nvt'] = [
-        'is_hotel_product'         => true,
-        'hotel_id'                 => $hotel_id,
-        'product_id'               => $product['product_id'],
-        'show_booking_form'        => $show_booking_form,
-        'booking_form_position'    => $booking_form_position,
+    //
+    // NOTE: Large data (prices, rooms_data, packages_data, hotel_full_data)
+    // is stored in a static registry instead of $product to keep $product
+    // small. Smarty wraps each $product key in Variable objects — if the
+    // array is deeply nested, it can exhaust 256 MB during scope resolution.
+    _nvt_data_registry($hotel_id, [
         'prices'                   => $prices,
         'rooms_data'               => $rooms_data,
         'packages_data'            => $packages_data,
@@ -241,6 +241,15 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
         'early_booking'            => $early_booking,
         'room_age_bands'           => $room_age_bands,
         'last_update'              => $last_update,
+    ]);
+
+    // Only scalar/small values go into $product['nvt']
+    $product['nvt'] = [
+        'is_hotel_product'         => true,
+        'hotel_id'                 => $hotel_id,
+        'product_id'               => $product['product_id'],
+        'show_booking_form'        => $show_booking_form,
+        'booking_form_position'    => $booking_form_position,
         'calendar_prices_json'     => $calendar_prices_json,
         'calendar_prices_currency' => $calendar_prices_currency,
         'show_calendar_prices'     => $show_calendar_prices,
@@ -364,7 +373,48 @@ function _nvt_extract_hotel_id(string $product_code): ?string
 }
 
 /**
+ * Static registry for large hotel data that must NOT go into $product.
+ *
+ * Smarty wraps every key in $product with Variable objects. Deeply nested
+ * arrays (prices with 200+ entries, full_data with rooms/facilities) cause
+ * Smarty 5's Data::getVariable() to exhaust PHP's 256 MB memory limit.
+ *
+ * This registry stores that data outside the Smarty scope chain entirely.
+ * Templates retrieve it via {$hotel_data = fn_nvt_get_data($hotel_id)} or
+ * by unpacking at the top of the template.
+ *
+ * @param string|null $hotel_id Hotel ID to store/retrieve (null = get all)
+ * @param array|null  $data     Data to store (null = retrieve)
+ * @return array Stored data for the hotel, or empty array
+ */
+function _nvt_data_registry(?string $hotel_id = null, ?array $data = null): array
+{
+    static $registry = [];
+
+    if ($hotel_id !== null && $data !== null) {
+        $registry[$hotel_id] = $data;
+        return $data;
+    }
+
+    if ($hotel_id !== null) {
+        return $registry[$hotel_id] ?? [];
+    }
+
+    return $registry;
+}
+
+/**
+ * Public accessor for hotel data registry — called from Smarty templates
+ * via registered modifier or PHP function in templates.
+ */
+function fn_nvt_get_hotel_tab_data(string $hotel_id): array
+{
+    return _nvt_data_registry($hotel_id);
+}
+
+/**
  * Load hotel info from cache and assign to Smarty view.
+ * @deprecated Use _nvt_populate_hotel_product_data() which packs into $product['nvt']
  */
 function _nvt_assign_hotel_info_to_product(array $product, string $hotel_id): void
 {
