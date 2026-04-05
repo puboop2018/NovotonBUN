@@ -7,17 +7,14 @@
  * compilation if the modifier isn't found in plugin directories.
  *}
 
-{* Only show for Novoton hotel products *}
-{if !$product.nvt.is_hotel_product}
+{* Load hotel data from PHP static registry — NOT from $product.
+   Modifying $product during Smarty rendering causes Data.php:265 crash. *}
+{$_nvt_data = $product.product_id|nvt_hotel_tab_data}
+{if !$_nvt_data.is_hotel_product}
     {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
 {else}
 
-{* Unpack $nvt container into local aliases to avoid Smarty scope chain
-   traversal for every variable access (fixes Data.php:265 memory exhaustion) *}
-{* Load large data from PHP registry (NOT from $product — that causes Smarty
-   Data.php:265 memory exhaustion due to deeply nested Variable objects).
-   fn_nvt_get_hotel_tab_data() returns the data stored during the product hook. *}
-{$_nvt_data = $product.nvt.hotel_id|nvt_hotel_tab_data}
+{* Unpack registry data into local template variables *}
 {$prices = $_nvt_data.prices}
 {$rooms_data = $_nvt_data.rooms_data}
 {$board_data = $_nvt_data.board_data}
@@ -28,7 +25,7 @@
 {$early_booking = $_nvt_data.early_booking}
 {$room_age_bands = $_nvt_data.room_age_bands}
 {$last_update = $_nvt_data.last_update}
-{$hotel_id = $product.nvt.hotel_id}
+{$hotel_id = $_nvt_data.hotel_id}
 
 {style src="css/addons/novoton_holidays/styles.css"}
 
