@@ -73,67 +73,20 @@ function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_c
  */
 function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
-    if (empty($product['product_id'])) {
-        return;
-    }
-
     // ────────────────────────────────────────────────────────────────────
-    // CRITICAL: Do NOT modify $product or call $view->assign() here.
+    // COMPLETE NO-OP.
     //
-    // This hook runs DURING Smarty template rendering. In Smarty 5,
-    // $product is already wrapped in a Variable object. Modifying the
-    // underlying array through the PHP reference corrupts Smarty's
-    // internal scope chain, causing Data::getVariable() infinite
-    // recursion that exhausts the 256 MB memory limit (Data.php:265).
+    // In Smarty 5 (CS-Cart 4.18+), this hook runs during template
+    // rendering. ANY of the following crashes the page:
+    //   - $view->assign() → corrupts Smarty scope chain (Data.php:265)
+    //   - $product['key'] = ... → corrupts Smarty Variable wrapper
+    //   - registerPlugin() → too late, compiled templates can't find it
     //
-    // ALL data is stored in a PHP static registry (_nvt_data_registry).
-    // Templates retrieve it via {$hotel_id|nvt_hotel_tab_data} modifier.
+    // All hotel data is now loaded by templates themselves:
+    //   - Booking form: detected from $product.product_code prefix (NVT)
+    //   - Hotel prices tab: uses fn_novoton_holidays_get_tab_data()
+    //     registered as a Smarty function in func.php
     // ────────────────────────────────────────────────────────────────────
-
-    $addon_settings = ConfigProvider::all();
-    if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
-        return;
-    }
-
-    if (!_nvt_is_hotel_product($product, $addon_settings)) {
-        // Store in registry — do NOT modify $product
-        _nvt_data_registry('__pid_' . $product['product_id'], [
-            'is_hotel_product' => false,
-        ]);
-        return;
-    }
-
-    // Convert PHP errors (including trigger_error from CS-Cart DB layer)
-    // into exceptions so our try/catch can handle them.
-    $previousHandler = set_error_handler(function ($severity, $message, $file, $line) {
-        // Only convert errors, not notices/deprecations
-        if ($severity & (E_ERROR | E_USER_ERROR | E_WARNING | E_USER_WARNING | E_RECOVERABLE_ERROR)) {
-            throw new \ErrorException($message, 0, $severity, $file, $line);
-        }
-        return false; // Let PHP's default handler deal with notices
-    });
-
-    try {
-        _nvt_populate_hotel_product_data($product, $addon_settings);
-    } catch (\Throwable $e) {
-        $error_detail = sprintf(
-            'Novoton: product hook failed for product #%d: [%s] %s in %s:%d',
-            $product['product_id'],
-            get_class($e),
-            $e->getMessage(),
-            $e->getFile(),
-            $e->getLine()
-        );
-
-        _nvt_log_error($error_detail, $e);
-
-        // Store safe defaults in registry — do NOT modify $product
-        _nvt_data_registry('__pid_' . $product['product_id'], [
-            'is_hotel_product' => false,
-        ]);
-    } finally {
-        restore_error_handler();
-    }
 }
 
 /**
