@@ -8,7 +8,7 @@
 {include file="addons/travel_core/blocks/booking_engine.tpl"
     travel_provider='sphinx'
     travel_search_dispatch='sphinx_booking.search'
-    current_hotel_id=$hotel_id|default:$sphinx_hotel_id
+    current_hotel_id=$hotel_id
     current_product_id=$product_id
     calendar_prices_json=$calendar_prices_json
     calendar_prices_currency=$calendar_prices_currency
