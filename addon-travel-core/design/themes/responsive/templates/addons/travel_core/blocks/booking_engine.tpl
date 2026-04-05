@@ -42,30 +42,13 @@
     {$current_hotel_id = $hotel_id|default:$travel_search_params.hotel_id|default:''}
 {/if}
 
-{* ── Runtime color overrides from admin Appearance Settings ── *}
-{* Only emit properties that have a non-empty value; empty = use LESS/theme default *}
+{* ── Runtime color overrides: passed via data-colors JSON, applied by React ── *}
 {$_tc = $addons.travel_core|default:[]}
-{capture name="_tc_style"}{strip}
-{if !empty($_tc.color_primary)}--nvt-primary:{$_tc.color_primary|escape:'html'};{/if}
-{if !empty($_tc.color_accent)}--nvt-accent:{$_tc.color_accent|escape:'html'};{/if}
-{if !empty($_tc.color_text)}--nvt-text:{$_tc.color_text|escape:'html'};{/if}
-{if !empty($_tc.color_text_light)}--nvt-text-light:{$_tc.color_text_light|escape:'html'};{/if}
-{if !empty($_tc.color_bg)}--nvt-bg:{$_tc.color_bg|escape:'html'};{/if}
-{if !empty($_tc.color_border)}--nvt-border:{$_tc.color_border|escape:'html'};{/if}
-{if !empty($_tc.color_search_btn_bg)}--nvt-search-btn-bg:{$_tc.color_search_btn_bg|escape:'html'};{/if}
-{if !empty($_tc.color_search_btn_hover)}--nvt-search-btn-hover:{$_tc.color_search_btn_hover|escape:'html'};{/if}
-{if !empty($_tc.color_search_btn_text)}--nvt-search-btn-text:{$_tc.color_search_btn_text|escape:'html'};{/if}
-{if !empty($_tc.color_cal_cheapest)}--nvt-cal-cheapest-color:{$_tc.color_cal_cheapest|escape:'html'};{/if}
-{if !empty($_tc.color_cal_price)}--nvt-cal-price-color:{$_tc.color_cal_price|escape:'html'};{/if}
-{if !empty($_tc.color_danger)}--nvt-danger:{$_tc.color_danger|escape:'html'};{/if}
-{/strip}{/capture}
-{if $smarty.capture._tc_style|trim}
-<style>:root { {$smarty.capture._tc_style nofilter} }</style>
-{/if}
 
 {* Container for React component *}
 <div id="travel-booking-root"
      data-travel-booking
+     data-colors='{ldelim}"primary":"{$_tc.color_primary|default:""}","accent":"{$_tc.color_accent|default:""}","text":"{$_tc.color_text|default:""}","textLight":"{$_tc.color_text_light|default:""}","bg":"{$_tc.color_bg|default:""}","border":"{$_tc.color_border|default:""}","btnBg":"{$_tc.color_search_btn_bg|default:""}","btnHover":"{$_tc.color_search_btn_hover|default:""}","btnText":"{$_tc.color_search_btn_text|default:""}","calCheapest":"{$_tc.color_cal_cheapest|default:""}","calPrice":"{$_tc.color_cal_price|default:""}","danger":"{$_tc.color_danger|default:""}"{rdelim}'
      data-search-dispatch="{$travel_search_dispatch}"
      data-provider="{$travel_provider}"
      data-hotel-id="{$current_hotel_id|default:''}"

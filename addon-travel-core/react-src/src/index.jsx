@@ -92,6 +92,45 @@ function readConfig(el) {
 }
 
 /**
+ * CSS variable name mapping for color overrides.
+ * Keys match the JSON keys in data-colors attribute.
+ */
+const COLOR_CSS_MAP = {
+    primary:      '--nvt-primary',
+    accent:       '--nvt-accent',
+    text:         '--nvt-text',
+    textLight:    '--nvt-text-light',
+    bg:           '--nvt-bg',
+    border:       '--nvt-border',
+    btnBg:        '--nvt-search-btn-bg',
+    btnHover:     '--nvt-search-btn-hover',
+    btnText:      '--nvt-search-btn-text',
+    calCheapest:  '--nvt-cal-cheapest-color',
+    calPrice:     '--nvt-cal-price-color',
+    danger:       '--nvt-danger',
+};
+
+/**
+ * Apply admin color overrides from data-colors JSON attribute.
+ * Sets CSS custom properties on :root so all components pick them up.
+ * Only non-empty values are applied — empty strings fall back to CSS defaults.
+ */
+function applyColors(el) {
+    const raw = el.dataset.colors;
+    if (!raw) return;
+    try {
+        const colors = JSON.parse(raw);
+        const root = document.documentElement;
+        for (const [key, cssVar] of Object.entries(COLOR_CSS_MAP)) {
+            const value = colors[key];
+            if (value && typeof value === 'string' && value.trim()) {
+                root.style.setProperty(cssVar, value.trim());
+            }
+        }
+    } catch (_) { /* ignore malformed JSON */ }
+}
+
+/**
  * Main initialisation function.
  * Finds mount points by [data-travel-booking] attribute and renders React roots.
  */
@@ -99,6 +138,7 @@ function init() {
     const mountPoints = document.querySelectorAll('[data-travel-booking]');
     mountPoints.forEach(el => {
         loadTranslations(el);
+        applyColors(el);
         const config = readConfig(el);
         if (!config.mode) config.mode = el.dataset.travelBooking || 'product';
         createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
