@@ -115,10 +115,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'rooms_data' => json_encode([]),
         'guest_name' => $guest_list, 'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'base_price' => $basePrice, 'total_price' => $total_price,
         'currency' => $currency, 'status' => TravelConstants::STATUS_PENDING,
-        'api_response' => json_encode($bookingData),
+        'api_response' => json_encode($bookingData, JSON_UNESCAPED_UNICODE),
     ];
 
     if ($existing_booking_id !== null) {
@@ -143,7 +143,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'nights' => $booking_record['nights'],
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'guest_names' => $guest_list, 'holder_name' => $holder_name,
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
         'total_price' => $total_price, 'currency' => $currency,
     ];

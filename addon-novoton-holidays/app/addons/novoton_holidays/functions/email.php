@@ -382,6 +382,12 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         // Star rating labels — use FeatureMapper display names with hardcoded fallback
         $star_labels_fallback = NOVOTON_STAR_LABELS;
 
+        // Pre-fetch hotel data in batch (2 queries) instead of N+1 inside the loop
+        $hotel_ids = array_column($hotels, 'hotel_id');
+        if (!empty($hotel_ids)) {
+            fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+        }
+
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
             $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
@@ -518,6 +524,12 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
 
         $root = $dom->createElement('products');
         $dom->appendChild($root);
+
+        // Pre-fetch hotel data in batch to avoid N+1 queries inside the loop
+        $hotel_ids = array_column($hotels, 'hotel_id');
+        if (!empty($hotel_ids)) {
+            fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
+        }
 
         foreach ($hotels as $hotel) {
             $product_code = !empty($hotel['product_code'])

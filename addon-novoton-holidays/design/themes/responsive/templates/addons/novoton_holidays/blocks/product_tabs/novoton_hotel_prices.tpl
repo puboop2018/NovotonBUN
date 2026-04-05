@@ -8,7 +8,7 @@
  *}
 
 {* Only show for Novoton hotel products *}
-{if !$is_hotel_product && !$product.is_hotel_product}
+{if !$is_hotel_product}
     {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
 {else}
 

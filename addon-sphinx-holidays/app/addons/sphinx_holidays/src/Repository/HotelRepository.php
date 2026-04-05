@@ -110,20 +110,20 @@ class HotelRepository
                     sync_status = 'active',
                     last_synced_at = new_row.last_synced_at,
                     product_skip_reason = IF(
-                        destination_name != new_row.destination_name
-                        OR country_name != new_row.country_name
-                        OR country_code != new_row.country_code,
-                        NULL, product_skip_reason
+                        ?:sphinx_hotels.destination_name != new_row.destination_name
+                        OR ?:sphinx_hotels.country_name != new_row.country_name
+                        OR ?:sphinx_hotels.country_code != new_row.country_code,
+                        NULL, ?:sphinx_hotels.product_skip_reason
                     ),
                     product_needs_update = IF(
-                        product_id IS NOT NULL AND product_id > 0 AND (
-                            name != new_row.name
-                            OR description != new_row.description
-                            OR short_description != new_row.short_description
-                            OR classification != new_row.classification
-                            OR image_url != new_row.image_url
+                        ?:sphinx_hotels.product_id IS NOT NULL AND ?:sphinx_hotels.product_id > 0 AND (
+                            ?:sphinx_hotels.name != new_row.name
+                            OR ?:sphinx_hotels.description != new_row.description
+                            OR ?:sphinx_hotels.short_description != new_row.short_description
+                            OR ?:sphinx_hotels.classification != new_row.classification
+                            OR ?:sphinx_hotels.image_url != new_row.image_url
                         ),
-                        'Y', product_needs_update
+                        'Y', ?:sphinx_hotels.product_needs_update
                     )",
                 $hotelId,
                 (string) ($hotel['name'] ?? ''),
@@ -299,6 +299,28 @@ class HotelRepository
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
             "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
+            '%' . $escaped . '%',
+            $limit
+        );
+    }
+
+    /**
+     * Lightweight hotel name search for AJAX autocomplete.
+     * Returns only the columns needed for the Select2 dropdown display.
+     */
+    public function searchByName(string $query, int $limit = 20): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return [];
+        }
+        $escaped = addcslashes($query, '%_\\');
+        return db_get_array(
+            "SELECT hotel_id, name, classification, country_code, destination_name
+             FROM ?:sphinx_hotels
+             WHERE name LIKE ?l
+             ORDER BY country_code ASC, name ASC
+             LIMIT ?i",
             '%' . $escaped . '%',
             $limit
         );

@@ -84,7 +84,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // Get children ages from guests_data (more reliable than form hidden field)
     $all_child_ages = [];
     foreach ($guests_data as $guest) {
-        if (isset($guest['type']) && $guest['type'] == 'child' && isset($guest['age'])) {
+        if (isset($guest['type']) && $guest['type'] === 'child' && isset($guest['age'])) {
             $all_child_ages[] = (int)($guest['age']);
         }
     }
@@ -347,7 +347,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         // Collect children ages from guests_data for this room
         $child_ages_for_room = [];
         foreach ($guests_data as $key => $guest) {
-            if (isset($guest['room']) && $guest['room'] == $room_num && $guest['type'] == 'child') {
+            if (isset($guest['room']) && $guest['room'] == $room_num && $guest['type'] === 'child') {
                 $child_ages_for_room[] = (int)($guest['age']);
             }
         }
@@ -435,7 +435,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'room_type' => $room_type_column,
             'adults' => $total_adults,
             'children' => $total_children,
-            'rooms_data' => json_encode($rooms_data),
+            'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
             'guest_name' => $guest_list,
             'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
             'base_price' => $base_price,
@@ -480,7 +480,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'children' => $total_children,
             'children_ages' => $children_ages,
             'num_rooms' => $num_rooms,
-            'rooms_data' => json_encode($rooms_data),
+            'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
             'guest_name' => $guest_list,
             'holder_name' => $holder_name,
             'guest_email' => '',  // Will be set from order at checkout

@@ -172,7 +172,7 @@ try {
         'children' => $children,
         'children_ages' => $children_ages_str,
         'rooms' => $rooms,
-        'nights' => (int)(round((strtotime($check_out) - strtotime($check_in)) / 86400)),
+        'nights' => (strtotime($check_out) && strtotime($check_in)) ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
     ]);
 
 } catch (\Throwable $e) {

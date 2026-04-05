@@ -21,6 +21,21 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 class BookingRepository implements BookingRepositoryInterface
 {
     /**
+     * Columns selected for listing queries (excludes large JSON/text fields:
+     * rooms_data, guests_data, api_request, api_response, alternatives_data,
+     * notes, terms_of_payment_raw/formatted, terms_of_cancellation_raw/formatted).
+     */
+    private const LIST_COLUMNS = 'booking_id, order_id, product_id, user_id,
+        session_id, novoton_confirm_id, novoton_invoice_id, novoton_res_num,
+        novoton_status, hotel_id, hotel_name, package_id, package_name,
+        room_id, room_type, board_id, board_name, item_id,
+        check_in, check_out, nights, adults, children, children_ages,
+        num_rooms, room_number, total_rooms, guest_name, guest_email, guest_phone,
+        holder_name, base_price, extras_price, total_price, api_price,
+        currency, status, alternatives_requested, last_status_check,
+        created_at, updated_at';
+
+    /**
      * Request-scoped memo cache for hydrated bookings.
      * Prevents the same booking's rooms_data/guests_data from being
      * decoded 2-3 times within a single request cycle.
@@ -124,18 +139,12 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings by user ID
      */
-    public function findByUserId(int $user_id, int $limit = 0): array
+    public function findByUserId(int $user_id, int $limit = 100): array
     {
-        if ($limit > 0) {
-            return db_get_array(
-                "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i",
-                $user_id,
-                $limit
-            );
-        }
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC",
-            $user_id
+            "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i",
+            $user_id,
+            $limit
         );
     }
     
@@ -145,7 +154,7 @@ class BookingRepository implements BookingRepositoryInterface
     public function findBySessionId(string $session_id): array
     {
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE session_id = ?s AND order_id = 0 ORDER BY created_at DESC",
+            "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE session_id = ?s AND order_id = 0 ORDER BY created_at DESC LIMIT 50",
             $session_id
         );
     }
@@ -153,38 +162,37 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings by hotel ID
      */
-    public function findByHotelId(string $hotel_id): array
+    public function findByHotelId(string $hotel_id, int $limit = 100): array
     {
-        return db_get_array("SELECT * FROM ?:novoton_bookings WHERE hotel_id = ?s ORDER BY check_in DESC", $hotel_id);
+        return db_get_array(
+            "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE hotel_id = ?s ORDER BY check_in DESC LIMIT ?i",
+            $hotel_id,
+            $limit
+        );
     }
     
     /**
      * Find pending bookings
      */
-    public function findPending(int $limit = 0): array
+    public function findPending(int $limit = 500): array
     {
-        if ($limit > 0) {
-            return db_get_array(
-                "SELECT * FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC LIMIT ?i",
-                TravelConstants::STATUS_PENDING,
-                $limit
-            );
-        }
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC",
-            TravelConstants::STATUS_PENDING
+            "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC LIMIT ?i",
+            TravelConstants::STATUS_PENDING,
+            $limit
         );
     }
     
     /**
      * Find bookings with Novoton reservation ID
      */
-    public function findWithReservationId(): array
+    public function findWithReservationId(int $limit = 1000): array
     {
         return db_get_array(
-            "SELECT * FROM ?:novoton_bookings 
+            "SELECT " . self::LIST_COLUMNS . ", novoton_reservation_id FROM ?:novoton_bookings
              WHERE novoton_reservation_id IS NOT NULL AND novoton_reservation_id != ''
-             ORDER BY created_at DESC"
+             ORDER BY created_at DESC LIMIT ?i",
+            $limit
         );
     }
     

@@ -30,36 +30,36 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
         'synced_at' => $pkg['synced_at']
     ];
 
-    // Decode priceinfo if available
-    if (!empty($pkg['priceinfo_data'])) {
+    // Decode priceinfo only when detailed extraction is requested.
+    // When called from prefetch (false), priceinfo_data is excluded from
+    // the SELECT to avoid transferring 50-200KB of JSON per package row.
+    if ($include_priceinfo_details && !empty($pkg['priceinfo_data'])) {
         $priceinfo = json_decode($pkg['priceinfo_data'], true);
         if ($priceinfo === null) return $packageData;
         if ($priceinfo) {
             $packageData['priceinfo'] = $priceinfo;
 
             // Extract detailed priceinfo components if requested
-            if ($include_priceinfo_details) {
-                // Extract seasons for display
-                if (isset($priceinfo['seasons']['season'])) {
-                    $packageData['seasons'] = $priceinfo['seasons']['season'];
-                    // Normalize single season to array
-                    if (isset($packageData['seasons']['IdSeason'])) {
-                        $packageData['seasons'] = [$packageData['seasons']];
-                    }
+            // Extract seasons for display
+            if (isset($priceinfo['seasons']['season'])) {
+                $packageData['seasons'] = $priceinfo['seasons']['season'];
+                // Normalize single season to array
+                if (isset($packageData['seasons']['IdSeason'])) {
+                    $packageData['seasons'] = [$packageData['seasons']];
                 }
+            }
 
-                // Extract early booking for display
-                if (isset($priceinfo['early_booking'])) {
-                    $packageData['early_booking'] = $priceinfo['early_booking'];
-                }
+            // Extract early booking for display
+            if (isset($priceinfo['early_booking'])) {
+                $packageData['early_booking'] = $priceinfo['early_booking'];
+            }
 
-                // Extract season prices for display
-                if (isset($priceinfo['season_price'])) {
-                    $packageData['season_price'] = $priceinfo['season_price'];
-                    // Normalize single entry to array
-                    if (isset($packageData['season_price']['IdRoom'])) {
-                        $packageData['season_price'] = [$packageData['season_price']];
-                    }
+            // Extract season prices for display
+            if (isset($priceinfo['season_price'])) {
+                $packageData['season_price'] = $priceinfo['season_price'];
+                // Normalize single entry to array
+                if (isset($packageData['season_price']['IdRoom'])) {
+                    $packageData['season_price'] = [$packageData['season_price']];
                 }
             }
         }
@@ -122,7 +122,9 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
         $hotel['packages'] = $packages;
     } else {
         $rows = db_get_array(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            "SELECT id, hotel_id, package_id, package_name, min_price, has_early_booking,
+                    seasons_count, currency, synced_at
+             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
             $hotel['hotel_id']
         );
         if (!empty($rows)) {
@@ -168,9 +170,11 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
         $missing
     );
 
-    // Batch query 2: all package rows for these hotels
+    // Batch query 2: package metadata (exclude priceinfo_data JSON — not needed for listing)
     $all_packages = db_get_array(
-        "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id IN (?a) ORDER BY hotel_id, package_name",
+        "SELECT id, hotel_id, package_id, package_name, min_price, has_early_booking,
+                seasons_count, currency, synced_at
+         FROM ?:novoton_hotel_packages WHERE hotel_id IN (?a) ORDER BY hotel_id, package_name",
         $missing
     );
 
@@ -641,15 +645,22 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
         // Parse <IdFacility> elements from hotel_facilities API response
         $facility_nodes = $response->xpath('//IdFacility') ?: [];
 
+        // Collect valid IDs and batch INSERT (single query instead of N round trips)
+        $facility_ids = [];
         foreach ($facility_nodes as $node) {
-            $facility_id = (int) $node;
-
-            if ($facility_id > 0) {
-                db_query(
-                    "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES (?s, ?i)",
-                    $hotel_id, $facility_id
-                );
+            $fid = (int) $node;
+            if ($fid > 0) {
+                $facility_ids[] = $fid;
             }
+        }
+        if (!empty($facility_ids)) {
+            $values = [];
+            foreach ($facility_ids as $fid) {
+                $values[] = db_quote("(?s, ?i)", $hotel_id, $fid);
+            }
+            db_query(
+                "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES " . implode(', ', $values)
+            );
         }
 
         return true;

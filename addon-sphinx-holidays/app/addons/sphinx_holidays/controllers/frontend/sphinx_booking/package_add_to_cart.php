@@ -125,7 +125,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $num_rooms = max(1, (int)($bookingData['num_rooms'] ?? 1));
 
     if (empty($nights) && !empty($check_in) && !empty($check_out)) {
-        $nights = (int)round((strtotime($check_out) - strtotime($check_in)) / 86400);
+        $ci_ts = strtotime($check_in);
+        $co_ts = strtotime($check_out);
+        if ($ci_ts !== false && $co_ts !== false) {
+            $nights = (int)round(($co_ts - $ci_ts) / 86400);
+        }
     }
 
     // Parse rooms data from form
@@ -151,13 +155,13 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'board_id' => $boardName, 'check_in' => $check_in, 'check_out' => $check_out,
         'nights' => $nights, 'adults' => $adults, 'children' => $children,
         'children_ages' => $children_ages, 'num_rooms' => $num_rooms,
-        'rooms_data' => json_encode($rooms_data),
+        'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
         'guest_name' => $guest_list, 'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '', 'guest_phone' => $contact['phone'] ?? '',
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'base_price' => $basePrice, 'total_price' => $total_price,
         'currency' => $priceCurrency, 'status' => TravelConstants::STATUS_PENDING,
-        'api_response' => json_encode($customized ?? $bookingData),
+        'api_response' => json_encode($customized ?? $bookingData, JSON_UNESCAPED_UNICODE),
     ];
 
     if ($existing_booking_id !== null) {
@@ -191,7 +195,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         'num_rooms' => $num_rooms, 'rooms_data' => $rooms_data,
         'transport_type' => $transport_type,
         'guest_names' => $guest_list, 'holder_name' => $holder_name,
-        'guests_data' => json_encode($guests_data),
+        'guests_data' => json_encode($guests_data, JSON_UNESCAPED_UNICODE),
         'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
         'total_price' => $total_price, 'currency' => $priceCurrency,
         'additional_services' => $service_codes,

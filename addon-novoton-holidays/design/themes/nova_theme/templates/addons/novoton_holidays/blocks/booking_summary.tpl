@@ -27,7 +27,7 @@
 
     {* Board type *}
     <div style="margin-bottom: 4px; font-size: 13px;">
-        {$product.extra.board_id|default:$product.extra.board_name}
+        {$product.extra.board_id|default:$product.extra.board_name|escape:html}
     </div>
 
     {* Guests *}
