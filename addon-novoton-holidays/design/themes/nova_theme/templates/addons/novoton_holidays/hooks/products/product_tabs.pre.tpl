@@ -1,19 +1,35 @@
 {*
- * Hook: products:product_tabs (nova_theme)
+ * Hook: products:product_tabs
  * Injects Novoton booking form before product tabs on hotel product pages.
  *
- * SMARTY 5 COMPATIBILITY: Inlined booking engine — no {include}.
+ * SMARTY 5 FIX: Inlined mount point — no {include}, no $view->assign().
+ * Nested {include} on CS-Cart product pages creates a Smarty scope chain
+ * deep enough to exhaust 256MB in Data::getVariable() (Data.php:265).
+ * Inlining the HTML avoids creating additional Smarty scope levels.
+ *
+ * The React booking engine reads data-* attributes and handles everything
+ * client-side via AJAX. No server-side Smarty data is needed.
  *}
 
 {if $product.product_code|substr:0:3 == 'NVT'}
 
-{$_nvt_hid = $product.product_code|substr:3}
+{* ── CSS color overrides from admin Appearance Settings ── *}
+{strip}
+{$_colors = ''}
+{if $addons.travel_core.color_primary}{$_colors = "`$_colors`--nvt-primary:`$addons.travel_core.color_primary`;"}{/if}
+{if $addons.travel_core.color_accent}{$_colors = "`$_colors`--nvt-accent:`$addons.travel_core.color_accent`;"}{/if}
+{if $addons.travel_core.color_search_btn_bg}{$_colors = "`$_colors`--nvt-search-btn-bg:`$addons.travel_core.color_search_btn_bg`;"}{/if}
+{if $addons.travel_core.color_search_btn_hover}{$_colors = "`$_colors`--nvt-search-btn-hover:`$addons.travel_core.color_search_btn_hover`;"}{/if}
+{if $addons.travel_core.color_search_btn_text}{$_colors = "`$_colors`--nvt-search-btn-text:`$addons.travel_core.color_search_btn_text`;"}{/if}
+{/strip}
+{if $_colors}<style>:root {ldelim} {$_colors nofilter} {rdelim}</style>{/if}
 
+{* ── React mount point with data attributes ── *}
 <div id="travel-booking-root"
      data-travel-booking
      data-search-dispatch="novoton_booking.search"
      data-provider="novoton"
-     data-hotel-id="{$_nvt_hid}"
+     data-hotel-id="{$product.product_code|substr:3}"
      data-product-id="{$product.product_id}"
      data-debug="false"
      data-mode="product"
@@ -28,8 +44,9 @@
     </div>
 </div>
 
-{$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
-<script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$cache_ver}" defer></script>
-<script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$cache_ver}" defer></script>
+{* ── React bundles ── *}
+{$_cv = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
+<script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$_cv}" defer></script>
+<script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$_cv}" defer></script>
 
 {/if}
