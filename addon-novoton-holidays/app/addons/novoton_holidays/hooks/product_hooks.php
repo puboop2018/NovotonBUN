@@ -83,8 +83,9 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
     }
 
     if (!_nvt_is_hotel_product($product, $addon_settings)) {
-        \Tygh\Tygh::$app['view']->assign('is_hotel_product', false);
-        \Tygh\Tygh::$app['view']->assign('show_novoton_booking_form', false);
+        // Mark as non-hotel via $product — do NOT call $view->assign()
+        // during template rendering (causes Data.php:265 memory exhaustion)
+        $product['nvt'] = ['is_hotel_product' => false];
         return;
     }
 
@@ -112,14 +113,8 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 
         _nvt_log_error($error_detail, $e);
 
-        // Assign safe defaults so templates don't crash on missing variables
-        $view = \Tygh\Tygh::$app['view'];
-        $view->assign('is_hotel_product', false);
-        $view->assign('show_novoton_booking_form', false);
-        $view->assign('prices', []);
-        $view->assign('calendar_prices_json', '{}');
-        $view->assign('calendar_prices_currency', '');
-        $view->assign('show_calendar_prices', 'N');
+        // Assign safe defaults via $product — do NOT use $view->assign()
+        $product['nvt'] = ['is_hotel_product' => false];
     } finally {
         restore_error_handler();
     }
@@ -131,49 +126,72 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  * Extracted so the caller can wrap in try/catch without deeply nesting
  * the entire function body. Any \Throwable is caught by the caller.
  */
-function _nvt_populate_hotel_product_data(array $product, array $addon_settings): void
+function _nvt_populate_hotel_product_data(array &$product, array $addon_settings): void
 {
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
-    // Prices from packages table — assign to Smarty view, NOT to $product.
-    // Stuffing large nested arrays into $product causes Smarty stack overflow.
+    // ────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────
+
+    // Prices from packages table
     $prices = fn_novoton_holidays_get_hotel_prices((int) $product['product_id'], false, $hotel_id);
 
-    // Last sync timestamp — local var only, NOT assigned to $product
+    // Last sync timestamp
     $hotelRepo = Container::getInstance()->hotelRepository();
     $last_update = !empty($hotel_id)
         ? $hotelRepo->getLatestPackageSyncedAt($hotel_id)
         : null;
 
     // Hotel info (rooms, packages, board, full data)
+    $rooms_data = [];
+    $packages_data = [];
+    $board_data = [];
+    $hotel_full_data = [];
+    $active_package = '';
+
     if (!empty($hotel_id)) {
-        _nvt_assign_hotel_info_to_product($product, $hotel_id);
-        _nvt_assign_season_and_early_booking($product, $hotel_id);
+        $hotel_info = fn_novoton_holidays_get_hotel_data($hotel_id);
+
+        if (!empty($hotel_info)) {
+            if (!empty($hotel_info['rooms'])) {
+                $rooms_by_id = [];
+                foreach ($hotel_info['rooms'] as $room) {
+                    $rid = $room['IdRoom'] ?? '';
+                    if (!empty($rid)) {
+                        $rooms_by_id[$rid] = $room;
+                    }
+                }
+                $rooms_data = $rooms_by_id;
+            }
+            $packages_data = $hotel_info['packages'] ?? [];
+            $board_data = $hotel_info['board'] ?? [];
+            $active_package = _nvt_resolve_active_package($packages_data);
+            $hotel_full_data = $hotel_info['full_data'] ?? [];
+        }
     }
 
-    // Build per-room child age bands from price data
+    // Season/early booking data
+    $season_dates = [];
+    $early_booking = [];
+    if (!empty($hotel_id)) {
+        $package_data = $hotelRepo->getLatestPriceinfoData($hotel_id);
+        if (!empty($package_data)) {
+            $priceinfo = json_decode($package_data, true);
+            if ($priceinfo) {
+                $season_dates = _nvt_parse_seasons($priceinfo);
+                $early_booking = _nvt_parse_early_booking($priceinfo);
+            }
+        }
+    }
+
+    // Room age bands
     $room_age_bands = _nvt_build_room_age_bands($prices);
-    \Tygh\Tygh::$app['view']->assign('room_age_bands', $room_age_bands);
-
-    // Assign to Smarty
-    \Tygh\Tygh::$app['view']->assign('prices', $prices);
-    \Tygh\Tygh::$app['view']->assign('last_update', $last_update);
-    \Tygh\Tygh::$app['view']->assign('product_id', $product['product_id']);
-    \Tygh\Tygh::$app['view']->assign('hotel_id', $hotel_id);
-    \Tygh\Tygh::$app['view']->assign('is_hotel_product', true);
-    \Tygh\Tygh::$app['view']->assign('addon_settings', $addon_settings);
-
-    // Booking form settings
-    $show_booking_form    = !isset($addon_settings['show_booking_form']) || $addon_settings['show_booking_form'] === 'Y';
-    $booking_form_position = $addon_settings['booking_form_position'] ?? 'before_tabs';
-
-    \Tygh\Tygh::$app['view']->assign('show_novoton_booking_form', $show_booking_form);
-    \Tygh\Tygh::$app['view']->assign('novoton_booking_form_position', $booking_form_position);
 
     // Calendar prices
     $calendar_prices_json = '{}';
     $calendar_prices_currency = '';
-    if (!empty($hotel_id) && ConfigProvider::isShowCalendarPrices()) {
+    $show_calendar_prices = ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N';
+    if (!empty($hotel_id) && $show_calendar_prices === 'Y') {
         $display_currency = CurrencyService::getDisplayCurrency();
         $priceInfoService = Container::getInstance()->priceInfoService();
         $calendarData = $priceInfoService->getCalendarPrices($hotel_id, $display_currency, 2);
@@ -182,9 +200,51 @@ function _nvt_populate_hotel_product_data(array $product, array $addon_settings)
             $calendar_prices_currency = $calendarData['currency'];
         }
     }
-    \Tygh\Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
-    \Tygh\Tygh::$app['view']->assign('calendar_prices_currency', $calendar_prices_currency);
-    \Tygh\Tygh::$app['view']->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
+
+    // Booking form settings
+    $show_booking_form = !isset($addon_settings['show_booking_form']) || $addon_settings['show_booking_form'] === 'Y';
+    $booking_form_position = $addon_settings['booking_form_position'] ?? 'before_tabs';
+
+    // ────────────────────────────────────────────────────────────────────
+    // CRITICAL: Use $product['nvt'] instead of $view->assign() calls.
+    //
+    // This hook runs DURING Smarty template rendering (inside CS-Cart's
+    // fn_gather_additional_product_data, called from index.tpl's {capture}).
+    // Calling $view->assign() here modifies the Smarty root scope while
+    // child templates are actively resolving variables through Data::
+    // getVariable() parent chain traversal. This causes infinite recursion
+    // or exponential memory growth in Data.php:265, exhausting the 256 MB
+    // memory limit.
+    //
+    // Instead, we attach ONE key to $product (passed by reference from
+    // CS-Cart core). CS-Cart assigns $product to Smarty's $product var
+    // AFTER this hook returns. Templates access via $product.nvt.prices,
+    // $product.nvt.hotel_id, etc. — a single scope-chain lookup for
+    // $product, then direct array access for sub-keys.
+    // ────────────────────────────────────────────────────────────────────
+
+    // Pack everything into $product['nvt'] — accessed as $product.nvt.xxx in templates.
+    // Do NOT use $view->assign() — it causes the Data.php:265 crash.
+    $product['nvt'] = [
+        'is_hotel_product'         => true,
+        'hotel_id'                 => $hotel_id,
+        'product_id'               => $product['product_id'],
+        'show_booking_form'        => $show_booking_form,
+        'booking_form_position'    => $booking_form_position,
+        'prices'                   => $prices,
+        'rooms_data'               => $rooms_data,
+        'packages_data'            => $packages_data,
+        'board_data'               => $board_data,
+        'hotel_full_data'          => $hotel_full_data,
+        'active_package'           => $active_package,
+        'season_dates'             => $season_dates,
+        'early_booking'            => $early_booking,
+        'room_age_bands'           => $room_age_bands,
+        'last_update'              => $last_update,
+        'calendar_prices_json'     => $calendar_prices_json,
+        'calendar_prices_currency' => $calendar_prices_currency,
+        'show_calendar_prices'     => $show_calendar_prices,
+    ];
 }
 
 /**
