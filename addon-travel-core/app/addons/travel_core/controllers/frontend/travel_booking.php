@@ -60,6 +60,99 @@ if ($provider === null) {
     }
 }
 
+// ── booking_config: AJAX endpoint for React booking engine ──
+// Returns JSON with provider, hotel_id, colors, translations.
+// Called by React init() — replaces data-* attributes on mount point.
+if ($mode === 'booking_config') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $config = ['isHotel' => false];
+
+    if (!empty($product_id)) {
+        $productCode = db_get_field(
+            "SELECT product_code FROM ?:products WHERE product_id = ?i",
+            (int) $product_id
+        );
+
+        $providerName = '';
+        $hotelId = '';
+        $searchDispatch = '';
+
+        if ($productCode && str_starts_with($productCode, 'NVT')) {
+            $providerName = 'novoton';
+            $hotelId = substr($productCode, 3);
+            $searchDispatch = 'novoton_booking.search';
+        } elseif ($productCode && str_starts_with($productCode, 'SPX')) {
+            $providerName = 'sphinx';
+            $hotelId = substr($productCode, 3);
+            $searchDispatch = 'sphinx_booking.search';
+        }
+
+        if ($providerName) {
+            // Colors from travel_core addon settings
+            $tc = \Tygh\Registry::get('addons.travel_core') ?: [];
+            $colors = [];
+            $colorMap = [
+                'primary'     => 'color_primary',
+                'accent'      => 'color_accent',
+                'text'        => 'color_text',
+                'textLight'   => 'color_text_light',
+                'bg'          => 'color_bg',
+                'border'      => 'color_border',
+                'btnBg'       => 'color_search_btn_bg',
+                'btnHover'    => 'color_search_btn_hover',
+                'btnText'     => 'color_search_btn_text',
+                'calCheapest' => 'color_cal_cheapest',
+                'calPrice'    => 'color_cal_price',
+                'danger'      => 'color_danger',
+            ];
+            foreach ($colorMap as $jsKey => $settingKey) {
+                $colors[$jsKey] = $tc[$settingKey] ?? '';
+            }
+
+            // Translations for current language
+            $translationKeys = [
+                'availability', 'check_in_date', 'check_out_date',
+                'check_in', 'check_out', 'select_dates_message',
+                'search', 'change_search', 'apply_changes',
+                'adult', 'adults', 'child', 'children',
+                'rooms', 'room', 'done', 'add_room',
+                'adults_label', 'children_label',
+                'nights_stay', 'night_stay', 'night', 'nights',
+                'childrens_ages', 'child_age', 'select_age',
+                'years_old', 'year_old',
+                'selected', 'selected_singular', 'select_check_out',
+                'january', 'february', 'march', 'april',
+                'may', 'june', 'july', 'august',
+                'september', 'october', 'november', 'december',
+                'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun',
+                'remove', 'please_enter_dates', 'select_check_in',
+                'select_missing_ages', 'select_age_for_one_child',
+                'select_age_for_children', 'calendar_price_footer',
+            ];
+            $translations = [];
+            foreach ($translationKeys as $key) {
+                $camelKey = lcfirst(str_replace('_', '', ucwords($key, '_')));
+                $translations[$camelKey] = __('travel_core.' . $key);
+            }
+
+            $config = [
+                'isHotel'        => true,
+                'provider'       => $providerName,
+                'hotelId'        => $hotelId,
+                'productId'      => (int) $product_id,
+                'searchDispatch' => $searchDispatch,
+                'mode'           => 'product',
+                'colors'         => $colors,
+                'translations'   => $translations,
+            ];
+        }
+    }
+
+    echo json_encode($config, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($provider !== null) {
     $providerName = $provider['name'];
 
