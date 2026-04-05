@@ -2,7 +2,7 @@
 
 {capture name="mainbox"}
 
-<form method="post" action="{"travel_booking_styles.save"|fn_url}" name="appearance_form" class="form-horizontal form-edit">
+<form method="post" action="{"travel_booking_styles.save"|fn_url}" name="appearance_form" id="appearance_form" class="form-horizontal form-edit">
     <input type="hidden" name="security_hash" value="{$security_hash}" />
 
     {foreach $color_groups as $group_key => $group}
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', travelUpdatePreview);
 {/capture}
 
 {capture name="buttons"}
-    {include file="buttons/save.tpl" but_name="dispatch[travel_booking_styles.save]" but_role="submit-button"}
+    <button type="submit" form="appearance_form" name="dispatch[travel_booking_styles.save]" class="btn btn-primary">{__("save")}</button>
 {/capture}
 
 {include file="common/mainbox.tpl"

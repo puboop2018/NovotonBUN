@@ -30,27 +30,16 @@
 {if !$travel_search_dispatch}{$travel_search_dispatch = ''}{/if}
 {if !$travel_mode}{$travel_mode = 'product'}{/if}
 
-{* Get product_id from context - prefer explicitly passed vars over scope-inherited
-   $product to avoid Smarty scope chain recursion when included from hook templates *}
+{* Resolve product_id and hotel_id from explicitly passed parameters only.
+   Do NOT fall back to scope-inherited $product — traversing the Smarty parent
+   scope chain to resolve $product triggers Data::getVariable() recursion that
+   overflows the call stack on product detail pages. All callers MUST pass
+   current_product_id and current_hotel_id explicitly via {include} params. *}
 {if !$current_product_id}
-    {if $product_id}
-        {$current_product_id = $product_id}
-    {elseif $travel_search_params.product_id}
-        {$current_product_id = $travel_search_params.product_id}
-    {else}
-        {$current_product_id = ''}
-    {/if}
+    {$current_product_id = $product_id|default:$travel_search_params.product_id|default:''}
 {/if}
-
-{* Get hotel_id - prefer explicitly passed var over scope-inherited $product *}
 {if !$current_hotel_id}
-    {if $hotel_id}
-        {$current_hotel_id = $hotel_id}
-    {elseif $travel_search_params.hotel_id}
-        {$current_hotel_id = $travel_search_params.hotel_id}
-    {else}
-        {$current_hotel_id = ''}
-    {/if}
+    {$current_hotel_id = $hotel_id|default:$travel_search_params.hotel_id|default:''}
 {/if}
 
 {* ── Runtime color overrides from admin Appearance Settings ── *}
