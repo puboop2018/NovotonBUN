@@ -8,9 +8,25 @@
  *}
 
 {* Only show for Novoton hotel products *}
-{if !$is_hotel_product}
+{if !$product.nvt.is_hotel_product}
     {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
 {else}
+
+{* Unpack $nvt container into local aliases to avoid Smarty scope chain
+   traversal for every variable access (fixes Data.php:265 memory exhaustion) *}
+{* Unpack $product.nvt container into local aliases so existing template
+   code continues to work without changing every variable reference *}
+{$prices = $product.nvt.prices}
+{$rooms_data = $product.nvt.rooms_data}
+{$board_data = $product.nvt.board_data}
+{$packages_data = $product.nvt.packages_data}
+{$hotel_full_data = $product.nvt.hotel_full_data}
+{$active_package = $product.nvt.active_package}
+{$season_dates = $product.nvt.season_dates}
+{$early_booking = $product.nvt.early_booking}
+{$room_age_bands = $product.nvt.room_age_bands}
+{$last_update = $product.nvt.last_update}
+{$hotel_id = $product.nvt.hotel_id}
 
 {style src="css/addons/novoton_holidays/styles.css"}
 

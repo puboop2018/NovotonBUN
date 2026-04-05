@@ -645,10 +645,9 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
     );
 
     if (!empty($hotel)) {
-        // Assign hotel data to Smarty view only — NOT to $product_data.
-        // Any keys added to $product_data pollute Smarty's $product scope chain,
-        // causing Data::getVariable() stack overflow on product detail pages.
-        \Tygh\Tygh::$app['view']->assign('sphinx_hotel_data', $hotel);
+        // Store via $product_data — do NOT use $view->assign() during template
+        // rendering, it causes Data::getVariable() infinite recursion (Data.php:265)
+        $product_data['sphinx_hotel_data'] = $hotel;
     }
 }
 
@@ -661,30 +660,25 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
 {
     $hotel_id = _sphinx_extract_hotel_id($product['product_code'] ?? '');
     if ($hotel_id === '') {
-        \Tygh\Tygh::$app['view']->assign('is_sphinx_hotel', false);
+        $product['spx'] = ['is_sphinx_hotel' => false];
         return;
     }
-
-    // Check if hotel exists in sphinx_hotels (any sync_status — the booking form
-    // should render even for hotels not yet synced, as the search API is always available)
-    $hotelStatus = db_get_field(
-        "SELECT sync_status FROM ?:sphinx_hotels WHERE hotel_id = ?s",
-        $hotel_id
-    );
 
     // Show booking form for any SPX-prefixed product, even if hotel isn't in local DB.
     // The React form will handle API availability at search time.
 
-    // Assign to Smarty view only — NOT to $product.
-    // Stuffing values into $product forces Smarty's Data::getVariable() to walk
-    // the entire $product scope chain on every $product.* template access, which
-    // overflows the call stack on product detail pages (zend.max_allowed_stack_size).
-    $view = \Tygh\Tygh::$app['view'];
-    $view->assign('is_sphinx_hotel', true);
-    $view->assign('sphinx_hotel_id', $hotel_id);
-    $view->assign('show_sphinx_booking_form', true);
-    $view->assign('sphinx_booking_form_position', 'before_tabs');
-    $view->assign('product_id', $product['product_id']);
+    // Store via $product['spx'] — do NOT use $view->assign() during template
+    // rendering. Calling $view->assign() here modifies the Smarty root scope
+    // while child templates are actively traversing the parent scope chain,
+    // causing Data::getVariable() infinite recursion (Data.php:265) that
+    // exhausts the 256 MB memory limit.
+    $product['spx'] = [
+        'is_sphinx_hotel'    => true,
+        'hotel_id'           => $hotel_id,
+        'product_id'         => $product['product_id'],
+        'show_booking_form'  => true,
+        'booking_form_position' => 'before_tabs',
+    ];
 }
 
 /**

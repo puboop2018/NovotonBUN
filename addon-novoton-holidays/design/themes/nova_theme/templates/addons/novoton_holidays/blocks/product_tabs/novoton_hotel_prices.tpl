@@ -7,10 +7,25 @@
  * compilation if the modifier isn't found in plugin directories.
  *}
 
+{* Unpack $nvt container into local aliases to avoid Smarty scope chain
+   traversal for every variable access (fixes Data.php:265 memory exhaustion) *}
+{* Unpack $product.nvt container into local aliases *}
+{$prices = $product.nvt.prices}
+{$rooms_data = $product.nvt.rooms_data}
+{$board_data = $product.nvt.board_data}
+{$packages_data = $product.nvt.packages_data}
+{$hotel_full_data = $product.nvt.hotel_full_data}
+{$active_package = $product.nvt.active_package}
+{$season_dates = $product.nvt.season_dates}
+{$early_booking = $product.nvt.early_booking}
+{$room_age_bands = $product.nvt.room_age_bands}
+{$last_update = $product.nvt.last_update}
+{$hotel_id = $product.nvt.hotel_id}
+
 {style src="css/addons/novoton_holidays/styles.css"}
 
 <div class="novoton-hotel-prices" id="novoton_prices_tab">
-    
+
     {* Header: Last update + Package info *}
     <div class="prices-header">
         {if $last_update}
