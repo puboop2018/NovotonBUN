@@ -1,15 +1,14 @@
 {*
  * Hook: products:product_tabs
- * Injects booking form before product tabs on hotel product pages
+ * Injects booking form before product tabs on Novoton hotel product pages.
+ * Detects hotel products by checking product_code starts with "NVT".
+ * Uses ONLY built-in Smarty syntax — no custom plugins needed.
  *}
 
-{nvt_data product_id=$product.product_id assign="_nvt"}
-{if $_nvt.is_hotel_product && $_nvt.show_booking_form && $_nvt.booking_form_position == 'before_tabs'}
+{if $product.product_code|substr:0:3 == 'NVT'}
+    {$_nvt_hotel_id = $product.product_code|substr:3}
     {include file="addons/novoton_holidays/blocks/booking_engine.tpl"
-        hotel_id=$_nvt.hotel_id
-        product_id=$_nvt.product_id
-        calendar_prices_json=$_nvt.calendar_prices_json
-        calendar_prices_currency=$_nvt.calendar_prices_currency
-        show_calendar_prices=$_nvt.show_calendar_prices
+        hotel_id=$_nvt_hotel_id
+        product_id=$product.product_id
     }
 {/if}

@@ -112,28 +112,6 @@ function smarty_modifier_novoton_format_board($board_id)
 }
 
 /**
- * Smarty function plugin: {nvt_data product_id=$product.product_id assign="varname"}
- *
- * Returns Novoton hotel data from PHP static registry into a template variable.
- * This avoids Smarty modifier registration timing issues in Smarty 5.
- */
-function smarty_function_nvt_data($params, $template)
-{
-    $product_id = $params['product_id'] ?? '';
-    $data = [];
-    if (!empty($product_id)) {
-        $data = fn_nvt_get_hotel_tab_data('__pid_' . $product_id);
-    }
-
-    if (!empty($params['assign'])) {
-        $template->assign($params['assign'], $data);
-        return '';
-    }
-
-    return '';
-}
-
-/**
  * Register Smarty modifiers explicitly as backup.
  * The smarty_modifier_{name} naming convention handles auto-discovery,
  * but explicit registration ensures CS-Cart's Smarty also knows about them.
@@ -152,7 +130,6 @@ function fn_novoton_holidays_register_smarty_modifiers()
             if ($smarty) {
                 $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
                 $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
-                $smarty->registerPlugin('function', 'nvt_data', 'smarty_function_nvt_data');
                 $registered = true;
             }
         }
