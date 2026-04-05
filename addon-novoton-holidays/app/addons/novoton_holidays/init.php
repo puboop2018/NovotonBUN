@@ -112,16 +112,16 @@ function smarty_modifier_novoton_format_board($board_id)
 }
 
 /**
- * Smarty modifier: {$hotel_id|nvt_hotel_tab_data}
- * Returns large hotel data from PHP registry (prices, rooms, seasons etc.)
- * without polluting the Smarty scope chain.
+ * Smarty modifier: {$product.product_id|nvt_hotel_tab_data}
+ * Returns all Novoton hotel data from PHP registry (prices, rooms, seasons etc.)
+ * without polluting the Smarty scope chain or modifying $product.
  */
-function smarty_modifier_nvt_hotel_tab_data($hotel_id)
+function smarty_modifier_nvt_hotel_tab_data($product_id)
 {
-    if (empty($hotel_id)) {
+    if (empty($product_id)) {
         return [];
     }
-    return fn_nvt_get_hotel_tab_data((string) $hotel_id);
+    return fn_nvt_get_hotel_tab_data('__pid_' . $product_id);
 }
 
 /**

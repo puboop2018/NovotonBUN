@@ -7,8 +7,8 @@
  * compilation if the modifier isn't found in plugin directories.
  *}
 
-{* Load large data from PHP registry — NOT from $product (see Data.php:265 fix) *}
-{$_nvt_data = $product.nvt.hotel_id|nvt_hotel_tab_data}
+{* Load hotel data from PHP static registry (see Data.php:265 fix) *}
+{$_nvt_data = $product.product_id|nvt_hotel_tab_data}
 {$prices = $_nvt_data.prices}
 {$rooms_data = $_nvt_data.rooms_data}
 {$board_data = $_nvt_data.board_data}
@@ -19,7 +19,7 @@
 {$early_booking = $_nvt_data.early_booking}
 {$room_age_bands = $_nvt_data.room_age_bands}
 {$last_update = $_nvt_data.last_update}
-{$hotel_id = $product.nvt.hotel_id}
+{$hotel_id = $_nvt_data.hotel_id}
 
 {style src="css/addons/novoton_holidays/styles.css"}
 

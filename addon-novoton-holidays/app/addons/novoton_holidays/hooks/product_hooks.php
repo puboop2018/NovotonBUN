@@ -77,15 +77,29 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
         return;
     }
 
+    // ────────────────────────────────────────────────────────────────────
+    // CRITICAL: Do NOT modify $product or call $view->assign() here.
+    //
+    // This hook runs DURING Smarty template rendering. In Smarty 5,
+    // $product is already wrapped in a Variable object. Modifying the
+    // underlying array through the PHP reference corrupts Smarty's
+    // internal scope chain, causing Data::getVariable() infinite
+    // recursion that exhausts the 256 MB memory limit (Data.php:265).
+    //
+    // ALL data is stored in a PHP static registry (_nvt_data_registry).
+    // Templates retrieve it via {$hotel_id|nvt_hotel_tab_data} modifier.
+    // ────────────────────────────────────────────────────────────────────
+
     $addon_settings = ConfigProvider::all();
     if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
         return;
     }
 
     if (!_nvt_is_hotel_product($product, $addon_settings)) {
-        // Mark as non-hotel via $product — do NOT call $view->assign()
-        // during template rendering (causes Data.php:265 memory exhaustion)
-        $product['nvt'] = ['is_hotel_product' => false];
+        // Store in registry — do NOT modify $product
+        _nvt_data_registry('__pid_' . $product['product_id'], [
+            'is_hotel_product' => false,
+        ]);
         return;
     }
 
@@ -113,8 +127,10 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
 
         _nvt_log_error($error_detail, $e);
 
-        // Assign safe defaults via $product — do NOT use $view->assign()
-        $product['nvt'] = ['is_hotel_product' => false];
+        // Store safe defaults in registry — do NOT modify $product
+        _nvt_data_registry('__pid_' . $product['product_id'], [
+            'is_hotel_product' => false,
+        ]);
     } finally {
         restore_error_handler();
     }
@@ -126,7 +142,7 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  * Extracted so the caller can wrap in try/catch without deeply nesting
  * the entire function body. Any \Throwable is caught by the caller.
  */
-function _nvt_populate_hotel_product_data(array &$product, array $addon_settings): void
+function _nvt_populate_hotel_product_data(array $product, array $addon_settings): void
 {
     $hotel_id = _nvt_extract_hotel_id($product['product_code']);
 
@@ -230,7 +246,17 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
     // is stored in a static registry instead of $product to keep $product
     // small. Smarty wraps each $product key in Variable objects — if the
     // array is deeply nested, it can exhaust 256 MB during scope resolution.
-    _nvt_data_registry($hotel_id, [
+    // Store ALL data in the PHP static registry — do NOT modify $product.
+    // Modifying $product during Smarty rendering corrupts the scope chain.
+    _nvt_data_registry('__pid_' . $product['product_id'], [
+        'is_hotel_product'         => true,
+        'hotel_id'                 => $hotel_id,
+        'product_id'               => $product['product_id'],
+        'show_booking_form'        => $show_booking_form,
+        'booking_form_position'    => $booking_form_position,
+        'calendar_prices_json'     => $calendar_prices_json,
+        'calendar_prices_currency' => $calendar_prices_currency,
+        'show_calendar_prices'     => $show_calendar_prices,
         'prices'                   => $prices,
         'rooms_data'               => $rooms_data,
         'packages_data'            => $packages_data,
@@ -242,18 +268,6 @@ function _nvt_populate_hotel_product_data(array &$product, array $addon_settings
         'room_age_bands'           => $room_age_bands,
         'last_update'              => $last_update,
     ]);
-
-    // Only scalar/small values go into $product['nvt']
-    $product['nvt'] = [
-        'is_hotel_product'         => true,
-        'hotel_id'                 => $hotel_id,
-        'product_id'               => $product['product_id'],
-        'show_booking_form'        => $show_booking_form,
-        'booking_form_position'    => $booking_form_position,
-        'calendar_prices_json'     => $calendar_prices_json,
-        'calendar_prices_currency' => $calendar_prices_currency,
-        'show_calendar_prices'     => $show_calendar_prices,
-    ];
 }
 
 /**
