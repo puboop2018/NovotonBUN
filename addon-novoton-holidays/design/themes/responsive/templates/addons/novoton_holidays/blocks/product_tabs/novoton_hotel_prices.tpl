@@ -9,7 +9,7 @@
 
 {* Load hotel data from PHP static registry — NOT from $product.
    Modifying $product during Smarty rendering causes Data.php:265 crash. *}
-{$_nvt_data = $product.product_id|nvt_hotel_tab_data}
+{nvt_data product_id=$product.product_id assign="_nvt_data"}
 {if !$_nvt_data.is_hotel_product}
     {* Not a Novoton hotel — return empty so CS-Cart hides the tab *}
 {else}

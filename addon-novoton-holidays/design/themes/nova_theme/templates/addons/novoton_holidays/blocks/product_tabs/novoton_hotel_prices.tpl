@@ -8,7 +8,7 @@
  *}
 
 {* Load hotel data from PHP static registry (see Data.php:265 fix) *}
-{$_nvt_data = $product.product_id|nvt_hotel_tab_data}
+{nvt_data product_id=$product.product_id assign="_nvt_data"}
 {$prices = $_nvt_data.prices}
 {$rooms_data = $_nvt_data.rooms_data}
 {$board_data = $_nvt_data.board_data}
