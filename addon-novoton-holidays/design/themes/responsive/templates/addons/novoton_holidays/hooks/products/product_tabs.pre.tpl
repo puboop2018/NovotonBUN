@@ -34,7 +34,7 @@
     </div>
 </div>
 
-{* ── React bundles ── *}
+{* ── React bundles (browser deduplicates same-src scripts automatically) ── *}
 {$_cv = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
 <script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$_cv}" defer></script>
 <script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$_cv}" defer></script>

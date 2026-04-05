@@ -1,6 +1,9 @@
-{* Novoton Booking Engine (block version) - Thin wrapper around shared travel_core template
+{* Novoton Booking Engine (block version)
  *
- * IMPORTANT: Pass ALL variables explicitly to avoid Smarty scope chain traversal.
+ * WARNING: Do NOT place this block on product detail pages — the {include}
+ * creates Smarty scope depth that exhausts 256MB memory (Data.php:265).
+ * Product pages use the inlined version in product_tabs.pre.tpl instead.
+ * This block is safe for homepage, category, and landing pages.
  *}
 {style src="css/addons/novoton_holidays/styles.css"}
 
