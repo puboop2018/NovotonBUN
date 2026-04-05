@@ -112,16 +112,25 @@ function smarty_modifier_novoton_format_board($board_id)
 }
 
 /**
- * Smarty modifier: {$product.product_id|nvt_hotel_tab_data}
- * Returns all Novoton hotel data from PHP registry (prices, rooms, seasons etc.)
- * without polluting the Smarty scope chain or modifying $product.
+ * Smarty function plugin: {nvt_data product_id=$product.product_id assign="varname"}
+ *
+ * Returns Novoton hotel data from PHP static registry into a template variable.
+ * This avoids Smarty modifier registration timing issues in Smarty 5.
  */
-function smarty_modifier_nvt_hotel_tab_data($product_id)
+function smarty_function_nvt_data($params, $template)
 {
-    if (empty($product_id)) {
-        return [];
+    $product_id = $params['product_id'] ?? '';
+    $data = [];
+    if (!empty($product_id)) {
+        $data = fn_nvt_get_hotel_tab_data('__pid_' . $product_id);
     }
-    return fn_nvt_get_hotel_tab_data('__pid_' . $product_id);
+
+    if (!empty($params['assign'])) {
+        $template->assign($params['assign'], $data);
+        return '';
+    }
+
+    return '';
 }
 
 /**
@@ -143,7 +152,7 @@ function fn_novoton_holidays_register_smarty_modifiers()
             if ($smarty) {
                 $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
                 $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
-                $smarty->registerPlugin('modifier', 'nvt_hotel_tab_data', 'smarty_modifier_nvt_hotel_tab_data');
+                $smarty->registerPlugin('function', 'nvt_data', 'smarty_function_nvt_data');
                 $registered = true;
             }
         }

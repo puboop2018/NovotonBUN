@@ -3,7 +3,7 @@
  * Injects booking form before product tabs on hotel product pages
  *}
 
-{$_nvt = $product.product_id|nvt_hotel_tab_data}
+{nvt_data product_id=$product.product_id assign="_nvt"}
 {if $_nvt.is_hotel_product && $_nvt.show_booking_form && $_nvt.booking_form_position == 'before_tabs'}
     {include file="addons/novoton_holidays/blocks/booking_engine.tpl"
         hotel_id=$_nvt.hotel_id
