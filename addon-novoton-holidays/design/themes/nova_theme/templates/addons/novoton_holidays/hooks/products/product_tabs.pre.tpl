@@ -13,21 +13,11 @@
 
 {if $product.product_code|substr:0:3 == 'NVT'}
 
-{* ── CSS color overrides from admin Appearance Settings ── *}
-{strip}
-{$_colors = ''}
-{if $addons.travel_core.color_primary}{$_colors = "`$_colors`--nvt-primary:`$addons.travel_core.color_primary`;"}{/if}
-{if $addons.travel_core.color_accent}{$_colors = "`$_colors`--nvt-accent:`$addons.travel_core.color_accent`;"}{/if}
-{if $addons.travel_core.color_search_btn_bg}{$_colors = "`$_colors`--nvt-search-btn-bg:`$addons.travel_core.color_search_btn_bg`;"}{/if}
-{if $addons.travel_core.color_search_btn_hover}{$_colors = "`$_colors`--nvt-search-btn-hover:`$addons.travel_core.color_search_btn_hover`;"}{/if}
-{if $addons.travel_core.color_search_btn_text}{$_colors = "`$_colors`--nvt-search-btn-text:`$addons.travel_core.color_search_btn_text`;"}{/if}
-{/strip}
-{if $_colors}<style>:root {ldelim} {$_colors nofilter} {rdelim}</style>{/if}
-
-{* ── React mount point with data attributes ── *}
+{* ── React mount point — colors passed via data-colors JSON, applied by React ── *}
 <div id="travel-booking-root"
      data-travel-booking
      data-search-dispatch="novoton_booking.search"
+     data-colors='{ldelim}"primary":"{$addons.travel_core.color_primary|default:""}","accent":"{$addons.travel_core.color_accent|default:""}","text":"{$addons.travel_core.color_text|default:""}","textLight":"{$addons.travel_core.color_text_light|default:""}","bg":"{$addons.travel_core.color_bg|default:""}","border":"{$addons.travel_core.color_border|default:""}","btnBg":"{$addons.travel_core.color_search_btn_bg|default:""}","btnHover":"{$addons.travel_core.color_search_btn_hover|default:""}","btnText":"{$addons.travel_core.color_search_btn_text|default:""}","calCheapest":"{$addons.travel_core.color_cal_cheapest|default:""}","calPrice":"{$addons.travel_core.color_cal_price|default:""}","danger":"{$addons.travel_core.color_danger|default:""}"{rdelim}'
      data-provider="novoton"
      data-hotel-id="{$product.product_code|substr:3}"
      data-product-id="{$product.product_id}"
