@@ -64,12 +64,29 @@ if ($provider === null) {
 // Returns JSON with provider, hotel_id, colors, translations.
 // Called by React init() — replaces data-* attributes on mount point.
 if ($mode === 'booking_config') {
+    // Flush any output buffering to prevent stale HTML from tainting JSON
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json; charset=utf-8');
 
     $config = ['isHotel' => false];
 
+    // Allow product_id from both $product_id (set at top of controller) and $_REQUEST
+    if (empty($product_id)) {
+        $product_id = $_REQUEST['product_id'] ?? '';
+    }
+
+    if (empty($product_id)) {
+        $config['_debug'] = [
+            'reason'      => 'product_id is empty',
+            'request_pid' => $_REQUEST['product_id'] ?? '(not in REQUEST)',
+            'mode'        => $mode,
+        ];
+    }
+
     if (!empty($product_id)) {
-        $productCode = db_get_field(
+        $productCode = (string) db_get_field(
             "SELECT product_code FROM ?:products WHERE product_id = ?i",
             (int) $product_id
         );
@@ -86,6 +103,14 @@ if ($mode === 'booking_config') {
             $providerName = 'sphinx';
             $hotelId = substr($productCode, 3);
             $searchDispatch = 'sphinx_booking.search';
+        }
+
+        if (!$providerName) {
+            $config['_debug'] = [
+                'product_id'   => $product_id,
+                'product_code' => $productCode ?: '(empty)',
+                'reason'       => $productCode ? 'code prefix not NVT/SPX (got: ' . substr($productCode, 0, 10) . ')' : 'product not found in DB',
+            ];
         }
 
         if ($providerName) {

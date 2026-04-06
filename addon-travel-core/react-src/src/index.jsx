@@ -228,7 +228,7 @@ function init() {
                 console.log('[TravelBooking] fetchConfig response:', serverConfig);
 
                 if (!serverConfig || !serverConfig.isHotel) {
-                    console.warn('[TravelBooking] Not a hotel product or fetch failed — clearing mount');
+                    console.warn('[TravelBooking] Not a hotel product or fetch failed — clearing mount. Response:', JSON.stringify(serverConfig));
                     el.innerHTML = '';
                     return;
                 }
