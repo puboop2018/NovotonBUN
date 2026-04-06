@@ -582,6 +582,57 @@
         <item lang="ro" id="travel_core.exchange_rates_updated"><![CDATA[Cursurile valutare au fost actualizate cu succes]]></item>
         <item lang="en" id="travel_core.exchange_rates_failed"><![CDATA[Exchange rate update failed]]></item>
         <item lang="ro" id="travel_core.exchange_rates_failed"><![CDATA[Actualizarea cursului valutar a eșuat]]></item>
+        <!-- SEO Templates admin page -->
+        <item lang="en" id="travel_core.seo_templates_page_title"><![CDATA[SEO Templates]]></item>
+        <item lang="ro" id="travel_core.seo_templates_page_title"><![CDATA[Șabloane SEO]]></item>
+        <item lang="en" id="travel_core.seo_templates"><![CDATA[SEO Templates]]></item>
+        <item lang="ro" id="travel_core.seo_templates"><![CDATA[Șabloane SEO]]></item>
+        <item lang="en" id="travel_core.seo_templates_hint"><![CDATA[Use {{placeholder}} tokens to build dynamic SEO fields. Add |modifier after the name for text transformations (e.g. {{name|upper}}). Unused placeholders are removed automatically.]]></item>
+        <item lang="ro" id="travel_core.seo_templates_hint"><![CDATA[Folosiți token-uri {{placeholder}} pentru câmpuri SEO dinamice. Adăugați |modificator după nume pentru transformări de text (ex. {{name|upper}}). Placeholder-urile nefolosite sunt eliminate automat.]]></item>
+        <item lang="en" id="travel_core.seo_templates_saved"><![CDATA[SEO templates saved successfully]]></item>
+        <item lang="ro" id="travel_core.seo_templates_saved"><![CDATA[Șabloanele SEO au fost salvate cu succes]]></item>
+        <item lang="en" id="travel_core.seo_product_name"><![CDATA[Product name]]></item>
+        <item lang="ro" id="travel_core.seo_product_name"><![CDATA[Numele produsului]]></item>
+        <item lang="en" id="travel_core.seo_product_name_desc"><![CDATA[The display name shown on the storefront product listing.]]></item>
+        <item lang="ro" id="travel_core.seo_product_name_desc"><![CDATA[Numele afișat pe pagina produsului din magazin.]]></item>
+        <item lang="en" id="travel_core.seo_page_title"><![CDATA[Page title]]></item>
+        <item lang="ro" id="travel_core.seo_page_title"><![CDATA[Titlul paginii]]></item>
+        <item lang="en" id="travel_core.seo_page_title_desc"><![CDATA[The <title> tag shown in browser tabs and search results. Keep under 60 characters.]]></item>
+        <item lang="ro" id="travel_core.seo_page_title_desc"><![CDATA[Tag-ul <title> afișat în tab-ul browserului și rezultatele căutării. Maxim 60 caractere.]]></item>
+        <item lang="en" id="travel_core.seo_meta_description"><![CDATA[Meta description]]></item>
+        <item lang="ro" id="travel_core.seo_meta_description"><![CDATA[Meta descriere]]></item>
+        <item lang="en" id="travel_core.seo_meta_description_desc"><![CDATA[Shown as snippet text under the title in search results. Keep under 160 characters.]]></item>
+        <item lang="ro" id="travel_core.seo_meta_description_desc"><![CDATA[Afișat ca fragment de text sub titlu în rezultatele căutării. Maxim 160 caractere.]]></item>
+        <item lang="en" id="travel_core.seo_meta_keywords"><![CDATA[Meta keywords]]></item>
+        <item lang="ro" id="travel_core.seo_meta_keywords"><![CDATA[Cuvinte cheie]]></item>
+        <item lang="en" id="travel_core.seo_meta_keywords_desc"><![CDATA[Comma-separated keywords. Most search engines ignore this, but some niche engines still use it.]]></item>
+        <item lang="ro" id="travel_core.seo_meta_keywords_desc"><![CDATA[Cuvinte cheie separate prin virgulă. Majoritatea motoarelor de căutare le ignoră.]]></item>
+        <item lang="en" id="travel_core.seo_name_slug"><![CDATA[SEO name (URL slug)]]></item>
+        <item lang="ro" id="travel_core.seo_name_slug"><![CDATA[Nume SEO (slug URL)]]></item>
+        <item lang="en" id="travel_core.seo_name_slug_desc"><![CDATA[The URL-friendly slug: hotel-name-city-country.html. Avoid changing after products are indexed.]]></item>
+        <item lang="ro" id="travel_core.seo_name_slug_desc"><![CDATA[Slug-ul URL: hotel-nume-oras-tara.html. Evitați modificarea după indexarea produselor.]]></item>
+        <item lang="en" id="travel_core.seo_placeholders_title"><![CDATA[Placeholders to use]]></item>
+        <item lang="ro" id="travel_core.seo_placeholders_title"><![CDATA[Placeholder-uri disponibile]]></item>
+        <item lang="en" id="travel_core.seo_modifiers_title"><![CDATA[Modifiers to use]]></item>
+        <item lang="ro" id="travel_core.seo_modifiers_title"><![CDATA[Modificatori disponibili]]></item>
+        <item lang="en" id="travel_core.seo_modifiers_example"><![CDATA[Example]]></item>
+        <item lang="ro" id="travel_core.seo_modifiers_example"><![CDATA[Exemplu]]></item>
+        <item lang="en" id="travel_core.seo_click_to_copy"><![CDATA[Click to copy]]></item>
+        <item lang="ro" id="travel_core.seo_click_to_copy"><![CDATA[Click pentru a copia]]></item>
+        <item lang="en" id="travel_core.seo_tips_title"><![CDATA[Tips]]></item>
+        <item lang="ro" id="travel_core.seo_tips_title"><![CDATA[Sfaturi]]></item>
+        <item lang="en" id="travel_core.seo_tip_1"><![CDATA[Array placeholders (facilities, boards) show the first 3 values, comma-separated.]]></item>
+        <item lang="ro" id="travel_core.seo_tip_1"><![CDATA[Placeholder-urile array (facilities, boards) arată primele 3 valori, separate prin virgulă.]]></item>
+        <item lang="en" id="travel_core.seo_tip_2"><![CDATA[Empty placeholders are removed and dangling separators cleaned up automatically.]]></item>
+        <item lang="ro" id="travel_core.seo_tip_2"><![CDATA[Placeholder-urile goale sunt eliminate și separatorii orfani sunt curățați automat.]]></item>
+        <item lang="en" id="travel_core.seo_tip_3"><![CDATA[Changes apply to NEW products only. Use cron re-sync to update existing products.]]></item>
+        <item lang="ro" id="travel_core.seo_tip_3"><![CDATA[Modificările se aplică doar produselor NOI. Folosiți re-sincronizarea cron pentru a actualiza produsele existente.]]></item>
+        <item lang="en" id="travel_core.seo_tip_4"><![CDATA[Combine modifiers with placeholders: {{name|title}} outputs "Grand Hotel Varna".]]></item>
+        <item lang="ro" id="travel_core.seo_tip_4"><![CDATA[Combinați modificatori cu placeholder-uri: {{name|title}} produce "Grand Hotel Varna".]]></item>
+        <item lang="en" id="travel_core.seo_no_addons"><![CDATA[No travel addons with SEO templates are active. Enable Novoton Holidays or Sphinx Holidays first.]]></item>
+        <item lang="ro" id="travel_core.seo_no_addons"><![CDATA[Niciun addon de turism cu șabloane SEO nu este activ. Activați mai întâi Novoton Holidays sau Sphinx Holidays.]]></item>
+        <item lang="en" id="travel_core.admin_menu_seo_templates"><![CDATA[SEO Templates]]></item>
+        <item lang="ro" id="travel_core.admin_menu_seo_templates"><![CDATA[Șabloane SEO]]></item>
     </language_variables>
 
     <!-- Admin menu -->
@@ -602,6 +653,10 @@
                     <item id="travel_tools">
                         <href>travel_tools.manage</href>
                         <position>15</position>
+                    </item>
+                    <item id="travel_seo_templates">
+                        <href>travel_seo_templates.manage</href>
+                        <position>20</position>
                     </item>
                 </items>
             </item>
