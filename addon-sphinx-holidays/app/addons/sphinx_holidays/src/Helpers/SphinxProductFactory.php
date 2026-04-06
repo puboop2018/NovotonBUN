@@ -286,6 +286,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         return [
             'name'           => $hotel['name'] ?? '',
             'classification' => $hotel['classification'] ?? '',
+            'stars_emoji'    => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
             'city'           => $cityName,
             'country'        => $countryName,
             'region'         => $hotel['region_name'] ?? '',
@@ -294,6 +295,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'rating'         => $hotel['rating'] ?? '',
             'facilities'     => $facilities,
             'boards'         => $boards,
+            'board_types'    => $boards,
             'latitude'       => $hotel['latitude'] ?? '',
             'longitude'      => $hotel['longitude'] ?? '',
             'image_url'      => $hotel['image_url'] ?? '',
@@ -301,6 +303,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'phone'          => $hotel['phone'] ?? '',
             'email'          => $hotel['email'] ?? '',
             'website'        => $hotel['website'] ?? '',
+            'year'           => date('Y'),
         ];
     }
 

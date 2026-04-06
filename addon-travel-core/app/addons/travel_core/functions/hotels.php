@@ -162,6 +162,79 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
  *
  * Supports scalar values and arrays (arrays are joined as comma-separated,
  * limited to the first 3 items). Leftover unreplaced tokens are removed.
+/**
+ * Apply a text modifier to a value.
+ *
+ * Supported modifiers: lower, upper, title, capitalize, trim, slug,
+ * first, last, abs, round, strip_tags.
+ *
+ * Usage in templates: {{name|upper}}, {{price|round}}, {{city|title}}
+ *
+ * @param string $value    The raw placeholder value
+ * @param string $modifier Modifier name (case-insensitive)
+ * @return string Modified value
+ */
+function fn_travel_core_apply_modifier(string $value, string $modifier): string
+{
+    switch (strtolower($modifier)) {
+        case 'lower':      return mb_strtolower($value, 'UTF-8');
+        case 'upper':      return mb_strtoupper($value, 'UTF-8');
+        case 'title':      return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
+        case 'capitalize': return mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8');
+        case 'trim':       return trim($value);
+        case 'slug':       return function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-'));
+        case 'first':      return mb_substr($value, 0, 1, 'UTF-8');
+        case 'last':       return mb_substr($value, -1, 1, 'UTF-8');
+        case 'abs':        return (string) abs((float) $value);
+        case 'round':      return (string) round((float) $value);
+        case 'strip_tags': return strip_tags($value);
+        default:           return $value;
+    }
+}
+
+/**
+ * Truncate a string at a word boundary, appending ellipsis if needed.
+ *
+ * @param string $value     The string to truncate
+ * @param int    $maxLength Maximum length (0 = no limit)
+ * @param string $ellipsis  Suffix when truncated (default: empty)
+ * @return string Truncated string
+ */
+function fn_travel_core_truncate_seo(string $value, int $maxLength, string $ellipsis = ''): string
+{
+    if ($maxLength <= 0 || mb_strlen($value, 'UTF-8') <= $maxLength) {
+        return $value;
+    }
+
+    $cut = mb_substr($value, 0, $maxLength - mb_strlen($ellipsis, 'UTF-8'), 'UTF-8');
+    // Find last space to avoid cutting mid-word
+    $lastSpace = mb_strrpos($cut, ' ', 0, 'UTF-8');
+    if ($lastSpace !== false && $lastSpace > $maxLength * 0.6) {
+        $cut = mb_substr($cut, 0, $lastSpace, 'UTF-8');
+    }
+
+    return rtrim($cut, ' .,;:-') . $ellipsis;
+}
+
+/**
+ * Build a star rating emoji string (e.g., 4 → "★★★★").
+ *
+ * @param int $stars Number of stars (0-5)
+ * @return string Unicode star characters
+ */
+function fn_travel_core_build_star_emoji(int $stars): string
+{
+    return str_repeat('★', max(0, min(5, $stars)));
+}
+
+/**
+ * Render an SEO template by replacing {{placeholder}} tokens with values.
+ *
+ * Supports pipe modifiers: {{name|upper}}, {{city|lower}}, {{price|round}}.
+ * Arrays are joined as comma-separated (first 3 items).
+ * Leftover unreplaced tokens are removed.
+ * Dangling separators are cleaned up.
+ * Extra spaces are collapsed.
  *
  * @param string $pattern       Template string with {{placeholder}} tokens
  * @param array  $placeholders  Key => value map (keys without braces)
@@ -173,27 +246,30 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
         return '';
     }
 
-    $search = [];
-    $replace = [];
-
+    // Resolve array placeholders to strings upfront
+    $resolved = [];
     foreach ($placeholders as $key => $value) {
-        $search[] = '{{' . $key . '}}';
         if (is_array($value)) {
-            $replace[] = implode(', ', array_slice(array_filter(array_map('trim', $value)), 0, 3));
+            $resolved[$key] = implode(', ', array_slice(array_filter(array_map('trim', $value)), 0, 3));
         } else {
-            $replace[] = (string) $value;
+            $resolved[$key] = (string) $value;
         }
     }
 
-    $result = str_replace($search, $replace, $pattern);
+    // Replace {{key}} and {{key|modifier}} in one pass
+    $result = preg_replace_callback(
+        '/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?\}\}/',
+        function ($m) use ($resolved) {
+            $value = $resolved[$m[1]] ?? '';
+            if (isset($m[2]) && $m[2] !== '') {
+                $value = fn_travel_core_apply_modifier($value, $m[2]);
+            }
+            return $value;
+        },
+        $pattern
+    );
 
-    // Remove any leftover unreplaced {{...}} tokens
-    $result = preg_replace('/\{\{[a-z_]+\}\}/', '', $result);
-
-    // Clean up dangling separators left by empty placeholders:
-    //   ", ,"  → ","    (double comma)
-    //   " - "  at start/end
-    //   "- ,"  or ", -" (mixed dangling)
+    // Clean up dangling separators left by empty placeholders
     $result = preg_replace('/,\s*,/', ',', $result);           // collapse double commas
     $result = preg_replace('/\s*-\s*,/', ',', $result);        // "- ," → ","
     $result = preg_replace('/,\s*-\s*/', ' - ', $result);      // ", -" → " - "
