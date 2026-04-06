@@ -85,7 +85,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
     $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
-    $parsed_guests = _sphinx_parse_and_validate_guests($guests, $check_in);
+    $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, $check_in, 'sphinx');
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.booking_form?' . http_build_query([
             'offer_id' => $offer_id, 'hotel_id' => $hotel_id, 'product_id' => $product_id,

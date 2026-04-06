@@ -75,7 +75,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
     $contact = $bookingData['contact'] ?? [];
     // Parse guests (no full DOB validation needed at add_to_cart, that happens in update_booking)
-    $parsed_guests = _nvt_parse_and_validate_guests($guests, '', 0, '');
+    $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, '', 'novoton');
     $guests_data = $parsed_guests['guests_data'] ?? [];
     $guest_names = $parsed_guests['guest_names'] ?? [];
     $guest_list = $parsed_guests['guest_list'] ?? '';

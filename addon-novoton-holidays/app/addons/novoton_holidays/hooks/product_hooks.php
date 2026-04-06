@@ -126,34 +126,6 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
 }
 
 // ============================================================================
-// ERROR LOGGING
-// ============================================================================
-
-/**
- * Log an error message to the dedicated novoton_errors.log file.
- * Wrapped in try/catch so logging never crashes the calling code.
- */
-function _nvt_log_error(string $message, ?\Throwable $e = null): void
-{
-    try {
-        $logDir = defined('DIR_ROOT') ? DIR_ROOT . '/var/log/' : '';
-        if ($logDir) {
-            if (!is_dir($logDir)) {
-                mkdir($logDir, 0775, true);
-            }
-            $trace = $e ? "\n" . $e->getTraceAsString() : '';
-            file_put_contents(
-                $logDir . 'novoton_errors.log',
-                date('Y-m-d H:i:s') . ' ' . $message . $trace . "\n\n",
-                FILE_APPEND
-            );
-        }
-    } catch (\Throwable $logEx) {
-        // Logging must never crash the page
-    }
-}
-
-// ============================================================================
 // PRODUCT HELPERS (private-by-convention)
 // ============================================================================
 

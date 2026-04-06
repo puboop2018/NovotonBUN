@@ -38,4 +38,26 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * @return array Merged guests data
      */
     public function merge(array ...$sources): array;
+
+    /**
+     * Parse date of birth from guest form data.
+     *
+     * @param array $guest Guest form data
+     * @return string YYYY-MM-DD or '' if invalid/missing
+     */
+    public static function parseDob(array $guest): string;
+
+    /**
+     * Parse and validate guest data from a booking form submission.
+     *
+     * @param array  $guests   Raw guests array from form
+     * @param string $checkIn  Check-in date for child age validation
+     * @param string $provider Provider name for log messages
+     * @return array|false Parsed result or false if validation fails
+     */
+    public static function parseAndValidateGuests(
+        array $guests,
+        string $checkIn = '',
+        string $provider = ''
+    ): array|false;
 }

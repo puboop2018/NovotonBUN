@@ -382,4 +382,231 @@ class GuestDataService implements GuestDataServiceInterface
 
         return $merged;
     }
+
+    /**
+     * Parse date of birth from guest form data.
+     *
+     * Accepts multiple input formats:
+     *   - $guest['dob'] as DD/MM/YYYY
+     *   - $guest['dob'] as YYYY-MM-DD
+     *   - $guest['dob_day'] + $guest['dob_month'] + $guest['dob_year'] (component)
+     *   - $guest['birthday'] as YYYY-MM-DD
+     *
+     * @param array $guest Guest form data
+     * @return string YYYY-MM-DD or '' if invalid/missing
+     */
+    public static function parseDob(array $guest): string
+    {
+        $currentYear = (int) date('Y');
+        $minYear = $currentYear - 120;
+
+        // Format 1: $guest['dob'] field (DD/MM/YYYY or YYYY-MM-DD)
+        if (!empty($guest['dob'])) {
+            $dob = trim($guest['dob']);
+
+            // DD/MM/YYYY
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob, $m)) {
+                $d = (int) $m[1];
+                $mo = (int) $m[2];
+                $y = (int) $m[3];
+                if ($d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
+                    && $y >= $minYear && $y <= $currentYear
+                    && checkdate($mo, $d, $y)
+                ) {
+                    return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+                }
+            }
+
+            // YYYY-MM-DD
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+                $parts = explode('-', $dob);
+                if (checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0])) {
+                    return $dob;
+                }
+            }
+        }
+
+        // Format 2: Component fields (dob_day, dob_month, dob_year)
+        if (!empty($guest['dob_day']) && !empty($guest['dob_month']) && !empty($guest['dob_year'])) {
+            $d = (int) $guest['dob_day'];
+            $mo = (int) $guest['dob_month'];
+            $y = (int) $guest['dob_year'];
+            if ($d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
+                && $y >= $minYear && $y <= $currentYear
+                && checkdate($mo, $d, $y)
+            ) {
+                return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+            }
+        }
+
+        // Format 3: $guest['birthday'] as YYYY-MM-DD
+        if (!empty($guest['birthday'])) {
+            $raw = trim($guest['birthday']);
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+                $parts = explode('-', $raw);
+                if (checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0])) {
+                    return $raw;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Parse and validate guest data from a booking form submission.
+     *
+     * Shared by all travel providers. Handles:
+     *   - Name parsing (first/last or single name)
+     *   - DOB parsing and validation (no future dates)
+     *   - Child age validation at check-in (must be under 18)
+     *   - Age calculation from DOB
+     *   - Holder name resolution (prefers is_holder flag, falls back to first guest)
+     *
+     * @param array  $guests   Raw guests array from form
+     * @param string $checkIn  Check-in date (YYYY-MM-DD) for child age validation
+     * @param string $provider Provider name for log/notification messages ('novoton'|'sphinx')
+     * @return array|false Parsed result array or false if validation fails
+     */
+    public static function parseAndValidateGuests(
+        array $guests,
+        string $checkIn = '',
+        string $provider = ''
+    ): array|false {
+        $guestNames = [];
+        $guestsData = [];
+
+        foreach ($guests as $key => $guest) {
+            $firstName = trim($guest['first_name'] ?? '');
+            $lastName = trim($guest['last_name'] ?? '');
+            $name = trim($guest['name'] ?? '');
+
+            $birthday = self::parseDob($guest);
+
+            // Validate DOB: not in future
+            if (!empty($birthday)) {
+                $dobTimestamp = strtotime($birthday);
+                $todayMidnight = strtotime('today midnight');
+                if ($dobTimestamp && $dobTimestamp > $todayMidnight) {
+                    $birthday = '';
+                    if (!empty($provider)) {
+                        fn_log_event('general', 'runtime', [
+                            'message' => ucfirst($provider) . ': Rejected future DOB',
+                            'guest_key' => $key,
+                            'invalid_dob' => $guest['dob'] ?? $guest['birthday'] ?? 'unknown',
+                        ]);
+                    }
+                }
+
+                // Validate child age: must be under 18 at check-in
+                $guestType = strtolower($guest['type'] ?? '');
+                $isChild = (str_contains($key, 'child') || $guestType === 'child');
+                if ($dobTimestamp && $isChild && !empty($checkIn)) {
+                    try {
+                        $dobDate = new \DateTime($birthday);
+                        $checkInDate = new \DateTime($checkIn);
+                        $ageAtCheckin = $dobDate->diff($checkInDate)->y;
+
+                        if ($ageAtCheckin >= 18) {
+                            if (!empty($provider)) {
+                                fn_log_event('general', 'runtime', [
+                                    'message' => ucfirst($provider) . ': Child age >= 18 at check-in (blocked)',
+                                    'guest_key' => $key,
+                                    'birthday' => $birthday,
+                                    'check_in' => $checkIn,
+                                    'calculated_age' => $ageAtCheckin,
+                                ]);
+                            }
+                            $langKey = $provider . '_holidays.child_must_be_under_18';
+                            fn_set_notification('E', __('error'), __($langKey,
+                                ['[default]' => 'Child must be under 18 years old at check-in date.']));
+                            return false;
+                        }
+                    } catch (\Exception $e) {
+                        $birthday = '';
+                    }
+                }
+            }
+
+            // Resolve display name and API name
+            if (!empty($lastName) || !empty($firstName)) {
+                if (!empty($lastName) && !empty($firstName)) {
+                    $displayName = $lastName . ', ' . $firstName;
+                    $apiName = $firstName . ' ' . $lastName;
+                } elseif (!empty($lastName)) {
+                    $displayName = $lastName;
+                    $apiName = $lastName;
+                } else {
+                    $displayName = $firstName;
+                    $apiName = $firstName;
+                }
+                $guestNames[] = $displayName;
+
+                $guestAge = self::calculateAge($birthday, (int) ($guest['age'] ?? 0));
+
+                $guestsData[$key] = [
+                    'name' => $displayName,
+                    'api_name' => $apiName,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'type' => $guest['type'] ?? 'adult',
+                    'age' => $guestAge,
+                    'birthday' => $birthday,
+                    'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',
+                    'room' => (int) ($guest['room'] ?? 1),
+                    'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
+                ];
+            } elseif (!empty($name)) {
+                $guestNames[] = $name;
+
+                $guestAge = self::calculateAge($birthday, (int) ($guest['age'] ?? 0));
+
+                $guestsData[$key] = [
+                    'name' => $name,
+                    'api_name' => $name,
+                    'first_name' => '',
+                    'last_name' => '',
+                    'type' => $guest['type'] ?? 'adult',
+                    'age' => $guestAge,
+                    'birthday' => $birthday,
+                    'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',
+                    'room' => (int) ($guest['room'] ?? 1),
+                    'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
+                ];
+            }
+        }
+
+        // Resolve holder: prefer guest with is_holder flag, fallback to first guest
+        $holderName = $guestNames[0] ?? '';
+        foreach ($guestsData as $g) {
+            if (!empty($g['is_holder']) && !empty($g['name'])) {
+                $holderName = $g['name'];
+                break;
+            }
+        }
+
+        return [
+            'guests_data' => $guestsData,
+            'guest_names' => $guestNames,
+            'guest_list' => implode(', ', $guestNames),
+            'holder_name' => $holderName,
+        ];
+    }
+
+    /**
+     * Calculate guest age from birthday, with fallback to form-supplied age.
+     */
+    private static function calculateAge(string $birthday, int $fallbackAge): int
+    {
+        if (!empty($birthday)) {
+            try {
+                $dobDate = new \DateTime($birthday);
+                return $dobDate->diff(new \DateTime())->y;
+            } catch (\Exception $e) {
+                // Invalid date — use fallback
+            }
+        }
+
+        return $fallbackAge;
+    }
 }

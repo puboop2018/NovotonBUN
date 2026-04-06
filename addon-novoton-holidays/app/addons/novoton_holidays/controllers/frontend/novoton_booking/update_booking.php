@@ -51,7 +51,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
     
     // Parse and validate guests (returns false if validation fails)
-    $parsed_guests = _nvt_parse_and_validate_guests($guests, $check_in_for_validation, $booking_id, $cart_id);
+    $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, $check_in_for_validation, 'novoton');
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, "novoton_booking.edit_booking?booking_id={$booking_id}&cart_id={$cart_id}"];
     }
