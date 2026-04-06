@@ -163,7 +163,7 @@ async function fetchConfig(productId) {
     }
 
     const baseUrl = (window.Tygh?.current_location || window.location.origin) + '/index.php';
-    const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}&is_ajax=1`;
+    const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}`;
     dbg('fetchConfig: GET', url);
 
     try {
