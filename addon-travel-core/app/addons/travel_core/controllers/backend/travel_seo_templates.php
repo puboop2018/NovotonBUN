@@ -34,22 +34,48 @@ function _travel_seo_get_section_id(string $addonName, string $sectionName = 'se
 }
 
 /**
- * Read current SEO template values for an addon.
+ * Read current SEO template values for an addon, with sensible defaults.
  */
 function _travel_seo_read_settings(string $addonName): array
 {
     $sectionId = _travel_seo_get_section_id($addonName);
-    if ($sectionId <= 0) {
-        return [];
+
+    $values = [];
+    if ($sectionId > 0) {
+        $rows = db_get_hash_single_array(
+            "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'seo_%'",
+            ['name', 'value'],
+            $sectionId
+        );
+        $values = is_array($rows) ? $rows : [];
     }
 
-    $rows = db_get_hash_single_array(
-        "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'seo_%'",
-        ['name', 'value'],
-        $sectionId
-    );
+    // Defaults per addon — ensures textareas always have a value
+    $defaults = [
+        'novoton_holidays' => [
+            'seo_product_name'     => '{{name}}',
+            'seo_page_title'       => '{{name}} - {{city}}, {{country}} {{year}}',
+            'seo_meta_description' => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
+            'seo_meta_keywords'    => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
+            'seo_name_slug'        => '{{name}}-{{city}}-{{country}}',
+        ],
+        'sphinx_holidays' => [
+            'seo_product_name'     => '{{name}}',
+            'seo_page_title'       => '{{name}} {{classification}}* - {{city}}, {{country}}',
+            'seo_meta_description' => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'seo_meta_keywords'    => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
+            'seo_name_slug'        => '{{name}}-{{city}}-{{country}}',
+        ],
+    ];
 
-    return is_array($rows) ? $rows : [];
+    $addonDefaults = $defaults[$addonName] ?? [];
+    foreach ($addonDefaults as $key => $default) {
+        if (!isset($values[$key]) || $values[$key] === '') {
+            $values[$key] = $default;
+        }
+    }
+
+    return $values;
 }
 
 /**

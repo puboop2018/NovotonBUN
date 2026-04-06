@@ -64,25 +64,11 @@ if ($provider === null) {
 // Returns JSON with provider, hotel_id, colors, translations.
 // Called by React init() — replaces data-* attributes on mount point.
 if ($mode === 'booking_config') {
-    // Flush any output buffering to prevent stale HTML from tainting JSON
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
-    header('Content-Type: application/json; charset=utf-8');
-
+    // Build the config response — determine if this product is a hotel
     $config = ['isHotel' => false];
 
-    // Allow product_id from both $product_id (set at top of controller) and $_REQUEST
     if (empty($product_id)) {
         $product_id = $_REQUEST['product_id'] ?? '';
-    }
-
-    if (empty($product_id)) {
-        $config['_debug'] = [
-            'reason'      => 'product_id is empty',
-            'request_pid' => $_REQUEST['product_id'] ?? '(not in REQUEST)',
-            'mode'        => $mode,
-        ];
     }
 
     if (!empty($product_id)) {
@@ -103,14 +89,6 @@ if ($mode === 'booking_config') {
             $providerName = 'sphinx';
             $hotelId = substr($productCode, 3);
             $searchDispatch = 'sphinx_booking.search';
-        }
-
-        if (!$providerName) {
-            $config['_debug'] = [
-                'product_id'   => $product_id,
-                'product_code' => $productCode ?: '(empty)',
-                'reason'       => $productCode ? 'code prefix not NVT/SPX (got: ' . substr($productCode, 0, 10) . ')' : 'product not found in DB',
-            ];
         }
 
         if ($providerName) {
@@ -174,8 +152,12 @@ if ($mode === 'booking_config') {
         }
     }
 
-    echo json_encode($config, JSON_UNESCAPED_UNICODE);
-    exit;
+    // Use exit(output) — same pattern as novoton_booking/ajax_recalculate_price.php.
+    // Do NOT use ob_end_clean() — destroying CS-Cart's output buffers causes empty
+    // responses because PHP's shutdown sequence can't flush properly.
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    exit(json_encode($config, JSON_UNESCAPED_UNICODE));
 }
 
 if ($provider !== null) {
