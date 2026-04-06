@@ -464,7 +464,7 @@
 
 {* A73: Include DOB validation script with price recalculation *}
 {* A74e: Include external booking form validation JS *}
-{script src="js/addons/addon-travel-core/booking-form-validation.js"}
+{script src="js/addons/travel_core/booking-form-validation.js"}
 
 <script>
 // A74e: Translation strings for JavaScript (used by external module)

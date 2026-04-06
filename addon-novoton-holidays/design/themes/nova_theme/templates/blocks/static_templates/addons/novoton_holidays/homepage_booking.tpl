@@ -85,5 +85,5 @@ window.NovotonTranslations = {
 };
 </script>
 {$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
-<script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$cache_ver}" defer></script>
-<script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$cache_ver}" defer></script>
+<script src="{$config.current_location}/js/addons/travel_core/react-vendor.js?v={$cache_ver}" defer></script>
+<script src="{$config.current_location}/js/addons/travel_core/react19-bundle.js?v={$cache_ver}" defer></script>

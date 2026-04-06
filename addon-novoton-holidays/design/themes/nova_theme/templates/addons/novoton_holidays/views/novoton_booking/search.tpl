@@ -136,8 +136,8 @@
             </div>
         </div>
         {$_cv = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
-        <script src="{$config.current_location}/js/addons/addon-travel-core/react-vendor.js?v={$_cv}" defer></script>
-        <script src="{$config.current_location}/js/addons/addon-travel-core/react19-bundle.js?v={$_cv}" defer></script>
+        <script src="{$config.current_location}/js/addons/travel_core/react-vendor.js?v={$_cv}" defer></script>
+        <script src="{$config.current_location}/js/addons/travel_core/react19-bundle.js?v={$_cv}" defer></script>
     </div>
 
     {if $novoton_results && $novoton_results|@count > 0}
@@ -1122,7 +1122,7 @@ window.NovotonTranslations = {
 </script>
 {* React scripts loaded by shared booking_engine.tpl include above *}
 {$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
-<script src="{$config.current_location}/js/addons/addon-travel-core/dob-validation.js?v={$cache_ver}" defer></script>
+<script src="{$config.current_location}/js/addons/travel_core/dob-validation.js?v={$cache_ver}" defer></script>
 
 {* A73: JavaScript fallback to fix desktop/mobile display if CSS fails *}
 <script>
