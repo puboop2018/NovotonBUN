@@ -58,6 +58,7 @@
 {* ── Client-side debug (only with ?travel_debug=1) ── *}
 {if $travel_debug_enabled}
 <script>
+{literal}
 (function() {
     var results = [];
     function log(label, value, ok) {
@@ -174,6 +175,7 @@
         }
     }, true);
 })();
+{/literal}
 </script>
 {/if}
 
