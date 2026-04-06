@@ -210,6 +210,7 @@ class UpdateProductsCommand
         return [
             'name'           => $hotel['name'] ?? '',
             'classification' => $hotel['classification'] ?? '',
+            'stars_emoji'    => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
             'city'           => $hotel['destination_name'] ?? '',
             'country'        => $hotel['country_name'] ?? '',
             'region'         => $hotel['region_name'] ?? '',
@@ -218,8 +219,10 @@ class UpdateProductsCommand
             'rating'         => $hotel['rating'] ?? '',
             'facilities'     => $facilities,
             'boards'         => $boards,
+            'board_types'    => $boards,
             'latitude'       => $hotel['latitude'] ?? '',
             'longitude'      => $hotel['longitude'] ?? '',
+            'year'           => date('Y'),
         ];
     }
 

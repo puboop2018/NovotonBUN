@@ -226,6 +226,15 @@ class OffersUpdateCommand extends AbstractCronCommand
             ) ?: [];
         }
 
+        // Min price from packages table
+        $min_price = '';
+        if (!empty($hotel['hotel_id'])) {
+            $min_price = db_get_field(
+                "SELECT MIN(min_price) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND min_price > 0",
+                $hotel['hotel_id']
+            ) ?: '';
+        }
+
         return [
             'name'          => $displayName,
             'raw_name'      => $hotel['hotel_name'] ?? '',
@@ -233,6 +242,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             'country'       => $hotel['country'] ?? '',
             'region'        => $hotel['region'] ?? '',
             'star_rating'   => $hotel['star_rating'] ?? '',
+            'stars_emoji'   => fn_travel_core_build_star_emoji((int) ($hotel['star_rating'] ?? 0)),
             'hotel_type'    => $hotel['hotel_type'] ?? '',
             'property_type' => $hotel['property_type'] ?? 'hotel',
             'year'          => date('Y'),
@@ -240,6 +250,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             'facilities'    => $facilities,
             'latitude'      => $hotel['latitude'] ?? '',
             'longitude'     => $hotel['longitude'] ?? '',
+            'min_price'     => $min_price,
         ];
     }
 }
