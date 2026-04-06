@@ -127,12 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Clear ALL settings caches so changes appear immediately
+        // Clear settings cache so changes appear immediately
         Registry::del('addons.travel_core');
         Registry::del('settings');
-        if (class_exists('Tygh\\Settings')) {
-            Settings::instance()->clearCache();
-        }
 
         // Force reload from DB
         $addon_scheme = Registry::get('addons.travel_core');

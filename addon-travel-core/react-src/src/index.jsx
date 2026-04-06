@@ -111,38 +111,26 @@ const COLOR_CSS_MAP = {
 };
 
 /**
- * Apply admin color overrides from data-colors JSON attribute.
- * Sets CSS custom properties on :root so all components pick them up.
- * Only non-empty values are applied — empty strings fall back to CSS defaults.
+ * Apply color overrides as CSS custom properties on :root.
+ * Accepts either a colors object or reads from data-colors attribute.
  */
+function applyColorsFromObject(colors) {
+    if (!colors || typeof colors !== 'object') return;
+    const root = document.documentElement;
+    for (const [key, cssVar] of Object.entries(COLOR_CSS_MAP)) {
+        const value = colors[key];
+        if (value && typeof value === 'string' && value.trim()) {
+            root.style.setProperty(cssVar, value.trim());
+        }
+    }
+}
+
 function applyColors(el) {
     const raw = el.dataset.colors;
     if (!raw) return;
     try {
-        const colors = JSON.parse(raw);
-        const root = document.documentElement;
-        for (const [key, cssVar] of Object.entries(COLOR_CSS_MAP)) {
-            const value = colors[key];
-            if (value && typeof value === 'string' && value.trim()) {
-                root.style.setProperty(cssVar, value.trim());
-            }
-        }
+        applyColorsFromObject(JSON.parse(raw));
     } catch (_) { /* ignore malformed JSON */ }
-}
-
-/**
- * Main initialisation function.
- * Finds mount points by [data-travel-booking] attribute and renders React roots.
- */
-function init() {
-    const mountPoints = document.querySelectorAll('[data-travel-booking]');
-    mountPoints.forEach(el => {
-        loadTranslations(el);
-        applyColors(el);
-        const config = readConfig(el);
-        if (!config.mode) config.mode = el.dataset.travelBooking || 'product';
-        createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
-    });
 }
 
 /**
@@ -156,6 +144,98 @@ function loadTranslations(el) {
         const parsed = JSON.parse(raw);
         window.TravelTranslations = Object.assign(window.TravelTranslations || {}, parsed);
     } catch (_) { /* ignore malformed JSON */ }
+}
+
+/**
+ * Fetch booking engine config from server via AJAX.
+ * Used when the mount point only has data-product-id (no inline config).
+ * Caches per product_id to avoid duplicate fetches on the same page.
+ */
+const _configCache = {};
+async function fetchConfig(productId) {
+    if (_configCache[productId]) return _configCache[productId];
+
+    const baseUrl = (window.Tygh?.current_location || window.location.origin) + '/index.php';
+    const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}&is_ajax=1`;
+
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        _configCache[productId] = data;
+        return data;
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
+ * Render a booking engine into a mount point element.
+ */
+function renderMount(el, config) {
+    if (!config.mode) config.mode = el.dataset.travelBooking || 'product';
+    createRoot(el).render(<ErrorBoundary><BookingEngine config={config} /></ErrorBoundary>);
+}
+
+/**
+ * Main initialisation function.
+ * Supports two modes:
+ *   1. Inline config: data-provider, data-colors, data-translations on the element
+ *      (used by search results pages and legacy templates)
+ *   2. AJAX config: only data-product-id on the element — fetches everything from
+ *      travel_booking.booking_config endpoint (used by product detail pages to
+ *      avoid Smarty scope chain crash)
+ */
+function init() {
+    const mountPoints = document.querySelectorAll('[data-travel-booking]');
+    mountPoints.forEach(el => {
+        if (el.dataset.provider) {
+            // ── Inline mode: all config in data attributes ──
+            loadTranslations(el);
+            applyColors(el);
+            const config = readConfig(el);
+            renderMount(el, config);
+        } else if (el.dataset.productId) {
+            // ── AJAX mode: fetch config from server ──
+            fetchConfig(el.dataset.productId).then(serverConfig => {
+                if (!serverConfig || !serverConfig.isHotel) {
+                    el.innerHTML = ''; // Not a hotel product — clear skeleton
+                    return;
+                }
+
+                // Apply colors and translations from server response
+                applyColorsFromObject(serverConfig.colors);
+                window.TravelTranslations = Object.assign(
+                    window.TravelTranslations || {},
+                    serverConfig.translations || {}
+                );
+
+                // Merge server config with any URL params (for search mode)
+                const url = new URLSearchParams(window.location.search);
+                const config = {
+                    provider:            serverConfig.provider,
+                    hotelId:             url.get('hotel_id') || serverConfig.hotelId,
+                    productId:           String(serverConfig.productId),
+                    mode:                serverConfig.mode || 'product',
+                    searchDispatch:      serverConfig.searchDispatch,
+                    initialCheckIn:      url.get('check_in') || '',
+                    initialCheckOut:     url.get('check_out') || '',
+                    initialAdults:       parseInt(url.get('adults'), 10) || 2,
+                    initialChildren:     parseInt(url.get('children'), 10) || 0,
+                    initialChildrenAges: url.get('children_ages') || '',
+                    initialRooms:        parseInt(url.get('rooms'), 10) || 1,
+                    maxRooms:            12,
+                    maxAdults:           9,
+                    maxChildren:         4,
+                    buttonText:          '',
+                    roomsData:           url.get('rooms_data') || '',
+                    calendarPrices:      null,
+                    calendarPricesCurrency: '',
+                };
+                renderMount(el, config);
+            });
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------
