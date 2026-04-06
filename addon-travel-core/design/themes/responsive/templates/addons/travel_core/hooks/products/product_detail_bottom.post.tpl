@@ -26,6 +26,11 @@
         <summary style="color:#e94560;cursor:pointer;">Full Debug Data (click to expand)</summary>
         <pre style="color:#0f0;margin-top:10px;">{$travel_debug_output|escape:'html'}</pre>
     </details>
+    <hr style="border-color:#333;margin:10px 0;">
+    <details open>
+        <summary style="color:#e94560;cursor:pointer;">booking_config AJAX Response (live test)</summary>
+        <div id="travel-debug-api" style="margin-top:10px;"><span style="color:#888;">Fetching...</span></div>
+    </details>
 </div>
 {/if}
 
@@ -105,6 +110,44 @@
             if (s.href.indexOf('travel_core') !== -1) travelCSS = true;
         });
         log('travel_core CSS', travelCSS ? 'LOADED' : 'NOT LOADED', travelCSS);
+
+        // ── Test booking_config AJAX endpoint (what React actually sees) ──
+        var productId = root ? root.dataset.productId : '';
+        if (productId) {
+            var baseUrl = (window.Tygh && window.Tygh.current_location || window.location.origin) + '/index.php';
+            var configUrl = baseUrl + '?dispatch=travel_booking.booking_config&product_id=' + encodeURIComponent(productId) + '&is_ajax=1';
+            log('booking_config URL', configUrl, true);
+            fetch(configUrl).then(function(r) {
+                log('booking_config HTTP status', r.status + ' ' + r.statusText, r.ok);
+                log('booking_config Content-Type', r.headers.get('content-type') || 'missing', (r.headers.get('content-type') || '').indexOf('json') !== -1);
+                return r.text();
+            }).then(function(text) {
+                log('booking_config response length', text.length + ' chars', text.length > 0);
+                var firstChar = text.charAt(0);
+                log('booking_config starts with {', firstChar === '{' ? 'YES (valid JSON start)' : 'NO: starts with "' + text.substring(0, 80).replace(/</g, '&lt;') + '"', firstChar === '{');
+                try {
+                    var data = JSON.parse(text);
+                    log('booking_config JSON parse', 'OK', true);
+                    log('booking_config isHotel', String(data.isHotel), data.isHotel === true);
+                    log('booking_config provider', data.provider || 'missing', !!data.provider);
+                    log('booking_config searchDispatch', data.searchDispatch || 'missing', !!data.searchDispatch);
+                    log('booking_config hotelId', data.hotelId || 'missing', !!data.hotelId);
+                    // Show in debug panel
+                    var apiPanel = document.getElementById('travel-debug-api');
+                    if (apiPanel) apiPanel.innerHTML = '<pre style="color:#0f0;margin:0;">' + JSON.stringify(data, null, 2) + '</pre>';
+                } catch(e) {
+                    log('booking_config JSON parse', 'FAILED: ' + e.message, false);
+                    log('booking_config raw (first 200)', text.substring(0, 200).replace(/</g, '&lt;'), false);
+                    var apiPanel = document.getElementById('travel-debug-api');
+                    if (apiPanel) apiPanel.innerHTML = '<pre style="color:#e94560;margin:0;">JSON PARSE ERROR: ' + e.message + '\n\nRaw response:\n' + text.substring(0, 500).replace(/</g, '&lt;') + '</pre>';
+                }
+                // Update summary after async results
+                console.table(results);
+            }).catch(function(err) {
+                log('booking_config fetch', 'NETWORK ERROR: ' + err.message, false);
+                console.table(results);
+            });
+        }
 
         // Print summary table to console
         console.table(results);
