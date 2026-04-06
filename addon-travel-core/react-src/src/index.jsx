@@ -153,18 +153,34 @@ function loadTranslations(el) {
  */
 const _configCache = {};
 async function fetchConfig(productId) {
-    if (_configCache[productId]) return _configCache[productId];
+    if (_configCache[productId]) {
+        console.log('[TravelBooking] fetchConfig: cache hit for', productId);
+        return _configCache[productId];
+    }
 
     const baseUrl = (window.Tygh?.current_location || window.location.origin) + '/index.php';
     const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}&is_ajax=1`;
+    console.log('[TravelBooking] fetchConfig: GET', url);
 
     try {
         const resp = await fetch(url);
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        _configCache[productId] = data;
-        return data;
-    } catch (_) {
+        console.log('[TravelBooking] fetchConfig: status', resp.status, resp.statusText);
+        if (!resp.ok) {
+            console.error('[TravelBooking] fetchConfig: HTTP error', resp.status);
+            return null;
+        }
+        const text = await resp.text();
+        console.log('[TravelBooking] fetchConfig: raw response length', text.length, 'chars, first 200:', text.substring(0, 200));
+        try {
+            const data = JSON.parse(text);
+            _configCache[productId] = data;
+            return data;
+        } catch (parseErr) {
+            console.error('[TravelBooking] fetchConfig: JSON parse error:', parseErr.message, 'Response was:', text.substring(0, 500));
+            return null;
+        }
+    } catch (err) {
+        console.error('[TravelBooking] fetchConfig: network error:', err);
         return null;
     }
 }
@@ -188,18 +204,32 @@ function renderMount(el, config) {
  */
 function init() {
     const mountPoints = document.querySelectorAll('[data-travel-booking]');
-    mountPoints.forEach(el => {
+    console.log('[TravelBooking] init: found', mountPoints.length, 'mount point(s)');
+
+    mountPoints.forEach((el, idx) => {
+        console.log('[TravelBooking] mount #' + idx, {
+            provider: el.dataset.provider || '(none)',
+            productId: el.dataset.productId || '(none)',
+            allDataAttrs: Object.keys(el.dataset)
+        });
+
         if (el.dataset.provider) {
             // ── Inline mode: all config in data attributes ──
+            console.log('[TravelBooking] → inline mode (data-provider present)');
             loadTranslations(el);
             applyColors(el);
             const config = readConfig(el);
             renderMount(el, config);
         } else if (el.dataset.productId) {
             // ── AJAX mode: fetch config from server ──
-            fetchConfig(el.dataset.productId).then(serverConfig => {
+            const pid = el.dataset.productId;
+            console.log('[TravelBooking] → AJAX mode, fetching config for product_id=' + pid);
+            fetchConfig(pid).then(serverConfig => {
+                console.log('[TravelBooking] fetchConfig response:', serverConfig);
+
                 if (!serverConfig || !serverConfig.isHotel) {
-                    el.innerHTML = ''; // Not a hotel product — clear skeleton
+                    console.warn('[TravelBooking] Not a hotel product or fetch failed — clearing mount');
+                    el.innerHTML = '';
                     return;
                 }
 
@@ -232,8 +262,13 @@ function init() {
                     calendarPrices:      null,
                     calendarPricesCurrency: '',
                 };
+                console.log('[TravelBooking] Rendering with config:', config);
                 renderMount(el, config);
+            }).catch(err => {
+                console.error('[TravelBooking] fetchConfig error:', err);
             });
+        } else {
+            console.warn('[TravelBooking] mount #' + idx + ': no data-provider or data-product-id — skipping');
         }
     });
 }
