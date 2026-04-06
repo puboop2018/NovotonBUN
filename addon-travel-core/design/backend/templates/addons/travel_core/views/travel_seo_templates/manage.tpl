@@ -185,6 +185,7 @@
 
 {* ── Click-to-insert JavaScript ── *}
 <script>
+{literal}
 (function() {
     // Track the last focused textarea and its cursor position
     var lastField = null;
@@ -269,7 +270,7 @@
             var before = val.substring(0, pos);
 
             // Find last {{ before cursor that doesn't already have this modifier
-            var openIdx = before.lastIndexOf('{ldelim}{ldelim}');
+            var openIdx = before.lastIndexOf('{{');
             if (openIdx === -1) {
                 // No placeholder before cursor — insert standalone
                 insertAtCursor('|' + modName);
@@ -277,7 +278,7 @@
             }
 
             // Find the closing }} after the opening {{
-            var closeIdx = val.indexOf('{rdelim}{rdelim}', openIdx);
+            var closeIdx = val.indexOf('}}', openIdx);
             if (closeIdx === -1) {
                 insertAtCursor('|' + modName);
                 return;
@@ -298,6 +299,7 @@
         }
     });
 })();
+{/literal}
 </script>
 
 {/capture}
