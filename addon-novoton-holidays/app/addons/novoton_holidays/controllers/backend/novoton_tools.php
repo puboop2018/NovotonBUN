@@ -155,7 +155,7 @@ if ($mode === 'test_api') {
             echo "Error: " . $result['error'] . "\n";
         }
         if (!empty($result['last_request'])) {
-            echo "Last request:\n" . (is_array($result['last_request']) ? print_r($result['last_request'], true) : $result['last_request']) . "\n";
+            echo "Last request:\n" . (is_array($result['last_request']) ? json_encode($result['last_request'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : $result['last_request']) . "\n";
         }
         if (!empty($result['last_http_code'])) {
             echo "Last HTTP code: " . $result['last_http_code'] . "\n";
@@ -288,11 +288,11 @@ if ($mode === 'test_room_price') {
         ]);
 
         echo '<h3>Request Parameters:</h3>';
-        echo '<pre>' . htmlspecialchars(print_r($result['params'], true)) . '</pre>';
+        echo '<pre>' . htmlspecialchars(json_encode($result['params'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
 
         echo '<h3>Response:</h3>';
         if ($result['success']) {
-            echo '<pre>' . htmlspecialchars(print_r($result['result'], true)) . '</pre>';
+            echo '<pre>' . htmlspecialchars(json_encode($result['result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
 
             if ($result['price'] > 0) {
                 echo '<p><strong>Price: &euro;' . htmlspecialchars((string)$result['price']) . ' (with commission: &euro;' . htmlspecialchars((string)$result['price_with_commission']) . ')</strong></p>';

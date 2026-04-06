@@ -135,10 +135,6 @@
                     </item>
                 </items>
             </section>
-            <!-- Appearance/color settings removed from addon.xml.
-                 Managed exclusively via Booking Form Appearance page
-                 (travel_booking_styles.manage) with color pickers + live preview.
-                 Existing DB rows in cscart_settings_objects are preserved. -->
         </sections>
     </settings>
 
@@ -273,6 +269,10 @@
         <item lang="ro" id="travel_core.guests"><![CDATA[Oaspeți]]></item>
         <item lang="en" id="travel_core.dates"><![CDATA[Dates]]></item>
         <item lang="ro" id="travel_core.dates"><![CDATA[Date]]></item>
+        <item lang="en" id="travel_core.date_from"><![CDATA[From]]></item>
+        <item lang="ro" id="travel_core.date_from"><![CDATA[De la]]></item>
+        <item lang="en" id="travel_core.date_to"><![CDATA[To]]></item>
+        <item lang="ro" id="travel_core.date_to"><![CDATA[Până la]]></item>
         <!-- Booking engine: availability & search -->
         <item lang="en" id="travel_core.availability"><![CDATA[Availability]]></item>
         <item lang="ro" id="travel_core.availability"><![CDATA[Disponibilitate]]></item>

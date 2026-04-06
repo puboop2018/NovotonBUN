@@ -51,9 +51,10 @@
         <div class="control-group">
             <label class="control-label">{__("travel_core.dates")}:</label>
             <div class="controls">
-                {include file="common/calendar.tpl" date_id="date_from" date_name="date_from" date_val=$search.date_from extra="placeholder='From'"}
+                {include file="common/calendar.tpl" date_id="date_from" date_name="date_from" date_val=$search.date_from extra="placeholder='{__("travel_core.date_from")}'"}
                 <span style="display: inline-block; padding: 0 5px; vertical-align: middle; color: #999;">&mdash;</span>
-                {include file="common/calendar.tpl" date_id="date_to" date_name="date_to" date_val=$search.date_to extra="placeholder='To'"}
+                {include file="common/calendar.tpl" date_id="date_to" date_name="date_to" date_val=$search.date_to extra="placeholder='{__("travel_core.date_to")}'"}
+
             </div>
         </div>
 

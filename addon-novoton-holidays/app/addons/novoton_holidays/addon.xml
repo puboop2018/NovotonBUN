@@ -30,7 +30,7 @@
             <min>8.3.0</min>
             <max>8.4.99</max>
         </php_version>
- 	<php_extensions>
+        <php_extensions>
             <curl>
                 <supported>Y</supported>
             </curl>
