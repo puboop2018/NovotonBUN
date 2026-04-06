@@ -152,16 +152,17 @@ if ($mode === 'booking_config') {
         }
     }
 
-    // Flush ALL CS-Cart output buffers to ensure clean JSON response.
-    // CS-Cart stacks multiple ob_start() layers; leftover buffered HTML
-    // (notices, debug bars) would corrupt the JSON and cause React's
-    // JSON.parse() to fail, silently hiding the booking form.
+    // Prepare JSON response BEFORE touching output buffers.
+    $json = json_encode($config, JSON_UNESCAPED_UNICODE);
+
+    // Discard any buffered HTML (CS-Cart notices, debug bars) that would
+    // corrupt the JSON. Must happen AFTER json_encode, not before.
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, must-revalidate');
-    echo json_encode($config, JSON_UNESCAPED_UNICODE);
+    echo $json;
     exit;
 }
 
