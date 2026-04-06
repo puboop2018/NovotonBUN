@@ -40,7 +40,7 @@
                                       class="input-large"
                                       rows="2"
                                       style="width: 95%;">{$addon.settings.seo_product_name}</textarea>
-                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_product_name_desc")}</p>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_product_name_desc")|escape:"html"}</p>
                         </div>
                     </div>
 
@@ -55,7 +55,7 @@
                                       class="input-large"
                                       rows="2"
                                       style="width: 95%;">{$addon.settings.seo_page_title}</textarea>
-                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_page_title_desc")}</p>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_page_title_desc")|escape:"html"}</p>
                         </div>
                     </div>
 
@@ -70,7 +70,7 @@
                                       class="input-large"
                                       rows="3"
                                       style="width: 95%;">{$addon.settings.seo_meta_description}</textarea>
-                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_meta_description_desc")}</p>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_meta_description_desc")|escape:"html"}</p>
                         </div>
                     </div>
 
@@ -85,7 +85,7 @@
                                       class="input-large"
                                       rows="2"
                                       style="width: 95%;">{$addon.settings.seo_meta_keywords}</textarea>
-                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_meta_keywords_desc")}</p>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_meta_keywords_desc")|escape:"html"}</p>
                         </div>
                     </div>
 
@@ -100,7 +100,7 @@
                                       class="input-large"
                                       rows="2"
                                       style="width: 95%;">{$addon.settings.seo_name_slug}</textarea>
-                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_name_slug_desc")}</p>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_name_slug_desc")|escape:"html"}</p>
                         </div>
                     </div>
 

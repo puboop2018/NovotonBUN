@@ -597,8 +597,8 @@
         <item lang="ro" id="travel_core.seo_product_name_desc"><![CDATA[Numele afișat pe pagina produsului din magazin.]]></item>
         <item lang="en" id="travel_core.seo_page_title"><![CDATA[Page title]]></item>
         <item lang="ro" id="travel_core.seo_page_title"><![CDATA[Titlul paginii]]></item>
-        <item lang="en" id="travel_core.seo_page_title_desc"><![CDATA[The <title> tag shown in browser tabs and search results. Keep under 60 characters.]]></item>
-        <item lang="ro" id="travel_core.seo_page_title_desc"><![CDATA[Tag-ul <title> afișat în tab-ul browserului și rezultatele căutării. Maxim 60 caractere.]]></item>
+        <item lang="en" id="travel_core.seo_page_title_desc"><![CDATA[The &lt;title&gt; tag shown in browser tabs and search results. Keep under 60 characters.]]></item>
+        <item lang="ro" id="travel_core.seo_page_title_desc"><![CDATA[Tag-ul &lt;title&gt; afișat în tab-ul browserului și rezultatele căutării. Maxim 60 caractere.]]></item>
         <item lang="en" id="travel_core.seo_meta_description"><![CDATA[Meta description]]></item>
         <item lang="ro" id="travel_core.seo_meta_description"><![CDATA[Meta descriere]]></item>
         <item lang="en" id="travel_core.seo_meta_description_desc"><![CDATA[Shown as snippet text under the title in search results. Keep under 160 characters.]]></item>
