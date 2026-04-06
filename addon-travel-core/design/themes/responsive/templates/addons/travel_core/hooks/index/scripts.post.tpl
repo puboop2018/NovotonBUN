@@ -8,6 +8,7 @@
  * @since 1.0.0
  *}
 
+<!-- [travel_core] index/scripts.post.tpl LOADED -->
 {$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
 
 {* Shared utilities *}

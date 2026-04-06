@@ -7,6 +7,7 @@
  * travel_booking.booking_config AJAX endpoint. Zero Smarty scope depth.
  *}
 
+<!-- [novoton_holidays] product_tabs.pre.tpl LOADED (nova_theme) -->
 {if $product.product_code|substr:0:3 == 'NVT'}
 <div id="travel-booking-root"
      data-travel-booking
