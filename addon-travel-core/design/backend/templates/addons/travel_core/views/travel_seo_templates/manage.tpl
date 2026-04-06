@@ -39,7 +39,7 @@
                                       name="{$addon_id}[seo_product_name]"
                                       class="input-large"
                                       rows="2"
-                                      style="width: 95%;">{$addon.settings.seo_product_name|default:"{{name}}"}</textarea>
+                                      style="width: 95%;">{$addon.settings.seo_product_name}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_product_name_desc")}</p>
                         </div>
                     </div>
