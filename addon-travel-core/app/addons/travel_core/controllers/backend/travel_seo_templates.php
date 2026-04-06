@@ -215,6 +215,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ============================================================================
 
 if ($mode === 'manage' || empty($mode)) {
+    // One-time fix: language variable contained raw <title> which broke page rendering.
+    // Update cached DB values that still have unescaped HTML tags.
+    db_query(
+        "UPDATE ?:language_values SET value = REPLACE(value, '<title>', '&lt;title&gt;') WHERE name = 'travel_core.seo_page_title_desc' AND value LIKE '%<title>%'"
+    );
+
     $view = Tygh::$app['view'];
 
     // Detect which addons are installed

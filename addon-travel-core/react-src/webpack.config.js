@@ -9,7 +9,7 @@ module.exports = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(__dirname, '..', 'js', 'addons', 'addon-travel-core'),
+        path: path.resolve(__dirname, '..', 'js', 'addons', 'travel_core'),
     },
     optimization: {
         splitChunks: {
