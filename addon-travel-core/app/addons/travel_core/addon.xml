@@ -635,33 +635,8 @@
         <item lang="ro" id="travel_core.admin_menu_seo_templates"><![CDATA[Șabloane SEO]]></item>
     </language_variables>
 
-    <!-- Admin menu -->
-    <menu>
-        <items>
-            <item id="travel_core_menu">
-                <title>Travel</title>
-                <position>5</position>
-                <items>
-                    <item id="travel_bookings">
-                        <href>travel_bookings.manage</href>
-                        <position>5</position>
-                    </item>
-                    <item id="travel_feature_mappings">
-                        <href>travel_feature_mappings.manage</href>
-                        <position>10</position>
-                    </item>
-                    <item id="travel_tools">
-                        <href>travel_tools.manage</href>
-                        <position>15</position>
-                    </item>
-                    <item id="travel_seo_templates">
-                        <href>travel_seo_templates.manage</href>
-                        <position>20</position>
-                    </item>
-                </items>
-            </item>
-        </items>
-    </menu>
+    <!-- Admin menu is registered via schemas/menu/menu.post.php (the authoritative source).
+         The <menu> block in addon.xml is NOT used when a schema file exists. -->
 
     <!-- Functions to run on install/uninstall -->
     <functions>
