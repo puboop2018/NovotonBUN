@@ -135,58 +135,10 @@
                     </item>
                 </items>
             </section>
-            <section id="appearance">
-                <items>
-                    <item id="color_primary">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_accent">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_text">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_text_light">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_bg">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_border">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_search_btn_bg">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_search_btn_hover">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_search_btn_text">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_cal_cheapest">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_cal_price">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_danger">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                </items>
-            </section>
+            <!-- Appearance/color settings removed from addon.xml.
+                 Managed exclusively via Booking Form Appearance page
+                 (travel_booking_styles.manage) with color pickers + live preview.
+                 Existing DB rows in cscart_settings_objects are preserved. -->
         </sections>
     </settings>
 
@@ -619,6 +571,10 @@
         <item lang="ro" id="travel_core.seo_modifiers_example"><![CDATA[Exemplu]]></item>
         <item lang="en" id="travel_core.seo_click_to_copy"><![CDATA[Click to copy]]></item>
         <item lang="ro" id="travel_core.seo_click_to_copy"><![CDATA[Click pentru a copia]]></item>
+        <item lang="en" id="travel_core.seo_click_to_insert"><![CDATA[Click to insert at cursor position]]></item>
+        <item lang="ro" id="travel_core.seo_click_to_insert"><![CDATA[Click pentru a insera la poziția cursorului]]></item>
+        <item lang="en" id="travel_core.seo_click_to_insert_modifier"><![CDATA[Click to apply modifier to nearest placeholder]]></item>
+        <item lang="ro" id="travel_core.seo_click_to_insert_modifier"><![CDATA[Click pentru a aplica modificatorul la placeholder-ul cel mai apropiat]]></item>
         <item lang="en" id="travel_core.seo_tips_title"><![CDATA[Tips]]></item>
         <item lang="ro" id="travel_core.seo_tips_title"><![CDATA[Sfaturi]]></item>
         <item lang="en" id="travel_core.seo_tip_1"><![CDATA[Array placeholders (facilities, boards) show the first 3 values, comma-separated.]]></item>

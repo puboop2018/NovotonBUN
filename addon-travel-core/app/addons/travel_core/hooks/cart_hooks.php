@@ -60,11 +60,6 @@ function fn_travel_core_dispatch_before_display(): void
 
     $dispatch = $_REQUEST['dispatch'] ?? '';
 
-    // ── DEBUG MODE: append ?travel_debug=1 to any page ──
-    if (!empty($_REQUEST['travel_debug'])) {
-        _travel_core_render_debug($dispatch);
-    }
-
     // ── CSS loading for booking-related pages ──
     $booking_pages = ['travel_', 'novoton_', 'sphinx_', 'products.', 'checkout', 'cart'];
     foreach ($booking_pages as $prefix) {
@@ -106,6 +101,12 @@ function fn_travel_core_dispatch_before_display(): void
         }
 
         _travel_core_prepare_hotel_seo_data($productId);
+    }
+
+    // ── DEBUG MODE: append ?travel_debug=1 to any page ──
+    // Runs AFTER all variable assignments so captured state is accurate.
+    if (!empty($_REQUEST['travel_debug'])) {
+        _travel_core_render_debug($dispatch);
     }
 }
 

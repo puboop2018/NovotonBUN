@@ -207,6 +207,14 @@ function init() {
     console.log('[TravelBooking] init: found', mountPoints.length, 'mount point(s)');
 
     mountPoints.forEach((el, idx) => {
+        // Guard: skip already-initialized mount points (prevents double-init
+        // when scripts are accidentally loaded twice or init() is called again).
+        if (el.dataset.travelInitialized) {
+            console.log('[TravelBooking] mount #' + idx + ': already initialized, skipping');
+            return;
+        }
+        el.dataset.travelInitialized = 'true';
+
         console.log('[TravelBooking] mount #' + idx, {
             provider: el.dataset.provider || '(none)',
             productId: el.dataset.productId || '(none)',

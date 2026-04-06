@@ -152,12 +152,17 @@ if ($mode === 'booking_config') {
         }
     }
 
-    // Use exit(output) — same pattern as novoton_booking/ajax_recalculate_price.php.
-    // Do NOT use ob_end_clean() — destroying CS-Cart's output buffers causes empty
-    // responses because PHP's shutdown sequence can't flush properly.
+    // Flush ALL CS-Cart output buffers to ensure clean JSON response.
+    // CS-Cart stacks multiple ob_start() layers; leftover buffered HTML
+    // (notices, debug bars) would corrupt the JSON and cause React's
+    // JSON.parse() to fail, silently hiding the booking form.
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, must-revalidate');
-    exit(json_encode($config, JSON_UNESCAPED_UNICODE));
+    echo json_encode($config, JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 if ($provider !== null) {
