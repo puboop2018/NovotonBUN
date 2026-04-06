@@ -53,7 +53,7 @@
         var productId = root ? root.dataset.productId : '';
         if (productId) {
             var baseUrl = (window.Tygh && window.Tygh.current_location || window.location.origin) + '/index.php';
-            var configUrl = baseUrl + '?dispatch=travel_booking.booking_config&product_id=' + encodeURIComponent(productId) + '&is_ajax=1';
+            var configUrl = baseUrl + '?dispatch=travel_booking.booking_config&product_id=' + encodeURIComponent(productId);
             log('booking_config URL', configUrl, true);
             fetch(configUrl).then(function(r) {
                 log('booking_config HTTP status', r.status + ' ' + r.statusText, r.ok);
