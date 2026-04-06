@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Provider-specific: determine source table and JSON column
         $scanConfig = _travel_fm_get_scan_config($provider);
         if (!$scanConfig) {
-            fn_set_notification('E', __('error'), "Provider '{$provider}' does not support facility scanning.");
+            fn_set_notification('E', __('error'), "Provider '" . htmlspecialchars($provider, ENT_QUOTES, 'UTF-8') . "' does not support facility scanning.");
             return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
         }
 

@@ -16,6 +16,10 @@ import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { getLocale, parseDate, toDateString, t } from './utils';
 
+// Conditional debug logger — only outputs when ?travel_debug=1 is in URL
+const DEBUG = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('travel_debug');
+function dbg(...args) { if (DEBUG) console.log('[TravelBooking]', ...args); }
+
 class ErrorBoundary extends Component {
     constructor(props) {
         super(props);
@@ -66,7 +70,7 @@ function readConfig(el) {
         try {
             calendarPrices = JSON.parse(el.dataset.calendarPrices);
             calendarPricesCurrency = el.dataset.calendarPricesCurrency || '';
-        } catch (_) { /* ignore malformed JSON */ }
+        } catch (e) { dbg('calendar prices JSON parse failed:', e.message); }
     }
 
     return {
@@ -130,7 +134,7 @@ function applyColors(el) {
     if (!raw) return;
     try {
         applyColorsFromObject(JSON.parse(raw));
-    } catch (_) { /* ignore malformed JSON */ }
+    } catch (e) { dbg('colors JSON parse failed:', e.message); }
 }
 
 /**
@@ -143,7 +147,7 @@ function loadTranslations(el) {
     try {
         const parsed = JSON.parse(raw);
         window.TravelTranslations = Object.assign(window.TravelTranslations || {}, parsed);
-    } catch (_) { /* ignore malformed JSON */ }
+    } catch (e) { dbg('translations JSON parse failed:', e.message); }
 }
 
 /**
@@ -154,33 +158,33 @@ function loadTranslations(el) {
 const _configCache = {};
 async function fetchConfig(productId) {
     if (_configCache[productId]) {
-        console.log('[TravelBooking] fetchConfig: cache hit for', productId);
+        dbg('fetchConfig: cache hit for', productId);
         return _configCache[productId];
     }
 
     const baseUrl = (window.Tygh?.current_location || window.location.origin) + '/index.php';
     const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}&is_ajax=1`;
-    console.log('[TravelBooking] fetchConfig: GET', url);
+    dbg('fetchConfig: GET', url);
 
     try {
         const resp = await fetch(url);
-        console.log('[TravelBooking] fetchConfig: status', resp.status, resp.statusText);
+        dbg('fetchConfig: status', resp.status, resp.statusText);
         if (!resp.ok) {
-            console.error('[TravelBooking] fetchConfig: HTTP error', resp.status);
+            dbg('fetchConfig: HTTP error', resp.status);
             return null;
         }
         const text = await resp.text();
-        console.log('[TravelBooking] fetchConfig: raw response length', text.length, 'chars, first 200:', text.substring(0, 200));
+        dbg('fetchConfig: response length', text.length, 'chars');
         try {
             const data = JSON.parse(text);
             _configCache[productId] = data;
             return data;
         } catch (parseErr) {
-            console.error('[TravelBooking] fetchConfig: JSON parse error:', parseErr.message, 'Response was:', text.substring(0, 500));
+            dbg('fetchConfig: JSON parse error:', parseErr.message, 'Response:', text.substring(0, 500));
             return null;
         }
     } catch (err) {
-        console.error('[TravelBooking] fetchConfig: network error:', err);
+        dbg('fetchConfig: network error:', err);
         return null;
     }
 }
@@ -204,18 +208,18 @@ function renderMount(el, config) {
  */
 function init() {
     const mountPoints = document.querySelectorAll('[data-travel-booking]');
-    console.log('[TravelBooking] init: found', mountPoints.length, 'mount point(s)');
+    dbg('init: found', mountPoints.length, 'mount point(s)');
 
     mountPoints.forEach((el, idx) => {
         // Guard: skip already-initialized mount points (prevents double-init
         // when scripts are accidentally loaded twice or init() is called again).
         if (el.dataset.travelInitialized) {
-            console.log('[TravelBooking] mount #' + idx + ': already initialized, skipping');
+            dbg('mount #' + idx + ': already initialized, skipping');
             return;
         }
         el.dataset.travelInitialized = 'true';
 
-        console.log('[TravelBooking] mount #' + idx, {
+        dbg('mount #' + idx, {
             provider: el.dataset.provider || '(none)',
             productId: el.dataset.productId || '(none)',
             allDataAttrs: Object.keys(el.dataset)
@@ -223,7 +227,7 @@ function init() {
 
         if (el.dataset.provider) {
             // ── Inline mode: all config in data attributes ──
-            console.log('[TravelBooking] → inline mode (data-provider present)');
+            dbg('→ inline mode (data-provider present)');
             loadTranslations(el);
             applyColors(el);
             const config = readConfig(el);
@@ -231,12 +235,12 @@ function init() {
         } else if (el.dataset.productId) {
             // ── AJAX mode: fetch config from server ──
             const pid = el.dataset.productId;
-            console.log('[TravelBooking] → AJAX mode, fetching config for product_id=' + pid);
+            dbg('→ AJAX mode, fetching config for product_id=' + pid);
             fetchConfig(pid).then(serverConfig => {
-                console.log('[TravelBooking] fetchConfig response:', serverConfig);
+                dbg('fetchConfig response:', serverConfig);
 
                 if (!serverConfig || !serverConfig.isHotel) {
-                    console.warn('[TravelBooking] Not a hotel product or fetch failed — clearing mount. Response:', JSON.stringify(serverConfig));
+                    dbg('Not a hotel product or fetch failed — clearing mount. Response:', JSON.stringify(serverConfig));
                     el.innerHTML = '';
                     return;
                 }
@@ -270,13 +274,13 @@ function init() {
                     calendarPrices:      null,
                     calendarPricesCurrency: '',
                 };
-                console.log('[TravelBooking] Rendering with config:', config);
+                dbg('Rendering with config:', config);
                 renderMount(el, config);
             }).catch(err => {
-                console.error('[TravelBooking] fetchConfig error:', err);
+                dbg('fetchConfig error:', err);
             });
         } else {
-            console.warn('[TravelBooking] mount #' + idx + ': no data-provider or data-product-id — skipping');
+            dbg('mount #' + idx + ': no data-provider or data-product-id — skipping');
         }
     });
 }
