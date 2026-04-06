@@ -131,13 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         Registry::del('addons.travel_core');
         Registry::del('settings');
 
-        // Force reload from DB
-        $addon_scheme = Registry::get('addons.travel_core');
-        if ($addon_scheme === null) {
-            // Rebuild addon settings cache
-            fn_get_addon_data('travel_core');
-        }
-
         if (!empty($errors)) {
             foreach ($errors as $err) {
                 fn_set_notification('E', __('error'), $err);
