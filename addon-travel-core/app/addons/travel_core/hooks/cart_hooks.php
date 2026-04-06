@@ -74,10 +74,33 @@ function fn_travel_core_dispatch_before_display(): void
         }
     }
 
-    // ── Hotel structured data (JSON-LD + OG tags) for product pages ──
-    // This runs BEFORE Smarty template rendering, so Registry::set() is safe.
+    // ── Hotel product page: inject booking form mount + React scripts ──
+    // This is the PRIMARY mechanism for loading the booking form.
+    // It works via PHP hook (dispatch_before_display) which is reliable
+    // even when Smarty template cache hasn't been cleared after deployment.
+    // The Smarty hook (product_tabs.pre.tpl) serves as a secondary fallback.
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
-        _travel_core_prepare_hotel_seo_data((int) $_REQUEST['product_id']);
+        $productId = (int) $_REQUEST['product_id'];
+        $productCode = (string) db_get_field(
+            "SELECT product_code FROM ?:products WHERE product_id = ?i",
+            $productId
+        );
+
+        if ($productCode !== '' && (str_starts_with($productCode, 'NVT') || str_starts_with($productCode, 'SPX'))) {
+            $view = \Tygh\Tygh::$app['view'];
+            $view->assign('travel_booking_product_id', $productId);
+            $view->assign('travel_booking_product_code', $productCode);
+
+            // Register the React scripts via CS-Cart's inline script mechanism
+            $cacheVer = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
+            $baseUrl = Registry::get('config.current_location');
+            $view->assign('travel_booking_scripts', [
+                $baseUrl . '/js/addons/travel_core/react-vendor.js?v=' . $cacheVer,
+                $baseUrl . '/js/addons/travel_core/react19-bundle.js?v=' . $cacheVer,
+            ]);
+        }
+
+        _travel_core_prepare_hotel_seo_data($productId);
     }
 }
 
