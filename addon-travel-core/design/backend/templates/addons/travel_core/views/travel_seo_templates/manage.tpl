@@ -128,9 +128,9 @@
                 <div class="seo-placeholder-list" data-addon="{$addon_id}" style="margin-bottom: 15px;">
                     {foreach $addon.placeholders as $ph_key => $ph_desc}
                     <div style="margin-bottom: 4px; font-size: 12px; line-height: 1.5;">
-                        <span class="label label-info" style="cursor: pointer; font-family: monospace; font-size: 11px;"
-                              onclick="navigator.clipboard.writeText('{ldelim}{ldelim}{$ph_key}{rdelim}{rdelim}');"
-                              title="{__("travel_core.seo_click_to_copy")}">{$ph_key}</span>
+                        <span class="label label-info seo-insert-tag" style="cursor: pointer; font-family: monospace; font-size: 11px;"
+                              data-insert="{ldelim}{ldelim}{$ph_key}{rdelim}{rdelim}"
+                              title="{__("travel_core.seo_click_to_insert")}">{$ph_key}</span>
                         <span class="muted" style="font-size: 11px;"> - {$ph_desc}</span>
                     </div>
                     {/foreach}
@@ -151,7 +151,9 @@
 
                 {foreach $seo_modifiers as $mod_name => $mod_desc}
                 <div style="margin-bottom: 4px; font-size: 12px; line-height: 1.5;">
-                    <span class="label label-success" style="font-family: monospace; font-size: 11px;">{$mod_name}</span>
+                    <span class="label label-success seo-insert-modifier" style="cursor: pointer; font-family: monospace; font-size: 11px;"
+                          data-modifier="{$mod_name}"
+                          title="{__("travel_core.seo_click_to_insert_modifier")}">{$mod_name}</span>
                     <span class="muted" style="font-size: 11px;"> - {$mod_desc}</span>
                 </div>
                 {/foreach}
@@ -180,6 +182,123 @@
         <strong>{__("warning")}</strong>: {__("travel_core.seo_no_addons")}
     </div>
 {/if}
+
+{* ── Click-to-insert JavaScript ── *}
+<script>
+(function() {
+    // Track the last focused textarea and its cursor position
+    var lastField = null;
+    var lastPos = 0;
+
+    // Listen for focus/click/keyup on all SEO textareas to track cursor
+    var form = document.getElementById('seo_templates_form');
+    if (!form) return;
+
+    form.addEventListener('focus', function(e) {
+        if (e.target.tagName === 'TEXTAREA') {
+            lastField = e.target;
+            lastPos = e.target.selectionStart || 0;
+        }
+    }, true);
+
+    form.addEventListener('click', function(e) {
+        if (e.target.tagName === 'TEXTAREA') {
+            lastField = e.target;
+            // Delay to let browser update selection
+            setTimeout(function() { lastPos = e.target.selectionStart || 0; }, 0);
+        }
+    }, true);
+
+    form.addEventListener('keyup', function(e) {
+        if (e.target.tagName === 'TEXTAREA') {
+            lastField = e.target;
+            lastPos = e.target.selectionStart || 0;
+        }
+    }, true);
+
+    // Insert text at cursor position in the tracked textarea
+    function insertAtCursor(text) {
+        if (!lastField) {
+            // No field focused yet — focus the first textarea in the active tab
+            var activeTab = form.querySelector('.tab-pane.active') || form;
+            lastField = activeTab.querySelector('textarea');
+            if (!lastField) return;
+            lastPos = lastField.value.length;
+        }
+
+        lastField.focus();
+        var val = lastField.value;
+        var selStart = lastField.selectionStart;
+        var selEnd = lastField.selectionEnd;
+
+        // If there's a selection, replace it; otherwise insert at cursor
+        lastField.value = val.substring(0, selStart) + text + val.substring(selEnd);
+
+        // Move cursor to end of inserted text
+        var newPos = selStart + text.length;
+        lastField.selectionStart = newPos;
+        lastField.selectionEnd = newPos;
+        lastPos = newPos;
+
+        // Flash the field briefly to confirm insertion
+        lastField.style.transition = 'background-color 0.15s';
+        lastField.style.backgroundColor = '#d4edda';
+        setTimeout(function() { lastField.style.backgroundColor = ''; }, 300);
+    }
+
+    // ── Placeholder badges: click to insert {{placeholder}} at cursor ──
+    document.addEventListener('click', function(e) {
+        var tag = e.target.closest('.seo-insert-tag');
+        if (tag) {
+            e.preventDefault();
+            insertAtCursor(tag.getAttribute('data-insert'));
+            return;
+        }
+
+        // ── Modifier badges: click to append |modifier to nearest {{placeholder}} ──
+        var mod = e.target.closest('.seo-insert-modifier');
+        if (mod) {
+            e.preventDefault();
+            var modName = mod.getAttribute('data-modifier');
+
+            if (!lastField) return;
+
+            // Find the placeholder token nearest (before) the cursor and append the modifier
+            var val = lastField.value;
+            var pos = lastField.selectionStart || lastPos;
+            var before = val.substring(0, pos);
+
+            // Find last {{ before cursor that doesn't already have this modifier
+            var openIdx = before.lastIndexOf('{ldelim}{ldelim}');
+            if (openIdx === -1) {
+                // No placeholder before cursor — insert standalone
+                insertAtCursor('|' + modName);
+                return;
+            }
+
+            // Find the closing }} after the opening {{
+            var closeIdx = val.indexOf('{rdelim}{rdelim}', openIdx);
+            if (closeIdx === -1) {
+                insertAtCursor('|' + modName);
+                return;
+            }
+
+            // Extract the token content between {{ and }}
+            var tokenContent = val.substring(openIdx + 2, closeIdx);
+
+            // Check if modifier already present
+            if (tokenContent.indexOf('|' + modName) !== -1) return;
+
+            // Insert |modifier right before the }}
+            var insertPos = closeIdx;
+            lastField.selectionStart = insertPos;
+            lastField.selectionEnd = insertPos;
+            insertAtCursor('|' + modName);
+            return;
+        }
+    });
+})();
+</script>
 
 {/capture}
 
