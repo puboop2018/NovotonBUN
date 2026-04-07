@@ -167,9 +167,12 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         }
     }
 
-    // Clear settings cache so ConfigProvider picks up new values
+    // Clear ALL caches so new templates are picked up immediately.
     Registry::del('addons.' . $addonName);
     Registry::del('settings');
+    if (function_exists('fn_clear_cache')) {
+        fn_clear_cache('registry');
+    }
 
     return $saved;
 }

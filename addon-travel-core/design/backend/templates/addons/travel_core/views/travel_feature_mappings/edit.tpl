@@ -208,8 +208,8 @@
 
 {/capture}
 
-{$_fm_label = {__('travel_core.fm_edit_mapping')}}
-{$_fm_title = "`$_fm_label`: `$mapping.canonical_code`"}
+{assign var="_fm_label" value=__('travel_core.fm_edit_mapping')}
+{assign var="_fm_title" value="`$_fm_label`: `$mapping.canonical_code`"}
 
 {include file="common/mainbox.tpl"
     title=$_fm_title

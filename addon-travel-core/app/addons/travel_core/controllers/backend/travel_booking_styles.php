@@ -153,9 +153,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Clear settings cache so changes appear immediately
+        // Clear ALL caches so color changes appear on the frontend immediately.
+        // Registry::del() only clears in-memory state for the current request;
+        // CS-Cart uses a persistent file-based settings cache that must also be cleared.
         Registry::del('addons.travel_core');
         Registry::del('settings');
+        if (function_exists('fn_clear_cache')) {
+            fn_clear_cache('registry');
+        }
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
