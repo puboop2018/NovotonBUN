@@ -72,15 +72,47 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
 
     if (empty($hotel_info)) {
+        // Hotel not in local DB — auto-create from API (same pattern as OffersUpdateCommand)
         fn_log_event('general', 'runtime', [
-            'message' => 'Novoton add_to_cart: hotel_id not found in local DB (FK would fail)',
+            'message' => 'Novoton add_to_cart: hotel_id not in local DB, auto-creating',
             'hotel_id' => $bookingData['hotel_id'],
             'product_id' => $product_id,
         ]);
-        fn_set_notification('E', __('error'), __('novoton_holidays.hotel_not_found', [
-            '[default]' => 'Hotel data is not available. Please try again or contact support.'
-        ]));
-        return [CONTROLLER_STATUS_REDIRECT, 'products.view?product_id=' . $product_id];
+
+        $hotel_data = [
+            'hotel_id' => $bookingData['hotel_id'],
+            'product_id' => (int) $product_id,
+            'hotel_name' => '',
+            'city' => '',
+            'region' => '',
+            'country' => '',
+            'hotel_type' => '',
+            'has_room_price' => 'N',
+            'hotel_list_synced_at' => date('Y-m-d H:i:s'),
+        ];
+
+        try {
+            $api_for_hotel = fn_novoton_holidays_get_api();
+            if ($api_for_hotel) {
+                $api_hotel_info = $api_for_hotel->getHotelInfo($bookingData['hotel_id']);
+                if ($api_hotel_info) {
+                    $hotel_data['hotel_name'] = (string) ($api_hotel_info->Hotel ?? '');
+                    $hotel_data['city']       = (string) ($api_hotel_info->City ?? '');
+                    $hotel_data['region']     = (string) ($api_hotel_info->Region ?? '');
+                    $hotel_data['country']    = (string) ($api_hotel_info->Country ?? '');
+                    $hotel_data['hotel_type'] = (string) ($api_hotel_info->HotelType ?? $api_hotel_info->Stars ?? '');
+                }
+            }
+        } catch (\Throwable $e) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton add_to_cart: getHotelInfo failed, using stub',
+                'hotel_id' => $bookingData['hotel_id'],
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        _nvt_hotel_repo()->upsert($hotel_data);
+        $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
     }
     
     // Process guest information — sanitize via SecurityService
