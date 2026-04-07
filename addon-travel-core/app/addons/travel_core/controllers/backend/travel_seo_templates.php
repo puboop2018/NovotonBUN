@@ -84,9 +84,10 @@ function _travel_seo_read_settings(string $addonName): array
 /**
  * Save SEO template values for an addon.
  *
- * Uses INSERT … ON DUPLICATE KEY UPDATE so saving works even when the
- * addon was installed before the seo_templates section existed in addon.xml
- * (i.e. the settings_objects rows were never created by CS-Cart's installer).
+ * The addon.xml files don't declare seo_* items, so CS-Cart never creates
+ * settings_objects rows on install.  This function handles both cases:
+ *   - Row exists → UPDATE its value
+ *   - Row missing → INSERT it (batch, single query)
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
@@ -95,11 +96,8 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         return 0;
     }
 
-    $saved = 0;
-    $allowedKeys = ['seo_product_name', 'seo_page_title', 'seo_meta_description', 'seo_meta_keywords', 'seo_name_slug', 'seo_full_description'];
-
-    // Map of setting type per key (for INSERT fallback)
-    $types = [
+    // Single source of truth: allowed keys → their settings type
+    $keyTypes = [
         'seo_product_name'     => 'I',  // input
         'seo_page_title'       => 'I',
         'seo_meta_description' => 'T',  // textarea
@@ -108,29 +106,44 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         'seo_full_description' => 'T',
     ];
 
-    foreach ($values as $key => $value) {
-        if (!in_array($key, $allowedKeys, true)) {
-            continue;
-        }
+    // Filter to allowed keys only
+    $values = array_intersect_key($values, $keyTypes);
+    if (empty($values)) {
+        return 0;
+    }
 
+    // 1 query: fetch all existing seo_* rows for this section
+    $existing = db_get_hash_single_array(
+        "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
+        ['name', 'object_id'],
+        $sectionId, array_keys($values)
+    );
+
+    $inserts = [];
+    $saved = 0;
+
+    foreach ($values as $key => $value) {
         $value = trim((string) $value);
 
-        $objectId = (int) db_get_field(
-            "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
-            $key, $sectionId
-        );
-
-        if ($objectId > 0) {
-            db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
+        if (!empty($existing[$key])) {
+            // Row exists → update
+            db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, (int) $existing[$key]);
         } else {
-            // Row missing — create it so the setting persists
-            db_query(
-                "INSERT INTO ?:settings_objects (name, section_id, section_tab_id, type, value, edition_type, handler, parent_id, is_global) "
-                . "VALUES (?s, ?i, 0, ?s, ?s, 'ROOT', '', 0, 'N')",
-                $key, $sectionId, $types[$key] ?? 'I', $value
-            );
+            // Row missing → collect for batch insert
+            $inserts[] = [
+                'name' => $key, 'section_id' => $sectionId, 'section_tab_id' => 0,
+                'type' => $keyTypes[$key], 'value' => $value,
+                'edition_type' => 'ROOT', 'handler' => '', 'parent_id' => 0, 'is_global' => 'N',
+            ];
         }
         $saved++;
+    }
+
+    // 1 query: batch insert all missing rows
+    if (!empty($inserts)) {
+        foreach ($inserts as $row) {
+            db_query("INSERT INTO ?:settings_objects ?e", $row);
+        }
     }
 
     // Clear settings cache so ConfigProvider picks up new values
