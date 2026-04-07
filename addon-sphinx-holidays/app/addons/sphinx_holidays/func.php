@@ -541,7 +541,11 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
  */
 function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
-    if (empty($order_id) || empty($cart['products'])) {
+    // CS-Cart Multi-Vendor passes $order_id as array (parent + child order IDs).
+    // Normalize to the parent (first) order ID for booking submission.
+    $resolved_order_id = (int) (is_array($order_id) ? reset($order_id) : $order_id);
+
+    if (empty($resolved_order_id) || empty($cart['products'])) {
         return;
     }
 
@@ -556,7 +560,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         $offer_id = $product['extra']['offer_id'] ?? '';
 
         // Link booking to order with PENDING status (not confirmed yet — API call hasn't happened)
-        $repo->linkToOrder($booking_id, $order_id, \Tygh\Addons\TravelCore\TravelConstants::STATUS_PENDING);
+        $repo->linkToOrder($booking_id, $resolved_order_id, \Tygh\Addons\TravelCore\TravelConstants::STATUS_PENDING);
 
         // Submit booking to Sphinx API
         if (!empty($offer_id)) {
@@ -588,7 +592,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                     fn_log_event('general', 'runtime', [
                         'message' => 'Sphinx: booking confirmed but no reference returned',
                         'booking_id' => $booking_id,
-                        'order_id' => $order_id,
+                        'order_id' => $resolved_order_id,
                     ]);
                 }
 
@@ -606,7 +610,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
                     'booking_id' => $booking_id,
-                    'order_id' => $order_id,
+                    'order_id' => $resolved_order_id,
                 ]);
             }
         }
