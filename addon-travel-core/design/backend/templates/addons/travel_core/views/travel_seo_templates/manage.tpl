@@ -29,9 +29,35 @@
                     <h4 style="margin-top: 15px; margin-bottom: 5px;">{$addon.label} &mdash; {__("travel_core.seo_templates")}</h4>
                     <p class="muted" style="margin-bottom: 20px; font-size: 12px;">{__("travel_core.seo_templates_hint")}</p>
 
+                    {* ── Overwrite mode dropdown ── *}
+                    <div class="control-group" style="padding: 12px 15px; background: #f0f4f8; border-radius: 6px; margin-bottom: 20px;">
+                        <label class="control-label" for="{$addon_id}_seo_overwrite_mode" style="font-weight: 600;">
+                            {__("travel_core.seo_overwrite_mode")}
+                        </label>
+                        <div class="controls">
+                            <select name="{$addon_id}[seo_overwrite_mode]" id="{$addon_id}_seo_overwrite_mode" class="input-large">
+                                <option value="override_all"{if $addon.settings.seo_overwrite_mode == 'override_all'} selected="selected"{/if}>
+                                    {__("travel_core.seo_override_all")}
+                                </option>
+                                <option value="fill_if_empty"{if $addon.settings.seo_overwrite_mode == 'fill_if_empty'} selected="selected"{/if}>
+                                    {__("travel_core.seo_fill_if_empty")}
+                                </option>
+                            </select>
+                            <p class="muted" style="font-size: 11px; margin-top: 4px;">{__("travel_core.seo_overwrite_mode_desc")}</p>
+                        </div>
+                    </div>
+
+                    {* ── SEO field templates with per-field checkboxes ── *}
+                    {* Each field has: hidden N + checkbox Y pattern for unchecked submission *}
+
                     {* Product Name *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_product_name">
                         <label class="control-label" for="{$addon_id}_seo_product_name">
+                            <input type="hidden" name="{$addon_id}[seo_field_product_name]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_product_name]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_product_name"
+                                   {if $addon.settings.seo_field_product_name != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_product_name")}
                         </label>
                         <div class="controls">
@@ -45,8 +71,13 @@
                     </div>
 
                     {* Page Title *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_page_title">
                         <label class="control-label" for="{$addon_id}_seo_page_title">
+                            <input type="hidden" name="{$addon_id}[seo_field_page_title]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_page_title]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_page_title"
+                                   {if $addon.settings.seo_field_page_title != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_page_title")}
                         </label>
                         <div class="controls">
@@ -60,8 +91,13 @@
                     </div>
 
                     {* Meta Description *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_meta_description">
                         <label class="control-label" for="{$addon_id}_seo_meta_description">
+                            <input type="hidden" name="{$addon_id}[seo_field_meta_description]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_meta_description]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_meta_description"
+                                   {if $addon.settings.seo_field_meta_description != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_meta_description")}
                         </label>
                         <div class="controls">
@@ -75,8 +111,13 @@
                     </div>
 
                     {* Meta Keywords *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_meta_keywords">
                         <label class="control-label" for="{$addon_id}_seo_meta_keywords">
+                            <input type="hidden" name="{$addon_id}[seo_field_meta_keywords]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_meta_keywords]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_meta_keywords"
+                                   {if $addon.settings.seo_field_meta_keywords != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_meta_keywords")}
                         </label>
                         <div class="controls">
@@ -90,8 +131,13 @@
                     </div>
 
                     {* SEO Name (slug) *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_name_slug">
                         <label class="control-label" for="{$addon_id}_seo_name_slug">
+                            <input type="hidden" name="{$addon_id}[seo_field_name_slug]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_name_slug]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_name_slug"
+                                   {if $addon.settings.seo_field_name_slug != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_name_slug")}
                         </label>
                         <div class="controls">
@@ -105,8 +151,13 @@
                     </div>
 
                     {* Full description template (optional) *}
-                    <div class="control-group">
+                    <div class="control-group seo-field-group" data-field="{$addon_id}_seo_full_description">
                         <label class="control-label" for="{$addon_id}_seo_full_description">
+                            <input type="hidden" name="{$addon_id}[seo_field_full_description]" value="N" />
+                            <input type="checkbox" name="{$addon_id}[seo_field_full_description]" value="Y"
+                                   class="seo-field-toggle"
+                                   data-target="{$addon_id}_seo_full_description"
+                                   {if $addon.settings.seo_field_full_description != 'N'}checked="checked"{/if} />
                             {__("travel_core.seo_full_description")}
                         </label>
                         <div class="controls">
@@ -116,6 +167,22 @@
                                       rows="4"
                                       style="width: 95%;">{$addon.settings.seo_full_description}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_full_description_desc")|escape:"html"}</p>
+                        </div>
+                    </div>
+
+                    {* ── Bulk Apply ── *}
+                    <div class="control-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                        <label class="control-label" style="font-weight: 600;">{__("travel_core.seo_bulk_apply")}</label>
+                        <div class="controls">
+                            <form action="{"travel_seo_templates.bulk_apply"|fn_url}" method="post" style="display: inline;">
+                                <input type="hidden" name="security_hash" value="{$security_hash}" />
+                                <input type="hidden" name="addon_id" value="{$addon_id}" />
+                                <button type="submit" class="btn btn-warning cm-comet"
+                                        onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|escape:"javascript"}');">
+                                    <i class="icon-refresh"></i> {__("travel_core.seo_bulk_apply_button")}
+                                </button>
+                            </form>
+                            <p class="muted" style="font-size: 11px; margin-top: 5px;">{__("travel_core.seo_bulk_apply_desc")}</p>
                         </div>
                     </div>
 
@@ -202,6 +269,19 @@
 <script>
 {literal}
 (function() {
+    // ── Per-field checkbox toggle: gray out textarea when unchecked ──
+    document.querySelectorAll('.seo-field-toggle').forEach(function(cb) {
+        function applyState() {
+            var ta = document.getElementById(cb.getAttribute('data-target'));
+            if (ta) {
+                ta.style.opacity = cb.checked ? '1' : '0.4';
+                ta.style.pointerEvents = cb.checked ? '' : 'none';
+            }
+        }
+        cb.addEventListener('change', applyState);
+        applyState(); // initial state
+    });
+
     // Track the last focused textarea and its cursor position
     var lastField = null;
     var lastPos = 0;

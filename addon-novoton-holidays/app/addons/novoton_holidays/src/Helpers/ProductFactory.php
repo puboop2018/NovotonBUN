@@ -74,18 +74,11 @@ class ProductFactory implements ProductFactoryInterface
             // Ignore description fetch errors
         }
 
-        // Build placeholder map for SEO templates
+        // Build placeholder map and apply SEO templates (respects overwrite mode + field toggles)
         $placeholders = self::buildNovotonPlaceholders($hotel, $displayName, $description);
+        $seoFields = fn_travel_core_apply_seo_fields('novoton_holidays', $placeholders, 0, $hotelId);
 
-        // Resolve full description: use template if configured, otherwise raw API description
-        $descTemplate = ConfigProvider::getSeoFullDescription();
-        $fullDescription = $descTemplate !== ''
-            ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
-            : $description;
-
-        // Create product using SEO templates
-        $productData = [
-            'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+        $productData = array_merge([
             'product_code'     => $productCode,
             'price'            => 0,
             'amount'           => ConfigProvider::getDefaultProductQuantity(),
@@ -93,12 +86,7 @@ class ProductFactory implements ProductFactoryInterface
             'company_id'       => ConfigProvider::getCompanyId(),
             'main_category'    => $categoryId,
             'category_ids'     => [$categoryId],
-            'full_description' => $fullDescription,
-            'page_title'       => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
-            'meta_description' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
-            'meta_keywords'    => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-            'seo_name'         => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
-        ];
+        ], $seoFields);
 
         $productId = fn_update_product($productData, 0, CART_LANGUAGE);
 
@@ -197,7 +185,7 @@ class ProductFactory implements ProductFactoryInterface
      * @param string $description API description text
      * @return array<string, string|array> Key => value map (keys without braces)
      */
-    private static function buildNovotonPlaceholders(array $hotel, string $displayName, string $description = ''): array
+    public static function buildNovotonPlaceholders(array $hotel, string $displayName, string $description = ''): array
     {
         // Load facility names from DB
         $facilities = [];

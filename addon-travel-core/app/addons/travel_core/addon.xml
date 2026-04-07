@@ -543,6 +543,26 @@
         <item lang="ro" id="travel_core.seo_templates_hint"><![CDATA[Folosiți token-uri {{placeholder}} pentru câmpuri SEO dinamice. Adăugați |modificator după nume pentru transformări de text (ex. {{name|upper}}). Placeholder-urile nefolosite sunt eliminate automat.]]></item>
         <item lang="en" id="travel_core.seo_templates_saved"><![CDATA[SEO templates saved successfully]]></item>
         <item lang="ro" id="travel_core.seo_templates_saved"><![CDATA[Șabloanele SEO au fost salvate cu succes]]></item>
+        <item lang="en" id="travel_core.seo_overwrite_mode"><![CDATA[Overwrite filled fields]]></item>
+        <item lang="ro" id="travel_core.seo_overwrite_mode"><![CDATA[Suprascrie câmpurile completate]]></item>
+        <item lang="en" id="travel_core.seo_overwrite_mode_desc"><![CDATA[Controls behavior when templates are applied to existing products during sync or bulk apply.]]></item>
+        <item lang="ro" id="travel_core.seo_overwrite_mode_desc"><![CDATA[Controlează comportamentul când șabloanele sunt aplicate produselor existente la sincronizare sau aplicare în masă.]]></item>
+        <item lang="en" id="travel_core.seo_override_all"><![CDATA[Override all — always overwrite product fields]]></item>
+        <item lang="ro" id="travel_core.seo_override_all"><![CDATA[Suprascrie tot — întotdeauna suprascrie câmpurile produsului]]></item>
+        <item lang="en" id="travel_core.seo_fill_if_empty"><![CDATA[Fill in if empty — preserve manual edits]]></item>
+        <item lang="ro" id="travel_core.seo_fill_if_empty"><![CDATA[Completează dacă e gol — păstrează editările manuale]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply"><![CDATA[Bulk apply to existing products]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply"><![CDATA[Aplică în masă pe produsele existente]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply_button"><![CDATA[Apply templates now]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply_button"><![CDATA[Aplică șabloanele acum]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply_desc"><![CDATA[Re-applies SEO templates to all existing hotel products. Respects the overwrite mode and field toggles above.]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply_desc"><![CDATA[Re-aplică șabloanele SEO pe toate produsele hoteliere existente. Respectă modul de suprascriere și toggleurile de câmpuri de mai sus.]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply_progress"><![CDATA[Applying SEO templates...]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply_progress"><![CDATA[Se aplică șabloanele SEO...]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply_done"><![CDATA[SEO templates applied: [updated] updated out of [total] products]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply_done"><![CDATA[Șabloane SEO aplicate: [updated] actualizate din [total] produse]]></item>
+        <item lang="en" id="travel_core.seo_bulk_apply_confirm"><![CDATA[This will re-apply SEO templates to all existing hotel products. Continue?]]></item>
+        <item lang="ro" id="travel_core.seo_bulk_apply_confirm"><![CDATA[Aceasta va re-aplica șabloanele SEO pe toate produsele hoteliere existente. Continuați?]]></item>
         <item lang="en" id="travel_core.seo_product_name"><![CDATA[Product name]]></item>
         <item lang="ro" id="travel_core.seo_product_name"><![CDATA[Numele produsului]]></item>
         <item lang="en" id="travel_core.seo_product_name_desc"><![CDATA[The display name shown on the storefront product listing.]]></item>

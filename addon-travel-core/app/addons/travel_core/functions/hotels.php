@@ -307,3 +307,193 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
     $slug = preg_replace('/-{2,}/', '-', $slug); // collapse multiple dashes
     return trim($slug, '-');
 }
+
+// ============================================================================
+// SEO Field Application — shared by all provider addons
+// ============================================================================
+
+/**
+ * Field mapping: setting key → [template registry key, product_data key].
+ */
+function _travel_core_seo_field_map(): array
+{
+    return [
+        'seo_field_product_name'     => ['seo_product_name',     'product'],
+        'seo_field_page_title'       => ['seo_page_title',       'page_title'],
+        'seo_field_meta_description' => ['seo_meta_description', 'meta_description'],
+        'seo_field_meta_keywords'    => ['seo_meta_keywords',    'meta_keywords'],
+        'seo_field_name_slug'        => ['seo_name_slug',        'seo_name'],
+        'seo_field_full_description' => ['seo_full_description', 'full_description'],
+    ];
+}
+
+/**
+ * Apply SEO template fields to a product, respecting overwrite mode and field toggles.
+ *
+ * Returns only the product_data keys that should be written — callers merge
+ * this into their own product data array before calling fn_update_product().
+ *
+ * @param string      $addonName    'novoton_holidays' or 'sphinx_holidays'
+ * @param array       $placeholders Key => value map for template rendering
+ * @param int         $productId    0 = new product (all enabled fields applied), >0 = existing
+ * @param string|null $hotelId      For unique slug generation (SphinxProductFactory pattern)
+ * @return array Product data keys to merge into fn_update_product()
+ */
+function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders, int $productId = 0, ?string $hotelId = null): array
+{
+    $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
+
+    $overwriteMode = ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all';
+    $fillIfEmpty = ($overwriteMode === 'fill_if_empty') && ($productId > 0);
+
+    // Load current product values once (only when needed for fill_if_empty)
+    $current = [];
+    $currentSlug = '';
+    if ($fillIfEmpty) {
+        $current = db_get_row(
+            "SELECT product, page_title, meta_description, meta_keywords, full_description
+             FROM ?:product_descriptions
+             WHERE product_id = ?i AND lang_code = ?s",
+            $productId, CART_LANGUAGE
+        ) ?: [];
+        $currentSlug = (string) db_get_field(
+            "SELECT name FROM ?:seo_names WHERE object_id = ?i AND type = 'p' LIMIT 1",
+            $productId
+        );
+    }
+
+    $result = [];
+    $fieldMap = _travel_core_seo_field_map();
+
+    foreach ($fieldMap as $toggleKey => [$templateKey, $productKey]) {
+        // Check field toggle (default Y for backward compat)
+        $enabled = ($settings[$toggleKey] ?? '') ?: 'Y';
+        if ($enabled !== 'Y') {
+            continue;
+        }
+
+        // Fill-if-empty: skip if existing value is non-empty
+        if ($fillIfEmpty) {
+            $existingValue = ($productKey === 'seo_name')
+                ? $currentSlug
+                : ($current[$productKey] ?? '');
+            if (trim($existingValue) !== '') {
+                continue;
+            }
+        }
+
+        // Read template pattern from addon settings
+        $template = (string) ($settings[$templateKey] ?? '');
+
+        // Render the field
+        if ($productKey === 'seo_name') {
+            $rendered = fn_travel_core_render_seo_slug($template, $placeholders);
+            // Ensure uniqueness for existing or new products
+            if ($hotelId !== null && function_exists('fn_generate_seo_name')) {
+                // Check for duplicates (append hotel_id suffix if needed)
+                $existing = db_get_field(
+                    "SELECT object_id FROM ?:seo_names WHERE name = ?s AND type = 'p' AND object_id != ?i LIMIT 1",
+                    $rendered, $productId
+                );
+                if ($existing) {
+                    $rendered .= '-' . preg_replace('/[^a-z0-9]/', '', strtolower($hotelId));
+                }
+            }
+            $result[$productKey] = $rendered;
+        } elseif ($productKey === 'full_description') {
+            // Special: if template is empty, fall back to raw description placeholder
+            if ($template !== '') {
+                $result[$productKey] = fn_travel_core_render_seo_template($template, $placeholders);
+            } else {
+                $result[$productKey] = (string) ($placeholders['description'] ?? '');
+            }
+        } else {
+            $result[$productKey] = fn_travel_core_render_seo_template($template, $placeholders);
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Bulk-apply SEO templates to all existing hotel products for an addon.
+ *
+ * Respects overwrite mode and field toggles. Uses fn_set_progress() for
+ * CS-Cart's native progress bar in the admin panel.
+ *
+ * @param string $addonName 'novoton_holidays' or 'sphinx_holidays'
+ * @return array{updated: int, skipped: int, total: int}
+ */
+function fn_travel_core_seo_bulk_apply(string $addonName): array
+{
+    $updated = 0;
+    $skipped = 0;
+    $total = 0;
+    $batchSize = 200;
+    $offset = 0;
+
+    while (true) {
+        if ($addonName === 'novoton_holidays') {
+            $hotels = db_get_array(
+                "SELECT hotel_id, product_id, hotel_name, city, country, region,
+                        star_rating, hotel_type, property_type, latitude, longitude
+                 FROM ?:novoton_hotels
+                 WHERE product_id IS NOT NULL AND product_id > 0
+                 LIMIT ?i, ?i",
+                $offset, $batchSize
+            );
+        } elseif ($addonName === 'sphinx_holidays') {
+            $hotels = db_get_array(
+                "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
+                        h.description, h.rating, h.facilities_json, h.boards_json,
+                        h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
+                        h.destination_name, h.country_name, h.region_name
+                 FROM ?:sphinx_hotels h
+                 WHERE h.product_id IS NOT NULL AND h.product_id > 0
+                   AND h.sync_status = 'active'
+                 LIMIT ?i, ?i",
+                $offset, $batchSize
+            );
+        } else {
+            break;
+        }
+
+        if (empty($hotels)) {
+            break;
+        }
+
+        foreach ($hotels as $hotel) {
+            $total++;
+            $productId = (int) $hotel['product_id'];
+
+            // Build placeholders per addon
+            if ($addonName === 'novoton_holidays') {
+                $displayName = $hotel['hotel_name'] ?? '';
+                $placeholders = \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders($hotel, $displayName);
+            } else {
+                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
+                    'city'    => $hotel['destination_name'] ?? '',
+                    'country' => $hotel['country_name'] ?? '',
+                    'region'  => $hotel['region_name'] ?? '',
+                ]);
+            }
+
+            $seoFields = fn_travel_core_apply_seo_fields($addonName, $placeholders, $productId, $hotel['hotel_id']);
+
+            if (empty($seoFields)) {
+                $skipped++;
+            } else {
+                fn_update_product($seoFields, $productId, CART_LANGUAGE);
+                $updated++;
+            }
+
+            if (function_exists('fn_set_progress')) {
+                fn_set_progress('echo', ($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['hotel_id']) . ' — ' . ($seoFields ? 'updated' : 'skipped'));
+            }
+        }
+
+        $offset += $batchSize;
+    }
+
+    return ['updated' => $updated, 'skipped' => $skipped, 'total' => $total];
+}
