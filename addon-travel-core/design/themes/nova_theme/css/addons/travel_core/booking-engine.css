@@ -258,9 +258,9 @@ button.nvt-field-input:active {
     min-width: 0;
 }
 .nvt-calendar-header {
-    display: flex;
+    display: none; /* hidden on desktop — month titles are in nvt-calendar-nav-row */
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-bottom: 12px;
 }
 .nvt-calendar-header h3 {
@@ -703,13 +703,20 @@ button.nvt-field-input:active {
     width: 100%;
 }
 
-/* ---------- Calendar nav bar (prev/next buttons) ---------- */
+/* ---------- Calendar nav row (arrows inline with month titles) ---------- */
 
-.nvt-calendar-nav-bar {
+.nvt-calendar-nav-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+}
+.nvt-calendar-nav-row .nvt-month-title {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--nvt-text, #1a1a1a);
 }
 
 /* ---------- Homepage location input ---------- */
@@ -887,9 +894,12 @@ button.nvt-field-input:active {
         background: var(--nvt-border, #e0e0e0) !important;
     }
 
-    /* Hide desktop prev/next nav on mobile */
-    .nvt-calendar-nav-bar {
+    /* Hide desktop nav row on mobile; show per-month headers instead */
+    .nvt-calendar-nav-row {
         display: none;
+    }
+    .nvt-calendar-header {
+        display: flex;
     }
 
     /* Shared sticky weekday header (replaces per-month weekday rows) */

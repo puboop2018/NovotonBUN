@@ -233,9 +233,12 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
 
         return (
             <div className="nvt-calendar-month" key={`${year}-${month}`}>
-                <div className="nvt-calendar-header">
-                    <h3>{monthNames[month]} {year}</h3>
-                </div>
+                {/* Month title — visible on mobile only (desktop uses nvt-calendar-nav-row) */}
+                {isMobile && (
+                    <div className="nvt-calendar-header">
+                        <h3>{monthNames[month]} {year}</h3>
+                    </div>
+                )}
                 <div className="nvt-calendar-weekdays">
                     {weekdays.map((d, i) => <span key={i}>{d}</span>)}
                 </div>
@@ -357,8 +360,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 <XIcon />
             </button>
 
-            {/* Desktop: prev/next navigation (hidden on mobile via CSS) */}
-            <div className="nvt-calendar-nav-bar">
+            {/* Desktop: unified nav row — arrows inline with month titles (hidden on mobile via CSS) */}
+            <div className="nvt-calendar-nav-row">
                 <button
                     type="button"
                     className="nvt-calendar-nav"
@@ -368,6 +371,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 >
                     <ChevronLeft />
                 </button>
+                <h3 className="nvt-month-title">{monthNames[month1Month]} {month1Year}</h3>
+                <h3 className="nvt-month-title">{monthNames[month2Month]} {month2Year}</h3>
                 <button
                     type="button"
                     className="nvt-calendar-nav"

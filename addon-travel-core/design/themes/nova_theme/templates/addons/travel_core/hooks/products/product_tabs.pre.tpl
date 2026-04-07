@@ -15,7 +15,7 @@
 <div id="travel-booking-root"
      data-travel-booking
      data-product-id="{$travel_booking_product_id}"
-     style="margin-bottom: 20px; min-height: 60px; border: 1px dashed #ccc;">
+     style="margin-bottom: 20px; min-height: 60px;">
     <div class="travel-loading-state">
         <div class="nvt-skeleton-row">
             <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
