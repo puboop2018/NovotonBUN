@@ -30,13 +30,13 @@
             <div>
                 <div style="font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.check_in")|default:"Check-in"}</div>
                 <div style="font-weight: 600; color: #003580;">
-                    {$check_in_display|date_format:"%a %d %b %Y"}
+                    {$check_in_display|default:''|date_format:"%a %d %b %Y"}
                 </div>
             </div>
             <div>
                 <div style="font-size: 12px; color: #666; margin-bottom: 4px;">{__("novoton_holidays.check_out")|default:"Check-out"}</div>
                 <div style="font-weight: 600; color: #003580;">
-                    {$check_out_display|date_format:"%a %d %b %Y"}
+                    {$check_out_display|default:''|date_format:"%a %d %b %Y"}
                 </div>
             </div>
             <div>

@@ -7,8 +7,8 @@
     <strong>Hotel:</strong> {$product.extra.hotel_name|escape:'html'}<br>
     {/if}
 
-    <strong>Check-in:</strong> {$product.extra.check_in|date_format:"%d.%m.%Y"} |
-    <strong>Check-out:</strong> {$product.extra.check_out|date_format:"%d.%m.%Y"} |
+    <strong>Check-in:</strong> {$product.extra.check_in|default:''|date_format:"%d.%m.%Y"} |
+    <strong>Check-out:</strong> {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"} |
     <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$product.extra.nights}<br>
 
     {if $product.extra.package_name}

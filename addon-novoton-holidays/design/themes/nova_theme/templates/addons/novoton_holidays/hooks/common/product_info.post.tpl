@@ -6,7 +6,7 @@
 <div class="ty-novoton-booking-details" style="margin-top: 8px; padding: 10px; background: #f5f9fc; border-radius: 4px; font-size: 12px; border-left: 3px solid #003580;">
     <div style="margin-bottom: 4px;">
         <strong style="color: #003580;"></strong> 
-        {$product.extra.check_in|date_format:"%d.%m.%Y"} -> {$product.extra.check_out|date_format:"%d.%m.%Y"}
+        {$product.extra.check_in|default:''|date_format:"%d.%m.%Y"} -> {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"}
         <span style="color: #666;">({$product.extra.nights} nights)</span>
     </div>
     <div style="margin-bottom: 4px;">

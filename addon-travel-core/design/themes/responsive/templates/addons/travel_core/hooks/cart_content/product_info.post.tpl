@@ -1,7 +1,7 @@
 {if !empty($product.extra.travel_booking)}
 <div class="travel-booking-cart-info" style="margin-top:10px;padding:12px;background:#f5f9fc;border-radius:6px;font-size:13px;border-left:4px solid #003580;">
     {if $product.extra.hotel_name}<div style="font-weight:600;color:#003580;margin-bottom:6px;">{$product.extra.hotel_name|escape:html}</div>{/if}
-    <div style="margin-bottom:6px;">{$product.extra.check_in|date_format:"%d.%m.%Y"} - {$product.extra.check_out|date_format:"%d.%m.%Y"} ({$product.extra.nights} {__("travel_core.nights")|default:"nights"})</div>
+    <div style="margin-bottom:6px;">{$product.extra.check_in|default:''|date_format:"%d.%m.%Y"} - {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"} ({$product.extra.nights} {__("travel_core.nights")|default:"nights"})</div>
     {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
         <div style="font-weight:600;color:#003580;margin:8px 0 6px;">{$product.extra.num_rooms} rooms:</div>
         {foreach from=$product.extra.rooms_data item=room key=idx}

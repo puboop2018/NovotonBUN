@@ -11,7 +11,7 @@
                  {$product.product|default:'Booking'}
             </div>
             <div style="font-size: 10px; color: #555;">
-                 {$product.extra.check_in|date_format:"%d.%m"} - {$product.extra.check_out|date_format:"%d.%m.%Y"}<br>
+                 {$product.extra.check_in|default:''|date_format:"%d.%m"} - {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"}<br>
                  {$product.extra.room_name|default:$product.extra.room_id|truncate:25}<br>
                  {$product.extra.adults} ad.{if $product.extra.children}, {$product.extra.children} ch.{/if}
             </div>

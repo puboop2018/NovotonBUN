@@ -24,7 +24,7 @@
 
             {* 2. Dates and nights - bold values, format: "05 Jul 2026, 12 Jul 2026, 7" *}
             {if $oi.extra.check_in && $oi.extra.check_out}
-                <strong>{$oi.extra.check_in|date_format:"%d %b %Y"}, {$oi.extra.check_out|date_format:"%d %b %Y"}, {$oi.extra.nights}</strong><br>
+                <strong>{$oi.extra.check_in|default:''|date_format:"%d %b %Y"}, {$oi.extra.check_out|default:''|date_format:"%d %b %Y"}, {$oi.extra.nights}</strong><br>
             {/if}
 
             {* 3. Room type + Board on one line - bold *}
