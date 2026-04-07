@@ -105,7 +105,7 @@ try {
         $cursor = null;
         $pollCount = 0;
 
-        $maxResults = 200; // Hard cap to prevent memory exhaustion
+        $maxResults = 50; // Hard cap — Smarty 5 scope chain OOM at 200
 
         do {
             if ($pollCount > 0) {

@@ -177,7 +177,7 @@
                 <td class="span3"><strong>{$field|replace:'_':' '|capitalize}:</strong></td>
                 <td>
                     {if is_array($value)}
-                        <pre style="max-height:200px;overflow:auto;font-size:11px;">{$value|@json_encode:128|escape:html}</pre>
+                        <pre style="max-height:200px;overflow:auto;font-size:11px;">{$value|json_encode:128|escape:html}</pre>
                     {else}
                         {$value|escape:html}
                     {/if}
@@ -234,9 +234,14 @@
 
 {/capture}
 
+{capture name="buttons"}
+    <a href="{"travel_bookings.manage"|fn_url}" class="btn">{__("back")}</a>
+{/capture}
+
 {$_bk_title = "Booking #`$booking.booking_id` - `$booking.hotel_name`"}
 
 {include file="common/mainbox.tpl"
     title=$_bk_title
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }

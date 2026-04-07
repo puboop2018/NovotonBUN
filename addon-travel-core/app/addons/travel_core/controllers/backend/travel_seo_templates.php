@@ -18,19 +18,42 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function _travel_seo_get_section_id(string $addonName, string $sectionName = 'seo_templates'): int
 {
+    static $cache = [];
+    $cacheKey = $addonName . '/' . $sectionName;
+    if (isset($cache[$cacheKey])) {
+        return $cache[$cacheKey];
+    }
+
     $parentId = (int) db_get_field(
         "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
         $addonName
     );
 
     if ($parentId <= 0) {
+        $cache[$cacheKey] = 0;
         return 0;
     }
 
-    return (int) db_get_field(
+    $id = (int) db_get_field(
         "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND parent_id = ?i",
         $sectionName, $parentId
     );
+
+    // Self-bootstrap: create section if addon was upgraded without reinstall
+    if ($id <= 0) {
+        db_query("INSERT INTO ?:settings_sections ?e", [
+            'name'         => $sectionName,
+            'parent_id'    => $parentId,
+            'edition_type' => 'ROOT',
+            'type'         => 'TAB',
+            'position'     => 200,
+            'is_optional'  => 'N',
+        ]);
+        $id = (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    $cache[$cacheKey] = $id;
+    return $id;
 }
 
 /**

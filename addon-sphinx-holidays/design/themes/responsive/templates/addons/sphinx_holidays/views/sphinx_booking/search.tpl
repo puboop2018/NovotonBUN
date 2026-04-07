@@ -16,7 +16,13 @@
     {* Search form wrapper for re-searching *}
     <div class="travel-search-form-wrapper">
         {$travel_search_params = $sphinx_search_params}
+        {* Null-out search results before include to prevent Smarty 5 scope chain
+           OOM — Data.php:265 exhausts 256MB traversing parent scopes that carry
+           the full results array into nested booking engine templates. *}
+        {$_saved_results = $sphinx_search_results}
+        {$sphinx_search_results = null}
         {include file="addons/sphinx_holidays/blocks/booking_engine.tpl" travel_mode="search"}
+        {$sphinx_search_results = $_saved_results}
     </div>
 
     {if $sphinx_search_results}
