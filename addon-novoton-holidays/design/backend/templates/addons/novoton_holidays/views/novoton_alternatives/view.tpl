@@ -89,7 +89,7 @@
 
 {if $request.alternatives}
 <div class="well">
-    <h4><i class="icon-list-alt"></i> Available Alternatives ({$request.alternatives|@count})</h4>
+    <h4><i class="icon-list-alt"></i> Available Alternatives ({$request.alternatives|count})</h4>
     
     <table class="table table-striped">
         <thead>

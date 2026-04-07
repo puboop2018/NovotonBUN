@@ -107,19 +107,12 @@
     </div>
     {/if}
     
-    {* ===== BOOKING FORM — DRY scoped include (scope="local" prevents OOM) ===== *}
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
     <div class="travel-search-form-wrapper novoton-search-form-wrapper" style="margin-bottom: 20px;">
-        {include file="addons/travel_core/blocks/booking_engine.tpl"
-            scope="local"
-            travel_provider='novoton'
-            travel_search_dispatch='novoton_booking.search'
-            travel_mode='search'
-            travel_search_params=$novoton_params
-            _addons_travel_core=$addons.travel_core
-        }
+        {$booking_engine_html nofilter}
     </div>
 
-    {if $novoton_results && $novoton_results|@count > 0}
+    {if $novoton_results && $novoton_results|count > 0}
         
         {* ===== HOTEL HEADER - A76g: White background ===== *}
         <div class="novoton-hotel-header" style="background: #fff; color: var(--nvt-price-color, #003580); padding: 20px; border-radius: 8px 8px 0 0; border: 1px solid #e0e0e0; border-bottom: none;">
@@ -138,7 +131,7 @@
                     {/if}
                 </div>
                 <div>
-                    {if $novoton_results|@count > 0}
+                    {if $novoton_results|count > 0}
                     {* Calculate total quota from all results *}
                     {$total_quota = 0}
                     {foreach from=$novoton_results item=r}
@@ -146,8 +139,8 @@
                             {$total_quota = $total_quota + $r.rooms_available}
                         {/if}
                     {/foreach}
-                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|@count}
-                    {$badge_offers_count = $novoton_results|@count}
+                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|count}
+                    {$badge_offers_count = $novoton_results|count}
                     <span id="novoton-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" style="background: var(--nvt-success, #28a745); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
                         ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"}{else}{__("novoton_holidays.rooms")|default:"rooms"}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
                     </span>
@@ -190,7 +183,7 @@
             {foreach from=$novoton_params.rooms_data item=room key=room_idx}
                 {$room_num = $room_idx + 1}
                 {assign var="room_key" value=$room_num}
-                {if isset($all_room_results.$room_key) && $all_room_results.$room_key|@count > 0}
+                {if isset($all_room_results.$room_key) && $all_room_results.$room_key|count > 0}
                     {* Room has options - OK *}
                 {else}
                     {$all_rooms_have_options = false}
@@ -304,7 +297,7 @@
                         </div>
                         
                         <div style="padding: 10px; max-height: 400px; overflow-y: auto;">
-                            {if $room_specific_results && $room_specific_results|@count > 0}
+                            {if $room_specific_results && $room_specific_results|count > 0}
                                 {foreach from=$room_specific_results item=result}
                                     {if $result.room_type_display}
                                         {$room_display = $result.room_type_display}
@@ -357,7 +350,7 @@
                                                     <div style="color: #dc3545; font-size: 11px; margin-top: 2px;">
                                                         <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                                                     </div>
-                                                    {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                                    {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                                         <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 4px 8px; margin-top: 4px; font-size: 11px;">
                                                             <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                                             {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -562,7 +555,7 @@
                                 <span style="display: inline-block; background: #fff3cd; color: #856404; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {__("novoton_holidays.on_request")|default:"La cerere"}
                                 </span>
-                                {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                     <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 8px; margin-top: 6px; font-size: 11px;">
                                         <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                         {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -707,7 +700,7 @@
                             <div style="color: #dc3545; font-size: 13px; margin-top: 8px;">
                                 <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                             </div>
-                            {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                            {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                 <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 12px;">
                                     <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                     {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -839,12 +832,12 @@
         {if $terms_of_payment || $terms_of_cancellation || $parsed_payment_terms || $parsed_cancellation_terms || $terms_of_payment_raw || $terms_of_cancellation_raw}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
             
-            {if $parsed_payment_terms|@count > 0 || $terms_of_payment || $terms_of_payment_raw}
+            {if $parsed_payment_terms|count > 0 || $terms_of_payment || $terms_of_payment_raw}
             <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
                 <h4 style="margin: 0 0 15px; font-size: 16px; color: #333;">
                     💳 {__("novoton_holidays.payment_terms")|default:"Condiții de plată"}
                 </h4>
-                {if $parsed_payment_terms && $parsed_payment_terms|@count > 0}
+                {if $parsed_payment_terms && $parsed_payment_terms|count > 0}
                     <ul style="margin: 0; padding-left: 0; list-style: none;">
                     {foreach from=$parsed_payment_terms item=term}
                         <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #555;">
@@ -885,7 +878,7 @@
         
         {/if}
         
-    {elseif $no_availability_message && $alternative_results && $alternative_results|@count > 0}
+    {elseif $no_availability_message && $alternative_results && $alternative_results|count > 0}
         {* Show alternative dates results *}
         <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">

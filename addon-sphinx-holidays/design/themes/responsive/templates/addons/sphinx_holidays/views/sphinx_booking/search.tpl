@@ -13,22 +13,14 @@
 
 <div class="travel-search-results-page sphinx-search-results">
 
-    {* ===== BOOKING FORM — DRY scoped include (scope="local" prevents OOM) ===== *}
-    {* scope="local" prevents Smarty 5 from inheriting the parent scope
-       ($sphinx_search_results etc.) into the booking engine template.
-       Only explicitly passed variables are visible inside the include.
-       $addons.travel_core must be passed explicitly as _addons_travel_core
-       because scope="local" blocks access to Smarty root-scope vars.
-       Smarty built-ins ($smarty.const.*, {__()}, $config) remain available. *}
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
+    {* The booking engine HTML is rendered to a string in the search controller
+       BEFORE $sphinx_search_results is assigned to the view. This prevents
+       Smarty 5's scope chain traversal from carrying 50+ result objects into
+       the booking engine template (which causes 256MB OOM at Data.php:265).
+       Smarty has NO scope="local" — {include} always inherits parent scope. *}
     <div class="travel-search-form-wrapper">
-        {include file="addons/travel_core/blocks/booking_engine.tpl"
-            scope="local"
-            travel_provider='sphinx'
-            travel_search_dispatch='sphinx_booking.search'
-            travel_mode='search'
-            travel_search_params=$sphinx_search_params
-            _addons_travel_core=$addons.travel_core
-        }
+        {$booking_engine_html nofilter}
     </div>
 
     {if $sphinx_search_results}

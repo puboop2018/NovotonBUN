@@ -76,7 +76,7 @@
                 </td>
                 <td>
                     {if $request.alternatives}
-                        <strong class="text-success">{$request.alternatives|@count}</strong> found
+                        <strong class="text-success">{$request.alternatives|count}</strong> found
                     {else}
                         <span class="muted">-</span>
                     {/if}

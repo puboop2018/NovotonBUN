@@ -22,7 +22,7 @@
 <div class="row-fluid" style="margin-bottom: 20px;">
     <div class="span4">
         <div class="well well-small center">
-            <h2 class="no-margin" style="color: #f0ad4e;">{$hotels|@count}</h2>
+            <h2 class="no-margin" style="color: #f0ad4e;">{$hotels|count}</h2>
             <p class="muted no-margin">Hotels to Add (API)</p>
         </div>
     </div>
@@ -34,13 +34,13 @@
     </div>
     <div class="span4">
         <div class="well well-small center">
-            <h2 class="no-margin" style="color: #5bc0de;">{$hotels|@count + $in_cart_count}</h2>
+            <h2 class="no-margin" style="color: #5bc0de;">{$hotels|count + $in_cart_count}</h2>
             <p class="muted no-margin">Total with Prices</p>
         </div>
     </div>
 </div>
 
-{if $hotels|@count > 0}
+{if $hotels|count > 0}
 
 {* Action Buttons *}
 <div class="well">
@@ -49,7 +49,7 @@
 
     <div style="margin-top: 15px;">
         <a href="{"novoton_holidays.add_hotels_as_products&country=`$country`"|fn_url}" class="btn btn-primary">
-            <i class="icon-plus"></i> Configure &amp; Add {$hotels|@count} Hotels as Products
+            <i class="icon-plus"></i> Configure &amp; Add {$hotels|count} Hotels as Products
         </a>
         <a href="{"novoton_holidays.manage"|fn_url}" class="btn">
             <i class="icon-arrow-left"></i> Back to Dashboard
@@ -98,8 +98,8 @@
     </tbody>
 </table>
 
-{if $hotels|@count > 100}
-<p class="muted">Showing first 100 of {$hotels|@count} hotels.</p>
+{if $hotels|count > 100}
+<p class="muted">Showing first 100 of {$hotels|count} hotels.</p>
 {/if}
 
 {else}

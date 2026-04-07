@@ -98,9 +98,9 @@
     {else}
         {assign var="rooms" value=$booking.rooms_data}
     {/if}
-    {if $rooms && is_array($rooms) && $rooms|@count > 0}
+    {if $rooms && is_array($rooms) && $rooms|count > 0}
     <div class="rooms-section">
-        <h4>Rooms ({$rooms|@count})</h4>
+        <h4>Rooms ({$rooms|count})</h4>
         <div class="rooms-grid">
             {foreach from=$rooms item=room key=idx}
             <div class="room-card">
@@ -183,7 +183,7 @@
                     {else}
                         {assign var="api_req" value=$booking.api_request}
                     {/if}
-                    <pre class="debug-section">{$api_req|@print_r:true}</pre>
+                    <pre class="debug-section">{$api_req|print_r:true}</pre>
                     {else}
                     <p class="muted">No API request recorded (API submission may be disabled)</p>
                     {/if}
@@ -197,7 +197,7 @@
                     {else}
                         {assign var="api_resp" value=$booking.api_response}
                     {/if}
-                    <pre class="debug-section">{$api_resp|@print_r:true}</pre>
+                    <pre class="debug-section">{$api_resp|print_r:true}</pre>
                     {else}
                     <p class="muted">No API response recorded (API may be disabled or not yet called)</p>
                     {/if}
@@ -214,9 +214,9 @@
     {else}
         {assign var="alts" value=$booking.alternatives_data}
     {/if}
-    {if $alts && is_array($alts) && $alts|@count > 0}
+    {if $alts && is_array($alts) && $alts|count > 0}
     <div class="alternatives-preview">
-        <h4>{$alts|@count} Alternative(s) Found</h4>
+        <h4>{$alts|count} Alternative(s) Found</h4>
         <table class="table table-condensed table-striped" style="background: #fff;">
             <thead>
                 <tr><th>Hotel</th><th>Room</th><th>Dates</th><th>Price</th><th>Quota</th></tr>
@@ -235,8 +235,8 @@
                 {/foreach}
             </tbody>
         </table>
-        {if $alts|@count > 5}
-        <p class="muted">Showing first 5 of {$alts|@count} alternatives.</p>
+        {if $alts|count > 5}
+        <p class="muted">Showing first 5 of {$alts|count} alternatives.</p>
         {/if}
         <a href="{"novoton_bookings.alternatives?booking_id=`$booking.booking_id`"|fn_url}" class="btn btn-success">View All Alternatives</a>
     </div>

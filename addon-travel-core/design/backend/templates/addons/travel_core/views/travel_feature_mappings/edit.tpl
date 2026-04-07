@@ -152,7 +152,7 @@
 <hr>
 
 {* Aliases Section *}
-<h4>{__("travel_core.fm_aliases")} ({$aliases|@count})</h4>
+<h4>{__("travel_core.fm_aliases")} ({$aliases|count})</h4>
 
 {if $aliases}
 <table class="table table-striped table-condensed">

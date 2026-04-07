@@ -56,7 +56,7 @@
 
 {if $id_num && $alternatives}
 <div class="alert alert-success">
-    <h4><i class="icon-ok"></i> {$alternatives|@count} Alternatives Found!</h4>
+    <h4><i class="icon-ok"></i> {$alternatives|count} Alternatives Found!</h4>
 </div>
 
 <table class="table table-striped">
