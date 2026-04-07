@@ -373,43 +373,9 @@
             </section>
             <section id="seo_templates">
                 <items>
-                    <item id="seo_templates_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="seo_placeholders_info">
+                    <item id="seo_templates_redirect_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{description}}, {{facilities}}, {{latitude}}, {{longitude}}. Arrays (facilities) show the first 3 values comma-separated.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_product_name">
-                        <type>textarea</type>
-                        <default_value>{{name}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_page_title">
-                        <type>textarea</type>
-                        <default_value>{{name}} - {{city}}, {{country}} {{year}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_description">
-                        <type>textarea</type>
-                        <default_value>Rezervă cazare la {{name}} în {{city}}, {{country}}. Hotel de {{star_rating}} stele cu {{facilities}}. Vezi tarife și disponibilitate.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_keywords">
-                        <type>textarea</type>
-                        <default_value>{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} stele</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_name_slug">
-                        <type>textarea</type>
-                        <default_value>{{name}}-{{city}}-{{country}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_full_description">
-                        <type>textarea</type>
-                        <default_value></default_value>
+                        <default_value>SEO templates are managed centrally via Travel Core → SEO Templates page (admin.php?dispatch=travel_seo_templates.manage).</default_value>
                         <variants/>
                     </item>
                 </items>

@@ -217,39 +217,9 @@
             </section>
             <section id="seo_templates">
                 <items>
-                    <item id="seo_placeholders_info">
+                    <item id="seo_templates_redirect_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}, {{address}}, {{phone}}, {{email}}, {{website}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_product_name">
-                        <type>input</type>
-                        <default_value>{{name}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_page_title">
-                        <type>input</type>
-                        <default_value>{{name}} {{classification}}* - {{city}}, {{country}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_description">
-                        <type>textarea</type>
-                        <default_value>Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}. View rates and availability.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_keywords">
-                        <type>input</type>
-                        <default_value>{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_name_slug">
-                        <type>input</type>
-                        <default_value>{{name}}-{{city}}-{{country}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_full_description">
-                        <type>textarea</type>
-                        <default_value></default_value>
+                        <default_value>SEO templates are managed centrally via Travel Core → SEO Templates page (admin.php?dispatch=travel_seo_templates.manage).</default_value>
                         <variants/>
                     </item>
                 </items>

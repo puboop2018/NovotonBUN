@@ -563,6 +563,10 @@
         <item lang="ro" id="travel_core.seo_name_slug"><![CDATA[Nume SEO (slug URL)]]></item>
         <item lang="en" id="travel_core.seo_name_slug_desc"><![CDATA[The URL-friendly slug: hotel-name-city-country.html. Avoid changing after products are indexed.]]></item>
         <item lang="ro" id="travel_core.seo_name_slug_desc"><![CDATA[Slug-ul URL: hotel-nume-oras-tara.html. Evitați modificarea după indexarea produselor.]]></item>
+        <item lang="en" id="travel_core.seo_full_description"><![CDATA[Full description template (optional)]]></item>
+        <item lang="ro" id="travel_core.seo_full_description"><![CDATA[Șablon descriere completă (opțional)]]></item>
+        <item lang="en" id="travel_core.seo_full_description_desc"><![CDATA[Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is.]]></item>
+        <item lang="ro" id="travel_core.seo_full_description_desc"><![CDATA[Șablon opțional pentru descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală.]]></item>
         <item lang="en" id="travel_core.seo_placeholders_title"><![CDATA[Placeholders to use]]></item>
         <item lang="ro" id="travel_core.seo_placeholders_title"><![CDATA[Placeholder-uri disponibile]]></item>
         <item lang="en" id="travel_core.seo_modifiers_title"><![CDATA[Modifiers to use]]></item>

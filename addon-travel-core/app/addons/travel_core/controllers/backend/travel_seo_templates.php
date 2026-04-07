@@ -53,24 +53,27 @@ function _travel_seo_read_settings(string $addonName): array
     // Defaults per addon — ensures textareas always have a value
     $defaults = [
         'novoton_holidays' => [
-            'seo_product_name'     => '{{name}}',
-            'seo_page_title'       => '{{name}} - {{city}}, {{country}} {{year}}',
-            'seo_meta_description' => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
-            'seo_meta_keywords'    => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
-            'seo_name_slug'        => '{{name}}-{{city}}-{{country}}',
+            'seo_product_name'      => '{{name}}',
+            'seo_page_title'        => '{{name}} - {{city}}, {{country}} {{year}}',
+            'seo_meta_description'  => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
+            'seo_meta_keywords'     => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
+            'seo_name_slug'         => '{{name}}-{{city}}-{{country}}',
+            'seo_full_description'  => '',
         ],
         'sphinx_holidays' => [
-            'seo_product_name'     => '{{name}}',
-            'seo_page_title'       => '{{name}} {{classification}}* - {{city}}, {{country}}',
-            'seo_meta_description' => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-            'seo_meta_keywords'    => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
-            'seo_name_slug'        => '{{name}}-{{city}}-{{country}}',
+            'seo_product_name'      => '{{name}}',
+            'seo_page_title'        => '{{name}} {{classification}}* - {{city}}, {{country}}',
+            'seo_meta_description'  => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'seo_meta_keywords'     => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
+            'seo_name_slug'         => '{{name}}-{{city}}-{{country}}',
+            'seo_full_description'  => '',
         ],
     ];
 
     $addonDefaults = $defaults[$addonName] ?? [];
     foreach ($addonDefaults as $key => $default) {
-        if (!isset($values[$key]) || $values[$key] === '') {
+        if (!isset($values[$key])) {
+            // Key not in DB at all — use default
             $values[$key] = $default;
         }
     }
@@ -80,6 +83,10 @@ function _travel_seo_read_settings(string $addonName): array
 
 /**
  * Save SEO template values for an addon.
+ *
+ * Uses INSERT … ON DUPLICATE KEY UPDATE so saving works even when the
+ * addon was installed before the seo_templates section existed in addon.xml
+ * (i.e. the settings_objects rows were never created by CS-Cart's installer).
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
@@ -89,7 +96,17 @@ function _travel_seo_save_settings(string $addonName, array $values): int
     }
 
     $saved = 0;
-    $allowedKeys = ['seo_product_name', 'seo_page_title', 'seo_meta_description', 'seo_meta_keywords', 'seo_name_slug'];
+    $allowedKeys = ['seo_product_name', 'seo_page_title', 'seo_meta_description', 'seo_meta_keywords', 'seo_name_slug', 'seo_full_description'];
+
+    // Map of setting type per key (for INSERT fallback)
+    $types = [
+        'seo_product_name'     => 'I',  // input
+        'seo_page_title'       => 'I',
+        'seo_meta_description' => 'T',  // textarea
+        'seo_meta_keywords'    => 'I',
+        'seo_name_slug'        => 'I',
+        'seo_full_description' => 'T',
+    ];
 
     foreach ($values as $key => $value) {
         if (!in_array($key, $allowedKeys, true)) {
@@ -105,11 +122,18 @@ function _travel_seo_save_settings(string $addonName, array $values): int
 
         if ($objectId > 0) {
             db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
-            $saved++;
+        } else {
+            // Row missing — create it so the setting persists
+            db_query(
+                "INSERT INTO ?:settings_objects (name, section_id, section_tab_id, type, value, edition_type, handler, parent_id, is_global, object_type) "
+                . "VALUES (?s, ?i, 0, ?s, ?s, 'ROOT', '', 0, 'N', '')",
+                $key, $sectionId, $types[$key] ?? 'I', $value
+            );
         }
+        $saved++;
     }
 
-    // Clear settings cache
+    // Clear settings cache so ConfigProvider picks up new values
     Registry::del('addons.' . $addonName);
     Registry::del('settings');
 
