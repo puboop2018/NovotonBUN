@@ -2169,6 +2169,14 @@ msgctxt "SettingsOptions::novoton_holidays::product_code_prefixes"
 msgid "Product Code Prefixes (comma separated)"
 msgstr "Prefixe Cod Produs (separate prin virgulă)"
 
+msgctxt "SettingsOptions::novoton_holidays::default_product_quantity"
+msgid "Default product quantity"
+msgstr "Cantitate implicită produs"
+
+msgctxt "SettingsTooltips::novoton_holidays::default_product_quantity"
+msgid "Inventory quantity assigned to hotel products on creation"
+msgstr "Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de 'inventar zero'."
+
 msgctxt "SettingsOptions::novoton_holidays::products_header"
 msgid "Product Settings"
 msgstr "Setări Produse"

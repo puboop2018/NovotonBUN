@@ -153,6 +153,11 @@
                         <default_value>NVT</default_value>
                         <variants/>
                     </item>
+                    <item id="default_product_quantity">
+                        <type>input</type>
+                        <default_value>555</default_value>
+                        <variants/>
+                    </item>
                     <item id="delete_products_on_uninstall">
                         <type>checkbox</type>
                         <default_value>N</default_value>

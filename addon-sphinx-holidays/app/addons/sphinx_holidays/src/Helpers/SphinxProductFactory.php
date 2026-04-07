@@ -190,6 +190,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'product'           => $productName,
             'product_code'      => $productCode,
             'price'             => 0,
+            'amount'            => ConfigProvider::getDefaultProductQuantity(),
             'status'            => 'A',
             'company_id'        => Registry::get('runtime.company_id') ?: 1,
             'main_category'     => $categoryId,

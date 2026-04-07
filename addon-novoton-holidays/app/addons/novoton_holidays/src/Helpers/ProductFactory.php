@@ -88,6 +88,7 @@ class ProductFactory implements ProductFactoryInterface
             'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
             'product_code'     => $productCode,
             'price'            => 0,
+            'amount'           => ConfigProvider::getDefaultProductQuantity(),
             'status'           => 'D',
             'company_id'       => ConfigProvider::getCompanyId(),
             'main_category'    => $categoryId,
