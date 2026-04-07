@@ -193,19 +193,15 @@
         {* ── RIGHT: Sidebar with placeholders & modifiers ── *}
         <div class="span4">
 
-            {* Placeholders panel *}
+            {* Placeholders panel — show only the active tab's placeholders *}
             <div class="well well-small" style="background: #f8f9fa; margin-bottom: 15px;">
                 <h5 style="margin-top: 0; padding-bottom: 6px; border-bottom: 1px solid #dee2e6;">
                     {__("travel_core.seo_placeholders_title")}
                 </h5>
 
                 {foreach $seo_addons as $addon_id => $addon}
-                {if $seo_addons|count > 1}
-                <div class="seo-placeholder-group" data-addon="{$addon_id}" style="margin-bottom: 12px;">
-                    <strong style="font-size: 11px; text-transform: uppercase; color: #6c757d;">{$addon.label}</strong>
-                </div>
-                {/if}
-                <div class="seo-placeholder-list" data-addon="{$addon_id}" style="margin-bottom: 15px;">
+                <div class="seo-placeholder-list" data-addon-placeholders="{$addon_id}"
+                     style="margin-bottom: 15px;{if $addon_id != $active_tab} display: none;{/if}">
                     {foreach $addon.placeholders as $ph_key => $ph_desc}
                     <div style="margin-bottom: 4px; font-size: 12px; line-height: 1.5;">
                         <span class="label label-info seo-insert-tag" style="cursor: pointer; font-family: monospace; font-size: 11px;"
@@ -278,6 +274,17 @@
         }
         cb.addEventListener('change', applyState);
         applyState(); // initial state
+    });
+
+    // ── Tab switch: show only the active tab's placeholders in sidebar ──
+    document.querySelectorAll('.nav-tabs a[data-toggle="tab"]').forEach(function(tabLink) {
+        tabLink.addEventListener('click', function() {
+            // Extract addon_id from href: "#tab_novoton_holidays" → "novoton_holidays"
+            var addonId = (this.getAttribute('href') || '').replace('#tab_', '');
+            document.querySelectorAll('[data-addon-placeholders]').forEach(function(el) {
+                el.style.display = (el.getAttribute('data-addon-placeholders') === addonId) ? '' : 'none';
+            });
+        });
     });
 
     // Track the last focused textarea and its cursor position
