@@ -328,7 +328,7 @@ export default function GuestPicker({
                                                 aria-invalid={error || undefined}
                                             >
                                                 <option value="">
-                                                    {t('childNAge', 'Child [n] age').replace('[n]', childIdx + 1)}
+                                                    {t('childNAge', 'Select child [n] age').replace('[n]', childIdx + 1)}
                                                 </option>
                                                 {Array.from({ length: 18 }, (_, a) => (
                                                     <option key={a} value={a}>
