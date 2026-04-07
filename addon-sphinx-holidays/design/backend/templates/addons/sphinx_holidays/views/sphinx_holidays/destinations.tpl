@@ -76,5 +76,5 @@
 
 {capture name="buttons"}{/capture}
 
-{include file="common/mainbox.tpl" title="{__("sphinx_holidays.destinations")}" content=$smarty.capture.mainbox
+{include file="common/mainbox.tpl" title=__("sphinx_holidays.destinations") content=$smarty.capture.mainbox
     buttons=$smarty.capture.buttons}

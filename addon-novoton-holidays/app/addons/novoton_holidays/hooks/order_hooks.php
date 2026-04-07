@@ -105,13 +105,39 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
         return;
     }
 
-    // $cart can be null in edge cases (payment gateway callbacks, order status re-triggers)
-    if (!is_array($cart) || empty($cart['products'])) {
+    // Primary path: use cart data when available (full booking submission with API call)
+    if (is_array($cart) && !empty($cart['products'])) {
+        Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
         return;
     }
 
-    // BookingSubmissionService uses BookingRepository which syncs to travel_bookings automatically
-    Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
+    // Fallback path: $cart is null/empty (payment callbacks, order status re-triggers).
+    // Link any unlinked novoton bookings to this order by looking up the order's products.
+    $order_info = fn_get_order_info($resolved_order_id);
+    if (empty($order_info['products'])) {
+        return;
+    }
+
+    foreach ($order_info['products'] as $product) {
+        $extra = $product['extra'] ?? [];
+        if (empty($extra['novoton_booking']) || empty($extra['novoton_booking_id'])) {
+            continue;
+        }
+
+        $booking_id = (int) $extra['novoton_booking_id'];
+        if ($booking_id <= 0) {
+            continue;
+        }
+
+        // Only link if the booking isn't already linked to an order
+        $current_order = (int) db_get_field(
+            "SELECT order_id FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id
+        );
+
+        if ($current_order <= 0) {
+            _nvt_booking_repo()->update($booking_id, ['order_id' => $resolved_order_id]);
+        }
+    }
 }
 
 // ============================================================================
