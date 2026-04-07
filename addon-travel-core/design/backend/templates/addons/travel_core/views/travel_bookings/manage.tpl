@@ -280,7 +280,10 @@
 
 {/capture}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl"
     title=__('travel_core.manage_bookings')
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }
