@@ -25,7 +25,7 @@
             </div>
             <div class="span6 text-right">
                 {if $booking.provider_display.status_label}
-                    {$booking.provider_display.status_label|escape:'html'}
+                    {$booking.provider_display.status_label nofilter}
                 {elseif $booking.status == 'confirmed'}
                     <span class="label label-success label-large">Confirmed</span>
                 {elseif $booking.status == 'pending'}
@@ -234,7 +234,9 @@
 
 {/capture}
 
+{$_bk_title = "Booking #`$booking.booking_id` - `$booking.hotel_name`"}
+
 {include file="common/mainbox.tpl"
-    title="Booking #{$booking.booking_id} - {$booking.hotel_name|escape:html}"
+    title=$_bk_title
     content=$smarty.capture.mainbox
 }
