@@ -105,6 +105,8 @@ try {
         $cursor = null;
         $pollCount = 0;
 
+        $maxResults = 200; // Hard cap to prevent memory exhaustion
+
         do {
             if ($pollCount > 0) {
                 sleep($pollInterval);
@@ -117,8 +119,11 @@ try {
             if (!empty($pollResponse['results'])) {
                 foreach ($pollResponse['results'] as $result) {
                     $allResults[] = $result;
+                    if (count($allResults) >= $maxResults) break;
                 }
             }
+
+            if (count($allResults) >= $maxResults) break;
 
             $status = $pollResponse['status'] ?? 'completed';
             if ($status === 'completed') break;
@@ -128,12 +133,40 @@ try {
 
         } while ($pollCount < $maxPolls);
 
-        // Cache raw results (before commission) for identical future searches
+        // Cache results for identical future searches.
+        // Strip to display-relevant fields to avoid caching multi-MB API payloads
+        // (descriptions, facilities, images, terms) that exhaust memory.
         if ($cacheEnabled && $cacheTtl > 0 && !empty($allResults)) {
+            $cacheFields = [
+                'offer_id', 'hotel_id', 'product_id',
+                'hotel_name', 'hotel_image', 'star_rating', 'destination',
+                'room_name', 'room_type', 'board_name', 'board_type',
+                'price', 'currency',
+            ];
+            $cacheResults = [];
+            foreach ($allResults as $r) {
+                $cr = [];
+                foreach ($cacheFields as $f) {
+                    if (isset($r[$f])) $cr[$f] = $r[$f];
+                }
+                // Preserve offers array (stripped) for commission recalculation
+                if (!empty($r['offers'])) {
+                    $cr['offers'] = array_map(function($o) use ($cacheFields) {
+                        $so = [];
+                        foreach ($cacheFields as $f) {
+                            if (isset($o[$f])) $so[$f] = $o[$f];
+                        }
+                        return $so;
+                    }, $r['offers']);
+                }
+                $cacheResults[] = $cr;
+            }
             CacheService::set($cacheKey, [
-                'results' => $allResults,
+                'results' => $cacheResults,
                 'search_id' => $searchId,
             ], $cacheTtl);
+            // Replace allResults with stripped version for downstream processing
+            $allResults = $cacheResults;
         }
     }
 
@@ -161,7 +194,27 @@ try {
         unset($result);
     }
 
-    $view->assign('sphinx_search_results', $allResults);
+    // Strip results to only the fields the template needs — raw API responses
+    // can contain huge payloads (descriptions, facilities, images, terms) that
+    // exhaust memory when Smarty serializes them for the template engine.
+    $templateFields = [
+        'offer_id', 'hotel_id', 'product_id',
+        'hotel_name', 'hotel_image', 'star_rating', 'destination',
+        'room_name', 'room_type', 'board_name', 'board_type',
+        'price', 'original_price', 'currency',
+    ];
+    $slimResults = [];
+    foreach ($allResults as $result) {
+        $slim = [];
+        foreach ($templateFields as $f) {
+            if (isset($result[$f])) {
+                $slim[$f] = $result[$f];
+            }
+        }
+        $slimResults[] = $slim;
+    }
+
+    $view->assign('sphinx_search_results', $slimResults);
     $view->assign('sphinx_search_id', $searchId);
     $view->assign('sphinx_search_params', [
         'hotel_id' => $hotel_id,
