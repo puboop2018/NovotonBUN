@@ -73,19 +73,18 @@ try {
             $debugLog = array_merge($debugLog, $altSearcher->getDebugLog());
         }
 
-        // ── 5b. Pre-render booking engine before heavy data is assigned ──
-        // Smarty {include} always inherits parent scope — there is NO
-        // scope="local" option. By rendering the booking engine template
-        // to a string NOW (before search results are assigned to the view),
-        // we avoid Smarty 5 scope chain traversal over the large results
-        // array, preventing the 256MB OOM at Data.php:265.
+        // ── 5b. Pre-render booking engine as pure PHP string ────────────
+        // fn_travel_core_render_booking_engine() builds the React mount HTML
+        // entirely in PHP — zero Smarty involvement, zero scope chain traversal.
+        // This prevents the 256MB OOM at Data.php:265 that occurs when Smarty 5
+        // traverses the view's accumulated scope during {include} or fetch().
         $view = \Tygh\Tygh::$app['view'];
-        $view->assign('travel_provider', 'novoton');
-        $view->assign('travel_search_dispatch', 'novoton_booking.search');
-        $view->assign('travel_mode', 'search');
-        $view->assign('travel_search_params', $params['novoton_params']);
-        $view->assign('_addons_travel_core', \Tygh\Registry::get('addons.travel_core') ?: []);
-        $view->assign('booking_engine_html', $view->fetch('addons/travel_core/blocks/booking_engine.tpl'));
+        $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
+            'provider'        => 'novoton',
+            'search_dispatch' => 'novoton_booking.search',
+            'mode'            => 'search',
+            'search_params'   => $params['novoton_params'],
+        ]));
 
         // ── 6. Assign everything to the template ─────────────────────
         $formatter->assignToView(

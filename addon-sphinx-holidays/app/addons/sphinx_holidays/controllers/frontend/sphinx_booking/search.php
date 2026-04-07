@@ -228,17 +228,16 @@ try {
         'nights' => (strtotime($check_out) && strtotime($check_in)) ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
     ];
 
-    // Pre-render booking engine BEFORE assigning search results to the view.
-    // Smarty {include} always inherits parent scope (NO scope="local" exists).
-    // By rendering the template to a string first, the booking engine never
-    // sees $sphinx_search_results in its scope, preventing the 256MB OOM
-    // at Data.php:265 caused by Smarty 5's scope chain traversal.
-    $view->assign('travel_provider', 'sphinx');
-    $view->assign('travel_search_dispatch', 'sphinx_booking.search');
-    $view->assign('travel_mode', 'search');
-    $view->assign('travel_search_params', $templateParams);
-    $view->assign('_addons_travel_core', Registry::get('addons.travel_core') ?: []);
-    $view->assign('booking_engine_html', $view->fetch('addons/travel_core/blocks/booking_engine.tpl'));
+    // Render booking engine as pure PHP string — zero Smarty involvement.
+    // fn_travel_core_render_booking_engine() builds the React mount HTML
+    // entirely in PHP, avoiding Smarty 5's scope chain traversal that
+    // causes 256MB OOM at Data.php:265.
+    $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
+        'provider'        => 'sphinx',
+        'search_dispatch' => 'sphinx_booking.search',
+        'mode'            => 'search',
+        'search_params'   => $templateParams,
+    ]));
 
     $view->assign('sphinx_search_results', $slimResults);
     $view->assign('sphinx_search_id', $searchId);

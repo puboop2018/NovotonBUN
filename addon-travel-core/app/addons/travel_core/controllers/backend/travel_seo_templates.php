@@ -9,7 +9,6 @@
 declare(strict_types=1);
 
 use Tygh\Registry;
-use Tygh\Settings;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -166,10 +165,14 @@ function _travel_seo_ensure_settings_exist(string $addonName): void
 }
 
 /**
- * Save SEO template values for an addon using the Settings API.
+ * Save SEO template values for an addon.
  *
- * Ensures setting rows exist first (they're not in addon.xml), then uses
- * Settings::instance()->updateValue() for DB write + cache invalidation.
+ * Uses direct SQL because Settings::instance()->updateValue() cannot find
+ * settings that were created via raw SQL INSERT (it uses its own internal
+ * registry keyed by addon.xml definitions). Since seo_* settings are NOT
+ * in addon.xml, we must manage them directly.
+ *
+ * Flow: ensure rows exist (INSERT if missing) → UPDATE values → clear cache.
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
@@ -187,18 +190,45 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         return 0;
     }
 
-    // Ensure setting rows exist in DB before updateValue() — they're not
-    // defined in addon.xml, so CS-Cart doesn't create them on install.
+    // Ensure setting rows exist in DB (creates section + rows if missing)
     _travel_seo_ensure_settings_exist($addonName);
 
-    $settings = Settings::instance();
-    $saved = 0;
+    // Get the section_id so we can target the correct rows
+    $parentId = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
+        $addonName
+    );
+    $sectionId = ($parentId > 0)
+        ? (int) db_get_field(
+            "SELECT section_id FROM ?:settings_sections WHERE name = 'seo_templates' AND parent_id = ?i",
+            $parentId
+        )
+        : 0;
 
+    if ($sectionId <= 0) {
+        return 0;
+    }
+
+    // Fetch object_ids for all settings in one query
+    $existing = db_get_hash_single_array(
+        "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
+        ['name', 'object_id'],
+        $sectionId, array_keys($values)
+    );
+
+    $saved = 0;
     foreach ($values as $key => $value) {
         $value = trim((string) $value);
-        $settings->updateValue($key, $value, $addonName);
-        $saved++;
+        if (!empty($existing[$key])) {
+            db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
+                $value, (int) $existing[$key]);
+            $saved++;
+        }
     }
+
+    // Clear settings cache so changes appear immediately
+    Registry::del('addons.' . $addonName);
+    Registry::del('settings');
 
     return $saved;
 }
