@@ -14,7 +14,6 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Registry;
-use Tygh\Settings;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -23,10 +22,11 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Get the section_id for the 'appearance' tab under the travel_core addon settings.
+ * Get (or create) the section_id for the 'appearance' tab under the travel_core addon settings.
  *
- * CS-Cart creates these rows from addon.xml during addon installation.
- * We only read — never create rows in the core settings_sections table.
+ * The addon.xml doesn't declare an 'appearance' section or color_* items, so CS-Cart
+ * never creates them on install.  This function self-bootstraps: if the section or any
+ * color settings are missing, it creates them on the fly.
  */
 function _travel_styles_get_section_id(): int
 {
@@ -48,6 +48,44 @@ function _travel_styles_get_section_id(): int
         "SELECT section_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
         $parentId
     );
+
+    // Self-bootstrap: create the 'appearance' section if it doesn't exist
+    if ($id <= 0) {
+        db_query("INSERT INTO ?:settings_sections ?e", [
+            'name'        => 'appearance',
+            'parent_id'   => $parentId,
+            'edition_type' => 'ROOT',
+            'type'        => 'TAB',
+            'position'    => 100,
+            'is_optional' => 'N',
+        ]);
+        $id = (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    // Ensure color_* setting rows exist (seed with defaults on first use)
+    if ($id > 0) {
+        $existingNames = db_get_fields(
+            "SELECT name FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'color_%'", $id
+        );
+        $existingSet = array_flip($existingNames ?: []);
+
+        foreach (_travel_styles_color_map() as $name => [$cssVar, $default]) {
+            if (!isset($existingSet[$name])) {
+                db_query("INSERT INTO ?:settings_objects ?e", [
+                    'name'           => $name,
+                    'section_id'     => $id,
+                    'section_tab_id' => 0,
+                    'type'           => 'I',
+                    'value'          => '',
+                    'edition_type'   => 'ROOT',
+                    'handler'        => '',
+                    'parent_id'      => 0,
+                    'is_global'      => 'N',
+                    'position'       => 0,
+                ]);
+            }
+        }
+    }
 
     return $id;
 }
@@ -83,45 +121,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors = [];
         $saved = 0;
 
+        // Validate all submitted values first
+        $clean = [];
         foreach ($colorMap as $settingId => $info) {
             $value = trim((string) ($submitted[$settingId] ?? ''));
 
-            // Validate: empty or valid hex color
             if ($value !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
                 $errors[] = __('travel_core.invalid_color_value', ['[setting]' => __('travel_core.' . $settingId)]);
                 continue;
             }
 
-            // Normalize to lowercase hex
-            if ($value !== '') {
-                $value = strtolower($value);
-            }
+            $clean[$settingId] = ($value !== '') ? strtolower($value) : '';
+        }
 
-            // Find the setting in CS-Cart's settings_objects table
-            $sectionId = _travel_styles_get_section_id();
-            if ($sectionId > 0) {
-                $objectId = (int) db_get_field(
-                    "SELECT object_id FROM ?:settings_objects WHERE name = ?s AND section_id = ?i",
-                    $settingId, $sectionId
-                );
+        // _travel_styles_get_section_id() guarantees section + rows exist
+        $sectionId = _travel_styles_get_section_id();
+        if ($sectionId > 0 && !empty($clean)) {
+            // 1 query: fetch all existing object_ids
+            $existing = db_get_hash_single_array(
+                "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
+                ['name', 'object_id'],
+                $sectionId, array_keys($clean)
+            );
 
-                if ($objectId > 0) {
-                    db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, $objectId);
-                    $saved++;
-                } else {
-                    // Setting row missing (fresh install or schema change) — create it
-                    db_query("INSERT INTO ?:settings_objects ?e", [
-                        'name'       => $settingId,
-                        'section_id' => $sectionId,
-                        'section_tab_id' => 0,
-                        'type'       => 'H',
-                        'value'      => $value,
-                        'edition_type' => 'ROOT',
-                        'handler'    => '',
-                        'position'   => 0,
-                        'is_global'  => 'N',
-                        'object_type' => 'O',
-                    ]);
+            foreach ($clean as $settingId => $value) {
+                if (!empty($existing[$settingId])) {
+                    db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
+                        $value, (int) $existing[$settingId]);
                     $saved++;
                 }
             }

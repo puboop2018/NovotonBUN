@@ -216,9 +216,9 @@
 
                 {* Status *}
                 <td>
-                    {* Use provider-specific status label if available *}
+                    {* Use provider-specific status label if available (already HTML-safe from provider) *}
                     {if $booking.provider_display.status_label}
-                        {$booking.provider_display.status_label|escape:'html'}
+                        {$booking.provider_display.status_label nofilter}
                     {elseif $booking.status == 'confirmed'}
                         <span class="label label-success">Confirmed</span>
                     {elseif $booking.status == 'pending'}
@@ -281,6 +281,6 @@
 {/capture}
 
 {include file="common/mainbox.tpl"
-    title="{__('travel_core.manage_bookings')}"
+    title=__('travel_core.manage_bookings')
     content=$smarty.capture.mainbox
 }

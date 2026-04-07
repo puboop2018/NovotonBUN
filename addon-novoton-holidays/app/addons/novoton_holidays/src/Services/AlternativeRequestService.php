@@ -117,6 +117,18 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
             ];
         }
 
+        // Verify hotel exists (FK constraint: novoton_alternative_requests.hotel_id -> novoton_hotels.hotel_id)
+        $hotelExists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotelId);
+        if (!$hotelExists) {
+            return [
+                'success' => false,
+                'request_id' => 0,
+                'novoton_id' => '',
+                'message' => '',
+                'error' => 'invalid_hotel',
+            ];
+        }
+
         if (!filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
             return [
                 'success' => false,

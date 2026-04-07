@@ -48,6 +48,11 @@ use Tygh\Tygh;
         return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];
     }
 
+    if (!empty($result['error']) && $result['error'] === 'invalid_hotel') {
+        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_hotel'));
+        return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search')];
+    }
+
     if (!empty($result['error']) && $result['error'] === 'invalid_email') {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_email'));
         return [CONTROLLER_STATUS_REDIRECT, fn_url('novoton_booking.search?hotel_id=' . urlencode($hotel_id))];

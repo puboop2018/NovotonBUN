@@ -2136,6 +2136,10 @@ msgctxt "Languages::novoton_holidays.alternatives_request_saved"
 msgid "Your request has been saved. Our team will contact you soon."
 msgstr "Your request has been saved. Our team will contact you soon."
 
+msgctxt "Languages::novoton_holidays.invalid_hotel"
+msgid "The selected hotel is not available. Please try a different search."
+msgstr "The selected hotel is not available. Please try a different search."
+
 msgctxt "Languages::novoton_holidays.no_alternatives_yet"
 msgid "No alternatives available yet. Please check again later."
 msgstr "No alternatives available yet. Please check again later."
@@ -2464,6 +2468,10 @@ msgstr "Price"
 msgctxt "Languages::novoton_holidays.note"
 msgid "Note"
 msgstr "Note"
+
+msgctxt "Languages::novoton_holidays.notes"
+msgid "Notes"
+msgstr "Notes"
 
 msgctxt "Languages::novoton_holidays.checking_price"
 msgid "Checking price..."

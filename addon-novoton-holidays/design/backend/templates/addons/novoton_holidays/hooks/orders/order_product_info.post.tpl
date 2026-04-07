@@ -18,14 +18,14 @@
             {/if}
             
             {* Pre-assign room type translations *}
-            {$_rt_dbl = "{__('novoton_holidays.room_type_dbl')}"}
-            {$_rt_sgl = "{__('novoton_holidays.room_type_sgl')}"}
-            {$_rt_trp = "{__('novoton_holidays.room_type_trp')}"}
-            {$_rt_quad = "{__('novoton_holidays.room_type_quad')}"}
-            {$_rt_fam = "{__('novoton_holidays.room_type_fam')}"}
-            {$_rt_app = "{__('novoton_holidays.room_type_app')}"}
-            {$_rt_stu = "{__('novoton_holidays.room_type_stu')}"}
-            {$_rt_sui = "{__('novoton_holidays.room_type_sui')}"}
+            {$_rt_dbl = {__('novoton_holidays.room_type_dbl')}}
+            {$_rt_sgl = {__('novoton_holidays.room_type_sgl')}}
+            {$_rt_trp = {__('novoton_holidays.room_type_trp')}}
+            {$_rt_quad = {__('novoton_holidays.room_type_quad')}}
+            {$_rt_fam = {__('novoton_holidays.room_type_fam')}}
+            {$_rt_app = {__('novoton_holidays.room_type_app')}}
+            {$_rt_stu = {__('novoton_holidays.room_type_stu')}}
+            {$_rt_sui = {__('novoton_holidays.room_type_sui')}}
 
             {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>

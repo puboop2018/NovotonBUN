@@ -208,8 +208,10 @@
 
 {/capture}
 
+{$_fm_title = {__('travel_core.fm_edit_mapping')}|cat:': '|cat:$mapping.canonical_code}
+
 {include file="common/mainbox.tpl"
-    title="{__('travel_core.fm_edit_mapping')}: {$mapping.canonical_code}"
+    title=$_fm_title
     content=$smarty.capture.mainbox
 }
 
