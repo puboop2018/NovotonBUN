@@ -53,20 +53,34 @@ function _travel_seo_read_settings(string $addonName): array
     // Defaults per addon — ensures textareas always have a value
     $defaults = [
         'novoton_holidays' => [
-            'seo_product_name'      => '{{name}}',
-            'seo_page_title'        => '{{name}} - {{city}}, {{country}} {{year}}',
-            'seo_meta_description'  => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
-            'seo_meta_keywords'     => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
-            'seo_name_slug'         => '{{name}}-{{city}}-{{country}}',
-            'seo_full_description'  => '',
+            'seo_product_name'          => '{{name}}',
+            'seo_page_title'            => '{{name}} - {{city}}, {{country}} {{year}}',
+            'seo_meta_description'      => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
+            'seo_meta_keywords'         => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
+            'seo_name_slug'             => '{{name}}-{{city}}-{{country}}',
+            'seo_full_description'      => '',
+            'seo_overwrite_mode'        => 'override_all',
+            'seo_field_product_name'    => 'Y',
+            'seo_field_page_title'      => 'Y',
+            'seo_field_meta_description'=> 'Y',
+            'seo_field_meta_keywords'   => 'Y',
+            'seo_field_name_slug'       => 'Y',
+            'seo_field_full_description'=> 'Y',
         ],
         'sphinx_holidays' => [
-            'seo_product_name'      => '{{name}}',
-            'seo_page_title'        => '{{name}} {{classification}}* - {{city}}, {{country}}',
-            'seo_meta_description'  => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-            'seo_meta_keywords'     => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
-            'seo_name_slug'         => '{{name}}-{{city}}-{{country}}',
-            'seo_full_description'  => '',
+            'seo_product_name'          => '{{name}}',
+            'seo_page_title'            => '{{name}} {{classification}}* - {{city}}, {{country}}',
+            'seo_meta_description'      => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+            'seo_meta_keywords'         => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
+            'seo_name_slug'             => '{{name}}-{{city}}-{{country}}',
+            'seo_full_description'      => '',
+            'seo_overwrite_mode'        => 'override_all',
+            'seo_field_product_name'    => 'Y',
+            'seo_field_page_title'      => 'Y',
+            'seo_field_meta_description'=> 'Y',
+            'seo_field_meta_keywords'   => 'Y',
+            'seo_field_name_slug'       => 'Y',
+            'seo_field_full_description'=> 'Y',
         ],
     ];
 
@@ -98,12 +112,19 @@ function _travel_seo_save_settings(string $addonName, array $values): int
 
     // Single source of truth: allowed keys → their settings type
     $keyTypes = [
-        'seo_product_name'     => 'I',  // input
-        'seo_page_title'       => 'I',
-        'seo_meta_description' => 'T',  // textarea
-        'seo_meta_keywords'    => 'I',
-        'seo_name_slug'        => 'I',
-        'seo_full_description' => 'T',
+        'seo_product_name'          => 'I',  // input
+        'seo_page_title'            => 'I',
+        'seo_meta_description'      => 'T',  // textarea
+        'seo_meta_keywords'         => 'I',
+        'seo_name_slug'             => 'I',
+        'seo_full_description'      => 'T',
+        'seo_overwrite_mode'        => 'S',  // select
+        'seo_field_product_name'    => 'C',  // checkbox
+        'seo_field_page_title'      => 'C',
+        'seo_field_meta_description'=> 'C',
+        'seo_field_meta_keywords'   => 'C',
+        'seo_field_name_slug'       => 'C',
+        'seo_field_full_description'=> 'C',
     ];
 
     // Filter to allowed keys only
@@ -244,6 +265,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'travel_seo_templates.manage'];
+    }
+
+    if ($mode === 'bulk_apply') {
+        $addon_id = $_REQUEST['addon_id'] ?? '';
+        if (!in_array($addon_id, ['novoton_holidays', 'sphinx_holidays'], true)) {
+            fn_set_notification('E', __('error'), 'Invalid addon.');
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_seo_templates.manage'];
+        }
+
+        fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
+
+        $result = fn_travel_core_seo_bulk_apply($addon_id);
+
+        fn_set_progress('finish');
+        fn_set_notification('N', __('notice'),
+            str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                __('travel_core.seo_bulk_apply_done'))
+        );
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_seo_templates.manage&tab=' . $addon_id];
     }
 }
 

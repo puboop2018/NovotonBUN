@@ -170,24 +170,11 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'linked', 'product_id' => $dupeProductId, 'reason' => 'duplicate hotel'];
         }
 
-        // Build placeholder map for SEO templates
+        // Build placeholder map and apply SEO templates (respects overwrite mode + field toggles)
         $placeholders = self::buildPlaceholders($hotel, $hierarchy);
+        $seoFields = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, 0, $hotelId);
 
-        $productName = fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders);
-
-        // Resolve full description: use template if configured, otherwise raw API description
-        $descTemplate = ConfigProvider::getSeoFullDescription();
-        $fullDescription = $descTemplate !== ''
-            ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
-            : ($hotel['description'] ?? '');
-
-        // Create CS-Cart product using SEO templates
-        // Generate base SEO slug, then ensure uniqueness by appending hotel_id if needed
-        $seoSlug = fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders);
-        $seoSlug = self::ensureUniqueSeoName($seoSlug, $hotelId);
-
-        $productData = [
-            'product'           => $productName,
+        $productData = array_merge([
             'product_code'      => $productCode,
             'price'             => 0,
             'amount'            => ConfigProvider::getDefaultProductQuantity(),
@@ -195,13 +182,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'company_id'        => Registry::get('runtime.company_id') ?: 1,
             'main_category'     => $categoryId,
             'category_ids'      => [$categoryId],
-            'full_description'  => $fullDescription,
             'short_description' => $hotel['short_description'] ?? '',
-            'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
-            'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
-            'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-            'seo_name'          => $seoSlug,
-        ];
+        ], $seoFields);
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
         $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
@@ -256,7 +238,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
      * @param array $hierarchy Destination hierarchy (country, region, city)
      * @return array<string, string|array> Key => value map (keys without braces)
      */
-    private static function buildPlaceholders(array $hotel, array $hierarchy): array
+    public static function buildPlaceholders(array $hotel, array $hierarchy = []): array
     {
         $cityName = ($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? '');
         $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');

@@ -129,17 +129,11 @@ class AddProductsCommand extends AbstractCronCommand
                     fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to get description for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                 }
 
-                // Build placeholder map for SEO templates
-                $placeholders = $this->buildPlaceholders($hotel, $display_name, $description);
+                // Apply SEO templates respecting overwrite mode + field toggles
+                $placeholders = \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders($hotel, $display_name, $description);
+                $seoFields = fn_travel_core_apply_seo_fields('novoton_holidays', $placeholders, 0, $hotel_id);
 
-                // Resolve full description: use template if configured, otherwise raw API description
-                $descTemplate = ConfigProvider::getSeoFullDescription();
-                $full_description = $descTemplate !== ''
-                    ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
-                    : $description;
-
-                $product_data = [
-                    'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+                $product_data = array_merge([
                     'product_code'     => $product_code,
                     'price'            => 0,
                     'amount'           => ConfigProvider::getDefaultProductQuantity(),
@@ -147,12 +141,7 @@ class AddProductsCommand extends AbstractCronCommand
                     'company_id'       => Registry::get('runtime.company_id') ?: 1,
                     'main_category'    => $category_id,
                     'category_ids'     => [$category_id],
-                    'full_description' => $full_description,
-                    'page_title'       => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
-                    'meta_description' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
-                    'meta_keywords'    => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-                    'seo_name'         => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
-                ];
+                ], $seoFields);
 
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 

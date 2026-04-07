@@ -68,28 +68,20 @@ class UpdateProductsCommand
                 $hotelId = $hotel['hotel_id'];
                 $productId = (int) $hotel['product_id'];
 
-                // Build placeholder map for SEO templates
-                $placeholders = self::buildPlaceholders($hotel);
+                // Apply SEO templates respecting overwrite mode + field toggles
+                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel);
+                $seoFields = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, $productId, $hotelId);
 
-                // Resolve full description: use template if configured, otherwise raw API description
-                $descTemplate = ConfigProvider::getSeoFullDescription();
-                $fullDescription = $descTemplate !== ''
-                    ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
-                    : ($hotel['description'] ?? '');
+                if (empty($seoFields)) {
+                    // All fields skipped (fill_if_empty and all already filled, or all toggles off)
+                    db_query("UPDATE ?:sphinx_hotels SET product_needs_update = 'N' WHERE hotel_id = ?s", $hotelId);
+                    $stats['skipped'] = ($stats['skipped'] ?? 0) + 1;
+                    continue;
+                }
 
-                // Generate SEO slug, ensuring uniqueness (exclude current product from collision check)
-                $seoSlug = fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders);
-                $seoSlug = self::ensureUniqueSeoName($seoSlug, $hotelId, $productId);
-
-                $product_data = [
-                    'product'           => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
-                    'full_description'  => $fullDescription,
+                $product_data = array_merge([
                     'short_description' => $hotel['short_description'] ?? '',
-                    'page_title'        => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
-                    'meta_description'  => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
-                    'meta_keywords'     => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-                    'seo_name'          => $seoSlug,
-                ];
+                ], $seoFields);
 
                 // Use configured languages (addon setting) instead of all active
                 $configuredLanguages = ConfigProvider::getProductLanguages();
