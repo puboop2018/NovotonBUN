@@ -104,7 +104,7 @@ class SphinxHttpClient
 
         while ($attempt <= $this->maxRetries) {
             // Proactive throttle: pause when approaching rate limit
-            if ($this->rateLimitRemaining !== null && $this->rateLimitRemaining <= 2 && $this->rateLimitRemaining > 0) {
+            if ($this->rateLimitRemaining !== null && $this->rateLimitRemaining <= 2) {
                 $pauseSeconds = ($this->rateLimitReset !== null)
                     ? max(1, min(30, $this->rateLimitReset - time()))
                     : self::RATE_LIMIT_PAUSE_DEFAULT;
