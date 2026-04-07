@@ -107,40 +107,15 @@
     </div>
     {/if}
     
-    {* ===== BOOKING FORM - React Component (inlined to avoid Smarty {include} crash) ===== *}
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
+    {* Rendered to string in search.php BEFORE heavy results are assigned.
+       Smarty has NO scope="local" — {include} always inherits parent scope.
+       Pre-rendering avoids scope chain traversal over large result arrays. *}
     <div class="travel-search-form-wrapper novoton-search-form-wrapper" style="margin-bottom: 20px;">
-        <div id="travel-booking-root"
-             data-travel-booking
-             data-search-dispatch="novoton_booking.search"
-             data-colors='{ldelim}"primary":"{$addons.travel_core.color_primary|default:""}","accent":"{$addons.travel_core.color_accent|default:""}","text":"{$addons.travel_core.color_text|default:""}","textLight":"{$addons.travel_core.color_text_light|default:""}","bg":"{$addons.travel_core.color_bg|default:""}","border":"{$addons.travel_core.color_border|default:""}","btnBg":"{$addons.travel_core.color_search_btn_bg|default:""}","btnHover":"{$addons.travel_core.color_search_btn_hover|default:""}","btnText":"{$addons.travel_core.color_search_btn_text|default:""}","calCheapest":"{$addons.travel_core.color_cal_cheapest|default:""}","calPrice":"{$addons.travel_core.color_cal_price|default:""}","danger":"{$addons.travel_core.color_danger|default:""}"{rdelim}'
-             data-provider="novoton"
-             data-hotel-id="{$novoton_params.hotel_id|default:''}"
-             data-product-id="{$novoton_params.product_id|default:''}"
-             data-debug="false"
-             data-mode="search"
-             data-lang="{$smarty.const.CART_LANGUAGE|default:'en'}"
-             data-check-in="{$novoton_params.check_in|default:''}"
-             data-check-out="{$novoton_params.check_out|default:''}"
-             data-adults="{$novoton_params.adults|default:2}"
-             data-children="{$novoton_params.children_count|default:$novoton_params.children|default:0}"
-             data-children-ages="{$novoton_params.children_ages|default:''}"
-             data-rooms="{$novoton_params.num_rooms|default:$novoton_params.rooms|default:1}"
-             data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
-             data-translations='{ldelim}"availability":"{__("travel_core.availability")}","checkInDate":"{__("travel_core.check_in_date")}","checkOutDate":"{__("travel_core.check_out_date")}","checkIn":"{__("travel_core.check_in")}","checkOut":"{__("travel_core.check_out")}","selectDatesMessage":"{__("travel_core.select_dates_message")}","search":"{__("travel_core.search")}","changeSearch":"{__("travel_core.change_search")}","applyChanges":"{__("travel_core.apply_changes")}","adult":"{__("travel_core.adult")}","adults":"{__("travel_core.adults")}","child":"{__("travel_core.child")}","children":"{__("travel_core.children")}","rooms":"{__("travel_core.rooms")}","room":"{__("travel_core.room")}","done":"{__("travel_core.done")}","addRoom":"{__("travel_core.add_room")}","adultsLabel":"{__("travel_core.adults_label")}","childrenLabel":"{__("travel_core.children_label")}","nightsStay":"{__("travel_core.nights_stay")}","nightStay":"{__("travel_core.night_stay")}","night":"{__("travel_core.night")}","nights":"{__("travel_core.nights")}","childrenAges":"{__("travel_core.childrens_ages")}","childAge":"{__("travel_core.child_age")}","selectAge":"{__("travel_core.select_age")}","yearsOld":"{__("travel_core.years_old")}","yearOld":"{__("travel_core.year_old")}","selected":"{__("travel_core.selected")}","selectedSingular":"{__("travel_core.selected_singular")}","selectCheckOut":"{__("travel_core.select_check_out")}","january":"{__("travel_core.january")}","february":"{__("travel_core.february")}","march":"{__("travel_core.march")}","april":"{__("travel_core.april")}","may":"{__("travel_core.may")}","june":"{__("travel_core.june")}","july":"{__("travel_core.july")}","august":"{__("travel_core.august")}","september":"{__("travel_core.september")}","october":"{__("travel_core.october")}","november":"{__("travel_core.november")}","december":"{__("travel_core.december")}","mon":"{__("travel_core.mon")}","tue":"{__("travel_core.tue")}","wed":"{__("travel_core.wed")}","thu":"{__("travel_core.thu")}","fri":"{__("travel_core.fri")}","sat":"{__("travel_core.sat")}","sun":"{__("travel_core.sun")}","remove":"{__("travel_core.remove")}","pleaseEnterDates":"{__("travel_core.please_enter_dates")}","selectCheckIn":"{__("travel_core.select_check_in")}","selectMissingAges":"{__("travel_core.select_missing_ages")}","selectAgeForOneChild":"{__("travel_core.select_age_for_one_child")}","selectAgeForChildren":"{__("travel_core.select_age_for_children")}","calendarPriceFooter":"{__("travel_core.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}"{rdelim}'>
-            <div class="travel-loading-state">
-                <div class="nvt-skeleton-row">
-                    <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
-                    <div class="nvt-skeleton-field"></div>
-                    <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
-                </div>
-            </div>
-        </div>
-        {$_cv = $smarty.const.TRAVEL_CACHE_VER|default:'1'}
-        <script src="{$config.current_location}/js/addons/travel_core/react-vendor.js?v={$_cv}" defer></script>
-        <script src="{$config.current_location}/js/addons/travel_core/react19-bundle.js?v={$_cv}" defer></script>
+        {$booking_engine_html nofilter}
     </div>
 
-    {if $novoton_results && $novoton_results|@count > 0}
+    {if $novoton_results && $novoton_results|count > 0}
         
         {* ===== HOTEL HEADER - A76g: White background ===== *}
         <div class="novoton-hotel-header" style="background: #fff; color: var(--nvt-price-color, #003580); padding: 20px; border-radius: 8px 8px 0 0; border: 1px solid #e0e0e0; border-bottom: none;">
@@ -159,7 +134,7 @@
                     {/if}
                 </div>
                 <div>
-                    {if $novoton_results|@count > 0}
+                    {if $novoton_results|count > 0}
                     {* Calculate total quota from all results *}
                     {$total_quota = 0}
                     {foreach from=$novoton_results item=r}
@@ -167,8 +142,8 @@
                             {$total_quota = $total_quota + $r.rooms_available}
                         {/if}
                     {/foreach}
-                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|@count}
-                    {$badge_offers_count = $novoton_results|@count}
+                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|count}
+                    {$badge_offers_count = $novoton_results|count}
                     <span id="novoton-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" style="background: var(--nvt-success, #28a745); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
                         ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"}{else}{__("novoton_holidays.rooms")|default:"rooms"}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
                     </span>
@@ -211,7 +186,7 @@
             {foreach from=$novoton_params.rooms_data item=room key=room_idx}
                 {$room_num = $room_idx + 1}
                 {assign var="room_key" value=$room_num}
-                {if isset($all_room_results.$room_key) && $all_room_results.$room_key|@count > 0}
+                {if isset($all_room_results.$room_key) && $all_room_results.$room_key|count > 0}
                     {* Room has options - OK *}
                 {else}
                     {$all_rooms_have_options = false}
@@ -325,7 +300,7 @@
                         </div>
                         
                         <div style="padding: 10px; max-height: 400px; overflow-y: auto;">
-                            {if $room_specific_results && $room_specific_results|@count > 0}
+                            {if $room_specific_results && $room_specific_results|count > 0}
                                 {foreach from=$room_specific_results item=result}
                                     {if $result.room_type_display}
                                         {$room_display = $result.room_type_display}
@@ -378,7 +353,7 @@
                                                     <div style="color: #dc3545; font-size: 11px; margin-top: 2px;">
                                                         <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                                                     </div>
-                                                    {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                                    {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                                         <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 4px 8px; margin-top: 4px; font-size: 11px;">
                                                             <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                                             {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -583,7 +558,7 @@
                                 <span style="display: inline-block; background: #fff3cd; color: #856404; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
                                      {__("novoton_holidays.on_request")|default:"La cerere"}
                                 </span>
-                                {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                                {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                     <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 8px; margin-top: 6px; font-size: 11px;">
                                         <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                         {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -728,7 +703,7 @@
                             <div style="color: #dc3545; font-size: 13px; margin-top: 8px;">
                                 <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span style="font-weight: normal;">- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
                             </div>
-                            {if $result.nearby_availability && $result.nearby_availability|@count > 0}
+                            {if $result.nearby_availability && $result.nearby_availability|count > 0}
                                 <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 12px;">
                                     <strong style="color: #f57f17;">{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                     {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
@@ -860,12 +835,12 @@
         {if $terms_of_payment || $terms_of_cancellation || $parsed_payment_terms || $parsed_cancellation_terms || $terms_of_payment_raw || $terms_of_cancellation_raw}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
             
-            {if $parsed_payment_terms|@count > 0 || $terms_of_payment || $terms_of_payment_raw}
+            {if $parsed_payment_terms|count > 0 || $terms_of_payment || $terms_of_payment_raw}
             <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
                 <h4 style="margin: 0 0 15px; font-size: 16px; color: #333;">
                     💳 {__("novoton_holidays.payment_terms")|default:"Condiții de plată"}
                 </h4>
-                {if $parsed_payment_terms && $parsed_payment_terms|@count > 0}
+                {if $parsed_payment_terms && $parsed_payment_terms|count > 0}
                     <ul style="margin: 0; padding-left: 0; list-style: none;">
                     {foreach from=$parsed_payment_terms item=term}
                         <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #555;">
@@ -906,7 +881,7 @@
         
         {/if}
         
-    {elseif $no_availability_message && $alternative_results && $alternative_results|@count > 0}
+    {elseif $no_availability_message && $alternative_results && $alternative_results|count > 0}
         {* Show alternative dates results *}
         <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">

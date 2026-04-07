@@ -13,6 +13,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
@@ -105,7 +106,7 @@ try {
         $cursor = null;
         $pollCount = 0;
 
-        $maxResults = 200; // Hard cap to prevent memory exhaustion
+        $maxResults = 50; // Hard cap — Smarty 5 scope chain OOM at 200
 
         do {
             if ($pollCount > 0) {
@@ -214,9 +215,8 @@ try {
         $slimResults[] = $slim;
     }
 
-    $view->assign('sphinx_search_results', $slimResults);
-    $view->assign('sphinx_search_id', $searchId);
-    $view->assign('sphinx_search_params', [
+    // Template display params (distinct from API $searchParams above)
+    $templateParams = [
         'hotel_id' => $hotel_id,
         'destination_id' => $destination_id,
         'check_in' => $check_in,
@@ -226,7 +226,23 @@ try {
         'children_ages' => $children_ages_str,
         'rooms' => $rooms,
         'nights' => (strtotime($check_out) && strtotime($check_in)) ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
-    ]);
+    ];
+
+    // Pre-render booking engine BEFORE assigning search results to the view.
+    // Smarty {include} always inherits parent scope (NO scope="local" exists).
+    // By rendering the template to a string first, the booking engine never
+    // sees $sphinx_search_results in its scope, preventing the 256MB OOM
+    // at Data.php:265 caused by Smarty 5's scope chain traversal.
+    $view->assign('travel_provider', 'sphinx');
+    $view->assign('travel_search_dispatch', 'sphinx_booking.search');
+    $view->assign('travel_mode', 'search');
+    $view->assign('travel_search_params', $templateParams);
+    $view->assign('_addons_travel_core', Registry::get('addons.travel_core') ?: []);
+    $view->assign('booking_engine_html', $view->fetch('addons/travel_core/blocks/booking_engine.tpl'));
+
+    $view->assign('sphinx_search_results', $slimResults);
+    $view->assign('sphinx_search_id', $searchId);
+    $view->assign('sphinx_search_params', $templateParams);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

@@ -26,7 +26,7 @@
 <div class="add-products-form">
 
     {* Country selector tabs *}
-    {if $available_countries && $available_countries|@count > 1}
+    {if $available_countries && $available_countries|count > 1}
     <div class="country-tabs">
         {foreach from=$available_countries item=c}
             <a href="{"novoton_holidays.add_hotels_as_products&country=`$c`"|fn_url}"

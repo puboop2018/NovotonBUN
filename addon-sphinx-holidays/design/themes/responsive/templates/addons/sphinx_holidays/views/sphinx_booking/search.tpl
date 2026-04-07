@@ -13,10 +13,14 @@
 
 <div class="travel-search-results-page sphinx-search-results">
 
-    {* Search form wrapper for re-searching *}
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
+    {* The booking engine HTML is rendered to a string in the search controller
+       BEFORE $sphinx_search_results is assigned to the view. This prevents
+       Smarty 5's scope chain traversal from carrying 50+ result objects into
+       the booking engine template (which causes 256MB OOM at Data.php:265).
+       Smarty has NO scope="local" — {include} always inherits parent scope. *}
     <div class="travel-search-form-wrapper">
-        {$travel_search_params = $sphinx_search_params}
-        {include file="addons/sphinx_holidays/blocks/booking_engine.tpl" travel_mode="search"}
+        {$booking_engine_html nofilter}
     </div>
 
     {if $sphinx_search_results}

@@ -252,6 +252,10 @@ msgctxt "Languages::travel_core.child_age"
 msgid "Child's age"
 msgstr "Child's age"
 
+msgctxt "Languages::travel_core.child_n_age"
+msgid "Select child [n] age"
+msgstr "Select child [n] age"
+
 msgctxt "Languages::travel_core.select_age"
 msgid "Select age"
 msgstr "Select age"

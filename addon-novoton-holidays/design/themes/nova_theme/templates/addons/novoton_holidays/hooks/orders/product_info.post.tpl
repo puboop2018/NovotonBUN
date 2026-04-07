@@ -28,7 +28,7 @@
 
     {* Guest Names *}
     {if $product.extra.guests_data}
-        {$guests = $product.extra.guests_data|@json_decode:true}
+        {$guests = $product.extra.guests_data|json_decode:true}
         {if $guests}
             {$adult_guests = []}
             {$child_guests = []}

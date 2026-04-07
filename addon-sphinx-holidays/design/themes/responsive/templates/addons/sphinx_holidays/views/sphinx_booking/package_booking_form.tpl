@@ -157,7 +157,7 @@
         <input type="hidden" name="total_price" value="{$sphinx_package_booking.total_price}">
         <input type="hidden" name="base_price" value="{$sphinx_package_booking.base_price}">
         <input type="hidden" name="currency" value="{$sphinx_package_booking.currency}">
-        <input type="hidden" name="nights" value="{$sphinx_package_booking.check_in|strtotime|cat:' '|cat:$sphinx_package_booking.check_out|strtotime|@array_diff}">
+        <input type="hidden" name="nights" value="{$sphinx_package_booking.check_in|strtotime|cat:' '|cat:$sphinx_package_booking.check_out|strtotime|array_diff}">
         {if $sphinx_package_booking.rooms}
             <input type="hidden" name="rooms_json" value="{$sphinx_package_booking.rooms|json_encode|escape:html}">
             <input type="hidden" name="room_name" value="{$sphinx_package_booking.rooms.0.name|escape:html}">

@@ -30,7 +30,7 @@
             
             {* Guest Names *}
             {if $oi.extra.guests_data}
-                {$guests_parsed = $oi.extra.guests_data|@json_decode:true}
+                {$guests_parsed = $oi.extra.guests_data|json_decode:true}
                 {if $guests_parsed}
                     {$adult_list = []}
                     {$child_list = []}

@@ -152,7 +152,7 @@
 <hr>
 
 {* Aliases Section *}
-<h4>{__("travel_core.fm_aliases")} ({$aliases|@count})</h4>
+<h4>{__("travel_core.fm_aliases")} ({$aliases|count})</h4>
 
 {if $aliases}
 <table class="table table-striped table-condensed">
@@ -211,9 +211,12 @@
 {assign var="_fm_label" value=__('travel_core.fm_edit_mapping')}
 {assign var="_fm_title" value="`$_fm_label`: `$mapping.canonical_code`"}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl"
     title=$_fm_title
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }
 
 <script>

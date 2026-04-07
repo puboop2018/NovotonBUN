@@ -139,7 +139,14 @@ function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?
  */
 function fn_novoton_holidays_dispatch_before_display(): void
 {
-    // Register Smarty modifiers for ALL dispatches
+    // Register Smarty modifiers for ALL dispatches.
+    // Explicit registration ensures Smarty 5 finds the modifier even if
+    // auto-discovery of smarty_modifier_* functions is disabled.
+    try {
+        \Tygh\Tygh::$app['view']->registerPlugin('modifier', 'json_decode', 'smarty_modifier_json_decode');
+    } catch (\Throwable $e) {
+        // Silently ignore if already registered or view not available
+    }
     if (function_exists('fn_novoton_holidays_register_smarty_modifiers')) {
         fn_novoton_holidays_register_smarty_modifiers();
     }
@@ -178,10 +185,13 @@ function fn_novoton_holidays_dispatch_before_display(): void
  */
 function smarty_modifier_json_decode($string, $assoc = true)
 {
-    if (empty($string)) {
+    if (empty($string) || !is_string($string)) {
         return $assoc ? [] : null;
     }
-    return json_decode($string, $assoc);
+    $result = json_decode($string, $assoc);
+    return ($result === null && json_last_error() !== JSON_ERROR_NONE)
+        ? ($assoc ? [] : null)
+        : $result;
 }
 
 // ============================================================================

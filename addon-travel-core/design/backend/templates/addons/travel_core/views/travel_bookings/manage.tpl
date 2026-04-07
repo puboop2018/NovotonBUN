@@ -182,7 +182,7 @@
                 <td>
                     {if $booking.check_in}
                         {$booking.check_in|date_format:"%d.%m.%Y"}
-                        <br><small class="muted">→ {$booking.check_out|date_format:"%d.%m.%Y"}</small>
+                        {if $booking.check_out}<br><small class="muted">→ {$booking.check_out|date_format:"%d.%m.%Y"}</small>{/if}
                     {/if}
                 </td>
 
@@ -280,7 +280,10 @@
 
 {/capture}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl"
     title=__('travel_core.manage_bookings')
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }

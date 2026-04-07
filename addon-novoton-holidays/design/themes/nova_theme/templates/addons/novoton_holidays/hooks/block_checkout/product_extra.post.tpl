@@ -62,7 +62,7 @@
         {* Parse guests data once *}
         {$all_guests_parsed = null}
         {if $product.extra.guests_data}
-            {$all_guests_parsed = $product.extra.guests_data|@json_decode:true}
+            {$all_guests_parsed = $product.extra.guests_data|json_decode:true}
         {/if}
         
         {foreach from=$product.extra.rooms_data item=room key=idx}
@@ -136,7 +136,7 @@
             
             {* Guest names *}
             {if $product.extra.guests_data}
-                {$guests = $product.extra.guests_data|@json_decode:true}
+                {$guests = $product.extra.guests_data|json_decode:true}
                 {if $guests}
                     <div style="margin-bottom: 8px; font-size: 12px;">
                         <div style="color: #666; text-transform: uppercase; margin-bottom: 4px;">{__("novoton_holidays.guest_names")}:</div>

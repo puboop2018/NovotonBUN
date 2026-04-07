@@ -88,7 +88,7 @@
                     {if $product.extra.guests_data}
                         {assign var="all_guests" value=null}
                         {if is_string($product.extra.guests_data)}
-                            {assign var="all_guests" value=$product.extra.guests_data|@json_decode:true}
+                            {assign var="all_guests" value=$product.extra.guests_data|json_decode:true}
                         {else}
                             {assign var="all_guests" value=$product.extra.guests_data}
                         {/if}
@@ -147,7 +147,7 @@
             {if $product.extra.guests_data}
                 {assign var="guests" value=null}
                 {if is_string($product.extra.guests_data)}
-                    {assign var="guests" value=$product.extra.guests_data|@json_decode:true}
+                    {assign var="guests" value=$product.extra.guests_data|json_decode:true}
                 {else}
                     {assign var="guests" value=$product.extra.guests_data}
                 {/if}

@@ -38,7 +38,7 @@
             {* Guest Names List *}
             {if $oi.extra.guests_data}
                 {if is_string($oi.extra.guests_data)}
-                    {$guests_list = $oi.extra.guests_data|@json_decode:true}
+                    {$guests_list = $oi.extra.guests_data|json_decode:true}
                 {else}
                     {$guests_list = $oi.extra.guests_data}
                 {/if}

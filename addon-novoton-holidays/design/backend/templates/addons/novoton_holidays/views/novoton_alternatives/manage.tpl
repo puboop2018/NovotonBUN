@@ -76,7 +76,7 @@
                 </td>
                 <td>
                     {if $request.alternatives}
-                        <strong class="text-success">{$request.alternatives|@count}</strong> found
+                        <strong class="text-success">{$request.alternatives|count}</strong> found
                     {else}
                         <span class="muted">-</span>
                     {/if}
@@ -159,8 +159,11 @@
 </div>
 {/capture}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl" 
     title="{__('novoton_holidays.alternative_requests')}" 
-    content=$smarty.capture.mainbox 
+    content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons 
     sidebar=$smarty.capture.sidebar
 }

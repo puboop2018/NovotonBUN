@@ -1,5 +1,9 @@
 {** Travel Core - SEO Templates Management **}
 
+<style>
+#seo_templates_form .control-label { text-align: left; }
+</style>
+
 {capture name="mainbox"}
 
 {if $seo_addons}
@@ -29,13 +33,13 @@
                     <h4 style="margin-top: 15px; margin-bottom: 5px;">{$addon.label} &mdash; {__("travel_core.seo_templates")}</h4>
                     <p class="muted" style="margin-bottom: 20px; font-size: 12px;">{__("travel_core.seo_templates_hint")}</p>
 
-                    {* ── Overwrite mode dropdown ── *}
-                    <div class="control-group" style="padding: 12px 15px; background: #f0f4f8; border-radius: 6px; margin-bottom: 20px;">
-                        <label class="control-label" for="{$addon_id}_seo_overwrite_mode" style="font-weight: 600;">
-                            {__("travel_core.seo_overwrite_mode")}
-                        </label>
-                        <div class="controls">
-                            <select name="{$addon_id}[seo_overwrite_mode]" id="{$addon_id}_seo_overwrite_mode" class="input-large">
+                    {* ── Overwrite mode + Apply button (side-by-side) ── *}
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 12px 15px; background: #f0f4f8; border-radius: 6px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="{$addon_id}_seo_overwrite_mode" style="font-weight: 600; white-space: nowrap; margin: 0;">
+                                {__("travel_core.seo_overwrite_mode")}:
+                            </label>
+                            <select name="{$addon_id}[seo_overwrite_mode]" id="{$addon_id}_seo_overwrite_mode" class="input-medium" style="margin-bottom: 0;">
                                 <option value="override_all"{if $addon.settings.seo_overwrite_mode == 'override_all'} selected="selected"{/if}>
                                     {__("travel_core.seo_override_all")}
                                 </option>
@@ -43,8 +47,16 @@
                                     {__("travel_core.seo_fill_if_empty")}
                                 </option>
                             </select>
-                            <p class="muted" style="font-size: 11px; margin-top: 4px;">{__("travel_core.seo_overwrite_mode_desc")}</p>
                         </div>
+                        <form action="{"travel_seo_templates.bulk_apply"|fn_url}" method="post" style="display: inline; margin: 0;">
+                            <input type="hidden" name="security_hash" value="{$security_hash}" />
+                            <input type="hidden" name="addon_id" value="{$addon_id}" />
+                            <button type="submit" class="btn btn-warning cm-comet"
+                                    onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|escape:"javascript"}');">
+                                <i class="icon-refresh"></i> {__("travel_core.seo_bulk_apply_button")}
+                            </button>
+                        </form>
+                        <p class="muted" style="font-size: 11px; margin: 0; flex-basis: 100%;">{__("travel_core.seo_overwrite_mode_desc")}</p>
                     </div>
 
                     {* ── SEO field templates with per-field checkboxes ── *}
@@ -64,7 +76,7 @@
                             <textarea id="{$addon_id}_seo_product_name"
                                       name="{$addon_id}[seo_product_name]"
                                       class="input-large"
-                                      rows="2"
+                                      rows="1"
                                       style="width: 95%;">{$addon.settings.seo_product_name}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_product_name_desc")|escape:"html"}</p>
                         </div>
@@ -84,7 +96,7 @@
                             <textarea id="{$addon_id}_seo_page_title"
                                       name="{$addon_id}[seo_page_title]"
                                       class="input-large"
-                                      rows="2"
+                                      rows="1"
                                       style="width: 95%;">{$addon.settings.seo_page_title}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_page_title_desc")|escape:"html"}</p>
                         </div>
@@ -144,7 +156,7 @@
                             <textarea id="{$addon_id}_seo_name_slug"
                                       name="{$addon_id}[seo_name_slug]"
                                       class="input-large"
-                                      rows="2"
+                                      rows="1"
                                       style="width: 95%;">{$addon.settings.seo_name_slug}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_name_slug_desc")|escape:"html"}</p>
                         </div>
@@ -164,27 +176,13 @@
                             <textarea id="{$addon_id}_seo_full_description"
                                       name="{$addon_id}[seo_full_description]"
                                       class="input-large"
-                                      rows="4"
+                                      rows="3"
                                       style="width: 95%;">{$addon.settings.seo_full_description}</textarea>
                             <p class="muted" style="font-size: 11px;">{__("travel_core.seo_full_description_desc")|escape:"html"}</p>
                         </div>
                     </div>
 
-                    {* ── Bulk Apply ── *}
-                    <div class="control-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #dee2e6;">
-                        <label class="control-label" style="font-weight: 600;">{__("travel_core.seo_bulk_apply")}</label>
-                        <div class="controls">
-                            <form action="{"travel_seo_templates.bulk_apply"|fn_url}" method="post" style="display: inline;">
-                                <input type="hidden" name="security_hash" value="{$security_hash}" />
-                                <input type="hidden" name="addon_id" value="{$addon_id}" />
-                                <button type="submit" class="btn btn-warning cm-comet"
-                                        onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|escape:"javascript"}');">
-                                    <i class="icon-refresh"></i> {__("travel_core.seo_bulk_apply_button")}
-                                </button>
-                            </form>
-                            <p class="muted" style="font-size: 11px; margin-top: 5px;">{__("travel_core.seo_bulk_apply_desc")}</p>
-                        </div>
-                    </div>
+                    {* Bulk Apply button is now in the Overwrite mode bar at the top *}
 
                 </div>
                 {/foreach}

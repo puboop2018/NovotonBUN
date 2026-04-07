@@ -465,7 +465,7 @@
                     <- {__("novoton_holidays.back_to_results")}
                 </a>
                 <button type="submit" class="btn-submit" id="booking-submit-btn">
-                    {__("novoton_holidays.add_to_cart")}
+                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("novoton_holidays.add_to_cart")}{/if}
                 </button>
             </div>
         </div>
