@@ -125,8 +125,8 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         } else {
             // Row missing — create it so the setting persists
             db_query(
-                "INSERT INTO ?:settings_objects (name, section_id, section_tab_id, type, value, edition_type, handler, parent_id, is_global, object_type) "
-                . "VALUES (?s, ?i, 0, ?s, ?s, 'ROOT', '', 0, 'N', '')",
+                "INSERT INTO ?:settings_objects (name, section_id, section_tab_id, type, value, edition_type, handler, parent_id, is_global) "
+                . "VALUES (?s, ?i, 0, ?s, ?s, 'ROOT', '', 0, 'N')",
                 $key, $sectionId, $types[$key] ?? 'I', $value
             );
         }
