@@ -43,7 +43,9 @@
 {/if}
 
 {* ── Runtime color overrides: passed via data-colors JSON, applied by React ── *}
-{$_tc = $addons.travel_core|default:[]}
+{* When included with scope="local", $addons is not inherited from the parent.
+   Callers pass _addons_travel_core explicitly to avoid Smarty 5 scope chain OOM. *}
+{$_tc = $_addons_travel_core|default:$addons.travel_core|default:[]}
 
 {* Container for React component *}
 <div id="travel-booking-root"
