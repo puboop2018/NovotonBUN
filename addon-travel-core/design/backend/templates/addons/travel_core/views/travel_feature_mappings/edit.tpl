@@ -208,7 +208,8 @@
 
 {/capture}
 
-{$_fm_title = {__('travel_core.fm_edit_mapping')}|cat:': '|cat:$mapping.canonical_code}
+{$_fm_label = {__('travel_core.fm_edit_mapping')}}
+{$_fm_title = "`$_fm_label`: `$mapping.canonical_code`"}
 
 {include file="common/mainbox.tpl"
     title=$_fm_title

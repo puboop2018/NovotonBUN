@@ -334,19 +334,19 @@
                                     {/if}
                                     
                                     {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
-                                        {$board_display = "{__('novoton_holidays.all_inclusive')|default:'All Inclusive'}"}
+                                        {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
                                     {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
-                                        {$board_display = "{__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}"}
+                                        {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
                                     {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
-                                        {$board_display = "{__('novoton_holidays.full_board')|default:'Full Board'}"}
+                                        {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
                                     {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
-                                        {$board_display = "{__('novoton_holidays.half_board')|default:'Half Board'}"}
+                                        {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
                                     {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
-                                        {$board_display = "{__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}"}
+                                        {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
                                     {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
-                                        {$board_display = "{__('novoton_holidays.room_only')|default:'Room Only'}"}
+                                        {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
                                     {elseif $result.board_id == 'SC'}
-                                        {$board_display = "{__('novoton_holidays.self_catering')|default:'Self Catering'}"}
+                                        {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                                     {else}
                                         {$board_display = $result.board_name|default:$result.board_id}
                                     {/if}
@@ -502,19 +502,19 @@
                 {/if}
                 
                 {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
-                    {$board_display = "{__('novoton_holidays.all_inclusive')|default:'All Inclusive'}"}
+                    {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
                 {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
-                    {$board_display = "{__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}"}
+                    {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
                 {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
-                    {$board_display = "{__('novoton_holidays.full_board')|default:'Full Board'}"}
+                    {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
                 {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
-                    {$board_display = "{__('novoton_holidays.half_board')|default:'Half Board'}"}
+                    {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
                 {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
-                    {$board_display = "{__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}"}
+                    {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
                 {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
-                    {$board_display = "{__('novoton_holidays.room_only')|default:'Room Only'}"}
+                    {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
                 {elseif $result.board_id == 'SC'}
-                    {$board_display = "{__('novoton_holidays.self_catering')|default:'Self Catering'}"}
+                    {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                 {else}
                     {$board_display = $result.board_name|default:$result.board_id}
                 {/if}

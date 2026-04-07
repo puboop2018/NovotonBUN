@@ -88,22 +88,23 @@ try {
     if (!$fromCache) {
         $searchResponse = $api->searchPackages($searchParams);
 
-        if (empty($searchResponse['cursor'])) {
+        $searchId = $searchResponse['search_id'] ?? '';
+        if (empty($searchId) && empty($searchResponse['cursor'])) {
             fn_set_notification('E', __('error'),
                 __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
             $view->assign('sphinx_package_results', []);
             return;
         }
 
-        // Poll for results using cursor (API does long-polling, no client-side delay needed)
+        // Poll for results using search_id + cursor
         $maxPolls = ConfigProvider::getSearchMaxPolls();
-        $cursor = $searchResponse['cursor'];
+        $cursor = $searchResponse['cursor'] ?? null;
         $pollCount = 0;
 
         do {
             $pollCount++;
 
-            $pollResponse = $api->getPackageResults($cursor);
+            $pollResponse = $api->getPackageResults($searchId, $cursor);
             if ($pollResponse === null) break;
 
             if (!empty($pollResponse['data'])) {

@@ -121,6 +121,26 @@ class SphinxApi
         ]);
     }
 
+    /**
+     * Get circuit rates (paginated, filterable by destination/transport/month).
+     *
+     * @param array $params {destinatons, transport_types, months, pagination}
+     */
+    public function getCircuitRates(array $params): ?array
+    {
+        return $this->client->post('/api/v1/circuits/rates', $params);
+    }
+
+    /**
+     * Get experience rates (paginated, filterable by destination/month/date range).
+     *
+     * @param array $params {destinatons, months, from, to, pagination}
+     */
+    public function getExperienceRates(array $params): ?array
+    {
+        return $this->client->post('/api/v1/experiences/rates', $params);
+    }
+
     // ── Hotel Search & Booking ──
 
     /**
