@@ -12,6 +12,157 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
+ * Render the React booking engine mount-point HTML entirely in PHP.
+ *
+ * This replaces $view->fetch('booking_engine.tpl') and Smarty {include} for
+ * search result pages. The booking engine is a stateless "empty shell" — just
+ * a <div> with data-* attributes, a skeleton loader, and two <script> tags.
+ * Building it in PHP avoids Smarty 5's scope chain traversal that causes
+ * 256MB OOM (Data.php:265) when parent scope contains large result arrays.
+ *
+ * The Smarty template (booking_engine.tpl) is still used for product detail
+ * pages and the homepage block where scope chain is not an issue.
+ *
+ * @param array $params {
+ *     @type string $provider        'novoton' or 'sphinx'
+ *     @type string $search_dispatch 'novoton_booking.search' or 'sphinx_booking.search'
+ *     @type string $mode            'search' (default) or 'product'
+ *     @type array  $search_params   Search params for pre-filling (check_in, check_out, etc.)
+ *     @type string $calendar_prices_json  Optional JSON with per-day prices
+ *     @type string $calendar_prices_currency  Currency code for calendar prices
+ * }
+ * @return string Complete HTML string (safe for {$var nofilter} output)
+ */
+function fn_travel_core_render_booking_engine(array $params = []): string
+{
+    $provider       = $params['provider'] ?? '';
+    $searchDispatch = $params['search_dispatch'] ?? '';
+    $mode           = $params['mode'] ?? 'search';
+    $sp             = $params['search_params'] ?? [];
+    $calPricesJson  = $params['calendar_prices_json'] ?? '';
+    $calPricesCurr  = $params['calendar_prices_currency'] ?? '';
+
+    // Colors from addon settings (bypasses Smarty completely)
+    $tc = \Tygh\Registry::get('addons.travel_core') ?: [];
+    $colors = json_encode([
+        'primary'      => $tc['color_primary'] ?? '',
+        'accent'       => $tc['color_accent'] ?? '',
+        'text'         => $tc['color_text'] ?? '',
+        'textLight'    => $tc['color_text_light'] ?? '',
+        'bg'           => $tc['color_bg'] ?? '',
+        'border'       => $tc['color_border'] ?? '',
+        'btnBg'        => $tc['color_search_btn_bg'] ?? '',
+        'btnHover'     => $tc['color_search_btn_hover'] ?? '',
+        'btnText'      => $tc['color_search_btn_text'] ?? '',
+        'calCheapest'  => $tc['color_cal_cheapest'] ?? '',
+        'calPrice'     => $tc['color_cal_price'] ?? '',
+        'danger'       => $tc['color_danger'] ?? '',
+    ], JSON_UNESCAPED_SLASHES);
+
+    // Translations (50+ keys — built via PHP __() instead of Smarty {__()})
+    $translationKeys = [
+        'availability', 'checkInDate' => 'check_in_date', 'checkOutDate' => 'check_out_date',
+        'checkIn' => 'check_in', 'checkOut' => 'check_out',
+        'selectDatesMessage' => 'select_dates_message',
+        'search', 'changeSearch' => 'change_search', 'applyChanges' => 'apply_changes',
+        'adult', 'adults', 'child', 'children', 'rooms', 'room', 'done',
+        'addRoom' => 'add_room', 'adultsLabel' => 'adults_label',
+        'childrenLabel' => 'children_label',
+        'nightsStay' => 'nights_stay', 'nightStay' => 'night_stay',
+        'night', 'nights',
+        'childrenAges' => 'childrens_ages', 'childAge' => 'child_age',
+        'childNAge' => 'child_n_age',
+        'selectAge' => 'select_age', 'yearsOld' => 'years_old', 'yearOld' => 'year_old',
+        'selected', 'selectedSingular' => 'selected_singular',
+        'selectCheckOut' => 'select_check_out',
+        'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december',
+        'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun',
+        'remove',
+        'pleaseEnterDates' => 'please_enter_dates',
+        'selectCheckIn' => 'select_check_in',
+        'selectMissingAges' => 'select_missing_ages',
+        'selectAgeForOneChild' => 'select_age_for_one_child',
+        'selectAgeForChildren' => 'select_age_for_children',
+    ];
+
+    $translations = [];
+    foreach ($translationKeys as $jsKey => $langSuffix) {
+        if (is_int($jsKey)) {
+            $jsKey = $langSuffix;
+        }
+        $translations[$jsKey] = __('travel_core.' . $langSuffix);
+    }
+    // Special key with default fallback
+    $calFooter = __('travel_core.calendar_price_footer');
+    if (empty($calFooter) || $calFooter === 'travel_core.calendar_price_footer') {
+        $calFooter = 'Approximate prices in %s for a 1-night stay';
+    }
+    $translations['calendarPriceFooter'] = $calFooter;
+
+    $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    // Resolve IDs
+    $hotelId   = htmlspecialchars($sp['hotel_id'] ?? '', ENT_QUOTES);
+    $productId = htmlspecialchars((string)($sp['product_id'] ?? ''), ENT_QUOTES);
+    $lang      = defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en';
+    $cacheVer  = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
+    $baseUrl   = \Tygh\Registry::get('config.current_location') ?: '';
+
+    // Build data attributes for search mode
+    $searchAttrs = '';
+    if ($mode === 'search' && !empty($sp)) {
+        $searchAttrs = sprintf(
+            ' data-check-in="%s" data-check-out="%s" data-adults="%s" data-children="%s"'
+            . ' data-children-ages="%s" data-rooms="%s" data-rooms-data=\'%s\'',
+            htmlspecialchars($sp['check_in'] ?? '', ENT_QUOTES),
+            htmlspecialchars($sp['check_out'] ?? '', ENT_QUOTES),
+            (int)($sp['adults'] ?? 2),
+            (int)($sp['children_count'] ?? $sp['children'] ?? 0),
+            htmlspecialchars($sp['children_ages'] ?? $sp['children_ages_str'] ?? '', ENT_QUOTES),
+            (int)($sp['num_rooms'] ?? $sp['rooms'] ?? 1),
+            htmlspecialchars($sp['rooms_data_json'] ?? '[]', ENT_QUOTES)
+        );
+    }
+
+    // Calendar prices
+    $calAttrs = '';
+    if (!empty($calPricesJson) && $calPricesJson !== '{}') {
+        $calAttrs = sprintf(
+            ' data-calendar-prices=\'%s\' data-calendar-prices-currency="%s"',
+            $calPricesJson,
+            htmlspecialchars($calPricesCurr, ENT_QUOTES)
+        );
+    }
+
+    return <<<HTML
+<div id="travel-booking-root"
+     data-travel-booking
+     data-colors='{$colors}'
+     data-search-dispatch="{$searchDispatch}"
+     data-provider="{$provider}"
+     data-hotel-id="{$hotelId}"
+     data-product-id="{$productId}"
+     data-debug="false"
+     data-mode="{$mode}"
+     data-lang="{$lang}"
+     {$searchAttrs}
+     {$calAttrs}
+     data-translations='{$translationsJson}'>
+    <div class="travel-loading-state">
+        <div class="nvt-skeleton-row">
+            <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
+            <div class="nvt-skeleton-field"></div>
+            <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+        </div>
+    </div>
+</div>
+<script src="{$baseUrl}/js/addons/travel_core/react-vendor.js?v={$cacheVer}" defer></script>
+<script src="{$baseUrl}/js/addons/travel_core/react19-bundle.js?v={$cacheVer}" defer></script>
+HTML;
+}
+
+/**
  * Get or create a nested CS-Cart category tree from a path string.
  *
  * Example: "Hotels/Greece/Crete" creates/reuses three nested categories.
