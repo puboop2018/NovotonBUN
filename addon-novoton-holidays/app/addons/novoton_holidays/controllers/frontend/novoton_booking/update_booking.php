@@ -142,8 +142,14 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $cart['products'][$cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
             $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
             $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
-            // Recalculate and save cart
+
+            // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()
+            // reloads product data from the stored cart, which would overwrite the
+            // extras we just set if they haven't been saved first.
             $auth = &Tygh::$app['session']['auth'];
+            fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+
+            // Now recalculate (reloads extras from DB — our saved values survive)
             fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
             fn_save_cart_content($cart, $auth['user_id'] ?? 0);
         }

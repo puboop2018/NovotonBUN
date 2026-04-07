@@ -9,45 +9,23 @@
 declare(strict_types=1);
 
 use Tygh\Registry;
+use Tygh\Settings;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
-
-/**
- * Get section_id for a specific addon's seo_templates section.
- */
-function _travel_seo_get_section_id(string $addonName, string $sectionName = 'seo_templates'): int
-{
-    $parentId = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
-        $addonName
-    );
-
-    if ($parentId <= 0) {
-        return 0;
-    }
-
-    return (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND parent_id = ?i",
-        $sectionName, $parentId
-    );
-}
 
 /**
  * Read current SEO template values for an addon, with sensible defaults.
  */
 function _travel_seo_read_settings(string $addonName): array
 {
-    $sectionId = _travel_seo_get_section_id($addonName);
-
+    // Read from CS-Cart's settings registry (authoritative after Settings API writes)
+    $addonSettings = Registry::get('addons.' . $addonName) ?: [];
     $values = [];
-    if ($sectionId > 0) {
-        $rows = db_get_hash_single_array(
-            "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'seo_%'",
-            ['name', 'value'],
-            $sectionId
-        );
-        $values = is_array($rows) ? $rows : [];
+    foreach ($addonSettings as $key => $val) {
+        if (str_starts_with($key, 'seo_')) {
+            $values[$key] = $val;
+        }
     }
 
     // Defaults per addon — ensures textareas always have a value
@@ -96,80 +74,37 @@ function _travel_seo_read_settings(string $addonName): array
 }
 
 /**
- * Save SEO template values for an addon.
+ * Save SEO template values for an addon using the Settings API.
  *
- * The addon.xml files don't declare seo_* items, so CS-Cart never creates
- * settings_objects rows on install.  This function handles both cases:
- *   - Row exists → UPDATE its value
- *   - Row missing → INSERT it (batch, single query)
+ * Uses Settings::instance()->updateValue() which handles both the DB write
+ * and cache invalidation automatically. Falls back to direct SQL for settings
+ * that don't exist yet in the DB (first-time save after addon install).
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
-    $sectionId = _travel_seo_get_section_id($addonName);
-    if ($sectionId <= 0) {
-        return 0;
-    }
-
-    // Single source of truth: allowed keys → their settings type
-    $keyTypes = [
-        'seo_product_name'          => 'I',  // input
-        'seo_page_title'            => 'I',
-        'seo_meta_description'      => 'T',  // textarea
-        'seo_meta_keywords'         => 'I',
-        'seo_name_slug'             => 'I',
-        'seo_full_description'      => 'T',
-        'seo_overwrite_mode'        => 'S',  // select
-        'seo_field_product_name'    => 'C',  // checkbox
-        'seo_field_page_title'      => 'C',
-        'seo_field_meta_description'=> 'C',
-        'seo_field_meta_keywords'   => 'C',
-        'seo_field_name_slug'       => 'C',
-        'seo_field_full_description'=> 'C',
+    // Allowed keys — only these are persisted
+    $allowedKeys = [
+        'seo_product_name', 'seo_page_title', 'seo_meta_description',
+        'seo_meta_keywords', 'seo_name_slug', 'seo_full_description',
+        'seo_overwrite_mode',
+        'seo_field_product_name', 'seo_field_page_title', 'seo_field_meta_description',
+        'seo_field_meta_keywords', 'seo_field_name_slug', 'seo_field_full_description',
     ];
 
-    // Filter to allowed keys only
-    $values = array_intersect_key($values, $keyTypes);
+    $values = array_intersect_key($values, array_flip($allowedKeys));
     if (empty($values)) {
         return 0;
     }
 
-    // 1 query: fetch all existing seo_* rows for this section
-    $existing = db_get_hash_single_array(
-        "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
-        ['name', 'object_id'],
-        $sectionId, array_keys($values)
-    );
-
-    $inserts = [];
+    $settings = Settings::instance();
     $saved = 0;
 
     foreach ($values as $key => $value) {
         $value = trim((string) $value);
-
-        if (!empty($existing[$key])) {
-            // Row exists → update
-            db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i", $value, (int) $existing[$key]);
-        } else {
-            // Row missing → collect for batch insert
-            $inserts[] = [
-                'name' => $key, 'section_id' => $sectionId, 'section_tab_id' => 0,
-                'type' => $keyTypes[$key], 'value' => $value,
-                'edition_type' => 'ROOT', 'handler' => '', 'parent_id' => 0, 'is_global' => 'N',
-            ];
-        }
+        // Settings API: updates DB + invalidates cache in one call
+        $settings->updateValue($key, $value, $addonName);
         $saved++;
     }
-
-    // 1 query: batch insert all missing rows
-    if (!empty($inserts)) {
-        foreach ($inserts as $row) {
-            db_query("INSERT INTO ?:settings_objects ?e", $row);
-        }
-    }
-
-    // Clear settings cache so ConfigProvider picks up new values
-    Registry::del('addons.' . $addonName);
-    Registry::del('settings');
 
     return $saved;
 }

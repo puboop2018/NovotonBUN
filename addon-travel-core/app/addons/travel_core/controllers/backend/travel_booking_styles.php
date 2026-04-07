@@ -56,21 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors = [];
         $saved = 0;
 
-        // Validate all submitted values first
-        $clean = [];
-        foreach ($colorMap as $settingId => $info) {
-            $value = trim((string) ($submitted[$settingId] ?? ''));
+        foreach ($colorMap as $settingName => $info) {
+            $value = trim((string) ($submitted[$settingName] ?? ''));
 
+            // Validate: empty or valid hex color
             if ($value !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
-                $errors[] = __('travel_core.invalid_color_value', ['[setting]' => __('travel_core.' . $settingId)]);
+                $errors[] = __('travel_core.invalid_color_value', ['[setting]' => __('travel_core.' . $settingName)]);
                 continue;
             }
 
-            $clean[$settingId] = ($value !== '') ? strtolower($value) : '';
-        }
+            // Normalize to lowercase hex
+            $value = ($value !== '') ? strtolower($value) : '';
 
-        // Use Settings API — handles DB update + cache invalidation
-        foreach ($clean as $settingName => $value) {
+            // Use CS-Cart's Settings API — handles DB write + cache invalidation
             Settings::instance()->updateValue($settingName, $value, 'travel_core');
             $saved++;
         }
