@@ -70,6 +70,18 @@ use Tygh\Addons\TravelCore\TravelConstants;
     
     // Get hotel info using repository
     $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
+
+    if (empty($hotel_info)) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton add_to_cart: hotel_id not found in local DB (FK would fail)',
+            'hotel_id' => $bookingData['hotel_id'],
+            'product_id' => $product_id,
+        ]);
+        fn_set_notification('E', __('error'), __('novoton_holidays.hotel_not_found', [
+            '[default]' => 'Hotel data is not available. Please try again or contact support.'
+        ]));
+        return [CONTROLLER_STATUS_REDIRECT, 'products.view?product_id=' . $product_id];
+    }
     
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
