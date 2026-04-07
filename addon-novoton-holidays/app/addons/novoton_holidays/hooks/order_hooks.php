@@ -105,6 +105,11 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
         return;
     }
 
+    // $cart can be null in edge cases (payment gateway callbacks, order status re-triggers)
+    if (!is_array($cart) || empty($cart['products'])) {
+        return;
+    }
+
     // BookingSubmissionService uses BookingRepository which syncs to travel_bookings automatically
     Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
 }
