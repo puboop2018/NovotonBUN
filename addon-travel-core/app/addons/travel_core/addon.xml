@@ -139,63 +139,51 @@
                 <items>
                     <item id="color_primary">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#003580</default_value>
                     </item>
                     <item id="color_accent">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#febb02</default_value>
                     </item>
                     <item id="color_text">
                         <type>input</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_text_light">
                         <type>input</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_bg">
                         <type>input</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_border">
                         <type>input</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                     <item id="color_search_btn_bg">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#006ce4</default_value>
                     </item>
                     <item id="color_search_btn_hover">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#0057b8</default_value>
                     </item>
                     <item id="color_search_btn_text">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#ffffff</default_value>
                     </item>
                     <item id="color_cal_cheapest">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#2e7d32</default_value>
                     </item>
                     <item id="color_cal_price">
                         <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
+                        <default_value>#4B5563</default_value>
                     </item>
                     <item id="color_danger">
                         <type>input</type>
                         <default_value></default_value>
-                        <variants/>
                     </item>
                 </items>
             </section>
@@ -284,21 +272,6 @@
                 KEY `idx_status` (`status`),
                 KEY `idx_check_in` (`check_in`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        </item>
-        <!-- Upgrade: make color settings visible in addon settings (hidden → input) -->
-        <item for="upgrade">
-            UPDATE ?:settings_objects
-               SET type = 'I'
-             WHERE type = 'H'
-               AND name LIKE 'color_%'
-               AND section_id IN (
-                   SELECT section_id FROM ?:settings_sections
-                    WHERE name = 'appearance'
-                      AND parent_id IN (
-                          SELECT section_id FROM ?:settings_sections
-                           WHERE name = 'travel_core' AND type = 'ADDON'
-                      )
-               );
         </item>
     </queries>
 

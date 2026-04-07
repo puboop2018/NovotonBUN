@@ -4,12 +4,12 @@ declare(strict_types=1);
  * Travel Core - Booking Form Appearance Settings Controller
  *
  * Dedicated admin page for customizing the React booking engine colors.
- * Color values are stored as standard CS-Cart addon settings (declared in
- * addon.xml under the 'appearance' section) and read on the frontend via
- * Registry::get('addons.travel_core.color_*').
+ * Color values are stored as travel_core addon settings (defined in addon.xml
+ * under the 'appearance' section) and injected at runtime via CSS custom
+ * properties in booking_engine.tpl.
  *
- * Uses Settings::instance()->updateValue() for writes — this automatically
- * handles both the DB update and cache invalidation.
+ * Uses the CS-Cart Settings API (Settings::instance()->updateValue()) for
+ * saves — this handles both the database update and cache invalidation.
  *
  * @package TravelCore
  * @since   1.2.0
@@ -26,7 +26,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Color setting definitions: setting_name => [CSS variable, default hex].
+ * Color setting definitions: setting_id => [CSS variable, default].
  * Empty default = inherited from LESS/theme.
  */
 function _travel_styles_color_map(): array
@@ -90,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
 
-    // Read current values from CS-Cart's settings registry (authoritative after Settings API writes)
-    $addonSettings = Registry::get('addons.travel_core') ?: [];
+    // Read current values via Registry (reliable — Settings API manages cache)
+    $tc = Registry::get('addons.travel_core') ?: [];
 
     $color_groups = [
         'base' => [
@@ -128,7 +128,7 @@ if ($mode === 'manage') {
             'id'      => $id,
             'var'     => $cssVar,
             'default' => $default,
-            'value'   => $addonSettings[$id] ?? '',
+            'value'   => $tc[$id] ?? '',
             'label'   => __('travel_core.' . $id),
         ];
     }
