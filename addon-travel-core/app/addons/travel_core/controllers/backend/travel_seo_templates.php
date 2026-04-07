@@ -74,11 +74,102 @@ function _travel_seo_read_settings(string $addonName): array
 }
 
 /**
+ * Ensure seo_* setting rows exist in the DB for the given addon.
+ *
+ * The addon.xml files only define a seo_templates_redirect_info item — the
+ * actual seo_product_name, seo_page_title, etc. are NOT in addon.xml.
+ * Settings::instance()->updateValue() silently does nothing if the setting
+ * row doesn't exist, so we must create them on first use.
+ *
+ * This runs once per request (static guard) and only INSERTs missing rows.
+ */
+function _travel_seo_ensure_settings_exist(string $addonName): void
+{
+    static $ensured = [];
+    if (isset($ensured[$addonName])) {
+        return;
+    }
+    $ensured[$addonName] = true;
+
+    // Find the seo_templates section under this addon
+    $parentId = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
+        $addonName
+    );
+    if ($parentId <= 0) {
+        return;
+    }
+
+    $sectionId = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = 'seo_templates' AND parent_id = ?i",
+        $parentId
+    );
+
+    // Create section if missing (addon upgraded without reinstall)
+    if ($sectionId <= 0) {
+        db_query("INSERT INTO ?:settings_sections ?e", [
+            'name'         => 'seo_templates',
+            'parent_id'    => $parentId,
+            'edition_type' => 'ROOT',
+            'type'         => 'TAB',
+            'position'     => 200,
+            'is_optional'  => 'N',
+        ]);
+        $sectionId = (int) db_get_field("SELECT LAST_INSERT_ID()");
+    }
+
+    if ($sectionId <= 0) {
+        return;
+    }
+
+    // Setting definitions: name => type
+    $requiredSettings = [
+        'seo_product_name'          => 'I',
+        'seo_page_title'            => 'I',
+        'seo_meta_description'      => 'T',
+        'seo_meta_keywords'         => 'I',
+        'seo_name_slug'             => 'I',
+        'seo_full_description'      => 'T',
+        'seo_overwrite_mode'        => 'S',
+        'seo_field_product_name'    => 'C',
+        'seo_field_page_title'      => 'C',
+        'seo_field_meta_description'=> 'C',
+        'seo_field_meta_keywords'   => 'C',
+        'seo_field_name_slug'       => 'C',
+        'seo_field_full_description'=> 'C',
+    ];
+
+    // Check which already exist
+    $existing = db_get_fields(
+        "SELECT name FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
+        $sectionId, array_keys($requiredSettings)
+    );
+    $existingSet = array_flip($existing ?: []);
+
+    // INSERT only missing rows
+    foreach ($requiredSettings as $name => $type) {
+        if (!isset($existingSet[$name])) {
+            db_query("INSERT INTO ?:settings_objects ?e", [
+                'name'           => $name,
+                'section_id'     => $sectionId,
+                'section_tab_id' => 0,
+                'type'           => $type,
+                'value'          => '',
+                'edition_type'   => 'ROOT',
+                'handler'        => '',
+                'parent_id'      => 0,
+                'is_global'      => 'N',
+                'position'       => 0,
+            ]);
+        }
+    }
+}
+
+/**
  * Save SEO template values for an addon using the Settings API.
  *
- * Uses Settings::instance()->updateValue() which handles both the DB write
- * and cache invalidation automatically. Falls back to direct SQL for settings
- * that don't exist yet in the DB (first-time save after addon install).
+ * Ensures setting rows exist first (they're not in addon.xml), then uses
+ * Settings::instance()->updateValue() for DB write + cache invalidation.
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
@@ -96,12 +187,15 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         return 0;
     }
 
+    // Ensure setting rows exist in DB before updateValue() — they're not
+    // defined in addon.xml, so CS-Cart doesn't create them on install.
+    _travel_seo_ensure_settings_exist($addonName);
+
     $settings = Settings::instance();
     $saved = 0;
 
     foreach ($values as $key => $value) {
         $value = trim((string) $value);
-        // Settings API: updates DB + invalidates cache in one call
         $settings->updateValue($key, $value, $addonName);
         $saved++;
     }
