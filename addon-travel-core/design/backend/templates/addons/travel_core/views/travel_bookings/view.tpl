@@ -85,11 +85,11 @@
             <table class="table table-condensed">
                 <tr>
                     <td class="span4"><strong>{__("travel_core.check_in")}:</strong></td>
-                    <td>{$booking.check_in|date_format:"%d.%m.%Y"}</td>
+                    <td>{if $booking.check_in}{$booking.check_in|date_format:"%d.%m.%Y"}{else}&mdash;{/if}</td>
                 </tr>
                 <tr>
                     <td><strong>{__("travel_core.check_out")}:</strong></td>
-                    <td>{$booking.check_out|date_format:"%d.%m.%Y"}</td>
+                    <td>{if $booking.check_out}{$booking.check_out|date_format:"%d.%m.%Y"}{else}&mdash;{/if}</td>
                 </tr>
                 <tr>
                     <td><strong>{__("travel_core.nights")}:</strong></td>
@@ -116,7 +116,7 @@
             <table class="table table-condensed">
                 <tr>
                     <td class="span4"><strong>Total Price:</strong></td>
-                    <td><strong>{$booking.total_price|number_format:2} {$booking.currency|default:'EUR'}</strong></td>
+                    <td><strong>{$booking.total_price|default:0|number_format:2} {$booking.currency|default:'EUR'}</strong></td>
                 </tr>
                 <tr>
                     <td><strong>{__("created_at")}:</strong></td>
