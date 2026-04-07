@@ -503,6 +503,7 @@ export default function BookingEngine({ config }) {
                             maxChildren={maxChildren}
                             onUpdate={handleRoomsUpdate}
                             onClose={() => setShowGuests(false)}
+                            onValidate={setAgeErrors}
                             ageErrors={ageErrors}
                             triggerRef={guestTriggerRef}
                         />

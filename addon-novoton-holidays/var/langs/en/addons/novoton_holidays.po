@@ -304,6 +304,14 @@ msgctxt "SettingsTooltips::novoton_holidays::product_code_prefixes"
 msgid "Products with these prefixes will be synced with Novoton API"
 msgstr "Products with these prefixes will be synced with Novoton API"
 
+msgctxt "SettingsOptions::novoton_holidays::default_product_quantity"
+msgid "Default product quantity"
+msgstr "Default product quantity"
+
+msgctxt "SettingsTooltips::novoton_holidays::default_product_quantity"
+msgid "Inventory quantity assigned to hotel products on creation"
+msgstr "Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors."
+
 msgctxt "SettingsOptions::novoton_holidays::cron_access_key"
 msgid "Cron Access Key"
 msgstr "Cron Access Key"

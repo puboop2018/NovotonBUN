@@ -104,6 +104,21 @@
                         </div>
                     </div>
 
+                    {* Full description template (optional) *}
+                    <div class="control-group">
+                        <label class="control-label" for="{$addon_id}_seo_full_description">
+                            {__("travel_core.seo_full_description")}
+                        </label>
+                        <div class="controls">
+                            <textarea id="{$addon_id}_seo_full_description"
+                                      name="{$addon_id}[seo_full_description]"
+                                      class="input-large"
+                                      rows="4"
+                                      style="width: 95%;">{$addon.settings.seo_full_description}</textarea>
+                            <p class="muted" style="font-size: 11px;">{__("travel_core.seo_full_description_desc")|escape:"html"}</p>
+                        </div>
+                    </div>
+
                 </div>
                 {/foreach}
             </div>

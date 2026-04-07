@@ -136,6 +136,11 @@ class ConfigProvider implements ConfigProviderInterface
         return (string) self::getSetting('product_code_prefix', 'SPX');
     }
 
+    public static function getDefaultProductQuantity(): int
+    {
+        return max(0, (int) self::getSetting('default_product_quantity', 777));
+    }
+
     /**
      * Whether to skip creating products for hotels without a description.
      */

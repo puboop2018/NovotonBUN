@@ -97,8 +97,16 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
  */
 function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
+    // CS-Cart Multi-Vendor passes $order_id as array (parent + child order IDs).
+    // Normalize to the parent (first) order ID for booking submission.
+    $resolved_order_id = (int) (is_array($order_id) ? reset($order_id) : $order_id);
+
+    if (empty($resolved_order_id)) {
+        return;
+    }
+
     // BookingSubmissionService uses BookingRepository which syncs to travel_bookings automatically
-    Container::getInstance()->bookingSubmissionService()->submitOrder($order_id, $cart);
+    Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
 }
 
 // ============================================================================

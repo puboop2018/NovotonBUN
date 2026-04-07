@@ -6,7 +6,7 @@
  * error highlighting.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { t, getLocale, useFocusTrap } from './utils';
 import { TrashIcon } from './icons';
 
@@ -17,13 +17,42 @@ export default function GuestPicker({
     maxChildren = 4,
     onUpdate,
     onClose,
+    onValidate,
     ageErrors = [],
     triggerRef,
 }) {
     const popupRef = useRef(null);
 
+    // Track whether the user has attempted to close/submit — errors only
+    // show after this flag is set (avoids "naggy" immediate validation).
+    const [validated, setValidated] = useState(ageErrors.length > 0);
+
     // WCAG 2.1: trap focus within the guest picker dialog
     useFocusTrap(popupRef);
+
+    // Validate missing ages and notify parent; returns true if valid
+    const validateAndClose = useCallback(() => {
+        setValidated(true);
+        // Check for missing ages
+        const errors = [];
+        rooms.forEach((room, roomIdx) => {
+            if (room.children > 0) {
+                (room.childrenAges || []).forEach((age, childIdx) => {
+                    if (age === null || age === undefined || age === '') {
+                        errors.push({ room: roomIdx, child: childIdx });
+                    }
+                });
+            }
+        });
+        if (errors.length > 0) {
+            // Don't close — show errors inline
+            onValidate && onValidate(errors);
+            return false;
+        }
+        onValidate && onValidate([]);
+        onClose && onClose();
+        return true;
+    }, [rooms, onClose, onValidate]);
 
     // Close on outside click or Escape key
     useEffect(() => {
@@ -31,12 +60,12 @@ export default function GuestPicker({
             // Ignore clicks on the trigger button (prevents close-then-reopen flicker)
             if (triggerRef && triggerRef.current && triggerRef.current.contains(e.target)) return;
             if (popupRef.current && !popupRef.current.contains(e.target)) {
-                onClose && onClose();
+                validateAndClose();
             }
         }
         function handleKeyDown(e) {
             if (e.key === 'Escape') {
-                onClose && onClose();
+                validateAndClose();
             }
         }
         document.addEventListener('mousedown', handleClick);
@@ -45,7 +74,7 @@ export default function GuestPicker({
             document.removeEventListener('mousedown', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose, triggerRef]);
+    }, [validateAndClose, triggerRef]);
 
     const updateRoom = useCallback((roomIdx, field, value) => {
         const updated = rooms.map((room, i) => {
@@ -94,8 +123,8 @@ export default function GuestPicker({
     }, [rooms, onUpdate]);
 
     const handleDone = useCallback(() => {
-        onClose && onClose();
-    }, [onClose]);
+        validateAndClose();
+    }, [validateAndClose]);
 
     function hasAgeError(roomIdx, childIdx) {
         return ageErrors.some(e => e.room === roomIdx && e.child === childIdx);
@@ -183,8 +212,8 @@ export default function GuestPicker({
 
     return (
         <div className="nvt-guest-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('guestsAndRooms', 'Guests and rooms')}>
-            {/* Smart Anchor: clickable alert for missing child ages */}
-            {missingAgeInfo.totalMissing > 0 && (
+            {/* Smart Anchor: clickable alert for missing child ages — only after validation attempt */}
+            {validated && missingAgeInfo.totalMissing > 0 && (
                 <button
                     type="button"
                     className="nvt-smart-age-anchor"
@@ -274,14 +303,11 @@ export default function GuestPicker({
                         {room.children > 0 && (
                             <div className="nvt-child-ages">
                                 <div className="nvt-child-ages-header">
-                                    {t('childrenAges', "Children's ages")}
-                                </div>
-                                <div className="nvt-child-ages-message">
-                                    {t('childAge', "Child's age at check-in")}
+                                    {t('childrenAges', "Children's ages at check-in")}
                                 </div>
                                 {Array.from({ length: room.children }, (_, childIdx) => {
                                     const age = (room.childrenAges || [])[childIdx];
-                                    const error = hasAgeError(roomIdx, childIdx);
+                                    const error = validated && hasAgeError(roomIdx, childIdx);
 
                                     return (
                                         <div
@@ -302,7 +328,7 @@ export default function GuestPicker({
                                                 aria-invalid={error || undefined}
                                             >
                                                 <option value="">
-                                                    {t('selectAge', 'Select age')}
+                                                    {t('childNAge', 'Child [n] age').replace('[n]', childIdx + 1)}
                                                 </option>
                                                 {Array.from({ length: 18 }, (_, a) => (
                                                     <option key={a} value={a}>

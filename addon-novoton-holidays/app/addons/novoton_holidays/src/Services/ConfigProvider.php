@@ -270,6 +270,11 @@ class ConfigProvider
         return self::getProductCodePrefixes()[0] ?? 'NVT';
     }
 
+    public static function getDefaultProductQuantity(): int
+    {
+        return max(0, (int) (self::settings()['default_product_quantity'] ?? 555));
+    }
+
     /**
      * Get the configured category ID for a country.
      *

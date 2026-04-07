@@ -155,6 +155,11 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="default_product_quantity">
+                        <type>input</type>
+                        <default_value>777</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- API Resilience Header -->
                     <item id="resilience_header">
@@ -212,39 +217,9 @@
             </section>
             <section id="seo_templates">
                 <items>
-                    <item id="seo_placeholders_info">
+                    <item id="seo_templates_redirect_info">
                         <type>info</type>
-                        <default_value>Available placeholders: {{name}}, {{classification}}, {{city}}, {{country}}, {{region}}, {{property_type}}, {{description}}, {{rating}}, {{facilities}}, {{boards}}, {{latitude}}, {{longitude}}, {{image_url}}, {{address}}, {{phone}}, {{email}}, {{website}}. Arrays (facilities, boards) show the first 3 values comma-separated. Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_product_name">
-                        <type>input</type>
-                        <default_value>{{name}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_page_title">
-                        <type>input</type>
-                        <default_value>{{name}} {{classification}}* - {{city}}, {{country}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_description">
-                        <type>textarea</type>
-                        <default_value>Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}. View rates and availability.</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_meta_keywords">
-                        <type>input</type>
-                        <default_value>{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_name_slug">
-                        <type>input</type>
-                        <default_value>{{name}}-{{city}}-{{country}}</default_value>
-                        <variants/>
-                    </item>
-                    <item id="seo_full_description">
-                        <type>textarea</type>
-                        <default_value></default_value>
+                        <default_value>SEO templates are managed centrally via Travel Core → SEO Templates page (admin.php?dispatch=travel_seo_templates.manage).</default_value>
                         <variants/>
                     </item>
                 </items>
@@ -626,6 +601,10 @@
         <item lang="ro" id="sphinx_holidays.product_code_prefix.tooltip"><![CDATA[Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).]]></item>
         <item lang="en" id="sphinx_holidays.skip_no_description"><![CDATA[Skip hotels without description (do not create products for hotels with empty description)]]></item>
         <item lang="ro" id="sphinx_holidays.skip_no_description"><![CDATA[Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)]]></item>
+        <item lang="en" id="sphinx_holidays.default_product_quantity"><![CDATA[Default product quantity]]></item>
+        <item lang="ro" id="sphinx_holidays.default_product_quantity"><![CDATA[Cantitate implicită produs]]></item>
+        <item lang="en" id="sphinx_holidays.default_product_quantity.tooltip"><![CDATA[Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors.]]></item>
+        <item lang="ro" id="sphinx_holidays.default_product_quantity.tooltip"><![CDATA[Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de 'inventar zero'.]]></item>
 
         <item lang="en" id="sphinx_holidays.debug_header"><![CDATA[Debug]]></item>
         <item lang="ro" id="sphinx_holidays.debug_header"><![CDATA[Depanare]]></item>

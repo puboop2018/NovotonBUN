@@ -143,6 +143,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                 'product'          => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
                 'product_code'     => $product_code,
                 'price'            => 0,
+                'amount'           => ConfigProvider::getDefaultProductQuantity(),
                 'status'           => 'D',
                 'company_id'       => Registry::get('runtime.company_id') ?: 1,
                 'main_category'    => $category_id,
