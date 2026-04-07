@@ -303,10 +303,7 @@ export default function GuestPicker({
                         {room.children > 0 && (
                             <div className="nvt-child-ages">
                                 <div className="nvt-child-ages-header">
-                                    {t('childrenAges', "Children's ages")}
-                                </div>
-                                <div className="nvt-child-ages-message">
-                                    {t('childAgeNote', 'Age at time of travel')}
+                                    {t('childrenAges', "Children's ages at check-in")}
                                 </div>
                                 {Array.from({ length: room.children }, (_, childIdx) => {
                                     const age = (room.childrenAges || [])[childIdx];
