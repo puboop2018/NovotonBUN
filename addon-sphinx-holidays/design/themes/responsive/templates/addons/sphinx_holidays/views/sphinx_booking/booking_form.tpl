@@ -9,7 +9,7 @@
  * @since 1.0.0
  *}
 
-{capture name="mainbox"}
+
 
 {if $sphinx_booking_data}
 
@@ -181,6 +181,4 @@
     </div>
 {/if}
 
-{/capture}
 
-{include file="common/mainbox.tpl" title=__("sphinx_holidays.booking_form_title", ["[default]" => "Complete Your Booking"]) content=$smarty.capture.mainbox}

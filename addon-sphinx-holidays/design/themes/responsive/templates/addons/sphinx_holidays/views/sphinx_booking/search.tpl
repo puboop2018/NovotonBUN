@@ -9,16 +9,9 @@
  * @since 1.0.0
  *}
 
-{capture name="mainbox"}
-
 <div class="travel-search-results-page sphinx-search-results">
 
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
-    {* The booking engine HTML is rendered to a string in the search controller
-       BEFORE $sphinx_search_results is assigned to the view. This prevents
-       Smarty 5's scope chain traversal from carrying 50+ result objects into
-       the booking engine template (which causes 256MB OOM at Data.php:265).
-       Smarty has NO scope="local" — {include} always inherits parent scope. *}
     <div class="travel-search-form-wrapper">
         {$booking_engine_html nofilter}
     </div>
@@ -110,7 +103,3 @@
     {/if}
 
 </div>
-
-{/capture}
-
-{include file="common/mainbox.tpl" title=__("sphinx_holidays.search_results_title", ["[default]" => "Hotel Search Results"]) content=$smarty.capture.mainbox}

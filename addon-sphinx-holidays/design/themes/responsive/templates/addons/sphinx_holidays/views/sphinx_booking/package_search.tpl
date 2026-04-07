@@ -7,7 +7,7 @@
  * @since 1.2.0
  *}
 
-{capture name="mainbox"}
+
 
 <div class="travel-search-results-page sphinx-package-results">
 
@@ -108,6 +108,4 @@
 
 </div>
 
-{/capture}
 
-{include file="common/mainbox.tpl" title=__("sphinx_holidays.package_search_title", ["[default]" => "Package Search Results"]) content=$smarty.capture.mainbox}

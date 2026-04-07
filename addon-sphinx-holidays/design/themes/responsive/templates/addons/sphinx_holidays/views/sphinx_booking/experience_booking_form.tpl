@@ -8,7 +8,7 @@
  * @since 1.1.0
  *}
 
-{capture name="mainbox"}
+
 
 {if $sphinx_experience_booking}
 
@@ -134,6 +134,4 @@
 
 {/if}
 
-{/capture}
 
-{include file="common/mainbox.tpl" title=__("sphinx_holidays.experience_booking_title", ["[default]" => "Experience Booking"]) content=$smarty.capture.mainbox}
