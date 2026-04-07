@@ -302,7 +302,7 @@ button.nvt-field-input:active {
 .nvt-calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 4px;
 }
 /* When prices are displayed, switch from circles to rectangles with more room */
 

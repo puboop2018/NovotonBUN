@@ -584,6 +584,12 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                         $bookResult['booking_reference'],
                         json_encode($bookResult)
                     );
+                } else {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx: booking confirmed but no reference returned',
+                        'booking_id' => $booking_id,
+                        'order_id' => $order_id,
+                    ]);
                 }
 
                 // API call succeeded — now set confirmed status
@@ -803,7 +809,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
 
     $temp_file = fn_create_temp_file();
     if (!$temp_file) {
-        error_log("sphinx_holidays: fn_create_temp_file() returned empty for product #{$product_id}");
+        fn_log_event('general', 'runtime', ['message' => "Sphinx: fn_create_temp_file() returned empty for product #{$product_id}"]);
         return false;
     }
 
@@ -824,7 +830,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     // empty string with write_to_file, which caused all downloads to fail.
     $fp = fopen($temp_file, 'wb');
     if (!$fp) {
-        error_log("sphinx_holidays: fopen() failed for temp file '{$temp_file}' product #{$product_id}");
+        fn_log_event('general', 'runtime', ['message' => "Sphinx: fopen() failed for temp file '{$temp_file}' product #{$product_id}"]);
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -847,7 +853,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     fclose($fp);
 
     if ($httpCode !== 200 || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-        error_log("sphinx_holidays: image download failed for product #{$product_id}: HTTP {$httpCode}, size=" . (file_exists($temp_file) ? filesize($temp_file) : 'N/A') . ", url={$download_url}" . ($curlError ? " ({$curlError})" : ''));
+        fn_log_event('general', 'runtime', ['message' => "Sphinx: image download failed for product #{$product_id}: HTTP {$httpCode}, size=" . (file_exists($temp_file) ? filesize($temp_file) : 'N/A') . ", url={$download_url}" . ($curlError ? " ({$curlError})" : '')]);
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -858,7 +864,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         $image_info = false;
     }
     if (!$image_info) {
-        error_log("sphinx_holidays: getimagesize() failed for product #{$product_id}, file={$temp_file}, size=" . filesize($temp_file));
+        fn_log_event('general', 'runtime', ['message' => "Sphinx: getimagesize() failed for product #{$product_id}, file={$temp_file}, size=" . filesize($temp_file)]);
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
     }
@@ -902,14 +908,14 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         if (file_exists($temp_file)) { unlink($temp_file); }
 
         if (empty($pair_ids)) {
-            error_log("sphinx_holidays: fn_update_image_pairs() returned empty for product #{$product_id}, file={$filename}, size=" . ($detailed[0]['size'] ?? '?') . ", mime={$image_info['mime']}");
+            fn_log_event('general', 'runtime', ['message' => "Sphinx: fn_update_image_pairs() returned empty for product #{$product_id}, file={$filename}, size=" . ($detailed[0]['size'] ?? '?') . ", mime={$image_info['mime']}"]);
             return false;
         }
 
         return true;
     }
 
-    error_log("sphinx_holidays: fn_update_image_pairs() function not found");
+    fn_log_event('general', 'runtime', ['message' => 'Sphinx: fn_update_image_pairs() function not found']);
     if (file_exists($temp_file)) { unlink($temp_file); }
     return false;
 }

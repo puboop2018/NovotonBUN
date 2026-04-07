@@ -178,7 +178,7 @@ class SphinxHttpClient
                 $waitSeconds = min($waitSeconds, self::RATE_LIMIT_MAX_WAIT);
                 $this->lastError = "Rate limited. Waiting {$waitSeconds}s.";
                 if ($this->debugLogging) {
-                    error_log("[SphinxHttpClient] Rate limited on {$method} {$url}. Waiting {$waitSeconds}s. Remaining: {$this->rateLimitRemaining}, Limit: {$this->rateLimitLimit}");
+                    fn_log_event('general', 'runtime', ['message' => "[SphinxHttpClient] Rate limited on {$method} {$url}. Waiting {$waitSeconds}s. Remaining: {$this->rateLimitRemaining}, Limit: {$this->rateLimitLimit}"]);
                 }
                 sleep($waitSeconds);
                 $attempt++;
@@ -271,7 +271,7 @@ class SphinxHttpClient
     private function log(string $message): void
     {
         if ($this->debugLogging) {
-            error_log('[SphinxHttpClient] ' . $message);
+            fn_log_event('general', 'runtime', ['message' => '[SphinxHttpClient] ' . $message]);
         }
     }
 
