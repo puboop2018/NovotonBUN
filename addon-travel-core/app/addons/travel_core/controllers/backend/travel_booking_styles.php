@@ -4,9 +4,12 @@ declare(strict_types=1);
  * Travel Core - Booking Form Appearance Settings Controller
  *
  * Dedicated admin page for customizing the React booking engine colors.
- * Color values are stored as travel_core addon settings (hidden type in
- * addon.xml) and injected at runtime via CSS custom properties in
- * booking_engine.tpl.
+ * Color values are stored as travel_core addon settings (defined in addon.xml
+ * under the 'appearance' section) and injected at runtime via CSS custom
+ * properties in booking_engine.tpl.
+ *
+ * Uses the CS-Cart Settings API (Settings::instance()->updateValue()) for
+ * saves — this handles both the database update and cache invalidation.
  *
  * @package TravelCore
  * @since   1.2.0
@@ -14,80 +17,12 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Registry;
+use Tygh\Settings;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
     return [CONTROLLER_STATUS_DENIED];
-}
-
-/**
- * Get (or create) the section_id for the 'appearance' tab under the travel_core addon settings.
- *
- * The addon.xml doesn't declare an 'appearance' section or color_* items, so CS-Cart
- * never creates them on install.  This function self-bootstraps: if the section or any
- * color settings are missing, it creates them on the fly.
- */
-function _travel_styles_get_section_id(): int
-{
-    static $id = null;
-    if ($id !== null) {
-        return $id;
-    }
-
-    $parentId = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = 'travel_core' AND type = 'ADDON'"
-    );
-
-    if ($parentId <= 0) {
-        $id = 0;
-        return 0;
-    }
-
-    $id = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = 'appearance' AND parent_id = ?i",
-        $parentId
-    );
-
-    // Self-bootstrap: create the 'appearance' section if it doesn't exist
-    if ($id <= 0) {
-        db_query("INSERT INTO ?:settings_sections ?e", [
-            'name'        => 'appearance',
-            'parent_id'   => $parentId,
-            'edition_type' => 'ROOT',
-            'type'        => 'TAB',
-            'position'    => 100,
-            'is_optional' => 'N',
-        ]);
-        $id = (int) db_get_field("SELECT LAST_INSERT_ID()");
-    }
-
-    // Ensure color_* setting rows exist (seed with defaults on first use)
-    if ($id > 0) {
-        $existingNames = db_get_fields(
-            "SELECT name FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'color_%'", $id
-        );
-        $existingSet = array_flip($existingNames ?: []);
-
-        foreach (_travel_styles_color_map() as $name => [$cssVar, $default]) {
-            if (!isset($existingSet[$name])) {
-                db_query("INSERT INTO ?:settings_objects ?e", [
-                    'name'           => $name,
-                    'section_id'     => $id,
-                    'section_tab_id' => 0,
-                    'type'           => 'I',
-                    'value'          => '',
-                    'edition_type'   => 'ROOT',
-                    'handler'        => '',
-                    'parent_id'      => 0,
-                    'is_global'      => 'N',
-                    'position'       => 0,
-                ]);
-            }
-        }
-    }
-
-    return $id;
 }
 
 /**
@@ -134,28 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $clean[$settingId] = ($value !== '') ? strtolower($value) : '';
         }
 
-        // _travel_styles_get_section_id() guarantees section + rows exist
-        $sectionId = _travel_styles_get_section_id();
-        if ($sectionId > 0 && !empty($clean)) {
-            // 1 query: fetch all existing object_ids
-            $existing = db_get_hash_single_array(
-                "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
-                ['name', 'object_id'],
-                $sectionId, array_keys($clean)
-            );
-
-            foreach ($clean as $settingId => $value) {
-                if (!empty($existing[$settingId])) {
-                    db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
-                        $value, (int) $existing[$settingId]);
-                    $saved++;
-                }
-            }
+        // Use Settings API — handles DB update + cache invalidation
+        foreach ($clean as $settingName => $value) {
+            Settings::instance()->updateValue($settingName, $value, 'travel_core');
+            $saved++;
         }
-
-        // Clear settings cache so changes appear immediately
-        Registry::del('addons.travel_core');
-        Registry::del('settings');
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
@@ -174,17 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
 
-    // Read current values directly from DB to avoid stale cache
-    $sectionId = _travel_styles_get_section_id();
-    $currentValues = [];
-    if ($sectionId > 0) {
-        $rows = db_get_hash_single_array(
-            "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'color_%'",
-            ['name', 'value'],
-            $sectionId
-        );
-        $currentValues = is_array($rows) ? $rows : [];
-    }
+    // Read current values via Registry (reliable — Settings API manages cache)
+    $tc = Registry::get('addons.travel_core') ?: [];
 
     $color_groups = [
         'base' => [
@@ -221,7 +130,7 @@ if ($mode === 'manage') {
             'id'      => $id,
             'var'     => $cssVar,
             'default' => $default,
-            'value'   => $currentValues[$id] ?? '',
+            'value'   => $tc[$id] ?? '',
             'label'   => __('travel_core.' . $id),
         ];
     }
