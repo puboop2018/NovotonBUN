@@ -293,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'bulk_apply') {
         $addon_id = $_REQUEST['addon_id'] ?? '';
         if (!in_array($addon_id, ['novoton_holidays', 'sphinx_holidays'], true)) {
-            fn_set_notification('E', __('error'), 'Invalid addon.');
+            fn_set_notification('E', __('error'), __('travel_core.invalid_addon', ['[default]' => 'Invalid addon.']));
             return [CONTROLLER_STATUS_REDIRECT, 'travel_seo_templates.manage'];
         }
 

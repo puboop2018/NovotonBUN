@@ -218,7 +218,10 @@
 
 {/capture}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl"
     title="{__('novoton_holidays.manage_bookings')}"
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }

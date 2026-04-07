@@ -211,9 +211,12 @@
 {$_fm_label = {__('travel_core.fm_edit_mapping')}}
 {$_fm_title = "`$_fm_label`: `$mapping.canonical_code`"}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl"
     title=$_fm_title
     content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons
 }
 
 <script>

@@ -43,8 +43,9 @@
 {/if}
 
 {* ── Runtime color overrides: passed via data-colors JSON, applied by React ── *}
-{* When included with scope="local", $addons is not inherited from the parent.
-   Callers pass _addons_travel_core explicitly to avoid Smarty 5 scope chain OOM. *}
+{* On search pages, this template is pre-rendered to a string via $view->fetch()
+   in the controller BEFORE heavy search results are assigned. This avoids Smarty 5
+   scope chain OOM. Callers pass _addons_travel_core explicitly as a parameter. *}
 {$_tc = $_addons_travel_core|default:$addons.travel_core|default:[]}
 
 {* Container for React component *}

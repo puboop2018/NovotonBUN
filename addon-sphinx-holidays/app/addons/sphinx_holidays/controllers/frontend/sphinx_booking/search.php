@@ -13,6 +13,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
@@ -214,7 +215,8 @@ try {
         $slimResults[] = $slim;
     }
 
-    $searchParams = [
+    // Template display params (distinct from API $searchParams above)
+    $templateParams = [
         'hotel_id' => $hotel_id,
         'destination_id' => $destination_id,
         'check_in' => $check_in,
@@ -226,25 +228,21 @@ try {
         'nights' => (strtotime($check_out) && strtotime($check_in)) ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
     ];
 
-    // Pre-render booking engine in an isolated scope BEFORE assigning search
-    // results to the view. This prevents Smarty 5's scope chain traversal
-    // from carrying the results array (50+ objects) into the booking engine
-    // template, which causes the 256MB OOM at Data.php:265.
-    //
-    // Smarty's {include} always inherits parent scope and there is NO
-    // scope="local" option (only parent/root/global exist). The only way
-    // to get true isolation is PHP-level: render the template to a string
-    // before heavy data is assigned, then pass the HTML as a simple string.
+    // Pre-render booking engine BEFORE assigning search results to the view.
+    // Smarty {include} always inherits parent scope (NO scope="local" exists).
+    // By rendering the template to a string first, the booking engine never
+    // sees $sphinx_search_results in its scope, preventing the 256MB OOM
+    // at Data.php:265 caused by Smarty 5's scope chain traversal.
     $view->assign('travel_provider', 'sphinx');
     $view->assign('travel_search_dispatch', 'sphinx_booking.search');
     $view->assign('travel_mode', 'search');
-    $view->assign('travel_search_params', $searchParams);
+    $view->assign('travel_search_params', $templateParams);
     $view->assign('_addons_travel_core', Registry::get('addons.travel_core') ?: []);
     $view->assign('booking_engine_html', $view->fetch('addons/travel_core/blocks/booking_engine.tpl'));
 
     $view->assign('sphinx_search_results', $slimResults);
     $view->assign('sphinx_search_id', $searchId);
-    $view->assign('sphinx_search_params', $searchParams);
+    $view->assign('sphinx_search_params', $templateParams);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

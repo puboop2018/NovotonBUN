@@ -159,8 +159,11 @@
 </div>
 {/capture}
 
+{capture name="buttons"}{/capture}
+
 {include file="common/mainbox.tpl" 
     title="{__('novoton_holidays.alternative_requests')}" 
-    content=$smarty.capture.mainbox 
+    content=$smarty.capture.mainbox
+    buttons=$smarty.capture.buttons 
     sidebar=$smarty.capture.sidebar
 }
