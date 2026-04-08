@@ -136,12 +136,29 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {
         $cart = &Tygh::$app['session']['cart'];
+
+        // Find the cart item — try exact cart_id first, then fall back to
+        // searching by booking_id (handles cases where cart was rebuilt
+        // and the cart_id hash changed, e.g. after session expiry)
+        $target_cart_id = null;
         if (isset($cart['products'][$cart_id])) {
-            $cart['products'][$cart_id]['extra']['guest_names'] = $guest_list;
-            $cart['products'][$cart_id]['extra']['holder_name'] = $holder_name;
-            $cart['products'][$cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
-            $cart['products'][$cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
-            $cart['products'][$cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
+            $target_cart_id = $cart_id;
+        } else {
+            // Fallback: find cart item by novoton_booking_id
+            foreach ($cart['products'] ?? [] as $cid => $item) {
+                if (!empty($item['extra']['novoton_booking_id']) && (int)$item['extra']['novoton_booking_id'] === $booking_id) {
+                    $target_cart_id = $cid;
+                    break;
+                }
+            }
+        }
+
+        if ($target_cart_id !== null) {
+            $cart['products'][$target_cart_id]['extra']['guest_names'] = $guest_list;
+            $cart['products'][$target_cart_id]['extra']['holder_name'] = $holder_name;
+            $cart['products'][$target_cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
+            $cart['products'][$target_cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
+            $cart['products'][$target_cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
 
             // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()
             // reloads product data from the stored cart, which would overwrite the

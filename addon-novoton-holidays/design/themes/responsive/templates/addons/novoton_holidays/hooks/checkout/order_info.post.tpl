@@ -12,7 +12,7 @@
             </div>
             
             <div style="margin-bottom: 4px;">
-                <strong></strong> {$product.extra.check_in|date_format:"%d.%m.%Y"} - {$product.extra.check_out|date_format:"%d.%m.%Y"}
+                <strong></strong> {$product.extra.check_in|default:''|date_format:"%d.%m.%Y"} - {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"}
                 <span style="color: #666;">({$product.extra.nights} nights)</span>
             </div>
             

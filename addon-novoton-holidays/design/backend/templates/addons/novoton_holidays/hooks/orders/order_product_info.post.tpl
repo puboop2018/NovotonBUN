@@ -9,8 +9,8 @@
             <strong>Hotel:</strong> {$oi.extra.hotel_name|escape:'html'}{if $oi.extra.hotel_city} ({$oi.extra.hotel_city|escape:'html'}){/if}<br>
             {/if}
             
-            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} | 
-            <strong>Check-out:</strong> {$oi.extra.check_out|date_format:"%d.%m.%Y"} | 
+            <strong>Check-in:</strong> {$oi.extra.check_in|default:''|date_format:"%d.%m.%Y"} | 
+            <strong>Check-out:</strong> {$oi.extra.check_out|default:''|date_format:"%d.%m.%Y"} | 
             <strong>Nights:</strong> {$oi.extra.nights}<br>
             
             {if $oi.extra.package_name}
