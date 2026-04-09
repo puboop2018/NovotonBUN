@@ -1,6 +1,12 @@
 {* Novoton Holidays - Customer Order Details - Simple text display *}
 
 {if !empty($product.extra.novoton_booking)}
+{* Normalize rooms_data: may be JSON string or array *}
+{if $product.extra.rooms_data && is_string($product.extra.rooms_data)}
+    {$_nvt_rooms = $product.extra.rooms_data|json_decode:true}
+{else}
+    {$_nvt_rooms = $product.extra.rooms_data|default:[]}
+{/if}
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
 
     {if $product.extra.hotel_name}
@@ -15,15 +21,19 @@
     <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$product.extra.package_name}<br>
     {/if}
 
-    {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
+    {if $product.extra.num_rooms > 1 && $_nvt_rooms}
         <strong>{__("novoton_holidays.n_rooms", [$product.extra.num_rooms])}:</strong><br>
-        {foreach from=$product.extra.rooms_data item=room key=idx}
-            &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {__("novoton_holidays.n_adults", [$room.adults])}{if $room.children}, {__("novoton_holidays.n_children", [$room.children])} ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
+        {foreach from=$_nvt_rooms item=room key=idx}
+            {$room_display = $room.room_id|default:$room.room_name|default:''}
+            &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {if $room_display}{$room_display|novoton_format_room_type}{else}{$room.room_type_display|default:'Room'|escape:'html'}{/if} | {$room.board_id|default:$room.board_name|default:''|novoton_format_board} | {__("novoton_holidays.n_adults", [$room.adults|default:0])}{if $room.children}, {__("novoton_holidays.n_children", [$room.children])}{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if} | {$room.price|default:0} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
         {/foreach}
     {else}
-        <strong>{__("novoton_holidays.room_type")}:</strong> {$product.extra.room_type_display|default:$product.extra.room_name|default:$product.extra.room_id}<br>
-        <strong>{__("novoton_holidays.board")}:</strong> {$product.extra.board_display|default:$product.extra.board_name}<br>
-        <strong>{__("novoton_holidays.guests")}:</strong> {__("novoton_holidays.n_adults", [$product.extra.adults])}{if $product.extra.children}, {__("novoton_holidays.n_children", [$product.extra.children])} ({$product.extra.children_ages}){/if}<br>
+        {$room_id_raw = $product.extra.room_id|default:''}
+        {$room_display = $product.extra.room_type_display|default:''}
+        {$board_raw = $product.extra.board_id|default:''}
+        {if $room_id_raw || $room_display}<strong>{__("novoton_holidays.room_type")}:</strong> {if $room_id_raw}{$room_id_raw|novoton_format_room_type}{else}{$room_display|escape:'html'}{/if}<br>{/if}
+        {if $board_raw}<strong>{__("novoton_holidays.board")}:</strong> {$board_raw|novoton_format_board}<br>{/if}
+        <strong>{__("novoton_holidays.guests")}:</strong> {__("novoton_holidays.n_adults", [$product.extra.adults|default:0])}{if $product.extra.children}, {__("novoton_holidays.n_children", [$product.extra.children])}{if $product.extra.children_ages} ({$product.extra.children_ages}){/if}{/if}<br>
     {/if}
 
     {* Guest Names *}

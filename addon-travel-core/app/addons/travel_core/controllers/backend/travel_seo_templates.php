@@ -2,24 +2,37 @@
 /**
  * Travel SEO Templates — Admin page for managing SEO templates across all travel addons.
  *
- * Provides a unified interface with placeholder/modifier reference sidebar,
- * similar to CS-Cart's native SEO Templates page.
+ * Settings are declared in each provider addon's addon.xml under the seo_templates
+ * section. This controller uses CS-Cart's native Settings API for reads and writes:
+ *   - Read:  Registry::get('addons.{addon_id}')
+ *   - Write: Settings::instance()->updateValue($key, $value, $addon_id)
+ *
+ * No raw SQL, no self-bootstrap — CS-Cart handles DB rows and cache automatically.
+ *
+ * @package TravelCore
+ * @since   1.0.0
  */
 
 declare(strict_types=1);
 
 use Tygh\Registry;
+use Tygh\Settings;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
- * Read current SEO template values for an addon, with sensible defaults.
+ * Read current SEO template values for an addon from the Registry.
+ *
+ * Settings are declared in addon.xml, so CS-Cart creates the DB rows on install
+ * and loads them into the Registry at boot. Registry::get() is an in-memory
+ * read — zero SQL queries per page load.
  */
 function _travel_seo_read_settings(string $addonName): array
 {
-    // Read from CS-Cart's settings registry (authoritative after Settings API writes)
     $addonSettings = Registry::get('addons.' . $addonName) ?: [];
+
+    // Extract only seo_* keys
     $values = [];
     foreach ($addonSettings as $key => $val) {
         if (str_starts_with($key, 'seo_')) {
@@ -27,7 +40,7 @@ function _travel_seo_read_settings(string $addonName): array
         }
     }
 
-    // Defaults per addon — ensures textareas always have a value
+    // Defaults — used only if a setting has no value yet (e.g. fresh install)
     $defaults = [
         'novoton_holidays' => [
             'seo_product_name'          => '{{name}}',
@@ -63,8 +76,7 @@ function _travel_seo_read_settings(string $addonName): array
 
     $addonDefaults = $defaults[$addonName] ?? [];
     foreach ($addonDefaults as $key => $default) {
-        if (!isset($values[$key])) {
-            // Key not in DB at all — use default
+        if (!isset($values[$key]) || $values[$key] === '') {
             $values[$key] = $default;
         }
     }
@@ -73,110 +85,13 @@ function _travel_seo_read_settings(string $addonName): array
 }
 
 /**
- * Ensure seo_* setting rows exist in the DB for the given addon.
+ * Save SEO template values for a provider addon using the Settings API.
  *
- * The addon.xml files only define a seo_templates_redirect_info item — the
- * actual seo_product_name, seo_page_title, etc. are NOT in addon.xml.
- * Settings::instance()->updateValue() silently does nothing if the setting
- * row doesn't exist, so we must create them on first use.
- *
- * This runs once per request (static guard) and only INSERTs missing rows.
- */
-function _travel_seo_ensure_settings_exist(string $addonName): void
-{
-    static $ensured = [];
-    if (isset($ensured[$addonName])) {
-        return;
-    }
-    $ensured[$addonName] = true;
-
-    // Find the seo_templates section under this addon
-    $parentId = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
-        $addonName
-    );
-    if ($parentId <= 0) {
-        return;
-    }
-
-    $sectionId = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = 'seo_templates' AND parent_id = ?i",
-        $parentId
-    );
-
-    // Create section if missing (addon upgraded without reinstall)
-    if ($sectionId <= 0) {
-        db_query("INSERT INTO ?:settings_sections ?e", [
-            'name'         => 'seo_templates',
-            'parent_id'    => $parentId,
-            'edition_type' => 'ROOT',
-            'type'         => 'TAB',
-            'position'     => 200,
-            'is_optional'  => 'N',
-        ]);
-        $sectionId = (int) db_get_field("SELECT LAST_INSERT_ID()");
-    }
-
-    if ($sectionId <= 0) {
-        return;
-    }
-
-    // Setting definitions: name => type
-    $requiredSettings = [
-        'seo_product_name'          => 'I',
-        'seo_page_title'            => 'I',
-        'seo_meta_description'      => 'T',
-        'seo_meta_keywords'         => 'I',
-        'seo_name_slug'             => 'I',
-        'seo_full_description'      => 'T',
-        'seo_overwrite_mode'        => 'S',
-        'seo_field_product_name'    => 'C',
-        'seo_field_page_title'      => 'C',
-        'seo_field_meta_description'=> 'C',
-        'seo_field_meta_keywords'   => 'C',
-        'seo_field_name_slug'       => 'C',
-        'seo_field_full_description'=> 'C',
-    ];
-
-    // Check which already exist
-    $existing = db_get_fields(
-        "SELECT name FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
-        $sectionId, array_keys($requiredSettings)
-    );
-    $existingSet = array_flip($existing ?: []);
-
-    // INSERT only missing rows
-    foreach ($requiredSettings as $name => $type) {
-        if (!isset($existingSet[$name])) {
-            db_query("INSERT INTO ?:settings_objects ?e", [
-                'name'           => $name,
-                'section_id'     => $sectionId,
-                'section_tab_id' => 0,
-                'type'           => $type,
-                'value'          => '',
-                'edition_type'   => 'ROOT',
-                'handler'        => '',
-                'parent_id'      => 0,
-                'is_global'      => 'N',
-                'position'       => 0,
-            ]);
-        }
-    }
-}
-
-/**
- * Save SEO template values for an addon.
- *
- * Uses direct SQL because Settings::instance()->updateValue() cannot find
- * settings that were created via raw SQL INSERT (it uses its own internal
- * registry keyed by addon.xml definitions). Since seo_* settings are NOT
- * in addon.xml, we must manage them directly.
- *
- * Flow: ensure rows exist (INSERT if missing) → UPDATE values → clear cache.
+ * Settings::instance()->updateValue() handles the DB write AND cache
+ * invalidation in one call. Works because settings are declared in addon.xml.
  */
 function _travel_seo_save_settings(string $addonName, array $values): int
 {
-    // Allowed keys — only these are persisted
     $allowedKeys = [
         'seo_product_name', 'seo_page_title', 'seo_meta_description',
         'seo_meta_keywords', 'seo_name_slug', 'seo_full_description',
@@ -190,45 +105,14 @@ function _travel_seo_save_settings(string $addonName, array $values): int
         return 0;
     }
 
-    // Ensure setting rows exist in DB (creates section + rows if missing)
-    _travel_seo_ensure_settings_exist($addonName);
-
-    // Get the section_id so we can target the correct rows
-    $parentId = (int) db_get_field(
-        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
-        $addonName
-    );
-    $sectionId = ($parentId > 0)
-        ? (int) db_get_field(
-            "SELECT section_id FROM ?:settings_sections WHERE name = 'seo_templates' AND parent_id = ?i",
-            $parentId
-        )
-        : 0;
-
-    if ($sectionId <= 0) {
-        return 0;
-    }
-
-    // Fetch object_ids for all settings in one query
-    $existing = db_get_hash_single_array(
-        "SELECT name, object_id FROM ?:settings_objects WHERE section_id = ?i AND name IN (?a)",
-        ['name', 'object_id'],
-        $sectionId, array_keys($values)
-    );
-
+    $settings = Settings::instance();
     $saved = 0;
+
     foreach ($values as $key => $value) {
         $value = trim((string) $value);
-        if (!empty($existing[$key])) {
-            db_query("UPDATE ?:settings_objects SET value = ?s WHERE object_id = ?i",
-                $value, (int) $existing[$key]);
-            $saved++;
-        }
+        $settings->updateValue($key, $value, $addonName);
+        $saved++;
     }
-
-    // Clear settings cache so changes appear immediately
-    Registry::del('addons.' . $addonName);
-    Registry::del('settings');
 
     return $saved;
 }
@@ -309,12 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'save') {
         $totalSaved = 0;
 
-        // Save Novoton templates
         if (!empty($_REQUEST['novoton_holidays'])) {
             $totalSaved += _travel_seo_save_settings('novoton_holidays', $_REQUEST['novoton_holidays']);
         }
 
-        // Save Sphinx templates
         if (!empty($_REQUEST['sphinx_holidays'])) {
             $totalSaved += _travel_seo_save_settings('sphinx_holidays', $_REQUEST['sphinx_holidays']);
         }
@@ -352,15 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ============================================================================
 
 if ($mode === 'manage' || empty($mode)) {
-    // One-time fix: language variable contained raw <title> which broke page rendering.
-    // Update cached DB values that still have unescaped HTML tags.
-    db_query(
-        "UPDATE ?:language_values SET value = REPLACE(value, '<title>', '&lt;title&gt;') WHERE name = 'travel_core.seo_page_title_desc' AND value LIKE '%<title>%'"
-    );
-
     $view = Tygh::$app['view'];
 
-    // Detect which addons are installed
     $addons = [];
 
     $novotonActive = Registry::get('addons.novoton_holidays.status') === 'A';
@@ -384,7 +259,5 @@ if ($mode === 'manage' || empty($mode)) {
 
     $view->assign('seo_addons', $addons);
     $view->assign('seo_modifiers', _travel_seo_modifiers());
-
-    // Default tab: first addon
     $view->assign('active_tab', !empty($_REQUEST['tab']) ? $_REQUEST['tab'] : (key($addons) ?: ''));
 }

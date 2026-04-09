@@ -124,7 +124,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
     
     // Route through repository to sync travel_bookings
-    _nvt_booking_repo()->update($booking_id, [
+    $dbUpdateSuccess = _nvt_booking_repo()->update($booking_id, [
         'guest_name' => $guest_list,
         'holder_name' => $holder_name,
         'guest_email' => $contact['email'] ?? '',
@@ -132,6 +132,13 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
         'api_request' => json_encode($api_request, JSON_UNESCAPED_UNICODE),
     ]);
+
+    if (!$dbUpdateSuccess) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.booking_update_failed', [
+            '[default]' => 'Could not save guest details. Please try again.',
+        ]));
+        return [CONTROLLER_STATUS_REDIRECT, "novoton_booking.edit_booking?booking_id={$booking_id}&cart_id={$cart_id}"];
+    }
 
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {

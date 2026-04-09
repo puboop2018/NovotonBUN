@@ -217,10 +217,61 @@
             </section>
             <section id="seo_templates">
                 <items>
-                    <item id="seo_templates_redirect_info">
-                        <type>info</type>
-                        <default_value>SEO templates are managed centrally via Travel Core → SEO Templates page (admin.php?dispatch=travel_seo_templates.manage).</default_value>
-                        <variants/>
+                    <item id="seo_overwrite_mode">
+                        <type>selectbox</type>
+                        <default_value>override_all</default_value>
+                        <variants>
+                            <item id="override_all"></item>
+                            <item id="fill_if_empty"></item>
+                        </variants>
+                    </item>
+                    <item id="seo_product_name">
+                        <type>input</type>
+                        <default_value><![CDATA[{{name}}]]></default_value>
+                    </item>
+                    <item id="seo_page_title">
+                        <type>input</type>
+                        <default_value><![CDATA[{{name}} {{classification}}* - {{city}}, {{country}}]]></default_value>
+                    </item>
+                    <item id="seo_meta_description">
+                        <type>textarea</type>
+                        <default_value><![CDATA[Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.]]></default_value>
+                    </item>
+                    <item id="seo_meta_keywords">
+                        <type>input</type>
+                        <default_value><![CDATA[{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star]]></default_value>
+                    </item>
+                    <item id="seo_name_slug">
+                        <type>input</type>
+                        <default_value><![CDATA[{{name}}-{{city}}-{{country}}]]></default_value>
+                    </item>
+                    <item id="seo_full_description">
+                        <type>textarea</type>
+                        <default_value></default_value>
+                    </item>
+                    <item id="seo_field_product_name">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                    </item>
+                    <item id="seo_field_page_title">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                    </item>
+                    <item id="seo_field_meta_description">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                    </item>
+                    <item id="seo_field_meta_keywords">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                    </item>
+                    <item id="seo_field_name_slug">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                    </item>
+                    <item id="seo_field_full_description">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
                     </item>
                 </items>
             </section>

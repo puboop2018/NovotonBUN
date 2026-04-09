@@ -666,7 +666,13 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
  */
 function fn_sphinx_holidays_get_product_tabs_post($product_id, &$tabs): void
 {
-    $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+    // Guard: skip during addon uninstall or if products table is being dropped
+    try {
+        $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+    } catch (\Throwable $e) {
+        return;
+    }
+
     if (_sphinx_extract_hotel_id($code) !== '') {
         foreach ($tabs as $key => $tab) {
             if (($tab['addon'] ?? '') === 'novoton_holidays') {

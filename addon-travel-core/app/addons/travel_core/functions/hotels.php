@@ -15,7 +15,14 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Render the React booking engine mount-point HTML entirely in PHP.
  *
  * This replaces $view->fetch('booking_engine.tpl') and Smarty {include} for
- * search result pages. The booking engine is a stateless "empty shell" — just
+ * search result pages. The Smarty template (booking_engine.tpl) is still used
+ * for product detail pages and homepage blocks.
+ *
+ * IMPORTANT: If you add data-attributes, colors, or translations here,
+ * also update design/themes/responsive/templates/addons/travel_core/blocks/booking_engine.tpl
+ * to keep both implementations in sync.
+ *
+ * The booking engine is a stateless "empty shell" — just
  * a <div> with data-* attributes, a skeleton loader, and two <script> tags.
  * Building it in PHP avoids Smarty 5's scope chain traversal that causes
  * 256MB OOM (Data.php:265) when parent scope contains large result arrays.
@@ -135,10 +142,15 @@ function fn_travel_core_render_booking_engine(array $params = []): string
         );
     }
 
+    // Defense-in-depth: escape JSON strings for safe HTML attribute embedding.
+    // Prevents attribute injection if admin-controlled values ever contain quotes.
+    $colorsAttr = htmlspecialchars($colors, ENT_QUOTES, 'UTF-8');
+    $translationsAttr = htmlspecialchars($translationsJson, ENT_QUOTES, 'UTF-8');
+
     return <<<HTML
 <div id="travel-booking-root"
      data-travel-booking
-     data-colors='{$colors}'
+     data-colors='{$colorsAttr}'
      data-search-dispatch="{$searchDispatch}"
      data-provider="{$provider}"
      data-hotel-id="{$hotelId}"
@@ -148,7 +160,7 @@ function fn_travel_core_render_booking_engine(array $params = []): string
      data-lang="{$lang}"
      {$searchAttrs}
      {$calAttrs}
-     data-translations='{$translationsJson}'>
+     data-translations='{$translationsAttr}'>
     <div class="travel-loading-state">
         <div class="nvt-skeleton-row">
             <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>

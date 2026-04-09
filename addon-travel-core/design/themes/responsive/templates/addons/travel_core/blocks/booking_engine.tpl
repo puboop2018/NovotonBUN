@@ -1,6 +1,11 @@
 {*
  * Travel Core - Shared Booking Engine React Mount Point
  *
+ * NOTE: Search pages use fn_travel_core_render_booking_engine() in PHP instead
+ * of this template (to avoid Smarty 5 OOM). If you change data-attributes,
+ * colors, or translations here, also update the PHP function in:
+ *   app/addons/travel_core/functions/hotels.php
+ *
  * Usage from provider addon:
  *   {$travel_provider = 'sphinx'}
  *   {$travel_search_dispatch = 'sphinx_booking.search'}
