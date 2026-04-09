@@ -116,13 +116,16 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
         return;
     }
 
-    // Clean up bookings
-    $bookingRepo = Container::getInstance()->bookingRepository();
-    $bookingRepo->deleteByProductId($product_id);
+    // Guard: during addon uninstall, Container or DB tables may not exist
+    try {
+        $bookingRepo = Container::getInstance()->bookingRepository();
+        $bookingRepo->deleteByProductId($product_id);
 
-    // Unlink hotel record (the hotel stays, only the CS-Cart link is removed)
-    $hotelRepo = Container::getInstance()->hotelRepository();
-    $hotelRepo->unlinkProduct($product_id);
+        $hotelRepo = Container::getInstance()->hotelRepository();
+        $hotelRepo->unlinkProduct($product_id);
+    } catch (\Throwable $e) {
+        // Silently fail — tables are being dropped during uninstall anyway
+    }
 }
 
 // ============================================================================
