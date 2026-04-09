@@ -64,24 +64,24 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         $hotel_name = 'Hotel #' . $booking_record['hotel_id'];
     }
     
-    // Build booking data for form - prefer cart data over database
+    // Build booking data for form
     $rooms_data = [];
     $guests_data = [];
-    
-    // Try cart first, then database
+
+    // Rooms: try cart first (may have user selections), then database
     if ($cart_item && !empty($cart_item['extra']['rooms_data'])) {
         $rooms_data = JsonDecoder::decode($cart_item['extra']['rooms_data'], 'edit_booking:cart_rooms_data');
     }
     if (empty($rooms_data)) {
         $rooms_data = JsonDecoder::decode($booking_record['rooms_data'] ?? '', 'edit_booking:db_rooms_data');
     }
-    
-    if ($cart_item && !empty($cart_item['extra']['guests_data'])) {
-        $guests_data = (new GuestDataNormalizer())->normalize($cart_item['extra']['guests_data']);
-    }
-    if (empty($guests_data)) {
-        $guests_data = (new GuestDataNormalizer())->normalize($booking_record['guests_data'] ?? '');
-    }
+
+    // Guests: ALWAYS read from DB — it's the single source of truth.
+    // The cart copy is unreliable: fn_calculate_cart_content() can overwrite it,
+    // session expiry loses it, and cart_id hash changes can make it stale.
+    // update_booking.php writes to DB first (line 127), so DB always has the
+    // latest guest data regardless of cart state.
+    $guests_data = (new GuestDataNormalizer())->normalize($booking_record['guests_data'] ?? '');
     
     // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
     foreach ($guests_data as $key => &$guest) {
