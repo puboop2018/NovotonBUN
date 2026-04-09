@@ -115,9 +115,13 @@ try {
         $searchResponse = $api->searchHotels($searchParams);
 
         if (empty($searchResponse['search_id'])) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx searchHotels returned no search_id',
+                'search_params' => $searchParams,
+                'api_response' => is_array($searchResponse) ? json_encode($searchResponse) : (string)$searchResponse,
+            ]);
             fn_set_notification('E', __('error'),
                 __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
-            $view->assign('sphinx_search_results', []);
             return;
         }
 
