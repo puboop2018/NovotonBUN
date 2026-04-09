@@ -27,11 +27,6 @@ $tabs = [
         'text'     => __('travel_core.appearance_settings'),
         'position' => 250,
     ],
-    'travel_seo_templates' => [
-        'href'     => 'travel_seo_templates.manage',
-        'text'     => __('travel_core.admin_menu_seo_templates'),
-        'position' => 270,
-    ],
     'travel_tools' => [
         'href'     => 'travel_tools.manage',
         'text'     => __('travel_core.tools_and_cron'),
@@ -46,7 +41,6 @@ $pages = [
     'travel_feature_mappings.manage',
     'travel_feature_mappings.edit',
     'travel_booking_styles.manage',
-    'travel_seo_templates.manage',
     'travel_tools.manage',
 ];
 

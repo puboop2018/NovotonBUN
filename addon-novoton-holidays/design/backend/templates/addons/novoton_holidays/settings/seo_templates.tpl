@@ -1,4 +1,4 @@
-{** Sphinx Holidays - Enhanced SEO Templates settings section **}
+{** Novoton Holidays - Enhanced SEO Templates settings section **}
 {** Adds: clickable placeholder sidebar, modifiers reference, click-to-insert JS, bulk-apply button **}
 
 <style>
@@ -107,7 +107,7 @@
 }
 </style>
 
-<div class="seo-tpl-wrapper" id="seo_tpl_sphinx">
+<div class="seo-tpl-wrapper" id="seo_tpl_novoton">
 
     {* ── Sidebar: Placeholders + Modifiers + Tips ── *}
     <div class="seo-tpl-sidebar">
@@ -115,23 +115,18 @@
         {* Placeholders *}
         <div class="well well-small" style="background: #f8f9fa;">
             <h5>{__("travel_core.seo_placeholders_title")}</h5>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}name{rdelim}{rdelim}">name</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_name")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}classification{rdelim}{rdelim}">classification</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_classification")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}city{rdelim}{rdelim}">city</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_city")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}country{rdelim}{rdelim}">country</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_country")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}region{rdelim}{rdelim}">region</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_region")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}property_type{rdelim}{rdelim}">property_type</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_property_type")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}facilities{rdelim}{rdelim}">facilities</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_facilities")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}boards{rdelim}{rdelim}">boards</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_boards")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}rating{rdelim}{rdelim}">rating</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_rating")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}description{rdelim}{rdelim}">description</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_description")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}address{rdelim}{rdelim}">address</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_address")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}phone{rdelim}{rdelim}">phone</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_phone")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}email{rdelim}{rdelim}">email</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_email")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}website{rdelim}{rdelim}">website</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_website")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}image_url{rdelim}{rdelim}">image_url</span> <span class="seo-ph-desc">- {__("sphinx_holidays.ph_image_url")}</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}stars_emoji{rdelim}{rdelim}">stars_emoji</span> <span class="seo-ph-desc">- Stars (e.g. ★★★★)</span></div>
-            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}year{rdelim}{rdelim}">year</span> <span class="seo-ph-desc">- Current year</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}name{rdelim}{rdelim}">name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_name")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}raw_name{rdelim}{rdelim}">raw_name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_raw_name")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}city{rdelim}{rdelim}">city</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_city")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}country{rdelim}{rdelim}">country</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_country")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}region{rdelim}{rdelim}">region</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_region")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}star_rating{rdelim}{rdelim}">star_rating</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_star_rating")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}stars_emoji{rdelim}{rdelim}">stars_emoji</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_stars_emoji")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}hotel_type{rdelim}{rdelim}">hotel_type</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_hotel_type")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}property_type{rdelim}{rdelim}">property_type</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_property_type")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}year{rdelim}{rdelim}">year</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_year")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}description{rdelim}{rdelim}">description</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_description")}</span></div>
+            <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}facilities{rdelim}{rdelim}">facilities</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_facilities")}</span></div>
             <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}latitude{rdelim}{rdelim}">latitude</span> / <span class="seo-ph-badge" data-insert="{ldelim}{ldelim}longitude{rdelim}{rdelim}">longitude</span> <span class="seo-ph-desc">- GPS</span></div>
         </div>
 
@@ -169,9 +164,9 @@
     </div>
 </div>
 
-{* ── Bulk Apply bar (rendered before the auto-generated addon settings fields) ── *}
+{* ── Bulk Apply bar ── *}
 <div class="seo-bulk-bar">
-    <form action="{"sphinx_holidays.bulk_seo_apply"|fn_url}" method="post" style="display: inline; margin: 0;">
+    <form action="{"novoton_admin.bulk_seo_apply"|fn_url}" method="post" style="display: inline; margin: 0;">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         <button type="submit" class="btn btn-warning cm-comet"
                 onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|escape:"javascript"}');">
@@ -185,16 +180,14 @@
 <script>
 {literal}
 (function() {
-    var wrapper = document.getElementById('seo_tpl_sphinx');
+    var wrapper = document.getElementById('seo_tpl_novoton');
     if (!wrapper) return;
 
-    // Find the settings section that contains the SEO fields
     var section = wrapper.closest('.addon-settings-seo_templates') || wrapper.parentNode;
 
     var lastField = null;
     var lastPos = 0;
 
-    // Track focus on input/textarea within the settings section
     section.addEventListener('focus', function(e) {
         if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) {
             lastField = e.target;
@@ -218,7 +211,6 @@
 
     function insertAtCursor(text) {
         if (!lastField) {
-            // Default to first text input/textarea in section
             lastField = section.querySelector('input[type="text"], textarea');
             if (!lastField) return;
             lastPos = lastField.value.length;
@@ -236,13 +228,11 @@
         lastField.selectionEnd = newPos;
         lastPos = newPos;
 
-        // Flash green to confirm
         lastField.style.transition = 'background-color 0.15s';
         lastField.style.backgroundColor = '#d4edda';
         setTimeout(function() { lastField.style.backgroundColor = ''; }, 300);
     }
 
-    // Placeholder badges: click to insert {{placeholder}}
     document.addEventListener('click', function(e) {
         var badge = e.target.closest('.seo-ph-badge');
         if (badge && wrapper.contains(badge)) {
@@ -251,7 +241,6 @@
             return;
         }
 
-        // Modifier badges: append |modifier to nearest {{placeholder}} before cursor
         var mod = e.target.closest('.seo-mod-badge');
         if (mod && wrapper.contains(mod)) {
             e.preventDefault();

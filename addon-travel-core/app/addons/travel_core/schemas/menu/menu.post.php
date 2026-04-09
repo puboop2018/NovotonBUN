@@ -32,12 +32,6 @@ $schema['central']['travel_core'] = [
             'position' => 250,
             'title' => __('travel_core.appearance_settings'),
         ],
-        'travel_seo_templates' => [
-            'attrs' => ['class' => 'is-addon'],
-            'href' => 'travel_seo_templates.manage',
-            'position' => 270,
-            'title' => __('travel_core.admin_menu_seo_templates'),
-        ],
         'travel_tools' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'travel_tools.manage',

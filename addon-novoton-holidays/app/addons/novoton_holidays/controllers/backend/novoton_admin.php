@@ -16,6 +16,19 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
+// Bulk-apply SEO templates to all linked products
+if ($mode === 'bulk_seo_apply') {
+    if (function_exists('set_time_limit')) { set_time_limit(0); }
+    fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
+    $result = fn_travel_core_seo_bulk_apply('novoton_holidays');
+    fn_set_progress('finish');
+    fn_set_notification('N', __('notice'),
+        str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+            __('travel_core.seo_bulk_apply_done'))
+    );
+    return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_sub_section=novoton_holidays_seo_templates&selected_section=settings'];
+}
+
 // Update prices manually
 if ($mode === 'update_prices') {
     

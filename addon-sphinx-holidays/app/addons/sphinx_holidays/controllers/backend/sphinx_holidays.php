@@ -193,6 +193,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
 
+    if ($mode === 'bulk_seo_apply') {
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
+        fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
+        $result = fn_travel_core_seo_bulk_apply('sphinx_holidays');
+        fn_set_progress('finish');
+        fn_set_notification('N', __('notice'),
+            str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                __('travel_core.seo_bulk_apply_done'))
+        );
+        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=sphinx_holidays&selected_sub_section=sphinx_holidays_seo_templates&selected_section=settings'];
+    }
+
     if ($mode === 'bulk_update_hotels') {
         $hotelIds = $_REQUEST['hotel_ids'] ?? [];
         $status = $_REQUEST['bulk_status'] ?? '';

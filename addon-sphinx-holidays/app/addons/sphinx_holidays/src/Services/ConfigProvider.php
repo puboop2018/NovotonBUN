@@ -325,43 +325,4 @@ class ConfigProvider implements ConfigProviderInterface
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // SEO TEMPLATES
-    // ═══════════════════════════════════════════════════════════════════
-
-    public static function getSeoProductName(): string
-    {
-        return (string) self::getSetting('seo_product_name', '{{name}}');
-    }
-
-    public static function getSeoPageTitle(): string
-    {
-        return (string) self::getSetting('seo_page_title', '{{name}} {{classification}}* - {{city}}, {{country}}');
-    }
-
-    public static function getSeoMetaDescription(): string
-    {
-        return (string) self::getSetting('seo_meta_description', 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}. View rates and availability.');
-    }
-
-    public static function getSeoMetaKeywords(): string
-    {
-        return (string) self::getSetting('seo_meta_keywords', '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star');
-    }
-
-    public static function getSeoNameSlug(): string
-    {
-        return (string) self::getSetting('seo_name_slug', '{{name}}-{{city}}-{{country}}');
-    }
-
-    public static function getSeoFullDescription(): string
-    {
-        return (string) self::getSetting('seo_full_description', '');
-    }
-
-    private static function getSetting(string $key, mixed $default = ''): mixed
-    {
-        $value = Registry::get('addons.' . self::ADDON_ID . '.' . $key);
-        return $value !== null ? $value : $default;
-    }
 }
