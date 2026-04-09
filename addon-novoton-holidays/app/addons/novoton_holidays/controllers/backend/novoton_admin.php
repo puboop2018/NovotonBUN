@@ -20,7 +20,23 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 if ($mode === 'bulk_seo_apply') {
     if (function_exists('set_time_limit')) { set_time_limit(0); }
     fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
-    $result = fn_travel_core_seo_bulk_apply('novoton_holidays');
+
+    $fetcher = static fn(int $offset, int $batch): array => db_get_array(
+        "SELECT hotel_id, product_id, hotel_name, city, country, region,
+                star_rating, hotel_type, property_type, latitude, longitude
+         FROM ?:novoton_hotels
+         WHERE product_id IS NOT NULL AND product_id > 0
+         LIMIT ?i, ?i",
+        $offset, $batch
+    );
+
+    $builder = static fn(array $hotel): array =>
+        \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(
+            $hotel, $hotel['hotel_name'] ?? ''
+        );
+
+    $result = fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder);
+
     fn_set_progress('finish');
     fn_set_notification('N', __('notice'),
         str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],

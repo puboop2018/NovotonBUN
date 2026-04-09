@@ -196,7 +196,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'bulk_seo_apply') {
         if (function_exists('set_time_limit')) { set_time_limit(0); }
         fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
-        $result = fn_travel_core_seo_bulk_apply('sphinx_holidays');
+
+        $fetcher = static fn(int $offset, int $batch): array => db_get_array(
+            "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
+                    h.description, h.rating, h.facilities_json, h.boards_json,
+                    h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
+                    h.destination_name, h.country_name, h.region_name
+             FROM ?:sphinx_hotels h
+             WHERE h.product_id IS NOT NULL AND h.product_id > 0
+               AND h.sync_status = 'active'
+             LIMIT ?i, ?i",
+            $offset, $batch
+        );
+
+        $builder = static fn(array $hotel): array =>
+            \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
+                'city'    => $hotel['destination_name'] ?? '',
+                'country' => $hotel['country_name'] ?? '',
+                'region'  => $hotel['region_name'] ?? '',
+            ]);
+
+        $result = fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder);
+
         fn_set_progress('finish');
         fn_set_notification('N', __('notice'),
             str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],

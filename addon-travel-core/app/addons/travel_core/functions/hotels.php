@@ -584,10 +584,15 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
  * Respects overwrite mode and field toggles. Uses fn_set_progress() for
  * CS-Cart's native progress bar in the admin panel.
  *
- * @param string $addonName 'novoton_holidays' or 'sphinx_holidays'
+ * Provider addons supply their own data-fetching and placeholder-building
+ * callables, keeping travel_core free of addon-specific SQL and class refs.
+ *
+ * @param string   $addonName          'novoton_holidays' or 'sphinx_holidays'
+ * @param callable $hotelFetcher       fn(int $offset, int $batchSize): array — returns hotel rows
+ * @param callable $placeholderBuilder fn(array $hotel): array — returns placeholder map
  * @return array{updated: int, skipped: int, total: int}
  */
-function fn_travel_core_seo_bulk_apply(string $addonName): array
+function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher, callable $placeholderBuilder): array
 {
     $updated = 0;
     $skipped = 0;
@@ -596,30 +601,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName): array
     $offset = 0;
 
     while (true) {
-        if ($addonName === 'novoton_holidays') {
-            $hotels = db_get_array(
-                "SELECT hotel_id, product_id, hotel_name, city, country, region,
-                        star_rating, hotel_type, property_type, latitude, longitude
-                 FROM ?:novoton_hotels
-                 WHERE product_id IS NOT NULL AND product_id > 0
-                 LIMIT ?i, ?i",
-                $offset, $batchSize
-            );
-        } elseif ($addonName === 'sphinx_holidays') {
-            $hotels = db_get_array(
-                "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
-                        h.description, h.rating, h.facilities_json, h.boards_json,
-                        h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
-                        h.destination_name, h.country_name, h.region_name
-                 FROM ?:sphinx_hotels h
-                 WHERE h.product_id IS NOT NULL AND h.product_id > 0
-                   AND h.sync_status = 'active'
-                 LIMIT ?i, ?i",
-                $offset, $batchSize
-            );
-        } else {
-            break;
-        }
+        $hotels = $hotelFetcher($offset, $batchSize);
 
         if (empty($hotels)) {
             break;
@@ -628,18 +610,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName): array
         foreach ($hotels as $hotel) {
             $total++;
             $productId = (int) $hotel['product_id'];
-
-            // Build placeholders per addon
-            if ($addonName === 'novoton_holidays') {
-                $displayName = $hotel['hotel_name'] ?? '';
-                $placeholders = \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders($hotel, $displayName);
-            } else {
-                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
-                    'city'    => $hotel['destination_name'] ?? '',
-                    'country' => $hotel['country_name'] ?? '',
-                    'region'  => $hotel['region_name'] ?? '',
-                ]);
-            }
+            $placeholders = $placeholderBuilder($hotel);
 
             $seoFields = fn_travel_core_apply_seo_fields($addonName, $placeholders, $productId, $hotel['hotel_id']);
 
