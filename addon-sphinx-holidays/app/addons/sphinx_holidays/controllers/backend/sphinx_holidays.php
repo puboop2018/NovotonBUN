@@ -105,6 +105,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
     }
 
+    if ($mode === 'relink_products') {
+        if (!ConfigProvider::isConfigured()) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+        }
+
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
+
+        $api = Container::getApi();
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
+        $service = new HotelSyncService($api, $hotelRepo, $destRepo);
+
+        $result = $service->relinkExistingProducts();
+
+        if ($result['linked'] > 0 || $result['skipped'] > 0) {
+            fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
+                '[linked]'    => $result['linked'],
+                '[skipped]'   => $result['skipped'],
+                '[not_found]' => $result['not_found'],
+                '[errors]'    => $result['errors'],
+                '[total]'     => $result['total'],
+            ]));
+        } elseif ($result['total'] === 0) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_spx_products'));
+        } else {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.relink_done', [
+                '[linked]'    => 0,
+                '[skipped]'   => $result['skipped'],
+                '[not_found]' => $result['not_found'],
+                '[errors]'    => $result['errors'],
+                '[total]'     => $result['total'],
+            ]));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+    }
+
     if ($mode === 'retry_skipped') {
         $hotelRepo = Container::getHotelRepository();
         $reset = $hotelRepo->resetSkipped();
@@ -450,6 +488,16 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('skipped_hotels', $skippedCount);
     Tygh::$app['view']->assign('selected_countries', $selectedCountries);
     Tygh::$app['view']->assign('is_configured', $isConfigured);
+    // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
+    $prefix = ConfigProvider::getProductCodePrefix();
+    $orphanedSpxCount = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:products p
+         LEFT JOIN ?:sphinx_hotels h ON h.product_id = p.product_id
+         WHERE p.product_code LIKE ?l AND h.hotel_id IS NULL",
+        $prefix . '%'
+    );
+    Tygh::$app['view']->assign('orphaned_spx_products', $orphanedSpxCount);
+
     Tygh::$app['view']->assign('sync_logs', $syncLogs);
 
     // Cron URLs for the dashboard
