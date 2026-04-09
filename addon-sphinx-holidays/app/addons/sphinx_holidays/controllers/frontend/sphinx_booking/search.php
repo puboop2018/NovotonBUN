@@ -30,16 +30,39 @@ try {
     $children_ages_str = trim($_REQUEST['children_ages'] ?? '');
     $rooms = max(1, (int)($_REQUEST['rooms'] ?? 1));
 
+    if (empty($check_out) && !empty($check_in)) {
+        $nights = max(1, (int)($_REQUEST['nights'] ?? 7));
+        $check_out = date('Y-m-d', strtotime($check_in . " + {$nights} days"));
+    }
+
+    // Build template params early — needed by booking engine AND error paths
+    $templateParams = [
+        'hotel_id' => $hotel_id,
+        'destination_id' => $destination_id,
+        'check_in' => $check_in,
+        'check_out' => $check_out,
+        'adults' => $adults,
+        'children' => $children,
+        'children_ages' => $children_ages_str,
+        'rooms' => $rooms,
+        'nights' => (strtotime($check_out ?: 'now') && strtotime($check_in ?: 'now'))
+            ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
+    ];
+
+    // Render booking engine FIRST — always needed (even on error/no-results)
+    $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
+        'provider'        => 'sphinx',
+        'search_dispatch' => 'sphinx_booking.search',
+        'mode'            => 'search',
+        'search_params'   => $templateParams,
+    ]));
+    $view->assign('sphinx_search_params', $templateParams);
+    $view->assign('sphinx_search_results', []);
+
     if (empty($check_in)) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.please_fill_required_fields', ['[default]' => 'Please fill in the required search fields.']));
-        $view->assign('sphinx_search_results', []);
         return;
-    }
-
-    if (empty($check_out)) {
-        $nights = max(1, (int)($_REQUEST['nights'] ?? 7));
-        $check_out = date('Y-m-d', strtotime($check_in . " + {$nights} days"));
     }
 
     $children_ages = [];
@@ -215,33 +238,9 @@ try {
         $slimResults[] = $slim;
     }
 
-    // Template display params (distinct from API $searchParams above)
-    $templateParams = [
-        'hotel_id' => $hotel_id,
-        'destination_id' => $destination_id,
-        'check_in' => $check_in,
-        'check_out' => $check_out,
-        'adults' => $adults,
-        'children' => $children,
-        'children_ages' => $children_ages_str,
-        'rooms' => $rooms,
-        'nights' => (strtotime($check_out) && strtotime($check_in)) ? (int)round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
-    ];
-
-    // Render booking engine as pure PHP string — zero Smarty involvement.
-    // fn_travel_core_render_booking_engine() builds the React mount HTML
-    // entirely in PHP, avoiding Smarty 5's scope chain traversal that
-    // causes 256MB OOM at Data.php:265.
-    $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
-        'provider'        => 'sphinx',
-        'search_dispatch' => 'sphinx_booking.search',
-        'mode'            => 'search',
-        'search_params'   => $templateParams,
-    ]));
-
+    // Assign results (overrides the empty default set earlier)
     $view->assign('sphinx_search_results', $slimResults);
     $view->assign('sphinx_search_id', $searchId);
-    $view->assign('sphinx_search_params', $templateParams);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

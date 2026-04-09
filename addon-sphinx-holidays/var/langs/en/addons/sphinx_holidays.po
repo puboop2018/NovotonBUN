@@ -20,6 +20,38 @@ msgctxt "Addons::description::sphinx_holidays"
 msgid "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
 msgstr "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
 
+msgctxt "Languages::sphinx_holidays.search_error"
+msgid "An error occurred while searching. Please try again later."
+msgstr "An error occurred while searching. Please try again later."
+
+msgctxt "Languages::sphinx_holidays.no_results"
+msgid "No hotels found for your search criteria. Please try different dates or destination."
+msgstr "No hotels found for your search criteria. Please try different dates or destination."
+
+msgctxt "Languages::sphinx_holidays.search_results"
+msgid "[count] results found"
+msgstr "[count] results found"
+
+msgctxt "Languages::sphinx_holidays.search_results_title"
+msgid "Hotel Search Results"
+msgstr "Hotel Search Results"
+
+msgctxt "Languages::sphinx_holidays.book_now"
+msgid "Book now"
+msgstr "Book now"
+
+msgctxt "Languages::sphinx_holidays.please_fill_required_fields"
+msgid "Please fill in the required search fields."
+msgstr "Please fill in the required search fields."
+
+msgctxt "Languages::sphinx_holidays.alternative_dates_title"
+msgid "Availability found on nearby dates:"
+msgstr "Availability found on nearby dates:"
+
+msgctxt "Languages::sphinx_holidays.results_found"
+msgid "results"
+msgstr "results"
+
 msgctxt "SettingsSections::sphinx_holidays::general"
 msgid "General Settings"
 msgstr "General Settings"

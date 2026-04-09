@@ -20,6 +20,38 @@ msgctxt "Addons::description::sphinx_holidays"
 msgid "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
 msgstr "Integrare API REST Sphinx pentru rezervări de hoteluri, pachete, circuite și experiențe. Oferă căutare, disponibilitate, prețuri, rezervări și sincronizare destinații prin platforma de turism Sphinx."
 
+msgctxt "Languages::sphinx_holidays.search_error"
+msgid "An error occurred while searching. Please try again later."
+msgstr "A apărut o eroare la căutare. Vă rugăm încercați din nou."
+
+msgctxt "Languages::sphinx_holidays.no_results"
+msgid "No hotels found for your search criteria. Please try different dates or destination."
+msgstr "Nu s-au găsit hoteluri pentru criteriile dvs. Încercați alte date sau altă destinație."
+
+msgctxt "Languages::sphinx_holidays.search_results"
+msgid "[count] results found"
+msgstr "[count] rezultate găsite"
+
+msgctxt "Languages::sphinx_holidays.search_results_title"
+msgid "Hotel Search Results"
+msgstr "Rezultate căutare hoteluri"
+
+msgctxt "Languages::sphinx_holidays.book_now"
+msgid "Book now"
+msgstr "Rezervă acum"
+
+msgctxt "Languages::sphinx_holidays.please_fill_required_fields"
+msgid "Please fill in the required search fields."
+msgstr "Vă rugăm completați câmpurile obligatorii."
+
+msgctxt "Languages::sphinx_holidays.alternative_dates_title"
+msgid "Availability found on nearby dates:"
+msgstr "Disponibilitate găsită pe date apropiate:"
+
+msgctxt "Languages::sphinx_holidays.results_found"
+msgid "results"
+msgstr "rezultate"
+
 msgctxt "SettingsSections::sphinx_holidays::general"
 msgid "General Settings"
 msgstr "Setări Generale"
