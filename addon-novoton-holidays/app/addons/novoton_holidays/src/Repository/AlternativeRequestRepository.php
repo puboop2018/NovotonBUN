@@ -140,4 +140,47 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
             $request_id
         );
     }
+
+    /**
+     * Count requests matching optional status/conditions.
+     *
+     * @param string $whereSql  Pre-built WHERE clause (e.g. "WHERE status = 'pending'")
+     * @param array  $params    Bound parameters for the WHERE clause
+     */
+    public function countFiltered(string $whereSql = '', array $params = []): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_alternative_requests {$whereSql}",
+            ...$params
+        );
+    }
+
+    /**
+     * Find requests with pagination and optional WHERE clause.
+     *
+     * @param string $whereSql  Pre-built WHERE clause
+     * @param array  $params    Bound parameters
+     * @param int    $limit
+     * @param int    $offset
+     */
+    public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array
+    {
+        return db_get_array(
+            "SELECT * FROM ?:novoton_alternative_requests {$whereSql} ORDER BY created_at DESC LIMIT ?i, ?i",
+            ...array_merge($params, [$offset, $limit])
+        );
+    }
+
+    /**
+     * Get status counts grouped by status.
+     *
+     * @return array<string, int>
+     */
+    public function getStatusCounts(): array
+    {
+        return db_get_hash_single_array(
+            "SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status",
+            ['status', 'cnt']
+        );
+    }
 }

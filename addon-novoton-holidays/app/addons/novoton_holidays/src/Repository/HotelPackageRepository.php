@@ -183,4 +183,65 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
             $hotelId
         );
     }
+
+    /**
+     * Get package names with priceinfo data for a hotel (for AJAX dropdown).
+     */
+    public function findPackageNamesWithPriceinfo(string $hotelId): array
+    {
+        return db_get_array(
+            "SELECT package_name FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
+             ORDER BY package_name",
+            $hotelId
+        );
+    }
+
+    /**
+     * Get the first package name for a hotel (alphabetical order).
+     */
+    public function getFirstPackageName(string $hotelId): ?string
+    {
+        $val = db_get_field(
+            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
+            $hotelId
+        );
+        return ($val !== false && $val !== '') ? (string) $val : null;
+    }
+
+    /**
+     * Get package_id and package_name pairs for a hotel.
+     */
+    public function getPackageIdNamePairs(string $hotelId): array
+    {
+        return db_get_array(
+            "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotelId
+        );
+    }
+
+    /**
+     * Get package listing data for hotel detail view.
+     */
+    public function findForHotelDetail(string $hotelId): array
+    {
+        return db_get_array(
+            "SELECT package_id, package_name, min_price, has_early_booking, synced_at
+             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
+            $hotelId
+        );
+    }
+
+    /**
+     * Insert or update a package by hotel_id + package_id (simple upsert via ON DUPLICATE KEY).
+     */
+    public function upsertByHotelAndPackage(string $hotelId, string $packageId, string $packageName): bool
+    {
+        return (bool) db_query(
+            "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+             VALUES (?s, ?s, ?s, NOW())
+             ON DUPLICATE KEY UPDATE package_name = ?s",
+            $hotelId, $packageId, $packageName, $packageName
+        );
+    }
 }

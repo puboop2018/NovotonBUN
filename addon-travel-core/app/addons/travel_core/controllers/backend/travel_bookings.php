@@ -22,8 +22,12 @@ use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+/** @var \Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface $bookingRepo */
+$bookingRepo = new TravelBookingRepository();
 
 if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
     return [CONTROLLER_STATUS_DENIED];
@@ -92,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'check_status') {
         $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
         if ($booking_id > 0) {
-            $booking = db_get_row("SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i", $booking_id);
+            $booking = $bookingRepo->getProviderInfo($booking_id);
             if ($booking) {
                 $providerInfo = TravelProviderRegistry::get($booking['provider']);
                 try {
@@ -204,21 +208,12 @@ if ($mode === 'manage') {
     $sortColumn = $sortColumnMap[$params['sort_by']] ?? 'tb.created_at';
     $sortOrder = $params['sort_order'] === 'asc' ? 'ASC' : 'DESC';
 
-    $total = (int)db_get_field(
-        "SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p",
-        $condition
-    );
-
     $limit = $params['items_per_page'];
     $offset = ($params['page'] - 1) * $limit;
 
-    $bookings = db_get_array(
-        "SELECT tb.* FROM ?:travel_bookings tb
-         WHERE 1 ?p
-         ORDER BY " . $sortColumn . " " . $sortOrder . "
-         LIMIT ?i, ?i",
-        $condition, $offset, $limit
-    );
+    $paginatedResult = $bookingRepo->getPaginated($condition, $sortColumn, $sortOrder, $offset, $limit);
+    $total = $paginatedResult['total'];
+    $bookings = $paginatedResult['items'];
 
     // Enrich each booking with provider-specific display data and actions
     foreach ($bookings as &$booking) {
@@ -254,10 +249,7 @@ if ($mode === 'manage') {
         return [CONTROLLER_STATUS_NO_PAGE];
     }
 
-    $booking = db_get_row(
-        "SELECT * FROM ?:travel_bookings WHERE booking_id = ?i",
-        $booking_id
-    );
+    $booking = $bookingRepo->getById($booking_id);
 
     if (empty($booking)) {
         return [CONTROLLER_STATUS_NO_PAGE];

@@ -21,4 +21,6 @@ interface FacilityRepositoryInterface
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array;
     public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array;
     public function updateType(int $facility_id, string $facility_type): bool;
+    public function updateTypeAndTranslation(int $facility_id, string $facility_type, ?string $name_ro = null): bool;
+    public function getLastSyncedAt(): ?string;
 }

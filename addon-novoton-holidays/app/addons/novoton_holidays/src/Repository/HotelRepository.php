@@ -456,4 +456,259 @@ class HotelRepository implements HotelRepositoryInterface
             $limit
         );
     }
+
+    /**
+     * Get all hotel IDs (no other columns).
+     *
+     * @return string[]
+     */
+    public function getAllIds(): array
+    {
+        return db_get_fields("SELECT hotel_id FROM ?:novoton_hotels");
+    }
+
+    /**
+     * Get hotels indexed by hotel_id for a given country.
+     *
+     * @return array<string, array> Keyed by hotel_id
+     */
+    public function findByCountryIndexed(string $country): array
+    {
+        return db_get_hash_array(
+            "SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+            'hotel_id',
+            $country
+        );
+    }
+
+    /**
+     * Find hotels by country with optional limit (listing columns only).
+     */
+    public function findByCountryWithLimit(string $country, int $limit = 0): array
+    {
+        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        return db_get_array(
+            "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name{$limit_clause}",
+            $country
+        );
+    }
+
+    /**
+     * Find hotels needing price update (have prices, stale check).
+     */
+    public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
+    {
+        return db_get_array(
+            "SELECT hotel_id, hotel_name, product_id
+             FROM ?:novoton_hotels
+             WHERE has_room_price = 'Y'
+               AND (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i HOUR))
+             ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
+             LIMIT ?i",
+            $staleHours,
+            $limit
+        );
+    }
+
+    /**
+     * Find hotels with linked products, ordered by stalest price check first.
+     */
+    public function findWithProductsSortedByStaleness(int $limit = 50): array
+    {
+        return db_get_array(
+            "SELECT hotel_id, hotel_name, product_id
+             FROM ?:novoton_hotels
+             WHERE product_id > 0
+             ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
+             LIMIT ?i",
+            $limit
+        );
+    }
+
+    /**
+     * Find hotels with active prices for CSV export.
+     */
+    public function findWithPricesForExport(string $country): array
+    {
+        return db_get_array(
+            "SELECT hotel_id, hotel_name, city, hotel_type, has_room_price, product_id, last_price_check
+             FROM ?:novoton_hotels
+             WHERE country = ?s AND has_room_price = 'Y'
+             ORDER BY city, hotel_name",
+            $country
+        );
+    }
+
+    /**
+     * Find hotels with filters for import (includes all columns).
+     */
+    public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
+    {
+        $condition = "country = ?s AND has_room_price = 'Y'";
+        $params = [$country];
+
+        if ($importMode === 'new_only') {
+            $condition .= " AND (product_id IS NULL OR product_id = 0)";
+        }
+
+        if (!empty($selectedResorts)) {
+            $condition .= " AND city IN (?a)";
+            $params[] = $selectedResorts;
+        }
+
+        $limit_sql = $limit > 0 ? " LIMIT " . (int)($limit) : "";
+
+        return db_get_array(
+            "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
+            ...$params
+        );
+    }
+
+    /**
+     * Find hotel IDs that have priceinfo data in their packages.
+     *
+     * @return string[]
+     */
+    public function findIdsWithPriceinfoData(): array
+    {
+        return db_get_fields(
+            "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
+             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+             WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
+        );
+    }
+
+    /**
+     * Count hotels that have calendar_prices_raw populated.
+     */
+    public function countWithCalendarPrices(): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
+        );
+    }
+
+    /**
+     * Count hotels with packages (joined via novoton_hotel_packages).
+     */
+    public function countWithPackagesByCountry(string $country): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
+             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+             WHERE h.country = ?s",
+            $country
+        );
+    }
+
+    /**
+     * Get resort statistics (hotel count, price count) grouped by city.
+     */
+    public function getResortStatsByCountry(string $country): array
+    {
+        return db_get_array(
+            "SELECT city, COUNT(*) as hotel_count,
+                    SUM(CASE WHEN has_room_price = 'Y' THEN 1 ELSE 0 END) as with_prices
+             FROM ?:novoton_hotels
+             WHERE country = ?s AND city IS NOT NULL AND city != ''
+             GROUP BY city ORDER BY hotel_count DESC",
+            $country
+        );
+    }
+
+    /**
+     * Find unlinked hotels for the "view hotels to add" admin page.
+     *
+     * @param string $country
+     * @param string $filter  'prices' or 'packages'
+     * @param int    $limit
+     */
+    public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
+    {
+        if ($filter === 'packages') {
+            return db_get_array(
+                "SELECT h.*
+                 FROM ?:novoton_hotels h
+                 INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
+                 WHERE h.country = ?s
+                   AND (h.product_id IS NULL OR h.product_id = 0)
+                 GROUP BY h.hotel_id
+                 ORDER BY h.hotel_name
+                 LIMIT ?i",
+                $country,
+                $limit
+            );
+        }
+
+        return db_get_array(
+            "SELECT h.*
+             FROM ?:novoton_hotels h
+             WHERE h.country = ?s
+               AND h.has_room_price = 'Y'
+               AND (h.product_id IS NULL OR h.product_id = 0)
+             ORDER BY h.hotel_name
+             LIMIT ?i",
+            $country,
+            $limit
+        );
+    }
+
+    /**
+     * Get countries with count of hotels that have active prices.
+     */
+    public function getCountriesWithPriceCounts(): array
+    {
+        return db_get_array(
+            "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
+        );
+    }
+
+    /**
+     * Get distinct country/city combinations for resort listing.
+     */
+    public function getCountryCityPairs(): array
+    {
+        return db_get_array(
+            "SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city"
+        );
+    }
+
+    /**
+     * Get hotel_data JSON field for a hotel.
+     */
+    public function getHotelData(string $hotel_id): ?string
+    {
+        $val = db_get_field(
+            "SELECT hotel_data FROM ?:novoton_hotels WHERE hotel_id = ?s",
+            $hotel_id
+        );
+        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
+    }
+
+    /**
+     * Find hotels that have priceinfo data (joined with packages), for price comparison listing.
+     */
+    public function findWithPriceinfoData(int $limit = 200): array
+    {
+        return db_get_array(
+            "SELECT DISTINCT h.hotel_id, h.hotel_name
+             FROM ?:novoton_hotels h
+             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
+             WHERE p.priceinfo_data IS NOT NULL
+             ORDER BY h.hotel_name
+             LIMIT ?i",
+            $limit
+        );
+    }
+
+    /**
+     * Update packages_count for a hotel.
+     */
+    public function updatePackagesCount(string $hotel_id, int $count): bool
+    {
+        return (bool) db_query(
+            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
+            $count, $hotel_id
+        );
+    }
 }

@@ -8,8 +8,10 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactoryInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
+use Tygh\Addons\SphinxHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
@@ -118,6 +120,18 @@ class Container
     {
         /** @var SphinxBookingRepository */
         return self::resolve('bookingRepository', static fn() => new SphinxBookingRepository());
+    }
+
+    public static function getDestinationWhitelistRepository(): DestinationWhitelistRepository
+    {
+        /** @var DestinationWhitelistRepository */
+        return self::resolve('destinationWhitelistRepository', static fn() => new DestinationWhitelistRepository());
+    }
+
+    public static function getSyncLogRepository(): SyncLogRepository
+    {
+        /** @var SyncLogRepository */
+        return self::resolve('syncLogRepository', static fn() => new SyncLogRepository());
     }
 
     // ═══════════════════════════════════════════════════════════════════

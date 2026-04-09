@@ -724,6 +724,82 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
+     * Find bookings for admin listing with order info joined.
+     *
+     * @param string $condition Extra WHERE conditions (must start with " AND ...")
+     * @param int    $limit
+     * @return array
+     */
+    public function findForAdminList(string $condition = '', int $limit = 500): array
+    {
+        return db_get_array(
+            "SELECT b.booking_id, b.order_id, b.hotel_id, b.hotel_name, b.room_type,
+                    b.check_in, b.check_out, b.nights, b.adults, b.children,
+                    b.total_price, b.currency, b.status, b.novoton_status, b.created_at,
+                    o.status as order_status, o.email
+             FROM ?:novoton_bookings b
+             LEFT JOIN ?:orders o ON b.order_id = o.order_id
+             WHERE 1=1 {$condition}
+             ORDER BY b.created_at DESC
+             LIMIT ?i",
+            $limit
+        );
+    }
+
+    /**
+     * Find a booking with full order and product info for admin detail view.
+     */
+    public function findWithOrderDetails(int $booking_id): ?array
+    {
+        $row = db_get_row(
+            "SELECT b.*, o.*, p.product
+             FROM ?:novoton_bookings b
+             LEFT JOIN ?:orders o ON b.order_id = o.order_id
+             LEFT JOIN ?:products p ON b.product_id = p.product_id
+             WHERE b.booking_id = ?i",
+            $booking_id
+        );
+        return $row ?: null;
+    }
+
+    /**
+     * Find all bookings with order info for CSV export.
+     */
+    public function findAllForExport(): array
+    {
+        return db_get_array(
+            "SELECT b.*, o.email, o.status as order_status
+             FROM ?:novoton_bookings b
+             LEFT JOIN ?:orders o ON b.order_id = o.order_id
+             ORDER BY b.created_at DESC"
+        );
+    }
+
+    /**
+     * Find booking by ownership (user_id or session_id) — for frontend security checks.
+     */
+    public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array
+    {
+        $row = db_get_row(
+            "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+            $booking_id, $user_id, $session_id
+        );
+        return $row ?: null;
+    }
+
+    /**
+     * Check booking ownership (returns booking_id or null).
+     */
+    public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int
+    {
+        $id = db_get_field(
+            "SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
+            $booking_id, $user_id, $session_id
+        );
+        return $id ? (int) $id : null;
+    }
+
+    /**
      * Filter null values from data array to prevent PHP 8.1+
      * real_escape_string() deprecation when passed to ?e / ?u placeholders.
      */

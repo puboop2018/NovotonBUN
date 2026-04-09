@@ -236,4 +236,27 @@ class FacilityRepository implements FacilityRepositoryInterface
             $facility_type, $facility_id
         );
     }
+
+    /**
+     * Update facility type and Romanian translation.
+     */
+    public function updateTypeAndTranslation(int $facility_id, string $facility_type, ?string $name_ro = null): bool
+    {
+        if ($name_ro !== null) {
+            return (bool) db_query(
+                "UPDATE ?:novoton_facilities SET facility_type = ?s, facility_name_ro = ?s WHERE facility_id = ?i",
+                $facility_type, $name_ro, $facility_id
+            );
+        }
+        return $this->updateType($facility_id, $facility_type);
+    }
+
+    /**
+     * Get the latest synced_at timestamp across all facilities.
+     */
+    public function getLastSyncedAt(): ?string
+    {
+        $val = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
+        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
+    }
 }

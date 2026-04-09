@@ -39,11 +39,9 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
 
     // --- Security: Duplicate booking prevention ---
-    $pendingDuplicate = db_get_field(
-        "SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1",
-        $offer_id, TravelConstants::STATUS_PENDING
-    );
-    if ($pendingDuplicate) {
+    $repo = Container::getBookingRepository();
+    $pendingDuplicate = $repo->findPendingDuplicateByOffer($offer_id, TravelConstants::STATUS_PENDING);
+    if ($pendingDuplicate !== null) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.duplicate_booking', ['[default]' => 'A booking for this offer is already pending.']));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
