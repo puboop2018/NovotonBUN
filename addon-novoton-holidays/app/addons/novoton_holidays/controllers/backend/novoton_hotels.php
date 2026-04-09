@@ -64,25 +64,8 @@ if ($mode === 'add_hotels_as_products') {
             return preg_match('/^[a-z]{2,3}$/', $l) ? $l : null;
         }, $_REQUEST['languages'])) : ['en', 'ro'];
         
-        // Build query based on import mode
-        $condition = "country = ?s AND has_room_price = 'Y'";
-        $params = [$country];
-        
-        if ($import_mode === 'new_only') {
-            $condition .= " AND (product_id IS NULL OR product_id = 0)";
-        }
-        
-        if (!empty($selected_resorts)) {
-            $condition .= " AND city IN (?a)";
-            $params[] = $selected_resorts;
-        }
-        
-        $limit_sql = $limit > 0 ? " LIMIT " . (int)($limit) : "";
-        
-        $hotels = db_get_array(
-            "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
-            ...$params
-        );
+        $hotelRepo = Container::getInstance()->hotelRepository();
+        $hotels = $hotelRepo->findForImport($country, $import_mode, $selected_resorts, $limit);
         
         echo "Found " . count($hotels) . " hotels to process<br><br>\n";
         flush();
@@ -226,7 +209,8 @@ if ($mode === 'sync_hotel_facilities') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $hotel_ids = db_get_fields("SELECT hotel_id FROM ?:novoton_hotels");
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $hotel_ids = $hotelRepo->getAllIds();
     $synced = 0;
     $failed = 0;
 
@@ -262,6 +246,7 @@ if ($mode === 'save_facilities') {
         \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_BEACH_ACCESS,
     ];
     $updated = 0;
+    $facilityRepo = Container::getInstance()->facilityRepository();
 
     foreach ($facility_types as $facility_id => $type) {
         $facility_id = (int) $facility_id;
@@ -273,17 +258,7 @@ if ($mode === 'save_facilities') {
             ? trim((string) $facility_translations[$facility_id])
             : null;
 
-        if ($name_ro !== null) {
-            db_query(
-                "UPDATE ?:novoton_facilities SET facility_type = ?s, facility_name_ro = ?s WHERE facility_id = ?i",
-                $type, $name_ro, $facility_id
-            );
-        } else {
-            db_query(
-                "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
-                $type, $facility_id
-            );
-        }
+        $facilityRepo->updateTypeAndTranslation($facility_id, $type, $name_ro);
         $updated++;
     }
 
@@ -342,12 +317,12 @@ if ($mode === 'check_packages') {
         $errors = 0;
         $results_table = [];
 
+        $hotelRepo = Container::getInstance()->hotelRepository();
+        $packageRepo = Container::getInstance()->hotelPackageRepository();
+
         foreach ($countries as $country) {
             // V3: Select hotels without package_name column (it's now in novoton_hotel_packages)
-            $hotels = db_get_array(
-                "SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name LIMIT ?i",
-                $country, $limit
-            );
+            $hotels = $hotelRepo->findByCountryWithLimit($country, $limit);
 
             if (empty($hotels)) {
                 echo "<div class='country-header'>{$country}: 0 hotels in DB</div>\n";
@@ -391,21 +366,13 @@ if ($mode === 'check_packages') {
                         // V3: Store packages in novoton_hotel_packages table
                         foreach ($packages as $pkg) {
                             if (!empty($pkg['id'])) {
-                                db_query(
-                                    "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
-                                     VALUES (?s, ?s, ?s, NOW())
-                                     ON DUPLICATE KEY UPDATE package_name = ?s",
-                                    $hotel['hotel_id'], $pkg['id'], $pkg['name'], $pkg['name']
-                                );
+                                $packageRepo->upsertByHotelAndPackage($hotel['hotel_id'], $pkg['id'], $pkg['name']);
                                 $pkg_names[] = $pkg['name'];
                             }
                         }
 
                         // Update hotel packages_count (has_room_price is set exclusively by room_price check)
-                        db_query(
-                            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
-                            count($packages), $hotel['hotel_id']
-                        );
+                        $hotelRepo->updatePackagesCount($hotel['hotel_id'], count($packages));
 
                         $display_pkgs = implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '');
                         echo "<span class='success'>&check; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} &rarr; " . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";

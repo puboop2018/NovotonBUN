@@ -213,12 +213,8 @@ if ($mode === 'download_log') {
 // Export bookings
 if ($mode === 'export_bookings') {
     
-    $bookings = db_get_array(
-        "SELECT b.*, o.email, o.status as order_status 
-         FROM ?:novoton_bookings b
-         LEFT JOIN ?:orders o ON b.order_id = o.order_id
-         ORDER BY b.created_at DESC"
-    );
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $bookings = $bookingRepo->findAllForExport();
     
     // Create CSV
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
