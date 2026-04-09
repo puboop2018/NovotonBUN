@@ -145,11 +145,8 @@ if ($mode === 'recompute_calendar_prices') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $hotel_ids = db_get_fields(
-        "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
-         INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-         WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
-    );
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $hotel_ids = $hotelRepo->findIdsWithPriceinfoData();
 
     $count = 0;
     $errors = 0;
@@ -162,9 +159,7 @@ if ($mode === 'recompute_calendar_prices') {
         }
     }
 
-    $with_prices = (int) db_get_field(
-        "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
-    );
+    $with_prices = $hotelRepo->countWithCalendarPrices();
 
     $msg = "Calendar prices recomputed for {$count} / " . count($hotel_ids) . " hotels."
          . " ({$with_prices} hotels now have calendar prices)";
@@ -191,24 +186,12 @@ if ($mode === 'add_hotels_as_products') {
         $stats = [
             'total' => $hotelRepo->count(['country' => $country]),
             'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
-            'with_packages' => (int) db_get_field(
-                "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
-                 INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-                 WHERE h.country = ?s",
-                $country
-            ),
+            'with_packages' => $hotelRepo->countWithPackagesByCountry($country),
             'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
         ];
         $stats['to_add'] = max(0, $stats['with_prices'] - $stats['already_products']);
 
-        $resorts = db_get_array(
-            "SELECT city, COUNT(*) as hotel_count,
-                    SUM(CASE WHEN has_room_price = 'Y' THEN 1 ELSE 0 END) as with_prices
-             FROM ?:novoton_hotels
-             WHERE country = ?s AND city IS NOT NULL AND city != ''
-             GROUP BY city ORDER BY hotel_count DESC",
-            $country
-        );
+        $resorts = $hotelRepo->getResortStatsByCountry($country);
 
         $categories = db_get_array(
             "SELECT c.category_id, cd.category, c.parent_id
@@ -249,32 +232,7 @@ if ($mode === 'view_hotels_to_add') {
 
     $hotelRepo = Container::getInstance()->hotelRepository();
 
-    if ($filter === 'packages') {
-        $hotels = db_get_array(
-            "SELECT h.*, p.product_id as existing_product
-             FROM ?:novoton_hotels h
-             INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
-             LEFT JOIN ?:products p ON h.product_id = p.product_id
-             WHERE h.country = ?s
-               AND (h.product_id IS NULL OR h.product_id = 0)
-             GROUP BY h.hotel_id
-             ORDER BY h.hotel_name
-             LIMIT 500",
-            $country
-        );
-    } else {
-        $hotels = db_get_array(
-            "SELECT h.*, p.product_id as existing_product
-             FROM ?:novoton_hotels h
-             LEFT JOIN ?:products p ON h.product_id = p.product_id
-             WHERE h.country = ?s
-               AND h.has_room_price = 'Y'
-               AND (h.product_id IS NULL OR h.product_id = 0)
-             ORDER BY h.hotel_name
-             LIMIT 500",
-            $country
-        );
-    }
+    $hotels = $hotelRepo->findUnlinkedForAdmin($country, $filter, 500);
 
     $stats = [
         'total' => $hotelRepo->count(['country' => $country]),
