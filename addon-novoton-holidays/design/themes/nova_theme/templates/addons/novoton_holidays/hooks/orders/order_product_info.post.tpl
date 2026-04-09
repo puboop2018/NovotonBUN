@@ -25,12 +25,16 @@
             {if $oi.extra.num_rooms > 1 && $_nvt_rooms}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
                 {foreach from=$_nvt_rooms item=room key=idx}
-                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
+                    {$room_display = $room.room_id|default:$room.room_name|default:''}
+                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {if $room_display}{$room_display|novoton_format_room_type}{else}{$room.room_type_display|default:'Room'|escape:'html'}{/if} | {$room.board_id|default:$room.board_name|default:''|novoton_format_board} | {$room.adults|default:0} adults{if $room.children}, {$room.children} children{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if} | {$room.price|default:0} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
-                <strong>Room:</strong> {$oi.extra.room_type_display|default:$oi.extra.room_name|default:$oi.extra.room_id}<br>
-                <strong>Board:</strong> {$oi.extra.board_display|default:$oi.extra.board_name}<br>
-                <strong>Guests:</strong> {$oi.extra.adults} adults{if $oi.extra.children}, {$oi.extra.children} children ({$oi.extra.children_ages}){/if}<br>
+                {$room_id_raw = $oi.extra.room_id|default:''}
+                {$room_display = $oi.extra.room_type_display|default:''}
+                {$board_raw = $oi.extra.board_id|default:''}
+                {if $room_id_raw || $room_display}<strong>Room:</strong> {if $room_id_raw}{$room_id_raw|novoton_format_room_type}{else}{$room_display|escape:'html'}{/if}<br>{/if}
+                {if $board_raw}<strong>Board:</strong> {$board_raw|novoton_format_board}<br>{/if}
+                <strong>Guests:</strong> {$oi.extra.adults|default:0} adults{if $oi.extra.children}, {$oi.extra.children} children{if $oi.extra.children_ages} ({$oi.extra.children_ages}){/if}{/if}<br>
             {/if}
             
             {* Guest Names *}
