@@ -1,61 +1,48 @@
 <?php
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
 
-abstract class AbstractCronCommand
+/**
+ * Novoton-specific cron command base.
+ *
+ * Extends travel_core's shared base with Novoton API injection,
+ * SyncLogger integration, granular exception handling, and
+ * sync-table / email reporting.
+ */
+abstract class AbstractCronCommand extends BaseCommand
 {
     protected \Tygh\Addons\NovotonHolidays\NovotonApi $api;
-
     protected ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
-
-    /** @var array */
     protected array $params = [];
 
-    /** @var float */
-    protected float $startTime;
-
-    public function __construct(\Tygh\Addons\NovotonHolidays\NovotonApi $api, ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger, array $params = [])
-    {
+    public function __construct(
+        \Tygh\Addons\NovotonHolidays\NovotonApi $api,
+        ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger,
+        array $params = [],
+    ) {
+        parent::__construct();
         $this->api = $api;
         $this->logger = $logger;
         $this->params = $params;
-        $this->startTime = microtime(true);
-    }
 
-    abstract public function execute(): array;
+        // Wire SyncLogger as the output callback for the base class
+        if ($this->logger !== null) {
+            $this->setOutputCallback(fn(string $msg) => $this->logger->output($msg));
+        }
+    }
 
     abstract public static function getModes(): array;
-
-    abstract public static function getDescription(): string;
-
-    protected function output(string $message, bool $newline = true): void
-    {
-        if ($this->logger) {
-            $this->logger->output($message, $newline);
-            return;
-        }
-
-        // Last-resort fallback: should not normally be reached since
-        // all callers inject a SyncLogger. Log event so the message
-        // is captured even when logger is missing.
-        fn_log_event('general', 'runtime', [
-            'message' => 'CronCommand output (no logger): ' . $message,
-        ]);
-    }
 
     protected function getParam(string $key, mixed $default = null): mixed
     {
         return $this->params[$key] ?? $default;
-    }
-
-    protected function getDuration(): float
-    {
-        return round(microtime(true) - $this->startTime, 1);
     }
 
     protected function logComplete(string $mode, array $stats = []): void
@@ -64,7 +51,7 @@ abstract class AbstractCronCommand
             'timestamp' => time(),
             'mode' => $mode,
             'stats' => $stats,
-            'duration' => $this->getDuration()
+            'duration' => $this->getDuration(),
         ]);
     }
 
@@ -74,7 +61,7 @@ abstract class AbstractCronCommand
         $syncRepo->create($type, [
             'updated'  => $updated,
             'failed'   => $failed,
-            'duration' => (int)$this->getDuration(),
+            'duration' => (int) $this->getDuration(),
             'status'   => 'completed',
         ]);
     }
@@ -85,16 +72,12 @@ abstract class AbstractCronCommand
     }
 
     /**
-     * Execute a sync operation with standardized error handling.
+     * Novoton-specific error handling with granular exception types.
      *
-     * Catches SyncException, ApiException, XmlParsingException, and general
-     * Throwable, logging each consistently. Returns true on success, false on failure.
-     *
-     * @param callable $work The sync operation to execute
-     * @param string $context Human-readable context for error messages (e.g. "hotel 123")
-     * @param array &$errors Array to collect error messages
-     * @return bool Whether the operation succeeded
+     * Overrides the base class to distinguish SyncException, ApiException,
+     * and XmlParsingException for richer error messages.
      */
+    #[\Override]
     protected function trySyncItem(callable $work, string $context, array &$errors): bool
     {
         try {
