@@ -15,6 +15,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 {
     // ── Resolve / lookup ──
 
+    #[\Override]
     public function findByAlias(string $apiSource, string $featureType, string $apiValue): ?array
     {
         $result = db_get_row(
@@ -40,6 +41,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return $result ?: null;
     }
 
+    #[\Override]
     public function getDisplayName(string $featureType, string $canonicalCode, string $lang = 'en'): string
     {
         $column = $lang === 'ro' ? 'display_name_ro' : 'display_name_en';
@@ -50,6 +52,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function allCodes(string $featureType): array
     {
         return db_get_hash_array(
@@ -64,6 +67,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Mutations ──
 
+    #[\Override]
     public function insertMapping(string $featureType, string $canonicalCode, string $nameEn, string $nameRo, ?int $featureId): int
     {
         return (int) db_query(
@@ -76,6 +80,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function findMapId(string $featureType, string $canonicalCode): int
     {
         return (int) db_get_field(
@@ -84,6 +89,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function updateVariantId(int $mapId, int $variantId, string $source = 'auto'): void
     {
         db_query(
@@ -92,6 +98,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function updateFeatureId(int $mapId, int $featureId): void
     {
         db_query(
@@ -100,6 +107,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function updateMapping(int $mapId, array $data): void
     {
         if (!empty($data)) {
@@ -107,6 +115,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         }
     }
 
+    #[\Override]
     public function bulkUpdateStatus(array $mapIds, string $status): void
     {
         if (!empty($mapIds)) {
@@ -114,6 +123,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         }
     }
 
+    #[\Override]
     public function deleteMappings(array $mapIds): void
     {
         if (!empty($mapIds)) {
@@ -124,6 +134,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Aliases ──
 
+    #[\Override]
     public function upsertAlias(string $apiSource, string $apiValue, int $mapId, string $matchType = 'exact'): void
     {
         db_query(
@@ -135,6 +146,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function deleteAlias(int $aliasId): void
     {
         db_query("DELETE FROM ?:travel_api_alias WHERE alias_id = ?i", $aliasId);
@@ -142,6 +154,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Unmapped values ──
 
+    #[\Override]
     public function trackUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): void
     {
         db_query(
@@ -155,6 +168,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function deleteUnmapped(string $apiSource, string $featureType, string $apiValue): void
     {
         db_query(
@@ -163,6 +177,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function getUnmappedById(int $unmappedId): ?array
     {
         $row = db_get_row("SELECT * FROM ?:travel_unmapped_values WHERE unmapped_id = ?i", $unmappedId);
@@ -171,6 +186,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Batch operations ──
 
+    #[\Override]
     public function batchUpdateLastUsed(array $mapIds): void
     {
         if (!empty($mapIds)) {
@@ -178,6 +194,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         }
     }
 
+    #[\Override]
     public function getFeatureTypesWithoutFeatureId(): array
     {
         return db_get_fields(
@@ -185,6 +202,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function bulkSetFeatureId(string $featureType, int $featureId): void
     {
         db_query(
@@ -193,6 +211,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function getUnresolvedMappings(): array
     {
         return db_get_array(
@@ -205,6 +224,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Stats / listing ──
 
+    #[\Override]
     public function getTypeStats(): array
     {
         return db_get_hash_array(
@@ -222,6 +242,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    #[\Override]
     public function getGlobalStats(): array
     {
         $row = db_get_row(
@@ -239,11 +260,13 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         ];
     }
 
+    #[\Override]
     public function getUnmappedCount(): int
     {
         return (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values");
     }
 
+    #[\Override]
     public function getPaginatedMappings(string $condition, int $offset, int $limit): array
     {
         $total = (int) db_get_field(
@@ -266,6 +289,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return ['items' => $items, 'total' => $total];
     }
 
+    #[\Override]
     public function getTypeStatsSingle(string $featureType): array
     {
         $row = db_get_row(
@@ -283,6 +307,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         ];
     }
 
+    #[\Override]
     public function getPaginatedUnmapped(string $condition, int $offset, int $limit): array
     {
         $total = (int) db_get_field(
@@ -298,12 +323,14 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return ['items' => $items, 'total' => $total];
     }
 
+    #[\Override]
     public function getMappingById(int $mapId): ?array
     {
         $row = db_get_row("SELECT * FROM ?:travel_feature_map WHERE map_id = ?i", $mapId);
         return $row ?: null;
     }
 
+    #[\Override]
     public function getAliasesForMapping(int $mapId): array
     {
         return db_get_array(

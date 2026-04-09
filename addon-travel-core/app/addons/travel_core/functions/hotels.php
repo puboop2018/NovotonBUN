@@ -506,8 +506,10 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 {
     $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
 
-    $overwriteMode = ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all';
-    $fillIfEmpty = ($overwriteMode === 'fill_if_empty') && ($productId > 0);
+    $overwriteMode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
+        ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all'
+    ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
+    $fillIfEmpty = ($overwriteMode === \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::FillIfEmpty) && ($productId > 0);
 
     // Load current product values once (only when needed for fill_if_empty)
     $current = [];

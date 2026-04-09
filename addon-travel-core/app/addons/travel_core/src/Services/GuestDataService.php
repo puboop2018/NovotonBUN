@@ -30,6 +30,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $bookingData Booking form data
      * @return array Parsed guests data in canonical keyed format
      */
+    #[\Override]
     public function parseGuestsData(array $bookingData): array
     {
         // Primary source: guests_data field
@@ -54,6 +55,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guest Guest data
      * @return string Formatted API name
      */
+    #[\Override]
     public function formatApiName(array $guest): string
     {
         // If already has api_name, use it
@@ -79,6 +81,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guests_data Guests data (keyed array)
      * @return string Guest list
      */
+    #[\Override]
     public function buildGuestList(array $guests_data): string
     {
         $names = [];
@@ -102,6 +105,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $bookingData Fallback booking data
      * @return string Holder name
      */
+    #[\Override]
     public function getHolderName(array $guests_data, array $bookingData = []): string
     {
         // Look for holder flag
@@ -142,6 +146,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guests_data Guests data
      * @return array Guests by room [room_num => [guests]]
      */
+    #[\Override]
     public function getGuestsByRoom(array $guests_data): array
     {
         $by_room = [];
@@ -176,6 +181,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guests_data Guests data
      * @return array Room counts [room_num => [adults, children]]
      */
+    #[\Override]
     public function getRoomCounts(array $guests_data): array
     {
         $by_room = $this->getGuestsByRoom($guests_data);
@@ -208,6 +214,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guests_data Guests data
      * @return array Display-formatted guests
      */
+    #[\Override]
     public function formatForDisplay(array $guests_data): array
     {
         $display = [];
@@ -242,6 +249,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param int $expected_children Expected children count
      * @return array Validation result [valid, errors]
      */
+    #[\Override]
     public function validate(array $guests_data, int $expected_adults = 0, int $expected_children = 0): array
     {
         $errors = [];
@@ -357,6 +365,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $sources Array of guest data sources
      * @return array Merged guests data
      */
+    #[\Override]
     public function merge(array ...$sources): array
     {
         $merged = [];
@@ -395,6 +404,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array $guest Guest form data
      * @return string YYYY-MM-DD or '' if invalid/missing
      */
+    #[\Override]
     public static function parseDob(array $guest): string
     {
         $currentYear = (int) date('Y');
@@ -468,6 +478,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param string $provider Provider name for log/notification messages ('novoton'|'sphinx')
      * @return array|false Parsed result array or false if validation fails
      */
+    #[\Override]
     public static function parseAndValidateGuests(
         array $guests,
         string $checkIn = '',

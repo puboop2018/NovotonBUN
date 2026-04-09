@@ -40,6 +40,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
      * @return array Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
+    #[\Override]
     public function normalize(array|string $raw): array
     {
         $data = $this->decode($raw);
@@ -66,6 +67,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $raw
      * @return array
      */
+    #[\Override]
     public function decode($raw): array
     {
         if (is_string($raw)) {
@@ -84,6 +86,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array|string $data Guest data in any format
      * @return string JSON string in canonical keyed format
      */
+    #[\Override]
     public function toJson($data): string
     {
         $normalized = $this->normalize($data);
@@ -98,6 +101,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $data
      * @return bool
      */
+    #[\Override]
     public function isKeyedFormat(array $data): bool
     {
         if (empty($data)) {
@@ -125,6 +129,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * @param array $data
      * @return bool
      */
+    #[\Override]
     public function isArrayFormat(array $data): bool
     {
         if (empty($data)) {

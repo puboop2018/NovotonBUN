@@ -66,6 +66,7 @@ class CronDispatcher implements CronDispatcherInterface
         self::$registered = true;
     }
 
+    #[\Override]
     public function dispatch(string $mode, array $params = []): array
     {
         if (!isset(self::$commandMap[$mode])) {
@@ -77,6 +78,7 @@ class CronDispatcher implements CronDispatcherInterface
         return $command->execute();
     }
 
+    #[\Override]
     public function hasMode(string $mode): bool
     {
         return isset(self::$commandMap[$mode]);
@@ -85,6 +87,7 @@ class CronDispatcher implements CronDispatcherInterface
     /**
      * @return array<string, string> mode => description
      */
+    #[\Override]
     public static function getAvailableModes(): array
     {
         self::registerCommands();

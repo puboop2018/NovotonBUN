@@ -31,6 +31,7 @@ class CommissionCalculator implements CommissionCalculatorInterface
      * @param float $price Base price
      * @return float Price with commission applied
      */
+    #[\Override]
     public function apply(float $price): float
     {
         $finalPrice = $price * (1 + ($this->commission / 100));
@@ -45,6 +46,7 @@ class CommissionCalculator implements CommissionCalculatorInterface
     /**
      * @return float Commission percentage
      */
+    #[\Override]
     public function getCommission(): float
     {
         return $this->commission;
@@ -53,6 +55,7 @@ class CommissionCalculator implements CommissionCalculatorInterface
     /**
      * @return string 'Y' or 'N'
      */
+    #[\Override]
     public function getRoundPrices(): string
     {
         return $this->roundPrices;

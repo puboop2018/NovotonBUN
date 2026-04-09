@@ -15,7 +15,7 @@ use Tygh\Registry;
  */
 class ConfigProvider implements ConfigProviderInterface
 {
-    private const ADDON_ID = 'sphinx_holidays';
+    private const string ADDON_ID = 'sphinx_holidays';
 
     public static function getApiBaseUrl(): string
     {
