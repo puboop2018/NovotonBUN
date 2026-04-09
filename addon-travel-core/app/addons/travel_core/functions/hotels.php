@@ -339,20 +339,20 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
  */
 function fn_travel_core_apply_modifier(string $value, string $modifier): string
 {
-    switch (strtolower($modifier)) {
-        case 'lower':      return mb_strtolower($value, 'UTF-8');
-        case 'upper':      return mb_strtoupper($value, 'UTF-8');
-        case 'title':      return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
-        case 'capitalize': return mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8');
-        case 'trim':       return trim($value);
-        case 'slug':       return function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-'));
-        case 'first':      return mb_substr($value, 0, 1, 'UTF-8');
-        case 'last':       return mb_substr($value, -1, 1, 'UTF-8');
-        case 'abs':        return (string) abs((float) $value);
-        case 'round':      return (string) round((float) $value);
-        case 'strip_tags': return strip_tags($value);
-        default:           return $value;
-    }
+    return match (strtolower($modifier)) {
+        'lower'      => mb_strtolower($value, 'UTF-8'),
+        'upper'      => mb_strtoupper($value, 'UTF-8'),
+        'title'      => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
+        'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
+        'trim'       => trim($value),
+        'slug'       => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
+        'first'      => mb_substr($value, 0, 1, 'UTF-8'),
+        'last'       => mb_substr($value, -1, 1, 'UTF-8'),
+        'abs'        => (string) abs((float) $value),
+        'round'      => (string) round((float) $value),
+        'strip_tags' => strip_tags($value),
+        default      => $value,
+    };
 }
 
 /**
