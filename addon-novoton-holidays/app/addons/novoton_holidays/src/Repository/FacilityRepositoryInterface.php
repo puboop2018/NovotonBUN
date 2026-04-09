@@ -7,6 +7,7 @@ interface FacilityRepositoryInterface
 {
     public function findById(int $facility_id): ?array;
     public function findAll(string $lang = 'en'): array;
+    public function findAllFull(): array;
     public function exists(int $facility_id): bool;
     public function save(int $facility_id, string $name_en, string $name_ro = ''): bool;
     public function delete(int $facility_id): bool;

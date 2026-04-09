@@ -43,6 +43,14 @@ class FacilityRepository implements FacilityRepositoryInterface
     }
     
     /**
+     * Find all facilities with all columns (for admin listing).
+     */
+    public function findAllFull(): array
+    {
+        return db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
+    }
+
+    /**
      * Check if facility exists
      */
     public function exists(int $facility_id): bool

@@ -257,7 +257,7 @@ if ($mode === 'view_hotels_to_add') {
  */
 if ($mode === 'list_facilities') {
     $facilityRepo = Container::getInstance()->facilityRepository();
-    $facilities = $facilityRepo->findAll('en');
+    $facilities = $facilityRepo->findAllFull();
     $count = count($facilities);
     $last_sync = $facilityRepo->getLastSyncedAt();
 
@@ -492,7 +492,7 @@ if ($mode === 'manage' || empty($mode)) {
 
     $resorts_by_country = [];
     $hidden_resorts = array_map('strtoupper', ConfigProvider::getHiddenResorts());
-    $resorts = db_get_array("SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city");
+    $resorts = $hotelRepo->getCountryCityPairs();
     foreach ($resorts as $resort) {
         if (!empty($hidden_resorts) && in_array(strtoupper($resort['city']), $hidden_resorts, true)) {
             continue;
@@ -563,11 +563,8 @@ if ($mode === 'view_hotel') {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
     }
 
-    $hotel['packages'] = db_get_array(
-        "SELECT package_id, package_name, min_price, has_early_booking, synced_at
-         FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-        $hotel_id
-    );
+    $packageRepo = Container::getInstance()->hotelPackageRepository();
+    $hotel['packages'] = $packageRepo->findForHotelDetail($hotel_id);
 
     if (!empty($hotel['hotel_data'])) {
         $hotelData = json_decode($hotel['hotel_data'], true);
