@@ -197,21 +197,15 @@ if ($mode === 'manage') {
     // we must decrypt in PHP. For backward compat with pre-encryption rows,
     // we keep the LIKE as a fallback and also filter decrypted results below.
     $search_email_filter = $search_email;
-    
+
     $where_sql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
-    
+
     // Get total count
-    $total_items = db_get_field(
-        "SELECT COUNT(*) FROM ?:novoton_alternative_requests " . $where_sql,
-        ...$params
-    );
-    
+    $total_items = $altRequestRepo->countFiltered($where_sql, $params);
+
     // Get requests with pagination
     $offset = ($page - 1) * $items_per_page;
-    $requests = db_get_array(
-        "SELECT * FROM ?:novoton_alternative_requests " . $where_sql . " ORDER BY created_at DESC LIMIT ?i, ?i",
-        ...array_merge($params, [$offset, $items_per_page])
-    );
+    $requests = $altRequestRepo->findFiltered($where_sql, $params, $items_per_page, $offset);
     
     // Decrypt PII and decode alternatives data
     $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
@@ -231,10 +225,7 @@ if ($mode === 'manage') {
     }
 
     // Get status counts for tabs
-    $status_counts = db_get_hash_single_array(
-        "SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status",
-        ['status', 'cnt']
-    );
+    $status_counts = $altRequestRepo->getStatusCounts();
     
     Tygh::$app['view']->assign('requests', $requests);
     Tygh::$app['view']->assign('status_counts', $status_counts);
