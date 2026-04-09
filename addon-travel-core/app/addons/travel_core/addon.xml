@@ -278,8 +278,8 @@
     <language_variables>
         <item lang="en" id="travel_core"><![CDATA[Travel Core]]></item>
         <item lang="ro" id="travel_core"><![CDATA[Travel Core]]></item>
-        <item lang="en" id="travel_core_description"><![CDATA[Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Zero API-specific code — only interfaces and generic travel concepts.]]></item>
-        <item lang="ro" id="travel_core_description"><![CDATA[Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Fără cod specific API — doar interfețe și concepte generice de turism.]]></item>
+        <item lang="en" id="travel_core_description"><![CDATA[Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Install order: Travel Core FIRST, then provider addons. Uninstall order: provider addons FIRST, then Travel Core LAST.]]></item>
+        <item lang="ro" id="travel_core_description"><![CDATA[Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Ordine instalare: Travel Core PRIMUL, apoi addon-urile provider. Ordine dezinstalare: addon-urile provider PRIMUL, apoi Travel Core ULTIMUL.]]></item>
         <item lang="en" id="travel_core.until"><![CDATA[until]]></item>
         <item lang="ro" id="travel_core.until"><![CDATA[până la]]></item>
         <item lang="en" id="travel_core.free_cancellation"><![CDATA[Free Cancellation]]></item>
