@@ -543,8 +543,8 @@
     <language_variables>
         <item lang="en" id="sphinx_holidays"><![CDATA[Sphinx Holidays]]></item>
         <item lang="ro" id="sphinx_holidays"><![CDATA[Sphinx Holidays]]></item>
-        <item lang="en" id="sphinx_holidays_description"><![CDATA[Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform. Requires Travel Core. Uninstall order: disable Sphinx Holidays BEFORE Travel Core.]]></item>
-        <item lang="ro" id="sphinx_holidays_description"><![CDATA[Integrare API REST Sphinx pentru rezervări de hoteluri, pachete, circuite și experiențe. Oferă căutare, disponibilitate, prețuri, rezervări și sincronizare destinații prin platforma de turism Sphinx. Necesită Travel Core. Ordine dezinstalare: dezactivați Sphinx Holidays ÎNAINTE de Travel Core.]]></item>
+        <item lang="en" id="sphinx_holidays_description"><![CDATA[Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform.]]></item>
+        <item lang="ro" id="sphinx_holidays_description"><![CDATA[Integrare API REST Sphinx pentru rezervări de hoteluri, pachete, circuite și experiențe. Oferă căutare, disponibilitate, prețuri, rezervări și sincronizare destinații prin platforma de turism Sphinx.]]></item>
         <item lang="en" id="sphinx_holidays.api_header"><![CDATA[Sphinx API Settings]]></item>
         <item lang="ro" id="sphinx_holidays.api_header"><![CDATA[Setări API Sphinx]]></item>
         <item lang="en" id="sphinx_holidays.api_base_url"><![CDATA[API Base URL]]></item>

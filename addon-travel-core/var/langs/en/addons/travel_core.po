@@ -10,7 +10,7 @@ msgstr "Travel Core"
 
 msgctxt "Addons::description::travel_core"
 msgid "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel."
-msgstr "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Install order: Travel Core FIRST, then provider addons. Uninstall order: provider addons FIRST, then Travel Core LAST."
+msgstr "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel. Install: 1st Travel Core, 2nd Novoton, 3rd Sphinx. Uninstall: 1st Novoton, 2nd Sphinx, 3rd Travel Core."
 
 msgctxt "SettingsSections::travel_core::general"
 msgid "General Settings"

@@ -10,7 +10,7 @@ msgstr "Novoton Holidays"
 
 msgctxt "Addons::description::novoton_holidays"
 msgid "Integration with Novoton XML API for hotel bookings and price management"
-msgstr "Integrare cu Novoton XML API pentru rezervări hoteliere și gestionarea prețurilor. Necesită Travel Core. Ordine dezinstalare: dezactivați Novoton Holidays ÎNAINTE de Travel Core."
+msgstr "Integrare cu Novoton XML API pentru rezervări hoteliere și gestionarea prețurilor"
 
 msgctxt "SettingsSections::novoton_holidays::general"
 msgid "General Settings"

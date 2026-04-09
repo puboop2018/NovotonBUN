@@ -18,7 +18,7 @@ msgstr "Sphinx Holidays"
 
 msgctxt "Addons::description::sphinx_holidays"
 msgid "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
-msgstr "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform. Requires Travel Core. Uninstall order: disable Sphinx Holidays BEFORE Travel Core."
+msgstr "Sphinx REST API integration for hotel, package, circuit and experience bookings. Provides search, availability, pricing, booking and destination sync via the Sphinx travel platform."
 
 msgctxt "SettingsSections::sphinx_holidays::general"
 msgid "General Settings"
