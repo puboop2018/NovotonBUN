@@ -389,6 +389,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return int feature_id or 0 if not configured
      */
+    #[\Override]
     public static function getFeatureId(string $featureType): int
     {
         $settingKey = self::FEATURE_SETTING_KEYS[$featureType]
@@ -401,6 +402,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return array<string, array>
      */
+    #[\Override]
     public static function allCodes(string $featureType): array
     {
         return self::getRepository()->allCodes($featureType);
