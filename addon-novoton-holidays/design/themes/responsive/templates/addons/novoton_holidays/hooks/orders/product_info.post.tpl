@@ -1,6 +1,12 @@
 {* Novoton Holidays - Customer Order Details - Simple text display *}
 
 {if !empty($product.extra.novoton_booking)}
+{* Normalize rooms_data: may be JSON string or array *}
+{if $product.extra.rooms_data && is_string($product.extra.rooms_data)}
+    {$_nvt_rooms = $product.extra.rooms_data|json_decode:true}
+{else}
+    {$_nvt_rooms = $product.extra.rooms_data|default:[]}
+{/if}
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
 
     {if $product.extra.hotel_name}
@@ -15,9 +21,9 @@
     <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$product.extra.package_name}<br>
     {/if}
 
-    {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
+    {if $product.extra.num_rooms > 1 && $_nvt_rooms}
         <strong>{__("novoton_holidays.n_rooms", [$product.extra.num_rooms])}:</strong><br>
-        {foreach from=$product.extra.rooms_data item=room key=idx}
+        {foreach from=$_nvt_rooms item=room key=idx}
             &nbsp;&nbsp;- <strong>{__("novoton_holidays.room")} {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {__("novoton_holidays.n_adults", [$room.adults])}{if $room.children}, {__("novoton_holidays.n_children", [$room.children])} ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
         {/foreach}
     {else}

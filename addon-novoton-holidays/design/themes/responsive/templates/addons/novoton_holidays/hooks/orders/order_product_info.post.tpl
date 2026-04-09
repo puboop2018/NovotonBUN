@@ -1,6 +1,11 @@
 {* Novoton Holidays - Admin Order Details - Simple text display *}
 
 {if $oi.extra.novoton_booking}
+{if $oi.extra.rooms_data && is_string($oi.extra.rooms_data)}
+    {$_nvt_rooms = $oi.extra.rooms_data|json_decode:true}
+{else}
+    {$_nvt_rooms = $oi.extra.rooms_data|default:[]}
+{/if}
 <tr>
     <td colspan="7">
         <div style="margin:10px 0;font-size:13px;line-height:1.8;">
@@ -17,9 +22,9 @@
             <strong>{__("novoton_holidays.package")|default:"Pachet"}:</strong> {$oi.extra.package_name|escape:'html'}<br>
             {/if}
             
-            {if $oi.extra.num_rooms > 1 && $oi.extra.rooms_data}
+            {if $oi.extra.num_rooms > 1 && $_nvt_rooms}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
-                {foreach from=$oi.extra.rooms_data item=room key=idx}
+                {foreach from=$_nvt_rooms item=room key=idx}
                     &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id} | {$room.board_display|default:$room.board_name} | {$room.adults} adults{if $room.children}, {$room.children} children ({$room.children_ages_str}){/if} | {$room.price} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
