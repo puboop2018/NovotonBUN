@@ -29,7 +29,7 @@ trait StatefulCommandTrait
             return self::DEFAULT_STATE;
         }
 
-        $content = @file_get_contents($path);
+        $content = file_get_contents($path);
         if ($content === false) {
             return self::DEFAULT_STATE;
         }
@@ -68,11 +68,11 @@ trait StatefulCommandTrait
         ]);
 
         $tmpPath = $path . '.tmp';
-        if (@file_put_contents($tmpPath, $wrapped, LOCK_EX) === false) {
+        if (file_put_contents($tmpPath, $wrapped, LOCK_EX) === false) {
             return;
         }
 
-        @rename($tmpPath, $path);
+        rename($tmpPath, $path);
     }
 
     private function clearState(): void
@@ -81,7 +81,7 @@ trait StatefulCommandTrait
         foreach (['', '.tmp'] as $suffix) {
             $file = $path . $suffix;
             if (file_exists($file)) {
-                @unlink($file);
+                unlink($file);
             }
         }
     }

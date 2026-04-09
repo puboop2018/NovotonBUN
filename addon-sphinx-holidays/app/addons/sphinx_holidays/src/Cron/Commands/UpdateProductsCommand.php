@@ -17,20 +17,13 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  *
  * Usage: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=update_products
  */
-class UpdateProductsCommand
+class UpdateProductsCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     private const BATCH_SIZE = 200;
 
     public static function getDescription(): string
     {
         return 'Update CS-Cart products when Sphinx hotel data changes';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -240,10 +233,4 @@ class UpdateProductsCommand
         return $slug;
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

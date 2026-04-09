@@ -29,8 +29,7 @@ class PriceInfoParser
 
     private array $childAgeBands = [];
 
-    /** @var callable|null */
-    private $logger;
+    private ?\Closure $logger;
 
     private HotelPackageRepositoryInterface $packageRepo;
 
@@ -41,7 +40,7 @@ class PriceInfoParser
         ?HotelPackageRepositoryInterface $packageRepo = null,
         ?HotelRepositoryInterface $hotelRepo = null
     ) {
-        $this->logger = $logger;
+        $this->logger = $logger !== null ? $logger(...) : null;
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
         $this->hotelRepo = $hotelRepo ?? new HotelRepository();
     }

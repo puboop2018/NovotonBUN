@@ -15,18 +15,11 @@ use Tygh\Addons\SphinxHolidays\Services\OrderStatusSyncService;
  * Usage:
  *   php cron.php access_key=KEY mode=order_status
  */
-class OrderStatusSyncCommand
+class OrderStatusSyncCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Check Sphinx booking statuses via Orders API';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array

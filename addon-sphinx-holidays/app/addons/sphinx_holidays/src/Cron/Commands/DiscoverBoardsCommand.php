@@ -31,11 +31,9 @@ use function fn_log_event;
  *   php cron.php access_key=KEY mode=discover_boards status=1
  *   php cron.php access_key=KEY mode=discover_boards reset=1
  */
-class DiscoverBoardsCommand
+class DiscoverBoardsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
-
-    private ?\Closure $outputCallback = null;
 
     /** State file name stored in DIR_CACHE */
     private const STATE_FILE_NAME = 'sphinx_discover_boards_state.json';
@@ -75,11 +73,6 @@ class DiscoverBoardsCommand
     public static function getDescription(): string
     {
         return 'Discover available board/meal types per hotel via live search API (batched with resume)';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -503,10 +496,4 @@ class DiscoverBoardsCommand
         return ConfigProvider::getSelectedCountryCodes();
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

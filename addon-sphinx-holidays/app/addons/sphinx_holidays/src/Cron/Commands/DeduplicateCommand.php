@@ -17,18 +17,11 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
  *        Optional: &dry_run=1  (report only, no changes)
  *                  &limit=N    (max duplicate groups to process)
  */
-class DeduplicateCommand
+class DeduplicateCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Find and merge duplicate hotels (same name + property_type + classification + region)';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -186,10 +179,4 @@ class DeduplicateCommand
         );
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

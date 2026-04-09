@@ -16,16 +16,14 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 class DiscountCalculator
 {
-    /** @var PriceInfoParser */
-    private $parser;
+    private PriceInfoParser $parser;
 
-    /** @var callable|null Logger function */
-    private $logger;
+    private ?\Closure $logger;
 
     public function __construct(PriceInfoParser $parser, ?callable $logger = null)
     {
         $this->parser = $parser;
-        $this->logger = $logger;
+        $this->logger = $logger !== null ? $logger(...) : null;
     }
 
     /**

@@ -151,12 +151,12 @@ class StateManager implements StateManagerInterface
             // Write to temp file first for atomic operation
             $tempFile = $this->stateFile . '.tmp';
 
-            if (@file_put_contents($tempFile, $wrappedContent, LOCK_EX) === false) {
+            if (file_put_contents($tempFile, $wrappedContent, LOCK_EX) === false) {
                 return false;
             }
 
             // Atomically replace the state file
-            if (!@rename($tempFile, $this->stateFile)) {
+            if (!rename($tempFile, $this->stateFile)) {
                 if (file_exists($tempFile)) { unlink($tempFile); }
                 return false;
             }
@@ -184,7 +184,7 @@ class StateManager implements StateManagerInterface
         foreach (['', '.bak', '.tmp'] as $suffix) {
             $file = $this->stateFile . $suffix;
             if (file_exists($file)) {
-                if (!@unlink($file)) {
+                if (!unlink($file)) {
                     $ok = false;
                 }
             }
@@ -210,7 +210,7 @@ class StateManager implements StateManagerInterface
                     ? $decoded['_data']
                     : $decoded;
                 if (is_array($state)) {
-                    @file_put_contents($this->stateFile, $backupContent, LOCK_EX);
+                    file_put_contents($this->stateFile, $backupContent, LOCK_EX);
                     return array_merge(self::DEFAULT_STATE, $state);
                 }
             }
@@ -474,7 +474,7 @@ class StateManager implements StateManagerInterface
     public function acquireLock(int $timeout = 5): bool
     {
         $lockFile = $this->stateFile . '.lock';
-        $this->lockHandle = @fopen($lockFile, 'c');
+        $this->lockHandle = fopen($lockFile, 'c');
 
         if (!$this->lockHandle) {
             return false;

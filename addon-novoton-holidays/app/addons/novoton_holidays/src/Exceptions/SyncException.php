@@ -7,8 +7,8 @@ namespace Tygh\Addons\NovotonHolidays\Exceptions;
  */
 class SyncException extends NovotonException
 {
-    private $syncType;
-    private $entityId;
+    private string $syncType;
+    private string $entityId;
 
     public function __construct(string $message, string $syncType = '', string $entityId = '', array $context = [], ?\Throwable $previous = null)
     {
