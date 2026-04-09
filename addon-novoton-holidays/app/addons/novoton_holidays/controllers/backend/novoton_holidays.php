@@ -241,9 +241,7 @@ if ($mode === 'view_hotels_to_add') {
         'ready_to_add' => count($hotels)
     ];
 
-    $countries = db_get_array(
-        "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
-    );
+    $countries = $hotelRepo->getCountriesWithPriceCounts();
 
     Tygh::$app['view']->assign('hotels', $hotels);
     Tygh::$app['view']->assign('country', $country);
@@ -258,9 +256,10 @@ if ($mode === 'view_hotels_to_add') {
  * Mode: list_facilities
  */
 if ($mode === 'list_facilities') {
-    $facilities = db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
+    $facilityRepo = Container::getInstance()->facilityRepository();
+    $facilities = $facilityRepo->findAll('en');
     $count = count($facilities);
-    $last_sync = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
+    $last_sync = $facilityRepo->getLastSyncedAt();
 
     // Build feature type options with CS-Cart feature names for the dropdown
     // Show all feature types so admins can classify facilities into any category
