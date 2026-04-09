@@ -18,12 +18,27 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function _travel_seo_read_settings(string $addonName): array
 {
-    // Read from CS-Cart's settings registry (authoritative after Settings API writes)
-    $addonSettings = Registry::get('addons.' . $addonName) ?: [];
+    // Read directly from DB — NOT from Registry::get('addons.X').
+    // CS-Cart's settings registry only loads settings defined in addon.xml.
+    // Our seo_* settings are created at runtime (not in addon.xml), so the
+    // Registry doesn't see them. Direct DB read is the only reliable source.
+    $parentId = (int) db_get_field(
+        "SELECT section_id FROM ?:settings_sections WHERE name = ?s AND type = 'ADDON'",
+        $addonName
+    );
     $values = [];
-    foreach ($addonSettings as $key => $val) {
-        if (str_starts_with($key, 'seo_')) {
-            $values[$key] = $val;
+    if ($parentId > 0) {
+        $sectionId = (int) db_get_field(
+            "SELECT section_id FROM ?:settings_sections WHERE name = 'seo_templates' AND parent_id = ?i",
+            $parentId
+        );
+        if ($sectionId > 0) {
+            $rows = db_get_hash_single_array(
+                "SELECT name, value FROM ?:settings_objects WHERE section_id = ?i AND name LIKE 'seo_%'",
+                ['name', 'value'],
+                $sectionId
+            );
+            $values = is_array($rows) ? $rows : [];
         }
     }
 
