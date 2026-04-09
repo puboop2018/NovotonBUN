@@ -258,11 +258,12 @@ class BookingRepository implements BookingRepositoryInterface
 
         db_query("START TRANSACTION");
         try {
-            $result = (bool) db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
+            // db_query() returns affected rows for UPDATE. A return of 0 means
+            // "query succeeded but no rows changed" (data identical) — NOT failure.
+            // We only fail if the booking doesn't exist at all.
+            db_query("UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i", $data, $booking_id);
 
-            if ($result) {
-                $this->syncUpdateToTravelBookings($booking_id, $data);
-            }
+            $this->syncUpdateToTravelBookings($booking_id, $data);
 
             db_query("COMMIT");
         } catch (\Throwable $e) {
@@ -270,7 +271,7 @@ class BookingRepository implements BookingRepositoryInterface
             throw $e;
         }
 
-        return $result;
+        return true;
     }
     
     /**
