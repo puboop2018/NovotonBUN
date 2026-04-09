@@ -18,9 +18,6 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 
 // Bulk-apply SEO templates to all linked products
 if ($mode === 'bulk_seo_apply') {
-    if (function_exists('set_time_limit')) { set_time_limit(0); }
-    fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
-
     $fetcher = static fn(int $offset, int $batch): array => db_get_array(
         "SELECT hotel_id, product_id, hotel_name, city, country, region,
                 star_rating, hotel_type, property_type, latitude, longitude
@@ -35,14 +32,17 @@ if ($mode === 'bulk_seo_apply') {
             $hotel, $hotel['hotel_name'] ?? ''
         );
 
-    $result = fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder);
-
-    fn_set_progress('finish');
-    fn_set_notification('N', __('notice'),
-        str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-            __('travel_core.seo_bulk_apply_done'))
+    return fn_travel_core_run_long_task(
+        __('travel_core.seo_bulk_apply_progress'),
+        static fn() => fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder),
+        'addons.update?addon=novoton_holidays&selected_sub_section=novoton_holidays_seo_templates&selected_section=settings',
+        static function (array $result) {
+            fn_set_notification('N', __('notice'),
+                str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                    __('travel_core.seo_bulk_apply_done'))
+            );
+        }
     );
-    return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_sub_section=novoton_holidays_seo_templates&selected_section=settings'];
 }
 
 // Update prices manually

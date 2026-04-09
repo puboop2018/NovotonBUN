@@ -26,8 +26,6 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     private const API_SOURCE = 'sphinx';
 
-    private readonly SphinxNormalizer $normalizer;
-
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
@@ -37,9 +35,9 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     /** @var string|null Hash of the facilities_json that was cached */
     private ?string $resolvedFacilitiesCacheKey = null;
 
-    public function __construct(SphinxNormalizer $normalizer)
-    {
-        $this->normalizer = $normalizer;
+    public function __construct(
+        private readonly SphinxNormalizer $normalizer,
+    ) {
     }
 
     /**

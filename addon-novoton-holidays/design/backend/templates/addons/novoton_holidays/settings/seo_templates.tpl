@@ -1,101 +1,8 @@
 {** Novoton Holidays - Enhanced SEO Templates settings section **}
-{** Adds: clickable placeholder sidebar, modifiers reference, click-to-insert JS, bulk-apply button **}
+
+{style src="addons/travel_core/seo-templates.css"}
 
 <style>
-.seo-tpl-wrapper {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-.seo-tpl-sidebar {
-    flex: 0 0 260px;
-    min-width: 220px;
-}
-.seo-tpl-sidebar .well {
-    margin-bottom: 12px;
-}
-.seo-tpl-sidebar h5 {
-    margin-top: 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #dee2e6;
-}
-.seo-ph-badge {
-    display: inline-block;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
-    padding: 2px 6px;
-    margin: 2px 3px 2px 0;
-    border-radius: 3px;
-    background: #d9edf7;
-    color: #31708f;
-    border: 1px solid #bce8f1;
-    transition: background 0.15s;
-}
-.seo-ph-badge:hover {
-    background: #31708f;
-    color: #fff;
-}
-.seo-mod-badge {
-    display: inline-block;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
-    padding: 2px 6px;
-    margin: 2px 3px 2px 0;
-    border-radius: 3px;
-    background: #dff0d8;
-    color: #3c763d;
-    border: 1px solid #d6e9c6;
-    transition: background 0.15s;
-}
-.seo-mod-badge:hover {
-    background: #3c763d;
-    color: #fff;
-}
-.seo-ph-desc {
-    font-size: 11px;
-    color: #666;
-    margin-left: 2px;
-}
-.seo-ph-item {
-    margin-bottom: 4px;
-    font-size: 12px;
-    line-height: 1.6;
-}
-.seo-tips {
-    background: #fff3cd;
-    border-color: #ffc107;
-}
-.seo-tips h5 {
-    border-bottom-color: #ffc107;
-    color: #856404;
-}
-.seo-tips ul {
-    font-size: 11px;
-    color: #856404;
-    padding-left: 18px;
-    margin-bottom: 0;
-}
-.seo-tips li {
-    margin-bottom: 4px;
-}
-.seo-bulk-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: #f0f4f8;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-.seo-bulk-bar p {
-    font-size: 11px;
-    margin: 0;
-    flex-basis: 100%;
-    color: #6c757d;
-}
 .addon-settings-seo_templates input[type="text"],
 .addon-settings-seo_templates textarea {
     width: 100% !important;
@@ -107,7 +14,7 @@
 }
 </style>
 
-<div class="seo-tpl-wrapper" id="seo_tpl_novoton">
+<div class="seo-tpl-wrapper" data-seo-wrapper>
 
     {* ── Sidebar: Placeholders + Modifiers + Tips ── *}
     <div class="seo-tpl-sidebar">
@@ -176,102 +83,4 @@
     <p>{__("travel_core.seo_bulk_apply_desc")}</p>
 </div>
 
-{* ── Click-to-insert JavaScript ── *}
-<script>
-{literal}
-(function() {
-    var wrapper = document.getElementById('seo_tpl_novoton');
-    if (!wrapper) return;
-
-    var section = wrapper.closest('.addon-settings-seo_templates') || wrapper.parentNode;
-
-    var lastField = null;
-    var lastPos = 0;
-
-    section.addEventListener('focus', function(e) {
-        if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) {
-            lastField = e.target;
-            lastPos = e.target.selectionStart || 0;
-        }
-    }, true);
-
-    section.addEventListener('click', function(e) {
-        if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) {
-            lastField = e.target;
-            setTimeout(function() { lastPos = e.target.selectionStart || 0; }, 0);
-        }
-    }, true);
-
-    section.addEventListener('keyup', function(e) {
-        if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) {
-            lastField = e.target;
-            lastPos = e.target.selectionStart || 0;
-        }
-    }, true);
-
-    function insertAtCursor(text) {
-        if (!lastField) {
-            lastField = section.querySelector('input[type="text"], textarea');
-            if (!lastField) return;
-            lastPos = lastField.value.length;
-        }
-
-        lastField.focus();
-        var val = lastField.value;
-        var selStart = lastField.selectionStart;
-        var selEnd = lastField.selectionEnd;
-
-        lastField.value = val.substring(0, selStart) + text + val.substring(selEnd);
-
-        var newPos = selStart + text.length;
-        lastField.selectionStart = newPos;
-        lastField.selectionEnd = newPos;
-        lastPos = newPos;
-
-        lastField.style.transition = 'background-color 0.15s';
-        lastField.style.backgroundColor = '#d4edda';
-        setTimeout(function() { lastField.style.backgroundColor = ''; }, 300);
-    }
-
-    document.addEventListener('click', function(e) {
-        var badge = e.target.closest('.seo-ph-badge');
-        if (badge && wrapper.contains(badge)) {
-            e.preventDefault();
-            insertAtCursor(badge.getAttribute('data-insert'));
-            return;
-        }
-
-        var mod = e.target.closest('.seo-mod-badge');
-        if (mod && wrapper.contains(mod)) {
-            e.preventDefault();
-            var modName = mod.getAttribute('data-modifier');
-
-            if (!lastField) return;
-
-            var val = lastField.value;
-            var pos = lastField.selectionStart || lastPos;
-            var before = val.substring(0, pos);
-
-            var openIdx = before.lastIndexOf('{{');
-            if (openIdx === -1) {
-                insertAtCursor('|' + modName);
-                return;
-            }
-
-            var closeIdx = val.indexOf('}}', openIdx);
-            if (closeIdx === -1) {
-                insertAtCursor('|' + modName);
-                return;
-            }
-
-            var tokenContent = val.substring(openIdx + 2, closeIdx);
-            if (tokenContent.indexOf('|' + modName) !== -1) return;
-
-            lastField.selectionStart = closeIdx;
-            lastField.selectionEnd = closeIdx;
-            insertAtCursor('|' + modName);
-        }
-    });
-})();
-{/literal}
-</script>
+{script src="addons/travel_core/seo-click-insert.js"}

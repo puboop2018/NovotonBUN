@@ -29,18 +29,14 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
     private const DEST_CHUNK_SIZE = 200;
     private const PER_PAGE = 1000;
 
-    private readonly HotelRepository $hotelRepo;
-    private readonly DestinationRepository $destRepo;
     private readonly SphinxNormalizer $normalizer;
 
     public function __construct(
         SphinxApi $api,
-        HotelRepository $hotelRepo,
-        DestinationRepository $destRepo
+        private readonly HotelRepository $hotelRepo,
+        private readonly DestinationRepository $destRepo,
     ) {
         parent::__construct($api);
-        $this->hotelRepo = $hotelRepo;
-        $this->destRepo = $destRepo;
         $this->normalizer = Container::getNormalizer();
     }
 

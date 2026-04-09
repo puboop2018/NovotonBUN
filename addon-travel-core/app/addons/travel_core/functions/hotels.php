@@ -633,3 +633,104 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
 
     return ['updated' => $updated, 'skipped' => $skipped, 'total' => $total];
 }
+
+/**
+ * Run a long-running admin task with progress bar and redirect.
+ *
+ * Wraps the common controller boilerplate: set_time_limit, progress init/finish,
+ * notification, and redirect. Returns a CS-Cart controller redirect array.
+ *
+ * @param string   $progressLabel Translation key for the progress bar
+ * @param callable $task          fn(): mixed — the work to execute
+ * @param string   $redirectUrl   CS-Cart dispatch URL to redirect to after completion
+ * @param callable|null $onResult fn(mixed $result): void — optional post-task notification
+ * @return array CS-Cart [CONTROLLER_STATUS_REDIRECT, $url]
+ */
+function fn_travel_core_run_long_task(string $progressLabel, callable $task, string $redirectUrl, ?callable $onResult = null): array
+{
+    if (function_exists('set_time_limit')) { set_time_limit(0); }
+    fn_set_progress('init', $progressLabel);
+    $result = $task();
+    fn_set_progress('finish');
+
+    if ($onResult !== null) {
+        $onResult($result);
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+}
+
+/**
+ * Validate and attach a downloaded image temp file to a CS-Cart product.
+ *
+ * Shared logic extracted from fn_novoton_holidays_add_product_image() and
+ * fn_sphinx_holidays_add_product_image(). Each addon handles its own download
+ * strategy, then calls this function with the temp file path.
+ *
+ * @param int    $productId Product ID to attach the image to
+ * @param string $tempFile  Path to already-downloaded temp file
+ * @param string $prefix    Filename prefix (e.g. 'novoton', 'sphinx')
+ * @param bool   $isMain    True for main product image, false for additional
+ * @return bool True on success
+ */
+function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
+{
+    if ($productId <= 0 || !file_exists($tempFile) || filesize($tempFile) < 1000) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    try {
+        $imageInfo = getimagesize($tempFile);
+    } catch (\Throwable $e) {
+        $imageInfo = false;
+    }
+
+    if (!$imageInfo) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    $mimeToExt = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+
+    $ext = $mimeToExt[$imageInfo['mime']] ?? 'jpg';
+    $filename = "{$prefix}_hotel_{$productId}_" . time() . '_' . mt_rand(100, 999) . ".{$ext}";
+
+    $existingPairs = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
+        $productId
+    );
+
+    $pairData = [
+        'type'        => $isMain ? 'M' : 'A',
+        'object_id'   => $productId,
+        'object_type' => 'product',
+        'position'    => $existingPairs,
+    ];
+
+    if (!function_exists('fn_update_image_pairs')) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    $detailed = [
+        0 => [
+            'name'     => $filename,
+            'path'     => $tempFile,
+            'tmp_name' => $tempFile,
+            'size'     => filesize($tempFile),
+            'type'     => $imageInfo['mime'],
+        ],
+    ];
+
+    $pairIds = fn_update_image_pairs([], $detailed, $pairData, $productId, 'product');
+
+    if (file_exists($tempFile)) { unlink($tempFile); }
+
+    return !empty($pairIds);
+}

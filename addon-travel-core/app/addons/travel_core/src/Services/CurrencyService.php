@@ -15,15 +15,12 @@ namespace Tygh\Addons\TravelCore\Services;
 
 class CurrencyService
 {
-    /** @var string The currency code that the provider API returns prices in */
-    private readonly string $apiCurrency;
-
     /**
      * @param string $apiCurrency Currency code the API uses (e.g. 'EUR', 'USD')
      */
-    public function __construct(string $apiCurrency = 'EUR')
-    {
-        $this->apiCurrency = $apiCurrency;
+    public function __construct(
+        private readonly string $apiCurrency = 'EUR',
+    ) {
     }
 
     /**

@@ -194,9 +194,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'bulk_seo_apply') {
-        if (function_exists('set_time_limit')) { set_time_limit(0); }
-        fn_set_progress('init', __('travel_core.seo_bulk_apply_progress'));
-
         $fetcher = static fn(int $offset, int $batch): array => db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
                     h.description, h.rating, h.facilities_json, h.boards_json,
@@ -216,14 +213,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'region'  => $hotel['region_name'] ?? '',
             ]);
 
-        $result = fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder);
-
-        fn_set_progress('finish');
-        fn_set_notification('N', __('notice'),
-            str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-                __('travel_core.seo_bulk_apply_done'))
+        return fn_travel_core_run_long_task(
+            __('travel_core.seo_bulk_apply_progress'),
+            static fn() => fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder),
+            'addons.update&addon=sphinx_holidays&selected_sub_section=sphinx_holidays_seo_templates&selected_section=settings',
+            static function (array $result) {
+                fn_set_notification('N', __('notice'),
+                    str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                        __('travel_core.seo_bulk_apply_done'))
+                );
+            }
         );
-        return [CONTROLLER_STATUS_REDIRECT, 'addons.update&addon=sphinx_holidays&selected_sub_section=sphinx_holidays_seo_templates&selected_section=settings'];
     }
 
     if ($mode === 'bulk_update_hotels') {

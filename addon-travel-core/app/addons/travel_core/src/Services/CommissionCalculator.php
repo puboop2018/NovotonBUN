@@ -17,12 +17,12 @@ use Tygh\Addons\TravelCore\Contracts\CommissionCalculatorInterface;
 class CommissionCalculator implements CommissionCalculatorInterface
 {
     private readonly float $commission;
-    private readonly string $roundPrices;
 
-    public function __construct(float $commission, string $roundPrices = 'Y')
-    {
+    public function __construct(
+        float $commission,
+        private readonly string $roundPrices = 'Y',
+    ) {
         $this->commission = max(0.0, $commission);
-        $this->roundPrices = $roundPrices;
     }
 
     /**
