@@ -1007,12 +1007,8 @@ if ($mode === 'get_packages') {
         exit;
     }
 
-    $packages = db_get_array(
-        "SELECT package_name FROM ?:novoton_hotel_packages
-         WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-         ORDER BY package_name",
-        $hotel_id
-    );
+    $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
+    $packages = $packageRepo->findPackageNamesWithPriceinfo($hotel_id);
 
     echo json_encode(['packages' => $packages]);
     exit;
@@ -1032,10 +1028,8 @@ if ($mode === 'get_rooms') {
         exit;
     }
 
-    $hotel_data_json = db_get_field(
-        "SELECT hotel_data FROM ?:novoton_hotels WHERE hotel_id = ?s",
-        $hotel_id
-    );
+    $hotelRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelRepository();
+    $hotel_data_json = $hotelRepo->getHotelData($hotel_id);
 
     $rooms_list = [];
 
@@ -1078,14 +1072,8 @@ if ($mode === 'get_rooms') {
  */
 if (empty($mode) || $mode === 'manage') {
     // Get list of hotels with packages
-    $hotels = db_get_array(
-        "SELECT DISTINCT h.hotel_id, h.hotel_name
-         FROM ?:novoton_hotels h
-         INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-         WHERE p.priceinfo_data IS NOT NULL
-         ORDER BY h.hotel_name
-         LIMIT 200"
-    );
+    $hotelRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelRepository();
+    $hotels = $hotelRepo->findWithPriceinfoData(200);
 
     Tygh::$app['view']->assign('hotels', $hotels);
     Tygh::$app['view']->assign('default_check_in', date('Y') . '-07-01');

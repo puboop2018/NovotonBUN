@@ -36,6 +36,7 @@ interface HotelRepositoryInterface
     public function getCalendarPricesRaw(string $hotel_id): ?string;
     public function setCalendarPricesRaw(string $hotel_id, ?string $json): void;
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array;
+    public function findLinkedForSeo(int $offset, int $batch): array;
     public function getAllIds(): array;
     public function findByCountryIndexed(string $country): array;
     public function findByCountryWithLimit(string $country, int $limit = 0): array;

@@ -458,6 +458,21 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Find hotels linked to products (for SEO bulk apply), paginated.
+     */
+    public function findLinkedForSeo(int $offset, int $batch): array
+    {
+        return db_get_array(
+            "SELECT hotel_id, product_id, hotel_name, city, country, region,
+                    star_rating, hotel_type, property_type, latitude, longitude
+             FROM ?:novoton_hotels
+             WHERE product_id IS NOT NULL AND product_id > 0
+             LIMIT ?i, ?i",
+            $offset, $batch
+        );
+    }
+
+    /**
      * Get all hotel IDs (no other columns).
      *
      * @return string[]

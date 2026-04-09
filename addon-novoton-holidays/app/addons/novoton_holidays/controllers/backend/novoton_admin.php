@@ -19,14 +19,8 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 
 // Bulk-apply SEO templates to all linked products
 if ($mode === 'bulk_seo_apply') {
-    $fetcher = static fn(int $offset, int $batch): array => db_get_array(
-        "SELECT hotel_id, product_id, hotel_name, city, country, region,
-                star_rating, hotel_type, property_type, latitude, longitude
-         FROM ?:novoton_hotels
-         WHERE product_id IS NOT NULL AND product_id > 0
-         LIMIT ?i, ?i",
-        $offset, $batch
-    );
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $fetcher = static fn(int $offset, int $batch): array => $hotelRepo->findLinkedForSeo($offset, $batch);
 
     $builder = static fn(array $hotel): array =>
         \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(

@@ -26,10 +26,8 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
     $current_session_id = Tygh::$app['session']->getID();
 
-    $booking_record = db_get_row(
-        "SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
-        $booking_id, $current_user_id, $current_session_id
-    );
+    $bookingRepo = _nvt_booking_repo();
+    $booking_record = $bookingRepo->findByIdWithOwnership($booking_id, $current_user_id, $current_session_id);
 
     if (empty($booking_record)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
@@ -44,10 +42,8 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     
     // Get hotel info
-    $hotel_info = db_get_row(
-        "SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s",
-        $booking_record['hotel_id']
-    );
+    $hotelRepo = _nvt_hotel_repo();
+    $hotel_info = $hotelRepo->findById($booking_record['hotel_id']);
     
     // Get hotel name - try multiple sources
     $hotel_name = $hotel_info['hotel_name'] ?? '';
@@ -147,10 +143,8 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $package_name = $booking_record['package_name'];
     if (empty($package_name) && !empty($booking_record['hotel_id'])) {
         // V3: Get first package from novoton_hotel_packages table
-        $first_pkg = db_get_field(
-            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
-            $booking_record['hotel_id']
-        );
+        $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
+        $first_pkg = $packageRepo->getFirstPackageName($booking_record['hotel_id']);
         if (!empty($first_pkg)) {
             $package_name = $first_pkg;
         }
@@ -164,10 +158,10 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     
     // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
-    $db_packages = db_get_array(
-        "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-        $booking_record['hotel_id']
-    );
+    if (!isset($packageRepo)) {
+        $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
+    }
+    $db_packages = $packageRepo->getPackageIdNamePairs($booking_record['hotel_id']);
     if (!empty($db_packages)) {
         foreach ($db_packages as $pkg) {
             $all_packages[] = [

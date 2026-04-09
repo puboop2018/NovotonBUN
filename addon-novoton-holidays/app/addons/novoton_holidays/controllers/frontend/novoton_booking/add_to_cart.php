@@ -138,10 +138,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $package_name = $bookingData['package_name'] ?? '';
     if (empty($package_name) && !empty($bookingData['hotel_id'])) {
         // V3: Get first package from novoton_hotel_packages table
-        $first_pkg = db_get_field(
-            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
-            $bookingData['hotel_id']
-        );
+        $packageRepo = Container::getInstance()->hotelPackageRepository();
+        $first_pkg = $packageRepo->getFirstPackageName($bookingData['hotel_id']);
         if (!empty($first_pkg)) {
             $package_name = $first_pkg;
         }
@@ -418,20 +416,15 @@ use Tygh\Addons\TravelCore\TravelConstants;
     
     // Check if similar booking already exists (same hotel, dates, holder, no order yet)
     // This prevents duplicates from form resubmissions
-    $existing_booking_id = db_get_field(
-        "SELECT booking_id FROM ?:novoton_bookings 
-         WHERE order_id = 0 
-         AND hotel_id = ?s 
-         AND check_in = ?s 
-         AND check_out = ?s 
-         AND holder_name = ?s
-         AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-         LIMIT 1",
+    $bookingRepo = _nvt_booking_repo();
+    $existing = $bookingRepo->findExisting(
         $bookingData['hotel_id'],
         $bookingData['check_in'],
         $bookingData['check_out'],
-        $holder_name
+        $holder_name,
+        1 // within last 1 hour
     );
+    $existing_booking_id = $existing ? (int) $existing['booking_id'] : null;
     
     // Extract room_id and room_type from rooms_data for database columns
     // This ensures the columns are populated even for multi-room bookings

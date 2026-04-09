@@ -134,15 +134,13 @@ if ($mode == 'cron_update') {
     echo "Completed: " . date('Y-m-d H:i:s') . "\n";
     
     // Log to database
-    db_query(
-        "INSERT INTO ?:novoton_sync_log 
-         (sync_date, products_updated, products_failed, products_missing, products_no_data, status) 
-         VALUES (NOW(), ?i, ?i, ?i, ?i, 'completed')",
-        $stats['updated'],
-        $stats['failed'],
-        $stats['missing'],
-        $stats['no_data']
-    );
+    $syncLogRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->syncLogRepository();
+    $syncLogRepo->create('cron_price_update', [
+        'total' => count($products),
+        'updated' => $stats['updated'],
+        'failed' => $stats['failed'],
+        'status' => 'completed',
+    ]);
     
     exit;
 }

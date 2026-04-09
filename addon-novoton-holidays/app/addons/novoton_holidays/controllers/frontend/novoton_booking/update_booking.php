@@ -25,10 +25,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
     $current_session_id = Tygh::$app['session']->getID();
 
-    $ownership_check = db_get_field(
-        "SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
-        $booking_id, $current_user_id, $current_session_id
-    );
+    $bookingRepo = _nvt_booking_repo();
+    $ownership_check = $bookingRepo->checkOwnership($booking_id, $current_user_id, $current_session_id);
     if (empty($ownership_check)) {
         $security->logSecurityEvent('unauthorized_booking_update', [
             'booking_id' => $booking_id,
