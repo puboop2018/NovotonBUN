@@ -3321,6 +3321,10 @@ msgctxt "Languages::novoton_holidays.booking_api_failed"
 msgid "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
 msgstr "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
 
+msgctxt "Languages::novoton_holidays.seo_placeholders_title"
+msgid "Novoton placeholders to use"
+msgstr "Novoton placeholders to use"
+
 msgctxt "Languages::novoton_holidays.ph_name"
 msgid "Hotel display name"
 msgstr "Hotel display name"
