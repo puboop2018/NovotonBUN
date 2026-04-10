@@ -12,7 +12,6 @@ use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
@@ -92,27 +91,32 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
     }
     unset($guest);
 
-    // Convert stored API-currency price (EUR) to the cart primary currency (e.g. LEI)
-    // so the form total matches what the cart page shows. The DB stores total_price
-    // in the API currency (see add_to_cart.php line 478-479); the cart item stores
-    // the converted value via convertFromApiCurrency(). Without this conversion the
-    // form would display the raw EUR amount labelled with the primary-currency symbol.
-    $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
-    $apiCurrency     = $booking_record['currency'] ?? ConfigProvider::getApiCurrency();
-    $currencyService = new CurrencyService($apiCurrency);
-    $displayTotal    = $currencyService->convertFromApiCurrency(
-        (float) ($booking_record['total_price'] ?? 0),
-        $primaryCurrency
-    );
-
-    // Convert per-room prices in rooms_data the same way so per-room subtotals
-    // match the header total.
-    foreach ($rooms_data as &$room) {
-        if (isset($room['price'])) {
-            $room['price'] = $currencyService->convertFromApiCurrency((float) $room['price'], $primaryCurrency);
-        }
+    // Resolve the display total. The DB stores total_price in the API
+    // currency (EUR), while the cart line item stores the converted value
+    // in the primary currency (LEI). Prefer the cart — it's what the cart
+    // page shows and is already in primary currency. Fall back to the
+    // repository helper when the cart item isn't available (session
+    // expired, direct-URL access, etc.).
+    if ($cart_item && isset($cart_item['price'])) {
+        $displayTotal = (float) $cart_item['price'];
+    } else {
+        $displayTotal = $bookingRepo->getDisplayPrice($booking_record);
     }
-    unset($room);
+
+    // Per-room subtotals in rooms_data are stored in the API currency on
+    // the booking record; convert them to match the header total so the
+    // per-room breakdown stays consistent with the total shown above.
+    $apiCurrency = (string) ($booking_record['currency'] ?? '');
+    $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
+    if ($apiCurrency !== '' && $apiCurrency !== $primaryCurrency) {
+        $currencyService = new CurrencyService($apiCurrency);
+        foreach ($rooms_data as &$room) {
+            if (isset($room['price'])) {
+                $room['price'] = $currencyService->convertFromApiCurrency((float) $room['price'], $primaryCurrency);
+            }
+        }
+        unset($room);
+    }
 
     $booking = [
         'hotel_id' => $booking_record['hotel_id'],

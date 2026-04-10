@@ -48,6 +48,25 @@ interface BookingRepositoryInterface
     public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int;
 
     /**
+     * Convert a booking's stored total_price (in its api-side `currency`)
+     * into the target display currency (defaults to CART_PRIMARY_CURRENCY).
+     *
+     * The booking record stores prices in the API currency used at
+     * add-to-cart time (see add_to_cart.php). The cart line item, on the
+     * other hand, stores prices in the cart primary currency via
+     * CurrencyService::convertFromApiCurrency(). Any display path that
+     * reads the booking directly (edit form, order recap, email, etc.)
+     * must apply the same conversion, otherwise an EUR value gets
+     * rendered with a LEI label.
+     *
+     * @param array       $booking        Raw booking row (must contain
+     *                                    `total_price` + `currency`)
+     * @param string|null $targetCurrency Null = CART_PRIMARY_CURRENCY
+     * @return float Converted price in the target currency
+     */
+    public function getDisplayPrice(array $booking, ?string $targetCurrency = null): float;
+
+    /**
      * Decode JSON fields on a raw booking row in-place.
      *
      * @param array $booking Raw DB row

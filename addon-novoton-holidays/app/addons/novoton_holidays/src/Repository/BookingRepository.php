@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -797,6 +798,28 @@ class BookingRepository implements BookingRepositoryInterface
             $booking_id, $user_id, $session_id
         );
         return $id ? (int) $id : null;
+    }
+
+    #[\Override]
+    public function getDisplayPrice(array $booking, ?string $targetCurrency = null): float
+    {
+        $total = (float) ($booking['total_price'] ?? 0);
+        if ($total <= 0) {
+            return 0.0;
+        }
+
+        $source = (string) ($booking['currency'] ?? '');
+        $target = $targetCurrency
+            ?? (defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR');
+
+        // No currency on the row (legacy / direct insert) or already in the
+        // target currency: return the stored value as-is. A conversion with
+        // an unknown source would be a guess and silently mislead the user.
+        if ($source === '' || $source === $target) {
+            return $total;
+        }
+
+        return (new CurrencyService($source))->convertFromApiCurrency($total, $target);
     }
 
     /**
