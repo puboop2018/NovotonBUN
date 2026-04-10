@@ -12,6 +12,7 @@ use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
     $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
     $cart_id = $_REQUEST['cart_id'] ?? '';
@@ -90,7 +91,29 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         }
     }
     unset($guest);
-    
+
+    // Convert stored API-currency price (EUR) to the cart primary currency (e.g. LEI)
+    // so the form total matches what the cart page shows. The DB stores total_price
+    // in the API currency (see add_to_cart.php line 478-479); the cart item stores
+    // the converted value via convertFromApiCurrency(). Without this conversion the
+    // form would display the raw EUR amount labelled with the primary-currency symbol.
+    $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
+    $apiCurrency     = $booking_record['currency'] ?? ConfigProvider::getApiCurrency();
+    $currencyService = new CurrencyService($apiCurrency);
+    $displayTotal    = $currencyService->convertFromApiCurrency(
+        (float) ($booking_record['total_price'] ?? 0),
+        $primaryCurrency
+    );
+
+    // Convert per-room prices in rooms_data the same way so per-room subtotals
+    // match the header total.
+    foreach ($rooms_data as &$room) {
+        if (isset($room['price'])) {
+            $room['price'] = $currencyService->convertFromApiCurrency((float) $room['price'], $primaryCurrency);
+        }
+    }
+    unset($room);
+
     $booking = [
         'hotel_id' => $booking_record['hotel_id'],
         'room_id' => $booking_record['room_id'],
@@ -101,7 +124,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'adults' => $booking_record['adults'],
         'children' => $booking_record['children'],
         'children_ages' => $booking_record['children_ages'],
-        'total_price' => $booking_record['total_price'],
+        'total_price' => $displayTotal,
         'package_name' => $booking_record['package_name'],
         'num_rooms' => $booking_record['num_rooms'] ?: 1,
         'rooms_data' => $rooms_data,
@@ -127,7 +150,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
                 'adults' => (int)($booking_record['adults']),
                 'children' => (int)($booking_record['children']),
                 'childrenAges' => $children_ages_arr,
-                'price' => (float)($booking_record['total_price'])
+                'price' => $displayTotal,
             ]
         ];
     }
