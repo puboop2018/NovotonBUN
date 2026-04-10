@@ -33,6 +33,35 @@
 }
 </style>
 
+{*
+ * Mock placeholder data for the live-preview script. Mirrors the
+ * fields produced at runtime by SphinxProductFactory::buildPlaceholders()
+ * so the admin sees a realistic render before saving + bulk-applying.
+ *}
+<script>
+window.__seoMockData = {
+    name: "Arena Mar",
+    classification: "4",
+    city: "Golden Sands",
+    country: "Bulgaria",
+    region: "Varna",
+    property_type: "hotel",
+    facilities: ["pool", "spa", "wifi"],
+    boards: ["All inclusive", "Half board"],
+    rating: "8.5",
+    description: "Beachfront 4-star resort on the Black Sea.",
+    address: "Str. Strandului 1",
+    phone: "+359 52 123 456",
+    email: "info@arenamar.bg",
+    website: "https://arenamar.bg",
+    image_url: "https://cdn.example.com/arena-mar.jpg",
+    stars_emoji: "★★★★",
+    year: "{$smarty.now|date_format:'%Y'}",
+    latitude: "43.2828",
+    longitude: "28.0173"
+};
+</script>
+
 {capture name="mainbox"}
 
 <form method="post"
@@ -94,14 +123,21 @@
                            name="seo[seo_field_product_name]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_product_name"
                            {if $seo_values.seo_field_product_name != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_product_name")|default:"Product name template"}
                 </label>
-                <input type="text"
-                       id="seo_product_name"
-                       name="seo[seo_product_name]"
-                       value="{$seo_values.seo_product_name|escape:html}" />
-                <p class="help-block">{__("sphinx_holidays.seo_product_name.tooltip")|default:"Template for the product name."}</p>
+                <div class="controls">
+                    <input type="text"
+                           id="seo_product_name"
+                           name="seo[seo_product_name]"
+                           data-seo-ideal="80"
+                           data-seo-max="255"
+                           value="{$seo_values.seo_product_name|escape:html}" />
+                    <div class="seo-preview" data-seo-preview-for="seo_product_name" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <span class="seo-counter" data-seo-counter-for="seo_product_name"></span>
+                    <p class="help-block">{__("sphinx_holidays.seo_product_name.tooltip")|default:"Template for the product name."}</p>
+                </div>
             </div>
 
             {* Page Title *}
@@ -111,14 +147,21 @@
                            name="seo[seo_field_page_title]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_page_title"
                            {if $seo_values.seo_field_page_title != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_page_title")|default:"Page title template"}
                 </label>
-                <input type="text"
-                       id="seo_page_title"
-                       name="seo[seo_page_title]"
-                       value="{$seo_values.seo_page_title|escape:html}" />
-                <p class="help-block">{__("sphinx_holidays.seo_page_title.tooltip")|default:"Template for the HTML page title (SEO)."}</p>
+                <div class="controls">
+                    <input type="text"
+                           id="seo_page_title"
+                           name="seo[seo_page_title]"
+                           data-seo-ideal="60"
+                           data-seo-max="255"
+                           value="{$seo_values.seo_page_title|escape:html}" />
+                    <div class="seo-preview" data-seo-preview-for="seo_page_title" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <span class="seo-counter" data-seo-counter-for="seo_page_title"></span>
+                    <p class="help-block">{__("sphinx_holidays.seo_page_title.tooltip")|default:"Template for the HTML page title (SEO). Google typically truncates around 60 characters."}</p>
+                </div>
             </div>
 
             {* Meta Description *}
@@ -128,13 +171,20 @@
                            name="seo[seo_field_meta_description]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_meta_description"
                            {if $seo_values.seo_field_meta_description != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_meta_description")|default:"Meta description template"}
                 </label>
-                <textarea id="seo_meta_description"
-                          name="seo[seo_meta_description]"
-                          rows="3">{$seo_values.seo_meta_description|escape:html}</textarea>
-                <p class="help-block">{__("sphinx_holidays.seo_meta_description.tooltip")|default:"Template for the meta description tag."}</p>
+                <div class="controls">
+                    <textarea id="seo_meta_description"
+                              name="seo[seo_meta_description]"
+                              data-seo-ideal="160"
+                              data-seo-max="500"
+                              rows="3">{$seo_values.seo_meta_description|escape:html}</textarea>
+                    <div class="seo-preview" data-seo-preview-for="seo_meta_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <span class="seo-counter" data-seo-counter-for="seo_meta_description"></span>
+                    <p class="help-block">{__("sphinx_holidays.seo_meta_description.tooltip")|default:"Template for the meta description tag. Google truncates around 160 characters."}</p>
+                </div>
             </div>
 
             {* Meta Keywords *}
@@ -144,14 +194,21 @@
                            name="seo[seo_field_meta_keywords]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_meta_keywords"
                            {if $seo_values.seo_field_meta_keywords != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_meta_keywords")|default:"Meta keywords template"}
                 </label>
-                <input type="text"
-                       id="seo_meta_keywords"
-                       name="seo[seo_meta_keywords]"
-                       value="{$seo_values.seo_meta_keywords|escape:html}" />
-                <p class="help-block">{__("sphinx_holidays.seo_meta_keywords.tooltip")|default:"Template for the meta keywords tag."}</p>
+                <div class="controls">
+                    <input type="text"
+                           id="seo_meta_keywords"
+                           name="seo[seo_meta_keywords]"
+                           data-seo-ideal="200"
+                           data-seo-max="255"
+                           value="{$seo_values.seo_meta_keywords|escape:html}" />
+                    <div class="seo-preview" data-seo-preview-for="seo_meta_keywords" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <span class="seo-counter" data-seo-counter-for="seo_meta_keywords"></span>
+                    <p class="help-block">{__("sphinx_holidays.seo_meta_keywords.tooltip")|default:"Template for the meta keywords tag."}</p>
+                </div>
             </div>
 
             {* SEO Name Slug *}
@@ -161,14 +218,21 @@
                            name="seo[seo_field_name_slug]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_name_slug"
                            {if $seo_values.seo_field_name_slug != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_name_slug")|default:"SEO URL slug template"}
                 </label>
-                <input type="text"
-                       id="seo_name_slug"
-                       name="seo[seo_name_slug]"
-                       value="{$seo_values.seo_name_slug|escape:html}" />
-                <p class="help-block">{__("sphinx_holidays.seo_name_slug.tooltip")|default:"Template for the SEO-friendly URL slug. Result is automatically sanitized."}</p>
+                <div class="controls">
+                    <input type="text"
+                           id="seo_name_slug"
+                           name="seo[seo_name_slug]"
+                           data-seo-ideal="80"
+                           data-seo-max="255"
+                           value="{$seo_values.seo_name_slug|escape:html}" />
+                    <div class="seo-preview" data-seo-preview-for="seo_name_slug" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <span class="seo-counter" data-seo-counter-for="seo_name_slug"></span>
+                    <p class="help-block">{__("sphinx_holidays.seo_name_slug.tooltip")|default:"Template for the SEO-friendly URL slug. Result is automatically sanitized."}</p>
+                </div>
             </div>
 
             {* Full Description *}
@@ -178,20 +242,24 @@
                            name="seo[seo_field_full_description]"
                            value="Y"
                            class="field-toggle"
+                           data-seo-toggle="seo_full_description"
                            {if $seo_values.seo_field_full_description != 'N'}checked="checked"{/if} />
                     {__("sphinx_holidays.seo_full_description")|default:"Full description template (optional)"}
                 </label>
-                <textarea id="seo_full_description"
-                          name="seo[seo_full_description]"
-                          rows="4">{$seo_values.seo_full_description|escape:html}</textarea>
-                <p class="help-block">{__("sphinx_holidays.seo_full_description.tooltip")|default:"Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."}</p>
+                <div class="controls">
+                    <textarea id="seo_full_description"
+                              name="seo[seo_full_description]"
+                              rows="4">{$seo_values.seo_full_description|escape:html}</textarea>
+                    <div class="seo-preview" data-seo-preview-for="seo_full_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
+                    <p class="help-block">{__("sphinx_holidays.seo_full_description.tooltip")|default:"Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."}</p>
+                </div>
             </div>
 
         </div>
 
-        {* ── RIGHT: Placeholder + Modifier sidebar ── *}
+        {* ── RIGHT: Placeholder + Modifier sidebar (sticky on scroll) ── *}
         <div class="span4 seo-tpl-wrapper" data-seo-wrapper>
-            <div class="seo-tpl-sidebar">
+            <div class="seo-tpl-sidebar seo-tpl-sidebar-sticky">
 
                 {* Placeholders *}
                 <div class="well well-small" style="background: #f8f9fa;">
