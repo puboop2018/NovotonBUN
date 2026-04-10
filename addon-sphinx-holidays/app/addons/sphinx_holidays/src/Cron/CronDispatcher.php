@@ -56,6 +56,7 @@ class CronDispatcher implements CronDispatcherInterface
      *
      * @return array<string, string>
      */
+    #[\Override]
     public static function getAvailableModes(): array
     {
         $result = [];
@@ -68,6 +69,7 @@ class CronDispatcher implements CronDispatcherInterface
     /**
      * Check if a mode exists.
      */
+    #[\Override]
     public function hasMode(string $mode): bool
     {
         return isset(self::$modes[$mode]);
@@ -85,6 +87,7 @@ class CronDispatcher implements CronDispatcherInterface
      * @param array $params Additional parameters
      * @return array Result from the command
      */
+    #[\Override]
     public function dispatch(string $mode, array $params = []): array
     {
         if (!$this->hasMode($mode)) {
@@ -129,8 +132,8 @@ class CronDispatcher implements CronDispatcherInterface
                 }
                 flush();
                 // Touch lock file so stale detection doesn't kill active sync
-                if ($lockFile !== null) {
-                    @touch($lockFile);
+                if ($lockFile !== null && file_exists($lockFile)) {
+                    touch($lockFile);
                 }
             });
 
@@ -140,7 +143,7 @@ class CronDispatcher implements CronDispatcherInterface
             if ($lockFp) {
                 flock($lockFp, LOCK_UN);
                 fclose($lockFp);
-                @unlink($lockFile);
+                if (file_exists($lockFile)) { unlink($lockFile); }
             }
         }
 
@@ -165,7 +168,7 @@ class CronDispatcher implements CronDispatcherInterface
      */
     private function acquireLock(string $lockFile)
     {
-        $fp = @fopen($lockFile, 'c'); // 'c' = create if missing, don't truncate
+        $fp = fopen($lockFile, 'c'); // 'c' = create if missing, don't truncate
         if (!$fp) {
             return false;
         }
@@ -196,8 +199,8 @@ class CronDispatcher implements CronDispatcherInterface
         // The unlink+reopen is acceptable here because only stale-lock
         // recovery reaches this path, and concurrent stale recovery is
         // harmless (both processes would try to acquire, only one wins flock)
-        @unlink($lockFile);
-        $fp = @fopen($lockFile, 'c');
+        if (file_exists($lockFile)) { unlink($lockFile); }
+        $fp = fopen($lockFile, 'c');
         if (!$fp) {
             return false;
         }

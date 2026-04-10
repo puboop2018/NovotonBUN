@@ -63,11 +63,13 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         'family'    => 'DBL',
     ];
 
+    #[\Override]
     public function getProviderName(): string
     {
         return 'sphinx';
     }
 
+    #[\Override]
     public function normalizeStarRating(mixed $rawValue): ?string
     {
         if ($rawValue === null || $rawValue === '') {
@@ -78,6 +80,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return ($stars >= 1 && $stars <= 5) ? (string) $stars : null;
     }
 
+    #[\Override]
     public function normalizeBoardCode(mixed $rawValue): ?string
     {
         if (empty($rawValue) || !is_string($rawValue)) {
@@ -123,6 +126,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         self::$unknownBoards = [];
     }
 
+    #[\Override]
     public function normalizeRoomTypeCode(mixed $rawValue): ?string
     {
         if (empty($rawValue) || !is_string($rawValue)) {
@@ -140,6 +144,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return null;
     }
 
+    #[\Override]
     public function normalizePropertyType(mixed $rawValue): ?string
     {
         if (empty($rawValue) || !is_string($rawValue)) {
@@ -166,6 +171,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return $typeMap[$lower] ?? null;
     }
 
+    #[\Override]
     public function normalizeFacilityCode(mixed $rawValue): ?string
     {
         // Sphinx facilities come with numeric IDs — pass through as-is
@@ -176,6 +182,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         return is_string($rawValue) ? $rawValue : null;
     }
 
+    #[\Override]
     public function normalizeResort(mixed $rawValue): ?string
     {
         if (empty($rawValue) || !is_string($rawValue)) {

@@ -19,9 +19,6 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 class OrderStatusSyncService
 {
-    private readonly SphinxApi $api;
-    private readonly SphinxBookingRepository $repo;
-
     private ?\Closure $outputCallback = null;
 
     /** Map Sphinx API booking statuses to our internal TravelConstants statuses */
@@ -31,10 +28,10 @@ class OrderStatusSyncService
         'cancelled'  => TravelConstants::STATUS_CANCELLED,
     ];
 
-    public function __construct(SphinxApi $api, SphinxBookingRepository $repo)
-    {
-        $this->api = $api;
-        $this->repo = $repo;
+    public function __construct(
+        private readonly SphinxApi $api,
+        private readonly SphinxBookingRepository $repo,
+    ) {
     }
 
     public function setOutputCallback(\Closure $callback): void

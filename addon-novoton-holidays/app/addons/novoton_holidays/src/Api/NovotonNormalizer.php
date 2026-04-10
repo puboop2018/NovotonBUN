@@ -17,11 +17,13 @@ use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 
 class NovotonNormalizer implements ProviderNormalizerInterface
 {
+    #[\Override]
     public function getProviderName(): string
     {
         return 'novoton';
     }
 
+    #[\Override]
     public function normalizeStarRating(mixed $rawValue): ?string
     {
         $numeric = preg_replace('/[^0-9]/', '', trim((string) $rawValue));
@@ -39,6 +41,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return (string) $stars;
     }
 
+    #[\Override]
     public function normalizeBoardCode(mixed $rawValue): ?string
     {
         $trimmed = trim((string) $rawValue);
@@ -52,6 +55,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return BoardType::isValid($canonical) ? $canonical : null;
     }
 
+    #[\Override]
     public function normalizeRoomTypeCode(mixed $rawValue): ?string
     {
         if (empty($rawValue)) {
@@ -91,6 +95,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return null;
     }
 
+    #[\Override]
     public function normalizeFacilityCode(mixed $rawValue): ?string
     {
         $id = (int) $rawValue;
@@ -98,6 +103,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return $id > 0 ? (string) $id : null;
     }
 
+    #[\Override]
     public function normalizeResort(mixed $rawValue): ?string
     {
         $trimmed = trim((string) $rawValue);
@@ -105,6 +111,7 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         return $trimmed !== '' ? mb_convert_case($trimmed, MB_CASE_TITLE, 'UTF-8') : null;
     }
 
+    #[\Override]
     public function normalizePropertyType(mixed $rawValue): ?string
     {
         $trimmed = trim((string) $rawValue);

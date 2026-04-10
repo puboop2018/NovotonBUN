@@ -101,6 +101,7 @@ class FeatureMapper implements FeatureMapperInterface
      * @param string $apiValue    Raw value from the API
      * @return array|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
      */
+    #[\Override]
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array
     {
         $cacheKey = $apiSource . "\0" . $featureType . "\0" . $apiValue;
@@ -158,6 +159,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return array|null The mapping with guaranteed cscart_variant_id (if resolvable)
      */
+    #[\Override]
     public static function resolveWithVariant(string $apiSource, string $featureType, string $apiValue): ?array
     {
         $mapping = self::resolve($apiSource, $featureType, $apiValue);
@@ -197,6 +199,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return int|null map_id of the auto-registered row (dynamic), or null (strict/failed)
      */
+    #[\Override]
     public static function handleUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): ?int
     {
         // Always track in unmapped_values for visibility
@@ -280,6 +283,7 @@ class FeatureMapper implements FeatureMapperInterface
      * Uses INSERT ... ON DUPLICATE KEY UPDATE to increment hotel_count
      * and refresh last_seen_at. Lightweight — one query per unique miss per request.
      */
+    #[\Override]
     public static function trackUnmapped(string $apiSource, string $featureType, string $apiValue, string $apiLabel = ''): void
     {
         $dedupeKey = $apiSource . "\0" . $featureType . "\0" . $apiValue;
@@ -296,6 +300,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Update the variant_id for a mapping row.
      */
+    #[\Override]
     public static function updateVariantId(int $mapId, int $variantId, string $source = 'auto'): void
     {
         self::getRepository()->updateVariantId($mapId, $variantId, $source);
@@ -308,6 +313,7 @@ class FeatureMapper implements FeatureMapperInterface
      * Clear the in-memory resolve cache.
      * Call after import/sync operations to free memory.
      */
+    #[\Override]
     public static function clearCache(): void
     {
         // Batch-flush last_used_at updates (one query instead of N)
@@ -325,6 +331,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Get CS-Cart variant_id directly (for product feature assignment).
      */
+    #[\Override]
     public static function toVariantId(string $apiSource, string $featureType, string $apiValue): ?int
     {
         $mapping = self::resolve($apiSource, $featureType, $apiValue);
@@ -340,6 +347,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return array<string, array> Keyed by api_value
      */
+    #[\Override]
     public static function resolveMany(string $apiSource, string $featureType, array $apiValues): array
     {
         if (empty($apiValues)) {
@@ -360,6 +368,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Get display name for a canonical code (language-aware).
      */
+    #[\Override]
     public static function getDisplayName(string $featureType, string $canonicalCode, string $lang = 'en'): string
     {
         return self::getRepository()->getDisplayName($featureType, $canonicalCode, $lang);
@@ -368,6 +377,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Register an alias (called by each API addon during install/sync).
      */
+    #[\Override]
     public static function addAlias(string $apiSource, string $apiValue, int $mapId, string $matchType = 'exact'): void
     {
         self::getRepository()->upsertAlias($apiSource, $apiValue, $mapId, $matchType);
@@ -379,6 +389,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return int feature_id or 0 if not configured
      */
+    #[\Override]
     public static function getFeatureId(string $featureType): int
     {
         $settingKey = self::FEATURE_SETTING_KEYS[$featureType]
@@ -391,6 +402,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * @return array<string, array>
      */
+    #[\Override]
     public static function allCodes(string $featureType): array
     {
         return self::getRepository()->allCodes($featureType);

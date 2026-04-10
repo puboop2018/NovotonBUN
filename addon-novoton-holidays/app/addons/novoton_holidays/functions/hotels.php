@@ -798,13 +798,14 @@ function fn_novoton_holidays_assign_property_rating_feature(int $product_id, str
 }
 
 /**
- * Add image to product from URL
- * 
- * Downloads image from URL and attaches it to a CS-Cart product.
- * 
- * @param int $product_id Product ID
- * @param string $image_url URL of the image
- * @param bool $is_main Whether this is the main product image
+ * Add image to product from URL.
+ *
+ * Downloads via CS-Cart's Http::get(), then delegates validation and
+ * attachment to the shared fn_travel_core_attach_product_image().
+ *
+ * @param int    $product_id Product ID
+ * @param string $image_url  URL of the image
+ * @param bool   $is_main    Whether this is the main product image
  * @return bool Success status
  */
 function fn_novoton_holidays_add_product_image(int $product_id, string $image_url, bool $is_main = false): bool
@@ -812,100 +813,13 @@ function fn_novoton_holidays_add_product_image(int $product_id, string $image_ur
     if (empty($product_id) || empty($image_url)) {
         return false;
     }
-    
-    // Download image to temp file
+
     $temp_file = fn_create_temp_file();
     if (!$temp_file) {
         return false;
     }
-    
-    // Use CS-Cart's HTTP class for download
-    $result = \Tygh\Http::get($image_url, [], [
-        'write_to_file' => $temp_file
-    ]);
-    
-    if (empty($result) || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-        if (file_exists($temp_file)) { unlink($temp_file); }
-        return false;
-    }
-    
-    // Detect image type
-    $image_info = @getimagesize($temp_file);
-    if (!$image_info) {
-        if (file_exists($temp_file)) { unlink($temp_file); }
-        return false;
-    }
-    
-    // Get extension from mime type
-    $mime_to_ext = [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/gif' => 'gif',
-        'image/webp' => 'webp'
-    ];
-    
-    $ext = $mime_to_ext[$image_info['mime']] ?? 'jpg';
-    $filename = "novoton_hotel_{$product_id}_" . time() . ".{$ext}";
-    
-    // Prepare image data for CS-Cart
-    $image_data = [
-        'detailed' => [
-            'name' => $filename,
-            'path' => $temp_file,
-            'size' => filesize($temp_file)
-        ]
-    ];
-    
-    // Get current image count for pair_id
-    $existing_pairs = db_get_field(
-        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
-        $product_id
-    );
-    
-    $pair_data = [
-        'type' => $is_main ? 'M' : 'A',  // M = Main, A = Additional
-        'object_id' => $product_id,
-        'object_type' => 'product',
-        'position' => $existing_pairs
-    ];
-    
-    // Use CS-Cart's function to add image
-    if (function_exists('fn_update_image_pairs')) {
-        $icons = [];
-        $detailed = [
-            0 => [
-                'name'     => $filename,
-                'path'     => $temp_file,
-                'tmp_name' => $temp_file,
-                'size'     => filesize($temp_file),
-                'type'     => $image_info['mime'],
-            ]
-        ];
-        
-        $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, $product_id, 'product');
-        
-        if (file_exists($temp_file)) { unlink($temp_file); }
-        return !empty($pair_ids);
-    }
-    
-    if (file_exists($temp_file)) { unlink($temp_file); }
-    return false;
-}
 
-/**
- * @deprecated Since 4.0.0 — Feature mappings now managed by travel_core.
- * Use fn_travel_core_seed_feature_map() + fn_novoton_holidays_seed_travel_aliases() instead.
- *
- * Kept as a no-op stub to avoid breaking callers during transition.
- */
-function fn_novoton_holidays_seed_feature_mappings(string $provider = 'novoton'): array
-{
-    // Delegate to travel_core's canonical seeding system
-    if (function_exists('fn_travel_core_seed_feature_map')) {
-        fn_travel_core_seed_feature_map();
-    }
-    if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {
-        fn_novoton_holidays_seed_travel_aliases();
-    }
-    return ['seeded' => 0, 'skipped' => 0];
+    \Tygh\Http::get($image_url, [], ['write_to_file' => $temp_file]);
+
+    return fn_travel_core_attach_product_image($product_id, $temp_file, 'novoton', $is_main);
 }

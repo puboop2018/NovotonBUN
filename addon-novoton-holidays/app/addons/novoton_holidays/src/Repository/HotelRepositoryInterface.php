@@ -36,4 +36,22 @@ interface HotelRepositoryInterface
     public function getCalendarPricesRaw(string $hotel_id): ?string;
     public function setCalendarPricesRaw(string $hotel_id, ?string $json): void;
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array;
+    public function findLinkedForSeo(int $offset, int $batch): array;
+    public function getAllIds(): array;
+    public function findByCountryIndexed(string $country): array;
+    public function findByCountryWithLimit(string $country, int $limit = 0): array;
+    public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array;
+    public function findWithProductsSortedByStaleness(int $limit = 50): array;
+    public function findWithPricesForExport(string $country): array;
+    public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array;
+    public function findIdsWithPriceinfoData(): array;
+    public function countWithCalendarPrices(): int;
+    public function countWithPackagesByCountry(string $country): int;
+    public function getResortStatsByCountry(string $country): array;
+    public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array;
+    public function getCountriesWithPriceCounts(): array;
+    public function getCountryCityPairs(): array;
+    public function getHotelData(string $hotel_id): ?string;
+    public function findWithPriceinfoData(int $limit = 200): array;
+    public function updatePackagesCount(string $hotel_id, int $count): bool;
 }

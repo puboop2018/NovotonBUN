@@ -255,4 +255,8 @@ return [
         'en' => 'Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is.',
         'ro' => 'Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală.',
     ],
+    'sphinx_holidays.per_night' => [
+        'en' => 'night',
+        'ro' => 'noapte',
+    ],
 ];

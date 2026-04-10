@@ -25,10 +25,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
     $current_session_id = Tygh::$app['session']->getID();
 
-    $ownership_check = db_get_field(
-        "SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)",
-        $booking_id, $current_user_id, $current_session_id
-    );
+    $bookingRepo = _nvt_booking_repo();
+    $ownership_check = $bookingRepo->checkOwnership($booking_id, $current_user_id, $current_session_id);
     if (empty($ownership_check)) {
         $security->logSecurityEvent('unauthorized_booking_update', [
             'booking_id' => $booking_id,
@@ -124,16 +122,20 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
     
     // Route through repository to sync travel_bookings
-    $dbUpdateSuccess = _nvt_booking_repo()->update($booking_id, [
-        'guest_name' => $guest_list,
-        'holder_name' => $holder_name,
-        'guest_email' => $contact['email'] ?? '',
-        'guest_phone' => $contact['phone'] ?? '',
-        'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
-        'api_request' => json_encode($api_request, JSON_UNESCAPED_UNICODE),
-    ]);
-
-    if (!$dbUpdateSuccess) {
+    try {
+        _nvt_booking_repo()->update($booking_id, [
+            'guest_name' => $guest_list,
+            'holder_name' => $holder_name,
+            'guest_email' => $contact['email'] ?? '',
+            'guest_phone' => $contact['phone'] ?? '',
+            'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
+            'api_request' => json_encode($api_request, JSON_UNESCAPED_UNICODE),
+        ]);
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton booking update failed: ' . $e->getMessage(),
+            'booking_id' => $booking_id,
+        ]);
         fn_set_notification('E', __('error'), __('novoton_holidays.booking_update_failed', [
             '[default]' => 'Could not save guest details. Please try again.',
         ]));

@@ -3320,3 +3320,51 @@ msgstr "off"
 msgctxt "Languages::novoton_holidays.booking_api_failed"
 msgid "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
 msgstr "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
+
+msgctxt "Languages::novoton_holidays.ph_name"
+msgid "Hotel display name"
+msgstr "Hotel display name"
+
+msgctxt "Languages::novoton_holidays.ph_raw_name"
+msgid "Original hotel name (untranslated)"
+msgstr "Original hotel name (untranslated)"
+
+msgctxt "Languages::novoton_holidays.ph_city"
+msgid "City / resort"
+msgstr "City / resort"
+
+msgctxt "Languages::novoton_holidays.ph_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::novoton_holidays.ph_region"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "Languages::novoton_holidays.ph_star_rating"
+msgid "Star rating (number)"
+msgstr "Star rating (number)"
+
+msgctxt "Languages::novoton_holidays.ph_stars_emoji"
+msgid "Stars as emoji (e.g. ★★★★)"
+msgstr "Stars as emoji (e.g. ★★★★)"
+
+msgctxt "Languages::novoton_holidays.ph_hotel_type"
+msgid "Hotel type"
+msgstr "Hotel type"
+
+msgctxt "Languages::novoton_holidays.ph_property_type"
+msgid "Property type (hotel, apartment, etc.)"
+msgstr "Property type (hotel, apartment, etc.)"
+
+msgctxt "Languages::novoton_holidays.ph_year"
+msgid "Current year"
+msgstr "Current year"
+
+msgctxt "Languages::novoton_holidays.ph_description"
+msgid "Hotel description text"
+msgstr "Hotel description text"
+
+msgctxt "Languages::novoton_holidays.ph_facilities"
+msgid "Top facilities (comma-separated)"
+msgstr "Top facilities (comma-separated)"

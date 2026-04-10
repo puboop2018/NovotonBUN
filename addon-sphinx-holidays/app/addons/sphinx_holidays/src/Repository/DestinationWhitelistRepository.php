@@ -104,4 +104,87 @@ class DestinationWhitelistRepository
             $destinationId, $selectionType
         );
     }
+
+    /**
+     * Replace the entire whitelist within a transaction.
+     *
+     * Clears all existing entries and inserts the new list atomically.
+     *
+     * @param array<array{destination_id: int, selection_type: string}> $entries
+     * @return void
+     * @throws \Exception On failure (transaction is rolled back)
+     */
+    public function replaceAll(array $entries): void
+    {
+        db_query("START TRANSACTION");
+        try {
+            db_query("DELETE FROM ?:sphinx_destination_whitelist");
+
+            foreach ($entries as $entry) {
+                $destId = (int) ($entry['destination_id'] ?? 0);
+                $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
+                if ($destId > 0) {
+                    db_query(
+                        "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
+                         ON DUPLICATE KEY UPDATE selection_type = ?s",
+                        $destId, $selType, $selType
+                    );
+                }
+            }
+
+            db_query("COMMIT");
+        } catch (\Exception $e) {
+            db_query("ROLLBACK");
+            throw $e;
+        }
+    }
+
+    /**
+     * Get non-country child destination IDs whitelisted for a given country code.
+     *
+     * @param string $countryCode ISO country code
+     * @return int[]
+     */
+    public function getWhitelistedChildIdsByCountry(string $countryCode): array
+    {
+        $childIds = db_get_fields(
+            "SELECT w.destination_id FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+             WHERE d.country_code = ?s AND d.type != 'country'",
+            $countryCode
+        );
+        return array_map('intval', $childIds);
+    }
+
+    /**
+     * Get whitelist type counts grouped by destination type.
+     *
+     * @return array<string, int> type => count (e.g. ['country' => 3, 'region' => 12])
+     */
+    public function getCountsByDestinationType(): array
+    {
+        return db_get_hash_single_array(
+            "SELECT d.type, COUNT(*) as cnt FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+             GROUP BY d.type",
+            ['type', 'cnt']
+        );
+    }
+
+    /**
+     * Get sample non-country destination names from the whitelist.
+     *
+     * @param int $limit Max number of names to return
+     * @return string[]
+     */
+    public function getSampleNonCountryNames(int $limit = 5): array
+    {
+        return db_get_fields(
+            "SELECT d.name FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
+             WHERE d.type != 'country'
+             ORDER BY d.name LIMIT ?i",
+            $limit
+        );
+    }
 }

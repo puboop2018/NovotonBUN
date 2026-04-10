@@ -339,20 +339,20 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
  */
 function fn_travel_core_apply_modifier(string $value, string $modifier): string
 {
-    switch (strtolower($modifier)) {
-        case 'lower':      return mb_strtolower($value, 'UTF-8');
-        case 'upper':      return mb_strtoupper($value, 'UTF-8');
-        case 'title':      return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
-        case 'capitalize': return mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8');
-        case 'trim':       return trim($value);
-        case 'slug':       return function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-'));
-        case 'first':      return mb_substr($value, 0, 1, 'UTF-8');
-        case 'last':       return mb_substr($value, -1, 1, 'UTF-8');
-        case 'abs':        return (string) abs((float) $value);
-        case 'round':      return (string) round((float) $value);
-        case 'strip_tags': return strip_tags($value);
-        default:           return $value;
-    }
+    return match (strtolower($modifier)) {
+        'lower'      => mb_strtolower($value, 'UTF-8'),
+        'upper'      => mb_strtoupper($value, 'UTF-8'),
+        'title'      => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
+        'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
+        'trim'       => trim($value),
+        'slug'       => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
+        'first'      => mb_substr($value, 0, 1, 'UTF-8'),
+        'last'       => mb_substr($value, -1, 1, 'UTF-8'),
+        'abs'        => (string) abs((float) $value),
+        'round'      => (string) round((float) $value),
+        'strip_tags' => strip_tags($value),
+        default      => $value,
+    };
 }
 
 /**
@@ -506,8 +506,10 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 {
     $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
 
-    $overwriteMode = ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all';
-    $fillIfEmpty = ($overwriteMode === 'fill_if_empty') && ($productId > 0);
+    $overwriteMode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
+        ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all'
+    ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
+    $fillIfEmpty = ($overwriteMode === \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::FillIfEmpty) && ($productId > 0);
 
     // Load current product values once (only when needed for fill_if_empty)
     $current = [];
@@ -584,10 +586,15 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
  * Respects overwrite mode and field toggles. Uses fn_set_progress() for
  * CS-Cart's native progress bar in the admin panel.
  *
- * @param string $addonName 'novoton_holidays' or 'sphinx_holidays'
+ * Provider addons supply their own data-fetching and placeholder-building
+ * callables, keeping travel_core free of addon-specific SQL and class refs.
+ *
+ * @param string   $addonName          'novoton_holidays' or 'sphinx_holidays'
+ * @param callable $hotelFetcher       fn(int $offset, int $batchSize): array — returns hotel rows
+ * @param callable $placeholderBuilder fn(array $hotel): array — returns placeholder map
  * @return array{updated: int, skipped: int, total: int}
  */
-function fn_travel_core_seo_bulk_apply(string $addonName): array
+function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher, callable $placeholderBuilder): array
 {
     $updated = 0;
     $skipped = 0;
@@ -596,30 +603,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName): array
     $offset = 0;
 
     while (true) {
-        if ($addonName === 'novoton_holidays') {
-            $hotels = db_get_array(
-                "SELECT hotel_id, product_id, hotel_name, city, country, region,
-                        star_rating, hotel_type, property_type, latitude, longitude
-                 FROM ?:novoton_hotels
-                 WHERE product_id IS NOT NULL AND product_id > 0
-                 LIMIT ?i, ?i",
-                $offset, $batchSize
-            );
-        } elseif ($addonName === 'sphinx_holidays') {
-            $hotels = db_get_array(
-                "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
-                        h.description, h.rating, h.facilities_json, h.boards_json,
-                        h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
-                        h.destination_name, h.country_name, h.region_name
-                 FROM ?:sphinx_hotels h
-                 WHERE h.product_id IS NOT NULL AND h.product_id > 0
-                   AND h.sync_status = 'active'
-                 LIMIT ?i, ?i",
-                $offset, $batchSize
-            );
-        } else {
-            break;
-        }
+        $hotels = $hotelFetcher($offset, $batchSize);
 
         if (empty($hotels)) {
             break;
@@ -628,18 +612,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName): array
         foreach ($hotels as $hotel) {
             $total++;
             $productId = (int) $hotel['product_id'];
-
-            // Build placeholders per addon
-            if ($addonName === 'novoton_holidays') {
-                $displayName = $hotel['hotel_name'] ?? '';
-                $placeholders = \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders($hotel, $displayName);
-            } else {
-                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
-                    'city'    => $hotel['destination_name'] ?? '',
-                    'country' => $hotel['country_name'] ?? '',
-                    'region'  => $hotel['region_name'] ?? '',
-                ]);
-            }
+            $placeholders = $placeholderBuilder($hotel);
 
             $seoFields = fn_travel_core_apply_seo_fields($addonName, $placeholders, $productId, $hotel['hotel_id']);
 
@@ -659,4 +632,105 @@ function fn_travel_core_seo_bulk_apply(string $addonName): array
     }
 
     return ['updated' => $updated, 'skipped' => $skipped, 'total' => $total];
+}
+
+/**
+ * Run a long-running admin task with progress bar and redirect.
+ *
+ * Wraps the common controller boilerplate: set_time_limit, progress init/finish,
+ * notification, and redirect. Returns a CS-Cart controller redirect array.
+ *
+ * @param string   $progressLabel Translation key for the progress bar
+ * @param callable $task          fn(): mixed — the work to execute
+ * @param string   $redirectUrl   CS-Cart dispatch URL to redirect to after completion
+ * @param callable|null $onResult fn(mixed $result): void — optional post-task notification
+ * @return array CS-Cart [CONTROLLER_STATUS_REDIRECT, $url]
+ */
+function fn_travel_core_run_long_task(string $progressLabel, callable $task, string $redirectUrl, ?callable $onResult = null): array
+{
+    if (function_exists('set_time_limit')) { set_time_limit(0); }
+    fn_set_progress('init', $progressLabel);
+    $result = $task();
+    fn_set_progress('finish');
+
+    if ($onResult !== null) {
+        $onResult($result);
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+}
+
+/**
+ * Validate and attach a downloaded image temp file to a CS-Cart product.
+ *
+ * Shared logic extracted from fn_novoton_holidays_add_product_image() and
+ * fn_sphinx_holidays_add_product_image(). Each addon handles its own download
+ * strategy, then calls this function with the temp file path.
+ *
+ * @param int    $productId Product ID to attach the image to
+ * @param string $tempFile  Path to already-downloaded temp file
+ * @param string $prefix    Filename prefix (e.g. 'novoton', 'sphinx')
+ * @param bool   $isMain    True for main product image, false for additional
+ * @return bool True on success
+ */
+function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
+{
+    if ($productId <= 0 || !file_exists($tempFile) || filesize($tempFile) < 1000) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    try {
+        $imageInfo = getimagesize($tempFile);
+    } catch (\Throwable $e) {
+        $imageInfo = false;
+    }
+
+    if (!$imageInfo) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    $mimeToExt = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+
+    $ext = $mimeToExt[$imageInfo['mime']] ?? 'jpg';
+    $filename = "{$prefix}_hotel_{$productId}_" . time() . '_' . mt_rand(100, 999) . ".{$ext}";
+
+    $existingPairs = (int) db_get_field(
+        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
+        $productId
+    );
+
+    $pairData = [
+        'type'        => $isMain ? 'M' : 'A',
+        'object_id'   => $productId,
+        'object_type' => 'product',
+        'position'    => $existingPairs,
+    ];
+
+    if (!function_exists('fn_update_image_pairs')) {
+        if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+
+    $detailed = [
+        0 => [
+            'name'     => $filename,
+            'path'     => $tempFile,
+            'tmp_name' => $tempFile,
+            'size'     => filesize($tempFile),
+            'type'     => $imageInfo['mime'],
+        ],
+    ];
+
+    $pairIds = fn_update_image_pairs([], $detailed, $pairData, $productId, 'product');
+
+    if (file_exists($tempFile)) { unlink($tempFile); }
+
+    return !empty($pairIds);
 }

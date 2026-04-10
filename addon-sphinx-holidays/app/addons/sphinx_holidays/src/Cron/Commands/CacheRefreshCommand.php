@@ -16,18 +16,11 @@ use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
  * Usage:
  *   php cron.php access_key=KEY mode=cache_refresh
  */
-class CacheRefreshCommand
+class CacheRefreshCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Refresh cached hotel & package deals from Sphinx cache endpoints';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -60,10 +53,4 @@ class CacheRefreshCommand
         }
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

@@ -3320,3 +3320,51 @@ msgstr "reducere"
 msgctxt "Languages::novoton_holidays.booking_api_failed"
 msgid "Novoton booking failed for hotel \"[hotel]\" in order #[order_id]. The API submission did not succeed. Please check and resubmit manually."
 msgstr "Rezervarea Novoton a eșuat pentru hotelul „[hotel]" în comanda #[order_id]. Transmiterea către API nu a reușit. Verificați și retrimiteți manual."
+
+msgctxt "Languages::novoton_holidays.ph_name"
+msgid "Hotel display name"
+msgstr "Nume hotel afișat"
+
+msgctxt "Languages::novoton_holidays.ph_raw_name"
+msgid "Original hotel name (untranslated)"
+msgstr "Numele original al hotelului (netradus)"
+
+msgctxt "Languages::novoton_holidays.ph_city"
+msgid "City / resort"
+msgstr "Oraș / stațiune"
+
+msgctxt "Languages::novoton_holidays.ph_country"
+msgid "Country"
+msgstr "Țară"
+
+msgctxt "Languages::novoton_holidays.ph_region"
+msgid "Region"
+msgstr "Regiune"
+
+msgctxt "Languages::novoton_holidays.ph_star_rating"
+msgid "Star rating (number)"
+msgstr "Clasificare stele (număr)"
+
+msgctxt "Languages::novoton_holidays.ph_stars_emoji"
+msgid "Stars as emoji (e.g. ★★★★)"
+msgstr "Stele ca emoji (ex. ★★★★)"
+
+msgctxt "Languages::novoton_holidays.ph_hotel_type"
+msgid "Hotel type"
+msgstr "Tip hotel"
+
+msgctxt "Languages::novoton_holidays.ph_property_type"
+msgid "Property type (hotel, apartment, etc.)"
+msgstr "Tip proprietate (hotel, apartament, etc.)"
+
+msgctxt "Languages::novoton_holidays.ph_year"
+msgid "Current year"
+msgstr "Anul curent"
+
+msgctxt "Languages::novoton_holidays.ph_description"
+msgid "Hotel description text"
+msgstr "Text descriere hotel"
+
+msgctxt "Languages::novoton_holidays.ph_facilities"
+msgid "Top facilities (comma-separated)"
+msgstr "Facilități principale (separate prin virgulă)"

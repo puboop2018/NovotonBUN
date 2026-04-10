@@ -836,8 +836,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders()
         : [];
 
-    // Use direct cURL — CS-Cart's Http::get ignores custom headers and returns
-    // empty string with write_to_file, which caused all downloads to fail.
+    // Use direct cURL — CS-Cart's Http::get ignores custom headers.
     $fp = fopen($temp_file, 'wb');
     if (!$fp) {
         fn_log_event('general', 'runtime', ['message' => "Sphinx: fopen() failed for temp file '{$temp_file}' product #{$product_id}"]);
@@ -868,66 +867,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    try {
-        $image_info = getimagesize($temp_file);
-    } catch (\Throwable $e) {
-        $image_info = false;
-    }
-    if (!$image_info) {
-        fn_log_event('general', 'runtime', ['message' => "Sphinx: getimagesize() failed for product #{$product_id}, file={$temp_file}, size=" . filesize($temp_file)]);
-        if (file_exists($temp_file)) { unlink($temp_file); }
-        return false;
-    }
-
-    $mime_to_ext = [
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/gif'  => 'gif',
-        'image/webp' => 'webp',
-    ];
-
-    $ext = $mime_to_ext[$image_info['mime']] ?? 'jpg';
-    $filename = "sphinx_hotel_{$product_id}_" . time() . '_' . mt_rand(100, 999) . ".{$ext}";
-
-    $existing_pairs = (int) db_get_field(
-        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
-        $product_id
-    );
-
-    $pair_data = [
-        'type'        => $is_main ? 'M' : 'A',
-        'object_id'   => $product_id,
-        'object_type' => 'product',
-        'position'    => $existing_pairs,
-    ];
-
-    if (function_exists('fn_update_image_pairs')) {
-        $icons = [];
-        $detailed = [
-            0 => [
-                'name'     => $filename,
-                'path'     => $temp_file,
-                'tmp_name' => $temp_file,
-                'size'     => filesize($temp_file),
-                'type'     => $image_info['mime'],
-            ],
-        ];
-
-        $pair_ids = fn_update_image_pairs($icons, $detailed, $pair_data, $product_id, 'product');
-
-        if (file_exists($temp_file)) { unlink($temp_file); }
-
-        if (empty($pair_ids)) {
-            fn_log_event('general', 'runtime', ['message' => "Sphinx: fn_update_image_pairs() returned empty for product #{$product_id}, file={$filename}, size=" . ($detailed[0]['size'] ?? '?') . ", mime={$image_info['mime']}"]);
-            return false;
-        }
-
-        return true;
-    }
-
-    fn_log_event('general', 'runtime', ['message' => 'Sphinx: fn_update_image_pairs() function not found']);
-    if (file_exists($temp_file)) { unlink($temp_file); }
-    return false;
+    return fn_travel_core_attach_product_image($product_id, $temp_file, 'sphinx', $is_main);
 }
 
 /**

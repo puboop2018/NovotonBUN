@@ -17,21 +17,21 @@ use Tygh\Addons\NovotonHolidays\Constants;
 
 class ConfigProvider
 {
-    public const ADDON_ID = 'novoton_holidays';
+    public const string ADDON_ID = 'novoton_holidays';
 
     // API rate limiting
-    public const API_DELAY_MS = 100;
+    public const int API_DELAY_MS = 100;
 
     // Batch processing bounds (for clamping admin input)
-    public const MIN_BATCH_SIZE = 10;
-    public const MAX_BATCH_SIZE = 500;
-    public const MIN_EXECUTION_TIME = 60;
-    public const MAX_EXECUTION_TIME = 3600;
+    public const int MIN_BATCH_SIZE = 10;
+    public const int MAX_BATCH_SIZE = 500;
+    public const int MIN_EXECUTION_TIME = 60;
+    public const int MAX_EXECUTION_TIME = 3600;
 
-    public const MAX_IMAGES_PER_HOTEL = 10;
+    public const int MAX_IMAGES_PER_HOTEL = 10;
 
     // Stale threshold for incremental sync (hours)
-    public const STALE_HOURS = 24;
+    public const int STALE_HOURS = 24;
 
     /** @var self|null Instance-based singleton. */
     private static ?self $instance = null;

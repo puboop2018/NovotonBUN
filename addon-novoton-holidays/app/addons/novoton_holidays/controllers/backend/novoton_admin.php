@@ -8,12 +8,36 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
     return [CONTROLLER_STATUS_DENIED];
+}
+
+// Bulk-apply SEO templates to all linked products
+if ($mode === 'bulk_seo_apply') {
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $fetcher = static fn(int $offset, int $batch): array => $hotelRepo->findLinkedForSeo($offset, $batch);
+
+    $builder = static fn(array $hotel): array =>
+        \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(
+            $hotel, $hotel['hotel_name'] ?? ''
+        );
+
+    return fn_travel_core_run_long_task(
+        __('travel_core.seo_bulk_apply_progress'),
+        static fn() => fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder),
+        'addons.update?addon=novoton_holidays&selected_sub_section=novoton_holidays_seo_templates&selected_section=settings',
+        static function (array $result) {
+            fn_set_notification('N', __('notice'),
+                str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                    __('travel_core.seo_bulk_apply_done'))
+            );
+        }
+    );
 }
 
 // Update prices manually
@@ -76,11 +100,10 @@ if ($mode === 'update_prices') {
 
 // View sync logs
 if ($mode === 'sync_logs') {
-    
-    $logs = db_get_array(
-        "SELECT * FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 50"
-    );
-    
+
+    $syncLogRepo = Container::getInstance()->syncLogRepository();
+    $logs = $syncLogRepo->findRecent(50);
+
     Tygh::$app['view']->assign('sync_logs', $logs);
 }
 
@@ -105,19 +128,10 @@ if ($mode === 'bookings') {
     if (!empty($_REQUEST['date_to']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_REQUEST['date_to'])) {
         $condition .= db_quote(" AND b.check_in <= ?s", $_REQUEST['date_to']);
     }
-    
-    $bookings = db_get_array(
-        "SELECT b.booking_id, b.order_id, b.hotel_id, b.hotel_name, b.room_type, 
-                b.check_in, b.check_out, b.nights, b.adults, b.children, 
-                b.total_price, b.currency, b.status, b.novoton_status, b.created_at,
-                o.status as order_status, o.email 
-         FROM ?:novoton_bookings b
-         LEFT JOIN ?:orders o ON b.order_id = o.order_id
-         WHERE 1=1 $condition
-         ORDER BY b.created_at DESC
-         LIMIT 500"
-    );
-    
+
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $bookings = $bookingRepo->findForAdminList($condition, 500);
+
     Tygh::$app['view']->assign('bookings', $bookings);
     Tygh::$app['view']->assign('search', array_intersect_key($_REQUEST, array_flip(['order_id', 'status', 'date_from', 'date_to', 'dispatch'])));
 }
@@ -132,14 +146,8 @@ if ($mode === 'booking_details') {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.bookings'];
     }
 
-    $booking = db_get_row(
-        "SELECT b.*, o.*, p.product 
-         FROM ?:novoton_bookings b
-         LEFT JOIN ?:orders o ON b.order_id = o.order_id
-         LEFT JOIN ?:products p ON b.product_id = p.product_id
-         WHERE b.booking_id = ?i",
-        $bookingId
-    );
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $booking = $bookingRepo->findWithOrderDetails($bookingId);
     
     if ($booking) {
         // Get invoice from Novoton
@@ -199,12 +207,8 @@ if ($mode === 'download_log') {
 // Export bookings
 if ($mode === 'export_bookings') {
     
-    $bookings = db_get_array(
-        "SELECT b.*, o.email, o.status as order_status 
-         FROM ?:novoton_bookings b
-         LEFT JOIN ?:orders o ON b.order_id = o.order_id
-         ORDER BY b.created_at DESC"
-    );
+    $bookingRepo = Container::getInstance()->bookingRepository();
+    $bookings = $bookingRepo->findAllForExport();
     
     // Create CSV
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";

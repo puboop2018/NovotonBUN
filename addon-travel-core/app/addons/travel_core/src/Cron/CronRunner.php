@@ -16,23 +16,13 @@ use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
  */
 class CronRunner
 {
-    private string $addonLabel;
-    private CronDispatcherInterface $dispatcher;
-    private ?string $defaultMode;
-
-    /** @var callable(\Throwable): void|null */
-    private mixed $onError;
-
     public function __construct(
-        string $addonLabel,
-        CronDispatcherInterface $dispatcher,
-        ?string $defaultMode = null,
-        ?callable $onError = null
+        private readonly string $addonLabel,
+        private readonly CronDispatcherInterface $dispatcher,
+        private readonly ?string $defaultMode = null,
+        /** @var callable(\Throwable): void|null */
+        private readonly mixed $onError = null,
     ) {
-        $this->addonLabel = $addonLabel;
-        $this->dispatcher = $dispatcher;
-        $this->defaultMode = $defaultMode;
-        $this->onError = $onError;
     }
 
     /**

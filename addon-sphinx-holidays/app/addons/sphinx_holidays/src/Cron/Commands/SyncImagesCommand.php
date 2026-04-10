@@ -18,20 +18,13 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
  *   sync_images&country=GR    — sync missing images for Greece only
  *   sync_images&force=Y       — re-sync all images (even if product already has images)
  */
-class SyncImagesCommand
+class SyncImagesCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     private const BATCH_SIZE = 50;
 
     public static function getDescription(): string
     {
         return 'Download and attach hotel images to CS-Cart products';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -177,10 +170,4 @@ class SyncImagesCommand
         );
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

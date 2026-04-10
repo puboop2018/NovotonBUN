@@ -72,10 +72,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     );
     
     // Get hotel info from novoton_hotels table
-    $hotel_info = db_get_row(
-        "SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s",
-        $bookingData['hotel_id']
-    );
+    $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
     
     // If hotel not found in novoton_hotels, try to get name from product
     if (empty($hotel_info['hotel_name']) && !empty($product_id)) {
@@ -189,10 +186,8 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     
     // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
-    $db_packages = db_get_array(
-        "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-        $booking['hotel_id']
-    );
+    $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
+    $db_packages = $packageRepo->getPackageIdNamePairs($booking['hotel_id']);
     if (!empty($db_packages)) {
         foreach ($db_packages as $pkg) {
             $all_packages[] = [

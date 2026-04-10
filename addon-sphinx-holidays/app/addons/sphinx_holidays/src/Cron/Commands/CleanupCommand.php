@@ -8,18 +8,11 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  *
  * Usage: php cron.php access_key=KEY mode=cleanup
  */
-class CleanupCommand
+class CleanupCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Clean up orphan bookings, old sync logs, and expired cache entries';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -109,10 +102,4 @@ class CleanupCommand
         ];
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

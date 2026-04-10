@@ -68,7 +68,7 @@ trait SyncStateTrait
         }
 
         if (!rename($tmpFile, $this->state_file)) {
-            @unlink($tmpFile);
+            if (file_exists($tmpFile)) { unlink($tmpFile); }
         }
     }
 

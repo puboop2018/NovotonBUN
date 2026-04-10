@@ -3,22 +3,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
+
 /**
- * Base class for Sphinx sync cron commands.
+ * Sphinx-specific cron command base.
  *
- * Provides shared output callback management and rate limit summary formatting.
+ * Extends travel_core's shared base with rate-limit summary formatting
+ * specific to the Sphinx API's HTTP 429 / X-RateLimit headers.
  */
-abstract class AbstractSyncCommand
+abstract class AbstractSyncCommand extends BaseCommand
 {
-    protected ?\Closure $outputCallback = null;
-
-    abstract public static function getDescription(): string;
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
-    }
-
     protected function outputRateLimitSummary(array $stats): void
     {
         if ($this->outputCallback === null) {
@@ -27,7 +21,7 @@ abstract class AbstractSyncCommand
 
         $rlHits = $stats['rate_limit_hits'] ?? 0;
         if ($rlHits > 0) {
-            ($this->outputCallback)("Rate limit: {$rlHits} request(s) were throttled (HTTP 429).");
+            $this->output("Rate limit: {$rlHits} request(s) were throttled (HTTP 429).");
         }
 
         $rl = $stats['rate_limit'] ?? [];
@@ -37,7 +31,7 @@ abstract class AbstractSyncCommand
             if ($resetIn !== null && $resetIn > 0) {
                 $msg .= ' Resets in ' . $this->formatResetTime($resetIn) . '.';
             }
-            ($this->outputCallback)($msg);
+            $this->output($msg);
         }
     }
 
@@ -54,13 +48,5 @@ abstract class AbstractSyncCommand
         $h = (int) floor($m / 60);
         $m = $m % 60;
         return $m > 0 ? "{$h}h {$m}m" : "{$h}h";
-    }
-
-    protected function wrapResult(array $stats): array
-    {
-        return [
-            'success' => $stats['success'],
-            'stats'   => $stats,
-        ];
     }
 }

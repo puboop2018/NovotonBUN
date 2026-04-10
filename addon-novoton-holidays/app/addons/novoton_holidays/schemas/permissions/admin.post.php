@@ -99,6 +99,7 @@ $schema['novoton_admin'] = [
         'export_bookings'  => ['permissions' => 'novoton_manage_bookings'],
         'test_api'         => ['permissions' => 'novoton_manage_sync'],
         'run_cron'         => ['permissions' => 'novoton_manage_sync'],
+        'bulk_seo_apply'   => ['permissions' => 'novoton_manage_settings'],
     ],
 ];
 

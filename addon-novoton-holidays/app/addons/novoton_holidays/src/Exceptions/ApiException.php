@@ -8,8 +8,8 @@ namespace Tygh\Addons\NovotonHolidays\Exceptions;
  */
 class ApiException extends NovotonException
 {
-    private $httpCode;
-    private $apiFunction;
+    private int $httpCode;
+    private string $apiFunction;
 
     public function __construct(string $message, string $apiFunction = '', int $httpCode = 0, array $context = [], ?\Throwable $previous = null)
     {

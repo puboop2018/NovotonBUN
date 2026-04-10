@@ -459,6 +459,35 @@ class DestinationRepository
     }
 
     /**
+     * Get the country_code for a destination by its ID.
+     *
+     * @param int $destinationId
+     * @return string|null Country code or null if not found
+     */
+    public function getCountryCodeById(int $destinationId): ?string
+    {
+        $code = db_get_field(
+            "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
+            $destinationId
+        );
+        return ($code !== false && $code !== '') ? (string) $code : null;
+    }
+
+    /**
+     * Count city-level destinations (city, destination) for a given country code.
+     *
+     * @param string $countryCode ISO country code
+     * @return int
+     */
+    public function countCitiesByCountry(string $countryCode): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:sphinx_destinations WHERE country_code = ?s AND type IN ('city','destination')",
+            $countryCode
+        );
+    }
+
+    /**
      * Find destinations by name or full_path prefix.
      *
      * "Athens" matches by name. "Athens, Greece" matches via full_path prefix,

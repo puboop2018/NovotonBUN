@@ -105,6 +105,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
     }
 
+    if ($mode === 'relink_products') {
+        if (!ConfigProvider::isConfigured()) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+        }
+
+        if (function_exists('set_time_limit')) { set_time_limit(0); }
+
+        $api = Container::getApi();
+        $hotelRepo = Container::getHotelRepository();
+        $destRepo = Container::getDestinationRepository();
+        $service = new HotelSyncService($api, $hotelRepo, $destRepo);
+
+        $result = $service->relinkExistingProducts();
+
+        if ($result['linked'] > 0 || $result['skipped'] > 0) {
+            fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
+                '[linked]'    => $result['linked'],
+                '[skipped]'   => $result['skipped'],
+                '[not_found]' => $result['not_found'],
+                '[errors]'    => $result['errors'],
+                '[total]'     => $result['total'],
+            ]));
+        } elseif ($result['total'] === 0) {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.no_spx_products'));
+        } else {
+            fn_set_notification('W', __('warning'), __('sphinx_holidays.relink_done', [
+                '[linked]'    => 0,
+                '[skipped]'   => $result['skipped'],
+                '[not_found]' => $result['not_found'],
+                '[errors]'    => $result['errors'],
+                '[total]'     => $result['total'],
+            ]));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+    }
+
     if ($mode === 'retry_skipped') {
         $hotelRepo = Container::getHotelRepository();
         $reset = $hotelRepo->resetSkipped();
@@ -122,28 +160,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Single JSON field to avoid PHP max_input_vars limit
         $whitelist = json_decode($_REQUEST['whitelist_json'] ?? '[]', true) ?: [];
 
-        db_query("START TRANSACTION");
+        $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
-            // Clear existing whitelist
-            db_query("DELETE FROM ?:sphinx_destination_whitelist");
-
-            if (!empty($whitelist) && is_array($whitelist)) {
-                foreach ($whitelist as $entry) {
-                    $destId = (int) ($entry['destination_id'] ?? 0);
-                    $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
-                    if ($destId > 0) {
-                        db_query(
-                            "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
-                             ON DUPLICATE KEY UPDATE selection_type = ?s",
-                            $destId, $selType, $selType
-                        );
-                    }
-                }
-            }
-
-            db_query("COMMIT");
+            $whitelistRepo->replaceAll(is_array($whitelist) ? $whitelist : []);
         } catch (\Exception $e) {
-            db_query("ROLLBACK");
             fn_set_notification('E', __('error'), __('sphinx_holidays.whitelist_save_failed'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
         }
@@ -153,6 +173,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
+    }
+
+    if ($mode === 'bulk_seo_apply') {
+        $hotelRepo = Container::getHotelRepository();
+        $fetcher = static fn(int $offset, int $batch): array =>
+            $hotelRepo->fetchLinkedBatchForSeo($offset, $batch);
+
+        $builder = static fn(array $hotel): array =>
+            \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
+                'city'    => $hotel['destination_name'] ?? '',
+                'country' => $hotel['country_name'] ?? '',
+                'region'  => $hotel['region_name'] ?? '',
+            ]);
+
+        return fn_travel_core_run_long_task(
+            __('travel_core.seo_bulk_apply_progress'),
+            static fn() => fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder),
+            'addons.update&addon=sphinx_holidays&selected_sub_section=sphinx_holidays_seo_templates&selected_section=settings',
+            static function (array $result) {
+                fn_set_notification('N', __('notice'),
+                    str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
+                        __('travel_core.seo_bulk_apply_done'))
+                );
+            }
+        );
     }
 
     if ($mode === 'bulk_update_hotels') {
@@ -254,11 +299,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Update DB with fresh image data so next sync doesn't need API call
                     if (!empty($imageUrls)) {
-                        db_query(
-                            "UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s",
+                        $hotelRepo->updateImages(
+                            (string) $hotel['hotel_id'],
                             $imageUrls[0],
-                            json_encode($fresh['images']),
-                            (string) $hotel['hotel_id']
+                            json_encode($fresh['images'])
                         );
                     }
                 }
@@ -348,18 +392,15 @@ if ($mode === 'get_whitelist_children') {
         echo json_encode(['children' => []]);
         exit;
     }
-    $countryCode = db_get_field("SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i", $countryId);
+    $destRepo = Container::getDestinationRepository();
+    $countryCode = $destRepo->getCountryCodeById($countryId);
     if (empty($countryCode)) {
         echo json_encode(['children' => []]);
         exit;
     }
-    $childIds = db_get_fields(
-        "SELECT w.destination_id FROM ?:sphinx_destination_whitelist w
-         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-         WHERE d.country_code = ?s AND d.type != 'country'",
-        $countryCode
-    );
-    echo json_encode(['children' => array_map('intval', $childIds)]);
+    $whitelistRepo = Container::getDestinationWhitelistRepository();
+    $childIds = $whitelistRepo->getWhitelistedChildIdsByCountry($countryCode);
+    echo json_encode(['children' => $childIds]);
     exit;
 }
 
@@ -435,9 +476,8 @@ if ($mode === 'manage') {
     $selectedCountries = ConfigProvider::getSelectedCountryCodes();
 
     // Recent sync logs (both types)
-    $syncLogs = db_get_array(
-        "SELECT * FROM ?:sphinx_sync_log ORDER BY started_at DESC LIMIT 10"
-    );
+    $syncLogRepo = Container::getSyncLogRepository();
+    $syncLogs = $syncLogRepo->getRecent(10);
 
     Tygh::$app['view']->assign('counts_by_type', $countsByType);
     Tygh::$app['view']->assign('total_destinations', $totalDestinations);
@@ -450,6 +490,10 @@ if ($mode === 'manage') {
     Tygh::$app['view']->assign('skipped_hotels', $skippedCount);
     Tygh::$app['view']->assign('selected_countries', $selectedCountries);
     Tygh::$app['view']->assign('is_configured', $isConfigured);
+    // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
+    $orphanedSpxCount = $hotelRepo->countOrphanedProducts(ConfigProvider::getProductCodePrefix());
+    Tygh::$app['view']->assign('orphaned_spx_products', $orphanedSpxCount);
+
     Tygh::$app['view']->assign('sync_logs', $syncLogs);
 
     // Cron URLs for the dashboard
@@ -529,6 +573,7 @@ if ($mode === 'manage') {
 
 } elseif ($mode === 'whitelist') {
     $destRepo = Container::getDestinationRepository();
+    $whitelistRepo = Container::getDestinationWhitelistRepository();
     $countsByType = $destRepo->getCountsByType();
     $totalDestinations = $destRepo->getTotal();
 
@@ -536,7 +581,7 @@ if ($mode === 'manage') {
     $countries = $destRepo->getCountries();
 
     // Get current whitelist entries
-    $whitelistRows = db_get_array("SELECT * FROM ?:sphinx_destination_whitelist");
+    $whitelistRows = $whitelistRepo->findAll();
     $whitelistMap = []; // destination_id => selection_type
     foreach ($whitelistRows as $row) {
         $whitelistMap[(int) $row['destination_id']] = $row['selection_type'];
@@ -553,13 +598,7 @@ if ($mode === 'manage') {
         $whitelistedChildren = [];
         if ($isWhitelisted && $selectionType !== 'all') {
             // Get whitelisted children for this country
-            $childIds = db_get_fields(
-                "SELECT d.destination_id FROM ?:sphinx_destinations d
-                 JOIN ?:sphinx_destination_whitelist w ON d.destination_id = w.destination_id
-                 WHERE d.country_code = ?s AND d.type != 'country'",
-                $country['country_code']
-            );
-            $whitelistedChildren = array_map('intval', $childIds);
+            $whitelistedChildren = $whitelistRepo->getWhitelistedChildIdsByCountry($country['country_code']);
             $childCount = count($whitelistedChildren);
         }
 
@@ -574,22 +613,12 @@ if ($mode === 'manage') {
     }
 
     // Summary stats — single query instead of N+1
-    $whitelistedTypeCounts = db_get_hash_single_array(
-        "SELECT d.type, COUNT(*) as cnt FROM ?:sphinx_destination_whitelist w
-         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-         GROUP BY d.type",
-        ['type', 'cnt']
-    );
+    $whitelistedTypeCounts = $whitelistRepo->getCountsByDestinationType();
     $whitelistedCountryCount = (int) ($whitelistedTypeCounts['country'] ?? 0);
     $whitelistedRegionCount = array_sum($whitelistedTypeCounts) - $whitelistedCountryCount;
 
     // Sample whitelisted city names for summary
-    $sampleCities = db_get_fields(
-        "SELECT d.name FROM ?:sphinx_destination_whitelist w
-         JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-         WHERE d.type != 'country'
-         ORDER BY d.name LIMIT 5"
-    );
+    $sampleCities = $whitelistRepo->getSampleNonCountryNames(5);
 
     // Per-country whitelist summary: region full/partial counts + city count
     $whitelistSummary = [];
@@ -605,10 +634,7 @@ if ($mode === 'manage') {
 
         if ($cd['selection_type'] === 'all') {
             $fullRegions = count($regions);
-            $totalCities = (int) db_get_field(
-                "SELECT COUNT(*) FROM ?:sphinx_destinations WHERE country_code = ?s AND type IN ('city','destination')",
-                $cd['country_code']
-            );
+            $totalCities = $destRepo->countCitiesByCountry($cd['country_code']);
         } else {
             foreach ($regions as $region) {
                 $rid = (int) $region['destination_id'];

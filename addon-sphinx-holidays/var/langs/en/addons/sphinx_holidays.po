@@ -232,6 +232,22 @@ msgctxt "SettingsOptions::sphinx_holidays::debug_logging"
 msgid "Enable debug logging"
 msgstr "Enable debug logging"
 
+msgctxt "Languages::sphinx_holidays.relink_existing_products"
+msgid "Re-link Existing Products"
+msgstr "Re-link Existing Products"
+
+msgctxt "Languages::sphinx_holidays.relink_confirm"
+msgid "This will fetch hotel data from the Sphinx API for all existing SPX products and re-link them. This may take several minutes. Continue?"
+msgstr "This will fetch hotel data from the Sphinx API for all existing SPX products and re-link them. This may take several minutes. Continue?"
+
+msgctxt "Languages::sphinx_holidays.relink_done"
+msgid "Re-linked [linked] of [total] products. Already linked: [skipped]. Not found in API: [not_found]. Errors: [errors]."
+msgstr "Re-linked [linked] of [total] products. Already linked: [skipped]. Not found in API: [not_found]. Errors: [errors]."
+
+msgctxt "Languages::sphinx_holidays.no_spx_products"
+msgid "No products with SPX codes found in the catalog."
+msgstr "No products with SPX codes found in the catalog."
+
 msgctxt "SettingsOptions::sphinx_holidays::seo_templates_header"
 msgid "SEO Templates"
 msgstr "SEO Templates"

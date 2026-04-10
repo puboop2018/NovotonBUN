@@ -15,8 +15,4 @@ $schema['travel_booking_styles'] = [
     'permissions' => ['GET', 'POST'],
 ];
 
-$schema['travel_seo_templates'] = [
-    'permissions' => ['GET', 'POST'],
-];
-
 return $schema;

@@ -598,6 +598,67 @@ class HotelRepository
     }
 
     /**
+     * Fetch a batch of active linked hotels for SEO bulk-apply.
+     *
+     * Returns hotel rows with location data needed for placeholder building.
+     *
+     * @param int $offset Starting offset
+     * @param int $batch  Batch size
+     * @return array
+     */
+    public function fetchLinkedBatchForSeo(int $offset, int $batch): array
+    {
+        return db_get_array(
+            "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
+                    h.description, h.rating, h.facilities_json, h.boards_json,
+                    h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
+                    h.destination_name, h.country_name, h.region_name
+             FROM ?:sphinx_hotels h
+             WHERE h.product_id IS NOT NULL AND h.product_id > 0
+               AND h.sync_status = 'active'
+             LIMIT ?i, ?i",
+            $offset, $batch
+        );
+    }
+
+    /**
+     * Count orphaned SPX products (exist in CS-Cart but not linked in sphinx_hotels).
+     *
+     * These are products with the sphinx product code prefix that have no
+     * corresponding hotel row linking back to them.
+     *
+     * @param string $productCodePrefix The product code prefix (e.g. 'SPX')
+     * @return int
+     */
+    public function countOrphanedProducts(string $productCodePrefix): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:products p
+             LEFT JOIN ?:sphinx_hotels h ON h.product_id = p.product_id
+             WHERE p.product_code LIKE ?l AND h.hotel_id IS NULL",
+            $productCodePrefix . '%'
+        );
+    }
+
+    /**
+     * Update image URL and images JSON for a hotel.
+     *
+     * Used when fresh image data is fetched from the API during image sync.
+     *
+     * @param string $hotelId   The hotel ID
+     * @param string $imageUrl  Primary image URL
+     * @param string $imagesJson JSON-encoded array of image data
+     * @return void
+     */
+    public function updateImages(string $hotelId, string $imageUrl, string $imagesJson): void
+    {
+        db_query(
+            "UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s",
+            $imageUrl, $imagesJson, $hotelId
+        );
+    }
+
+    /**
      * Get distinct classification values present in the data.
      *
      * @return int[]

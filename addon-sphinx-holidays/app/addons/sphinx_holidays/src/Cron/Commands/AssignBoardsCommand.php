@@ -30,11 +30,9 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  *   php cron.php access_key=KEY mode=assign_boards status=1
  *   php cron.php access_key=KEY mode=assign_boards reset=1
  */
-class AssignBoardsCommand
+class AssignBoardsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
-
-    private ?\Closure $outputCallback = null;
 
     /** State file name stored in DIR_CACHE */
     private const STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
@@ -59,11 +57,6 @@ class AssignBoardsCommand
     public static function getDescription(): string
     {
         return 'Assign discovered board/meal types as CS-Cart product features (batched with resume)';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -319,10 +312,4 @@ class AssignBoardsCommand
         return ['success' => true, 'status' => $state['status'], 'processed' => $state['processed'], 'total' => $state['total']];
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

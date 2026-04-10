@@ -400,7 +400,7 @@ class CacheService implements CacheServiceInterface
         $shard = substr($safe_key, 0, 2) ?: '__';
         $dir = $this->cache_dir . $shard . '/';
         if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            mkdir($dir, 0755, true);
         }
         return $dir . $safe_key . '.cache';
     }
@@ -502,7 +502,7 @@ class CacheService implements CacheServiceInterface
             // upper bound that avoids reading files that are obviously stale.
             $maxTtl = 86400;
             foreach ($files as $file) {
-                $mtime = @filemtime($file);
+                $mtime = file_exists($file) ? filemtime($file) : false;
                 if ($mtime !== false && ($mtime + $maxTtl) < $now) {
                     // File is older than max possible TTL — definitely expired
                     if (unlink($file)) {

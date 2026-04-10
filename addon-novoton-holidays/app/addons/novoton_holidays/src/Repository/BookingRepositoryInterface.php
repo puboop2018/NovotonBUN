@@ -41,6 +41,12 @@ interface BookingRepositoryInterface
     public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int;
     public function findWithReservationId(int $limit = 1000): array;
 
+    public function findForAdminList(string $condition = '', int $limit = 500): array;
+    public function findWithOrderDetails(int $booking_id): ?array;
+    public function findAllForExport(): array;
+    public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array;
+    public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int;
+
     /**
      * Decode JSON fields on a raw booking row in-place.
      *

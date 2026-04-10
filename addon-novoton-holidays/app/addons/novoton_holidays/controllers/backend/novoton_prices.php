@@ -59,14 +59,8 @@ if ($mode === 'update_prices') {
     $limit = (int)($_REQUEST['limit'] ?? 50);
     
     // Get hotels with products
-    $hotels = db_get_array(
-        "SELECT h.hotel_id, h.hotel_name, h.product_id 
-         FROM ?:novoton_hotels h
-         WHERE h.product_id > 0
-         ORDER BY CASE WHEN h.last_price_check IS NULL THEN 0 ELSE 1 END, h.last_price_check ASC
-         LIMIT ?i",
-        $limit
-    );
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $hotels = $hotelRepo->findWithProductsSortedByStaleness($limit);
     
     echo "Updating prices for " . count($hotels) . " products...<br><br>\n";
     flush();
@@ -188,11 +182,7 @@ if ($mode === 'check_prices') {
         flush();
 
         // Step 1: Get resort names from resort_list API (the authoritative source).
-        $all_hotels = db_get_hash_array(
-            "SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
-            'hotel_id',
-            $country
-        );
+        $all_hotels = $hotelRepo->findByCountryIndexed($country);
         $total_hotels = count($all_hotels);
         $grand_total_hotels += $total_hotels;
 
@@ -467,11 +457,7 @@ if ($mode === 'check_prices_hotel') {
         flush();
 
         // Get all hotels for this country
-        $limit_sql = $limit > 0 ? "LIMIT " . (int)($limit) : "";
-        $all_hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name {$limit_sql}",
-            $country
-        );
+        $all_hotels = $hotelRepo->findByCountryWithLimit($country, $limit);
 
         $total_hotels = count($all_hotels);
         $grand_total_hotels += $total_hotels;
@@ -656,13 +642,8 @@ if ($mode === 'download_active_prices_csv') {
     
     $country = preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
-    $hotels = db_get_array(
-        "SELECT hotel_id, hotel_name, city, hotel_type, has_room_price, product_id, last_price_check
-         FROM ?:novoton_hotels
-         WHERE country = ?s AND has_room_price = 'Y'
-         ORDER BY city, hotel_name",
-        $country
-    );
+    $hotelRepo = Container::getInstance()->hotelRepository();
+    $hotels = $hotelRepo->findWithPricesForExport($country);
     
     $csv = "Hotel ID;Hotel Name;City;Hotel Type;Product ID;Last Check\n";
 
@@ -713,14 +694,7 @@ if ($mode === 'cron_offers_update') {
         $start_time = time();
         
         // Get hotels that need price update
-        $hotels = db_get_array(
-            "SELECT hotel_id, hotel_name, product_id 
-             FROM ?:novoton_hotels 
-             WHERE has_room_price = 'Y'
-               AND (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL 24 HOUR))
-             ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
-             LIMIT 100"
-        );
+        $hotels = $hotelRepo->findNeedingPriceUpdate(24, 100);
         
         echo "Processing " . count($hotels) . " hotels\n\n";
         

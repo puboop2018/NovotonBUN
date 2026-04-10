@@ -29,18 +29,14 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
     private const DEST_CHUNK_SIZE = 200;
     private const PER_PAGE = 1000;
 
-    private readonly HotelRepository $hotelRepo;
-    private readonly DestinationRepository $destRepo;
     private readonly SphinxNormalizer $normalizer;
 
     public function __construct(
         SphinxApi $api,
-        HotelRepository $hotelRepo,
-        DestinationRepository $destRepo
+        private readonly HotelRepository $hotelRepo,
+        private readonly DestinationRepository $destRepo,
     ) {
         parent::__construct($api);
-        $this->hotelRepo = $hotelRepo;
-        $this->destRepo = $destRepo;
         $this->normalizer = Container::getNormalizer();
     }
 
@@ -363,6 +359,77 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             'rating'            => isset($raw['rating']) ? (float) $raw['rating'] : null,
             'rating_count'      => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
         ];
+    }
+
+    /**
+     * Re-link existing CS-Cart products (with the configured prefix) back to sphinx_hotels.
+     *
+     * After a fresh addon reinstall the sphinx_hotels table is empty but CS-Cart
+     * still has products with SPX* codes. This method fetches only those hotels
+     * from the Sphinx API one-by-one and re-inserts them with the product link.
+     *
+     * @param callable|null $progressCallback fn(int $current, int $total, string $hotelId)
+     * @return array{total: int, linked: int, skipped: int, not_found: int, errors: int}
+     */
+    public function relinkExistingProducts(?callable $progressCallback = null): array
+    {
+        $prefix = ConfigProvider::getProductCodePrefix();
+        $prefixLen = strlen($prefix);
+
+        $spxProducts = db_get_array(
+            "SELECT product_id, product_code FROM ?:products WHERE product_code LIKE ?l",
+            $prefix . '%'
+        );
+
+        $stats = ['total' => count($spxProducts), 'linked' => 0, 'skipped' => 0, 'not_found' => 0, 'errors' => 0];
+
+        if (empty($spxProducts)) {
+            return $stats;
+        }
+
+        foreach ($spxProducts as $i => $product) {
+            $hotelId = substr($product['product_code'], $prefixLen);
+            if ($progressCallback) {
+                $progressCallback($i + 1, $stats['total'], $hotelId);
+            }
+
+            // Skip if already linked in sphinx_hotels
+            $existing = $this->hotelRepo->getById($hotelId);
+            if ($existing && !empty($existing['product_id'])) {
+                $stats['skipped']++;
+                continue;
+            }
+
+            // Fetch single hotel from API
+            try {
+                $raw = $this->api->getHotel($hotelId);
+            } catch (\Throwable $e) {
+                $stats['errors']++;
+                continue;
+            }
+
+            if (empty($raw)) {
+                $stats['not_found']++;
+                continue;
+            }
+
+            // Unwrap if API returns {data: {...}}
+            if (isset($raw['data']) && is_array($raw['data']) && !isset($raw['id'])) {
+                $raw = $raw['data'];
+            }
+
+            $normalized = $this->normalizeHotel($raw);
+            if ($normalized === null) {
+                $stats['errors']++;
+                continue;
+            }
+
+            $this->hotelRepo->upsertBatch([$normalized]);
+            $this->hotelRepo->linkToProduct($hotelId, (int) $product['product_id']);
+            $stats['linked']++;
+        }
+
+        return $stats;
     }
 
     /**

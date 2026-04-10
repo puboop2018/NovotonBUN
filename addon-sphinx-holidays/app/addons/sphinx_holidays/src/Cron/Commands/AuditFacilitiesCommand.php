@@ -3,18 +3,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-class AuditFacilitiesCommand
+class AuditFacilitiesCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
-
     public static function getDescription(): string
     {
         return 'Audit unmapped facility IDs from Sphinx hotels (report only, no changes)';
-    }
-
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
     }
 
     public function execute(array $params = []): array
@@ -111,10 +104,4 @@ class AuditFacilitiesCommand
         ];
     }
 
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
-    }
 }

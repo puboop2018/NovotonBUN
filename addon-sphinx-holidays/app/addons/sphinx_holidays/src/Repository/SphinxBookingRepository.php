@@ -38,6 +38,25 @@ class SphinxBookingRepository
     }
 
     /**
+     * Check if a pending duplicate booking exists for the given offer.
+     *
+     * Used in circuit/experience/package add-to-cart to prevent double bookings
+     * where the offer is already linked to an order and still pending.
+     *
+     * @param string $offerId The offer ID to check
+     * @param string $pendingStatus The status considered "pending"
+     * @return int|null Booking ID if duplicate exists, null otherwise
+     */
+    public function findPendingDuplicateByOffer(string $offerId, string $pendingStatus): ?int
+    {
+        $id = db_get_field(
+            "SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1",
+            $offerId, $pendingStatus
+        );
+        return $id !== false && $id !== '' ? (int) $id : null;
+    }
+
+    /**
      * Find existing unassigned booking matching hotel + dates + holder (for dedup in add_to_cart).
      */
     public function findRecentUnassigned(string $hotel_id, string $check_in, string $check_out, string $holder_name): ?int

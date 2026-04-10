@@ -126,4 +126,29 @@ interface HotelPackageRepositoryInterface
      * @return string[] Array of JSON priceinfo_data strings
      */
     public function getAllPriceinfoData(string $hotelId): array;
+
+    /**
+     * Get package names with priceinfo data for a hotel (for AJAX dropdown).
+     */
+    public function findPackageNamesWithPriceinfo(string $hotelId): array;
+
+    /**
+     * Get the first package name for a hotel (alphabetical order).
+     */
+    public function getFirstPackageName(string $hotelId): ?string;
+
+    /**
+     * Get package_id and package_name pairs for a hotel.
+     */
+    public function getPackageIdNamePairs(string $hotelId): array;
+
+    /**
+     * Get package listing data for hotel detail view.
+     */
+    public function findForHotelDetail(string $hotelId): array;
+
+    /**
+     * Insert or update a package by hotel_id + package_id (simple upsert via ON DUPLICATE KEY).
+     */
+    public function upsertByHotelAndPackage(string $hotelId, string $packageId, string $packageName): bool;
 }

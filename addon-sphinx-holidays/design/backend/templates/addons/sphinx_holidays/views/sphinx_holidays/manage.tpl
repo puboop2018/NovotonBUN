@@ -134,6 +134,15 @@
             </button>
         </form>
     {/if}
+    {if $orphaned_spx_products > 0}
+        <form action="{""|fn_url}" method="post" style="display:inline; margin-left: 8px;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.relink_products" />
+            <button type="submit" class="btn btn-info" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.relink_confirm")|escape:javascript}');">
+                <i class="icon-link"></i> {__("sphinx_holidays.relink_existing_products")} ({$orphaned_spx_products})
+            </button>
+        </form>
+    {/if}
 
     {* ── Browse Links ── *}
     <div class="travel-action-buttons">

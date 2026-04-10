@@ -85,6 +85,11 @@
                             {/if}
                             <span class="sphinx-price-amount">{$pricing.selling_price|number_format:2:",":"."}</span>
                             <span class="sphinx-price-currency">{$pricing.currency|default:'EUR'}</span>
+                            {if $sphinx_package_params.nights > 0}
+                                <span class="sphinx-price-per-night">
+                                    ({($pricing.selling_price / $sphinx_package_params.nights)|number_format:2:",":"."} / {__("sphinx_holidays.per_night")|default:"night"})
+                                </span>
+                            {/if}
                         </div>
                         <a href="{"sphinx_booking.package_booking_form?offer_id=`$result.offer_id`&adults=`$sphinx_package_params.adults`&children=`$sphinx_package_params.children`&children_ages=`$sphinx_package_params.children_ages`&rooms=`$sphinx_package_params.rooms`"|fn_url}"
                            class="sphinx-offer-book-btn">
