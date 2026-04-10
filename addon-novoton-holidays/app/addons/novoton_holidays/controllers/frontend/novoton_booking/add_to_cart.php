@@ -94,7 +94,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         try {
             $api_for_hotel = fn_novoton_holidays_get_api();
             if ($api_for_hotel) {
-                $api_hotel_info = $api_for_hotel->getHotelInfo($bookingData['hotel_id']);
+                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bookingData['hotel_id']);
                 if ($api_hotel_info) {
                     $hotel_data['hotel_name'] = (string) ($api_hotel_info->Hotel ?? '');
                     $hotel_data['city']       = (string) ($api_hotel_info->City ?? '');
@@ -162,7 +162,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     ];
     
     $api = fn_novoton_holidays_get_api();
-    $priceData = $api ? $api->getRoomPrice($priceParams) : null;
+    $priceData = $api ? $api->pricing()->getRoomPrice($priceParams) : null;
 
     // A80: Server-side price validation - safety net
     // If we have children and API returns no data, abort booking

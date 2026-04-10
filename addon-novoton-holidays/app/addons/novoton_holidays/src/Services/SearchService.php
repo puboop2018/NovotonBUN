@@ -172,7 +172,7 @@ class SearchService implements SearchServiceInterface
         $api_params = $this->buildApiParams($params);
 
         // Call API - use searchAvailability method
-        $response = $this->api->searchAvailability($api_params);
+        $response = $this->api->availability()->searchAvailability($api_params);
         
         if (!$response) {
             $this->log('Search API returned empty', ['params' => $api_params]);
@@ -224,7 +224,7 @@ class SearchService implements SearchServiceInterface
 
         // Phase 2: batch-fetch all uncached dates in parallel via curl_multi
         if (!empty($uncached_api_params)) {
-            $batch_results = $this->api->searchAvailabilityBatch($uncached_api_params);
+            $batch_results = $this->api->availability()->searchAvailabilityBatch($uncached_api_params);
 
             foreach ($batch_results as $search_date => $results) {
                 // Cache results (5 minutes)

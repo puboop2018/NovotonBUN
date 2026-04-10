@@ -154,7 +154,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         }
 
         // Get hotel info from API (includes packages)
-        $hotel_info = $api->getHotelInfo($hotel_id);
+        $hotel_info = $api->hotels()->getHotelInfo($hotel_id);
 
         if (empty($hotel_info) || !isset($hotel_info->packages)) {
             return 'no_data';
@@ -190,7 +190,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             }
 
             // Get priceinfo for this package
-            $priceInfo = $api->getPriceInfo($hotel_id, $packageName);
+            $priceInfo = $api->pricing()->getPriceInfo($hotel_id, $packageName);
             $priceData = !empty($priceInfo) ? json_decode(json_encode($priceInfo), true) : [];
 
             $priceinfoValue = !empty($priceData) ? json_encode($priceData) : '';

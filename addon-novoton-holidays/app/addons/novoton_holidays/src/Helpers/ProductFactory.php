@@ -66,7 +66,7 @@ class ProductFactory implements ProductFactoryInterface
         // Fetch description
         $description = '';
         try {
-            $descResponse = $api->getHotelDescription($hotelId, 'UK');
+            $descResponse = $api->hotels()->getHotelDescription($hotelId, 'UK');
             if ($descResponse && isset($descResponse->Description)) {
                 $description = (string)$descResponse->Description;
             }
@@ -124,7 +124,7 @@ class ProductFactory implements ProductFactoryInterface
     public function attachHotelImages(int $productId, string $hotelId, NovotonApiInterface $api): int
     {
         try {
-            $imagesResponse = $api->getHotelImages($hotelId);
+            $imagesResponse = $api->hotels()->getHotelImages($hotelId);
 
             if (!$imagesResponse || !isset($imagesResponse->url)) {
                 return 0;

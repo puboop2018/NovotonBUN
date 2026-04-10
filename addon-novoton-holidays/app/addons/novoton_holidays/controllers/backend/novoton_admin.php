@@ -131,7 +131,7 @@ if ($mode === 'booking_details') {
         $api = _nvt_api();
         
         try {
-            $invoice = $api->getInvoiceXml($booking['novoton_invoice_id']);
+            $invoice = $api->reservations()->getInvoiceXml($booking['novoton_invoice_id']);
             $booking['invoice'] = $invoice;
         } catch (Exception $e) {
             fn_set_notification('W', __('warning'), __('novoton_holidays.failed_to_get_invoice'));
@@ -221,7 +221,7 @@ if ($mode === 'test_api') {
     $api = _nvt_api();
     
     try {
-        $resorts = $api->getResortList('BULGARIA');
+        $resorts = $api->destinations()->getResortList('BULGARIA');
         
         if ($resorts && isset($resorts->Resort)) {
             fn_set_notification('N', __('notice'), __('novoton_holidays.api_connection_successful'));

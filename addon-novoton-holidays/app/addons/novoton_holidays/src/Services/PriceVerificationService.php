@@ -53,7 +53,7 @@ class PriceVerificationService
             'children' => $params['children_ages'] ?? [],
         ];
 
-        $priceData = $this->api->getRoomPrice($priceParams);
+        $priceData = $this->api->pricing()->getRoomPrice($priceParams);
 
         if (!$priceData || !isset($priceData->Price)) {
             $this->log('Price verification failed', [

@@ -173,7 +173,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
         $debug_log('API params (with actual room/board IDs)', $params);
 
-        $response = $api->getRoomPrice($params);
+        $response = $api->pricing()->getRoomPrice($params);
 
         $debug_log('API Last Request', $api->getLastRequest());
         $rawResponse = $api->getLastResponse();
@@ -199,7 +199,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
             $params['room_id'] = '';
             $params['board_id'] = '';
-            $response = $api->getRoomPrice($params);
+            $response = $api->pricing()->getRoomPrice($params);
 
             $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse() ?? '', 0, 2000));
 

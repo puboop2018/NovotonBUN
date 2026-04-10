@@ -76,7 +76,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Fallback: Call API directly (for first-time or if cron hasn't run)
         $this->log('PriceInfo fallback to API', ['hotel_id' => $hotelId, 'package' => $packageName]);
 
-        $response = $this->api->getPriceInfo($hotelId, $packageName, $lang);
+        $response = $this->api->pricing()->getPriceInfo($hotelId, $packageName, $lang);
 
         if (!$response) {
             return null;

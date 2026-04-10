@@ -41,7 +41,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output("Checking offers added/modified after this time...");
         $this->output("");
 
-        $response = $this->api->getOffersUpdate($last_import, $country);
+        $response = $this->api->destinations()->getOffersUpdate($last_import, $country);
 
         if (!$response || !isset($response->Offer)) {
             $this->output("No new offers found.");
@@ -69,7 +69,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             if (!$existing) {
                 $this->output("NEW HOTEL - ", false);
-                $hotel_info = $this->api->getHotelInfo($hotel_id);
+                $hotel_info = $this->api->hotels()->getHotelInfo($hotel_id);
                 if ($hotel_info) {
                     $hotel_data = [
                         'hotel_id' => $hotel_id,
@@ -118,7 +118,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $description = '';
             try {
-                $desc = $this->api->getHotelDescription($hotel_id, 'UK');
+                $desc = $this->api->hotels()->getHotelDescription($hotel_id, 'UK');
                 if ($desc && isset($desc->Description)) {
                     $description = (string)$desc->Description;
                 }
@@ -191,7 +191,7 @@ class OffersUpdateCommand extends AbstractCronCommand
     private function attachImages(string $hotelId, int $productId, string $baseUrl): void
     {
         try {
-            $images = $this->api->getHotelImages($hotelId);
+            $images = $this->api->hotels()->getHotelImages($hotelId);
             if ($images && isset($images->url)) {
                 $count = 0;
                 foreach ($images->url as $url) {

@@ -264,7 +264,7 @@ class BatchedHotelInfoSync
             }
 
             // Fetch all hotel info in parallel using curl_multi
-            $batch_results = $api->getHotelInfoBatch($batch);
+            $batch_results = $api->hotels()->getHotelInfoBatch($batch);
 
             foreach ($batch as $hotel_id) {
                 // Check time and memory limits within batch (skip if unlimited mode)
@@ -361,7 +361,7 @@ class BatchedHotelInfoSync
                     }
                     usleep(Constants::API_DELAY_BACKOFF);
                     try {
-                        $hotel_info = $api->getHotelInfo($retry_id);
+                        $hotel_info = $api->hotels()->getHotelInfo($retry_id);
                         if ($hotel_info) {
                             $this->processHotelInfo($retry_id, $hotel_info, $now, $retry_hotel_map, $retry_product_code_map, $retry_prefixes);
                             $recovered++;
@@ -754,7 +754,7 @@ class BatchedHotelInfoSync
             $this->output("Checking {$country}...");
 
             try {
-                $response = $api->getOffersUpdate($datetime_param, $country);
+                $response = $api->destinations()->getOffersUpdate($datetime_param, $country);
 
                 if ($response && isset($response->Offer)) {
                     $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];

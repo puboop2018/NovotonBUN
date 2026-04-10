@@ -122,7 +122,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     continue;
                 }
 
-                $priceData = $api->getRoomPrice($priceParams);
+                $priceData = $api->pricing()->getRoomPrice($priceParams);
 
                 if (!$priceData || !isset($priceData->Price)) {
                     if ($debug) {

@@ -228,7 +228,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     if ((empty($age_categories) || empty($room_limits)) && !empty($booking['hotel_id'])) {
         $api = fn_novoton_holidays_get_api();
         if ($api) {
-            $hotelInfoResponse = $api->getHotelInfo($booking['hotel_id']);
+            $hotelInfoResponse = $api->hotels()->getHotelInfo($booking['hotel_id']);
             if ($hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
                 $h = $hotelInfoResponse->hotels->hotel;
                 

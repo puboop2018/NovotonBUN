@@ -97,7 +97,7 @@ class HotelSync
             $this->log("Fetching hotel_list for country: {$countryName}");
 
             try {
-                $hotelList = $this->api->getHotelList($countryName);
+                $hotelList = $this->api->hotels()->getHotelList($countryName);
 
                 if (!$hotelList || !isset($hotelList->hotelinfo)) {
                     $this->stats['errors'][] = "No hotels found for {$countryName}";
@@ -263,7 +263,7 @@ class HotelSync
             $this->stats['hotels_processed']++;
 
             try {
-                $hotelInfo = $this->api->getHotelInfo($hotelId);
+                $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
                 if (!$hotelInfo) {
                     $this->stats['errors'][] = "No hotelinfo for hotel {$hotelId}";
@@ -425,7 +425,7 @@ class HotelSync
 
             try {
                 // Get priceinfo for this package
-                $priceInfo = $this->api->getPriceInfo($hotelId, $packageName);
+                $priceInfo = $this->api->pricing()->getPriceInfo($hotelId, $packageName);
 
                 $priceInfoJson = null;
 
@@ -577,7 +577,7 @@ class HotelSync
             $this->stats['packages_processed']++;
 
             try {
-                $priceInfo = $this->api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
+                $priceInfo = $this->api->pricing()->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
 
                 if (!$priceInfo) {
                     $this->stats['packages_failed']++;

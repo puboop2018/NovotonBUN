@@ -111,7 +111,7 @@ class PriceInfoSync
 
         try {
             // Get hotel info (for packages)
-            $hotelInfo = $this->api->getHotelInfo($hotelId);
+            $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
             if (!$hotelInfo || !isset($hotelInfo->packages)) {
                 $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
@@ -143,7 +143,7 @@ class PriceInfoSync
                 }
 
                 // Get price info for this package
-                $priceInfo = $this->api->getPriceInfo($hotelId, $packageName);
+                $priceInfo = $this->api->pricing()->getPriceInfo($hotelId, $packageName);
 
                 if (empty($priceInfo)) {
                     continue;
@@ -291,7 +291,7 @@ class PriceInfoSync
     private function checkMissingProducts(array &$stats): void
     {
         try {
-            $apiHotels = $this->api->getHotelList($this->defaultCountry);
+            $apiHotels = $this->api->hotels()->getHotelList($this->defaultCountry);
 
             if ($apiHotels && isset($apiHotels->hotelinfo)) {
                 // Build LIKE conditions for all prefixes and fetch all matching products at once

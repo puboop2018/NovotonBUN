@@ -169,7 +169,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 'room_guests' => $roomGuests,
             ];
 
-            $apiResult = $api->createHotelRequest($requestData, 'UK', true);
+            $apiResult = $api->reservations()->createHotelRequest($requestData, 'UK', true);
 
             // Store in DB — encrypt PII
             $requestRecord = $this->buildRequestRecord(

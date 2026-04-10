@@ -194,7 +194,7 @@ class HotelAvailabilitySearcher
         }
 
         // Execute ALL room requests in parallel via curl_multi
-        $batchResponses = $api->getRoomPriceBatch($batchRequests, count($batchRequests));
+        $batchResponses = $api->pricing()->getRoomPriceBatch($batchRequests, count($batchRequests));
 
         // Process batch results
         $allRoomResults = [];
@@ -288,7 +288,7 @@ class HotelAvailabilitySearcher
             'children'    => $singleRoomChildren,
         ];
 
-        $priceData = $api->getRoomPrice($priceParams);
+        $priceData = $api->pricing()->getRoomPrice($priceParams);
 
         $this->logSingleRoomDebug($api, $hotelId, $priceParams);
 
@@ -300,7 +300,7 @@ class HotelAvailabilitySearcher
             // Fetch room quota for all rooms
             $quotaMap = [];
             try {
-                $quotaMap = $api->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+                $quotaMap = $api->availability()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
                 $this->log("=== ROOM QUOTA (hotel_quota API) ===");
                 foreach ($quotaMap as $qRoom => $qValue) {
                     $this->log("  {$qRoom}: {$qValue}");

@@ -279,7 +279,7 @@ class BatchedPriceInfoSync
 
                 try {
                     // API requires PackageName, not package_id (IdCont)
-                    $priceinfo = $api->getPriceInfo($hotel_id, $package_name);
+                    $priceinfo = $api->pricing()->getPriceInfo($hotel_id, $package_name);
 
                     if (!$priceinfo) {
                         $this->output("API returned empty");
@@ -343,7 +343,7 @@ class BatchedPriceInfoSync
                     );
                     if (empty($r_package_name)) continue;
                     try {
-                        $priceinfo = $api->getPriceInfo($r_hotel_id, $r_package_name);
+                        $priceinfo = $api->pricing()->getPriceInfo($r_hotel_id, $r_package_name);
                         if ($priceinfo) {
                             $this->processPriceInfo($r_hotel_id, $r_package_id, $priceinfo, $now);
                             $recovered++;

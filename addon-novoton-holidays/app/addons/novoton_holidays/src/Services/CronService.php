@@ -68,7 +68,7 @@ class CronService implements CronServiceInterface
                     continue;
                 }
 
-                $resInfo = $this->api->getReservationInfo($idNum);
+                $resInfo = $this->api->reservations()->getReservationInfo($idNum);
 
                 if (!$resInfo) {
                     $results['unchanged']++;
@@ -144,7 +144,7 @@ class CronService implements CronServiceInterface
             $results['processed']++;
 
             try {
-                $response = $this->api->getAlternatives($request['novoton_request_id']);
+                $response = $this->api->reservations()->getAlternatives($request['novoton_request_id']);
 
                 if ($response && !empty($response->alternative)) {
                     // Found alternatives

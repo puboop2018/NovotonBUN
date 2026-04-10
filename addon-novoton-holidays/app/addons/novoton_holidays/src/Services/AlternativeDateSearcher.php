@@ -147,7 +147,7 @@ class AlternativeDateSearcher
             $apiCallCount += count($batchRequests);
 
             // Send all room×board requests for this date in parallel
-            $batchResponses = $api->getRoomPriceBatch($batchRequests);
+            $batchResponses = $api->pricing()->getRoomPriceBatch($batchRequests);
 
             // Process responses: find first valid board per room
             $foundRoomIds = [];

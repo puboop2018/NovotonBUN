@@ -507,7 +507,7 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
     ];
 
     try {
-        $response = $api->getResortList($country);
+        $response = $api->destinations()->getResortList($country);
 
         if (empty($response)) {
             return ['success' => false, 'error' => 'Empty API response'];
@@ -575,7 +575,7 @@ function fn_novoton_holidays_sync_facilities_list(): array
     ];
     
     try {
-        $response = $api->listFacilities();
+        $response = $api->hotels()->listFacilities();
         
         if (empty($response)) {
             return ['success' => false, 'error' => 'Empty API response'];
@@ -633,7 +633,7 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
     
     try {
         // Use dedicated hotel_facilities API (function 27) — returns <IdFacility> elements
-        $response = $api->getHotelFacilities($hotel_id);
+        $response = $api->hotels()->getHotelFacilities($hotel_id);
 
         if (empty($response)) {
             return false;

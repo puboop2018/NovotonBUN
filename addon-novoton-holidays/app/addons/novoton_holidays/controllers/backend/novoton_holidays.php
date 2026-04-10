@@ -323,7 +323,7 @@ if ($mode === 'room_price') {
                 'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
             ];
 
-            $result = $api->getRoomPrice($params);
+            $result = $api->pricing()->getRoomPrice($params);
 
             Tygh::$app['view']->assign('result', $result);
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
@@ -358,11 +358,11 @@ if ($mode === 'test_hotel_request') {
         try {
             $api = new NovotonApi();
 
-            $hotel_info = $api->getHotelInfo($hotel_id);
+            $hotel_info = $api->hotels()->getHotelInfo($hotel_id);
             $last_request = $api->getLastRequestFormatted();
             $last_response = $api->getLastResponse();
 
-            $hotel_desc = $api->getHotelDescription($hotel_id, 'UK', true);
+            $hotel_desc = $api->hotels()->getHotelDescription($hotel_id, 'UK', true);
 
             Tygh::$app['view']->assign('hotel_info', $hotel_info);
             Tygh::$app['view']->assign('hotel_desc', $hotel_desc);
@@ -401,7 +401,7 @@ if ($mode === 'test_alternative_rs') {
                 'children' => (int)($_REQUEST['children'] ?? 0),
             ];
 
-            $results = $api->searchAvailability($params);
+            $results = $api->availability()->searchAvailability($params);
 
             Tygh::$app['view']->assign('results', $results);
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());

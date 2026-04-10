@@ -51,7 +51,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             $best_price = 0;
             try {
-                $response = $this->api->getRoomPrice($params);
+                $response = $this->api->pricing()->getRoomPrice($params);
 
                 if ($response instanceof \SimpleXMLElement) {
                     $prices = $response->xpath('//Price');

@@ -148,7 +148,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         
         // Call API
         $api = fn_novoton_holidays_get_api();
-        $response = $api->getRoomPrice($params);
+        $response = $api->pricing()->getRoomPrice($params);
         
         if (!$response || !isset($response->Price)) {
             return null;

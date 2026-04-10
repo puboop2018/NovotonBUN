@@ -59,7 +59,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
         try {
             $api = $this->getApi();
-            $result = $api->getHotelList(Constants::DEFAULT_COUNTRY, '%', '%', '%');
+            $result = $api->hotels()->getHotelList(Constants::DEFAULT_COUNTRY, '%', '%', '%');
 
             if (empty($result)) {
                 return [
@@ -137,7 +137,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     {
         try {
             $api = $this->getApi();
-            $result = $api->getHotelList($country);
+            $result = $api->hotels()->getHotelList($country);
 
             if (!$result || !isset($result->Hotel)) {
                 return [
@@ -215,7 +215,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'children' => 0,
             ];
 
-            $result = $api->getRoomPrice($priceParams);
+            $result = $api->pricing()->getRoomPrice($priceParams);
 
             $price = 0;
             $priceWithCommission = 0;
@@ -268,7 +268,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 $searchParams['hotel_id'] = $params['hotel_id'];
             }
 
-            $results = $api->searchAvailability($searchParams);
+            $results = $api->availability()->searchAvailability($searchParams);
 
             if (empty($results)) {
                 return [
@@ -367,7 +367,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
         try {
             $api = $this->getApi();
-            $hotelInfo = $api->getHotelInfo($hotelId);
+            $hotelInfo = $api->hotels()->getHotelInfo($hotelId);
 
             if (!$hotelInfo) {
                 return [

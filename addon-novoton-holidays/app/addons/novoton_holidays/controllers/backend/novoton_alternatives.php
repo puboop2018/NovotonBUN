@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 $api = _nvt_api();
-                $response = $api->getAlternatives($request['novoton_request_id']);
+                $response = $api->reservations()->getAlternatives($request['novoton_request_id']);
                 
                 if ($response && isset($response->alternative)) {
                     $alternatives = [];
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($request['novoton_request_id'])) {
                     continue;
                 }
-                $response = $api->getAlternatives($request['novoton_request_id']);
+                $response = $api->reservations()->getAlternatives($request['novoton_request_id']);
                 
                 if ($response && isset($response->alternative)) {
                     $alternatives = [];

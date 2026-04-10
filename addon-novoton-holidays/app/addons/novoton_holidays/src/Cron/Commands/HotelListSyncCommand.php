@@ -37,7 +37,7 @@ class HotelListSyncCommand extends AbstractCronCommand
         foreach ($countries as $country) {
             $this->output("Fetching {$country}... ", false);
 
-            $hotels = $this->api->getHotelList($country);
+            $hotels = $this->api->hotels()->getHotelList($country);
 
             if (empty($hotels)) {
                 $this->output("0 hotels (or error)");

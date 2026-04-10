@@ -112,7 +112,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
         $result['checked']++;
 
         try {
-            $status_response = $api->getReservationInfo($booking['novoton_reservation_id']);
+            $status_response = $api->reservations()->getReservationInfo($booking['novoton_reservation_id']);
 
             if (!empty($status_response)) {
                 // getReservationInfo returns an XML object — access via object properties
@@ -245,7 +245,7 @@ function fn_novoton_holidays_cron_resinfo(): array
         if (empty($country)) continue;
         
         try {
-            $hotels = $api->getHotelList($country);
+            $hotels = $api->hotels()->getHotelList($country);
             
             if (!empty($hotels)) {
                 $country_stats = ['synced' => 0, 'added' => 0, 'updated' => 0];

@@ -121,7 +121,7 @@ class AddProductsCommand extends AbstractCronCommand
 
                 $description = '';
                 try {
-                    $desc = $this->api->getHotelDescription($hotel_id, 'UK');
+                    $desc = $this->api->hotels()->getHotelDescription($hotel_id, 'UK');
                     if ($desc && isset($desc->Description)) {
                         $description = (string) $desc->Description;
                     }
@@ -149,7 +149,7 @@ class AddProductsCommand extends AbstractCronCommand
                     $hotelRepo->linkToProduct($hotel_id, $product_id);
 
                     try {
-                        $images = $this->api->getHotelImages($hotel_id);
+                        $images = $this->api->hotels()->getHotelImages($hotel_id);
                         if ($images && isset($images->url)) {
                             $count = 0;
                             foreach ($images->url as $url) {

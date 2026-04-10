@@ -728,7 +728,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         try {
-            $response = $this->api->createReservation($apiData);
+            $response = $this->api->reservations()->createReservation($apiData);
 
             if ($response) {
                 $novotonId     = (string) ($response->IdNum   ?? '');
