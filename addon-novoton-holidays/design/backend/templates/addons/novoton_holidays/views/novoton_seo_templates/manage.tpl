@@ -52,6 +52,10 @@
             </p>
 
             {* Overwrite mode + bulk apply bar *}
+            {*
+             * Uses HTML5 formaction to override the parent form's action,
+             * so we don't nest <form> tags (which is invalid HTML).
+             *}
             <div class="seo-bulk-bar">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label for="seo_overwrite_mode" style="font-weight: 600; white-space: nowrap; margin: 0;">
@@ -69,17 +73,14 @@
                         </option>
                     </select>
                 </div>
-                <form action="{"novoton_seo_templates.bulk_apply"|fn_url}"
-                      method="post"
-                      style="display: inline; margin: 0;">
-                    <input type="hidden" name="security_hash" value="{$security_hash}" />
-                    <button type="submit"
-                            class="btn btn-warning cm-comet"
-                            onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|default:"Re-apply SEO templates to all existing Novoton products?"|escape:"javascript"}');">
-                        <i class="icon-refresh"></i>
-                        {__("travel_core.seo_bulk_apply_button")|default:"Bulk Apply to Existing Products"}
-                    </button>
-                </form>
+                <button type="submit"
+                        class="btn btn-warning cm-comet"
+                        formaction="{"novoton_seo_templates.bulk_apply"|fn_url}"
+                        formmethod="post"
+                        onclick="return confirm('{__("travel_core.seo_bulk_apply_confirm")|default:"Re-apply SEO templates to all existing Novoton products?"|escape:"javascript"}');">
+                    <i class="icon-refresh"></i>
+                    {__("travel_core.seo_bulk_apply_button")|default:"Bulk Apply to Existing Products"}
+                </button>
                 <p>{__("travel_core.seo_bulk_apply_desc")|default:"Re-renders the templates for all existing hotel products that are already linked to Novoton records."}</p>
             </div>
 
@@ -191,7 +192,7 @@
 
                 {* Placeholders *}
                 <div class="well well-small" style="background: #f8f9fa;">
-                    <h5>{__("travel_core.seo_placeholders_title")|default:"Placeholders"}</h5>
+                    <h5>{__("novoton_holidays.seo_placeholders_title")|default:"Novoton placeholders to use"}</h5>
                     <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}name{rdelim}{rdelim}">name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_name")}</span></div>
                     <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}raw_name{rdelim}{rdelim}">raw_name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_raw_name")}</span></div>
                     <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}city{rdelim}{rdelim}">city</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_city")}</span></div>
