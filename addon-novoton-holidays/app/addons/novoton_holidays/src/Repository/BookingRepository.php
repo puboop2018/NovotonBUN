@@ -366,25 +366,6 @@ class BookingRepository implements BookingRepositoryInterface
     
     // ── Display queries delegated to BookingQueryService ──
 
-    /**
-     * Get booking statistics.
-     * @deprecated Use BookingQueryService::getStats() directly
-     */
-    public function getStats(): array
-    {
-        $queryService = new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($this, $this->guestDataNormalizer);
-        return $queryService->getStats();
-    }
-
-    /**
-     * Get unified booking list.
-     * @deprecated Use BookingQueryService::getUnifiedBookings() directly
-     */
-    public function getUnifiedBookings(array $params = []): array
-    {
-        $queryService = new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($this, $this->guestDataNormalizer);
-        return $queryService->getUnifiedBookings($params);
-    }
 
     /**
      * Link unassigned bookings to a user by session ID.

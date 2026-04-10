@@ -424,7 +424,10 @@ class HotelRepository implements HotelRepositoryInterface
 
     public function getCalendarPricesRaw(string $hotel_id): ?string
     {
-        $val = @db_get_field(
+        // No @ suppression: PriceInfoService already wraps the call in
+        // try/catch to tolerate the column not existing on unmigrated
+        // installs (see PriceInfoService.php:301-305 / 360-366).
+        $val = db_get_field(
             "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotel_id
         );

@@ -424,6 +424,10 @@ if ($mode === 'manage' || empty($mode)) {
     $hotelRepo = Container::getInstance()->hotelRepository();
     $bookingRepo = Container::getInstance()->bookingRepository();
     $syncLogRepo = Container::getInstance()->syncLogRepository();
+    $bookingQueryService = new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService(
+        $bookingRepo,
+        new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer()
+    );
 
     $addon_settings = ConfigProvider::all();
 
@@ -437,7 +441,7 @@ if ($mode === 'manage' || empty($mode)) {
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
-        'bookings' => $bookingRepo->getStats(),
+        'bookings' => $bookingQueryService->getStats(),
         'by_country' => []
     ];
 

@@ -54,22 +54,14 @@ if (file_exists($service_loader)) {
     require_once $service_loader;
 }
 
-// Legacy alias for backward compatibility
+// Service delegation helpers (wired up for gradual migration from inline code).
+// _nvt_get_search_service / _nvt_get_booking_service were removed — they had
+// zero callers. The remaining three wrappers still have call sites elsewhere
+// in the booking flow and can be collapsed in a future cleanup once those
+// callers are updated to call _nvt_*_service() directly.
 if (!function_exists('_nvt_get_cache_service')) {
     function _nvt_get_cache_service() {
         return _nvt_cache_service();
-    }
-}
-
-// Service delegation helpers (wired up for gradual migration from inline code)
-if (!function_exists('_nvt_get_search_service')) {
-    function _nvt_get_search_service() {
-        return _nvt_search_service();
-    }
-}
-if (!function_exists('_nvt_get_booking_service')) {
-    function _nvt_get_booking_service() {
-        return _nvt_booking_service();
     }
 }
 if (!function_exists('_nvt_get_price_service')) {

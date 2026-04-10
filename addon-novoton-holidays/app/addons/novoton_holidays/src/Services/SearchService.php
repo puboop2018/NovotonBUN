@@ -19,6 +19,13 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class SearchService implements SearchServiceInterface
 {
+    /**
+     * TTL (in seconds) applied to cached availability search results.
+     * 5 minutes balances freshness with dogpile protection on repeated
+     * searches from the same user.
+     */
+    private const int AVAILABILITY_CACHE_TTL = 300;
+
     private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
 
     private CacheServiceInterface $cache;
@@ -175,9 +182,8 @@ class SearchService implements SearchServiceInterface
         // Process results
         $results = $this->processSearchResults($response, $params);
         
-        // Cache results (5 minutes for availability)
-        $this->cache->set($cache_key, $results, 300);
-        
+        $this->cache->set($cache_key, $results, self::AVAILABILITY_CACHE_TTL);
+
         return $results;
     }
     
@@ -225,7 +231,7 @@ class SearchService implements SearchServiceInterface
                 $date_params = $uncached_search_params[$search_date] ?? $params;
                 $cache_key = $this->buildCacheKey('availability', $date_params);
                 if ($this->cache) {
-                    $this->cache->set($cache_key, $results, 300);
+                    $this->cache->set($cache_key, $results, self::AVAILABILITY_CACHE_TTL);
                 }
 
                 if (!empty($results)) {
