@@ -116,23 +116,23 @@
                         <variants/>
                     </item>
                     <item id="hotels_category_id">
-                        <type>input</type>
-                        <default_value>0</default_value>
+                        <type>template</type>
+                        <default_value>hotels_category_id.tpl</default_value>
                         <variants/>
                     </item>
                     <item id="packages_category_id">
-                        <type>input</type>
-                        <default_value>0</default_value>
+                        <type>template</type>
+                        <default_value>packages_category_id.tpl</default_value>
                         <variants/>
                     </item>
                     <item id="circuits_category_id">
-                        <type>input</type>
-                        <default_value>0</default_value>
+                        <type>template</type>
+                        <default_value>circuits_category_id.tpl</default_value>
                         <variants/>
                     </item>
                     <item id="experiences_category_id">
-                        <type>input</type>
-                        <default_value>0</default_value>
+                        <type>template</type>
+                        <default_value>experiences_category_id.tpl</default_value>
                         <variants/>
                     </item>
                     <item id="product_languages">
