@@ -325,4 +325,9 @@ class ConfigProvider implements ConfigProviderInterface
         }
     }
 
+    private static function getSetting(string $key, mixed $default = ''): mixed
+    {
+        $value = Registry::get('addons.' . self::ADDON_ID . '.' . $key);
+        return $value !== null ? $value : $default;
+    }
 }
