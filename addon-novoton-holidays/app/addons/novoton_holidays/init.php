@@ -169,6 +169,7 @@ fn_register_hooks(
     'get_products_post',                       // Batch prefetch hotel data for product listings
     'get_product_data_post',                   // Add hotel data to products
     'gather_additional_product_data_post',     // Pass data to templates (for tabs)
+    'get_product_tabs_post',                   // Hide Hotel Prices tab on non-Novoton products
     'delete_product_post',                     // Cleanup after product deletion
     'pre_place_order',                         // Real-time price verification before order
     'place_order_post',                        // Create bookings on order (post — needs order_id)

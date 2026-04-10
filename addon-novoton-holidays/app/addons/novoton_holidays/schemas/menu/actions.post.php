@@ -10,16 +10,34 @@ defined('BOOTSTRAP') or die('Access denied');
 
 /** @var array $schema */
 
-$schema['novoton_holidays.list_facilities']['novoton_dashboard'] = [
-    'href'     => 'novoton_holidays.manage',
-    'text'     => __('novoton_holidays.actions.novoton_dashboard'),
-    'position' => 50,
+// Shared tab set for Novoton admin pages
+$tabs = [
+    'novoton_dashboard' => [
+        'href'     => 'novoton_holidays.manage',
+        'text'     => __('novoton_holidays.actions.novoton_dashboard'),
+        'position' => 50,
+    ],
+    'list_facilities' => [
+        'href'     => 'novoton_holidays.list_facilities',
+        'text'     => __('novoton_holidays.actions.import_facilities'),
+        'position' => 200,
+    ],
+    'novoton_seo_templates' => [
+        'href'     => 'novoton_seo_templates.manage',
+        'text'     => __('travel_core.seo_templates'),
+        'position' => 250,
+    ],
 ];
 
-$schema['novoton_holidays.list_facilities']['list_facilities'] = [
-    'href'     => 'novoton_holidays.list_facilities',
-    'text'     => __('novoton_holidays.actions.import_facilities'),
-    'position' => 200,
+$pages = [
+    'novoton_holidays.list_facilities',
+    'novoton_seo_templates.manage',
 ];
+
+foreach ($pages as $page) {
+    foreach ($tabs as $key => $tab) {
+        $schema[$page][$key] = $tab;
+    }
+}
 
 return $schema;

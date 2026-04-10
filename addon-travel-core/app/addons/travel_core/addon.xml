@@ -135,58 +135,6 @@
                     </item>
                 </items>
             </section>
-            <section id="appearance">
-                <items>
-                    <item id="color_primary">
-                        <type>input</type>
-                        <default_value>#003580</default_value>
-                    </item>
-                    <item id="color_accent">
-                        <type>input</type>
-                        <default_value>#febb02</default_value>
-                    </item>
-                    <item id="color_text">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_text_light">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_bg">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_border">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                    <item id="color_search_btn_bg">
-                        <type>input</type>
-                        <default_value>#006ce4</default_value>
-                    </item>
-                    <item id="color_search_btn_hover">
-                        <type>input</type>
-                        <default_value>#0057b8</default_value>
-                    </item>
-                    <item id="color_search_btn_text">
-                        <type>input</type>
-                        <default_value>#ffffff</default_value>
-                    </item>
-                    <item id="color_cal_cheapest">
-                        <type>input</type>
-                        <default_value>#2e7d32</default_value>
-                    </item>
-                    <item id="color_cal_price">
-                        <type>input</type>
-                        <default_value>#4B5563</default_value>
-                    </item>
-                    <item id="color_danger">
-                        <type>input</type>
-                        <default_value></default_value>
-                    </item>
-                </items>
-            </section>
         </sections>
     </settings>
 
