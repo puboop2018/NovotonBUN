@@ -60,6 +60,11 @@
                         <div class="sphinx-offer-price">
                             <span class="sphinx-price-amount">{$result.price|number_format:2:",":"."}</span>
                             <span class="sphinx-price-currency">{$sphinx_search_params.currency|default:'EUR'}</span>
+                            {if $sphinx_search_params.nights > 0}
+                                <span class="sphinx-price-per-night">
+                                    ({($result.price / $sphinx_search_params.nights)|number_format:2:",":"."} / {__("sphinx_holidays.per_night")|default:"night"})
+                                </span>
+                            {/if}
                         </div>
                         <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`"|fn_url}"
                            class="sphinx-offer-book-btn">
