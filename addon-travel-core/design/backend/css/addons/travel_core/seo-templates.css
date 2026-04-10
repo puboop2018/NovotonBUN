@@ -97,3 +97,100 @@
     flex-basis: 100%;
     color: #6c757d;
 }
+
+/* ── Sticky sidebar ──────────────────────────────────────
+ * Keeps the placeholder / modifier / tips panel pinned while
+ * the admin scrolls through the long list of template fields.
+ */
+.seo-tpl-sidebar-sticky {
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+/* ── Live preview box ────────────────────────────────────
+ * Shown under each template input. Renders the current
+ * template against a mock placeholder dictionary so the
+ * admin sees the output without saving or running bulk-apply.
+ */
+.seo-preview {
+    display: block;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border: 1px dashed #cfd8dc;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #333;
+    min-height: 24px;
+    word-break: break-word;
+}
+.seo-preview::before {
+    content: attr(data-label);
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.seo-preview-empty {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* ── Character counter ───────────────────────────────────
+ * Lives next to the preview. Green = under ideal, amber =
+ * between ideal and max, red = over max.
+ */
+.seo-counter {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: transparent;
+    color: #6c757d;
+}
+.seo-counter-ok {
+    color: #28a745;
+}
+.seo-counter-warn {
+    color: #b88700;
+    background: #fff8e1;
+}
+.seo-counter-over {
+    color: #dc3545;
+    background: #fdecea;
+    font-weight: 600;
+}
+
+/* ── Disabled field visual ───────────────────────────────
+ * When the per-field enable checkbox is unchecked, fade the
+ * input, preview, counter, and help text so the admin can
+ * see at a glance which fields won't be applied. The checkbox
+ * itself and the label text stay clickable.
+ */
+.seo-field-off .controls > input[type="text"],
+.seo-field-off .controls > textarea,
+.seo-field-off .seo-preview,
+.seo-field-off .seo-counter,
+.seo-field-off .help-block {
+    opacity: 0.45;
+    transition: opacity 0.15s;
+}
+.seo-field-off .controls > input[type="text"],
+.seo-field-off .controls > textarea {
+    background: #f5f5f5;
+}
+.seo-field-off .control-label {
+    color: #9a9a9a;
+}
+.seo-field-off .control-label::after {
+    content: " (disabled)";
+    font-size: 11px;
+    font-weight: normal;
+    color: #c0392b;
+}
