@@ -31,6 +31,11 @@ $tabs = [
         'text'     => __('sphinx_holidays.destination_whitelist'),
         'position' => 200,
     ],
+    'sphinx_seo_templates' => [
+        'href'     => 'sphinx_seo_templates.manage',
+        'text'     => __('travel_core.seo_templates'),
+        'position' => 250,
+    ],
     'sphinx_settings' => [
         'href'     => 'addons.update&addon=sphinx_holidays&selected_section=settings',
         'text'     => __('sphinx_holidays.addon_settings'),
@@ -39,7 +44,13 @@ $tabs = [
 ];
 
 // Apply same tabs to all pages (DRY)
-$pages = ['sphinx_holidays.manage', 'sphinx_holidays.destinations', 'sphinx_holidays.hotels', 'sphinx_holidays.whitelist'];
+$pages = [
+    'sphinx_holidays.manage',
+    'sphinx_holidays.destinations',
+    'sphinx_holidays.hotels',
+    'sphinx_holidays.whitelist',
+    'sphinx_seo_templates.manage',
+];
 foreach ($pages as $page) {
     foreach ($tabs as $key => $tab) {
         $schema[$page][$key] = $tab;

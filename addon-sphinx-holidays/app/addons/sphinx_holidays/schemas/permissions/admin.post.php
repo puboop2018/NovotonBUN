@@ -11,4 +11,8 @@ $schema['sphinx_booking'] = [
     'permissions' => ['GET', 'POST'],
 ];
 
+$schema['sphinx_seo_templates'] = [
+    'permissions' => ['GET', 'POST'],
+];
+
 return $schema;

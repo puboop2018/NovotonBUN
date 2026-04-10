@@ -17,29 +17,6 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
-// Bulk-apply SEO templates to all linked products
-if ($mode === 'bulk_seo_apply') {
-    $hotelRepo = Container::getInstance()->hotelRepository();
-    $fetcher = static fn(int $offset, int $batch): array => $hotelRepo->findLinkedForSeo($offset, $batch);
-
-    $builder = static fn(array $hotel): array =>
-        \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(
-            $hotel, $hotel['hotel_name'] ?? ''
-        );
-
-    return fn_travel_core_run_long_task(
-        __('travel_core.seo_bulk_apply_progress'),
-        static fn() => fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder),
-        'addons.update?addon=novoton_holidays&selected_sub_section=novoton_holidays_seo_templates&selected_section=settings',
-        static function (array $result) {
-            fn_set_notification('N', __('notice'),
-                str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-                    __('travel_core.seo_bulk_apply_done'))
-            );
-        }
-    );
-}
-
 // Update prices manually
 if ($mode === 'update_prices') {
     

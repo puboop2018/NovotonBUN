@@ -99,7 +99,6 @@ $schema['novoton_admin'] = [
         'export_bookings'  => ['permissions' => 'novoton_manage_bookings'],
         'test_api'         => ['permissions' => 'novoton_manage_sync'],
         'run_cron'         => ['permissions' => 'novoton_manage_sync'],
-        'bulk_seo_apply'   => ['permissions' => 'novoton_manage_settings'],
     ],
 ];
 
@@ -167,6 +166,15 @@ $schema['novoton_tools'] = [
         'cron_export_hotel_features'  => ['permissions' => 'novoton_manage_sync'],
         'export_hotel_features_xml'   => ['permissions' => 'manage_catalog'],
         'download_hotel_features_xml' => ['permissions' => 'manage_catalog'],
+    ],
+];
+
+// novoton_seo_templates controller (dedicated SEO templates admin page)
+$schema['novoton_seo_templates'] = [
+    'modes' => [
+        'manage'     => ['permissions' => 'novoton_manage_settings'],
+        'save'       => ['permissions' => 'novoton_manage_settings'],
+        'bulk_apply' => ['permissions' => 'novoton_manage_settings'],
     ],
 ];
 

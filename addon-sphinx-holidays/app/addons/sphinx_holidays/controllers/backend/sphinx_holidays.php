@@ -175,31 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
 
-    if ($mode === 'bulk_seo_apply') {
-        $hotelRepo = Container::getHotelRepository();
-        $fetcher = static fn(int $offset, int $batch): array =>
-            $hotelRepo->fetchLinkedBatchForSeo($offset, $batch);
-
-        $builder = static fn(array $hotel): array =>
-            \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
-                'city'    => $hotel['destination_name'] ?? '',
-                'country' => $hotel['country_name'] ?? '',
-                'region'  => $hotel['region_name'] ?? '',
-            ]);
-
-        return fn_travel_core_run_long_task(
-            __('travel_core.seo_bulk_apply_progress'),
-            static fn() => fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder),
-            'addons.update&addon=sphinx_holidays&selected_sub_section=sphinx_holidays_seo_templates&selected_section=settings',
-            static function (array $result) {
-                fn_set_notification('N', __('notice'),
-                    str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-                        __('travel_core.seo_bulk_apply_done'))
-                );
-            }
-        );
-    }
-
     if ($mode === 'bulk_update_hotels') {
         $hotelIds = $_REQUEST['hotel_ids'] ?? [];
         $status = $_REQUEST['bulk_status'] ?? '';
