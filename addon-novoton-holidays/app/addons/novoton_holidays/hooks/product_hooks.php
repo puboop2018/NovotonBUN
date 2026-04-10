@@ -128,6 +128,46 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
     }
 }
 
+/**
+ * Hook: get_product_tabs_post
+ *
+ * Hide the Novoton "Hotel Prices" tab on products that are NOT Novoton
+ * hotels. The tab is registered globally via ?:product_tabs (CS-Cart's
+ * addon tab system), which means CS-Cart attaches it to every product
+ * by default. This hook filters it out for non-Novoton products so it
+ * only appears where it's relevant.
+ *
+ * Identification: product_code prefix (e.g. "NVT12345") via the
+ * existing _nvt_extract_hotel_id() helper.
+ */
+function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
+{
+    if (empty($tabs)) {
+        return;
+    }
+
+    // Guard: skip during addon uninstall or if products table is being dropped
+    try {
+        $code = (string) db_get_field(
+            "SELECT product_code FROM ?:products WHERE product_id = ?i",
+            $product_id
+        );
+    } catch (\Throwable $e) {
+        return;
+    }
+
+    if ($code === '' || _nvt_extract_hotel_id($code) !== null) {
+        return; // Novoton product — keep the tab
+    }
+
+    // Not a Novoton product — hide the Novoton-owned tab
+    foreach ($tabs as $key => $tab) {
+        if (($tab['addon'] ?? '') === 'novoton_holidays') {
+            unset($tabs[$key]);
+        }
+    }
+}
+
 // ============================================================================
 // PRODUCT HELPERS (private-by-convention)
 // ============================================================================

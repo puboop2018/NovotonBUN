@@ -661,47 +661,6 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
 }
 
 /**
- * Hook: get_product_tabs_post
- * Hide the Novoton "Hotel Prices" tab on Sphinx hotel product pages.
- */
-function fn_sphinx_holidays_get_product_tabs_post($product_id, &$tabs): void
-{
-    // Guard: skip during addon uninstall or if products table is being dropped
-    try {
-        $code = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
-    } catch (\Throwable $e) {
-        return;
-    }
-
-    if (_sphinx_extract_hotel_id($code) !== '') {
-        foreach ($tabs as $key => $tab) {
-            if (($tab['addon'] ?? '') === 'novoton_holidays') {
-                unset($tabs[$key]);
-            }
-        }
-    }
-}
-
-/**
- * Extract hotel ID from a product code using the configured prefix.
- *
- * @return string Hotel ID or empty string if not a Sphinx product
- */
-function _sphinx_extract_hotel_id(string $productCode): string
-{
-    if ($productCode === '') {
-        return '';
-    }
-
-    $prefix = \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix();
-    if ($prefix !== '' && str_starts_with($productCode, $prefix)) {
-        return substr($productCode, strlen($prefix));
-    }
-
-    return '';
-}
-
-/**
  * Hook: user_login_post
  * Link session-based sphinx bookings to the logged-in user.
  */
