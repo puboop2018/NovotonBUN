@@ -29,12 +29,18 @@ class ValidationHelpers
     /**
      * Sanitize a person name.
      *
-     * Removes non-letter/space/apostrophe/hyphen characters and trims to max length.
+     * Keeps letters, digits, spaces, apostrophes, hyphens, and dots.
+     * Strips any other character (control chars, angle brackets,
+     * SQL-dangerous symbols, etc.).
+     *
+     * Digits are allowed to support Roman-numeral suffixes (Louis XIV,
+     * Queen Elizabeth II) and to prevent silent data loss on inputs
+     * with numeric content. Dots are allowed for suffixes like "Jr.", "Sr."
      * Supports Unicode (accented characters, Cyrillic, etc.).
      */
     public static function sanitizeName(string $name, int $maxLength = 100): string
     {
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
+        $name = preg_replace('/[^\p{L}\p{N}\s\'\-\.]/u', '', $name);
         return mb_substr(trim($name), 0, $maxLength);
     }
 
@@ -51,10 +57,11 @@ class ValidationHelpers
     /**
      * Validate a person name contains only valid characters.
      *
-     * Allows letters (including accented), spaces, hyphens, and apostrophes.
+     * Allows letters (including accented), digits, spaces, hyphens,
+     * apostrophes, and dots.
      */
     public static function isValidName(string $name, int $maxLength = 100): bool
     {
-        return (bool) preg_match('/^[\p{L}\s\'-]{1,' . $maxLength . '}$/u', $name);
+        return (bool) preg_match('/^[\p{L}\p{N}\s\'\-\.]{1,' . $maxLength . '}$/u', $name);
     }
 }
