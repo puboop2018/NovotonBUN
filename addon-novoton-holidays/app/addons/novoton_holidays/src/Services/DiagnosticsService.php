@@ -70,8 +70,8 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                     'sample_hotel' => null,
                     'error' => $api->getLastError(),
                     'last_request' => $api->getLastRequestFormatted(),
-                    'last_http_code' => $api->lastHttpCode,
-                    'raw_response_preview' => substr((string) ($api->lastResponseRaw ?? ''), 0, 500),
+                    'last_http_code' => $api->getLastHttpCode(),
+                    'raw_response_preview' => substr($api->getLastResponseRaw(), 0, 500),
                 ];
             }
 
