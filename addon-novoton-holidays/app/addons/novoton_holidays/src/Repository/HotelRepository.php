@@ -186,14 +186,24 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Delete hotel
+     * Delete a hotel and all its related rows (facilities + packages) atomically.
+     *
+     * The three DELETE statements are wrapped in a transaction so a mid-sequence
+     * failure cannot leave orphaned facility/package rows tied to a deleted hotel.
      */
     public function delete(string $hotel_id): bool
     {
-        // Delete related data first
-        db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
-        db_query("DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s", $hotel_id);
-        return (bool) db_query("DELETE FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
+        db_query("START TRANSACTION");
+        try {
+            db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
+            db_query("DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s", $hotel_id);
+            $deleted = (bool) db_query("DELETE FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
+            db_query("COMMIT");
+            return $deleted;
+        } catch (\Throwable $e) {
+            db_query("ROLLBACK");
+            throw $e;
+        }
     }
 
     /**
@@ -424,7 +434,9 @@ class HotelRepository implements HotelRepositoryInterface
 
     public function getCalendarPricesRaw(string $hotel_id): ?string
     {
-        $val = @db_get_field(
+        // `calendar_prices_raw` is guaranteed to exist by the idempotent install
+        // migration at functions/install.php:428. No error suppression needed.
+        $val = db_get_field(
             "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
             $hotel_id
         );
