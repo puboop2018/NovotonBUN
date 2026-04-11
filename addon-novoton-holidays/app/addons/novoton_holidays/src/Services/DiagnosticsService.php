@@ -12,20 +12,21 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 
 class DiagnosticsService implements DiagnosticsServiceInterface
 {
-    private ?NovotonApi $api;
+    private ?NovotonApiKitInterface $api;
 
     private array $settings;
 
-    public function __construct(?NovotonApi $api = null)
+    public function __construct(?NovotonApiKitInterface $api = null)
     {
         $this->settings = ConfigProvider::all();
         $this->api = $api;
@@ -33,8 +34,11 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
     /**
      * Get or lazy-create the API instance.
+     *
+     * Returns the Kit interface; NovotonApi implements it so the fallback
+     * `new NovotonApi()` satisfies the narrow type via covariance.
      */
-    private function getApi(): NovotonApi
+    private function getApi(): NovotonApiKitInterface
     {
         if ($this->api === null) {
             $this->api = new NovotonApi();
@@ -59,19 +63,20 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
         try {
             $api = $this->getApi();
-            $result = $api->getHotelList(Constants::DEFAULT_COUNTRY, '%', '%', '%');
+            $result = $api->hotels()->getHotelList(Constants::DEFAULT_COUNTRY, '%', '%', '%');
 
             if (empty($result)) {
+                $debug = $api->debugInfo();
                 return [
                     'success' => false,
                     'config' => $config,
                     'message' => 'No hotels returned or invalid response.',
                     'hotels_count' => 0,
                     'sample_hotel' => null,
-                    'error' => $api->getLastError(),
-                    'last_request' => $api->getLastRequestFormatted(),
-                    'last_http_code' => $api->lastHttpCode,
-                    'raw_response_preview' => substr((string) ($api->lastResponseRaw ?? ''), 0, 500),
+                    'error' => $debug->getErrorSummary(),
+                    'last_request' => $debug->lastRequestFormatted,
+                    'last_http_code' => $debug->lastHttpCode,
+                    'raw_response_preview' => substr($debug->lastResponseRaw, 0, 500),
                 ];
             }
 
@@ -137,14 +142,14 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     {
         try {
             $api = $this->getApi();
-            $result = $api->getHotelList($country);
+            $result = $api->hotels()->getHotelList($country);
 
             if (!$result || !isset($result->Hotel)) {
                 return [
                     'success' => false,
                     'total' => 0,
                     'hotels' => [],
-                    'error' => $api->getLastError(),
+                    'error' => $api->debugInfo()->getErrorSummary(),
                 ];
             }
 
@@ -215,13 +220,14 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'children' => 0,
             ];
 
-            $result = $api->getRoomPrice($priceParams);
+            $pricing = $api->pricing();
+            $result = $pricing->getRoomPrice($priceParams);
 
             $price = 0;
             $priceWithCommission = 0;
             if ($result && isset($result->Price)) {
                 $price = (float) $result->Price;
-                $priceWithCommission = $api->applyCommission($price);
+                $priceWithCommission = $pricing->applyCommission($price);
             }
 
             return [
@@ -230,7 +236,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'params' => $priceParams,
                 'price' => $price,
                 'price_with_commission' => $priceWithCommission,
-                'raw_response' => $api->getLastResponse(),
+                'raw_response' => $api->debugInfo()->lastResponse,
                 'error' => '',
             ];
         } catch (\Exception $e) {
@@ -268,7 +274,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 $searchParams['hotel_id'] = $params['hotel_id'];
             }
 
-            $results = $api->searchAvailability($searchParams);
+            $results = $api->availability()->searchAvailability($searchParams);
 
             if (empty($results)) {
                 return [
@@ -367,7 +373,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
         try {
             $api = $this->getApi();
-            $hotelInfo = $api->getHotelInfo($hotelId);
+            $hotelInfo = $api->hotels()->getHotelInfo($hotelId);
 
             if (!$hotelInfo) {
                 return [

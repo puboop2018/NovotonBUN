@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Api\Contracts;
 
+use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
+
 interface NovotonApiKitInterface
 {
     public function hotels(): HotelApiClientInterface;
@@ -38,4 +40,14 @@ interface NovotonApiKitInterface
     public function reservations(): ReservationApiClientInterface;
 
     public function destinations(): DestinationApiClientInterface;
+
+    /**
+     * Immutable snapshot of the most recent API request/response state.
+     *
+     * Diagnostic / test-harness callers use this to inspect the raw XML
+     * request, response, HTTP code, and last error after an API call,
+     * without reaching for the legacy public `$lastRequest` / `$lastResponse`
+     * / `$lastHttpCode` / `$lastError` properties on the concrete facade.
+     */
+    public function debugInfo(): RequestDebugInfo;
 }

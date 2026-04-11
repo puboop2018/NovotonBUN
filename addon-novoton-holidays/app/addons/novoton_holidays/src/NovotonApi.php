@@ -134,6 +134,7 @@ class NovotonApi implements NovotonApiInterface, NovotonApiKitInterface
     /**
      * Get debug info as an immutable value object (preferred over raw public properties).
      */
+    #[\Override]
     public function debugInfo(): RequestDebugInfo
     {
         return new RequestDebugInfo(
