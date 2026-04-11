@@ -44,7 +44,7 @@ try {
     }
 
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
+    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
     $verifiedPrice = (float)($verifyResult['price'] ?? 0);
     $basePrice = $verifiedPrice;
 

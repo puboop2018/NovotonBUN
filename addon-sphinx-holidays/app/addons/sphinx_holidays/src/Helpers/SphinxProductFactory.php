@@ -196,6 +196,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Replicate descriptions to other configured languages
         $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+        $fullDescription = $productData['full_description'] ?? '';
         foreach ($otherLanguages as $lc) {
             db_query(
                 "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)

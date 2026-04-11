@@ -86,6 +86,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
                 if ($result) {
                     $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
                     foreach ($otherLanguages as $lc) {
+                        $fullDescription = $product_data['full_description'] ?? '';
                         db_query(
                             "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
                              VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)

@@ -38,9 +38,13 @@ abstract class AbstractCronCommand extends BaseCommand
         $this->logger = $logger;
         $this->params = $params;
 
-        // Wire SyncLogger as the output callback for the base class
+        // Wire SyncLogger as the output callback for the base class.
+        // Forward the optional newline flag so prompt-style output (partial
+        // line + completion marker) renders correctly in CLI/web contexts.
         if ($this->logger !== null) {
-            $this->setOutputCallback(fn(string $msg) => $this->logger->output($msg));
+            $this->setOutputCallback(
+                fn(string $msg, bool $addNewline = true) => $this->logger->output($msg, $addNewline)
+            );
         }
     }
 

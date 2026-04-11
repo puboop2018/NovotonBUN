@@ -48,7 +48,7 @@ try {
     // Apply commission to each result
     $commission = ConfigProvider::getCommission();
     if ($commission > 0 && !empty($results)) {
-        $calculator = new CommissionCalculator($commission, ConfigProvider::shouldRoundPrices());
+        $calculator = new CommissionCalculator($commission, ConfigProvider::shouldRoundPrices() ? 'Y' : 'N');
         foreach ($results as &$result) {
             if (isset($result['price'])) {
                 $result['original_price'] = $result['price'];

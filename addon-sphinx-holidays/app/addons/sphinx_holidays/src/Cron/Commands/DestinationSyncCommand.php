@@ -388,10 +388,10 @@ class DestinationSyncCommand extends AbstractSyncCommand
         return true;
     }
 
-    protected function output(string $message): void
+    protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
+            ($this->outputCallback)($message, $addNewline);
         }
     }
 }

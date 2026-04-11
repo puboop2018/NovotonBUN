@@ -42,11 +42,17 @@ abstract class AbstractCronCommand
 
     /**
      * Emit an output message via the callback, or fall back to fn_log_event.
+     *
+     * The `$addNewline` flag supports prompt-style output where a command
+     * wants to emit a partial line ("[hotel] processing... ") followed by
+     * a completion marker on the same line ("OK"). The callback receives
+     * the flag as a second argument; callbacks that don't care about line
+     * breaks can ignore it.
      */
-    protected function output(string $message): void
+    protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
+            ($this->outputCallback)($message, $addNewline);
             return;
         }
 

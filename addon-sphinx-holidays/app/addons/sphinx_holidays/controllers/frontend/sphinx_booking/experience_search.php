@@ -50,7 +50,7 @@ try {
 
     // Apply commission
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
+    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
 
     if ($commission > 0 && !empty($allResults)) {
         $calculator = new CommissionCalculator($commission, $roundPrices);

@@ -71,7 +71,7 @@ final class CartService implements CartServiceInterface
             return $price;
         }
 
-        $calculator = new CommissionCalculator($commission, ConfigProvider::shouldRoundPrices());
+        $calculator = new CommissionCalculator($commission, ConfigProvider::shouldRoundPrices() ? 'Y' : 'N');
         return $calculator->apply($price);
     }
 

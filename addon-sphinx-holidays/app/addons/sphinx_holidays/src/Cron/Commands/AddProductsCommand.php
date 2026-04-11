@@ -458,10 +458,10 @@ class AddProductsCommand extends AbstractSyncCommand
         return $result;
     }
 
-    protected function output(string $message): void
+    protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
+            ($this->outputCallback)($message, $addNewline);
         }
     }
 }

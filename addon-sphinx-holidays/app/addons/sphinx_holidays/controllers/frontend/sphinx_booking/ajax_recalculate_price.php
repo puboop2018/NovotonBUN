@@ -40,7 +40,7 @@ try {
 
     $newPrice = (float)($verifyResult['price'] ?? 0);
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
+    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
 
     if ($commission > 0 && $newPrice > 0) {
         $calculator = new CommissionCalculator($commission, $roundPrices);

@@ -289,22 +289,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:output\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Variable \$allFacilityIds on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:output\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
 			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
@@ -319,28 +307,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:output\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:output\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
-
-		-
 			message: '#^Variable \$stats on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:output\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
 			message: '#^Ternary operator condition is always false\.$#'
@@ -619,18 +589,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php
 
 		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/ajax_recalculate_price.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php
-
-		-
 			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:customizeCircuit\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -655,52 +613,10 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
 
 		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_search.php
-
-		-
 			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:getExperienceQuote\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_search.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_search.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search_poll.php
 
 		-
 			message: '#^Comparison operation "\>" between \*NEVER\* and 0 results in an error\.$#'
@@ -769,12 +685,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
 
 		-
-			message: '#^Undefined variable\: \$fullDescription$#'
-			identifier: variable.undefined
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
-
-		-
 			message: '#^Static method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:ensureUniqueSeoName\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
@@ -784,12 +694,6 @@ parameters:
 			message: '#^Strict comparison using \=\=\= between 0 and 0 will always evaluate to true\.$#'
 			identifier: identical.alwaysTrue
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Undefined variable\: \$fullDescription$#'
-			identifier: variable.undefined
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
@@ -829,12 +733,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
 
 		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
 			message: '#^If condition is always true\.$#'
 			identifier: if.alwaysTrue
 			count: 1
@@ -851,12 +749,6 @@ parameters:
 			identifier: parameter.notFound
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#2 \$roundPrices of class Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator constructor expects string, bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:resolveHotelFacilities\(\) should return array\<int, array\{id\: string, name\: string, mapping\: array\|null\}\> but returns array\<string, array\>\.$#'

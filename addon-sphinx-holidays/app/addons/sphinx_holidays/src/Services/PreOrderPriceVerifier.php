@@ -95,7 +95,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             }
 
             $commission = ConfigProvider::getCommission();
-            $roundPrices = ConfigProvider::shouldRoundPrices();
+            $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
             if ($commission > 0) {
                 $calculator = new CommissionCalculator($commission, $roundPrices);
                 $apiPrice = $calculator->apply($apiPrice);

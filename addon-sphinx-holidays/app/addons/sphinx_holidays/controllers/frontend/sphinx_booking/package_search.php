@@ -126,7 +126,7 @@ try {
 
     // Apply commission to pricing.selling_price
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
+    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
 
     if ($commission > 0) {
         $calculator = new \Tygh\Addons\TravelCore\Services\CommissionCalculator($commission, $roundPrices);

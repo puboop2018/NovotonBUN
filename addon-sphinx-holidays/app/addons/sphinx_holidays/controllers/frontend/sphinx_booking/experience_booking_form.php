@@ -68,7 +68,7 @@ try {
 
     // Apply commission
     $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
+    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
     $sellingPrice = (float)($quote['pricing']['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
 
