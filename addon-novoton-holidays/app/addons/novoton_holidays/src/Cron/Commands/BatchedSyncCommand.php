@@ -4,7 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
-use Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSync;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class BatchedSyncCommand extends AbstractCronCommand
 {
@@ -59,7 +59,11 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        $sync = new BatchedPriceInfoSync();
+        // PR #8b: resolved via Container so the new AbstractBatchedSync-based
+        // BatchedPriceInfoSyncV2 replaces the legacy helper. The factory
+        // returns the concrete V2 type so setStaleHours() (which is not part
+        // of SyncInterface) remains callable below.
+        $sync = Container::getInstance()->batchedPriceInfoSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);
