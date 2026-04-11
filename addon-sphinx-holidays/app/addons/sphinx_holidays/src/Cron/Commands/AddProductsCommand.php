@@ -458,7 +458,7 @@ class AddProductsCommand extends AbstractSyncCommand
         return $result;
     }
 
-    private function output(string $message): void
+    protected function output(string $message): void
     {
         if ($this->outputCallback !== null) {
             ($this->outputCallback)($message);

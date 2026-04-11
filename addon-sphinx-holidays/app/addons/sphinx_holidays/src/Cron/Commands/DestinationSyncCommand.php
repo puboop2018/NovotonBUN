@@ -388,7 +388,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
         return true;
     }
 
-    private function output(string $message): void
+    protected function output(string $message): void
     {
         if ($this->outputCallback !== null) {
             ($this->outputCallback)($message);
