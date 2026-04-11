@@ -11,31 +11,44 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class RoomPriceService implements RoomPriceServiceInterface
 {
     /** @var float Commission percentage */
     private $commission;
-    
+
     /** @var string Default currency */
     private $currency;
-    
+
     /** @var CacheServiceInterface */
     private $cache;
-    
+
     /** @var bool Debug mode */
     private $debug = false;
-    
+
+    /** @var PricingApiClientInterface Pricing sub-client (lazy-fallback wired) */
+    private readonly PricingApiClientInterface $pricing;
+
     /**
-     * Constructor
+     * RoomPriceService only calls getRoomPrice() on the pricing sub-client,
+     * so the dependency is narrowed to PricingApiClientInterface rather
+     * than the whole NovotonApiKitInterface.
+     *
+     * The lazy fallback `(new NovotonApi())->pricing()` keeps the
+     * zero-argument construction path working so existing callsites
+     * that do `new RoomPriceService()` don't break — same pattern as
+     * CronService and AlternativeRequestService from earlier waves.
      */
-    public function __construct()
+    public function __construct(?PricingApiClientInterface $pricing = null)
     {
         $this->commission = ConfigProvider::getCommission();
         $this->currency = ConfigProvider::getApiCurrency();
         $this->cache = new CacheService();
         $this->debug = ConfigProvider::isDebugLogging();
+        $this->pricing = $pricing ?? (new NovotonApi())->pricing();
     }
     
     /**
@@ -146,9 +159,8 @@ class RoomPriceService implements RoomPriceServiceInterface
             return $cached;
         }
         
-        // Call API
-        $api = fn_novoton_holidays_get_api();
-        $response = $api->getRoomPrice($params);
+        // Call API via the injected pricing sub-client.
+        $response = $this->pricing->getRoomPrice($params);
         
         if (!$response || !isset($response->Price)) {
             return null;

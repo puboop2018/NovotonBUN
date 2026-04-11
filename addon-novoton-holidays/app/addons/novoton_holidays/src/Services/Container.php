@@ -188,7 +188,9 @@ class Container
 
     public function roomPriceService(): RoomPriceServiceInterface
     {
-        return $this->resolve('roomPriceService', fn() => new RoomPriceService());
+        return $this->resolve('roomPriceService', fn() => new RoomPriceService(
+            pricing: $this->novotonApi()->pricing(),
+        ));
     }
 
     public function securityService(): SecurityServiceInterface
