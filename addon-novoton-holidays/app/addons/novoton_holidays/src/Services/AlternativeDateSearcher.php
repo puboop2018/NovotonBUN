@@ -89,6 +89,10 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         if (!$api) {
             return ['results' => [], 'check_in' => '', 'check_out' => ''];
         }
+        // Bind the pricing sub-client once so every call inside this method
+        // goes through the narrow PricingApiClientInterface rather than the
+        // deprecated NovotonApi facade methods.
+        $pricing = $api->pricing();
 
         // Pre-extract room IDs/names for the batch
         $roomData = [];
@@ -148,7 +152,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
             $apiCallCount += count($batchRequests);
 
             // Send all room×board requests for this date in parallel
-            $batchResponses = $api->getRoomPriceBatch($batchRequests);
+            $batchResponses = $pricing->getRoomPriceBatch($batchRequests);
 
             // Process responses: find first valid board per room
             $foundRoomIds = [];
@@ -172,7 +176,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                         $foundRoomIds[$ri] = true;
                         $altCheckIn  = $tryCheckIn;
                         $altCheckOut = $tryCheckOut;
-                        $altPrice     = $api->applyCommission($rawPrice);
+                        $altPrice     = $pricing->applyCommission($rawPrice);
                         $altResults[] = [
                             'room'            => $rd['original'],
                             'room_id'         => $rd['id'],

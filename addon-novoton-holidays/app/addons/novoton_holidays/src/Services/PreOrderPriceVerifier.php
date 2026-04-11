@@ -63,8 +63,11 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         $cacheTtl  = ConfigProvider::getPreorderCacheTtl();
         $debug     = ConfigProvider::isDebugLogging();
 
-        // Lazy-load the API only when actually needed (cache miss)
-        $api = null;
+        // Lazy-load the API only when actually needed (cache miss).
+        // $pricing is bound from $api->pricing() after the null check so
+        // every API call inside the loop goes through the narrow
+        // PricingApiClientInterface rather than the deprecated facade.
+        $pricing = null;
 
         foreach ($cart['products'] as $cartId => $product) {
             if (empty($product['extra']['novoton_booking'])) {
@@ -97,7 +100,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 }
             } else {
                 // Cache miss / stale — call the API
-                if ($api === null) {
+                if ($pricing === null) {
                     $api = fn_novoton_holidays_get_api();
                     if (!$api) {
                         fn_log_event('general', 'runtime', [
@@ -105,6 +108,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                         ]);
                         return $result;
                     }
+                    $pricing = $api->pricing();
                 }
 
                 $priceParams = [
@@ -122,7 +126,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     continue;
                 }
 
-                $priceData = $api->getRoomPrice($priceParams);
+                $priceData = $pricing->getRoomPrice($priceParams);
 
                 if (!$priceData || !isset($priceData->Price)) {
                     if ($debug) {
@@ -136,7 +140,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 }
 
                 $rawApiPrice            = (float) (string) $priceData->Price;
-                $apiPriceWithCommission = $api->applyCommission($rawApiPrice);
+                $apiPriceWithCommission = $pricing->applyCommission($rawApiPrice);
             }
 
             $checkResult = $this->comparePrice(

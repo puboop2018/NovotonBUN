@@ -13,29 +13,49 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\AvailabilityApiClientInterface;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class SearchService implements SearchServiceInterface
 {
-    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    /** Narrow sub-client for the two searchAvailability*() calls. */
+    private readonly AvailabilityApiClientInterface $availability;
+
+    /** Narrow sub-client for applyCommission() only. */
+    private readonly PricingApiClientInterface $pricing;
 
     private CacheServiceInterface $cache;
 
     private bool $debug = false;
-    
+
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Both sub-clients are injectable for testing; in production the
+     * NovotonApi facade provides concrete implementations via
+     * `fn_novoton_holidays_get_api()`.
      *
      * @throws \RuntimeException if the Novoton API is not available
      */
-    public function __construct(?CacheServiceInterface $cache = null)
-    {
-        $this->api = fn_novoton_holidays_get_api();
-        if (!$this->api) {
-            throw new \RuntimeException('Novoton API is not available. Check addon settings and API credentials.');
+    public function __construct(
+        ?CacheServiceInterface $cache = null,
+        ?AvailabilityApiClientInterface $availability = null,
+        ?PricingApiClientInterface $pricing = null,
+    ) {
+        if ($availability === null || $pricing === null) {
+            $api = fn_novoton_holidays_get_api();
+            if (!$api) {
+                throw new \RuntimeException('Novoton API is not available. Check addon settings and API credentials.');
+            }
+            $availability ??= $api->availability();
+            $pricing      ??= $api->pricing();
         }
+        $this->availability = $availability;
+        $this->pricing      = $pricing;
         $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
@@ -165,7 +185,7 @@ class SearchService implements SearchServiceInterface
         $api_params = $this->buildApiParams($params);
 
         // Call API - use searchAvailability method
-        $response = $this->api->searchAvailability($api_params);
+        $response = $this->availability->searchAvailability($api_params);
         
         if (!$response) {
             $this->log('Search API returned empty', ['params' => $api_params]);
@@ -218,7 +238,7 @@ class SearchService implements SearchServiceInterface
 
         // Phase 2: batch-fetch all uncached dates in parallel via curl_multi
         if (!empty($uncached_api_params)) {
-            $batch_results = $this->api->searchAvailabilityBatch($uncached_api_params);
+            $batch_results = $this->availability->searchAvailabilityBatch($uncached_api_params);
 
             foreach ($batch_results as $search_date => $results) {
                 // Cache results (5 minutes)
@@ -388,7 +408,7 @@ class SearchService implements SearchServiceInterface
         }
         
         $raw_price = (float) (string) ($room->Price ?? 0);
-        $price_with_commission = $this->api->applyCommission($raw_price);
+        $price_with_commission = $this->pricing->applyCommission($raw_price);
         
         return [
             'room_id' => $room_id,
@@ -580,7 +600,7 @@ class SearchService implements SearchServiceInterface
                     continue;
                 }
 
-                $finalPrice = $this->api->applyCommission($price);
+                $finalPrice = $this->pricing->applyCommission($price);
                 $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
                 $item = [
@@ -636,7 +656,7 @@ class SearchService implements SearchServiceInterface
                 return [];
             }
 
-            $finalPrice = $this->api->applyCommission($price);
+            $finalPrice = $this->pricing->applyCommission($price);
             $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
             $item = [
