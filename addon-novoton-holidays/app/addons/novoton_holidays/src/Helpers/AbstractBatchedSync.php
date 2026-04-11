@@ -31,16 +31,14 @@ use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 abstract class AbstractBatchedSync implements SyncInterface
 {
     /**
-     * State manager
-     * @var StateManager
+     * State manager (interface-typed for testability).
      */
-    protected StateManager $state;
+    protected StateManagerInterface $state;
 
     /**
-     * Logger
-     * @var SyncLogger
+     * Logger (interface-typed for testability).
      */
-    protected SyncLogger $logger;
+    protected SyncLoggerInterface $logger;
 
     /**
      * API instance
@@ -85,15 +83,22 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected int $itemTimeoutWarning = 30;
 
     /**
-     * Constructor
+     * Constructor with optional DI.
+     *
+     * Collaborators are interface-typed and default to the concrete
+     * StateManager / SyncLogger so existing subclasses that call
+     * `parent::__construct()` with no arguments keep working unchanged.
+     * Unit tests inject in-memory fakes or mocks.
      */
-    public function __construct()
-    {
-        $this->batchSize = ConfigProvider::DEFAULT_BATCH_SIZE;
-        $this->maxExecutionTime = ConfigProvider::DEFAULT_MAX_EXECUTION_TIME;
+    public function __construct(
+        ?StateManagerInterface $state = null,
+        ?SyncLoggerInterface $logger = null,
+    ) {
+        $this->batchSize = ConfigProvider::getCronBatchSize();
+        $this->maxExecutionTime = ConfigProvider::getCronMaxExecutionTime();
 
-        $this->state = new StateManager($this->getSyncName());
-        $this->logger = new SyncLogger($this->getSyncName());
+        $this->state = $state ?? new StateManager($this->getSyncName());
+        $this->logger = $logger ?? new SyncLogger($this->getSyncName());
     }
 
     /**
@@ -220,6 +225,17 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected function isLimitReached(): bool
     {
         return $this->isTimeLimitReached() || $this->isMemoryLimitReached();
+    }
+
+    /**
+     * Sleep between processed items to avoid hammering the upstream API.
+     *
+     * Overridable in subclasses (and unit-test doubles) to change the delay
+     * or skip it entirely. Default reads ConfigProvider::API_DELAY_MS.
+     */
+    protected function sleepBetweenItems(): void
+    {
+        usleep(ConfigProvider::API_DELAY_MS * 1000);
     }
 
     /**
@@ -387,7 +403,7 @@ abstract class AbstractBatchedSync implements SyncInterface
                 }
 
                 // Small delay to avoid API rate limits
-                usleep(ConfigProvider::API_DELAY_MS * 1000);
+                $this->sleepBetweenItems();
             }
 
             // Save state once per batch instead of per item
