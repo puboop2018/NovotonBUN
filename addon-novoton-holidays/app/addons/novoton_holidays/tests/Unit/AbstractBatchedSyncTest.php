@@ -33,6 +33,8 @@ final class AbstractBatchedSyncTest extends TestCase
      * @param string                                  $syncType       Value returned by determineSyncType().
      * @param array<int|string, array<string, mixed>> $itemOutcomes   processItem() returns for each item, keyed by item id.
      * @param bool                                    $limitPredicate Force isLimitReached() to return true after the first item.
+     * @param bool                                    $retryEnabled   Subclass opts into retryFailedItems().
+     * @param bool                                    $cliEnvironment Whether isCliEnvironment() should return true (auto-unlimited).
      */
     private function makeSync(
         StateManagerInterface $state,
@@ -42,11 +44,25 @@ final class AbstractBatchedSyncTest extends TestCase
         array $itemsToSync = [],
         array $itemOutcomes = [],
         bool $limitPredicate = false,
+        bool $retryEnabled = false,
+        bool $cliEnvironment = false,
     ): AbstractBatchedSync {
-        return new class($state, $logger, $syncName, $syncType, $itemsToSync, $itemOutcomes, $limitPredicate)
+        return new class(
+            $state,
+            $logger,
+            $syncName,
+            $syncType,
+            $itemsToSync,
+            $itemOutcomes,
+            $limitPredicate,
+            $retryEnabled,
+            $cliEnvironment,
+        )
             extends AbstractBatchedSync
         {
             public array $processedItems = [];
+            /** @var array<int, array<int, string|int>> */
+            public array $preBatchCalls = [];
             private int $limitCheckCount = 0;
 
             public function __construct(
@@ -57,6 +73,8 @@ final class AbstractBatchedSyncTest extends TestCase
                 private readonly array $itemsToSyncValue,
                 private readonly array $itemOutcomesValue,
                 private readonly bool $limitPredicate,
+                private readonly bool $retryEnabled,
+                private readonly bool $cliEnvironment,
             ) {
                 parent::__construct($state, $logger);
             }
@@ -83,9 +101,31 @@ final class AbstractBatchedSyncTest extends TestCase
                     ?? ['success' => true, 'message' => '', 'data' => null];
             }
 
+            /** Capture preBatch calls so tests can assert on them. */
+            protected function preBatch(array $batch): void
+            {
+                $this->preBatchCalls[] = $batch;
+            }
+
             /** No real sleep inside unit tests. */
             protected function sleepBetweenItems(): void
             {
+            }
+
+            /** No real retry-delay inside unit tests. */
+            protected function sleepBetweenRetries(): void
+            {
+            }
+
+            protected function shouldRetryFailedItems(): bool
+            {
+                return $this->retryEnabled;
+            }
+
+            /** Force PHP_SAPI override for CLI default testing. */
+            protected function isCliEnvironment(): bool
+            {
+                return $this->cliEnvironment;
             }
 
             /**
@@ -424,6 +464,300 @@ final class AbstractBatchedSyncTest extends TestCase
         $this->assertCount(1, $sync->processedItems, 'Only the first item should have been processed');
     }
 
+    // ── New hooks: preBatch, retry, CLI default (PR #6b) ──────────────────
+
+    public function testPreBatchHookCalledOncePerBatchWithItemList(): void
+    {
+        $state = $this->createMock(StateManagerInterface::class);
+
+        $items = ['a', 'b', 'c'];
+
+        $state->method('load')->willReturn(['status' => 'idle']);
+        $state->method('getStatus')->willReturn([
+            'status' => 'in_progress',
+            'sync_type' => 'full',
+            'processed' => 0,
+            'total' => 3,
+            'synced' => 0,
+            'errors' => 0,
+        ]);
+        // Two batches to confirm preBatch fires once per batch.
+        $state->method('getNextBatch')->willReturnOnConsecutiveCalls(['a', 'b'], ['c'], []);
+        $state->method('complete')->willReturn([
+            'sync_type' => 'full',
+            'total' => 3,
+            'synced' => 3,
+            'errors' => 0,
+            'duration_seconds' => 0,
+            'metadata' => [],
+        ]);
+
+        $sync = $this->makeSync(
+            $state,
+            $this->createMock(SyncLoggerInterface::class),
+            itemsToSync: $items,
+        );
+
+        $result = $sync->run();
+
+        $this->assertSame('completed', $result['status']);
+        $this->assertSame(
+            [['a', 'b'], ['c']],
+            $sync->preBatchCalls,
+            'preBatch() should be called exactly once per batch, with the exact batch contents',
+        );
+    }
+
+    public function testRetrySuccessfullyRecoversFailedItemsAndAdjustsCounters(): void
+    {
+        $state = $this->createMock(StateManagerInterface::class);
+
+        $items = ['ok1', 'err1', 'err2'];
+
+        $state->method('load')->willReturnOnConsecutiveCalls(
+            // 1. initial run() load — idle, no in-progress state
+            ['status' => 'idle'],
+            // 2. retryFailedItems() reads the state built up by the main loop
+            [
+                'status' => 'in_progress',
+                'sync_type' => 'full',
+                'processed' => 3,
+                'total' => 3,
+                'synced' => 1,
+                'errors' => 2,
+                'error_ids' => ['err1', 'err2'],
+            ],
+            // 3. retryFailedItems() re-reads after the retry loop to patch counters
+            [
+                'status' => 'in_progress',
+                'sync_type' => 'full',
+                'processed' => 3,
+                'total' => 3,
+                'synced' => 1,
+                'errors' => 2,
+                'error_ids' => ['err1', 'err2'],
+            ],
+        );
+
+        $state->method('getStatus')->willReturn([
+            'status' => 'in_progress',
+            'sync_type' => 'full',
+            'processed' => 0,
+            'total' => 3,
+            'synced' => 0,
+            'errors' => 0,
+        ]);
+        $state->method('getNextBatch')->willReturnOnConsecutiveCalls($items, []);
+
+        // Capture the save() call made by retryFailedItems().
+        $savedState = null;
+        $state->expects($this->once())->method('save')
+            ->willReturnCallback(function (array $s) use (&$savedState): bool {
+                $savedState = $s;
+                return true;
+            });
+
+        $state->method('complete')->willReturn([
+            'sync_type' => 'full',
+            'total' => 3,
+            'synced' => 2,
+            'errors' => 1,
+            'duration_seconds' => 0,
+            'metadata' => [],
+        ]);
+
+        // Outcomes: err1 recovers on retry, err2 stays failed both times.
+        $callCounts = ['err1' => 0, 'err2' => 0];
+        $sync = new class(
+            $state,
+            $this->createMock(SyncLoggerInterface::class),
+            $items,
+            $callCounts,
+        ) extends AbstractBatchedSync {
+            public array $processedItems = [];
+
+            public function __construct(
+                StateManagerInterface $state,
+                SyncLoggerInterface $logger,
+                private readonly array $itemIds,
+                private array $callCounts,
+            ) {
+                parent::__construct($state, $logger);
+            }
+
+            protected function getSyncName(): string { return 'retry_test'; }
+            protected function determineSyncType(array $options): string { return 'full'; }
+            protected function getItemsToSync(string $syncType, array $options): array { return $this->itemIds; }
+            protected function shouldRetryFailedItems(): bool { return true; }
+            protected function sleepBetweenItems(): void {}
+            protected function sleepBetweenRetries(): void {}
+            protected function isCliEnvironment(): bool { return false; }
+
+            protected function processItem($itemId): array
+            {
+                $this->processedItems[] = $itemId;
+                $id = (string) $itemId;
+
+                if ($id === 'ok1') {
+                    return ['success' => true, 'message' => '', 'data' => null];
+                }
+
+                // err1 fails the first time, succeeds on retry.
+                if ($id === 'err1') {
+                    $this->callCounts['err1']++;
+                    return [
+                        'success' => $this->callCounts['err1'] >= 2,
+                        'message' => $this->callCounts['err1'] >= 2 ? '' : 'transient',
+                        'data'    => null,
+                    ];
+                }
+
+                // err2 always fails.
+                return ['success' => false, 'message' => 'permanent', 'data' => null];
+            }
+        };
+
+        $result = $sync->run();
+
+        $this->assertSame('completed', $result['status']);
+
+        // Main loop processes all 3, then retry processes err1 + err2 again.
+        $this->assertSame(
+            ['ok1', 'err1', 'err2', 'err1', 'err2'],
+            $sync->processedItems,
+            'Retry should replay the error ids in order after the main loop',
+        );
+
+        // State patched by retryFailedItems(): err1 recovered, err2 stayed.
+        $this->assertNotNull($savedState);
+        $this->assertSame(2, $savedState['synced'], 'synced should increment by 1 recovery');
+        $this->assertSame(1, $savedState['errors'], 'errors should decrement by 1 recovery');
+        $this->assertSame(['err2'], array_values($savedState['error_ids']));
+        $this->assertTrue($savedState['retry_done']);
+    }
+
+    public function testRetryIsSkippedWhenRetryDoneFlagAlreadySet(): void
+    {
+        $state = $this->createMock(StateManagerInterface::class);
+
+        // First load: idle, start a sync.
+        // Second load (inside retryFailedItems): already has retry_done=true.
+        $state->method('load')->willReturnOnConsecutiveCalls(
+            ['status' => 'idle'],
+            [
+                'status' => 'in_progress',
+                'processed' => 1,
+                'total' => 1,
+                'synced' => 0,
+                'errors' => 1,
+                'error_ids' => ['zombie'],
+                'retry_done' => true,
+            ],
+        );
+
+        $state->method('getStatus')->willReturn([
+            'status' => 'in_progress',
+            'sync_type' => 'full',
+            'processed' => 0,
+            'total' => 1,
+            'synced' => 0,
+            'errors' => 0,
+        ]);
+        $state->method('getNextBatch')->willReturnOnConsecutiveCalls(['zombie'], []);
+
+        // The retry_done short-circuit means save() must not be called.
+        $state->expects($this->never())->method('save');
+
+        $state->method('complete')->willReturn([
+            'sync_type' => 'full',
+            'total' => 1,
+            'synced' => 0,
+            'errors' => 1,
+            'duration_seconds' => 0,
+            'metadata' => [],
+        ]);
+
+        $sync = $this->makeSync(
+            $state,
+            $this->createMock(SyncLoggerInterface::class),
+            itemsToSync: ['zombie'],
+            itemOutcomes: ['zombie' => ['success' => false, 'message' => 'bad', 'data' => null]],
+            retryEnabled: true,
+        );
+
+        $result = $sync->run();
+
+        $this->assertSame('completed', $result['status']);
+        $this->assertCount(
+            1,
+            $sync->processedItems,
+            'Main loop processes the item once; retry is short-circuited by retry_done flag',
+        );
+    }
+
+    public function testRetryIsNotCalledWhenShouldRetryReturnsFalse(): void
+    {
+        $state = $this->createMock(StateManagerInterface::class);
+
+        $state->method('load')->willReturn(['status' => 'idle']);
+        $state->method('getStatus')->willReturn([
+            'status' => 'in_progress',
+            'sync_type' => 'full',
+            'processed' => 0,
+            'total' => 1,
+            'synced' => 0,
+            'errors' => 0,
+        ]);
+        $state->method('getNextBatch')->willReturnOnConsecutiveCalls(['x'], []);
+
+        // Base class default: shouldRetryFailedItems()=false → no save() inside retry.
+        $state->expects($this->never())->method('save');
+
+        $state->method('complete')->willReturn([
+            'sync_type' => 'full',
+            'total' => 1,
+            'synced' => 0,
+            'errors' => 1,
+            'duration_seconds' => 0,
+            'metadata' => [],
+        ]);
+
+        $sync = $this->makeSync(
+            $state,
+            $this->createMock(SyncLoggerInterface::class),
+            itemsToSync: ['x'],
+            itemOutcomes: ['x' => ['success' => false, 'message' => 'boom', 'data' => null]],
+            retryEnabled: false,
+        );
+
+        $result = $sync->run();
+
+        $this->assertSame('completed', $result['status']);
+        $this->assertSame(['x'], $sync->processedItems, 'Failed item is NOT retried when retry is disabled');
+    }
+
+    public function testCliEnvironmentDefaultsToUnlimitedMode(): void
+    {
+        $sync = $this->makeSync(
+            $this->createMock(StateManagerInterface::class),
+            $this->createMock(SyncLoggerInterface::class),
+            cliEnvironment: true,
+        );
+
+        $this->assertTrue($this->readProtectedBool($sync, 'unlimited'));
+    }
+
+    public function testNonCliEnvironmentKeepsUnlimitedFalseByDefault(): void
+    {
+        $sync = $this->makeSync(
+            $this->createMock(StateManagerInterface::class),
+            $this->createMock(SyncLoggerInterface::class),
+            cliEnvironment: false,
+        );
+
+        $this->assertFalse($this->readProtectedBool($sync, 'unlimited'));
+    }
+
     /**
      * Read a protected int property via reflection for the clamping tests.
      */
@@ -431,5 +765,14 @@ final class AbstractBatchedSyncTest extends TestCase
     {
         $ref = new \ReflectionProperty($instance::class, $property);
         return (int) $ref->getValue($instance);
+    }
+
+    /**
+     * Read a protected bool property via reflection.
+     */
+    private function readProtectedBool(object $instance, string $property): bool
+    {
+        $ref = new \ReflectionProperty($instance::class, $property);
+        return (bool) $ref->getValue($instance);
     }
 }
