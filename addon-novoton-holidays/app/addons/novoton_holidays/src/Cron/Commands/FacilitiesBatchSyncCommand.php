@@ -3,7 +3,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelFacilitiesSync;
+use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
+use Tygh\Addons\NovotonHolidays\Services\Container;
 
 /**
  * Batched hotel facilities sync cron command.
@@ -39,7 +40,11 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $this->output("==============================");
         $this->output("");
 
-        $sync = new BatchedHotelFacilitiesSync();
+        // PR #7b: resolved via Container so the new AbstractBatchedSync-based
+        // BatchedHotelFacilitiesSyncV2 replaces the legacy helper. The type
+        // hint below is SyncInterface, so future migrations (V3, replacement,
+        // etc.) don't need to touch this file.
+        $sync = Container::getInstance()->batchedHotelFacilitiesSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         // Apply configuration from request params
@@ -80,7 +85,7 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $result];
     }
 
-    private function printStatus(BatchedHotelFacilitiesSync $sync): array
+    private function printStatus(SyncInterface $sync): array
     {
         $status = $sync->getStatus();
         $this->output("Status: {$status['status']}");
