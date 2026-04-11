@@ -3,7 +3,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class BatchedSyncCommand extends AbstractCronCommand
@@ -34,7 +33,13 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        $sync = new BatchedHotelInfoSync();
+        // PR #9b: resolved via Container so the new AbstractBatchedSync-based
+        // BatchedHotelInfoSyncV2 replaces the legacy helper. With this swap,
+        // all three legacy Batched*Sync helpers have been migrated; the
+        // cleanup PR can now delete BatchedHotelFacilitiesSync,
+        // BatchedPriceInfoSync, BatchedHotelInfoSync, and the
+        // SyncStateTrait / OutputWriterTrait that only they used.
+        $sync = Container::getInstance()->batchedHotelInfoSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
         $this->configureBatchSync($sync);
