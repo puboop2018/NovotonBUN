@@ -44,6 +44,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactoryInterface;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelFacilitiesSyncV2;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
@@ -331,5 +332,19 @@ class Container
             return ($this->overrides['batchedHotelInfoSync'])();
         }
         return new BatchedHotelInfoSync();
+    }
+
+    /**
+     * BatchedHotelFacilitiesSyncV2 is the AbstractBatchedSync-based
+     * replacement for BatchedHotelFacilitiesSync (PR #7 of the audit).
+     * Shipped side-by-side; cron command swap is a follow-up PR.
+     * Not a singleton — new instance each call.
+     */
+    public function batchedHotelFacilitiesSyncV2(): SyncInterface
+    {
+        if (isset($this->overrides['batchedHotelFacilitiesSyncV2'])) {
+            return ($this->overrides['batchedHotelFacilitiesSyncV2'])();
+        }
+        return new BatchedHotelFacilitiesSyncV2();
     }
 }
