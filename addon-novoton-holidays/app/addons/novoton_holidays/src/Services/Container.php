@@ -141,7 +141,7 @@ class Container
             $this->guestDataService(),
             $this->roomPriceService(),
             $this->bookingRepository(),
-            $this->novotonApi(),
+            $this->novotonApi()->pricing(),
             $this->hotelRepository()
         ));
     }
@@ -216,7 +216,8 @@ class Container
     public function alternativeRequestService(): AlternativeRequestServiceInterface
     {
         return $this->resolve('alternativeRequestService', fn() => new AlternativeRequestService(
-            $this->securityService()
+            $this->securityService(),
+            $this->novotonApi()->reservations()
         ));
     }
 
@@ -224,7 +225,7 @@ class Container
     {
         return $this->resolve('bookingSubmissionService', fn() => new BookingSubmissionService(
             $this->bookingRepository(),
-            $this->novotonApi()
+            $this->novotonApi()->reservations()
         ));
     }
 

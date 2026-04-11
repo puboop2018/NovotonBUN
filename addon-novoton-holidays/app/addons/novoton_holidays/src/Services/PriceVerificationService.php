@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
+
 /**
  * Verifies hotel room prices via the Novoton API.
  *
@@ -13,20 +15,20 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  * at checkout time). This service handles the full API verification
  * during booking creation.
  *
+ * Depends only on the pricing sub-client — a focused 9-method contract —
+ * rather than the full 46-method NovotonApi facade.
+ *
  * @package NovotonHolidays
  * @since   3.4.0
  */
 class PriceVerificationService implements PriceVerificationServiceInterface
 {
-    /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
-    private $api;
+    private readonly PricingApiClientInterface $pricing;
+    private readonly bool $debug;
 
-    /** @var bool */
-    private bool $debug;
-
-    public function __construct(\Tygh\Addons\NovotonHolidays\NovotonApi $api)
+    public function __construct(PricingApiClientInterface $pricing)
     {
-        $this->api = $api;
+        $this->pricing = $pricing;
         $this->debug = ConfigProvider::isDebugLogging();
     }
 
@@ -54,7 +56,7 @@ class PriceVerificationService implements PriceVerificationServiceInterface
             'children' => $params['children_ages'] ?? [],
         ];
 
-        $priceData = $this->api->getRoomPrice($priceParams);
+        $priceData = $this->pricing->getRoomPrice($priceParams);
 
         if (!$priceData || !isset($priceData->Price)) {
             $this->log('Price verification failed', [
@@ -75,7 +77,7 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         }
 
         $rawPrice = (float) (string) $priceData->Price;
-        $totalPrice = $this->api->applyCommission($rawPrice);
+        $totalPrice = $this->pricing->applyCommission($rawPrice);
 
         // Extract terms
         $termsOfPayment = '';

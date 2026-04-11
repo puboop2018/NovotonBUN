@@ -19,6 +19,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
@@ -29,17 +30,17 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
     private ?SecurityServiceInterface $security;
 
-    private ?NovotonApi $api;
+    private ?ReservationApiClientInterface $reservations;
 
     private AlternativeRequestRepositoryInterface $altRequestRepo;
 
     public function __construct(
         ?SecurityServiceInterface $security = null,
-        ?NovotonApi $api = null,
+        ?ReservationApiClientInterface $reservations = null,
         ?AlternativeRequestRepositoryInterface $altRequestRepo = null
     ) {
         $this->security = $security;
-        $this->api = $api;
+        $this->reservations = $reservations;
         $this->altRequestRepo = $altRequestRepo ?? new AlternativeRequestRepository();
     }
 
@@ -55,18 +56,18 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     }
 
     /**
-     * Get or lazy-create the API instance.
+     * Get or lazy-create the reservations sub-client.
+     *
+     * Lazy instantiation is preserved so the caller can keep passing `null`
+     * and receive a default wiring — but the fallback now materialises only
+     * the reservations domain instead of the full NovotonApi facade.
      */
-    private function getApi(): NovotonApi
+    private function getReservations(): ReservationApiClientInterface
     {
-        if ($this->api === null) {
-            $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-            if (file_exists($src_dir . 'NovotonApi.php')) {
-                require_once($src_dir . 'NovotonApi.php');
-            }
-            $this->api = new NovotonApi();
+        if ($this->reservations === null) {
+            $this->reservations = (new NovotonApi())->reservations();
         }
-        return $this->api;
+        return $this->reservations;
     }
 
     /**
@@ -145,7 +146,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
         }
 
         try {
-            $api = $this->getApi();
+            $api = $this->getReservations();
 
             // Build guest placeholders
             $guests = [];
