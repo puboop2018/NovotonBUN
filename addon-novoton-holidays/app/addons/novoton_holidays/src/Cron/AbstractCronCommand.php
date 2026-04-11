@@ -18,12 +18,18 @@ use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
  */
 abstract class AbstractCronCommand extends BaseCommand
 {
-    protected \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    /**
+     * Narrow kit interface so subclasses can only reach the five
+     * domain sub-clients (hotels, pricing, availability, reservations,
+     * destinations) and can no longer call the deprecated flat
+     * NovotonApi facade methods directly.
+     */
+    protected \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api;
     protected ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
     protected array $params = [];
 
     public function __construct(
-        \Tygh\Addons\NovotonHolidays\NovotonApi $api,
+        \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api,
         ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger,
         array $params = [],
     ) {

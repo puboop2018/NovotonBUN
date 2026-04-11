@@ -59,7 +59,7 @@ class AlternativesCommand extends AbstractCronCommand
         foreach ($pending as $request) {
             $this->output("Checking request #{$request['request_id']} (IdNum: {$request['novoton_request_id']})... ", false);
 
-            $response = $this->api->getAlternatives($request['novoton_request_id']);
+            $response = $this->api->reservations()->getAlternatives($request['novoton_request_id']);
 
             if (!$response || !isset($response->alternative)) {
                 $this->output("no response");
@@ -137,7 +137,7 @@ class AlternativesCommand extends AbstractCronCommand
             $this->output("Booking #{$booking['booking_id']}... ", false);
 
             if (!empty($booking['novoton_reservation_id'])) {
-                $this->api->getAlternatives($booking['novoton_reservation_id']);
+                $this->api->reservations()->getAlternatives($booking['novoton_reservation_id']);
                 $bookingRepo->update((int) $booking['booking_id'], ['alternatives_requested' => 1]);
                 $this->output("checked");
             } else {

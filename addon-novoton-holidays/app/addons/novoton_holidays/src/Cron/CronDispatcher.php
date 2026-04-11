@@ -20,10 +20,10 @@ class CronDispatcher implements CronDispatcherInterface
     /** @var array<string, class-string<AbstractCronCommand>> mode => command class */
     private static array $commandMap = [];
     private static bool $registered = false;
-    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    private \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api;
     private ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
 
-    public function __construct(\Tygh\Addons\NovotonHolidays\NovotonApi $api, ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger)
+    public function __construct(\Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api, ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger)
     {
         $this->api = $api;
         $this->logger = $logger;
