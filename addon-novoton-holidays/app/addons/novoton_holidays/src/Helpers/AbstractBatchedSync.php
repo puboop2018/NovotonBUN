@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -181,11 +182,22 @@ abstract class AbstractBatchedSync implements SyncInterface
     }
 
     /**
-     * Get API instance
+     * Get the API kit for this sync.
      *
-     * @return NovotonApi
+     * Return type is deliberately narrowed to NovotonApiKitInterface —
+     * the concrete NovotonApi facade carries 29 @deprecated flat
+     * delegate methods, and subclasses must not reach for them.
+     * Route every call through a sub-client accessor:
+     *
+     *     $this->getApi()->hotels()->getHotelInfoBatch(...)
+     *     $this->getApi()->pricing()->getPriceInfo(...)
+     *     $this->getApi()->destinations()->getOffersUpdate(...)
+     *
+     * NovotonApi implements NovotonApiKitInterface (added in PR #4),
+     * so returning `$this->api` (a concrete NovotonApi instance) from
+     * this narrowed method is valid by covariance.
      */
-    protected function getApi(): NovotonApi
+    protected function getApi(): NovotonApiKitInterface
     {
         if ($this->api === null) {
             $srcDir = PathResolver::getPath('src');

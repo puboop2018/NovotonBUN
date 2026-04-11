@@ -248,7 +248,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
         try {
             // The Novoton API requires PackageName, not package_id (IdCont).
-            $priceInfo = $this->getApi()->getPriceInfo($hotelId, $packageName);
+            $priceInfo = $this->getApi()->pricing()->getPriceInfo($hotelId, $packageName);
         } catch (ApiException $e) {
             $this->logger->output("ERROR: " . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];

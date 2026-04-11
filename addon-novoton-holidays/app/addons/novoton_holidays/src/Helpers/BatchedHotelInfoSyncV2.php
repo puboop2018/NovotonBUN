@@ -246,7 +246,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // 3. curl_multi parallel fetch of hotel info for the whole batch.
-        $this->batchResults = $this->getApi()->getHotelInfoBatch($hotelIds);
+        $this->batchResults = $this->getApi()->hotels()->getHotelInfoBatch($hotelIds);
     }
 
     #[\Override]
@@ -557,7 +557,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             $this->logger->output("Checking {$country}...");
 
             try {
-                $response = $api->getOffersUpdate($datetimeParam, $country);
+                $response = $api->destinations()->getOffersUpdate($datetimeParam, $country);
 
                 if ($response && isset($response->Offer)) {
                     $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
