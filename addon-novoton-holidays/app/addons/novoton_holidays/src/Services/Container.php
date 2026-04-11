@@ -46,6 +46,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactoryInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelFacilitiesSyncV2;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSyncV2;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
@@ -346,5 +347,22 @@ class Container
             return ($this->overrides['batchedHotelFacilitiesSyncV2'])();
         }
         return new BatchedHotelFacilitiesSyncV2();
+    }
+
+    /**
+     * BatchedPriceInfoSyncV2 is the AbstractBatchedSync-based replacement
+     * for BatchedPriceInfoSync (PR #8 of the audit). Shipped side-by-side;
+     * cron command swap is a follow-up PR.
+     *
+     * Returns the concrete class (not SyncInterface) because callers need
+     * access to `setStaleHours()`, which is not part of SyncInterface.
+     * Not a singleton — new instance each call.
+     */
+    public function batchedPriceInfoSyncV2(): BatchedPriceInfoSyncV2
+    {
+        if (isset($this->overrides['batchedPriceInfoSyncV2'])) {
+            return ($this->overrides['batchedPriceInfoSyncV2'])();
+        }
+        return new BatchedPriceInfoSyncV2();
     }
 }
