@@ -188,25 +188,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Auto-create the variant
                     $nameRo = trim($mapping['display_name_ro'] ?? '') ?: $nameEn;
-                    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+                    $languages = $repo->getActiveLanguageCodes();
                     if (empty($languages)) {
                         $languages = ['en'];
                     }
 
-                    $newVariantId = (int) db_query(
-                        "INSERT INTO ?:product_feature_variants ?e",
-                        ['feature_id' => $featureId, 'position' => 0]
-                    );
+                    $newVariantId = $repo->createFeatureVariant($featureId);
 
                     if ($newVariantId > 0) {
+                        $nameByLang = [];
                         foreach ($languages as $langCode) {
-                            $variantName = ($langCode === 'ro') ? $nameRo : $nameEn;
-                            db_query(
-                                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
-                                 VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
-                                $newVariantId, $langCode, $variantName, $variantName
-                            );
+                            $nameByLang[$langCode] = ($langCode === 'ro') ? $nameRo : $nameEn;
                         }
+                        $repo->insertFeatureVariantDescriptions($newVariantId, $nameByLang);
                         FeatureMapper::updateVariantId((int) $mapping['map_id'], $newVariantId, 'auto');
                         // Add to local cache so subsequent mappings can match
                         $variantNameToId[$nameEn] = $newVariantId;
@@ -296,16 +290,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Count total hotels (only on first batch)
-        $totalHotels = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:{$scanConfig['table']} WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]'"
-        );
+        $totalHotels = $repo->countHotelsWithJsonFacilities($scanConfig['table'], $scanConfig['json_col']);
 
         // Fetch batch of hotels
-        $hotels = db_get_array(
-            "SELECT {$scanConfig['id_col']}, {$scanConfig['json_col']} FROM ?:{$scanConfig['table']} " .
-            "WHERE {$scanConfig['json_col']} IS NOT NULL AND {$scanConfig['json_col']} != '[]' " .
-            "ORDER BY {$scanConfig['id_col']} LIMIT ?i, ?i",
-            $offset, $batchSize
+        $hotels = $repo->findHotelsBatchForScan(
+            $scanConfig['table'],
+            $scanConfig['id_col'],
+            $scanConfig['json_col'],
+            $offset,
+            $batchSize
         );
 
         $newUnmapped = 0;
@@ -597,26 +590,12 @@ if ($mode === 'edit') {
     }
 
     // Load all CS-Cart product features for the feature dropdown
-    $allFeatures = db_get_array(
-        "SELECT f.feature_id, f.feature_type, fd.description
-         FROM ?:product_features f
-         LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
-         ORDER BY fd.description",
-        DESCR_SL
-    );
+    $allFeatures = $repo->findAllCsCartFeatures(DESCR_SL);
 
     // Load variants for the currently selected feature
     $featureVariants = [];
     if (!empty($mapping['cscart_feature_id'])) {
-        $featureVariants = db_get_array(
-            "SELECT v.variant_id, vd.variant as name
-             FROM ?:product_feature_variants v
-             LEFT JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id AND vd.lang_code = ?s
-             WHERE v.feature_id = ?i
-             ORDER BY v.position, vd.variant",
-            DESCR_SL,
-            (int) $mapping['cscart_feature_id']
-        );
+        $featureVariants = $repo->findVariantsForFeature((int) $mapping['cscart_feature_id'], DESCR_SL);
     }
 
     // Load aliases for this mapping
@@ -634,15 +613,7 @@ if ($mode === 'get_variants') {
     $variants = [];
 
     if ($featureId > 0) {
-        $variants = db_get_array(
-            "SELECT v.variant_id, vd.variant as name
-             FROM ?:product_feature_variants v
-             LEFT JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id AND vd.lang_code = ?s
-             WHERE v.feature_id = ?i
-             ORDER BY v.position, vd.variant",
-            DESCR_SL,
-            $featureId
-        );
+        $variants = $repo->findVariantsForFeature($featureId, DESCR_SL);
     }
 
     if (defined('AJAX_REQUEST')) {

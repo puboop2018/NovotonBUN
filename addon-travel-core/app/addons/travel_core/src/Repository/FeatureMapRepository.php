@@ -338,4 +338,78 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             $mapId
         );
     }
+
+    // ── CS-Cart feature/variant operations (used by admin controller) ──
+
+    #[\Override]
+    public function getActiveLanguageCodes(): array
+    {
+        return db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+    }
+
+    #[\Override]
+    public function createFeatureVariant(int $featureId, int $position = 0): int
+    {
+        return (int) db_query(
+            "INSERT INTO ?:product_feature_variants ?e",
+            ['feature_id' => $featureId, 'position' => $position]
+        );
+    }
+
+    #[\Override]
+    public function insertFeatureVariantDescriptions(int $variantId, array $nameByLang): void
+    {
+        foreach ($nameByLang as $langCode => $variantName) {
+            db_query(
+                "INSERT INTO ?:product_feature_variant_descriptions (variant_id, lang_code, variant)
+                 VALUES (?i, ?s, ?s) ON DUPLICATE KEY UPDATE variant = ?s",
+                $variantId, $langCode, $variantName, $variantName
+            );
+        }
+    }
+
+    #[\Override]
+    public function countHotelsWithJsonFacilities(string $table, string $jsonCol): int
+    {
+        return (int) db_get_field(
+            "SELECT COUNT(*) FROM ?:{$table} WHERE {$jsonCol} IS NOT NULL AND {$jsonCol} != '[]'"
+        );
+    }
+
+    #[\Override]
+    public function findHotelsBatchForScan(string $table, string $idCol, string $jsonCol, int $offset, int $limit): array
+    {
+        return db_get_array(
+            "SELECT {$idCol}, {$jsonCol} FROM ?:{$table} " .
+            "WHERE {$jsonCol} IS NOT NULL AND {$jsonCol} != '[]' " .
+            "ORDER BY {$idCol} LIMIT ?i, ?i",
+            $offset, $limit
+        );
+    }
+
+    #[\Override]
+    public function findAllCsCartFeatures(string $langCode): array
+    {
+        return db_get_array(
+            "SELECT f.feature_id, f.feature_type, fd.description
+             FROM ?:product_features f
+             LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
+             ORDER BY fd.description",
+            $langCode
+        );
+    }
+
+    #[\Override]
+    public function findVariantsForFeature(int $featureId, string $langCode): array
+    {
+        return db_get_array(
+            "SELECT v.variant_id, vd.variant as name
+             FROM ?:product_feature_variants v
+             LEFT JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id AND vd.lang_code = ?s
+             WHERE v.feature_id = ?i
+             ORDER BY v.position, vd.variant",
+            $langCode,
+            $featureId
+        );
+    }
 }
