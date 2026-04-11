@@ -33,12 +33,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        // PR #9b: resolved via Container so the new AbstractBatchedSync-based
-        // BatchedHotelInfoSyncV2 replaces the legacy helper. With this swap,
-        // all three legacy Batched*Sync helpers have been migrated; the
-        // cleanup PR can now delete BatchedHotelFacilitiesSync,
-        // BatchedPriceInfoSync, BatchedHotelInfoSync, and the
-        // SyncStateTrait / OutputWriterTrait that only they used.
+        // Resolved via Container so the AbstractBatchedSync-based
+        // BatchedHotelInfoSyncV2 handles the sync. The legacy
+        // BatchedHotelInfoSync helper was deleted in PR #11.
         $sync = Container::getInstance()->batchedHotelInfoSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
@@ -64,10 +61,11 @@ class BatchedSyncCommand extends AbstractCronCommand
         $this->output("========================");
         $this->output("");
 
-        // PR #8b: resolved via Container so the new AbstractBatchedSync-based
-        // BatchedPriceInfoSyncV2 replaces the legacy helper. The factory
-        // returns the concrete V2 type so setStaleHours() (which is not part
-        // of SyncInterface) remains callable below.
+        // Resolved via Container so the AbstractBatchedSync-based
+        // BatchedPriceInfoSyncV2 handles the sync. The legacy
+        // BatchedPriceInfoSync helper was deleted in PR #11. The
+        // factory returns the concrete V2 type so setStaleHours()
+        // (which is not part of SyncInterface) remains callable below.
         $sync = Container::getInstance()->batchedPriceInfoSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 

@@ -187,10 +187,3 @@ function _nvt_alternative_request_repo(): \Tygh\Addons\NovotonHolidays\Repositor
 function _nvt_db_iterator(): \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface {
     return Container::getInstance()->databaseIterator();
 }
-
-/**
- * @return \Tygh\Addons\NovotonHolidays\Helpers\SyncInterface
- */
-function _nvt_batched_hotelinfo_sync(): \Tygh\Addons\NovotonHolidays\Helpers\SyncInterface {
-    return Container::getInstance()->batchedHotelInfoSync();
-}

@@ -11,10 +11,12 @@ use Tygh\Addons\NovotonHolidays\Helpers\SyncLoggerInterface;
 /**
  * Tests for the AbstractBatchedSync template-method base class.
  *
- * The three legacy Batched*Sync helpers (BatchedHotelFacilitiesSync,
- * BatchedHotelInfoSync, BatchedPriceInfoSync) do NOT yet extend this class,
- * so this test suite is the first line of safety for the eventual migration
- * tracked by PRs #7–9 of the architectural audit.
+ * The three production Batched*Sync helpers (BatchedHotelFacilitiesSyncV2,
+ * BatchedPriceInfoSyncV2, BatchedHotelInfoSyncV2) all extend this class
+ * as of PRs #7–9 of the architectural audit. This test suite is the
+ * shared safety net for every subclass's use of the template method —
+ * each subclass gets its own focused smoke test covering its per-item
+ * business logic.
  *
  * Every test uses an anonymous subclass that:
  *   - injects StateManagerInterface + SyncLoggerInterface mocks via the

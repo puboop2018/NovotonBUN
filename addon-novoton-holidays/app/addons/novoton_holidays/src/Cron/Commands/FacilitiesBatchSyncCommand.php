@@ -40,10 +40,11 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $this->output("==============================");
         $this->output("");
 
-        // PR #7b: resolved via Container so the new AbstractBatchedSync-based
-        // BatchedHotelFacilitiesSyncV2 replaces the legacy helper. The type
-        // hint below is SyncInterface, so future migrations (V3, replacement,
-        // etc.) don't need to touch this file.
+        // Resolved via Container so the AbstractBatchedSync-based
+        // BatchedHotelFacilitiesSyncV2 handles the sync. The legacy
+        // BatchedHotelFacilitiesSync helper was deleted in PR #11.
+        // The local is typed SyncInterface so future migrations
+        // (V3, replacement, etc.) don't need to touch this file.
         $sync = Container::getInstance()->batchedHotelFacilitiesSyncV2();
         $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
 
