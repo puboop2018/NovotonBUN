@@ -223,7 +223,9 @@ class Container
 
     public function cronService(): CronServiceInterface
     {
-        return $this->resolve('cronService', fn() => new CronService());
+        return $this->resolve('cronService', fn() => new CronService(
+            reservations: $this->novotonApi()->reservations(),
+        ));
     }
 
     public function searchParameterNormalizer(): SearchParameterNormalizer

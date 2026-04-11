@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\NovotonApi;
-
 interface CronServiceInterface
 {
     /**
@@ -37,11 +35,4 @@ interface CronServiceInterface
      * @return array
      */
     public function getCountries(): array;
-
-    /**
-     * Get API instance.
-     *
-     * @return NovotonApi
-     */
-    public function getApi(): NovotonApi;
 }

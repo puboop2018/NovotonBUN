@@ -12,26 +12,38 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 class CronService implements CronServiceInterface
 {
-    private NovotonApi $api;
+    private readonly ReservationApiClientInterface $reservations;
     private readonly BookingRepositoryInterface $bookingRepo;
     private readonly AlternativeRequestRepositoryInterface $altRequestRepo;
     private array $countries;
-    private array $output = [];
 
+    /**
+     * CronService only uses the reservations sub-client (getReservationInfo
+     * for ASK polling, getAlternatives for alternative-request polling), so
+     * the dependency is narrowed to ReservationApiClientInterface rather
+     * than the whole NovotonApiKitInterface.
+     *
+     * The lazy fallback `(new NovotonApi())->reservations()` keeps the
+     * zero-argument construction path working so existing test harnesses
+     * that do `new CronService()` don't break — same pattern as
+     * AlternativeRequestService from PR #5.
+     */
     public function __construct(
         ?BookingRepositoryInterface $bookingRepo = null,
-        ?AlternativeRequestRepositoryInterface $altRequestRepo = null
+        ?AlternativeRequestRepositoryInterface $altRequestRepo = null,
+        ?ReservationApiClientInterface $reservations = null,
     ) {
-        $this->api = new NovotonApi();
+        $this->reservations = $reservations ?? (new NovotonApi())->reservations();
         $this->bookingRepo = $bookingRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
         $this->altRequestRepo = $altRequestRepo ?? new AlternativeRequestRepository();
         $this->countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
@@ -68,7 +80,7 @@ class CronService implements CronServiceInterface
                     continue;
                 }
 
-                $resInfo = $this->api->getReservationInfo($idNum);
+                $resInfo = $this->reservations->getReservationInfo($idNum);
 
                 if (!$resInfo) {
                     $results['unchanged']++;
@@ -144,7 +156,7 @@ class CronService implements CronServiceInterface
             $results['processed']++;
 
             try {
-                $response = $this->api->getAlternatives($request['novoton_request_id']);
+                $response = $this->reservations->getAlternatives($request['novoton_request_id']);
 
                 if ($response && !empty($response->alternative)) {
                     // Found alternatives
@@ -251,15 +263,5 @@ class CronService implements CronServiceInterface
     public function getCountries(): array
     {
         return $this->countries;
-    }
-
-    /**
-     * Get API instance
-     *
-     * @return NovotonApi
-     */
-    public function getApi(): NovotonApi
-    {
-        return $this->api;
     }
 }
