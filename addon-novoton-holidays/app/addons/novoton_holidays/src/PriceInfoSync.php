@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -17,13 +18,18 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class PriceInfoSync
 {
-    private NovotonApi $api;
+    private NovotonApiKitInterface $api;
     private string $defaultCountry;
     private array $productPrefixes;
 
-    public function __construct()
+    /**
+     * Inject the kit interface so business calls can only reach the
+     * five domain sub-clients. Defaults to a fresh NovotonApi instance
+     * to preserve the legacy self-construction behaviour.
+     */
+    public function __construct(?NovotonApiKitInterface $api = null)
     {
-        $this->api = new NovotonApi();
+        $this->api = $api ?? new NovotonApi();
         $this->defaultCountry = ConfigProvider::getDefaultCountry();
         $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
     }
@@ -111,7 +117,7 @@ class PriceInfoSync
 
         try {
             // Get hotel info (for packages)
-            $hotelInfo = $this->api->getHotelInfo($hotelId);
+            $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
             if (!$hotelInfo || !isset($hotelInfo->packages)) {
                 $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
@@ -143,7 +149,7 @@ class PriceInfoSync
                 }
 
                 // Get price info for this package
-                $priceInfo = $this->api->getPriceInfo($hotelId, $packageName);
+                $priceInfo = $this->api->pricing()->getPriceInfo($hotelId, $packageName);
 
                 if (empty($priceInfo)) {
                     continue;
@@ -291,7 +297,7 @@ class PriceInfoSync
     private function checkMissingProducts(array &$stats): void
     {
         try {
-            $apiHotels = $this->api->getHotelList($this->defaultCountry);
+            $apiHotels = $this->api->hotels()->getHotelList($this->defaultCountry);
 
             if ($apiHotels && isset($apiHotels->hotelinfo)) {
                 // Build LIKE conditions for all prefixes and fetch all matching products at once
@@ -456,10 +462,14 @@ class PriceInfoSync
             }
         }
 
-        // Clear live API cache via NovotonApi
-        if ($this->api) {
-            $this->api->clearCache('room_price');
-            $this->api->clearCache('hotel_quota');
+        // Clear live API cache via NovotonApi. clearCache() is an
+        // infrastructure method not exposed on the kit interface, so
+        // we re-query the concrete facade singleton for this call.
+        // The cache backend is shared, so the effect is identical.
+        $concrete = fn_novoton_holidays_get_api();
+        if ($concrete) {
+            $concrete->clearCache('room_price');
+            $concrete->clearCache('hotel_quota');
         }
     }
 

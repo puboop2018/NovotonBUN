@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
@@ -26,7 +27,7 @@ class HotelSync
 {
     use OutputWriterTrait;
 
-    private NovotonApi $api;
+    private NovotonApiKitInterface $api;
     private AdultOnlyDetector $adultOnlyDetector;
     private PropertyTypeDetector $propertyTypeDetector;
     private array $selectedCountries;
@@ -36,9 +37,12 @@ class HotelSync
     /**
      * Constructor — API dependency must be injected explicitly.
      *
-     * Use Container to get a properly wired instance.
+     * Accepts the narrow NovotonApiKitInterface so the sync class can
+     * only reach the five domain sub-clients (hotels, pricing, ...)
+     * and never falls back to deprecated facade methods. Concrete
+     * NovotonApi still works because it implements the kit interface.
      */
-    public function __construct(NovotonApi $api)
+    public function __construct(NovotonApiKitInterface $api)
     {
         $this->api = $api;
         $this->adultOnlyDetector = new AdultOnlyDetector();
@@ -97,7 +101,7 @@ class HotelSync
             $this->log("Fetching hotel_list for country: {$countryName}");
 
             try {
-                $hotelList = $this->api->getHotelList($countryName);
+                $hotelList = $this->api->hotels()->getHotelList($countryName);
 
                 if (!$hotelList || !isset($hotelList->hotelinfo)) {
                     $this->stats['errors'][] = "No hotels found for {$countryName}";
@@ -263,7 +267,7 @@ class HotelSync
             $this->stats['hotels_processed']++;
 
             try {
-                $hotelInfo = $this->api->getHotelInfo($hotelId);
+                $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
                 if (!$hotelInfo) {
                     $this->stats['errors'][] = "No hotelinfo for hotel {$hotelId}";
@@ -425,7 +429,7 @@ class HotelSync
 
             try {
                 // Get priceinfo for this package
-                $priceInfo = $this->api->getPriceInfo($hotelId, $packageName);
+                $priceInfo = $this->api->pricing()->getPriceInfo($hotelId, $packageName);
 
                 $priceInfoJson = null;
 
@@ -577,7 +581,7 @@ class HotelSync
             $this->stats['packages_processed']++;
 
             try {
-                $priceInfo = $this->api->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
+                $priceInfo = $this->api->pricing()->getPriceInfo($pkg['hotel_id'], $pkg['package_name']);
 
                 if (!$priceInfo) {
                     $this->stats['packages_failed']++;
