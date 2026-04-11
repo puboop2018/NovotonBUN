@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
@@ -20,8 +21,9 @@ use Tygh\Tygh;
  * Controllers only provide type-specific logic (offer verification,
  * service customization, type-specific booking record fields).
  */
-final class CartService
+final class CartService implements CartServiceInterface
 {
+    #[\Override]
     public function checkRateLimit(string $errorRedirect = 'index.index'): ?array
     {
         $security = Container::getSecurityService();
@@ -42,6 +44,7 @@ final class CartService
      * Check for an existing pending booking with the same offer_id.
      * Returns a redirect array if a duplicate is found, null otherwise.
      */
+    #[\Override]
     public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array
     {
         $repo = Container::getBookingRepository();
@@ -60,6 +63,7 @@ final class CartService
     /**
      * Apply configured commission (if any) to a price.
      */
+    #[\Override]
     public function applyCommission(float $price): float
     {
         $commission = ConfigProvider::getCommission();
@@ -77,6 +81,7 @@ final class CartService
      *
      * @return array{guests_data: array, guest_list: string, holder_name: string}|false
      */
+    #[\Override]
     public function parseGuests(array $rawGuests, string $dateRef): array|false
     {
         $security = Container::getSecurityService();
@@ -89,6 +94,7 @@ final class CartService
      * Resolve a CS-Cart product_id from an entity ID (hotel_id, circuit_id, etc.).
      * Falls back to a direct product_code lookup if no ID was provided by the form.
      */
+    #[\Override]
     public function resolveProductId(string $entityId, int $providedId = 0): int
     {
         if ($providedId > 0) {
@@ -110,6 +116,7 @@ final class CartService
      * Create or update a booking record using the findRecentUnassigned pattern.
      * Returns the booking_id.
      */
+    #[\Override]
     public function upsertBooking(
         array $record,
         string $entityId,
@@ -133,6 +140,7 @@ final class CartService
      * Assemble the product entry in the CS-Cart cart and persist it.
      * Returns the controller redirect tuple.
      */
+    #[\Override]
     public function addToCartAndRedirect(
         int $productId,
         float $totalPrice,
@@ -178,6 +186,7 @@ final class CartService
      *
      * @return array<string, mixed>
      */
+    #[\Override]
     public function buildBaseBookingRecord(
         int $productId,
         string $entityId,

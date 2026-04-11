@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
-class CurrencyService
+use Tygh\Addons\TravelCore\Contracts\CurrencyServiceInterface;
+
+class CurrencyService implements CurrencyServiceInterface
 {
     /**
      * @param string $apiCurrency Currency code the API uses (e.g. 'EUR', 'USD')
@@ -45,6 +47,7 @@ class CurrencyService
      *
      * @return string Currency code
      */
+    #[\Override]
     public function getApiCurrency(): string
     {
         return $this->apiCurrency;
@@ -64,6 +67,7 @@ class CurrencyService
      * @param string|null $targetCurrency Target currency code (null = display currency)
      * @return float Converted price
      */
+    #[\Override]
     public function convertFromApiCurrency(float $apiPrice, ?string $targetCurrency = null): float
     {
         $source = $this->apiCurrency;
@@ -106,6 +110,7 @@ class CurrencyService
      * @param array $results Search results array
      * @return array Results with converted prices
      */
+    #[\Override]
     public function convertResultsCurrency(array $results): array
     {
         $source = $this->apiCurrency;

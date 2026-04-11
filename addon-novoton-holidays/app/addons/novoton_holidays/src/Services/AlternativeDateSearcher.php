@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class AlternativeDateSearcher
+class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 {
     /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
     private const MAX_API_CALLS = 50;
@@ -48,6 +48,7 @@ class AlternativeDateSearcher
      *   check_out: string
      * }
      */
+    #[\Override]
     public function search(
         string $hotelId,
         string $checkIn,
@@ -209,6 +210,7 @@ class AlternativeDateSearcher
     /**
      * @return string[]
      */
+    #[\Override]
     public function getDebugLog(): array
     {
         return $this->debugLog;

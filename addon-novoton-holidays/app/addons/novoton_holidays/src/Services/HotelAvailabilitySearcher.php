@@ -15,7 +15,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class HotelAvailabilitySearcher
+class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 {
     /** @var SearchServiceInterface */
     private readonly SearchServiceInterface $searchService;
@@ -50,6 +50,7 @@ class HotelAvailabilitySearcher
      *   early_booking_range: array
      * }
      */
+    #[\Override]
     public function search(array $params): array
     {
         $hotelId  = $params['hotel_id'];
@@ -113,6 +114,7 @@ class HotelAvailabilitySearcher
     /**
      * @return string[]
      */
+    #[\Override]
     public function getDebugLog(): array
     {
         return $this->debugLog;
@@ -121,6 +123,7 @@ class HotelAvailabilitySearcher
     /**
      * @return \SimpleXMLElement[]  The rooms XML nodes (for alternative search)
      */
+    #[\Override]
     public function getRooms(string $hotelId): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);
@@ -133,6 +136,7 @@ class HotelAvailabilitySearcher
     /**
      * @return string[]  Board type identifiers
      */
+    #[\Override]
     public function getBoardTypes(string $hotelId, string $mealPlan = ''): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);

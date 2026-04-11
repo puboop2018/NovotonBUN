@@ -16,7 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  * @package NovotonHolidays
  * @since   3.4.0
  */
-class PriceVerificationService
+class PriceVerificationService implements PriceVerificationServiceInterface
 {
     /** @var \Tygh\Addons\NovotonHolidays\NovotonApi */
     private $api;
@@ -40,6 +40,7 @@ class PriceVerificationService
      * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
      * @return array{success: bool, total_price: float, base_price: float, terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string, error: string}
      */
+    #[\Override]
     public function verifyPrice(array $params): array
     {
         $priceParams = [

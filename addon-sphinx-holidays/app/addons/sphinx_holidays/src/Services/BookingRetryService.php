@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\BookingRetryServiceInterface;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -16,7 +17,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * @package SphinxHolidays
  * @since   1.2.0
  */
-class BookingRetryService
+class BookingRetryService implements BookingRetryServiceInterface
 {
     public function __construct(
         private readonly SphinxApi $api,
@@ -30,6 +31,7 @@ class BookingRetryService
      * @param int $bookingId The sphinx_bookings.booking_id
      * @return array{success: bool, message: string, booking_ref: string|null}
      */
+    #[\Override]
     public function retry(int $bookingId): array
     {
         $booking = $this->repo->findById($bookingId);

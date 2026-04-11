@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\OrderStatusSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -17,7 +18,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * @package SphinxHolidays
  * @since   1.2.0
  */
-class OrderStatusSyncService
+class OrderStatusSyncService implements OrderStatusSyncServiceInterface
 {
     private ?\Closure $outputCallback = null;
 
@@ -34,6 +35,7 @@ class OrderStatusSyncService
     ) {
     }
 
+    #[\Override]
     public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
@@ -51,6 +53,7 @@ class OrderStatusSyncService
      *
      * @return array{checked: int, changed: int, errors: int}
      */
+    #[\Override]
     public function syncAll(): array
     {
         $stats = ['checked' => 0, 'changed' => 0, 'errors' => 0];
@@ -111,6 +114,7 @@ class OrderStatusSyncService
      *
      * @return array{changed: bool, old_status: string, new_status: string, error: string|null}
      */
+    #[\Override]
     public function checkSingle(int $bookingId): array
     {
         $booking = $this->repo->findById($bookingId);

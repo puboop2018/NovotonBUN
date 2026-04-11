@@ -18,7 +18,7 @@ use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Registry;
 use Tygh\Tygh;
 
-class SearchResultFormatter
+class SearchResultFormatter implements SearchResultFormatterInterface
 {
     /**
      * Assign all search-result template variables.
@@ -30,6 +30,7 @@ class SearchResultFormatter
      * @param array $searchParams   Raw (sanitized) request params
      * @param array $debugLog       Debug lines (empty when debug is off)
      */
+    #[\Override]
     public function assignToView(
         array $results,
         array $novotonParams,
@@ -103,6 +104,7 @@ class SearchResultFormatter
      * Assign safe defaults so the template renders without secondary errors.
      * Used on early-return (no check-in) and in the error boundary.
      */
+    #[\Override]
     public function assignDefaults(?string $warningLangKey = null): void
     {
         $view      = Tygh::$app['view'];

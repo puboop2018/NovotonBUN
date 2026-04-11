@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
+use Tygh\Addons\TravelCore\Contracts\VariantResolverInterface;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -19,7 +20,7 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  * @package TravelCore
  * @since   1.3.0
  */
-class VariantResolver
+class VariantResolver implements VariantResolverInterface
 {
     use CsCartFeatureAssignment;
 
@@ -40,6 +41,7 @@ class VariantResolver
      *
      * @return int variant_id or 0
      */
+    #[\Override]
     public function ensureVariantExists(array $mapping): int
     {
         $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
@@ -115,6 +117,7 @@ class VariantResolver
      *
      * @return int Matched variant_id or 0
      */
+    #[\Override]
     public function findVariantByName(array $mapping, int $featureId): int
     {
         $nameEn = trim($mapping['display_name_en'] ?? '');
