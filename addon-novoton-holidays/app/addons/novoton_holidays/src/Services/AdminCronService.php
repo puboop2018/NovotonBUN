@@ -15,20 +15,20 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
-use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 
 class AdminCronService
 {
     use OutputWriterTrait;
 
-    private readonly NovotonApi $api;
+    private readonly NovotonApiKitInterface $api;
     private readonly Container $container;
 
-    public function __construct(NovotonApi $api)
+    public function __construct(NovotonApiKitInterface $api)
     {
         $this->api = $api;
         $this->container = Container::getInstance();
@@ -49,7 +49,7 @@ class AdminCronService
 
         foreach ($countries as $country) {
             $this->output("Fetching {$country}... ", false);
-            $hotels = $this->api->getHotelList($country);
+            $hotels = $this->api->hotels()->getHotelList($country);
 
             if (!empty($hotels)) {
                 $count = count($hotels);
@@ -98,7 +98,7 @@ class AdminCronService
             $check_in  = date(TravelConstants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
             $check_out = date(TravelConstants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + TravelConstants::DEFAULT_NIGHTS) . ' days'));
 
-            $response = $this->api->getRoomPrice([
+            $response = $this->api->pricing()->getRoomPrice([
                 'hotel_id'  => $hotel['hotel_id'],
                 'check_in'  => $check_in,
                 'check_out' => $check_out,
@@ -132,7 +132,7 @@ class AdminCronService
      */
     public function syncFacilities(): array
     {
-        $response = $this->api->listFacilities();
+        $response = $this->api->hotels()->listFacilities();
 
         if (!$response || !isset($response->Facility)) {
             return ['success' => false, 'message' => 'No facilities returned from API'];
@@ -252,7 +252,7 @@ class AdminCronService
 
         $this->output("Checking offers since: {$last_check}");
 
-        $response = $this->api->getOffersUpdate($last_check, $country);
+        $response = $this->api->destinations()->getOffersUpdate($last_check, $country);
 
         if (!$response || !isset($response->Offer)) {
             return ['success' => true, 'message' => 'No new offers found'];
