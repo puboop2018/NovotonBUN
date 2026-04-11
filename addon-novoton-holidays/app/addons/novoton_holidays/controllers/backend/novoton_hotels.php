@@ -336,7 +336,7 @@ if ($mode === 'check_packages') {
                 $grand_total++;
 
                 try {
-                    $hotel_info = $api->getHotelInfo($hotel['hotel_id']);
+                    $hotel_info = $api->hotels()->getHotelInfo($hotel['hotel_id']);
 
                     // V3: Extract all packages from hotelinfo
                     $packages = [];

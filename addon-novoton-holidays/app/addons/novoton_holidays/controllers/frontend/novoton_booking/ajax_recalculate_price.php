@@ -173,7 +173,8 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
         $debug_log('API params (with actual room/board IDs)', $params);
 
-        $response = $api->getRoomPrice($params);
+        $pricing = $api->pricing();
+        $response = $pricing->getRoomPrice($params);
 
         $debug_log('API Last Request', $api->getLastRequest());
         $rawResponse = $api->getLastResponse();
@@ -199,7 +200,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
             $params['room_id'] = '';
             $params['board_id'] = '';
-            $response = $api->getRoomPrice($params);
+            $response = $pricing->getRoomPrice($params);
 
             $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse() ?? '', 0, 2000));
 
@@ -298,7 +299,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         }
 
         // Apply commission so displayed price matches customer-facing price
-        $new_price = $api->applyCommission($new_price);
+        $new_price = $pricing->applyCommission($new_price);
 
         // Price stays in API currency (EUR); formatter applies display coefficient for rendering
 
