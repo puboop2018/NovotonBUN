@@ -2,17 +2,19 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
-class ReservationApiClient extends ApiClientBase
+class ReservationApiClient extends ApiClientBase implements ReservationApiClientInterface
 {
     /**
      * 7. hotel_res_RQ - Reservation request
      *
      * @return \SimpleXMLElement|false
      */
+    #[\Override]
     public function createReservation(array $bookingData): \SimpleXMLElement
     {
         $isTestMode = ConfigProvider::isTestBooking();
@@ -102,6 +104,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
+    #[\Override]
     public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $searchXml = $idNum ? '<IdNum>' . htmlspecialchars($idNum) . '</IdNum>' :
@@ -121,6 +124,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|array|false
      */
+    #[\Override]
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
     {
         $xml = $this->buildHotelRequestXml($requestData);
@@ -146,8 +150,14 @@ class ReservationApiClient extends ApiClientBase
     }
 
     /**
-     * Generate hotel_request XML without sending (for preview/testing)
+     * Generate hotel_request XML without sending (for preview/testing).
+     *
+     * Pure builder: no HTTP call, no debug state mutation. Facade wrappers
+     * intentionally bypass the delegate/syncFrom pipeline for this method —
+     * running `syncFrom()` would overwrite the current debug state with stale
+     * values from the last real API call on this sub-client.
      */
+    #[\Override]
     public function generateHotelRequestXml(array $requestData): string
     {
         return $this->maskCredentials($this->buildHotelRequestXml($requestData));
@@ -158,6 +168,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
+    #[\Override]
     public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -179,6 +190,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return string|false
      */
+    #[\Override]
     public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
     {
         $xml = $this->xmlHeader() . '
@@ -195,6 +207,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
+    #[\Override]
     public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -211,6 +224,7 @@ class ReservationApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement|false
      */
+    #[\Override]
     public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $arrFromXml = $arrFrom ? '<ArrFrom>' . htmlspecialchars($arrFrom) . '</ArrFrom>' : '';

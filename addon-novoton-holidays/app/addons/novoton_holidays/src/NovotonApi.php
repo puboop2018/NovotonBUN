@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Api\HotelApiClient;
 use Tygh\Addons\NovotonHolidays\Api\PricingApiClient;
 use Tygh\Addons\NovotonHolidays\Api\AvailabilityApiClient;
@@ -36,7 +37,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
-class NovotonApi implements NovotonApiInterface
+class NovotonApi implements NovotonApiInterface, NovotonApiKitInterface
 {
     private NovotonHttpClient $httpClient;
     private NovotonXmlParser $xmlParser;
@@ -82,11 +83,25 @@ class NovotonApi implements NovotonApiInterface
     }
 
     // ========== DOMAIN CLIENT ACCESSORS ==========
+    //
+    // Return types are the concrete sub-client classes (covariant with the
+    // interface return types declared on NovotonApiKitInterface). New callers
+    // should type-hint the interfaces from Api\Contracts\ to decouple themselves
+    // from the facade.
 
+    #[\Override]
     public function hotels(): HotelApiClient { return $this->hotelApi; }
+
+    #[\Override]
     public function pricing(): PricingApiClient { return $this->pricingApi; }
+
+    #[\Override]
     public function availability(): AvailabilityApiClient { return $this->availabilityApi; }
+
+    #[\Override]
     public function reservations(): ReservationApiClient { return $this->reservationApi; }
+
+    #[\Override]
     public function destinations(): DestinationApiClient { return $this->destinationApi; }
 
     // ========== SYNC DEBUG STATE ==========
@@ -268,7 +283,14 @@ class NovotonApi implements NovotonApiInterface
         return $this->delegateTo($this->reservationApi, 'createHotelRequest', [$requestData, $lang, $returnXml]);
     }
 
-    /** @deprecated Use $api->reservations()->generateHotelRequestXml() — no debug sync needed. */
+    /**
+     * @deprecated Use $api->reservations()->generateHotelRequestXml()
+     *
+     * Pure XML builder: no HTTP call, so this facade method intentionally
+     * bypasses delegateTo(). Calling syncFrom() here would overwrite the
+     * current debug state with stale values from the last real API call on
+     * the reservations sub-client.
+     */
     public function generateHotelRequestXml(array $requestData): string
     {
         return $this->reservationApi->generateHotelRequestXml($requestData);
