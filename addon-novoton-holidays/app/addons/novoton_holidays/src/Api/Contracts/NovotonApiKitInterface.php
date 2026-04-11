@@ -3,10 +3,13 @@ declare(strict_types=1);
 /**
  * Novoton API Kit — domain accessor contract.
  *
- * A focused contract that exposes only the five domain sub-clients. New callers
- * should type-hint this (or a single sub-client interface) instead of the bulky
- * legacy `NovotonApiInterface`, which still carries 29 deprecated flat delegate
- * methods for backward compatibility.
+ * A focused contract that exposes only the five domain sub-clients plus a
+ * single debugInfo() accessor. Callers should type-hint this (or a single
+ * sub-client interface) rather than the concrete NovotonApi facade.
+ *
+ * The previous bulky NovotonApiInterface — which carried 29 flat delegate
+ * methods for backward compatibility — was retired in PR #10 once every
+ * addon callsite was migrated to the sub-client accessors.
  *
  * Migration path:
  *     // Legacy — pulls in 46 methods, couples the caller to the facade:

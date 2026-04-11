@@ -37,7 +37,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
-class NovotonApi implements NovotonApiInterface, NovotonApiKitInterface
+class NovotonApi implements NovotonApiKitInterface
 {
     private NovotonHttpClient $httpClient;
     private NovotonXmlParser $xmlParser;
@@ -52,13 +52,19 @@ class NovotonApi implements NovotonApiInterface, NovotonApiKitInterface
     private ReservationApiClient $reservationApi;
     private DestinationApiClient $destinationApi;
 
-    // Debug properties (backward compat — synced from active domain client after each call)
-    public string $lastRequest = '';
-    public string $lastResponse = '';
-    public string $lastResponseRaw = '';
-    public array $lastRequestFormatted = [];
-    public string $lastError = '';
-    public int $lastHttpCode = 0;
+    /**
+     * Most recently returned sub-client — updated by each of the five
+     * hotels()/pricing()/availability()/reservations()/destinations()
+     * accessors. debugInfo() and the getLast*() accessors read their
+     * state from this client, so a diagnostic caller that does
+     *
+     *     $api->pricing()->getRoomPrice($p);
+     *     $api->getLastResponse();
+     *
+     * sees the XML returned by the pricing client — not stale state
+     * from an earlier facade call.
+     */
+    private ?object $lastActiveClient = null;
 
     public function __construct()
     {
@@ -90,280 +96,82 @@ class NovotonApi implements NovotonApiInterface, NovotonApiKitInterface
     // from the facade.
 
     #[\Override]
-    public function hotels(): HotelApiClient { return $this->hotelApi; }
+    public function hotels(): HotelApiClient { return $this->lastActiveClient = $this->hotelApi; }
 
     #[\Override]
-    public function pricing(): PricingApiClient { return $this->pricingApi; }
+    public function pricing(): PricingApiClient { return $this->lastActiveClient = $this->pricingApi; }
 
     #[\Override]
-    public function availability(): AvailabilityApiClient { return $this->availabilityApi; }
+    public function availability(): AvailabilityApiClient { return $this->lastActiveClient = $this->availabilityApi; }
 
     #[\Override]
-    public function reservations(): ReservationApiClient { return $this->reservationApi; }
+    public function reservations(): ReservationApiClient { return $this->lastActiveClient = $this->reservationApi; }
 
     #[\Override]
-    public function destinations(): DestinationApiClient { return $this->destinationApi; }
+    public function destinations(): DestinationApiClient { return $this->lastActiveClient = $this->destinationApi; }
 
-    // ========== SYNC DEBUG STATE ==========
-
-    private function syncFrom(object $client): void
-    {
-        $this->lastRequest = $client->lastRequest;
-        $this->lastResponse = $client->lastResponse;
-        $this->lastResponseRaw = $client->lastResponseRaw;
-        $this->lastRequestFormatted = $client->lastRequestFormatted;
-        $this->lastError = $client->lastError;
-        $this->lastHttpCode = $client->lastHttpCode;
-    }
+    // ========== DEBUG STATE ==========
 
     /**
-     * Delegate a method call to a domain client and sync debug state.
+     * Get debug info as an immutable value object.
      *
-     * @param object $client The domain API client to delegate to
-     * @param string $method The method name on the client
-     * @param array $args Arguments to pass through
-     * @return mixed The client method's return value
-     */
-    private function delegateTo(object $client, string $method, array $args): mixed
-    {
-        $result = $client->$method(...$args);
-        $this->syncFrom($client);
-        return $result;
-    }
-
-    /**
-     * Get debug info as an immutable value object (preferred over raw public properties).
+     * Reads from the most recently accessed sub-client. Returns an empty
+     * RequestDebugInfo if no sub-client has been touched yet.
      */
     #[\Override]
     public function debugInfo(): RequestDebugInfo
     {
-        return new RequestDebugInfo(
-            $this->lastRequest,
-            $this->lastResponse,
-            $this->lastResponseRaw,
-            $this->lastRequestFormatted,
-            $this->lastError,
-            $this->lastHttpCode
-        );
+        if ($this->lastActiveClient === null) {
+            return new RequestDebugInfo();
+        }
+        return RequestDebugInfo::fromClient($this->lastActiveClient);
     }
-
-    // ========== BACKWARD-COMPATIBLE DELEGATES ==========
-    // Prefer using domain client accessors directly: $api->hotels(), $api->pricing(), etc.
-
-    // -- Hotels --
-
-    /** @deprecated Use $api->hotels()->getHotelList() */
-    public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelList', [$country, $city, $hotel, $hotelType]);
-    }
-
-    /** @deprecated Use $api->hotels()->getHotelInfo() */
-    public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelInfo', [$hotelId, $lang]);
-    }
-
-    /** @deprecated Use $api->hotels()->getHotelInfoBatch() */
-    public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelInfoBatch', [$hotelIds, $lang, $concurrency]);
-    }
-
-    /** @deprecated Use $api->hotels()->getHotelDescription() */
-    public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelDescription', [$hotelId, $lang, $includePackage]);
-    }
-
-    /** @deprecated Use $api->hotels()->getHotelImages() */
-    public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelImages', [$hotelId, $lang]);
-    }
-
-    /** @deprecated Use $api->hotels()->getHotelFacilities() */
-    public function getHotelFacilities(string $hotelId): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'getHotelFacilities', [$hotelId]);
-    }
-
-    /** @deprecated Use $api->hotels()->listFacilities() */
-    public function listFacilities(): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->hotelApi, 'listFacilities', []);
-    }
-
-    // -- Pricing --
-
-    /** Not deprecated — delegates to CommissionCalculator, not a domain client. */
-    public function applyCommission(float $price): float
-    {
-        return $this->commissionCalculator->apply($price);
-    }
-
-    /** @deprecated Use $api->pricing()->getRoomPrice() */
-    public function getRoomPrice(array $params): \SimpleXMLElement|false
-    {
-        return $this->delegateTo($this->pricingApi, 'getRoomPrice', [$params]);
-    }
-
-    /** @deprecated Use $api->pricing()->getRoomPriceBatch() */
-    public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
-    {
-        return $this->delegateTo($this->pricingApi, 'getRoomPriceBatch', [$requestParams, $concurrency]);
-    }
-
-    /** @deprecated Use $api->pricing()->getRoomPriceByResort() */
-    public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
-    {
-        return $this->delegateTo($this->pricingApi, 'getRoomPriceByResort', [$params]);
-    }
-
-    /** @deprecated Use $api->pricing()->getRoomPriceByResortRaw() */
-    public function getRoomPriceByResortRaw(array $params): string
-    {
-        return $this->delegateTo($this->pricingApi, 'getRoomPriceByResortRaw', [$params]);
-    }
-
-    /** @deprecated Use $api->pricing()->getPriceInfo() */
-    public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->pricingApi, 'getPriceInfo', [$hotelId, $packageName, $lang]);
-    }
-
-    /** @deprecated Use $api->pricing()->getSpecialOffers() */
-    public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->pricingApi, 'getSpecialOffers', [$hotelId, $packageName, $lang]);
-    }
-
-    // -- Availability --
-
-    /** @deprecated Use $api->availability()->getHotelQuotaAll() */
-    public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
-    {
-        return $this->delegateTo($this->availabilityApi, 'getHotelQuotaAll', [$hotelId, $checkIn, $checkOut]);
-    }
-
-    /** @deprecated Use $api->availability()->getHotelQuota() */
-    public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->availabilityApi, 'getHotelQuota', [$hotelId, $roomId, $checkIn, $checkOut, $roomType]);
-    }
-
-    /** @deprecated Use $api->availability()->getHotelQuotaAdditional() */
-    public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->availabilityApi, 'getHotelQuotaAdditional', [$hotelId, $roomId, $checkIn, $checkOut]);
-    }
-
-    /** @deprecated Use $api->availability()->searchAvailability() */
-    public function searchAvailability(array $params): array
-    {
-        return $this->delegateTo($this->availabilityApi, 'searchAvailability', [$params]);
-    }
-
-    /** @deprecated Use $api->availability()->searchAvailabilityBatch() */
-    public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
-    {
-        return $this->delegateTo($this->availabilityApi, 'searchAvailabilityBatch', [$paramsList, $concurrency]);
-    }
-
-    // -- Reservations --
-
-    /** @deprecated Use $api->reservations()->createReservation() */
-    public function createReservation(array $bookingData): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->reservationApi, 'createReservation', [$bookingData]);
-    }
-
-    /** @deprecated Use $api->reservations()->createHotelRequest() */
-    public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
-    {
-        return $this->delegateTo($this->reservationApi, 'createHotelRequest', [$requestData, $lang, $returnXml]);
-    }
-
-    /**
-     * @deprecated Use $api->reservations()->generateHotelRequestXml()
-     *
-     * Pure XML builder: no HTTP call, so this facade method intentionally
-     * bypasses delegateTo(). Calling syncFrom() here would overwrite the
-     * current debug state with stale values from the last real API call on
-     * the reservations sub-client.
-     */
-    public function generateHotelRequestXml(array $requestData): string
-    {
-        return $this->reservationApi->generateHotelRequestXml($requestData);
-    }
-
-    /** @deprecated Use $api->reservations()->getAlternatives() */
-    public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->reservationApi, 'getAlternatives', [$idNum, $lang]);
-    }
-
-    /** @deprecated Use $api->reservations()->getReservationInfo() */
-    public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->reservationApi, 'getReservationInfo', [$idNum, $confirmAgency, $lang]);
-    }
-
-    /** @deprecated Use $api->reservations()->getInvoiceHtml() */
-    public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
-    {
-        return $this->delegateTo($this->reservationApi, 'getInvoiceHtml', [$idNum, $lang]);
-    }
-
-    /** @deprecated Use $api->reservations()->getInvoiceXml() */
-    public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->reservationApi, 'getInvoiceXml', [$idNum, $lang]);
-    }
-
-    /** @deprecated Use $api->reservations()->listInvoices() */
-    public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->reservationApi, 'listInvoices', [$arrFrom, $arrTo, $lang]);
-    }
-
-    // -- Destinations --
-
-    /** @deprecated Use $api->destinations()->getResortList() */
-    public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->destinationApi, 'getResortList', [$country, $lang]);
-    }
-
-    /** @deprecated Use $api->destinations()->getOffersUpdate() */
-    public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->destinationApi, 'getOffersUpdate', [$dateTime, $country, $resort, $hotel]);
-    }
-
-    /** @deprecated Use $api->destinations()->getKickbackInfo() */
-    public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
-    {
-        return $this->delegateTo($this->destinationApi, 'getKickbackInfo', [$lang]);
-    }
-
     // ========== DEBUG GETTERS ==========
+    //
+    // All getters delegate to the most-recently-accessed sub-client, so the
+    // typical diagnostic pattern
+    //
+    //     $api->pricing()->getRoomPrice($p);
+    //     $api->getLastResponse();
+    //
+    // returns the XML emitted by the pricing client. Prefer debugInfo() in
+    // new code — these flat getters exist for the diagnostic / admin pages
+    // that pre-date the value object.
 
-    public function getLastRequest(): string { return $this->lastRequest ?? ''; }
-    public function getLastResponse(): string { return $this->lastResponse ?? ''; }
-    public function getLastRequestFormatted(): array { return $this->lastRequestFormatted ?? []; }
+    public function getLastRequest(): string
+    {
+        return (string) ($this->lastActiveClient->lastRequest ?? '');
+    }
+
+    public function getLastResponse(): string
+    {
+        return (string) ($this->lastActiveClient->lastResponse ?? '');
+    }
+
+    public function getLastRequestFormatted(): array
+    {
+        return (array) ($this->lastActiveClient->lastRequestFormatted ?? []);
+    }
 
     public function getLastError(): string
     {
-        $error = $this->lastError ?? '';
-        if ($this->lastHttpCode && $this->lastHttpCode != 200) {
-            $error .= " (HTTP {$this->lastHttpCode})";
+        $error = (string) ($this->lastActiveClient->lastError ?? '');
+        $code  = (int) ($this->lastActiveClient->lastHttpCode ?? 0);
+        if ($code !== 0 && $code !== 200) {
+            $error .= " (HTTP {$code})";
         }
         return $error;
     }
 
-    public function getLastResponseRaw(): string { return $this->lastResponseRaw ?? ''; }
-    public function getLastHttpCode(): int { return $this->lastHttpCode ?? 0; }
+    public function getLastResponseRaw(): string
+    {
+        return (string) ($this->lastActiveClient->lastResponseRaw ?? '');
+    }
+
+    public function getLastHttpCode(): int
+    {
+        return (int) ($this->lastActiveClient->lastHttpCode ?? 0);
+    }
 
     // ========== CIRCUIT BREAKER ==========
 
