@@ -19,6 +19,12 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelReportingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelReportingRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelCacheRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelCacheRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
@@ -103,7 +109,27 @@ class Container
 
     public function hotelRepository(): HotelRepositoryInterface
     {
-        return $this->resolve('hotelRepository', fn() => new HotelRepository());
+        return $this->resolve('hotelRepository', fn() => new HotelRepository(
+            $this->hotelSearchRepository(),
+            $this->hotelReportingRepository(),
+            $this->hotelCacheRepository(),
+            $this->hotelPackageRepository(),
+        ));
+    }
+
+    public function hotelSearchRepository(): HotelSearchRepositoryInterface
+    {
+        return $this->resolve('hotelSearchRepository', fn() => new HotelSearchRepository());
+    }
+
+    public function hotelReportingRepository(): HotelReportingRepositoryInterface
+    {
+        return $this->resolve('hotelReportingRepository', fn() => new HotelReportingRepository());
+    }
+
+    public function hotelCacheRepository(): HotelCacheRepositoryInterface
+    {
+        return $this->resolve('hotelCacheRepository', fn() => new HotelCacheRepository());
     }
 
     public function bookingRepository(): BookingRepositoryInterface

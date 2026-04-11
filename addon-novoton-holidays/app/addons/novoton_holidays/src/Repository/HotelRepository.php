@@ -3,97 +3,69 @@ declare(strict_types=1);
 /**
  * Novoton Holidays - Hotel Repository
  *
- * Centralized database access for hotel data.
- * V3 Architecture: Uses novoton_hotel_packages for package data.
+ * Centralised database access for hotel data. Core CRUD + lookup +
+ * product linking + bulk accessor operations live here directly;
+ * everything else is delegated to a focused sub-repository:
+ *
+ *   - Listing / search / sync-selection  →  HotelSearchRepository
+ *   - Stats / geography / aggregates     →  HotelReportingRepository
+ *   - Cached / computed metadata columns →  HotelCacheRepository
+ *   - Package table operations           →  HotelPackageRepository
+ *
+ * The class still implements the full HotelRepositoryInterface so existing
+ * callers keep working unchanged. New callers should type-hint the narrow
+ * sub-repository interface they actually need (see PR #3 of the audit).
  *
  * @package NovotonHolidays
- * @since 3.0.0
+ * @since   3.0.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
 class HotelRepository implements HotelRepositoryInterface
 {
-    /**
-     * Find hotel by ID
-     */
-    public function findById(string $hotel_id): ?array
-    {
-        $hotel = db_get_row("SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
-        return $hotel ?: null;
-    }
+    private readonly HotelSearchRepositoryInterface $search;
+    private readonly HotelReportingRepositoryInterface $reporting;
+    private readonly HotelCacheRepositoryInterface $cache;
+    private readonly HotelPackageRepositoryInterface $packages;
 
     /**
-     * Find hotel by product ID
+     * Collaborators are injected for testability but default to concrete
+     * implementations so existing `new HotelRepository()` callsites keep
+     * working without any container wiring.
      */
-    public function findByProductId(int $product_id): ?array
-    {
-        $hotel = db_get_row("SELECT * FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
-        return $hotel ?: null;
+    public function __construct(
+        ?HotelSearchRepositoryInterface $search = null,
+        ?HotelReportingRepositoryInterface $reporting = null,
+        ?HotelCacheRepositoryInterface $cache = null,
+        ?HotelPackageRepositoryInterface $packages = null,
+    ) {
+        $this->search = $search ?? new HotelSearchRepository();
+        $this->reporting = $reporting ?? new HotelReportingRepository();
+        $this->cache = $cache ?? new HotelCacheRepository();
+        $this->packages = $packages ?? new HotelPackageRepository();
     }
 
-    /**
-     * Get hotel ID by product ID
-     */
-    public function getHotelIdByProduct(int $product_id): ?string
-    {
-        $hotel_id = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
-        return ($hotel_id !== false && $hotel_id !== '') ? (string)$hotel_id : null;
-    }
+    // ════════════════════════════════════════════════════════════════════
+    // CRUD + single-row lookups (own implementation — stay local)
+    // ════════════════════════════════════════════════════════════════════
 
     /**
-     * Core columns for hotel listing (excludes large hotel_data JSON)
+     * Core columns for hotel listing (excludes large hotel_data JSON).
      */
     private const LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
         hotel_type, star_rating, property_type, is_adults_only, latitude, longitude,
         has_room_price, packages_count, hotelinfo_synced_at, hotel_list_synced_at,
         last_price_check, created_at, updated_at';
 
-    /**
-     * Find all hotels with optional filters (excludes large JSON columns)
-     */
-    public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
+    #[\Override]
+    public function findById(string $hotel_id): ?array
     {
-        $where = $this->buildWhereClause($filters);
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
-
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        $hotel = db_get_row("SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
+        return $hotel ?: null;
     }
 
-    /**
-     * Find all hotels for listing (excludes large hotel_data JSON)
-     * Use this for admin lists, exports, etc. where full data isn't needed
-     */
-    public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
-    {
-        $where = $this->buildWhereClause($filters);
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
-
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
-    }
-
-    /**
-     * Find hotels by country (excludes large JSON columns)
-     */
-    public function findByCountry(string $country): array
-    {
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
-    }
-
-    /**
-     * Find hotels by country for listing (excludes large hotel_data JSON)
-     */
-    public function findByCountryForListing(string $country): array
-    {
-        return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
-            $country
-        );
-    }
-
-    /**
-     * Get basic hotel info by ID (excludes large hotel_data JSON)
-     */
+    #[\Override]
     public function findBasicById(string $hotel_id): ?array
     {
         $hotel = db_get_row(
@@ -103,86 +75,52 @@ class HotelRepository implements HotelRepositoryInterface
         return $hotel ?: null;
     }
 
-    /**
-     * Find hotels without packages (V3: checks novoton_hotel_packages table, excludes large JSON)
-     */
-    public function findWithoutPackages(int $limit = 0): array
+    #[\Override]
+    public function findByProductId(int $product_id): ?array
     {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
-        $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
-
-        return db_get_array(
-            "SELECT {$cols} FROM ?:novoton_hotels h
-             LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE p.id IS NULL
-             ORDER BY h.hotel_name {$limit_clause}"
-        );
+        $hotel = db_get_row("SELECT * FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
+        return $hotel ?: null;
     }
 
-    /**
-     * Count hotels with optional filters
-     */
-    public function count(array $filters = []): int
+    #[\Override]
+    public function getHotelIdByProduct(int $product_id): ?string
     {
-        $where = $this->buildWhereClause($filters);
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels {$where}");
+        $hotel_id = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i", $product_id);
+        return ($hotel_id !== false && $hotel_id !== '') ? (string) $hotel_id : null;
     }
 
-    /**
-     * Count hotels without packages by country (V3: checks novoton_hotel_packages table)
-     */
-    public function countWithoutPackagesByCountry(): array
-    {
-        return db_get_hash_single_array(
-            "SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
-             LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE p.id IS NULL
-             GROUP BY h.country ORDER BY cnt DESC",
-            ['country', 'cnt']
-        );
-    }
-
-    /**
-     * Check if hotel exists
-     */
+    #[\Override]
     public function exists(string $hotel_id): bool
     {
         return (bool) db_get_field("SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
     }
 
-    /**
-     * Save hotel (insert or update) — uses upsert to avoid TOCTOU race condition
-     */
+    #[\Override]
     public function save(string $hotel_id, array $data): bool
     {
         $data['hotel_id'] = $hotel_id;
         return $this->upsert($data);
     }
 
-    /**
-     * Insert new hotel
-     */
+    #[\Override]
     public function insert(array $data): bool
     {
         $data = self::filterNullValues($data);
         return (bool) db_query("INSERT INTO ?:novoton_hotels ?e", $data);
     }
 
-    /**
-     * Update hotel
-     */
+    #[\Override]
     public function update(string $hotel_id, array $data): bool
     {
         $data = self::filterNullValues($data);
         return (bool) db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
     }
 
-    /**
-     * Link hotel to product
-     */
-    public function linkToProduct(string $hotel_id, int $product_id): bool
+    #[\Override]
+    public function upsert(array $data): bool
     {
-        return $this->update($hotel_id, ['product_id' => $product_id]);
+        $data = self::filterNullValues($data);
+        return (bool) db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $data, $data);
     }
 
     /**
@@ -191,6 +129,7 @@ class HotelRepository implements HotelRepositoryInterface
      * The three DELETE statements are wrapped in a transaction so a mid-sequence
      * failure cannot leave orphaned facility/package rows tied to a deleted hotel.
      */
+    #[\Override]
     public function delete(string $hotel_id): bool
     {
         db_query("START TRANSACTION");
@@ -206,89 +145,13 @@ class HotelRepository implements HotelRepositoryInterface
         }
     }
 
-    /**
-     * Get distinct countries
-     */
-    public function getCountries(): array
+    #[\Override]
+    public function linkToProduct(string $hotel_id, int $product_id): bool
     {
-        return db_get_fields("SELECT DISTINCT country FROM ?:novoton_hotels WHERE country != '' ORDER BY country");
+        return $this->update($hotel_id, ['product_id' => $product_id]);
     }
 
-    /**
-     * Get distinct resorts (= city) for a country.
-     * Hidden/internal resorts (e.g. "Gift Voucher") are excluded.
-     */
-    public function getResorts(string $country = ''): array
-    {
-        $hidden = \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS;
-
-        if (!empty($country)) {
-            if (!empty($hidden)) {
-                return db_get_fields(
-                    "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city NOT IN (?a) ORDER BY city",
-                    $country, $hidden
-                );
-            }
-            return db_get_fields(
-                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' ORDER BY city",
-                $country
-            );
-        }
-
-        if (!empty($hidden)) {
-            return db_get_fields(
-                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' AND city NOT IN (?a) ORDER BY city",
-                $hidden
-            );
-        }
-        return db_get_fields("SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' ORDER BY city");
-    }
-
-    /**
-     * Get packages for a hotel (V3) - full data including priceinfo_data
-     */
-    public function getPackages(string $hotel_id): array
-    {
-        return db_get_array(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotel_id
-        );
-    }
-
-    /**
-     * Get packages for listing (V3) - excludes large priceinfo_data JSON
-     */
-    public function getPackagesForListing(string $hotel_id): array
-    {
-        return db_get_array(
-            "SELECT id, hotel_id, package_id, package_name, seasons_count, has_early_booking,
-                    min_price, currency, synced_at, created_at, updated_at
-             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotel_id
-        );
-    }
-
-    /**
-     * Save package (V3) — uses upsert to avoid TOCTOU race condition
-     */
-    public function savePackage(string $hotel_id, string $package_id, array $data): bool
-    {
-        $data['hotel_id'] = $hotel_id;
-        $data['package_id'] = $package_id;
-        $data = self::filterNullValues($data);
-
-        return (bool) db_query(
-            "INSERT INTO ?:novoton_hotel_packages ?e ON DUPLICATE KEY UPDATE ?u",
-            $data,
-            $data
-        );
-    }
-
-    /**
-     * Unlink a hotel from its CS-Cart product (set product_id = NULL).
-     *
-     * Used when a product is deleted — the hotel record stays, only the link is removed.
-     */
+    #[\Override]
     public function unlinkProduct(int $product_id): bool
     {
         return (bool) db_query("UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i", $product_id);
@@ -297,10 +160,11 @@ class HotelRepository implements HotelRepositoryInterface
     /**
      * Get location data (city, region, country) for multiple hotels in one query.
      *
-     * @param array $hotel_ids
+     * @param string[] $hotel_ids
      * @return array<string, array{hotel_id: string, city: string, region: string, country: string}>
      *         Keyed by hotel_id
      */
+    #[\Override]
     public function getLocationsByIds(array $hotel_ids): array
     {
         if (empty($hotel_ids)) {
@@ -318,424 +182,251 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Get the latest priceinfo_data JSON for a hotel (from novoton_hotel_packages).
+     * @return string[]
      */
-    public function getLatestPriceinfoData(string $hotel_id): ?string
+    #[\Override]
+    public function getAllIds(): array
     {
-        $data = db_get_field(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotel_id
-        );
-        return $data ?: null;
+        return db_get_fields("SELECT hotel_id FROM ?:novoton_hotels");
     }
 
-    /**
-     * Get the latest synced_at timestamp for a hotel's packages.
-     */
-    public function getLatestPackageSyncedAt(string $hotel_id): ?string
+    // ════════════════════════════════════════════════════════════════════
+    // HotelSearchRepository delegation (18 methods)
+    // ════════════════════════════════════════════════════════════════════
+
+    #[\Override]
+    public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
-        $ts = db_get_field(
-            "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-            $hotel_id
-        );
-        return $ts ?: null;
+        return $this->search->findAll($filters, $limit, $offset);
     }
 
-    /**
-     * Insert or update a hotel record (upsert).
-     * Filters null values to prevent PHP 8.1+ real_escape_string deprecation.
-     */
-    public function upsert(array $data): bool
+    #[\Override]
+    public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
     {
-        $data = self::filterNullValues($data);
-        return (bool) db_query("INSERT INTO ?:novoton_hotels ?e ON DUPLICATE KEY UPDATE ?u", $data, $data);
+        return $this->search->findAllForListing($filters, $limit, $offset);
     }
 
-    /**
-     * Find hotels that have prices but no linked CS-Cart product.
-     *
-     * @param string $country         Country filter
-     * @param array  $excludeResorts  Cities to exclude
-     * @param int    $limit           0 = no limit
-     */
+    #[\Override]
+    public function findByCountry(string $country): array
+    {
+        return $this->search->findByCountry($country);
+    }
+
+    #[\Override]
+    public function findByCountryForListing(string $country): array
+    {
+        return $this->search->findByCountryForListing($country);
+    }
+
+    #[\Override]
+    public function findByCountryIndexed(string $country): array
+    {
+        return $this->search->findByCountryIndexed($country);
+    }
+
+    #[\Override]
+    public function findByCountryWithLimit(string $country, int $limit = 0): array
+    {
+        return $this->search->findByCountryWithLimit($country, $limit);
+    }
+
+    #[\Override]
+    public function findWithoutPackages(int $limit = 0): array
+    {
+        return $this->search->findWithoutPackages($limit);
+    }
+
+    #[\Override]
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
-        $query = "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels
-                  WHERE has_room_price = 'Y' AND country = ?s
-                  AND (product_id IS NULL OR product_id = 0)";
-        $params = [$country];
-
-        if (!empty($excludeResorts)) {
-            $query .= " AND (city NOT IN (?a) OR city IS NULL)";
-            $params[] = $excludeResorts;
-        }
-
-        $query .= " ORDER BY hotel_name";
-        if ($limit > 0) {
-            $query .= " LIMIT ?i";
-            $params[] = $limit;
-        }
-
-        return db_get_array($query, ...$params);
+        return $this->search->findUnlinkedWithPrices($country, $excludeResorts, $limit);
     }
 
+    #[\Override]
+    public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
+    {
+        return $this->search->findUnlinkedForAdmin($country, $filter, $limit);
+    }
+
+    #[\Override]
+    public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
+    {
+        return $this->search->findNeedingPriceCheck($daysStale, $limit);
+    }
+
+    #[\Override]
+    public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
+    {
+        return $this->search->findNeedingPriceUpdate($staleHours, $limit);
+    }
+
+    #[\Override]
+    public function findWithProductsSortedByStaleness(int $limit = 50): array
+    {
+        return $this->search->findWithProductsSortedByStaleness($limit);
+    }
+
+    #[\Override]
+    public function findWithPricesForExport(string $country): array
+    {
+        return $this->search->findWithPricesForExport($country);
+    }
+
+    #[\Override]
+    public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
+    {
+        return $this->search->findForImport($country, $importMode, $selectedResorts, $limit);
+    }
+
+    #[\Override]
+    public function findIdsWithPriceinfoData(): array
+    {
+        return $this->search->findIdsWithPriceinfoData();
+    }
+
+    #[\Override]
+    public function findLinkedForSeo(int $offset, int $batch): array
+    {
+        return $this->search->findLinkedForSeo($offset, $batch);
+    }
+
+    #[\Override]
+    public function findWithPriceinfoData(int $limit = 200): array
+    {
+        return $this->search->findWithPriceinfoData($limit);
+    }
+
+    #[\Override]
+    public function count(array $filters = []): int
+    {
+        return $this->search->count($filters);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // HotelReportingRepository delegation (8 methods)
+    // ════════════════════════════════════════════════════════════════════
+
+    #[\Override]
+    public function getCountries(): array
+    {
+        return $this->reporting->getCountries();
+    }
+
+    #[\Override]
+    public function getResorts(string $country = ''): array
+    {
+        return $this->reporting->getResorts($country);
+    }
+
+    #[\Override]
+    public function getCountryCityPairs(): array
+    {
+        return $this->reporting->getCountryCityPairs();
+    }
+
+    #[\Override]
+    public function getCountriesWithPriceCounts(): array
+    {
+        return $this->reporting->getCountriesWithPriceCounts();
+    }
+
+    #[\Override]
+    public function countWithoutPackagesByCountry(): array
+    {
+        return $this->reporting->countWithoutPackagesByCountry();
+    }
+
+    #[\Override]
+    public function countWithPackagesByCountry(string $country): int
+    {
+        return $this->reporting->countWithPackagesByCountry($country);
+    }
+
+    #[\Override]
+    public function getResortStatsByCountry(string $country): array
+    {
+        return $this->reporting->getResortStatsByCountry($country);
+    }
+
+    #[\Override]
+    public function countWithCalendarPrices(): int
+    {
+        return $this->reporting->countWithCalendarPrices();
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // HotelCacheRepository delegation (4 methods)
+    // ════════════════════════════════════════════════════════════════════
+
+    #[\Override]
+    public function getCalendarPricesRaw(string $hotel_id): ?string
+    {
+        return $this->cache->getCalendarPricesRaw($hotel_id);
+    }
+
+    #[\Override]
+    public function setCalendarPricesRaw(string $hotel_id, ?string $json): void
+    {
+        $this->cache->setCalendarPricesRaw($hotel_id, $json);
+    }
+
+    #[\Override]
+    public function getHotelData(string $hotel_id): ?string
+    {
+        return $this->cache->getHotelData($hotel_id);
+    }
+
+    #[\Override]
+    public function updatePackagesCount(string $hotel_id, int $count): bool
+    {
+        return $this->cache->updatePackagesCount($hotel_id, $count);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // HotelPackageRepository delegation (5 methods)
+    // ════════════════════════════════════════════════════════════════════
+
+    #[\Override]
+    public function getPackages(string $hotel_id): array
+    {
+        return $this->packages->findByHotelIdFull($hotel_id);
+    }
+
+    #[\Override]
+    public function getPackagesForListing(string $hotel_id): array
+    {
+        return $this->packages->findForListing($hotel_id);
+    }
+
+    #[\Override]
+    public function savePackage(string $hotel_id, string $package_id, array $data): bool
+    {
+        return $this->packages->upsert($hotel_id, $package_id, $data);
+    }
+
+    #[\Override]
+    public function getLatestPriceinfoData(string $hotel_id): ?string
+    {
+        return $this->packages->getLatestPriceinfoData($hotel_id);
+    }
+
+    #[\Override]
+    public function getLatestPackageSyncedAt(string $hotel_id): ?string
+    {
+        return $this->packages->getLastSyncedAt($hotel_id);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Private helpers
+    // ════════════════════════════════════════════════════════════════════
+
     /**
-     * Filter null values from data array to prevent PHP 8.1+
+     * Filter null values from a data array to prevent PHP 8.1+
      * real_escape_string() deprecation when passed to ?e / ?u placeholders.
      * Null values are removed so the DB column keeps its DEFAULT / current value.
      */
     private static function filterNullValues(array $data): array
     {
         return array_filter($data, static fn($v) => $v !== null);
-    }
-
-    /**
-     * Build WHERE clause from filters
-     */
-    private function buildWhereClause(array $filters): string
-    {
-        $conditions = [];
-
-        if (!empty($filters['country'])) {
-            $conditions[] = db_quote("country = ?s", $filters['country']);
-        }
-        if (!empty($filters['city'])) {
-            $conditions[] = db_quote("city = ?s", $filters['city']);
-        }
-        if (!empty($filters['resort'])) {
-            $conditions[] = db_quote("city = ?s", $filters['resort']);
-        }
-        if (!empty($filters['has_room_price'])) {
-            $conditions[] = db_quote("has_room_price = ?s", $filters['has_room_price']);
-        }
-        if (!empty($filters['has_product'])) {
-            $conditions[] = "product_id > 0";
-        }
-        if (!empty($filters['no_packages'])) {
-            $conditions[] = "packages_count = 0";
-        }
-        if (!empty($filters['has_packages'])) {
-            $conditions[] = "packages_count > 0";
-        }
-        if (!empty($filters['has_verified_room_price'])) {
-            $conditions[] = "has_room_price = 'Y' AND last_price_check IS NOT NULL";
-        }
-        if (!empty($filters['stars'])) {
-            $conditions[] = db_quote("star_rating = ?i", (int) $filters['stars']);
-        }
-        if (!empty($filters['star_rating'])) {
-            $conditions[] = db_quote("star_rating = ?i", (int) $filters['star_rating']);
-        }
-
-        return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
-    }
-
-    public function getCalendarPricesRaw(string $hotel_id): ?string
-    {
-        // `calendar_prices_raw` is guaranteed to exist by the idempotent install
-        // migration at functions/install.php:428. No error suppression needed.
-        $val = db_get_field(
-            "SELECT calendar_prices_raw FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotel_id
-        );
-        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
-    }
-
-    public function setCalendarPricesRaw(string $hotel_id, ?string $json): void
-    {
-        if ($json !== null) {
-            db_query(
-                "UPDATE ?:novoton_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s",
-                $json, $hotel_id
-            );
-        } else {
-            db_query(
-                "UPDATE ?:novoton_hotels SET calendar_prices_raw = NULL WHERE hotel_id = ?s",
-                $hotel_id
-            );
-        }
-    }
-
-    public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
-    {
-        return db_get_array(
-            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
-             WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i DAY))
-             LIMIT ?i",
-            $daysStale,
-            $limit
-        );
-    }
-
-    /**
-     * Find hotels linked to products (for SEO bulk apply), paginated.
-     */
-    public function findLinkedForSeo(int $offset, int $batch): array
-    {
-        return db_get_array(
-            "SELECT hotel_id, product_id, hotel_name, city, country, region,
-                    star_rating, hotel_type, property_type, latitude, longitude
-             FROM ?:novoton_hotels
-             WHERE product_id IS NOT NULL AND product_id > 0
-             LIMIT ?i, ?i",
-            $offset, $batch
-        );
-    }
-
-    /**
-     * Get all hotel IDs (no other columns).
-     *
-     * @return string[]
-     */
-    public function getAllIds(): array
-    {
-        return db_get_fields("SELECT hotel_id FROM ?:novoton_hotels");
-    }
-
-    /**
-     * Get hotels indexed by hotel_id for a given country.
-     *
-     * @return array<string, array> Keyed by hotel_id
-     */
-    public function findByCountryIndexed(string $country): array
-    {
-        return db_get_hash_array(
-            "SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
-            'hotel_id',
-            $country
-        );
-    }
-
-    /**
-     * Find hotels by country with optional limit (listing columns only).
-     */
-    public function findByCountryWithLimit(string $country, int $limit = 0): array
-    {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
-        return db_get_array(
-            "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name{$limit_clause}",
-            $country
-        );
-    }
-
-    /**
-     * Find hotels needing price update (have prices, stale check).
-     */
-    public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
-    {
-        return db_get_array(
-            "SELECT hotel_id, hotel_name, product_id
-             FROM ?:novoton_hotels
-             WHERE has_room_price = 'Y'
-               AND (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i HOUR))
-             ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
-             LIMIT ?i",
-            $staleHours,
-            $limit
-        );
-    }
-
-    /**
-     * Find hotels with linked products, ordered by stalest price check first.
-     */
-    public function findWithProductsSortedByStaleness(int $limit = 50): array
-    {
-        return db_get_array(
-            "SELECT hotel_id, hotel_name, product_id
-             FROM ?:novoton_hotels
-             WHERE product_id > 0
-             ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
-             LIMIT ?i",
-            $limit
-        );
-    }
-
-    /**
-     * Find hotels with active prices for CSV export.
-     */
-    public function findWithPricesForExport(string $country): array
-    {
-        return db_get_array(
-            "SELECT hotel_id, hotel_name, city, hotel_type, has_room_price, product_id, last_price_check
-             FROM ?:novoton_hotels
-             WHERE country = ?s AND has_room_price = 'Y'
-             ORDER BY city, hotel_name",
-            $country
-        );
-    }
-
-    /**
-     * Find hotels with filters for import (includes all columns).
-     */
-    public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
-    {
-        $condition = "country = ?s AND has_room_price = 'Y'";
-        $params = [$country];
-
-        if ($importMode === 'new_only') {
-            $condition .= " AND (product_id IS NULL OR product_id = 0)";
-        }
-
-        if (!empty($selectedResorts)) {
-            $condition .= " AND city IN (?a)";
-            $params[] = $selectedResorts;
-        }
-
-        $limit_sql = $limit > 0 ? " LIMIT " . (int)($limit) : "";
-
-        return db_get_array(
-            "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
-            ...$params
-        );
-    }
-
-    /**
-     * Find hotel IDs that have priceinfo data in their packages.
-     *
-     * @return string[]
-     */
-    public function findIdsWithPriceinfoData(): array
-    {
-        return db_get_fields(
-            "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
-             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
-        );
-    }
-
-    /**
-     * Count hotels that have calendar_prices_raw populated.
-     */
-    public function countWithCalendarPrices(): int
-    {
-        return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
-        );
-    }
-
-    /**
-     * Count hotels with packages (joined via novoton_hotel_packages).
-     */
-    public function countWithPackagesByCountry(string $country): int
-    {
-        return (int) db_get_field(
-            "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
-             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE h.country = ?s",
-            $country
-        );
-    }
-
-    /**
-     * Get resort statistics (hotel count, price count) grouped by city.
-     */
-    public function getResortStatsByCountry(string $country): array
-    {
-        return db_get_array(
-            "SELECT city, COUNT(*) as hotel_count,
-                    SUM(CASE WHEN has_room_price = 'Y' THEN 1 ELSE 0 END) as with_prices
-             FROM ?:novoton_hotels
-             WHERE country = ?s AND city IS NOT NULL AND city != ''
-             GROUP BY city ORDER BY hotel_count DESC",
-            $country
-        );
-    }
-
-    /**
-     * Find unlinked hotels for the "view hotels to add" admin page.
-     *
-     * @param string $country
-     * @param string $filter  'prices' or 'packages'
-     * @param int    $limit
-     */
-    public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
-    {
-        if ($filter === 'packages') {
-            return db_get_array(
-                "SELECT h.*
-                 FROM ?:novoton_hotels h
-                 INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
-                 WHERE h.country = ?s
-                   AND (h.product_id IS NULL OR h.product_id = 0)
-                 GROUP BY h.hotel_id
-                 ORDER BY h.hotel_name
-                 LIMIT ?i",
-                $country,
-                $limit
-            );
-        }
-
-        return db_get_array(
-            "SELECT h.*
-             FROM ?:novoton_hotels h
-             WHERE h.country = ?s
-               AND h.has_room_price = 'Y'
-               AND (h.product_id IS NULL OR h.product_id = 0)
-             ORDER BY h.hotel_name
-             LIMIT ?i",
-            $country,
-            $limit
-        );
-    }
-
-    /**
-     * Get countries with count of hotels that have active prices.
-     */
-    public function getCountriesWithPriceCounts(): array
-    {
-        return db_get_array(
-            "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
-        );
-    }
-
-    /**
-     * Get distinct country/city combinations for resort listing.
-     */
-    public function getCountryCityPairs(): array
-    {
-        return db_get_array(
-            "SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city"
-        );
-    }
-
-    /**
-     * Get hotel_data JSON field for a hotel.
-     */
-    public function getHotelData(string $hotel_id): ?string
-    {
-        $val = db_get_field(
-            "SELECT hotel_data FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotel_id
-        );
-        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
-    }
-
-    /**
-     * Find hotels that have priceinfo data (joined with packages), for price comparison listing.
-     */
-    public function findWithPriceinfoData(int $limit = 200): array
-    {
-        return db_get_array(
-            "SELECT DISTINCT h.hotel_id, h.hotel_name
-             FROM ?:novoton_hotels h
-             INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE p.priceinfo_data IS NOT NULL
-             ORDER BY h.hotel_name
-             LIMIT ?i",
-            $limit
-        );
-    }
-
-    /**
-     * Update packages_count for a hotel.
-     */
-    public function updatePackagesCount(string $hotel_id, int $count): bool
-    {
-        return (bool) db_query(
-            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
-            $count, $hotel_id
-        );
     }
 }
