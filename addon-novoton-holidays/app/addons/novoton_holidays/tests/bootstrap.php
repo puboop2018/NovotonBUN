@@ -11,6 +11,27 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+// ── Cross-addon PSR-4 autoloader ───────────────────────────────────────────
+// Travel_core and Sphinx classes referenced from novoton code (e.g.
+// CommissionCalculator, RoomType, BoardType) aren't in novoton's
+// vendor/autoload. Register a simple PSR-4 loader for the sibling addons.
+spl_autoload_register(function (string $class): void {
+    $map = [
+        'Tygh\\Addons\\TravelCore\\'     => dirname(__DIR__, 5) . '/addon-travel-core/app/addons/travel_core/src/',
+        'Tygh\\Addons\\SphinxHolidays\\' => dirname(__DIR__, 5) . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/',
+    ];
+    foreach ($map as $prefix => $baseDir) {
+        if (str_starts_with($class, $prefix)) {
+            $relative = substr($class, strlen($prefix));
+            $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
+            return;
+        }
+    }
+});
+
 // ── CS-Cart path constants ──────────────────────────────────────────────────
 if (!defined('DIR_ROOT')) {
     define('DIR_ROOT', sys_get_temp_dir() . '/novoton_test_root');
