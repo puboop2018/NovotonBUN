@@ -11,11 +11,11 @@ namespace Tygh\Addons\SphinxHolidays\Api;
  */
 class SphinxHttpClient
 {
-    private const CURL_TIMEOUT = 30;
-    private const CURL_CONNECT_TIMEOUT = 10;
-    private const RATE_LIMIT_PAUSE_DEFAULT = 5;
-    private const RATE_LIMIT_MAX_WAIT = 120;
-    private const RATE_LIMIT_FALLBACK_WAIT = 60;
+    private const int CURL_TIMEOUT = 30;
+    private const int CURL_CONNECT_TIMEOUT = 10;
+    private const int RATE_LIMIT_PAUSE_DEFAULT = 5;
+    private const int RATE_LIMIT_MAX_WAIT = 120;
+    private const int RATE_LIMIT_FALLBACK_WAIT = 60;
 
     private string $baseUrl;
     private string $apiKey;

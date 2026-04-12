@@ -19,8 +19,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
 final class Constants
 {
     // Addon info
-    public const ADDON_ID = 'novoton_holidays';
-    public const VERSION = '3.2.0';
+    public const string ADDON_ID = 'novoton_holidays';
+    public const string VERSION = '3.2.0';
     
     // ========== Booking Status ==========
     // Shared statuses are in TravelConstants (STATUS_PENDING, STATUS_CONFIRMED, etc.)
@@ -40,22 +40,22 @@ final class Constants
     //   RQ  – alternatives pending (retrieve via alternative_RS)
 
     public const NOVOTON_STATUS_CONFIRMED  = 'Good';
-    public const NOVOTON_STATUS_ON_REQUEST = 'ASK';
+    public const string NOVOTON_STATUS_ON_REQUEST = 'ASK';
     public const NOVOTON_STATUS_CANCELLED  = 'ST';
     public const NOVOTON_STATUS_WAITLIST   = 'WT';
-    public const NOVOTON_STATUS_ALTERNATIVES_PENDING = 'RQ';
+    public const string NOVOTON_STATUS_ALTERNATIVES_PENDING = 'RQ';
 
     // ========== API Wire Format → Internal Status ==========
     // The Novoton API returns 'OK' on the wire; we normalize it to 'Good' internally.
 
-    public const NOVOTON_API_WIRE_MAP = [
+    public const array NOVOTON_API_WIRE_MAP = [
         'OK' => 'Good',   // API sends 'OK', we store/display 'Good'
     ];
 
     // ========== Reservation Status Mapping ==========
     // Maps internal status codes (after wire normalization) to internal statuses.
 
-    public const NOVOTON_STATUS_TO_INTERNAL = [
+    public const string NOVOTON_STATUS_TO_INTERNAL = [
         'OK'                                       => TravelConstants::STATUS_CONFIRMED,  // API wire format (legacy/direct)
         self::NOVOTON_STATUS_CONFIRMED             => TravelConstants::STATUS_CONFIRMED,  // Good -> confirmed
         self::NOVOTON_STATUS_ON_REQUEST            => TravelConstants::STATUS_ASK,        // ASK  -> ask (poll via resinfo)
@@ -75,21 +75,21 @@ final class Constants
     
     // ========== Availability Status ==========
     
-    public const AVAIL_OK = 'Good';
-    public const AVAIL_RQ = 'RQ';           // On Request
-    public const AVAIL_STOP = 'STOP';       // Stop Sale
-    public const AVAIL_NA = 'NA';           // Not Available
+    public const string AVAIL_OK = 'Good';
+    public const string AVAIL_RQ = 'RQ';           // On Request
+    public const string AVAIL_STOP = 'STOP';       // Stop Sale
+    public const string AVAIL_NA = 'NA';           // Not Available
     
     // ========== Age Types ==========
     
-    public const AGE_ADULT = 'ADULT';
-    public const AGE_CHILD = 'CHILD';
-    public const AGE_INFANT = 'INFANT';
+    public const string AGE_ADULT = 'ADULT';
+    public const string AGE_CHILD = 'CHILD';
+    public const string AGE_INFANT = 'INFANT';
     
     // ========== Accommodation Types ==========
     
-    public const ACC_REGULAR = 'REGULAR';
-    public const ACC_SINGLE = 'SINGLE';
+    public const string ACC_REGULAR = 'REGULAR';
+    public const string ACC_SINGLE = 'SINGLE';
     public const ACC_EXTRA_BED = 'EXTRA_BED';
     
     // ========== Currency ==========
@@ -97,7 +97,7 @@ final class Constants
     
     // ========== External URLs ==========
 
-    public const IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
+    public const string IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
 
     // ========== Limits ==========
     // Shared limits are in TravelConstants (MAX_ADULTS, MAX_CHILDREN, etc.)
@@ -105,9 +105,9 @@ final class Constants
     // ========== Cache TTL (seconds) ==========
     // ONLY for live API calls - static data uses database storage
     
-    public const CACHE_TTL_ROOM_PRICE = 300;        // 5 minutes (live booking prices)
-    public const CACHE_TTL_AVAILABILITY = 180;      // 3 minutes (live availability)
-    public const CACHE_TTL_SEARCH = 300;            // 5 minutes (search results)
+    public const int CACHE_TTL_ROOM_PRICE = 300;        // 5 minutes (live booking prices)
+    public const int CACHE_TTL_AVAILABILITY = 180;      // 3 minutes (live availability)
+    public const int CACHE_TTL_SEARCH = 300;            // 5 minutes (search results)
     
     // Note: hotel_list, hotel_info, priceinfo are NOT cached
     // They are stored in database and synced via cron jobs
@@ -119,7 +119,7 @@ final class Constants
     // --- Catalog & Hotel Data ---
     public const API_FUNCTION_HOTEL_LIST        = 'hotel_list';         //  1. List hotel names
     public const API_FUNCTION_HOTEL_INFO        = 'hotelinfo';          //  2. Hotel services/rooms/packages
-    public const API_FUNCTION_HOTEL_DESCRIPTION = 'hotel_description';  //  5. Hotel description text
+    public const string API_FUNCTION_HOTEL_DESCRIPTION = 'hotel_description';  //  5. Hotel description text
     public const API_FUNCTION_HOTEL_IMAGES      = 'hotel_images';       //  6. Hotel pictures
 
     // --- Pricing & Availability ---
@@ -158,18 +158,18 @@ final class Constants
     public const TABLE_HOTELS           = 'novoton_hotels';
     public const TABLE_HOTEL_PACKAGES   = 'novoton_hotel_packages';   // Packages from hotelinfo API with priceinfo
     public const TABLE_BOOKINGS         = 'novoton_bookings';
-    public const TABLE_HOTEL_FACILITIES = 'novoton_hotel_facilities'; // Junction: hotel ↔ facility
+    public const string TABLE_HOTEL_FACILITIES = 'novoton_hotel_facilities'; // Junction: hotel ↔ facility
     public const TABLE_FACILITIES       = 'novoton_facilities';       // Facility catalog
     public const TABLE_RESORTS          = 'novoton_resorts';          // Resort names by country
     public const TABLE_SYNC_LOG         = 'novoton_sync_log';
     public const TABLE_CACHE            = 'novoton_cache';
-    public const TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
-    public const TABLE_FEATURE_MAPPINGS = 'hotel_feature_mappings';   // Provider → CS-Cart feature mapping hub
+    public const string TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
+    public const string TABLE_FEATURE_MAPPINGS = 'hotel_feature_mappings';   // Provider → CS-Cart feature mapping hub
     
     // ========== Feature Types (Mapping Hub) ==========
     // Used as `feature_type` column in hotel_feature_mappings table.
 
-    public const FEATURE_TYPE_PROPERTY_RATING = 'property_rating';
+    public const string FEATURE_TYPE_PROPERTY_RATING = 'property_rating';
     public const FEATURE_TYPE_MEALS           = 'meals';
     public const FEATURE_TYPE_HOTEL_FACILITY  = 'hotel_facility';
     public const FEATURE_TYPE_ROOM_FACILITY   = 'room_facility';
@@ -179,7 +179,7 @@ final class Constants
     public const FEATURE_TYPE_BEACH_ACCESS    = 'beach_access';
 
     /** All valid feature types for input validation */
-    public const VALID_FEATURE_TYPES = [
+    public const array VALID_FEATURE_TYPES = [
         self::FEATURE_TYPE_PROPERTY_RATING,
         self::FEATURE_TYPE_MEALS,
         self::FEATURE_TYPE_HOTEL_FACILITY,
@@ -191,7 +191,7 @@ final class Constants
     ];
 
     /** Strict feature types: unknown codes are logged + skipped, never auto-created */
-    public const STRICT_FEATURE_TYPES = [
+    public const array STRICT_FEATURE_TYPES = [
         self::FEATURE_TYPE_PROPERTY_RATING,
         self::FEATURE_TYPE_MEALS,
         self::FEATURE_TYPE_PROPERTY_TYPE,
@@ -200,7 +200,7 @@ final class Constants
     ];
 
     /** Dynamic feature types: unknown codes are auto-registered in the mapping table */
-    public const DYNAMIC_FEATURE_TYPES = [
+    public const array DYNAMIC_FEATURE_TYPES = [
         self::FEATURE_TYPE_HOTEL_FACILITY,
         self::FEATURE_TYPE_ROOM_FACILITY,
         self::FEATURE_TYPE_RESORT,
@@ -208,7 +208,7 @@ final class Constants
 
     // ========== Age Type Mapping (Novoton API IdAge → label) ==========
 
-    public const AGE_TYPE_MAP = [
+    public const array AGE_TYPE_MAP = [
         '1' => 'ADULT',
         '2' => 'CHD 0-1.99',
         '3' => 'CHD 2-11.99',
@@ -219,7 +219,7 @@ final class Constants
 
     // ========== Countries ==========
     
-    public const COUNTRIES = [
+    public const array COUNTRIES = [
         'ALBANIA',
         'BULGARIA',
         'CYPRUS',
@@ -234,39 +234,39 @@ final class Constants
         'UNITED KINGDOM',
     ];
     
-    public const DEFAULT_COUNTRY = 'BULGARIA';
+    public const string DEFAULT_COUNTRY = 'BULGARIA';
 
     // ========== Hidden Resorts ==========
     // Resorts used only for internal/administrative purposes.
     // These are filtered from all frontend and backend resort listings.
 
-    public const HIDDEN_RESORTS = [
+    public const array HIDDEN_RESORTS = [
         'GIFT VOUCHER',
     ];
     
     // ========== Languages ==========
     
-    public const LANG_EN = 'UK';
-    public const LANG_BG = 'BG';
-    public const LANG_RO = 'RO';
+    public const string LANG_EN = 'UK';
+    public const string LANG_BG = 'BG';
+    public const string LANG_RO = 'RO';
     
-    public const DEFAULT_LANG = self::LANG_EN;
+    public const string DEFAULT_LANG = self::LANG_EN;
     
     // ========== Error Codes ==========
     
-    public const ERROR_INVALID_DATA = 'E001';
-    public const ERROR_API_FAILURE = 'E002';
-    public const ERROR_NOT_AVAILABLE = 'E003';
-    public const ERROR_PRICE_CHANGED = 'E004';
-    public const ERROR_BOOKING_FAILED = 'E005';
-    public const ERROR_RATE_LIMITED = 'E006';
-    public const ERROR_UNAUTHORIZED = 'E007';
+    public const string ERROR_INVALID_DATA = 'E001';
+    public const string ERROR_API_FAILURE = 'E002';
+    public const string ERROR_NOT_AVAILABLE = 'E003';
+    public const string ERROR_PRICE_CHANGED = 'E004';
+    public const string ERROR_BOOKING_FAILED = 'E005';
+    public const string ERROR_RATE_LIMITED = 'E006';
+    public const string ERROR_UNAUTHORIZED = 'E007';
     
     // ========== Board (Meal Plan) Mapping ==========
     // Maps user-facing board codes to Novoton API board type identifiers.
     // Single source of truth — replaces scattered $boardMapping arrays.
 
-    public const BOARD_MAPPING = [
+    public const array BOARD_MAPPING = [
         'AI'  => ['ALL INCL', 'AI', 'ALLINC'],
         'UAI' => ['ULTRA ALL', 'UAI'],
         'FB'  => ['FB', 'FULL BOARD'],
@@ -278,37 +278,37 @@ final class Constants
     // ========== Default Values ==========
     // Shared defaults are in TravelConstants (DEFAULT_ADULTS, DEFAULT_CHILDREN, etc.)
 
-    public const DEFAULT_COMMISSION = 0;
-    public const DEFAULT_ADULT_AGE = 33;
-    public const DEFAULT_ISO_NATIONAL = 'RO';
-    public const DEFAULT_CREATED_BY = 'CS-Cart';
+    public const int DEFAULT_COMMISSION = 0;
+    public const int DEFAULT_ADULT_AGE = 33;
+    public const string DEFAULT_ISO_NATIONAL = 'RO';
+    public const string DEFAULT_CREATED_BY = 'CS-Cart';
     
     // ========== Debug / Logging Settings Keys ==========
 
     /** Registry key for verbose service logging (default Y) */
-    public const SETTING_DEBUG_LOGGING = 'addons.novoton_holidays.debug_logging';
+    public const string SETTING_DEBUG_LOGGING = 'addons.novoton_holidays.debug_logging';
 
     /** Registry key for full debug mode (default N) */
-    public const SETTING_DEBUG_MODE = 'addons.novoton_holidays.debug_mode';
+    public const string SETTING_DEBUG_MODE = 'addons.novoton_holidays.debug_mode';
 
     // ========== API Timeouts ==========
 
-    public const API_TIMEOUT = 30;              // seconds
-    public const API_CONNECT_TIMEOUT = 10;      // seconds
+    public const int API_TIMEOUT = 30;              // seconds
+    public const int API_CONNECT_TIMEOUT = 10;      // seconds
 
     // ========== Cache TTL for cron-synced data (seconds) ==========
     // These are for DB-cached data that cron refreshes periodically.
     // See also CACHE_TTL_* above for live API call caching.
 
-    public const CACHE_TTL_HOTEL_INFO = 3600;        // 1 hour
-    public const CACHE_TTL_PRICE_INFO = 1800;        // 30 minutes
-    public const CACHE_TTL_SEARCH_RESULTS = 900;     // 15 minutes
-    public const CACHE_TTL_FACILITIES = 86400;        // 24 hours
+    public const int CACHE_TTL_HOTEL_INFO = 3600;        // 1 hour
+    public const int CACHE_TTL_PRICE_INFO = 1800;        // 30 minutes
+    public const int CACHE_TTL_SEARCH_RESULTS = 900;     // 15 minutes
+    public const int CACHE_TTL_FACILITIES = 86400;        // 24 hours
 
     // ========== Cron ==========
 
-    public const CRON_BATCH_SIZE = 100;
-    public const CRON_CHECK_INTERVAL = 86400;         // 24 hours
+    public const int CRON_BATCH_SIZE = 100;
+    public const int CRON_CHECK_INTERVAL = 86400;         // 24 hours
 
     // ========== API Rate Limiting Delays (microseconds) ==========
     // Used between consecutive API calls to avoid overwhelming the Novoton API.
@@ -319,58 +319,58 @@ final class Constants
     /** Standard delay between API polling calls */
     public const API_DELAY_NORMAL  = 100_000;   // 100ms
     /** Moderate delay for heavier API operations (alternatives, status checks) */
-    public const API_DELAY_MODERATE = 200_000;  // 200ms
+    public const int API_DELAY_MODERATE = 200_000;  // 200ms
     /** Heavy delay for expensive API calls (hotel info sync) */
     public const API_DELAY_HEAVY   = 300_000;   // 300ms
     /** Backoff delay for retry after transient failures */
-    public const API_DELAY_BACKOFF = 500_000;   // 500ms
+    public const int API_DELAY_BACKOFF = 500_000;   // 500ms
 
     // ========== Booking Limits (per-room) ==========
 
-    public const MAX_ADULTS_PER_ROOM = 4;
-    public const MAX_CHILDREN_PER_ROOM = 3;
+    public const int MAX_ADULTS_PER_ROOM = 4;
+    public const int MAX_CHILDREN_PER_ROOM = 3;
 
     // ========== Product ==========
 
-    public const PRODUCT_CODE_PREFIX = 'NVT';
+    public const string PRODUCT_CODE_PREFIX = 'NVT';
 
     /** Category path template for hotel products. {country} is replaced at runtime. */
-    public const PRODUCT_CATEGORY_TEMPLATE = '{country}/Litoral {country}';
+    public const string PRODUCT_CATEGORY_TEMPLATE = '{country}/Litoral {country}';
 
     // ========== Sync Log ==========
 
-    public const SYNC_LOG_RETENTION_DAYS = 30;
+    public const int SYNC_LOG_RETENTION_DAYS = 30;
 
     // ========== Internal Cache Limits ==========
 
     /** Max entries in BookingRepository in-memory hydrated cache before trimming */
-    public const HYDRATED_CACHE_MAX = 500;
+    public const int HYDRATED_CACHE_MAX = 500;
     /** Trim to this many entries when HYDRATED_CACHE_MAX is exceeded */
-    public const HYDRATED_CACHE_TRIM = 250;
+    public const int HYDRATED_CACHE_TRIM = 250;
 
     // ========== Diagnostics ==========
 
     /** Hours since last sync before health is considered degraded */
-    public const SYNC_HEALTH_THRESHOLD_HOURS = 48;
+    public const int SYNC_HEALTH_THRESHOLD_HOURS = 48;
 
     // ========== Price Check Defaults ==========
 
     /** Default check-in offset for automatic price checks (days from today) */
-    public const PRICE_CHECK_OFFSET_DAYS = 30;
+    public const int PRICE_CHECK_OFFSET_DAYS = 30;
 
     /** Default check-in offset for test/diagnostic forms (days from today) */
-    public const DEFAULT_CHECKIN_DAYS_AHEAD = 30;
+    public const int DEFAULT_CHECKIN_DAYS_AHEAD = 30;
 
     /** Default stay duration in nights for test/diagnostic forms */
-    public const DEFAULT_STAY_NIGHTS = 7;
+    public const int DEFAULT_STAY_NIGHTS = 7;
 
     // ========== Date Formats ==========
     // Shared date formats are in TravelConstants (DATETIME_FORMAT, DATE_FORMAT)
 
     // ========== File Paths ==========
 
-    public const CACHE_DIR = 'var/cache/novoton/';
-    public const LOG_DIR = 'var/log/';
+    public const string CACHE_DIR = 'var/cache/novoton/';
+    public const string LOG_DIR = 'var/log/';
     
     // Prevent instantiation
     private function __construct() {}

@@ -25,9 +25,9 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
  */
 class HotelSyncService extends AbstractSyncService implements HotelSyncServiceInterface
 {
-    private const UPSERT_BATCH_SIZE = 100;
-    private const DEST_CHUNK_SIZE = 200;
-    private const PER_PAGE = 1000;
+    private const int UPSERT_BATCH_SIZE = 100;
+    private const int DEST_CHUNK_SIZE = 200;
+    private const int PER_PAGE = 1000;
 
     private readonly SphinxNormalizer $normalizer;
 
