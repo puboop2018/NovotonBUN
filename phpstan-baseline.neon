@@ -2875,12 +2875,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Cron/AbstractCronCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Exceptions\\TravelException\:\:__construct\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Exceptions/TravelException.php
-
-		-
 			message: '#^Property Tygh\\Addons\\TravelCore\\Exceptions\\TravelException\:\:\$context type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -3223,14 +3217,32 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/BoardType.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\Occupancy\:\:__construct\(\) has parameter \$childrenAges with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Comparison operation "\<" between 0 and 0 is always false\.$#'
+			identifier: smaller.alwaysFalse
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\Occupancy\:\:create\(\) has parameter \$childrenAges with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Comparison operation "\>" between 0 and 17 is always false\.$#'
+			identifier: greater.alwaysFalse
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
+
+		-
+			message: '#^Offset int\<0, 5\> on array\<string, mixed\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
+
+		-
+			message: '#^Parameter \#3 \$childrenAges of class Tygh\\Addons\\TravelCore\\ValueObjects\\Occupancy constructor expects array\<string, mixed\>, list\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
 

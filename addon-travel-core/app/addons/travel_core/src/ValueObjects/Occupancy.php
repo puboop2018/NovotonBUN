@@ -21,6 +21,9 @@ final class Occupancy
     /** @var int[] */
     private array $childrenAges;
 
+    /**
+     * @param array<string, mixed> $childrenAges
+     */
     private function __construct(int $adults, int $children, array $childrenAges)
     {
         $this->adults       = $adults;
@@ -28,6 +31,9 @@ final class Occupancy
         $this->childrenAges = $childrenAges;
     }
 
+    /**
+     * @param array<string, mixed> $childrenAges
+     */
     public static function create(int $adults, int $children = 0, array $childrenAges = []): self
     {
         if ($adults < 1 || $adults > TravelConstants::MAX_ADULTS) {

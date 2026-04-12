@@ -7,6 +7,9 @@ class TravelException extends \RuntimeException
 {
     protected array $context = [];
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(string $message = '', array $context = [], int $code = 0, ?\Throwable $previous = null)
     {
         $this->context = $context;

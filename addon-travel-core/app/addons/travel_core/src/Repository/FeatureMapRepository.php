@@ -108,6 +108,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     }
 
     #[\Override]
+    /**
+     * @param array<string, mixed> $data
+     */
     public function updateMapping(int $mapId, array $data): void
     {
         if (!empty($data)) {
@@ -116,6 +119,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     }
 
     #[\Override]
+    /**
+     * @param array<string, mixed> $mapIds
+     */
     public function bulkUpdateStatus(array $mapIds, string $status): void
     {
         if (!empty($mapIds)) {
@@ -124,6 +130,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     }
 
     #[\Override]
+    /**
+     * @param array<string, mixed> $mapIds
+     */
     public function deleteMappings(array $mapIds): void
     {
         if (!empty($mapIds)) {
@@ -187,6 +196,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     // ── Batch operations ──
 
     #[\Override]
+    /**
+     * @param array<string, mixed> $mapIds
+     */
     public function batchUpdateLastUsed(array $mapIds): void
     {
         if (!empty($mapIds)) {
@@ -357,6 +369,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     }
 
     #[\Override]
+    /**
+     * @param array<string, mixed> $nameByLang
+     */
     public function insertFeatureVariantDescriptions(int $variantId, array $nameByLang): void
     {
         foreach ($nameByLang as $langCode => $variantName) {
