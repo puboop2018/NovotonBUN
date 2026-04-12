@@ -19,7 +19,7 @@ interface BookingAdminProviderInterface
      * that are specific to this provider (e.g. Novoton invoice ID, Sphinx offer ID).
      *
      * @param string $providerBookingId The provider_booking_id from travel_bookings
-     * @return array Provider-specific data (e.g. ['novoton_invoice_id' => '...', 'novoton_status' => '...'])
+     * @return array<string, mixed> Provider-specific data (e.g. ['novoton_invoice_id' => '...', 'novoton_status' => '...'])
      */
     public function getDisplayData(string $providerBookingId): array;
 
@@ -57,7 +57,7 @@ interface BookingAdminProviderInterface
      * handleAction() method. Returns a redirect target or result array.
      *
      * @param string $action  The action name (e.g. 'request_alternatives', 'cleanup_orphans')
-     * @param array  $request The $_REQUEST data
+     * @param array<string, mixed>  $request The $_REQUEST data
      * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     public function handleAction(string $action, array $request): array;

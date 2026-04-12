@@ -400,7 +400,7 @@ function fn_travel_core_build_star_emoji(int $stars): string
  * Extra spaces are collapsed.
  *
  * @param string $pattern       Template string with {{placeholder}} tokens
- * @param array  $placeholders  Key => value map (keys without braces)
+ * @param array<string, mixed>  $placeholders  Key => value map (keys without braces)
  * @return string Rendered string, trimmed
  */
 function fn_travel_core_render_seo_template(string $pattern, array $placeholders): string
@@ -424,7 +424,7 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
         '/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?\}\}/',
         function ($m) use ($resolved) {
             $value = $resolved[$m[1]] ?? '';
-            if (isset($m[2]) && $m[2] !== '') {
+            if (isset($m[2])) {
                 $value = fn_travel_core_apply_modifier($value, $m[2]);
             }
             return $value;
@@ -449,7 +449,7 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
  * Render an SEO template and convert the result to a URL-safe slug.
  *
  * @param string $pattern       Template string with {{placeholder}} tokens
- * @param array  $placeholders  Key => value map (keys without braces)
+ * @param array<string, mixed>  $placeholders  Key => value map (keys without braces)
  * @return string URL-safe slug
  */
 function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): string
@@ -478,6 +478,7 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 /**
  * Field mapping: setting key → [template registry key, product_data key].
  */
+/** @return array<string, array{0: string, 1: string}> */
 function _travel_core_seo_field_map(): array
 {
     return [
@@ -497,10 +498,10 @@ function _travel_core_seo_field_map(): array
  * this into their own product data array before calling fn_update_product().
  *
  * @param string      $addonName    'novoton_holidays' or 'sphinx_holidays'
- * @param array       $placeholders Key => value map for template rendering
+ * @param array<string, mixed>       $placeholders Key => value map for template rendering
  * @param int         $productId    0 = new product (all enabled fields applied), >0 = existing
  * @param string|null $hotelId      For unique slug generation (SphinxProductFactory pattern)
- * @return array Product data keys to merge into fn_update_product()
+ * @return array<string, mixed> Product data keys to merge into fn_update_product()
  */
 function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders, int $productId = 0, ?string $hotelId = null): array
 {
@@ -644,7 +645,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
  * @param callable $task          fn(): mixed — the work to execute
  * @param string   $redirectUrl   CS-Cart dispatch URL to redirect to after completion
  * @param callable|null $onResult fn(mixed $result): void — optional post-task notification
- * @return array CS-Cart [CONTROLLER_STATUS_REDIRECT, $url]
+ * @return array{0: string, 1: string} CS-Cart [CONTROLLER_STATUS_REDIRECT, $url]
  */
 function fn_travel_core_run_long_task(string $progressLabel, callable $task, string $redirectUrl, ?callable $onResult = null): array
 {
@@ -687,7 +688,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     }
 
     if (!$imageInfo) {
-        if (file_exists($tempFile)) { unlink($tempFile); }
+        unlink($tempFile);
         return false;
     }
 
@@ -713,11 +714,6 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         'position'    => $existingPairs,
     ];
 
-    if (!function_exists('fn_update_image_pairs')) {
-        if (file_exists($tempFile)) { unlink($tempFile); }
-        return false;
-    }
-
     $detailed = [
         0 => [
             'name'     => $filename,
@@ -730,7 +726,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
 
     $pairIds = fn_update_image_pairs([], $detailed, $pairData, $productId, 'product');
 
-    if (file_exists($tempFile)) { unlink($tempFile); }
+    unlink($tempFile);
 
     return !empty($pairIds);
 }

@@ -21,7 +21,7 @@ abstract class ApiClientBase
     /** @var array<string, mixed> Cache TTL by function (seconds) */
     protected array $cacheTtl = [];
 
-    /** @var string[] Functions that bypass cache */
+    /** @var list<string> Functions that bypass cache */
     protected array $noCacheFunctions = [];
 
     // Debug state — encapsulated in RequestDebugInfo value object.
@@ -106,6 +106,7 @@ abstract class ApiClientBase
         return $this->cache->get($cacheKey);
     }
 
+    /** @param mixed $data */
     protected function saveToCache(string $function, string $cacheKey, $data): void
     {
         if (in_array($function, $this->noCacheFunctions)) {

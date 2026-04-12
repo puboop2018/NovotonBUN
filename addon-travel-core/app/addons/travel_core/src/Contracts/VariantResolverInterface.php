@@ -17,6 +17,7 @@ interface VariantResolverInterface
     /**
      * Ensure a CS-Cart variant exists for a mapping row.
      *
+     * @param array<string, mixed> $mapping
      * @return int variant_id or 0
      */
     public function ensureVariantExists(array $mapping): int;
@@ -24,6 +25,7 @@ interface VariantResolverInterface
     /**
      * 3-pass variant name matching (exact → case-insensitive → normalized).
      *
+     * @param array<string, mixed> $mapping
      * @return int Matched variant_id or 0
      */
     public function findVariantByName(array $mapping, int $featureId): int;

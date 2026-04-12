@@ -24,7 +24,7 @@ use Tygh\Tygh;
 final class CartService implements CartServiceInterface
 {
     /**
-     * @return array<string, mixed>|null
+     * @return array<int, mixed>|null
      */
     #[\Override]
     public function checkRateLimit(string $errorRedirect = 'index.index'): ?array
@@ -46,7 +46,7 @@ final class CartService implements CartServiceInterface
     /**
      * Check for an existing pending booking with the same offer_id.
      * Returns a redirect array if a duplicate is found, null otherwise.
-     * @return array<string, mixed>|null
+     * @return array<int, mixed>|null
      */
     #[\Override]
     public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array
@@ -83,7 +83,7 @@ final class CartService implements CartServiceInterface
      * Sanitize raw guest data and run server-side validation.
      * Returns the parsed result or false on validation failure (notification already set).
      *
-     * @return array{guests_data: array, guest_list: string, holder_name: string}|false
+     * @return array{guests_data: array<string, mixed>, guest_list: string, holder_name: string}|false
      * @param array<string, mixed> $rawGuests
      */
     #[\Override]
@@ -146,7 +146,7 @@ final class CartService implements CartServiceInterface
      * Assemble the product entry in the CS-Cart cart and persist it.
      * Returns the controller redirect tuple.
      * @param array<string, mixed> $productExtra
-     * @return array<string, mixed>
+     * @return array<int, mixed>
      */
     #[\Override]
     public function addToCartAndRedirect(

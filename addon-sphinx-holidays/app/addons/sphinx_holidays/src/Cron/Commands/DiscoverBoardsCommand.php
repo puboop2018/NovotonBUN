@@ -6,7 +6,6 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
-use function fn_log_event;
 
 /**
  * Cron command: discover available board/meal types per hotel via live search.
@@ -451,7 +450,9 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     /**
      * Poll search results until completed or max attempts reached.
-     * @return array<string, mixed>
+     *
+     * @param \Tygh\Addons\SphinxHolidays\SphinxApi $api
+     * @return list<mixed>
      */
     private function pollResults($api, string $cursor): array
     {
@@ -487,7 +488,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
             if ($nextCursor !== null) {
                 $currentCursor = $nextCursor;
-            } elseif (!empty($results)) {
+            } else {
                 break;
             }
         }
@@ -497,10 +498,9 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    /** @return array<string, mixed> */
     /**
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<string>
      */
     private function resolveCountryCodes(array $params): array
     {

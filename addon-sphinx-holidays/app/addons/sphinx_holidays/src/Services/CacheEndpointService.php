@@ -29,19 +29,20 @@ class CacheEndpointService implements CacheEndpointServiceInterface
      * Get hotel deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
-     * @return array<string, mixed> Normalized deal entries with commission-applied prices
+     * @return list<array<string, mixed>> Normalized deal entries with commission-applied prices
      */
     #[\Override]
     public function getHotelDeals(array $filters = []): array
     {
         $cacheKey = 'deals:hotels:' . md5(json_encode($filters));
+        /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
             return $cached;
         }
 
         $response = $this->api->cacheHotels($filters);
-        if (empty($response) || !is_array($response)) {
+        if (empty($response)) {
             return [];
         }
 
@@ -58,19 +59,20 @@ class CacheEndpointService implements CacheEndpointServiceInterface
      * Get package deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, type?: string, limit?: int}
-     * @return array<string, mixed> Normalized deal entries with commission-applied prices
+     * @return list<array<string, mixed>> Normalized deal entries with commission-applied prices
      */
     #[\Override]
     public function getPackageDeals(array $filters = []): array
     {
         $cacheKey = 'deals:packages:' . md5(json_encode($filters));
+        /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
             return $cached;
         }
 
         $response = $this->api->cachePackages($filters);
-        if (empty($response) || !is_array($response)) {
+        if (empty($response)) {
             return [];
         }
 
@@ -119,7 +121,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     /**
      * Normalize and apply commission to deal entries.
      * @param array<string, mixed> $items
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function normalizeDeals(array $items): array
     {

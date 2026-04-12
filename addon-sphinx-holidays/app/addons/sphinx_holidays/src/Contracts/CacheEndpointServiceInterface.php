@@ -15,7 +15,7 @@ interface CacheEndpointServiceInterface
      * Get hotel deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
-     * @return array<string, mixed> Normalized deal entries with commission-applied prices
+     * @return list<array<string, mixed>> Normalized deal entries with commission-applied prices
      */
     public function getHotelDeals(array $filters = []): array;
 
@@ -23,7 +23,7 @@ interface CacheEndpointServiceInterface
      * Get package deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, type?: string, limit?: int}
-     * @return array<string, mixed> Normalized deal entries with commission-applied prices
+     * @return list<array<string, mixed>> Normalized deal entries with commission-applied prices
      */
     public function getPackageDeals(array $filters = []): array;
 

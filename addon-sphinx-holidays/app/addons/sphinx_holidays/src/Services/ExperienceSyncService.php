@@ -173,7 +173,7 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
     }
 
     /**
-     * @param array<string, mixed> $batch
+     * @param list<array<string, mixed>> $batch
      */
     private function upsertBatch(array $batch): int
     {

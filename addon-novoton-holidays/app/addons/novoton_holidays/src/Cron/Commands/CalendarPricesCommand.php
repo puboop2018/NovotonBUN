@@ -26,7 +26,7 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 class CalendarPricesCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {

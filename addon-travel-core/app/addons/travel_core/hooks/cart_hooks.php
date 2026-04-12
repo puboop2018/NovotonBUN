@@ -19,6 +19,10 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Hook: Format cart product info for travel bookings.
  *
  * Detects travel bookings (via 'travel_booking' flag) and adds formatted display data.
+ *
+ * @param array<string, mixed> $product
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $auth
  */
 function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): void
 {
@@ -29,6 +33,10 @@ function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): voi
 
 /**
  * Hook: After cart items calculated — ensure rooms_data is preserved as array.
+ *
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $cart_products
+ * @param array<string, mixed> $auth
  */
 function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {

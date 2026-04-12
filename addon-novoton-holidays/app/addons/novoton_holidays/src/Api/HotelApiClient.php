@@ -8,7 +8,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
 {
-    /** @var array<string, mixed> */
+    /** @var list<string> */
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_HOTEL_LIST,
         Constants::API_FUNCTION_HOTEL_INFO,

@@ -23,7 +23,7 @@ abstract class AbstractCronCommand
     /**
      * Execute the cron command.
      *
-     * @return array Command result with at minimum a 'success' key
+     * @return array<string, mixed> Command result with at minimum a 'success' key
      */
     abstract public function execute(): array;
 
@@ -92,7 +92,7 @@ abstract class AbstractCronCommand
      *
      * @param callable $work    The operation to execute
      * @param string   $context Human-readable context for error messages
-     * @param array    &$errors Array to collect error messages
+     * @param array<int, string>    &$errors Array to collect error messages
      */
     protected function trySyncItem(callable $work, string $context, array &$errors): bool
     {
@@ -107,6 +107,9 @@ abstract class AbstractCronCommand
 
     /**
      * Wrap command stats into a standardized result array.
+     *
+     * @param array<string, mixed> $stats
+     * @return array<string, mixed>
      */
     protected function wrapResult(array $stats): array
     {

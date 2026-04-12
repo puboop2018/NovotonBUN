@@ -79,7 +79,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return array<string, array<string, mixed>>
      */
     #[\Override]
     public function findByCountryIndexed(string $country): array
@@ -105,7 +105,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findWithoutPackages(int $limit = 0): array
@@ -122,8 +122,8 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @param array<string, mixed> $excludeResorts
-     * @return array<string, mixed>
+     * @param list<string> $excludeResorts
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
@@ -148,7 +148,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
@@ -182,7 +182,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
@@ -197,7 +197,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
@@ -215,7 +215,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findWithProductsSortedByStaleness(int $limit = 50): array
@@ -231,7 +231,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findWithPricesForExport(string $country): array
@@ -246,8 +246,8 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @param array<string, mixed> $selectedResorts
-     * @return array<string, mixed>
+     * @param list<string> $selectedResorts
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
@@ -273,7 +273,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     #[\Override]
     public function findIdsWithPriceinfoData(): array
@@ -286,7 +286,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findLinkedForSeo(int $offset, int $batch): array
@@ -302,7 +302,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function findWithPriceinfoData(int $limit = 200): array

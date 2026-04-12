@@ -111,7 +111,7 @@ class SearchService implements SearchServiceInterface
      * 
      * @param array<string, mixed> $request Request data
      * @param int $children_count Number of children
-     * @return array<string, mixed> Children ages
+     * @return list<int> Children ages
      */
     private function parseChildrenAges(array $request, int $children_count): array
     {
@@ -274,7 +274,7 @@ class SearchService implements SearchServiceInterface
      * @param array<string, mixed>       $roomTypeMap  Room ID => Type map (from hotelinfo)
      * @param int|null    $forRoom      Room number (multi-room), null for single
      * @param string|null $occupancyStr Occupancy string for display
-     * @return array<string, mixed> List of result items
+     * @return list<array<string, mixed>> List of result items
      */
     public function parseRoomPriceResponse(
         string $rawXml,
@@ -445,7 +445,7 @@ class SearchService implements SearchServiceInterface
      * @param string $hotelId  Hotel ID
      * @param string $checkIn  Guest check-in date (Y-m-d)
      * @param string $checkOut Guest check-out date (Y-m-d)
-     * @return array<string, mixed> List of applicable discount records
+     * @return list<array<string, mixed>> List of applicable discount records
      */
     public static function getEarlyBookingDiscounts(string $hotelId, string $checkIn, string $checkOut): array
     {
@@ -527,8 +527,8 @@ class SearchService implements SearchServiceInterface
      * a single row: the standard (non-extras) entry is kept as the base, and
      * the promotional price / label are attached as extras_price / extras_label.
      *
-     * @param array<string, mixed> $results
-     * @return array<string, mixed> Deduplicated results (re-indexed)
+     * @param list<array<string, mixed>> $results
+     * @return list<array<string, mixed>> Deduplicated results (re-indexed)
      */
     public static function deduplicateResults(array $results): array
     {

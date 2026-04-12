@@ -178,7 +178,7 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
     }
 
     /**
-     * @param array<string, mixed> $batch
+     * @param list<array<string, mixed>> $batch
      */
     private function upsertBatch(array $batch): int
     {

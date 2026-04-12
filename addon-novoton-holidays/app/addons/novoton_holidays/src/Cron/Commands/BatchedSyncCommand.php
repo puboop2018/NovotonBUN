@@ -8,7 +8,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 class BatchedSyncCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {
@@ -101,6 +101,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $result];
     }
 
+    /** @param \Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync $sync */
     private function configureBatchSync($sync): void
     {
         if (!empty($this->params['batch_size'])) {
@@ -134,6 +135,7 @@ class BatchedSyncCommand extends AbstractCronCommand
     }
 
     /**
+     * @param \Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync $sync
      * @return array<string, mixed>
      */
     private function printBatchStatus($sync): array

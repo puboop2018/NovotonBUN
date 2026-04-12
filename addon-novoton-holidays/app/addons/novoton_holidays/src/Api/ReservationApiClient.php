@@ -123,8 +123,8 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 22. hotel_request - Request alternatives when no prices available
      *
-     * @return \SimpleXMLElement|array
      * @param array<string, mixed> $requestData
+     * @return \SimpleXMLElement|array<string, mixed>
      */
     #[\Override]
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array

@@ -325,7 +325,7 @@ class SphinxBookingRepository
     /**
      * Find bookings eligible for status check (linked to order, non-terminal, recent).
      *
-     * @param array<string, mixed> $terminalStatuses Statuses to exclude
+     * @param list<string> $terminalStatuses Statuses to exclude
      * @param int $daysBack How many days back to look
      * @return array<string, mixed>
      */

@@ -135,7 +135,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $dupeProductId = 0;
 
         // Tier 1: name + property_type + classification + region_id + country_code
-        if ($dupeProductId === 0 && $regionId > 0 && $cc !== '') {
+        if ($regionId > 0 && $cc !== '') {
             $dupeProductId = (int) db_get_field(
                 "SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i
@@ -245,7 +245,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
      *
      * @param array<string, mixed> $hotel     Hotel row from sphinx_hotels table
      * @param array<string, mixed> $hierarchy Destination hierarchy (country, region, city)
-     * @return array<string, string|array> Key => value map (keys without braces)
+     * @return array<string, string|array<int, string>> Key => value map (keys without braces)
      */
     public static function buildPlaceholders(array $hotel, array $hierarchy = []): array
     {

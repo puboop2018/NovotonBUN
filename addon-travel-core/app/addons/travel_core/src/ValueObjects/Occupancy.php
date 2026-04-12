@@ -22,7 +22,7 @@ final class Occupancy
     private array $childrenAges;
 
     /**
-     * @param array<string, mixed> $childrenAges
+     * @param list<int> $childrenAges
      */
     private function __construct(int $adults, int $children, array $childrenAges)
     {
@@ -32,7 +32,7 @@ final class Occupancy
     }
 
     /**
-     * @param array<string, mixed> $childrenAges
+     * @param list<int|mixed> $childrenAges
      */
     public static function create(int $adults, int $children = 0, array $childrenAges = []): self
     {
@@ -66,7 +66,7 @@ final class Occupancy
 
     public function adults(): int        { return $this->adults; }
     public function children(): int      { return $this->children; }
-    /** @return array<string, mixed> */
+    /** @return list<int> */
     public function childrenAges(): array { return $this->childrenAges; }
     public function totalGuests(): int   { return $this->adults + $this->children; }
     public function hasChildren(): bool  { return $this->children > 0; }

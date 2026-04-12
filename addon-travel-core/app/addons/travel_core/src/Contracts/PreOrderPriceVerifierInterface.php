@@ -22,7 +22,7 @@ interface PreOrderPriceVerifierInterface
      * prices against its API, and returns corrections/notifications.
      *
      * @param array<string, mixed> $cart CS-Cart cart data
-     * @return array{allow: bool, corrections: array, notifications: array}
+     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>}
      *   - allow: whether the order should proceed (typically always true)
      *   - corrections: cart_id => price correction data
      *   - notifications: list of discrepancy data for admin alerts

@@ -39,6 +39,7 @@ class VariantResolver implements VariantResolverInterface
      * 3. Try 3-pass name matching against existing CS-Cart variants.
      * 4. Auto-create the variant if no match found.
      *
+     * @param array<string, mixed> $mapping
      * @return int variant_id or 0
      */
     #[\Override]
@@ -115,6 +116,7 @@ class VariantResolver implements VariantResolverInterface
      *   2. Case-insensitive match via LOWER()
      *   3. Normalized match — strips non-alphanumeric chars and collapses whitespace
      *
+     * @param array<string, mixed> $mapping
      * @return int Matched variant_id or 0
      */
     #[\Override]

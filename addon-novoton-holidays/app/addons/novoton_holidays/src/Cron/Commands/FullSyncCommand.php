@@ -31,7 +31,7 @@ class FullSyncCommand extends AbstractCronCommand
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     #[\Override]
     public static function getModes(): array

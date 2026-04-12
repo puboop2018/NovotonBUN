@@ -234,7 +234,9 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     }
 
     /**
-     * @return array<string, mixed>
+     * @param \SimpleXMLElement|null $result
+     * @param array<string, mixed> $params
+     * @return list<array<string, mixed>>
      */
     private function parseSearchResults($result, $params): array
     {
@@ -289,6 +291,11 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         return $results;
     }
 
+    /**
+     * @param mixed $data
+     * @param list<array<string, mixed>> $results
+     * @param array<string, mixed> $params
+     */
     private function extractOffersRecursive($data, &$results, $params): void
     {
         if (!is_array($data)) return;

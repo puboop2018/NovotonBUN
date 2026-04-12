@@ -7,7 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Exceptions;
  */
 class ValidationException extends NovotonException
 {
-    private $field;
+    private string $field;
 
     /**
      * @param array<string, mixed> $context

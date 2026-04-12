@@ -27,6 +27,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
  * Hook: Format cart product info for hotel bookings
+ *
+ * @param array<string, mixed> $product
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth): void
 {
@@ -40,6 +44,10 @@ function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth)
  *
  * Ensures booking details are shown even if extra data was lost.
  * Supports multiple bookings for the same hotel product.
+ *
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $cart_products
+ * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth): void
 {
@@ -101,6 +109,10 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
 
 /**
  * Hook: after calculate cart - ensure rooms_data is preserved as array
+ *
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $cart_products
+ * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
@@ -116,6 +128,9 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
 
 /**
  * Hook: checkout page display - add debug info and price change alerts
+ *
+ * @param array<string, mixed> $cart
+ * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?int $storefront_id = null): void
 {
@@ -182,6 +197,10 @@ function fn_novoton_holidays_dispatch_before_display(): void
 
 /**
  * Smarty modifier to decode JSON in templates
+ *
+ * @param mixed $string
+ * @param bool $assoc
+ * @return mixed
  */
 function smarty_modifier_json_decode($string, $assoc = true)
 {
@@ -200,7 +219,10 @@ function smarty_modifier_json_decode($string, $assoc = true)
 
 /**
  * Inject DB booking fields into a cart product's extra data.
+ *
+ * @param array<string, mixed> $product
  * @param array<string, mixed> $booking
+ * @param array<string, mixed> $cart
  */
 function _nvt_inject_booking_into_cart_product(
     array &$product,
@@ -249,6 +271,8 @@ function _nvt_inject_booking_into_cart_product(
  *
  * Delegates to BookingDisplayService::addBookingDisplayData() with
  * Novoton-specific config (lang prefix, formatters, JSON decoder).
+ *
+ * @param array<string, mixed> $product
  * @param array<string, mixed>|null $cart
  */
 function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $cart = null): void

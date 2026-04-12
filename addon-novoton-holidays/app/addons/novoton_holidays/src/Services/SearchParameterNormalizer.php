@@ -139,7 +139,7 @@ class SearchParameterNormalizer
      * Parse rooms_data / room_data JSON from the React or legacy form.
      * Falls back to constructing a single-room entry from scalar params.
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function parseRoomsData(array $params): array
     {
@@ -258,7 +258,7 @@ class SearchParameterNormalizer
         return [$totalAdults, $totalChildren, $allAges];
     }
 
-    /** @return array<string, mixed> */
+    /** @return list<int> */
     private function parseCommaAges(string $raw): array
     {
         $ages = [];

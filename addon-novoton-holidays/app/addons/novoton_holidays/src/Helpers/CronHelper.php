@@ -115,8 +115,8 @@ class CronHelper
     /**
      * Parse excluded resorts from request or settings
      *
-     * @return array<string, mixed>
      * @param array<string, mixed> $params
+     * @return list<string>
      */
     public static function getExcludedResorts(array $params = []): array
     {

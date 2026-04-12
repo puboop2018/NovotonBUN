@@ -56,6 +56,7 @@ if (file_exists($service_loader)) {
 
 // Legacy alias for backward compatibility
 if (!function_exists('_nvt_get_cache_service')) {
+    /** @return \Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface */
     function _nvt_get_cache_service() {
         return _nvt_cache_service();
     }
@@ -63,21 +64,25 @@ if (!function_exists('_nvt_get_cache_service')) {
 
 // Service delegation helpers (wired up for gradual migration from inline code)
 if (!function_exists('_nvt_get_search_service')) {
+    /** @return \Tygh\Addons\NovotonHolidays\Services\SearchServiceInterface */
     function _nvt_get_search_service() {
         return _nvt_search_service();
     }
 }
 if (!function_exists('_nvt_get_booking_service')) {
+    /** @return \Tygh\Addons\NovotonHolidays\Services\BookingServiceInterface */
     function _nvt_get_booking_service() {
         return _nvt_booking_service();
     }
 }
 if (!function_exists('_nvt_get_price_service')) {
+    /** @return \Tygh\Addons\NovotonHolidays\Services\RoomPriceServiceInterface */
     function _nvt_get_price_service() {
         return _nvt_price_service();
     }
 }
 if (!function_exists('_nvt_get_security_service')) {
+    /** @return \Tygh\Addons\NovotonHolidays\Services\SecurityServiceInterface */
     function _nvt_get_security_service() {
         return _nvt_security_service();
     }
@@ -114,6 +119,11 @@ unset($_nvt_array_params, $_nvt_param);
  * @return object|null Hotel info XML or null
  */
 if (!function_exists('_nvt_get_cached_hotel_info')) {
+/**
+ * @param string $hotel_id
+ * @param bool $force
+ * @return \SimpleXMLElement|null
+ */
 function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     $cache_key = 'nvt_hotel_info_' . $hotel_id;
 

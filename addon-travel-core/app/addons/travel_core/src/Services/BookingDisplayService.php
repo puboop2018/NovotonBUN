@@ -26,7 +26,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
      *   - 'room_name_formatter'  (callable) Room name formatter: fn(array room_data): string (default: null)
      *
      * @param array<string, mixed> $product Cart product (by reference)
-     * @param array|null $cart Cart data
+     * @param array<string, mixed>|null $cart Cart data
      * @param array<string, mixed> $config Provider-specific configuration overrides
      */
     #[\Override]

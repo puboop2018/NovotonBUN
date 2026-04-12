@@ -132,7 +132,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForListing(string $hotelId): array
     {
@@ -195,7 +195,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<string>
      */
     public function getAllPriceinfoData(string $hotelId): array
     {

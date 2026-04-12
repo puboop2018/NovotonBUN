@@ -80,7 +80,7 @@ function fn_novoton_holidays_decrypt_requests_pii(array $requests): array
  * Check reservation status from Novoton API
  * 
  * @param int $booking_id Booking ID (0 = check all pending)
- * @return array{success: bool, checked: int, changed: int, error?: string}
+ * @return array<string, mixed>
  */
 function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
 {
@@ -220,7 +220,7 @@ function fn_novoton_holidays_get_order_bookings($order_id): array
 /**
  * Cron: Sync hotels from ResInfo API
  * 
- * @return array{success: bool, synced: int, added: int, updated: int, errors: int, countries: array<string, mixed>, error?: string}
+ * @return array<string, mixed>
  */
 function fn_novoton_holidays_cron_resinfo(): array
 {

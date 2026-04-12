@@ -54,17 +54,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * present on the "empty result" branch — they surface the debug state
      * from the API client so the controller can render it in the admin UI.
      *
-     * @return array{
-     *   success: bool,
-     *   config: array,
-     *   message: string,
-     *   hotels_count: int,
-     *   sample_hotel: array|null,
-     *   error: string,
-     *   last_request?: array,
-     *   last_http_code?: int,
-     *   raw_response_preview?: string
-     * }
+     * @return array<string, mixed>
      */
     public function testApiConnection(): array
     {
@@ -151,7 +141,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      *
      * @param string $country Country name
      * @param int $limit Max hotels to return
-     * @return array{success: bool, total: int, hotels: array, error: string}
+     * @return array{success: bool, total: int, hotels: list<array<string, mixed>>, error: string}
      */
     public function testHotelList(string $country = Constants::DEFAULT_COUNTRY, int $limit = 10): array
     {
@@ -207,15 +197,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * Test room price API call.
      *
      * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults}
-     * @return array{
-     *   success: bool,
-     *   result: mixed,
-     *   params: array,
-     *   price: float,
-     *   price_with_commission: float,
-     *   raw_response: string,
-     *   error: string
-     * }
+     * @return array<string, mixed>
      */
     public function testRoomPrice(array $params): array
     {
@@ -280,7 +262,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * Test availability search API call.
      *
      * @param array<string, mixed> $params {hotel_id?, check_in, check_out, adults, children}
-     * @return array{success: bool, results: array, count: int, error: string}
+     * @return array{success: bool, results: list<array<string, mixed>>, count: int, error: string}
      */
     public function testSearch(array $params): array
     {
@@ -328,7 +310,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     /**
      * Test facilities sync.
      *
-     * @return array{success: bool, result: array, facilities: array, error: string}
+     * @return array{success: bool, result: list<array<string, mixed>>, facilities: list<array<string, mixed>>, error: string}
      */
     public function testFacilities(): array
     {
@@ -357,7 +339,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * Test single product data retrieval.
      *
      * @param string $productCode Product code (e.g. NVT1603)
-     * @return array{success: bool, product: array|null, hotel_id: string, hotel_info: mixed, packages_db: array, error: string}
+     * @return array{success: bool, product: array<string, mixed>|null, hotel_id: string, hotel_info: mixed, packages_db: list<array<string, mixed>>, error: string}
      */
     public function testProduct(string $productCode): array
     {

@@ -457,7 +457,7 @@ class PriceInfoParser
 
     /**
      * Get available child age bands for a specific room+board from season_price data.
-     * @return array<string, mixed>
+     * @return list<string|null>
      */
     public function getAvailableChildAgeBands(string $roomId, string $boardId): array
     {
@@ -542,7 +542,7 @@ class PriceInfoParser
 
     /**
      * Get season number for each night of the stay
-     * @return array<string, mixed>
+     * @return list<array<string, int|string>>
      */
     public function getSeasonsByNight(string $checkIn, int $nights): array
     {

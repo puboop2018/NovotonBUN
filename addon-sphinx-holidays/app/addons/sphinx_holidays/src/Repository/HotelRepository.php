@@ -48,7 +48,7 @@ class HotelRepository
     /**
      * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
      *
-     * @param array<string, mixed> $hotels Array of hotel rows
+     * @param list<array<string, mixed>> $hotels Array of hotel rows
      * @return int Number of rows affected
      */
     public function upsertBatch(array $hotels): int
@@ -161,7 +161,7 @@ class HotelRepository
     /**
      * Get hotels with optional filters.
      *
-     * @return array{items: array, total: int}
+     * @return array{items: array<int, array<string, mixed>>, total: int}
      */
     public function getFiltered(
         string $countryCode = '',

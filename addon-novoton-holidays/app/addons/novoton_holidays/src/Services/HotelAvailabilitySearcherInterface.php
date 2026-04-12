@@ -15,14 +15,14 @@ interface HotelAvailabilitySearcherInterface
      *
      * @param array<string, mixed> $params Normalized params from SearchParameterNormalizer
      * @return array{
-     *   results: array,
-     *   all_room_results: array,
+     *   results: list<array<string, mixed>>,
+     *   all_room_results: array<int, list<array<string, mixed>>>,
      *   is_multi_room: bool,
      *   multi_room_total_options: int,
      *   no_availability: bool,
-     *   max_room_capacity: array,
-     *   early_booking_discounts: array,
-     *   early_booking_range: array
+     *   max_room_capacity: array<string, int>,
+     *   early_booking_discounts: list<array<string, mixed>>,
+     *   early_booking_range: array<string, mixed>
      * }
      */
     public function search(array $params): array;

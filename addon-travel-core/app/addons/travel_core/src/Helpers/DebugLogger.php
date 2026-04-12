@@ -48,6 +48,8 @@ class DebugLogger
 
     /**
      * Log a debug message via fn_log_event when debug is enabled.
+     *
+     * @param array<string, mixed> $context
      */
     public static function log(string $message, array $context = []): void
     {

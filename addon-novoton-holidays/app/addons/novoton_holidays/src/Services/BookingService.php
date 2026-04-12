@@ -189,7 +189,7 @@ class BookingService implements BookingServiceInterface
      * Get bookings for order
      * 
      * @param int $order_id Order ID
-     * @return array<string, mixed> Bookings
+     * @return list<array<string, mixed>> Bookings
      */
     public function getBookingsForOrder(int $order_id): array
     {

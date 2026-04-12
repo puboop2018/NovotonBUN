@@ -47,19 +47,18 @@ if ($mode === 'run') {
     header('Content-Type: text/plain');
     echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$cron_mode}\n\n";
 
-    if ($cron_mode === 'exchange_rates') {
-        $commission = (float) Registry::get('addons.travel_core.currency_risk_commission');
+    // Currently only 'exchange_rates' is in $supported_modes, so we always reach here.
+    $commission = (float) Registry::get('addons.travel_core.currency_risk_commission');
 
-        $result = fn_travel_core_update_exchange_rates($commission, true);
+    $result = fn_travel_core_update_exchange_rates($commission, true);
 
-        if (!is_array($result)) {
-            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
-        }
-
-        echo fn_travel_core_format_exchange_rate_output($result) . "\n";
-
-        echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
+    if (!is_array($result)) {
+        $result = ['success' => false, 'message' => 'No response from exchange rate service'];
     }
+
+    echo fn_travel_core_format_exchange_rate_output($result) . "\n";
+
+    echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
 
     exit;
 }

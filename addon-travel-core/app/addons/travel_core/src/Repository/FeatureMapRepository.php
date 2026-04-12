@@ -52,6 +52,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    /** @return array<string, array<string, mixed>> */
     #[\Override]
     public function allCodes(string $featureType): array
     {
@@ -186,6 +187,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function getUnmappedById(int $unmappedId): ?array
     {
@@ -223,6 +225,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    /** @return array<int, array<string, mixed>> */
     #[\Override]
     public function getUnresolvedMappings(): array
     {
@@ -236,6 +239,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Stats / listing ──
 
+    /** @return array<string, array<string, mixed>> */
     #[\Override]
     public function getTypeStats(): array
     {
@@ -254,6 +258,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
+    /** @return array<string, mixed> */
     #[\Override]
     public function getGlobalStats(): array
     {
@@ -278,6 +283,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return (int) db_get_field("SELECT COUNT(*) FROM ?:travel_unmapped_values");
     }
 
+    /** @return array{items: array<int, array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginatedMappings(string $condition, int $offset, int $limit): array
     {
@@ -301,6 +307,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return ['items' => $items, 'total' => $total];
     }
 
+    /** @return array<string, mixed> */
     #[\Override]
     public function getTypeStatsSingle(string $featureType): array
     {
@@ -319,6 +326,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         ];
     }
 
+    /** @return array{items: array<int, array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginatedUnmapped(string $condition, int $offset, int $limit): array
     {
@@ -335,6 +343,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return ['items' => $items, 'total' => $total];
     }
 
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function getMappingById(int $mapId): ?array
     {
@@ -342,6 +351,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return $row ?: null;
     }
 
+    /** @return array<int, array<string, mixed>> */
     #[\Override]
     public function getAliasesForMapping(int $mapId): array
     {

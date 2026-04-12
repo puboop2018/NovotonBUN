@@ -42,14 +42,14 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
      *
      * @param array<string, mixed> $params Normalized params from SearchParameterNormalizer
      * @return array{
-     *   results: array,
-     *   all_room_results: array,
+     *   results: list<array<string, mixed>>,
+     *   all_room_results: array<int, list<array<string, mixed>>>,
      *   is_multi_room: bool,
      *   multi_room_total_options: int,
      *   no_availability: bool,
-     *   max_room_capacity: array,
-     *   early_booking_discounts: array,
-     *   early_booking_range: array
+     *   max_room_capacity: array<string, int>,
+     *   early_booking_discounts: list<array<string, mixed>>,
+     *   early_booking_range: array<string, mixed>
      * }
      */
     #[\Override]
@@ -376,7 +376,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $hotelInfo->xpath('//rooms') ?: [];
     }
 
-    /** @return array<string, mixed> */
+    /** @return list<string> */
     private function extractBoardTypes(\SimpleXMLElement $hotelInfo, string $mealPlan): array
     {
         $boardTypes = [];
@@ -416,7 +416,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $boardTypes;
     }
 
-    /** @return array<string, mixed> */
+    /** @return list<array{name: string, id_cont: string}> */
     private function extractPackages(\SimpleXMLElement $hotelInfo): array
     {
         $packages = [];
@@ -495,8 +495,8 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     }
 
     /**
-     * @return array<string, mixed>
-     * @param array<string, mixed> $raw
+     * @param list<mixed> $raw
+     * @return list<int>
      */
     private function cleanChildrenAges(array $raw): array
     {

@@ -23,7 +23,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * If countries are selected, returns only those countries.
  * 
  * @param mixed $selected_countries Countries from settings (array or comma-separated string)
- * @return array<string, mixed> List of country names in uppercase
+ * @return list<string> List of country names in uppercase
  */
 function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): array
 {

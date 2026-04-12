@@ -168,7 +168,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      * Used by assignFacilities(), getHotelFacilityCodes(), and detectTravelGroups()
      * to avoid parsing and resolving the same facilities_json multiple times.
      *
-     * @return array<int, array{id: string, name: string, mapping: array|null}>
+     * @return array<int, array{id: string, name: string, mapping: array<string, mixed>|null}>
      * @param array<string, mixed> $hotel
      */
     private function resolveHotelFacilities(array $hotel): array

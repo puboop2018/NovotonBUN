@@ -24,6 +24,9 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 
 /**
  * Validate return_url to prevent open redirects.
+ *
+ * @param string $url
+ * @return string
  */
 function _nvt_validate_return_url($url)
 {

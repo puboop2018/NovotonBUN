@@ -1,6 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Parameter \#2 \$stats of method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:syncProductPrices\(\) expects array\<string, int\>, array\<string, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
+
+		-
 			message: '#^Parameter \#1 \$request of function fn_novoton_holidays_decrypt_request_pii expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
 			identifier: argument.type
 			count: 3
@@ -11,18 +17,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Function _nvt_validate_return_url\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
-
-		-
-			message: '#^Function _nvt_validate_return_url\(\) has parameter \$url with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
 
 		-
 			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
@@ -67,6 +61,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
 
 		-
+			message: '#^Offset ''added'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
 			message: '#^Offset ''error'' on array\{success\: bool, file_path\: string, count\: int, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -91,25 +91,25 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''last_http_code'' does not exist on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\}\.$#'
+			message: '#^Offset ''last_http_code'' does not exist on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''last_http_code'' on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\} in empty\(\) does not exist\.$#'
+			message: '#^Offset ''last_http_code'' on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\} in empty\(\) does not exist\.$#'
 			identifier: empty.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''last_request'' does not exist on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\}\.$#'
+			message: '#^Offset ''last_request'' does not exist on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''last_request'' on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\} in empty\(\) does not exist\.$#'
+			message: '#^Offset ''last_request'' on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\} in empty\(\) does not exist\.$#'
 			identifier: empty.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
@@ -121,64 +121,28 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''raw_response_preview'' does not exist on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\}\.$#'
+			message: '#^Offset ''raw_response_preview'' does not exist on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Offset ''raw_response_preview'' on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\} in empty\(\) does not exist\.$#'
+			message: '#^Offset ''raw_response_preview'' on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\} in empty\(\) does not exist\.$#'
 			identifier: empty.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Function _nvt_get_booking_service\(\) has no return type specified\.$#'
-			identifier: missingType.return
+			message: '#^Offset ''total'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Function _nvt_get_cache_service\(\) has no return type specified\.$#'
-			identifier: missingType.return
+			message: '#^Offset ''updated'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_cached_hotel_info\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_cached_hotel_info\(\) has parameter \$force with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_cached_hotel_info\(\) has parameter \$hotel_id with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_price_service\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_search_service\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Function _nvt_get_security_service\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
 			message: '#^Offset ''room_id'' on non\-empty\-array\<mixed\> in empty\(\) always exists and is not falsy\.$#'
@@ -217,28 +181,16 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
+			message: '#^Parameter \#1 \$results of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
+
+		-
 			message: '#^Offset ''email'' on array\{email\: string\|false, phone\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Function fn_novoton_holidays_check_reservation_status\(\) should return array\{success\: bool, checked\: int, changed\: int, error\?\: string\} but returns array\{success\: false, error\: ''API not available''\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_check_reservation_status\(\) should return array\{success\: bool, checked\: int, changed\: int, error\?\: string\} but returns array\{success\: true, checked\: int\<0, max\>, updated\: int\<0, max\>, details\: array\<array\{error\: string\}\|array\{old\: mixed, new\: mixed, novoton\: string\}\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_cron_resinfo\(\) should return array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} but returns array\{success\: false, error\: ''API not available''\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
 			message: '#^Offset int\<0, 4\> on array\{''1 star'', ''2 stars'', ''3 stars'', ''4 stars'', ''5 stars''\}\|array\{''1 stea'', ''2 stele'', ''3 stele'', ''4 stele'', ''5 stele''\} on left side of \?\? always exists and is not nullable\.$#'
@@ -247,26 +199,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
-			message: '#^Parameter \#1 \$hotel_ids of function fn_novoton_holidays_prefetch_hotel_data expects array\<string, mixed\>, list given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
-
-		-
-			message: '#^Function fn_novoton_holidays_parse_cancellation_terms\(\) should return array\<string, mixed\> but returns list\<array\<string, bool\|float\|int\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
-
-		-
-			message: '#^Function fn_novoton_holidays_parse_payment_terms\(\) should return array\<string, mixed\> but returns list\<array\<string, bool\|int\<1, max\>\|string\>\>\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
 
@@ -283,24 +217,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
 
 		-
-			message: '#^Function fn_novoton_holidays_parse_countries\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_hotel_prices\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Parameter \#2 \$packages of function _novoton_enrich_hotel_row expects array\<string, mixed\>\|null, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Variable \$country on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
@@ -313,286 +229,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Function _nvt_inject_booking_into_cart_product\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Variable \$product_ids in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function _nvt_inject_booking_into_cart_product\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_add_booking_display_data\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items\(\) has parameter \$cart_products with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items_post\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_calculate_cart_items_post\(\) has parameter \$cart_products with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_checkout_pre_dispatch\(\) has parameter \$auth with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_checkout_pre_dispatch\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_cart_product_data_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_cart_product_data_post\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_cart_product_data_post\(\) has parameter \$product with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function smarty_modifier_json_decode\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function smarty_modifier_json_decode\(\) has parameter \$assoc with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function smarty_modifier_json_decode\(\) has parameter \$string with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Function _nvt_enrich_order_product_terms\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function _nvt_format_order_guests\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_order_info\(\) has parameter \$additional_data with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_order_info\(\) has parameter \$order with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_orders_post\(\) has parameter \$orders with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_orders_post\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_place_order_post\(\) has parameter \$action with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_place_order_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_place_order_post\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_place_order_post\(\) has parameter \$order_id with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_place_order_post\(\) has parameter \$order_status with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_pre_place_order\(\) has parameter \$allow with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_pre_place_order\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_pre_place_order\(\) has parameter \$product_groups with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_delete_product_post\(\) has parameter \$product_deleted with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_delete_product_post\(\) has parameter \$product_id with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_gather_additional_product_data_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_gather_additional_product_data_post\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_gather_additional_product_data_post\(\) has parameter \$product with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_data_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_data_post\(\) has parameter \$lang_code with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_data_post\(\) has parameter \$preview with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_data_post\(\) has parameter \$product_data with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_tabs_post\(\) has parameter \$product_id with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_product_tabs_post\(\) has parameter \$tabs with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_products_post\(\) has parameter \$lang_code with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_products_post\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_products_post\(\) has parameter \$products with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_ids of function fn_novoton_holidays_prefetch_hotel_data expects array\<string, mixed\>, list\<string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\ApiClientBase\:\:saveToCache\(\) has parameter \$data with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
 
 		-
 			message: '#^Offset int\<0, max\> on array\<string, mixed\> in isset\(\) does not exist\.$#'
@@ -601,112 +241,22 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:extractOffersRecursive\(\) has parameter \$data with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:searchAvailability\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:extractOffersRecursive\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:searchAvailabilityBatch\(\) should return array\<string, array\<string, mixed\>\> but returns array\<string, list\<array\<string, mixed\>\>\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:extractOffersRecursive\(\) has parameter \$results with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:parseSearchResults\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:parseSearchResults\(\) has parameter \$result with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
-
-		-
-			message: '#^PHPDoc type array\<string, mixed\> of property Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:\$noCacheFunctions is not covariant with PHPDoc type array\<string\> of overridden property Tygh\\Addons\\NovotonHolidays\\Api\\ApiClientBase\:\:\$noCacheFunctions\.$#'
-			identifier: property.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:\$noCacheFunctions \(array\<string, mixed\>\) does not accept default value of type array\<int, string\>\.$#'
-			identifier: property.defaultValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
 
 		-
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^PHPDoc type array\<string, mixed\> of property Tygh\\Addons\\NovotonHolidays\\Api\\PricingApiClient\:\:\$noCacheFunctions is not covariant with PHPDoc type array\<string\> of overridden property Tygh\\Addons\\NovotonHolidays\\Api\\ApiClientBase\:\:\$noCacheFunctions\.$#'
-			identifier: property.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Api\\PricingApiClient\:\:\$noCacheFunctions \(array\<string, mixed\>\) does not accept default value of type array\<int, string\>\.$#'
-			identifier: property.defaultValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^Parameter \#2 \$keywordMap of method Tygh\\Addons\\NovotonHolidays\\Api\\PropertyTypeDetector\:\:matchAgainst\(\) expects array\<string, mixed\>, array\<int, array\<string, string\>\> given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PropertyTypeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\ReservationApiClient\:\:createHotelRequest\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\ReservationApiClient\:\:createHotelRequest\(\) return type has no value type specified in iterable type array\|SimpleXMLElement\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\AbstractCronCommand\:\:trySyncItem\(\) has parameter \$errors with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/AbstractCronCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AddProductsCommand\:\:getExcludedResorts\(\) should return array\<string, mixed\> but returns list\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AddProductsCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Parameter \#2 \$excludeResorts of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedWithPrices\(\) expects list\<string\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AlternativesCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
 			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
@@ -721,34 +271,16 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\BatchedSyncCommand\:\:configureBatchSync\(\) has parameter \$sync with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Parameter \#1 \$sync of method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\BatchedSyncCommand\:\:configureBatchSync\(\) expects Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync, Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncInterface given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/BatchedSyncCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\BatchedSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
+			message: '#^Parameter \#1 \$sync of method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\BatchedSyncCommand\:\:printBatchStatus\(\) expects Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync, Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncInterface given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/BatchedSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\BatchedSyncCommand\:\:printBatchStatus\(\) has parameter \$sync with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/BatchedSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\CalendarPricesCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/CalendarPricesCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\CleanupCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/CleanupCommand.php
 
 		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
@@ -763,46 +295,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\DataSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\FacilitiesBatchSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/FacilitiesBatchSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\FullSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/FullSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\HotelListSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
-
-		-
 			message: '#^Parameter \#1 \$hotels of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotels\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\|null\>\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\HotelSyncCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\OffersUpdateCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
 			message: '#^Ternary operator condition is always false\.$#'
@@ -811,26 +307,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\ResInfoCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php
-
-		-
 			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\RoomPriceCheckCommand\:\:getModes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
@@ -853,24 +331,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
 		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Exceptions\\ValidationException\:\:\$field has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Exceptions/ValidationException.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Exceptions\\XmlParsingException\:\:\$responseSize has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Exceptions/XmlParsingException.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Exceptions\\XmlParsingException\:\:\$xmlErrors has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Exceptions/XmlParsingException.php
-
-		-
 			message: '#^Parameter \#1 \$batch of method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:preBatch\(\) expects array\<int, int\|string\>, array\<string, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -889,14 +349,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:countPackages\(\) has parameter \$hotelInfo with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:extractPackages\(\) has parameter \$hotelInfo with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
 
@@ -907,22 +361,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:processPriceInfo\(\) has parameter \$priceinfo with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Instanceof between SimpleXMLElement and SimpleXMLElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:simpleXmlToArray\(\) has parameter \$xml with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\CronHelper\:\:getExcludedResorts\(\) should return array\<string, mixed\> but returns array\<int\<0, max\>, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/CronHelper.php
 
 		-
 			message: '#^Parameter \#1 \$batchData of method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchHotelUpsert\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\|null\>\> given\.$#'
@@ -949,40 +391,34 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
 
 		-
-			message: '#^Parameter \#2 \$xmlErrors of class Tygh\\Addons\\NovotonHolidays\\Exceptions\\XmlParsingException constructor expects array\<string, mixed\>, list\<string\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonXmlParser.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:checkMissingProducts\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Cannot access an offset on int\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, int given\.$#'
+			identifier: argument.type
+			count: 7
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
+
+		-
+			message: '#^Parameter &\$stats by\-ref type of method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:checkMissingProducts\(\) expects array\<string, int\>, array\<string, int\|list\<string\>\> given\.$#'
+			identifier: parameterByRef.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:syncProductPrices\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
+			message: '#^Parameter &\$stats by\-ref type of method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:syncProductPrices\(\) expects array\<string, int\>, array\<string, int\|list\<string\>\> given\.$#'
+			identifier: parameterByRef.type
+			count: 9
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Default value of the parameter \#2 \$statuses \(array\<int, string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) is incompatible with type array\<string, mixed\>\.$#'
-			identifier: parameter.defaultValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:storeApiData\(\) has parameter \$response with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
 			message: '#^Parameter \#1 \$booking of static method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:hydrateJsonFields\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
@@ -991,112 +427,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Parameter \#1 \$order_ids \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderIds\(\) should be compatible with parameter \$order_ids \(list\<int\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#1 \$product_ids \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) should be compatible with parameter \$product_ids \(list\<int\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#2 \$statuses \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByNovotonStatus\(\) should be compatible with parameter \$statuses \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByNovotonStatus\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#2 \$statuses \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) should be compatible with parameter \$statuses \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:\$hydratedCache type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderIds\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findForAdminList\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findForAdminList\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findRqWithoutAlternatives\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findRqWithoutAlternatives\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithReservationId\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findWithReservationId\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getUnifiedBookings\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:getUnifiedBookings\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:storeApiData\(\) has parameter \$response with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelId\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelId\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelIdFull\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelIdFull\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:getAllPriceinfoData\(\) should be compatible with return type \(array\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:getAllPriceinfoData\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepository\:\:getCountriesWithPriceCounts\(\) should be compatible with return type \(array\<int, array\{country\: string, cnt\: int\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepositoryInterface\:\:getCountriesWithPriceCounts\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepository\:\:getCountryCityPairs\(\) should be compatible with return type \(array\<int, array\{country\: string, city\: string\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepositoryInterface\:\:getCountryCityPairs\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepository\:\:getResortStatsByCountry\(\) should be compatible with return type \(array\<int, array\{city\: string, hotel_count\: int, with_prices\: int\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepositoryInterface\:\:getResortStatsByCountry\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
 
 		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
@@ -1109,306 +443,6 @@ parameters:
 			identifier: empty.variable
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) should return list\<array\<string, mixed\>\> but returns array\<string, array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findIdsWithPriceinfoData\(\) should return array\<string, mixed\> but returns list\<string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountriesWithPriceCounts\(\) should return array\<string, mixed\> but returns array\<int, array\<string, int\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountryCityPairs\(\) should return array\<string, mixed\> but returns array\<int, array\<string, string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getResortStatsByCountry\(\) should return array\<string, mixed\> but returns array\<int, array\<string, int\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#2 \$excludeResorts \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should be compatible with parameter \$excludeResorts \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#2 \$excludeResorts of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\) expects list\<string\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#3 \$selectedResorts \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should be compatible with parameter \$selectedResorts \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findForImport\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#3 \$selectedResorts of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\) expects list\<string\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findForImport\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findIdsWithPriceinfoData\(\) should be compatible with return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findIdsWithPriceinfoData\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findLinkedForSeo\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findNeedingPriceCheck\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findNeedingPriceUpdate\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedForAdmin\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithPriceinfoData\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithPricesForExport\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithProductsSortedByStaleness\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithoutPackages\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountriesWithPriceCounts\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getCountriesWithPriceCounts\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountryCityPairs\(\) should be compatible with return type \(list\<array\{country\: string, city\: string\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getCountryCityPairs\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackages\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getPackages\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackagesForListing\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getPackagesForListing\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getResortStatsByCountry\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getResortStatsByCountry\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) should be compatible with return type \(array\<string, array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByCountryIndexed\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#2 \$excludeResorts \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) should be compatible with parameter \$excludeResorts \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Parameter \#3 \$selectedResorts \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) should be compatible with parameter \$selectedResorts \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\)$#'
-			identifier: method.childParameterType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findIdsWithPriceinfoData\(\) should be compatible with return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findIdsWithPriceinfoData\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findLinkedForSeo\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceCheck\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceUpdate\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedForAdmin\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPriceinfoData\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPricesForExport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) should be compatible with return type \(array\<string, array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
 			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
@@ -1435,18 +469,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcherInterface.php
 
 		-
-			message: '#^Offset ''changed'' on array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Offset ''checked'' on array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
 			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getAvailableActions\(\) should be compatible with return type \(array\<int, array\{name\: string, label\: string, url\: string, method\: string, css_class\: string, icon\: string\}\>\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getAvailableActions\(\)$#'
 			identifier: method.childReturnType
 			count: 1
@@ -1459,40 +481,16 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
 
 		-
-			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:enrichWithGuestDisplay\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:enrichWithRoomDisplay\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getUnifiedBookings\(\) should return array\<string, mixed\> but returns list\<array\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingService\:\:getBookingsForOrder\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingService\:\:getBookingsForOrder\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingServiceInterface\:\:getBookingsForOrder\(\)$#'
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getUnifiedBookings\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryServiceInterface\:\:getUnifiedBookings\(\)$#'
 			identifier: method.childReturnType
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
 			message: '#^Binary operation "\." between ''Booking error \('' and array\<string, mixed\> results in an error\.$#'
@@ -1501,27 +499,39 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildGroupGuestsAndRooms\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:groupRoomsByPackage\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:resolveRoomsAndGuests\(\) should return array\{list\<array\<string, mixed\>\>, list\<array\<string, mixed\>\>\} but returns array\{mixed, array\<string, mixed\>\}\.$#'
+			identifier: return.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:resolveRoomsAndGuests\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
 			message: '#^Offset 0 on array\<string, mixed\> on left side of \?\? does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Parameter \#1 \$guestsData of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:extractGuestName\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Parameter \#2 \$allGuests of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildApiBookingRequest\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Parameter \#2 \$allGuests of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildBookingRecord\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Parameter \#3 \$apiRooms of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildApiBookingRequest\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
@@ -1543,88 +553,28 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\CronService\:\:getCountries\(\) should return array\<string, mixed\> but returns list\<string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
-
-		-
 			message: '#^Parameter \#2 \$alternatives of method Tygh\\Addons\\NovotonHolidays\\Services\\CronService\:\:sendAlternativesEmail\(\) expects array\<string, mixed\>, list\<array\<string, string\>\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
 
 		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\CronService\:\:\$countries \(list\<string\>\) does not accept array\<string, mixed\>\.$#'
-			identifier: assign.propertyType
+			message: '#^Return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\CronService\:\:getCountries\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\CronServiceInterface\:\:getCountries\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testApiConnection\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testFacilities\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testHotelList\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testFacilities\(\) should return array\{success\: bool, result\: list\<array\<string, mixed\>\>, facilities\: list\<array\<string, mixed\>\>, error\: string\} but returns array\{success\: bool, result\: array\<string, mixed\>, facilities\: list\<array\<string, mixed\>\>, error\: mixed\}\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testProduct\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testRoomPrice\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) should return array\{success\: bool, results\: list\<array\<string, mixed\>\>, count\: int, error\: string\} but returns array\{success\: true, results\: non\-empty\-array\<string, mixed\>, count\: int\<1, max\>, error\: ''''\}\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testApiConnection\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testFacilities\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testHotelList\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testProduct\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testSearch\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
 
 		-
 			message: '#^Comparison operation "\>" between int\<2, max\> and 0 is always true\.$#'
@@ -1657,30 +607,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:cleanChildrenAges\(\) should return array\<string, mixed\> but returns list\<int\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:extractBoardTypes\(\) should return array\<string, mixed\> but returns array\<int, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:extractPackages\(\) should return array\<string, mixed\> but returns list\<array\<string, string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:search\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:parseRoomPriceResponse\(\) invoked with 7 parameters, 9 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -1705,34 +631,28 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
+			message: '#^Parameter \#1 \$discounts of static method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:getDiscountRange\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Parameter \#1 \$results of method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:calculateMaxCapacity\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcherInterface\:\:search\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcherInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PreOrderPriceVerifier\:\:comparePrice\(\) has parameter \$cartId with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Parameter \#1 \$results of static method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:deduplicateResults\(\) expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PreOrderPriceVerifier\:\:comparePrice\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PreOrderPriceVerifier\:\:verify\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculation\:\:getDebugLog\(\) should return list\<string\> but returns array\<string, mixed\>\.$#'
@@ -1741,7 +661,25 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
 
 		-
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculation\:\:getSamplePrices\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+		-
 			message: '#^Parameter \#2 \$childrenAges of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoParser\:\:buildOccupancyStructure\(\) expects list\<int\>, array\<float\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+		-
+			message: '#^Parameter \#2 \$seasonsByNight of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:calculateBasePrice\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+		-
+			message: '#^Parameter \#3 \$seasonsByNight of method Tygh\\Addons\\NovotonHolidays\\Services\\DiscountCalculator\:\:calculateReduction\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\>\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
@@ -1771,24 +709,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:getSamplePrices\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoParser\:\:getAvailableChildAgeBands\(\) should return array\<string, mixed\> but returns list\<string\|null\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoParser\:\:getSeasonsByNight\(\) should return array\<string, mixed\> but returns array\<int\<0, max\>, array\<string, int\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoParser\:\:\$childAgeBands \(array\<string, mixed\>\) does not accept list\<array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -1801,128 +721,50 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getCheapestRoomTotalBySeason\(\) should return array\<string, mixed\> but returns array\<int\<1, 20\>, float\>\.$#'
-			identifier: return.type
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getEarlyBooking\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getEarlyBooking\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getEarlyBooking\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getSeasons\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getSeasons\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getSeasons\(\) should return array\<string, mixed\> but returns array\<int, array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:toScalarSafe\(\) has parameter \$val with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Offset int\<1, max\> on array\<string, mixed\> in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, array\<string, mixed\> given\.$#'
+			message: '#^Parameter \#1 \$roomsData of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchParameterNormalizer\:\:mergeUrlChildrenAges\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchParameterNormalizer\:\:parseCommaAges\(\) should return array\<string, mixed\> but returns list\<int\>\.$#'
-			identifier: return.type
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchParameterNormalizer.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchParameterNormalizer\:\:parseRoomsData\(\) should return array\<string, mixed\> but returns array\<int, array\<string, array\<int\<0, max\>\|string, mixed\>\|int\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchParameterNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignActiveEarlyBooking\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignActiveEarlyBooking\(\) has parameter \$packages with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignCalendarPrices\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignPackages\(\) has parameter \$packages with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignCurrency\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignSeasonPeriod\(\) has parameter \$packages with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignHotelDisplay\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignTerms\(\) has parameter \$results with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignMeta\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignPackages\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignSeasonPeriod\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignTerms\(\) has parameter \$view with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Offset 0 on non\-empty\-array\<string, mixed\> in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Offset 0 on non\-empty\-array\<string, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignTerms\(\) has parameter \$searchParams with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
@@ -1939,32 +781,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:deduplicateResults\(\) should return array\<string, mixed\> but returns list\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:getEarlyBookingDiscounts\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:log\(\) is unused\.$#'
 			identifier: method.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:parseChildrenAges\(\) should return array\<string, mixed\> but returns list\<int\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:parseRoomPriceResponse\(\) should return array\<string, mixed\> but returns list\<array\<string, bool\|float\|int\|string\|null\>\>\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
@@ -1987,6 +805,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:parseRoomPriceResponse\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:parseRoomPriceResponse\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
@@ -1995,30 +819,6 @@ parameters:
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Left side of && is always false\.$#'
-			identifier: booleanAnd.leftAlwaysFalse
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\TermsFormatter\:\:parseCancellationTerms\(\) should return array\<string, mixed\> but returns list\<array\<string, bool\|float\|int\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\TermsFormatter\:\:parsePaymentTerms\(\) should return array\<string, mixed\> but returns list\<array\<string, bool\|int\<1, max\>\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
@@ -2035,1243 +835,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between string and int\<0, max\> will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Offset ''room_id'' on array\{room_id\: mixed, room_name\: mixed, adults\: int, children\: int, childrenAges\?\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
-			message: '#^Offset ''room_name'' on array\{room_id\: mixed, room_name\: mixed, adults\: int, children\: int, childrenAges\?\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
-			message: '#^Comparison operation "\>" between \*NEVER\* and 0 results in an error\.$#'
-			identifier: greater.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
-			identifier: notIdentical.alwaysFalse
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CartServiceInterface\:\:parseGuests\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CartServiceInterface.php
-
-		-
-			message: '#^Match expression does not handle remaining value\: string$#'
-			identifier: match.unhandled
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
-			identifier: greater.alwaysTrue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:completeSync\(\) has parameter \$repository with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Offset ''data'' on \*NEVER\* in isset\(\) always exists and is not nullable\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Offset 0 does not exist on non\-empty\-array\<string, mixed\>\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Offset 0 on array\<string, mixed\> in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Offset 0 on non\-empty\-array\<string, mixed\> in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Parameter \#1 \$destinations of method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DiscoverBoardsCommand\:\:pollResults\(\) has parameter \$api with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DiscoverBoardsCommand\:\:pollResults\(\) should return array\<string, mixed\> but returns list\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DiscoverBoardsCommand\:\:resolveCountryCodes\(\) should return array\<string, mixed\> but returns array\<int\<0, max\>, string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Used function fn_log_event not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Variable \$results in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.variable
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Parameter \#1 \$departureIds of method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) expects array\<string, mixed\>, array\<int\<0, max\>, int\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
-
-		-
-			message: '#^Parameter \#2 \$destinationIds of method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) expects array\<string, mixed\>, array\<int\<0, max\>, int\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
-
-		-
-			message: '#^Property Tygh\\Addons\\SphinxHolidays\\Cron\\CronDispatcher\:\:\$modes type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:buildPlaceholders\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between 0 and 0 will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getFiltered\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:loadChunked\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Offset ''destination_id'' on array\{destination_id\: int, selection_type\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationWhitelistRepository.php
-
-		-
-			message: '#^Offset ''selection_type'' on array\{destination_id\: int, selection_type\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationWhitelistRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getFiltered\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Offset ''data'' on \*NEVER\* in isset\(\) always exists and is not nullable\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
-			message: '#^Offset 0 on array\<string, mixed\> in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:getAvailableActions\(\) should be compatible with return type \(array\<int, array\{name\: string, label\: string, url\: string, method\: string, css_class\: string, icon\: string\}\>\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getAvailableActions\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:getProviderTabs\(\) should be compatible with return type \(array\<int, array\{name\: string, label\: string, dispatch\: string, ajax\: bool\}\>\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getProviderTabs\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CacheEndpointService\:\:normalizeDeals\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:addToCartAndRedirect\(\) should return array\<string, mixed\> but returns array\<int, mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkDuplicate\(\) never returns array\<string, mixed\> so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkDuplicate\(\) should return array\<string, mixed\>\|null but returns array\<int, mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkRateLimit\(\) never returns array\<string, mixed\> so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkRateLimit\(\) should return array\<string, mixed\>\|null but returns array\<int, mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:parseGuests\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
-			message: '#^Parameter \#1 \$batch of method Tygh\\Addons\\SphinxHolidays\\Services\\CircuitSyncService\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php
-
-		-
-			message: '#^Negated boolean expression is always true\.$#'
-			identifier: booleanNot.alwaysTrue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Offset 0 does not exist on non\-empty\-array\<string, mixed\>\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Offset 0 on non\-empty\-array\<string, mixed\> in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$destinations of method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$batch of method Tygh\\Addons\\SphinxHolidays\\Services\\ExperienceSyncService\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ExperienceSyncService.php
-
-		-
 			message: '#^If condition is always true\.$#'
 			identifier: if.alwaysTrue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:enrichFromHierarchy\(\) has parameter \$hotels with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:enrichFromHierarchy\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Offset string on non\-empty\-array\<string, array\<int\>\> on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$hotels of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:upsertBatch\(\) expects array\<string, mixed\>, array\<int, array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$hotels of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$terminalStatuses of method Tygh\\Addons\\SphinxHolidays\\Repository\\SphinxBookingRepository\:\:findForStatusCheck\(\) expects array\<string, mixed\>, array\<int, string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/OrderStatusSyncService.php
-
-		-
-			message: '#^Parameter \#2 \$localBookings of method Tygh\\Addons\\SphinxHolidays\\Services\\OrderStatusSyncService\:\:processApiOrder\(\) expects array\<string, mixed\>, array\<int, array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/OrderStatusSyncService.php
-
-		-
-			message: '#^Parameter \#2 \$localBookings of method Tygh\\Addons\\SphinxHolidays\\Services\\OrderStatusSyncService\:\:processApiOrder\(\) expects array\<string, mixed\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/OrderStatusSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$batch of method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:upsertBatch\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:resolveHotelFacilities\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
-
-		-
-			message: '#^Function _travel_styles_color_map\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Function _travel_bookings_enrich\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Function _travel_bookings_enrich\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''redirect'' on array\{redirect\: string, notification\?\: array\{type\: string, title\: string, message\: string\}\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''title'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''type'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^PHPDoc tag @var with type Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface is not subtype of native type Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Function _travel_fm_get_scan_config\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
 			message: '#^Offset ''beach_access''\|''board''\|''city''\|''hotel_facility''\|''property_type''\|''region''\|''resort''\|''room_facility''\|''room_type''\|''stars''\|''travel_group'' on array\{hotel_facility\: ''Hotel Facilities'', room_facility\: ''Room Facilities'', beach_access\: ''Beach Access'', board\: ''Board / Meals'', resort\: ''Resorts & Cities'', stars\: ''Star Rating'', property_type\: ''Property Type'', travel_group\: ''Travel Group'', \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between ''exchange_rates'' and ''exchange_rates'' will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_cron.php
-
-		-
-			message: '#^Default value of the parameter \#2 \$currencies \(array\<int, string\>\) of function fn_travel_core_parse_bnr_xml\(\) is incompatible with type array\<string, mixed\>\.$#'
-			identifier: parameter.defaultValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_calculate_currency_coefficients\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_parse_bnr_xml\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_update_cscart_currencies\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_update_exchange_rates\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Parameter \#2 \$currencies of function fn_travel_core_parse_bnr_xml expects array\<string, mixed\>, array\<int, string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function _travel_core_seo_field_map\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_apply_seo_fields\(\) has parameter \$placeholders with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_apply_seo_fields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_render_seo_slug\(\) has parameter \$placeholders with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_render_seo_template\(\) has parameter \$placeholders with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_run_long_task\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^If condition is always true\.$#'
-			identifier: if.alwaysTrue
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between non\-empty\-string and '''' will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_calculate_cart_items_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_calculate_cart_items_post\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_calculate_cart_items_post\(\) has parameter \$cart_products with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_get_cart_product_data_post\(\) has parameter \$auth with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_get_cart_product_data_post\(\) has parameter \$cart with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_get_cart_product_data_post\(\) has parameter \$product with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_get_order_info\(\) has parameter \$additional_data with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Function fn_travel_core_get_order_info\(\) has parameter \$order with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getDisplayData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingAdminProviderInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:handleAction\(\) has parameter \$request with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingAdminProviderInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingDisplayServiceInterface\:\:addBookingDisplayData\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingDisplayServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\CronDispatcherInterface\:\:dispatch\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/CronDispatcherInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\CurrencyServiceInterface\:\:convertResultsCurrency\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/CurrencyServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getAliasesForMapping\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getGlobalStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getMappingById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getPaginatedMappings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getPaginatedUnmapped\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getTypeStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getTypeStatsSingle\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getUnmappedById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getUnresolvedMappings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:updateMapping\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapperInterface\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapperInterface\:\:resolveMany\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataNormalizerInterface\:\:decode\(\) has parameter \$raw with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataNormalizerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataNormalizerInterface\:\:normalize\(\) has parameter \$raw with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataNormalizerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataNormalizerInterface\:\:normalize\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataNormalizerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataNormalizerInterface\:\:toJson\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataNormalizerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataServiceInterface\:\:getGuestsByRoom\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataServiceInterface\:\:getRoomCounts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataServiceInterface\:\:merge\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDataServiceInterface\:\:parseAndValidateGuests\(\) has parameter \$guests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:formatForDisplay\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestParserInterface\:\:parseGuestsData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestParserInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PreOrderPriceVerifierInterface\:\:verify\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PreOrderPriceVerifierInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:analyse\(\) has parameter \$bookingMeta with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:analyse\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:consumeAlerts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:peekAlerts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:storeAlert\(\) has parameter \$alertData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:sanitizeGuestData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateBookingData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateSearchParams\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface\:\:getPaginated\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/TravelBookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\VariantResolverInterface\:\:ensureVariantExists\(\) has parameter \$mapping with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/VariantResolverInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\VariantResolverInterface\:\:findVariantByName\(\) has parameter \$mapping with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/VariantResolverInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/AbstractCronCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:trySyncItem\(\) has parameter \$errors with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/AbstractCronCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:wrapResult\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/AbstractCronCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\AbstractCronCommand\:\:wrapResult\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/AbstractCronCommand.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Exceptions\\TravelException\:\:\$context type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Exceptions/TravelException.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Helpers\\DebugLogger\:\:log\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Helpers/DebugLogger.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getAliasesForMapping\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getGlobalStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getMappingById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getPaginatedMappings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getPaginatedUnmapped\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getTypeStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getTypeStatsSingle\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getUnmappedById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:getUnresolvedMappings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\FeatureMapRepository\:\:updateMapping\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getPaginated\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\BookingDisplayService\:\:addBookingDisplayData\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\CurrencyService\:\:convertResultsCurrency\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Services\\DateHelper\:\:\$roDays type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/DateHelper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Services\\DateHelper\:\:\$roMonths type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/DateHelper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Services\\DateHelper\:\:\$roMonthsShort type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/DateHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveFacility\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveMany\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveWithVariantFacility\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:\$cache type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:\$trackedUnmapped type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Call to function is_int\(\) with string will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:convertArrayToKeyed\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:decode\(\) has parameter \$raw with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:deriveNameFields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:ensureFields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) has parameter \$raw with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:toJson\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
-
-		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:formatForDisplay\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:formatGuestsForOrderDisplay\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:getGuestsByRoom\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:getRoomCounts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:merge\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:parseAndValidateGuests\(\) has parameter \$guests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:parseGuestsData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:validate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Offset ''name'' on array\{name\: non\-falsy\-string, api_name\: non\-falsy\-string, first_name\: string, last_name\: string, type\: mixed, age\: int, birthday\: string, dob\: string, \.\.\.\} in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:analyse\(\) has parameter \$bookingMeta with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:analyse\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:consumeAlerts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:peekAlerts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:storeAlert\(\) has parameter \$alertData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\VariantResolver\:\:ensureVariantExists\(\) has parameter \$mapping with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\VariantResolver\:\:findVariantByName\(\) has parameter \$mapping with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\BoardType\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/BoardType.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\BoardType\:\:allDisplayNames\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/BoardType.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\BoardType\:\:allWithAliases\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/BoardType.php
-
-		-
-			message: '#^Comparison operation "\<" between 0 and 0 is always false\.$#'
-			identifier: smaller.alwaysFalse
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
-
-		-
-			message: '#^Comparison operation "\>" between 0 and 17 is always false\.$#'
-			identifier: greater.alwaysFalse
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
-
-		-
-			message: '#^Offset int\<0, 5\> on array\<string, mixed\> in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
-
-		-
-			message: '#^Parameter \#3 \$childrenAges of class Tygh\\Addons\\TravelCore\\ValueObjects\\Occupancy constructor expects array\<string, mixed\>, list\<int\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
-
-		-
-			message: '#^Result of \|\| is always false\.$#'
-			identifier: booleanOr.alwaysFalse
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\RequestDebugInfo\:\:__construct\(\) has parameter \$lastRequestFormatted with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
-
-		-
-			message: '#^Property Tygh\\Addons\\TravelCore\\ValueObjects\\RequestDebugInfo\:\:\$lastRequestFormatted type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:allCodes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:allDisplayNames\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:allWithAliases\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php

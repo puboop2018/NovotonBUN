@@ -8,7 +8,7 @@ use Tygh\Addons\NovotonHolidays\HotelSync;
 class HotelSyncCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {

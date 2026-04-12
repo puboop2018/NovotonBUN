@@ -121,8 +121,8 @@ class DestinationWhitelistRepository
             db_query("DELETE FROM ?:sphinx_destination_whitelist");
 
             foreach ($entries as $entry) {
-                $destId = (int) ($entry['destination_id'] ?? 0);
-                $selType = ($entry['selection_type'] ?? 'specific') === 'all' ? 'all' : 'specific';
+                $destId = $entry['destination_id'];
+                $selType = $entry['selection_type'] === 'all' ? 'all' : 'specific';
                 if ($destId > 0) {
                     db_query(
                         "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)

@@ -89,7 +89,7 @@ function &_novoton_hotel_data_cache(): array
  * rooms/boards/ages, attach packages.
  *
  * @param array<string, mixed>      $hotel    Raw row from novoton_hotels
- * @param array<string, mixed>|null $packages Pre-fetched package rows (already normalized), or null to query
+ * @param list<array<string, mixed>>|null $packages Pre-fetched package rows (already normalized), or null to query
  * @return array<string, mixed> Enriched hotel array
  */
 function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
@@ -147,7 +147,7 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
  * for any number of hotels. Subsequent calls to fn_novoton_holidays_get_hotel_data()
  * for these IDs will be O(1) cache hits.
  *
- * @param array<string, mixed> $hotel_ids List of Novoton hotel IDs to prefetch
+ * @param list<string> $hotel_ids List of Novoton hotel IDs to prefetch
  */
 function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
 {
@@ -244,7 +244,7 @@ function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $for
  * @param int $product_id Product ID
  * @param bool $force Force refresh
  * @param string|int|null $hotel_id Hotel ID (string from API, int from DB)
- * @return array<string, mixed> Packages with prices data
+ * @return list<array<string, mixed>> Packages with prices data
  */
 function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, string|int|null $hotel_id = null): array
 {

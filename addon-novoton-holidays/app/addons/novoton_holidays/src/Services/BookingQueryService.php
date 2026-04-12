@@ -57,7 +57,7 @@ class BookingQueryService implements BookingQueryServiceInterface
      * Joins with orders table for order status information
      *
      * @param array<string, mixed> $params Filter parameters
-     * @return array<string, mixed> Unified bookings list
+     * @return list<array<string, mixed>> Unified bookings list
      */
     #[\Override]
     public function getUnifiedBookings(array $params = []): array
@@ -182,6 +182,7 @@ class BookingQueryService implements BookingQueryServiceInterface
 
     /**
      * Add room_types_list and board_display from rooms_data JSON.
+     * @param array<string, mixed> $booking
      * @param array<string, mixed> $nb
      */
     private function enrichWithRoomDisplay(array &$booking, array $nb): void
@@ -212,6 +213,7 @@ class BookingQueryService implements BookingQueryServiceInterface
 
     /**
      * Add guests_by_room from guests_data JSON.
+     * @param array<string, mixed> $booking
      * @param array<string, mixed> $nb
      */
     private function enrichWithGuestDisplay(array &$booking, array $nb): void

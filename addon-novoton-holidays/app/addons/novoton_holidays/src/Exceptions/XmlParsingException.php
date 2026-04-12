@@ -7,11 +7,12 @@ namespace Tygh\Addons\NovotonHolidays\Exceptions;
  */
 class XmlParsingException extends NovotonException
 {
-    private $xmlErrors;
-    private $responseSize;
+    /** @var list<string> */
+    private array $xmlErrors;
+    private int $responseSize;
 
     /**
-     * @param array<string, mixed> $xmlErrors
+     * @param list<string> $xmlErrors
      */
     public function __construct(string $message, array $xmlErrors = [], int $responseSize = 0, ?\Throwable $previous = null)
     {
@@ -24,7 +25,7 @@ class XmlParsingException extends NovotonException
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getXmlErrors(): array
     {

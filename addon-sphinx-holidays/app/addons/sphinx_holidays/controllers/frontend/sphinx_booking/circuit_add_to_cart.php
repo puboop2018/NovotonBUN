@@ -120,7 +120,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         $customized ?? $bookingData
     );
     $booking_record += [
-        'room_id'       => $rooms_data[0]['room_id'] ?? '',
+        'room_id'       => $rooms_data[0]['room_id'],
         'room_type'     => 'circuit',
         'board_id'      => $transport_type,
         'check_in'      => $departure_date,
@@ -142,7 +142,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         'travel_booking_id' => $booking_id, 'travel_provider' => 'sphinx',
         'booking_type' => 'circuit',
         'hotel_id' => (string) $circuit_id, 'hotel_name' => $title, 'offer_id' => $offer_id,
-        'room_id' => $rooms_data[0]['room_id'] ?? '', 'room_name' => $rooms_data[0]['room_name'] ?? '',
+        'room_id' => $rooms_data[0]['room_id'], 'room_name' => $rooms_data[0]['room_name'],
         'board_id' => $transport_type, 'board_name' => ucfirst($transport_type),
         'check_in' => $departure_date, 'check_out' => $check_out, 'nights' => $duration_nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,

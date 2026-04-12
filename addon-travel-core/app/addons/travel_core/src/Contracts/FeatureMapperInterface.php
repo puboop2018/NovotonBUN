@@ -62,7 +62,7 @@ interface FeatureMapperInterface
      * Bulk-resolve multiple API values.
      *
      * @param string[] $apiValues
-     * @return array<string, array|null> Keyed by apiValue
+     * @return array<string, array<string, mixed>> Keyed by apiValue
      */
     public static function resolveMany(string $apiSource, string $featureType, array $apiValues): array;
 
@@ -84,7 +84,7 @@ interface FeatureMapperInterface
     /**
      * Get all canonical codes for a feature type.
      *
-     * @return array<string, array> Keyed by canonical_code
+     * @return array<string, array<string, mixed>> Keyed by canonical_code
      */
     public static function allCodes(string $featureType): array;
 }

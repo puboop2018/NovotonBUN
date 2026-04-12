@@ -305,8 +305,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     /**
      * Parse rooms_data and guests_data, with DB fallbacks.
      *
-     * @return array{0: array, 1: array} [rooms_data[], guests_data[]]
      * @param array<string, mixed> $bookingData
+     * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>} [rooms_data[], guests_data[]]
      */
     private function resolveRoomsAndGuests(array $bookingData, int $orderId, bool $debug): array
     {
@@ -413,9 +413,9 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      *
      * Rooms with identical grouping keys can be sent in a single API call.
      *
-     * @return array<string, array{package_name: string, check_in: string, check_out: string, rooms: array}>
-     * @param array<string, mixed> $roomsData
+     * @param list<array<string, mixed>> $roomsData
      * @param array<string, mixed> $bookingData
+     * @return array<string, array{package_name: string, check_in: string, check_out: string, rooms: list<array<string, mixed>>}>
      */
     private function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
@@ -454,10 +454,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * guestsData (keyed "room{N}_adult_{I}" / "room{N}_child_{I}") and
      * calculates the API price (without commission).
      *
-     * @return array{0: array, 1: array, 2: float, 3: float} [allGuests[], apiRooms[], totalApiPrice, totalGroupPrice]
      * @param array<string, mixed> $group
-     * @param array<string, mixed> $guestsData
+     * @param list<array<string, mixed>> $guestsData
      * @param array<string, mixed> $bookingData
+     * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>, 2: float, 3: float} [allGuests[], apiRooms[], totalApiPrice, totalGroupPrice]
      */
     private function buildGroupGuestsAndRooms(
         array $group,

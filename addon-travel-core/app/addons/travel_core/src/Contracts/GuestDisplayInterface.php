@@ -32,7 +32,7 @@ interface GuestDisplayInterface
      * Format guests for display
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Display-formatted guests
+     * @return array<int, array<string, mixed>> Display-formatted guests
      */
     public function formatForDisplay(array $guests_data): array;
 }

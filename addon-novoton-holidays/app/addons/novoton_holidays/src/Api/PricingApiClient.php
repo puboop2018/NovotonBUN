@@ -15,7 +15,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
 {
     private readonly CommissionCalculator $commissionCalculator;
 
-    /** @var array<string, mixed> */
+    /** @var list<string> */
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_PRICE_INFO,
     ];

@@ -97,8 +97,8 @@ abstract class AbstractSyncService
      *
      * Handles Sphinx API's inconsistent response wrappers:
      * {'data': [...]} or {'items': [...]} or bare [...].
-     * @param array<string, mixed> $response
-     * @return array<string, mixed>
+     * @param array<int|string, mixed> $response
+     * @return list<mixed>
      */
     protected function extractItems(array $response): array
     {
@@ -108,7 +108,7 @@ abstract class AbstractSyncService
             $items = $response;
         }
 
-        return is_array($items) ? $items : [];
+        return is_array($items) ? array_values($items) : [];
     }
 
     /**

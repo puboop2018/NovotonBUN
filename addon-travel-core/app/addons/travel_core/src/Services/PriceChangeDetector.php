@@ -33,6 +33,9 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
 
     /**
      * Analyse a price change and return structured display data.
+     *
+     * @param array<string, mixed> $bookingMeta
+     * @return array<string, mixed>
      */
     #[\Override]
     public function analyse(
@@ -92,6 +95,8 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
 
     /**
      * Store a price change alert in the session.
+     *
+     * @param array<string, mixed> $alertData
      */
     #[\Override]
     public function storeAlert(array $alertData, string $cartId = ''): void
@@ -104,6 +109,8 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
 
     /**
      * Retrieve and clear all pending price change alerts from the session.
+     *
+     * @return array<int, array<string, mixed>>
      */
     #[\Override]
     public function consumeAlerts(): array
@@ -115,6 +122,8 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
 
     /**
      * Retrieve pending alerts without clearing them.
+     *
+     * @return array<int, array<string, mixed>>
      */
     #[\Override]
     public function peekAlerts(): array

@@ -36,8 +36,8 @@ class PackageRouteSyncService extends AbstractSyncService
     /**
      * Run package route sync from static API.
      *
-     * @param array<string, mixed> $departureIds  Optional departure ID filter
-     * @param array<string, mixed> $destinationIds Optional destination ID filter
+     * @param list<int> $departureIds  Optional departure ID filter
+     * @param list<int> $destinationIds Optional destination ID filter
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
     public function sync(array $departureIds = [], array $destinationIds = []): array
@@ -179,7 +179,7 @@ class PackageRouteSyncService extends AbstractSyncService
 
     /**
      * Upsert routes using the unique key (transport_type, departure_id, arrival_id, duration).
-     * @param array<string, mixed> $batch
+     * @param list<array<string, mixed>> $batch
      */
     private function upsertBatch(array $batch): int
     {

@@ -37,15 +37,15 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     /**
      * Normalize guest data from any supported format into canonical keyed format.
      *
-     * @param array|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
-     * @return array Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
+     * @param array<string, mixed>|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
+     * @return array<string, mixed> Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
     #[\Override]
     public function normalize(array|string $raw): array
     {
         $data = $this->decode($raw);
 
-        if (empty($data) || !is_array($data)) {
+        if (empty($data)) {
             return [];
         }
 
@@ -64,18 +64,18 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     /**
      * Decode a JSON string or pass through an array unchanged.
      *
-     * @param array|string $raw
+     * @param array<string, mixed>|string $raw
      * @return array<string, mixed>
      */
     #[\Override]
-    public function decode($raw): array
+    public function decode(array|string $raw): array
     {
         if (is_string($raw)) {
             $decoded = json_decode($raw, true);
             return is_array($decoded) ? $decoded : [];
         }
 
-        return is_array($raw) ? $raw : [];
+        return $raw;
     }
 
     /**
@@ -83,11 +83,11 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Normalizes before encoding to guarantee canonical format in DB.
      *
-     * @param array|string $data Guest data in any format
+     * @param array<string, mixed>|string $data Guest data in any format
      * @return string JSON string in canonical keyed format
      */
     #[\Override]
-    public function toJson($data): string
+    public function toJson(array|string $data): string
     {
         $normalized = $this->normalize($data);
         return !empty($normalized) ? json_encode($normalized) : '{}';
@@ -98,7 +98,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Keyed format uses string keys matching "room{N}_{type}_{I}".
      *
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      * @return bool
      */
     #[\Override]
@@ -126,7 +126,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Array format uses sequential numeric keys with guest entries.
      *
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      * @return bool
      */
     #[\Override]
@@ -153,8 +153,8 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Groups guests by room, then assigns keys like "room1_adult_1".
      *
-     * @param array<string, mixed> $guests Indexed array of guest entries
-     * @return array Canonical keyed array
+     * @param array<int|string, mixed> $guests Indexed array of guest entries
+     * @return array<string, mixed> Canonical keyed array
      */
     private function convertArrayToKeyed(array $guests): array
     {
@@ -212,7 +212,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * Ensure all guest entries have the full set of canonical fields.
      *
      * @param array<string, mixed> $data Keyed guest data
-     * @return array Keyed guest data with all fields populated
+     * @return array<string, mixed> Keyed guest data with all fields populated
      */
     private function ensureFields(array $data): array
     {
@@ -236,7 +236,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * If first_name/last_name are missing, try to parse from name/api_name.
      *
      * @param array<string, mixed> $guest Single guest entry
-     * @return array Guest entry with derived name fields
+     * @return array<string, mixed> Guest entry with derived name fields
      */
     private static function deriveNameFields(array $guest): array
     {

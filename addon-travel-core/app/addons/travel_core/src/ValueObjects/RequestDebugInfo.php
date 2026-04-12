@@ -14,10 +14,14 @@ class RequestDebugInfo
     public readonly string $lastRequest;
     public readonly string $lastResponse;
     public readonly string $lastResponseRaw;
+    /** @var array<string, mixed> */
     public readonly array $lastRequestFormatted;
     public readonly string $lastError;
     public readonly int $lastHttpCode;
 
+    /**
+     * @param array<string, mixed> $lastRequestFormatted
+     */
     public function __construct(
         string $lastRequest = '',
         string $lastResponse = '',

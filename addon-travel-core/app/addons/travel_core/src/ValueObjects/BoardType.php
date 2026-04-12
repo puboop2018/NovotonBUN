@@ -103,16 +103,19 @@ final class BoardType
         return self::fromApiCode($boardCode) !== null;
     }
 
+    /** @return array<int, string> */
     public static function allCodes(): array
     {
         return array_keys(self::DISPLAY_NAMES);
     }
 
+    /** @return array<string, string> */
     public static function allDisplayNames(): array
     {
         return self::DISPLAY_NAMES;
     }
 
+    /** @return array<string, string> */
     public static function allWithAliases(): array
     {
         $map = self::DISPLAY_NAMES;

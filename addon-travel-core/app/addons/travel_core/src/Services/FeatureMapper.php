@@ -25,10 +25,10 @@ use Tygh\Addons\TravelCore\Repository\FeatureMapRepository;
  */
 class FeatureMapper implements FeatureMapperInterface
 {
-    /** @var array Per-request in-memory cache for resolve() results */
+    /** @var array<string, array<string, mixed>|null> Per-request in-memory cache for resolve() results */
     private static array $cache = [];
 
-    /** @var array Per-request deduplication for trackUnmapped() */
+    /** @var array<string, true> Per-request deduplication for trackUnmapped() */
     private static array $trackedUnmapped = [];
 
     /** @var VariantResolver|null Lazy-initialized variant resolver */
@@ -131,6 +131,8 @@ class FeatureMapper implements FeatureMapperInterface
      * Facilities are split into hotel_facility, room_facility, and beach_access,
      * but callers (API syncs, scans) don't know which sub-type a given facility
      * belongs to. This tries each sub-type and returns the first match.
+     *
+     * @return array<string, mixed>|null
      */
     public static function resolveFacility(string $apiSource, string $apiValue): ?array
     {
@@ -177,6 +179,8 @@ class FeatureMapper implements FeatureMapperInterface
 
     /**
      * resolveWithVariant across all facility sub-types.
+     *
+     * @return array<string, mixed>|null
      */
     public static function resolveWithVariantFacility(string $apiSource, string $apiValue): ?array
     {
@@ -345,7 +349,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Bulk resolve for import performance (keyed result).
      *
-     * @return array<string, array> Keyed by api_value
+     * @return array<string, array<string, mixed>> Keyed by api_value
      */
     #[\Override]
     public static function resolveMany(string $apiSource, string $featureType, array $apiValues): array
@@ -400,7 +404,7 @@ class FeatureMapper implements FeatureMapperInterface
     /**
      * Get all canonical codes for a feature type.
      *
-     * @return array<string, array>
+     * @return array<string, array<string, mixed>>
      */
     #[\Override]
     public static function allCodes(string $featureType): array

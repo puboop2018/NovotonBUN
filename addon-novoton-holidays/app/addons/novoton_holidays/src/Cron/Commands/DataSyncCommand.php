@@ -9,7 +9,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 class DataSyncCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {

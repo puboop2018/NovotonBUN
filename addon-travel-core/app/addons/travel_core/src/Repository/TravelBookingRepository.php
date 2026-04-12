@@ -35,6 +35,7 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
         return $row ?: null;
     }
 
+    /** @return array{items: array<int, array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array
     {

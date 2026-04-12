@@ -109,7 +109,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     /**
      * @param array<string, mixed> $booking
-     * @return array<string, mixed>
+     * @return array<int, array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
      */
     #[\Override]
     public function getAvailableActions(array $booking): array
@@ -158,7 +158,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     /**
      * @param array<string, mixed> $booking
-     * @return array<string, mixed>
+     * @return array<int, array{name: string, label: string, dispatch: string, ajax: bool}>
      */
     #[\Override]
     public function getProviderTabs(array $booking): array

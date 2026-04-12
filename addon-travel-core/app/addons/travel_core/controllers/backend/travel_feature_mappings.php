@@ -357,7 +357,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Helper: provider-specific scan configuration (from TravelProviderRegistry)
+/**
+ * Helper: provider-specific scan configuration (from TravelProviderRegistry)
+ *
+ * @return array<string, mixed>|null
+ */
 function _travel_fm_get_scan_config(string $provider): ?array
 {
     return TravelProviderRegistry::getScanConfig($provider);

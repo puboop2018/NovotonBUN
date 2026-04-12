@@ -72,9 +72,9 @@ function fn_travel_core_fetch_bnr_rates(): string|false
  * Parse BNR XML and extract rates for specified currencies
  *
  * @param string $xml_content Raw XML from BNR
- * @param array<string, mixed> $currencies Currency codes to extract (default: EUR, USD, GBP)
+ * @param array<int, string> $currencies Currency codes to extract (default: EUR, USD, GBP)
  * @param bool $include_date If true, returns array with 'rates' and 'publishing_date' keys
- * @return array Associative array of currency => rate (relative to RON)
+ * @return array<string, mixed> Associative array of currency => rate (relative to RON)
  */
 function fn_travel_core_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD', 'GBP'], $include_date = false): array
 {
@@ -140,7 +140,7 @@ function fn_travel_core_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD',
  *
  * @param array<string, mixed> $bnr_rates Rates from BNR (currency => RON rate)
  * @param float $commission Commission percentage to add (e.g., 2 for 2%)
- * @return array Currency coefficients for CS-Cart
+ * @return array<string, float> Currency coefficients for CS-Cart
  */
 function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission = 0): array
 {
@@ -173,7 +173,7 @@ function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission 
  * Update CS-Cart currency rates using direct SQL
  *
  * @param array<string, mixed> $coefficients Currency coefficients to update
- * @return array Results with success/error info per currency
+ * @return array<string, mixed> Results with success/error info per currency
  */
 function fn_travel_core_update_cscart_currencies($coefficients): array
 {
@@ -252,7 +252,7 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
  *
  * @param float $commission Commission percentage to apply (0-5%)
  * @param bool $return_details If true, returns detailed results instead of just success/fail
- * @return array|bool Results array or bool success
+ * @return array<string, mixed>|bool Results array or bool success
  */
 function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $return_details = false): array|bool
 {

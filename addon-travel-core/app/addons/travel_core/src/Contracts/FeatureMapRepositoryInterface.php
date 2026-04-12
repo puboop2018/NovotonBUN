@@ -28,7 +28,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Get all active canonical codes for a feature type.
      *
-     * @return array<string, array> Keyed by canonical_code
+     * @return array<string, array<string, mixed>> Keyed by canonical_code
      */
     public function allCodes(string $featureType): array;
 
@@ -58,6 +58,8 @@ interface FeatureMapRepositoryInterface
 
     /**
      * Update a mapping row with arbitrary data (admin controller).
+     *
+     * @param array<string, mixed> $data
      */
     public function updateMapping(int $mapId, array $data): void;
 
@@ -101,6 +103,8 @@ interface FeatureMapRepositoryInterface
 
     /**
      * Get a single unmapped row by ID.
+     *
+     * @return array<string, mixed>|null
      */
     public function getUnmappedById(int $unmappedId): ?array;
 
@@ -129,7 +133,7 @@ interface FeatureMapRepositoryInterface
      * Get active mappings that need variant resolution.
      * (No variant, has feature_id, not manually locked.)
      *
-     * @return array[]
+     * @return array<int, array<string, mixed>>
      */
     public function getUnresolvedMappings(): array;
 
@@ -138,12 +142,14 @@ interface FeatureMapRepositoryInterface
     /**
      * Get per-feature-type stats for the dashboard.
      *
-     * @return array<string, array>
+     * @return array<string, array<string, mixed>>
      */
     public function getTypeStats(): array;
 
     /**
      * Get global mapping stats (total, active, unmapped, alias count).
+     *
+     * @return array<string, mixed>
      */
     public function getGlobalStats(): array;
 
@@ -155,29 +161,35 @@ interface FeatureMapRepositoryInterface
     /**
      * Get paginated mappings with alias counts.
      *
-     * @return array{items: array[], total: int}
+     * @return array{items: array<int, array<string, mixed>>, total: int}
      */
     public function getPaginatedMappings(string $condition, int $offset, int $limit): array;
 
     /**
      * Get stats for a single feature type.
+     *
+     * @return array<string, mixed>
      */
     public function getTypeStatsSingle(string $featureType): array;
 
     /**
      * Get paginated unmapped values.
      *
-     * @return array{items: array[], total: int}
+     * @return array{items: array<int, array<string, mixed>>, total: int}
      */
     public function getPaginatedUnmapped(string $condition, int $offset, int $limit): array;
 
     /**
      * Get a single mapping by map_id.
+     *
+     * @return array<string, mixed>|null
      */
     public function getMappingById(int $mapId): ?array;
 
     /**
      * Get aliases for a mapping.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function getAliasesForMapping(int $mapId): array;
 

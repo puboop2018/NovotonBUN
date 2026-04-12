@@ -40,7 +40,7 @@ class BookingRepository implements BookingRepositoryInterface
      * Prevents the same booking's rooms_data/guests_data from being
      * decoded 2-3 times within a single request cycle.
      *
-     * @var array<int, array>
+     * @var array<int, array<string, mixed>>
      */
     private static array $hydratedCache = [];
 
@@ -191,7 +191,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings with Novoton reservation ID
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findWithReservationId(int $limit = 1000): array
     {
@@ -321,6 +321,8 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Store API request/response
+     * @param mixed $request
+     * @param mixed $response
      */
     public function storeApiData(int $booking_id, $request, $response): bool
     {
@@ -391,7 +393,7 @@ class BookingRepository implements BookingRepositoryInterface
      * Get unified booking list.
      * @deprecated Use BookingQueryService::getUnifiedBookings() directly
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getUnifiedBookings(array $params = []): array
     {
@@ -467,9 +469,9 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings by multiple product IDs (batch query for cart).
      *
-     * @param array<string, mixed>  $product_ids Product IDs
-     * @param array<string, mixed>  $statuses    Optional status filter (default: pending + confirmed)
-     * @return array<string, mixed> Booking rows
+     * @param list<int>  $product_ids Product IDs
+     * @param list<string>  $statuses    Optional status filter (default: pending + confirmed)
+     * @return list<array<string, mixed>> Booking rows
      */
     public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
     {
@@ -562,8 +564,8 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings for multiple order IDs in a single batch query.
      *
-     * @param array<string, mixed> $order_ids
-     * @return array<string, mixed> Booking summary rows
+     * @param list<int> $order_ids
+     * @return list<array<string, mixed>> Booking summary rows
      */
     public function findByOrderIds(array $order_ids): array
     {
@@ -616,7 +618,7 @@ class BookingRepository implements BookingRepositoryInterface
      * Find bookings by Novoton API status (e.g. ASK, RQ).
      *
      * @param string $novoton_status  API-level status (e.g. 'ASK')
-     * @param array<string, mixed>  $statuses        Internal statuses to match
+     * @param list<string>  $statuses        Internal statuses to match
      * @param int    $limit           Max rows
      * @return list<array<string, mixed>>
      */
@@ -634,7 +636,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find RQ bookings that haven't had alternatives requested yet.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findRqWithoutAlternatives(int $limit = 50): array
     {
@@ -748,7 +750,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @param string $condition Extra WHERE conditions (must start with " AND ...")
      * @param int    $limit
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForAdminList(string $condition = '', int $limit = 500): array
     {

@@ -16,7 +16,7 @@ interface HotelPackageRepositoryInterface
      * Find all packages for a hotel (excludes large priceinfo_data JSON).
      *
      * @param string $hotelId
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findByHotelId(string $hotelId): array;
 
@@ -25,7 +25,7 @@ interface HotelPackageRepositoryInterface
      * Use only when the caller needs to process pricing data.
      *
      * @param string $hotelId
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findByHotelIdFull(string $hotelId): array;
 
@@ -94,7 +94,7 @@ interface HotelPackageRepositoryInterface
      * Get packages for listing (excludes large priceinfo_data JSON).
      *
      * @param string $hotelId
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForListing(string $hotelId): array;
 
@@ -123,7 +123,7 @@ interface HotelPackageRepositoryInterface
     /**
      * Get all priceinfo_data rows for a hotel (non-null only).
      *
-     * @return string[] Array of JSON priceinfo_data strings
+     * @return list<string> Array of JSON priceinfo_data strings
      */
     public function getAllPriceinfoData(string $hotelId): array;
 

@@ -24,7 +24,7 @@ class DestinationRepository
     /**
      * Upsert a batch of destinations (INSERT ... ON DUPLICATE KEY UPDATE).
      *
-     * @param array<string, mixed> $destinations Array of destination rows, each with keys matching DB columns
+     * @param list<array<string, mixed>> $destinations Array of destination rows, each with keys matching DB columns
      * @return int Number of rows affected
      */
     public function upsertBatch(array $destinations): int
@@ -80,7 +80,7 @@ class DestinationRepository
      * @param int $parentId Filter by parent_id
      * @param int $page Page number (1-based)
      * @param int $perPage Items per page
-     * @return array{items: array, total: int}
+     * @return array{items: array<int, array<string, mixed>>, total: int}
      */
     public function getFiltered(string $type = '', int $parentId = 0, int $page = 1, int $perPage = 50): array
     {
@@ -280,7 +280,7 @@ class DestinationRepository
      *
      * @param array<string> $columns Columns to select (must include destination_id)
      * @param callable      $mapper  fn(array $row): array — transforms each row into the stored value
-     * @return array<int, array> Keyed by destination_id
+     * @return array<int, array<string, mixed>> Keyed by destination_id
      */
     private function loadChunked(array $columns, callable $mapper): array
     {

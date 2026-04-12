@@ -435,7 +435,7 @@ class PriceInfoFormatter
      * @param array<string, mixed> $priceinfo Priceinfo data
      * @param string $roomId Room ID
      * @param string $boardId Board ID
-     * @return array<string, mixed> Price values by column
+     * @return list<array<string, mixed>> Price values by column
      */
     public static function getSamplePrices(array $priceinfo, string $roomId, string $boardId): array
     {

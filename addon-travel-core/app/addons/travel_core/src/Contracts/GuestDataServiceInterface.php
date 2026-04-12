@@ -19,7 +19,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * Get guests grouped by room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Guests by room [room_num => [guests]]
+     * @return array<int, array<int, array<string, mixed>>> Guests by room [room_num => [guests]]
      */
     public function getGuestsByRoom(array $guests_data): array;
 
@@ -27,7 +27,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * Get guest counts per room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Room counts [room_num => [adults, children]]
+     * @return array<int, array{adults: int, children: int}> Room counts [room_num => [adults, children]]
      */
     public function getRoomCounts(array $guests_data): array;
 
@@ -35,7 +35,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * Merge guest data from multiple sources
      *
      * @param array<string, mixed> $sources Array of guest data sources
-     * @return array Merged guests data
+     * @return array<string, mixed> Merged guests data
      */
     public function merge(array ...$sources): array;
 
@@ -50,7 +50,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Parse and validate guest data from a booking form submission.
      *
-     * @param array  $guests   Raw guests array from form
+     * @param array<string, mixed>  $guests   Raw guests array from form
      * @param string $checkIn  Check-in date for child age validation
      * @param string $provider Provider name for log messages
      * @return array<string, mixed>|false Parsed result or false if validation fails

@@ -35,7 +35,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * Verify all Novoton booking products in the cart against live API prices.
      *
      * @param array<string, mixed> $cart CS-Cart cart array
-     * @return array{allow: bool, corrections: array, notifications: array}
+     * @return array{allow: bool, corrections: array<string, array<string, mixed>>, notifications: list<array<string, mixed>>}
      *   - allow: always true (we correct, never block)
      *   - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
      *   - notifications: list of discrepancy data for admin emails
@@ -205,8 +205,9 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * Compare form price to API price and determine action.
      *
-     * @return array{allow: bool, correction: array|null, notification: array|null, type: string}
      * @param array<string, mixed> $extra
+     * @param string $cartId
+     * @return array{allow: bool, correction: array<string, mixed>|null, notification: array<string, mixed>|null, type: string}
      */
     private function comparePrice(
         float  $formPrice,

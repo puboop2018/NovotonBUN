@@ -37,7 +37,7 @@ interface CartServiceInterface
     /**
      * Sanitize raw guest data and run server-side validation.
      *
-     * @return array{guests_data: array, guest_list: string, holder_name: string}|false
+     * @return array{guests_data: array<string, mixed>, guest_list: string, holder_name: string}|false
      * @param array<string, mixed> $rawGuests
      */
     public function parseGuests(array $rawGuests, string $dateRef): array|false;
@@ -64,7 +64,7 @@ interface CartServiceInterface
      * Assemble the product entry in the CS-Cart cart and persist it.
      * Returns the controller redirect tuple.
      *
-     * @return array<string, mixed>
+     * @return array<int, mixed>
      * @param array<string, mixed> $productExtra
      */
     public function addToCartAndRedirect(

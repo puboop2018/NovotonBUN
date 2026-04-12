@@ -149,6 +149,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     // Internal helpers
     // =====================================================================
 
+    /** @param object $view */
     private function assignCurrency($view): void
     {
         $currency    = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
@@ -162,6 +163,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('novoton_round_prices', ConfigProvider::isRoundPrices());
     }
 
+    /** @param object $view */
     private function assignHotelDisplay($view, string $hotelId, int $productId): void
     {
         $hotelName    = '';
@@ -216,6 +218,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * @param array<string, mixed> $packages
      */
+    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignPackages($view, array $packages): void
     {
         if (empty($packages)) {
@@ -244,6 +247,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * @param array<string, mixed> $packages
      */
+    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignActiveEarlyBooking($view, array $packages): void
     {
         $currentDate = date('Y-m-d');
@@ -292,6 +296,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * @param array<string, mixed> $packages
      */
+    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignSeasonPeriod($view, array $packages): void
     {
         $seasonFrom  = '';
@@ -328,6 +333,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
      * @param array<string, mixed> $results
      * @param array<string, mixed> $searchParams
      */
+    /** @param object $view @param list<array<string, mixed>> $results @param array<string, mixed> $searchParams */
     private function assignTerms($view, array $results, array $searchParams, string $hotelId): void
     {
         $termsPaymentRaw      = '';
@@ -385,6 +391,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('early_booking_details', $ebDetails);
     }
 
+    /** @param object $view */
     private function assignCalendarPrices($view, string $hotelId): void
     {
         $calendarPricesJson = '{}';
@@ -406,6 +413,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('show_calendar_prices', $showCalendarPrices);
     }
 
+    /** @param object $view */
     private function assignMeta($view): void
     {
         $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';

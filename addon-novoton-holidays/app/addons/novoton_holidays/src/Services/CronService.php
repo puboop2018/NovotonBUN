@@ -259,7 +259,7 @@ class CronService implements CronServiceInterface
     /**
      * Get countries configured for sync
      *
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getCountries(): array
     {

@@ -123,7 +123,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
             $this->output("  {$countryCode}: sync mode: {$modeLabel}");
 
-            $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode] ?? [], $updatedSince);
+            $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode], $updatedSince);
             $stats['total'] += $countryStats['total'];
             $stats['synced'] += $countryStats['synced'];
             $stats['skipped'] += $countryStats['skipped'];
@@ -451,9 +451,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      * country_name, and region_name from each hotel's destination_id. Falls back to the
      * sync context $countryCode when destinations haven't been synced yet.
      *
-     * @param array[] $hotels Normalized hotel rows
+     * @param list<array<string, mixed>> $hotels Normalized hotel rows
      * @param string $countryCode Sync context country code (fallback)
-     * @return array[] Hotels with enriched country/region data
+     * @return list<array<string, mixed>> Hotels with enriched country/region data
      */
     private function enrichFromHierarchy(array $hotels, string $countryCode): array
     {

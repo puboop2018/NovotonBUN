@@ -170,10 +170,15 @@ class SphinxHttpClient
             if ($this->lastHttpCode === 429) {
                 $this->rateLimitHitCount++;
                 // Priority: Retry-After (seconds) > X-RateLimit-Reset (timestamp) > fallback 60s
-                if ($this->retryAfter !== null && $this->retryAfter > 0) {
-                    $waitSeconds = $this->retryAfter;
-                } elseif ($this->rateLimitReset !== null) {
-                    $waitSeconds = max(1, $this->rateLimitReset - time());
+                // Properties are set by curl HEADERFUNCTION callback (parseResponseHeaders)
+                /** @var int|null $retryAfter */
+                $retryAfter = $this->retryAfter;
+                /** @var int|null $rateLimitReset */
+                $rateLimitReset = $this->rateLimitReset;
+                if ($retryAfter !== null && $retryAfter > 0) {
+                    $waitSeconds = $retryAfter;
+                } elseif ($rateLimitReset !== null) {
+                    $waitSeconds = max(1, $rateLimitReset - time());
                 } else {
                     $waitSeconds = self::RATE_LIMIT_FALLBACK_WAIT;
                 }

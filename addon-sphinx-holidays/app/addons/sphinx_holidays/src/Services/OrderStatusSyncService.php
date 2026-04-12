@@ -157,7 +157,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
      *
      * @return int Number of bookings that changed status
      * @param array<string, mixed> $apiOrder
-     * @param array<string, mixed> $localBookings
+     * @param list<array<string, mixed>> $localBookings
      */
     private function processApiOrder(array $apiOrder, array $localBookings): int
     {

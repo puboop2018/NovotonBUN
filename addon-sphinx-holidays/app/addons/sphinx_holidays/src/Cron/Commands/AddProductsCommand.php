@@ -188,6 +188,7 @@ class AddProductsCommand extends AbstractSyncCommand
                         ? $state['invalid_country']++
                         : $state['failed']++,
                     'failed'  => $state['failed']++,
+                    default   => $state['failed']++,
                 };
             }
 

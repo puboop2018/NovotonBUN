@@ -31,6 +31,7 @@ class CronDispatcher implements CronDispatcherInterface
 {
     /**
      * Map of mode => command class.
+     * @var array<string, class-string>
      */
     private static array $modes = [
         'destinations'    => DestinationSyncCommand::class,

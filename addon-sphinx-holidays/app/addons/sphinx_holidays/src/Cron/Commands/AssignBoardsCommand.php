@@ -204,7 +204,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $this->saveState($state);
 
             // Progress output
-            if ($processedThisRun > 0 && $offset % 200 === 0) {
+            if ($offset % 200 === 0) {
                 $pct = round($offset / $total * 100, 1);
                 $this->output("  {$offset}/{$total} ({$pct}%) — {$state['assigned']} assigned");
             }

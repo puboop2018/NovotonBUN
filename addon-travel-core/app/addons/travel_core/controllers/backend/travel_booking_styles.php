@@ -29,6 +29,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
  * Color setting definitions: setting_id => [CSS variable, default].
  * Empty default = inherited from LESS/theme.
  */
+/** @return array<string, array{0: string, 1: string}> */
 function _travel_styles_color_map(): array
 {
     return [

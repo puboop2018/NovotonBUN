@@ -24,6 +24,10 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Batch pre-fetches hotel data for all hotel products on the page so that
  * subsequent per-product gather_additional_product_data_post calls hit the
  * in-memory cache instead of issuing 2 DB queries each (N+1 fix).
+ *
+ * @param list<array<string, mixed>> $products
+ * @param array<string, mixed> $params
+ * @param string $lang_code
  */
 function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_code = ''): void
 {
@@ -69,6 +73,10 @@ function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_c
  *    by try/catch alone)
  * 2. try/catch(\Throwable) catches all exceptions
  * 3. Safe Smarty defaults assigned in catch block
+ *
+ * @param array<string, mixed> $product
+ * @param array<string, mixed> $auth
+ * @param array<string, mixed> $params
  */
 function fn_novoton_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
@@ -94,6 +102,11 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  * No-op — hotel detection and data enrichment are handled entirely in
  * gather_additional_product_data_post. This hook skeleton is kept for
  * CS-Cart's hook registration system.
+ *
+ * @param array<string, mixed> $product_data
+ * @param array<string, mixed> $auth
+ * @param bool $preview
+ * @param string $lang_code
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
@@ -109,6 +122,9 @@ function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $previ
 
 /**
  * Hook: after deleting product
+ *
+ * @param int $product_id
+ * @param bool $product_deleted
  */
 function fn_novoton_holidays_delete_product_post($product_id, $product_deleted): void
 {
@@ -139,6 +155,9 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
  *
  * Identification: product_code prefix (e.g. "NVT12345") via the
  * existing _nvt_extract_hotel_id() helper.
+ *
+ * @param int $product_id
+ * @param array<string, mixed> $tabs
  */
 function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
 {

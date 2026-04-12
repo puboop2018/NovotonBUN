@@ -13,7 +13,7 @@ use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 class AddProductsCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {
@@ -298,7 +298,7 @@ class AddProductsCommand extends AbstractCronCommand
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     private function getExcludedResorts(): array
     {

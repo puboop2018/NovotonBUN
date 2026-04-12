@@ -10,7 +10,7 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 class HotelListSyncCommand extends AbstractCronCommand
 {
     /**
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public static function getModes(): array
     {

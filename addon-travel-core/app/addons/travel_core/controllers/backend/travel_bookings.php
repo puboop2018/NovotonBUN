@@ -26,7 +26,7 @@ use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-/** @var \Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface $bookingRepo */
+/** @var \Tygh\Addons\TravelCore\Repository\TravelBookingRepository $bookingRepo */
 $bookingRepo = new TravelBookingRepository();
 
 if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
@@ -40,6 +40,9 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
  * Enrich a booking row with provider-specific display data and actions.
  *
  * Uses the BookingAdminProviderInterface registered for the booking's provider.
+ *
+ * @param array<string, mixed> $booking
+ * @return array<string, mixed>
  */
 function _travel_bookings_enrich(array $booking): array
 {
@@ -145,10 +148,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!empty($result['notification'])) {
                     $n = $result['notification'];
-                    fn_set_notification($n['type'] ?? 'N', $n['title'] ?? '', $n['message'] ?? '');
+                    fn_set_notification($n['type'], $n['title'], $n['message']);
                 }
 
-                $redirect = $result['redirect'] ?? 'travel_bookings.manage';
+                $redirect = $result['redirect'];
                 return [CONTROLLER_STATUS_REDIRECT, $redirect];
             } else {
                 fn_set_notification('W', __('warning'), "No admin provider registered for '{$provider}'.");

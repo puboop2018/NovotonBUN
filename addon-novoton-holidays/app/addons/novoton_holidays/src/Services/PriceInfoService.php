@@ -165,7 +165,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * V3: Extracts from priceinfo_data JSON
      *
      * @param string $hotelId Hotel ID
-     * @return array<string, mixed> Seasons with dates
+     * @return list<array<string, mixed>> Seasons with dates
      */
     public function getSeasons(string $hotelId): array
     {
@@ -205,7 +205,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * V3: Extracts from priceinfo_data JSON
      *
      * @param string $hotelId Hotel ID
-     * @return array<string, mixed> Early booking periods
+     * @return list<array<string, mixed>> Early booking periods
      */
     public function getEarlyBooking(string $hotelId): array
     {
@@ -508,7 +508,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param array<string, mixed> $seasonPrices season_price rows
      * @param array<string, mixed> $seasons      seasons array
      * @param int   $adults       number of adults
-     * @return array<string, mixed> [seasonNum => cheapestRoomTotal]
+     * @return array<int, float> [seasonNum => cheapestRoomTotal]
      */
     private function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
     {
@@ -627,6 +627,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
     /**
      * Safely convert a value to scalar string.
+     * @param mixed $val
      */
     private function toScalarSafe($val): string
     {

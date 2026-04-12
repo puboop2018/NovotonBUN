@@ -17,6 +17,7 @@ interface PriceChangeDetectorInterface
     /**
      * Analyse a price change and return structured display data.
      *
+     * @param array<string, mixed> $bookingMeta
      * @return array{
      *   significant: bool,
      *   direction: string,
@@ -27,7 +28,7 @@ interface PriceChangeDetectorInterface
      *   currency: string,
      *   badge_type: string,
      *   context: string,
-     *   booking_meta: array,
+     *   booking_meta: array<string, mixed>,
      *   timestamp: int
      * }
      */
@@ -46,16 +47,22 @@ interface PriceChangeDetectorInterface
 
     /**
      * Store a price change alert in the session.
+     *
+     * @param array<string, mixed> $alertData
      */
     public function storeAlert(array $alertData, string $cartId = ''): void;
 
     /**
      * Retrieve and clear all pending price change alerts from the session.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function consumeAlerts(): array;
 
     /**
      * Retrieve pending alerts without clearing them.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function peekAlerts(): array;
 }

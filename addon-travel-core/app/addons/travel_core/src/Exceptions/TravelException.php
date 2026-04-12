@@ -5,6 +5,7 @@ namespace Tygh\Addons\TravelCore\Exceptions;
 
 class TravelException extends \RuntimeException
 {
+    /** @var array<string, mixed> */
     protected array $context = [];
 
     /**

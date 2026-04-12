@@ -426,6 +426,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      *
      * Verbatim from legacy BatchedHotelInfoSync::extractPackages().
      *
+     * @param \SimpleXMLElement|null $hotelInfo
      * @return array<int, array{IdCont: string, PackageName: string}>
      */
     private function extractPackages($hotelInfo): array
@@ -463,6 +464,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         return $packages;
     }
 
+    /** @param \SimpleXMLElement|null $hotelInfo */
     private function countPackages($hotelInfo): int
     {
         return count($this->extractPackages($hotelInfo));

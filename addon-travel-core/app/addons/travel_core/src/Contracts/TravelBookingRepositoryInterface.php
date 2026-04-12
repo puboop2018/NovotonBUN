@@ -34,7 +34,7 @@ interface TravelBookingRepositoryInterface
      * @param int    $offset     Pagination offset
      * @param int    $limit      Items per page
      *
-     * @return array{items: array[], total: int}
+     * @return array{items: array<int, array<string, mixed>>, total: int}
      */
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array;
 }

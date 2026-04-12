@@ -301,6 +301,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      * or has_early_booking inline — that's the cron's job.
      *
      * Logic preserved verbatim from the legacy BatchedPriceInfoSync.
+     * @param \SimpleXMLElement $priceinfo
      */
     private function processPriceInfo(string $hotelId, string $packageId, $priceinfo, string $now): int
     {
@@ -344,6 +345,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      * preserves text content, and includes attributes.
      *
      * Preserved verbatim from the legacy BatchedPriceInfoSync.
+     * @param \SimpleXMLElement $xml
      * @return array<string, mixed>
      */
     private static function simpleXmlToArray($xml): array

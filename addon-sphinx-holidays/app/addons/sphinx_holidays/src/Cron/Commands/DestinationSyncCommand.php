@@ -53,7 +53,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
      *   'full'   => 1  Force full re-sync
      *   'status' => 1  Show progress without running
      *   'reset'  => 1  Clear state, start fresh
-     * @return array{success: bool, stats: array}
+     * @return array{success: bool, stats: array<string, mixed>}
      */
     #[\Override]
     public function execute(array $params = []): array
@@ -220,6 +220,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
     /**
      * Mark sync as completed, build breadcrumbs, log, clear state.
      * @param array<string, mixed> $state
+     * @param \Tygh\Addons\SphinxHolidays\Repository\DestinationRepository $repository
      * @return array<string, mixed>
      */
     private function completeSync(array $state, $repository): array
@@ -363,8 +364,8 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
     /**
      * Extract items array from a paginated API response.
-     * @param array<string, mixed> $response
-     * @return array<string, mixed>
+     * @param array<int|string, mixed> $response
+     * @return list<mixed>
      */
     private function extractItems(array $response): array
     {
@@ -374,7 +375,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
             $items = $response;
         }
 
-        return is_array($items) ? $items : [];
+        return is_array($items) ? array_values($items) : [];
     }
 
     /**

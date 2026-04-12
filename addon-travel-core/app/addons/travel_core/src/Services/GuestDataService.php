@@ -28,7 +28,7 @@ class GuestDataService implements GuestDataServiceInterface
      * and always returns canonical keyed format via GuestDataNormalizer.
      *
      * @param array<string, mixed> $bookingData Booking form data
-     * @return array Parsed guests data in canonical keyed format
+     * @return array<string, mixed> Parsed guests data in canonical keyed format
      */
     #[\Override]
     public function parseGuestsData(array $bookingData): array
@@ -144,7 +144,7 @@ class GuestDataService implements GuestDataServiceInterface
      * Get guests grouped by room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Guests by room [room_num => [guests]]
+     * @return array<int, array<int, array<string, mixed>>> Guests by room [room_num => [guests]]
      */
     #[\Override]
     public function getGuestsByRoom(array $guests_data): array
@@ -179,7 +179,7 @@ class GuestDataService implements GuestDataServiceInterface
      * Get guest counts per room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Room counts [room_num => [adults, children]]
+     * @return array<int, array{adults: int, children: int}> Room counts [room_num => [adults, children]]
      */
     #[\Override]
     public function getRoomCounts(array $guests_data): array
@@ -212,7 +212,7 @@ class GuestDataService implements GuestDataServiceInterface
      * Format guests for display
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array Display-formatted guests
+     * @return array<int, array<string, mixed>> Display-formatted guests
      */
     #[\Override]
     public function formatForDisplay(array $guests_data): array
@@ -247,7 +247,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array<string, mixed> $guests_data Guests data
      * @param int $expected_adults Expected adult count
      * @param int $expected_children Expected children count
-     * @return array Validation result [valid, errors]
+     * @return array<string, mixed> Validation result [valid, errors]
      */
     #[\Override]
     public function validate(array $guests_data, int $expected_adults = 0, int $expected_children = 0): array
@@ -304,7 +304,7 @@ class GuestDataService implements GuestDataServiceInterface
      *
      * @param mixed $guests_data Raw guests data (array or JSON string)
      * @param string $holder_name Holder name for matching
-     * @return array Formatted guests array, or empty array if input is empty
+     * @return array<string, mixed> Formatted guests array, or empty array if input is empty
      */
     public static function formatGuestsForOrderDisplay($guests_data, string $holder_name = ''): array
     {
@@ -363,7 +363,7 @@ class GuestDataService implements GuestDataServiceInterface
      * Merge guest data from multiple sources
      *
      * @param array<string, mixed> $sources Array of guest data sources
-     * @return array Merged guests data
+     * @return array<string, mixed> Merged guests data
      */
     #[\Override]
     public function merge(array ...$sources): array
@@ -371,9 +371,6 @@ class GuestDataService implements GuestDataServiceInterface
         $merged = [];
 
         foreach ($sources as $source) {
-            if (!is_array($source)) {
-                continue;
-            }
 
             foreach ($source as $key => $guest) {
                 if (!isset($merged[$key]) || empty($merged[$key]['name'])) {
@@ -473,7 +470,7 @@ class GuestDataService implements GuestDataServiceInterface
      *   - Age calculation from DOB
      *   - Holder name resolution (prefers is_holder flag, falls back to first guest)
      *
-     * @param array  $guests   Raw guests array from form
+     * @param array<string, mixed>  $guests   Raw guests array from form
      * @param string $checkIn  Check-in date (YYYY-MM-DD) for child age validation
      * @param string $provider Provider name for log/notification messages ('novoton'|'sphinx')
      * @return array<string, mixed>|false Parsed result array or false if validation fails
@@ -590,7 +587,7 @@ class GuestDataService implements GuestDataServiceInterface
         // Resolve holder: prefer guest with is_holder flag, fallback to first guest
         $holderName = $guestNames[0] ?? '';
         foreach ($guestsData as $g) {
-            if (!empty($g['is_holder']) && !empty($g['name'])) {
+            if (!empty($g['is_holder'])) {
                 $holderName = $g['name'];
                 break;
             }

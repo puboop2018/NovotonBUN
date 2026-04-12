@@ -105,7 +105,7 @@ class PropertyTypeDetector
      * Match a text against a keyword map.
      *
      * @param string $text       Text to scan
-     * @param array<string, mixed>  $keywordMap Array of ['pattern' => regex, 'type' => code]
+     * @param list<array{pattern: string, type: string}>  $keywordMap Array of ['pattern' => regex, 'type' => code]
      * @return string|null       Matched type or null
      */
     private function matchAgainst(string $text, array $keywordMap): ?string

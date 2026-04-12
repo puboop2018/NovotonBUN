@@ -20,6 +20,9 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  *
  * Enriches order products with formatted dates and guest display names.
  * Provider-specific enrichment (terms, hotel locations) remains in provider hooks.
+ *
+ * @param array<string, mixed> $order
+ * @param array<string, mixed> $additional_data
  */
 function fn_travel_core_get_order_info(&$order, $additional_data): void
 {

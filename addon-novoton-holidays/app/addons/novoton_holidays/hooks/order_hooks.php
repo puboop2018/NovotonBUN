@@ -43,6 +43,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * We never block the order. If the price has increased, we silently update
  * the cart to the correct API price (same as the add_to_cart price floor).
  * The customer's order proceeds without interruption; admin is notified.
+ *
+ * @param array<string, mixed> $cart
+ * @param string $allow
+ * @param array<string, mixed> $product_groups
  */
 function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
 {
@@ -94,6 +98,12 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
  * Delegates entirely to BookingSubmissionService which encapsulates:
  *   1. DB hydration, room/guest resolution, room grouping
  *   2. API payload construction, DB upsert, API submission
+ *
+ * @param int|list<int> $order_id
+ * @param string $action
+ * @param string $order_status
+ * @param array<string, mixed>|null $cart
+ * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
@@ -149,6 +159,9 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
  *
  * Uses a single batch query (not N+1) to fetch all bookings for all
  * orders in the result set.
+ *
+ * @param array<string, mixed> $params
+ * @param list<array<string, mixed>> $orders
  */
 function fn_novoton_holidays_get_orders_post($params, &$orders): void
 {
@@ -193,6 +206,9 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
  *   - Payment & cancellation terms (from raw XML or API)
  *   - Guest display names (Last, First format)
  *   - Board display name via BoardType value object
+ *
+ * @param array<string, mixed> $order
+ * @param array<string, mixed> $additional_data
  */
 function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
@@ -308,6 +324,8 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
  * Terms are persisted in novoton_bookings at booking creation time.
  * Falls back to a DB lookup by booking_id if not in cart extra.
  * No live API call is made — terms are a snapshot from booking time.
+ *
+ * @param array<string, mixed> $product
  */
 function _nvt_enrich_order_product_terms(
     array &$product,
@@ -362,6 +380,8 @@ function _nvt_enrich_order_product_terms(
  *
  * Delegates to GuestDataService::formatGuestsForOrderDisplay() which handles
  * api_name → display format conversion and holder marking.
+ *
+ * @param array<string, mixed> $product
  */
 function _nvt_format_order_guests(array &$product): void
 {

@@ -164,7 +164,7 @@ function fn_novoton_holidays_parse_xml_string($xml_string): ?\SimpleXMLElement
  * </TermsOfPayment>
  * 
  * @param string $xml_string XML terms string
- * @return array<string, mixed> Parsed terms data
+ * @return list<array<string, mixed>> Parsed terms data
  */
 function fn_novoton_holidays_parse_payment_terms($xml_string): array
 {
@@ -234,7 +234,7 @@ function fn_novoton_holidays_parse_payment_terms($xml_string): array
  * 
  * @param string $xml_string XML terms string
  * @param string $check_in Check-in date for relative calculations
- * @return array<string, mixed> Parsed cancellation terms
+ * @return list<array<string, mixed>> Parsed cancellation terms
  */
 function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = ''): array
 {
