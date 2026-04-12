@@ -261,13 +261,15 @@ if ($mode === 'list_facilities') {
     $count = count($facilities);
     $last_sync = $facilityRepo->getLastSyncedAt();
 
-    // Build feature type options with CS-Cart feature names for the dropdown
-    // Show all feature types so admins can classify facilities into any category
+    // Build feature type options with CS-Cart feature names for the dropdown.
+    // Show all feature types so admins can classify facilities into any category.
+    // Feature IDs are stored under addons.travel_core.feature_id_<type> settings
+    // (see travel_core/func.php fn_settings_variants_addons_travel_core_feature_id_*).
     $facility_feature_types = \Tygh\Addons\NovotonHolidays\Constants::VALID_FEATURE_TYPES;
     $feature_type_options = [];
     foreach ($facility_feature_types as $ft) {
-        $settingKey = \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING[$ft] ?? '';
-        $featureId = $settingKey ? (int) Registry::get($settingKey) : 0;
+        $settingKey = 'addons.travel_core.feature_id_' . $ft;
+        $featureId = (int) Registry::get($settingKey);
         $label = ucwords(str_replace('_', ' ', $ft));
         if ($featureId > 0) {
             $featureName = db_get_field(

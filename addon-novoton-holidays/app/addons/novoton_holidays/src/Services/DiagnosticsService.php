@@ -49,7 +49,21 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     /**
      * Test API connection and credentials.
      *
-     * @return array{success: bool, config: array, message: string, hotels_count: int, sample_hotel: array|null, error: string}
+     * The last_request/last_http_code/raw_response_preview keys are only
+     * present on the "empty result" branch — they surface the debug state
+     * from the API client so the controller can render it in the admin UI.
+     *
+     * @return array{
+     *   success: bool,
+     *   config: array,
+     *   message: string,
+     *   hotels_count: int,
+     *   sample_hotel: array|null,
+     *   error: string,
+     *   last_request?: array,
+     *   last_http_code?: int,
+     *   raw_response_preview?: string
+     * }
      */
     public function testApiConnection(): array
     {
@@ -192,7 +206,15 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * Test room price API call.
      *
      * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults}
-     * @return array{success: bool, result: mixed, price: float, price_with_commission: float, raw_response: string, error: string}
+     * @return array{
+     *   success: bool,
+     *   result: mixed,
+     *   params: array,
+     *   price: float,
+     *   price_with_commission: float,
+     *   raw_response: string,
+     *   error: string
+     * }
      */
     public function testRoomPrice(array $params): array
     {
@@ -200,6 +222,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             return [
                 'success' => false,
                 'result' => null,
+                'params' => $params,
                 'price' => 0,
                 'price_with_commission' => 0,
                 'raw_response' => '',

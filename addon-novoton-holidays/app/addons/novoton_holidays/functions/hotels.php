@@ -74,7 +74,9 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
  * All functions that read/write the hotel data cache MUST use this
  * to guarantee a single shared store within each PHP request.
  *
- * @return array& Reference to the shared cache array
+ * Returns by reference so callers can mutate the cache in-place.
+ *
+ * @return array The shared cache array, returned by reference
  */
 function &_novoton_hotel_data_cache(): array
 {

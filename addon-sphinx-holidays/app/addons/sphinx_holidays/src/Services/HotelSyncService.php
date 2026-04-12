@@ -259,7 +259,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      * Resolve destination IDs grouped by country code.
      *
      * @param string[] $countryCodes
-     * @param int[] $extraDestIds Additional specific destination IDs (e.g. region/city)
+     * @param int[] $allowedDestIds Destination IDs already resolved from the whitelist
      * @return array<string, int[]> Country code => [destination_id, ...]
      */
     private function resolveDestinationIds(array $countryCodes, array $allowedDestIds = []): array

@@ -206,10 +206,10 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return;
         }
 
-        $rows = call_user_func_array('db_get_array', array_merge(
-            ['SELECT hotel_id, package_id, package_name FROM ?:novoton_hotel_packages WHERE ' . implode(' OR ', $whereParts)],
-            $whereParams
-        ));
+        $rows = db_get_array(
+            'SELECT hotel_id, package_id, package_name FROM ?:novoton_hotel_packages WHERE ' . implode(' OR ', $whereParts),
+            ...$whereParams
+        );
 
         foreach ($rows as $row) {
             $key = $row['hotel_id'] . '/' . $row['package_id'];

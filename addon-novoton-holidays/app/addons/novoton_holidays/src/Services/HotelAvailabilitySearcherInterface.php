@@ -19,6 +19,7 @@ interface HotelAvailabilitySearcherInterface
      *   all_room_results: array,
      *   is_multi_room: bool,
      *   multi_room_total_options: int,
+     *   no_availability: bool,
      *   max_room_capacity: array,
      *   early_booking_discounts: array,
      *   early_booking_range: array

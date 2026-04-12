@@ -76,7 +76,7 @@ class TravelProviderRegistry
     /**
      * Get a provider entry by name.
      *
-     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface}|null
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}|null
      */
     public static function get(string $name): ?array
     {
@@ -94,7 +94,7 @@ class TravelProviderRegistry
     /**
      * Get all registered providers.
      *
-     * @return array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface}>
+     * @return array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}>
      */
     public static function all(): array
     {

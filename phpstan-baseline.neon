@@ -31,12 +31,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
 
 		-
-			message: '#^Access to undefined constant Tygh\\Addons\\NovotonHolidays\\Constants\:\:FEATURE_TYPE_TO_SETTING\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_holidays.php
-
-		-
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
 			count: 1
@@ -121,12 +115,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Offset ''no_availability'' does not exist on array\{results\: array, all_room_results\: array, is_multi_room\: bool, multi_room_total_options\: int, max_room_capacity\: array, early_booking_discounts\: array, early_booking_range\: array\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
 			message: '#^Offset ''email'' on array\{email\: string\|false, phone\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
@@ -161,12 +149,6 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
-
-		-
-			message: '#^PHPDoc tag @return contains unresolvable type\.$#'
-			identifier: return.unresolvableType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
 			message: '#^Variable \$country on left side of \?\? always exists and is not nullable\.$#'
@@ -215,12 +197,6 @@ parameters:
 			identifier: ternary.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
-			message: '#^Parameter \#1 \$callback of function call_user_func_array expects callable\(\)\: mixed, ''db_get_array'' given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
 
 		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\NovotonApi\:\:\$cache \(Tygh\\Addons\\NovotonHolidays\\Services\\CacheService\|null\) does not accept Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\.$#'
@@ -313,20 +289,20 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^If condition is always true\.$#'
-			identifier: if.alwaysTrue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:buildCacheKey\(\) is unused\.$#'
+			identifier: method.unused
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
-			message: '#^Parameter \#1 \$response of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:processSearchResults\(\) expects object, array given\.$#'
-			identifier: argument.type
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:log\(\) is unused\.$#'
+			identifier: method.unused
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
+			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:\$cache is never read, only written\.$#'
+			identifier: property.onlyWritten
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
@@ -347,12 +323,6 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Parameter \#1 \$hotelIds of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:bulkUpdateStatus\(\) expects array\<string\>, array\<int\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
 			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:customizeCircuit\(\)\.$#'
@@ -433,12 +403,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
-			message: '#^Offset ''country_code'' does not exist on array\{name\: string, type\: string, parent_id\: int\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
 			message: '#^Offset ''destination_id'' on array\{destination_id\: int, selection_type\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -481,12 +445,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$extraDestIds$#'
-			identifier: parameter.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
 			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -495,30 +453,6 @@ parameters:
 		-
 			message: '#^Offset ''redirect'' on array\{redirect\: string, notification\?\: array\{type\: string, title\: string, message\: string\}\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''single_status_callback'' does not exist on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''single_status…'' on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''status_sync_callback'' does not exist on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Offset ''status_sync_callback'' on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
 
@@ -538,12 +472,6 @@ parameters:
 			message: '#^PHPDoc tag @var with type Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface is not subtype of native type Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\.$#'
 			identifier: varTag.nativeType
 			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 2
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
 
 		-

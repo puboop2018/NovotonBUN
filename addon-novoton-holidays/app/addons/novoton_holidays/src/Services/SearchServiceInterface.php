@@ -14,12 +14,6 @@ interface SearchServiceInterface
 
     public function calculateRoomTotals(array $rooms_data): array;
 
-    public function searchAvailability(array $params): array;
-
-    public function searchFlexibleDates(array $params, int $flex_days): array;
-
-    public function processSearchResults($response, array $params): array;
-
     public function getBoardName(string $board_id): string;
 
     /**
