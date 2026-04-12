@@ -174,6 +174,17 @@ class SearchParameterNormalizer
         // Fallback: build single room from scalar params
         $childrenCount = !empty($params['children']) ? (int) $params['children'] : 0;
         $childrenAges  = $this->parseCommaAges($params['children_ages'] ?? '');
+
+        // Legacy: child_age_1, child_age_2, ... individual URL params
+        if (empty($childrenAges) && $childrenCount > 0) {
+            for ($i = 1; $i <= $childrenCount; $i++) {
+                $age = $params['child_age_' . $i] ?? null;
+                if ($age !== null && $age !== '' && is_numeric($age)) {
+                    $childrenAges[] = (int) $age;
+                }
+            }
+        }
+
         if (!empty($childrenAges)) {
             $childrenCount = count($childrenAges);
         }

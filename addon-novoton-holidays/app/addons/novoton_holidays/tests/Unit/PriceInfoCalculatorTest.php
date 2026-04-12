@@ -172,6 +172,13 @@ class PriceInfoCalculatorTest extends TestCase
                     'Price4' => '382.5',
                 ],
                 [
+                    'Code' => '57', 'Base' => '54',
+                    'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                    'IdAge' => '1 ST CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
+                    'RoomPrice' => 'No', 'FromDays' => '1', 'ToDays' => '99',
+                    'Price4' => '20%',
+                ],
+                [
                     'Code' => '58', 'Base' => '54',
                     'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
                     'IdAge' => '2 ND CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
@@ -187,6 +194,13 @@ class PriceInfoCalculatorTest extends TestCase
                 'IdAge' => 'ADULT ', 'IdAcc' => 'REGULAR',
                 'RoomPrice' => 'Yes', 'FromDays' => '1', 'ToDays' => '99',
                 'Price4' => '382.5',
+            ]],
+            '57' => [[
+                'Code' => '57', 'Base' => '54',
+                'IdRoom' => 'DBL 2+2', 'IdBoard' => 'ULTRA ALL INCL',
+                'IdAge' => '1 ST CHD 2-11,99', 'IdAcc' => 'EXTRA BED',
+                'RoomPrice' => 'No', 'FromDays' => '1', 'ToDays' => '99',
+                'Price4' => '20%',
             ]],
             '58' => [[
                 'Code' => '58', 'Base' => '54',
