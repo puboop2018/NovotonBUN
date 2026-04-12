@@ -52,14 +52,16 @@ class BookingService implements BookingServiceInterface
         BookingRepositoryInterface $bookingRepo,
         PricingApiClientInterface $pricing,
         ?HotelRepositoryInterface $hotelRepo = null,
-        ?GuestDataNormalizer $guestDataNormalizer = null
+        ?GuestDataNormalizer $guestDataNormalizer = null,
+        ?CartAssemblyService $cartAssembly = null,
+        ?RoomsDataParser $roomsParser = null,
     ) {
         $this->guestService = $guestService;
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
-        $this->cartAssembly = new CartAssemblyService();
-        $this->roomsParser = new RoomsDataParser();
+        $this->cartAssembly = $cartAssembly ?? new CartAssemblyService();
+        $this->roomsParser = $roomsParser ?? new RoomsDataParser();
         $this->priceVerifier = new PriceVerificationService($pricing);
         $this->debug = ConfigProvider::isDebugLogging();
     }

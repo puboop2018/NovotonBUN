@@ -35,9 +35,10 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         SphinxApi $api,
         private readonly HotelRepository $hotelRepo,
         private readonly DestinationRepository $destRepo,
+        ?SphinxNormalizer $normalizer = null,
     ) {
         parent::__construct($api);
-        $this->normalizer = Container::getNormalizer();
+        $this->normalizer = $normalizer ?? Container::getNormalizer();
     }
 
     protected function getSyncType(): string

@@ -17,17 +17,10 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 
 class RoomPriceService implements RoomPriceServiceInterface
 {
-    /** @var float Commission percentage */
-    private $commission;
-
-    /** @var string Default currency */
-    private $currency;
-
-    /** @var CacheServiceInterface */
-    private $cache;
-
-    /** @var bool Debug mode */
-    private $debug = false;
+    private float $commission;
+    private string $currency;
+    private CacheServiceInterface $cache;
+    private bool $debug = false;
 
     /** @var PricingApiClientInterface Pricing sub-client (lazy-fallback wired) */
     private readonly PricingApiClientInterface $pricing;
@@ -42,11 +35,13 @@ class RoomPriceService implements RoomPriceServiceInterface
      * that do `new RoomPriceService()` don't break — same pattern as
      * CronService and AlternativeRequestService from earlier waves.
      */
-    public function __construct(?PricingApiClientInterface $pricing = null)
-    {
+    public function __construct(
+        ?PricingApiClientInterface $pricing = null,
+        ?CacheServiceInterface $cache = null,
+    ) {
         $this->commission = ConfigProvider::getCommission();
         $this->currency = ConfigProvider::getApiCurrency();
-        $this->cache = new CacheService();
+        $this->cache = $cache ?? new CacheService();
         $this->debug = ConfigProvider::isDebugLogging();
         $this->pricing = $pricing ?? (new NovotonApi())->pricing();
     }
