@@ -62,7 +62,7 @@ class SphinxHttpClient
      * Send a GET request.
      *
      * @param string $endpoint API endpoint (e.g., '/api/v1/static/destinations')
-     * @param array  $query    Query parameters
+     * @param array<string, mixed>  $query    Query parameters
      * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function get(string $endpoint, array $query = []): ?array
@@ -79,7 +79,7 @@ class SphinxHttpClient
      * Send a POST request.
      *
      * @param string $endpoint API endpoint
-     * @param array  $data     Request body (will be JSON-encoded)
+     * @param array<string, mixed>  $data     Request body (will be JSON-encoded)
      * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function post(string $endpoint, array $data = []): ?array
@@ -90,6 +90,8 @@ class SphinxHttpClient
 
     /**
      * Execute an HTTP request with retry and circuit breaker logic.
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>|null
      */
     private function request(string $method, string $url, ?array $body = null): ?array
     {
@@ -287,6 +289,7 @@ class SphinxHttpClient
 
     /**
      * Get full rate limit state for monitoring/logging.
+     * @return array<string, mixed>
      */
     public function getRateLimitState(): array
     {

@@ -156,6 +156,8 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
      * Process an API order response and update local bookings if statuses differ.
      *
      * @return int Number of bookings that changed status
+     * @param array<string, mixed> $apiOrder
+     * @param array<string, mixed> $localBookings
      */
     private function processApiOrder(array $apiOrder, array $localBookings): int
     {
@@ -234,6 +236,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
 
     /**
      * Store payment terms and cancellation fees from an API order response.
+     * @param array<string, mixed> $apiOrder
      */
     private function storeOrderTerms(int $bookingId, array $apiOrder): void
     {
@@ -291,6 +294,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
      * - Are linked to an order (order_id > 0)
      * - Have a non-terminal status (not already cancelled)
      * - Were created in the last 90 days
+     * @return array<string, mixed>
      */
     private function getBookingsToCheck(): array
     {

@@ -19,6 +19,10 @@ class ExperienceSyncCommand extends AbstractSyncCommand
         return 'Sync experience catalog from Sphinx static API';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {

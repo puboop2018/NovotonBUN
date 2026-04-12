@@ -23,6 +23,10 @@ class OrderStatusSyncCommand extends AbstractSyncCommand
         return 'Check Sphinx booking statuses via Orders API';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {

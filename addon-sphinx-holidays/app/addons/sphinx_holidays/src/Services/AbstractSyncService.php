@@ -88,7 +88,7 @@ abstract class AbstractSyncService
      * @param bool  $fullSync Whether this is a full or incremental sync
      * @param array<string, mixed> $stats    Initialized stats array to populate
      * @param array<string, mixed> $context  Additional parameters (country codes, destination IDs, etc.)
-     * @return array The populated stats array
+     * @return array<string, mixed> The populated stats array
      */
     abstract protected function doSync(bool $fullSync, array $stats, array $context): array;
 
@@ -97,6 +97,8 @@ abstract class AbstractSyncService
      *
      * Handles Sphinx API's inconsistent response wrappers:
      * {'data': [...]} or {'items': [...]} or bare [...].
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
      */
     protected function extractItems(array $response): array
     {
@@ -154,6 +156,9 @@ abstract class AbstractSyncService
         return (int) db_get_field("SELECT LAST_INSERT_ID()");
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     */
     private function logComplete(int $logId, string $status, array $stats): void
     {
         if ($logId <= 0) {

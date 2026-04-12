@@ -42,6 +42,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     /**
      * Assign all features from a sphinx_hotels row to a CS-Cart product.
+     * @param array<string, mixed> $hotel
      */
     #[\Override]
     public function assignAll(int $productId, array $hotel): void
@@ -168,6 +169,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      * to avoid parsing and resolving the same facilities_json multiple times.
      *
      * @return array<int, array{id: string, name: string, mapping: array|null}>
+     * @param array<string, mixed> $hotel
      */
     private function resolveHotelFacilities(array $hotel): array
     {
@@ -210,24 +212,36 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     // ── Feature-specific methods (delegate to templates) ──
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignStarRating(int $productId, array $hotel): void
     {
         $code = $this->normalizer->normalizeStarRating($hotel['classification'] ?? null);
         $this->assignMappedSelectBox($productId, 'stars', $code);
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignPropertyType(int $productId, array $hotel): void
     {
         $code = $this->normalizer->normalizePropertyType($hotel['property_type'] ?? null);
         $this->assignMappedSelectBox($productId, 'property_type', $code);
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignResort(int $productId, array $hotel): void
     {
         $code = $this->normalizer->normalizeResort($hotel['destination_name'] ?? null);
         $this->assignMappedSelectBox($productId, 'resort', $code, false);
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignRegion(int $productId, array $hotel): void
     {
         $regionId = (string) ($hotel['region_id'] ?? '');
@@ -260,11 +274,17 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignCity(int $productId, array $hotel): void
     {
         $this->assignLocationFeature($productId, 'city', $hotel['destination_name'] ?? null);
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignBoards(int $productId, array $hotel): void
     {
         $boardsJson = $hotel['boards_json'] ?? null;
@@ -287,6 +307,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      * (e.g., "Hotel Facilities", "Room Amenities"), so they're grouped
      * by cscart_feature_id before syncing. This is too complex for the
      * generic collectAndSyncCheckboxFeature() template.
+     * @param array<string, mixed> $hotel
      */
     private function assignFacilities(int $productId, array $hotel): void
     {
@@ -349,6 +370,9 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $hotel
+     */
     private function assignTravelGroup(int $productId, array $hotel): void
     {
         $featureId = $this->getFeatureId('travel_group');
@@ -374,6 +398,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      * Get all canonical facility codes present in a hotel's facilities_json.
      *
      * @return string[] Canonical codes (e.g. ['pool', 'pets_allowed', 'family_rooms'])
+     * @param array<string, mixed> $hotel
      */
     private function getHotelFacilityCodes(array $hotel): array
     {
@@ -428,6 +453,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
     /**
      * Auto-create a CS-Cart feature variant from mapping display names.
+     * @param array<string, mixed> $mapping
      */
     private function autoCreateVariant(int $featureId, array $mapping): int
     {

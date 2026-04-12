@@ -60,6 +60,10 @@ class FullSyncCommand
         $this->outputCallback = $callback;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     public function execute(array $params = []): array
     {
         $startMs = (int)(microtime(true) * 1000);

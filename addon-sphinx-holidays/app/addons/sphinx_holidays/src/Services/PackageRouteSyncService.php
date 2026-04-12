@@ -48,6 +48,11 @@ class PackageRouteSyncService extends AbstractSyncService
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $context
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
@@ -121,6 +126,8 @@ class PackageRouteSyncService extends AbstractSyncService
 
     /**
      * Normalize a raw API route into DB columns.
+     * @param array<string, mixed> $raw
+     * @return array<string, mixed>|null
      */
     private function normalizeRoute(array $raw): ?array
     {
@@ -172,6 +179,7 @@ class PackageRouteSyncService extends AbstractSyncService
 
     /**
      * Upsert routes using the unique key (transport_type, departure_id, arrival_id, duration).
+     * @param array<string, mixed> $batch
      */
     private function upsertBatch(array $batch): int
     {

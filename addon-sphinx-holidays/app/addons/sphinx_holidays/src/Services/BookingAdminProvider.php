@@ -25,6 +25,9 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $this->repo = $repo ?? new SphinxBookingRepository();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getDisplayData(string $providerBookingId): array
     {
@@ -81,6 +84,9 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $display;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function checkStatus(string $providerBookingId): array
     {
@@ -101,6 +107,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $booking
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getAvailableActions(array $booking): array
     {
@@ -132,6 +142,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return null;
     }
 
+    /**
+     * @param array<string, mixed> $request
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function handleAction(string $action, array $request): array
     {
@@ -142,6 +156,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    /**
+     * @param array<string, mixed> $booking
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getProviderTabs(array $booking): array
     {

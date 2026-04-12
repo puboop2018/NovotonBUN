@@ -11,6 +11,10 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
         return 'Audit unmapped facility IDs from Sphinx hotels (report only, no changes)';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {

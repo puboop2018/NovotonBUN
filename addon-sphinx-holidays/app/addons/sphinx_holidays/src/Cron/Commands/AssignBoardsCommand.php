@@ -60,6 +60,10 @@ class AssignBoardsCommand extends AbstractSyncCommand
         return 'Assign discovered board/meal types as CS-Cart product features (batched with resume)';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -134,6 +138,9 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
     /**
      * Process hotels in batches, respecting time limits.
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function processBatch(array $state, array $params): array
     {
@@ -233,6 +240,8 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
     /**
      * Mark sync as completed, log, and clear state.
+     * @param array<string, mixed> $state
+     * @return array<string, mixed>
      */
     private function completeSync(array $state): array
     {
@@ -277,6 +286,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
     /**
      * Show current assignment progress.
+     * @return array<string, mixed>
      */
     private function showStatus(): array
     {

@@ -214,7 +214,6 @@ class SphinxApi
      *
      * @param array<string, mixed> $params {destination_id, check_in, check_out, occupancy, currency, ...}
      * @return array<string, mixed>|null {search_id, ...}
-     * @return array<string, mixed>|null
      */
     public function searchHotels(array $params): ?array
     {

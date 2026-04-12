@@ -38,9 +38,11 @@ interface ConfigProviderInterface
 
     public static function getProductCodePrefix(): string;
 
+    /** @return list<string> */
     public static function getSelectedCountryCodes(): array;
 
     public static function isConfigured(): bool;
 
+    /** @return list<int> */
     public static function getAllowedDestinationIds(): array;
 }

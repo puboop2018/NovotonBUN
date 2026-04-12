@@ -22,6 +22,9 @@ trait StatefulCommandTrait
         return $cacheDir . self::STATE_FILE_NAME;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function loadState(): array
     {
         $path = $this->getStatePath();
@@ -53,6 +56,9 @@ trait StatefulCommandTrait
         return is_array($state) ? array_merge(self::DEFAULT_STATE, $state) : self::DEFAULT_STATE;
     }
 
+    /**
+     * @param array<string, mixed> $state
+     */
     private function saveState(array $state): void
     {
         $path = $this->getStatePath();
@@ -86,6 +92,9 @@ trait StatefulCommandTrait
         }
     }
 
+    /**
+     * @param array<string, mixed> $state
+     */
     private function isStale(array $state): bool
     {
         if ($state['status'] !== 'in_progress') {

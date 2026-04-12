@@ -27,6 +27,8 @@ class SecurityService implements SecurityServiceInterface
 
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     #[\Override]
     public function validateBookingData(array $data): array
@@ -83,6 +85,8 @@ class SecurityService implements SecurityServiceInterface
 
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     #[\Override]
     public function validateSearchParams(array $params): array
@@ -152,6 +156,8 @@ class SecurityService implements SecurityServiceInterface
 
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $guests
+     * @return array<string, mixed>
      */
     #[\Override]
     public function sanitizeGuestData(array $guests): array

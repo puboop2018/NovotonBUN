@@ -114,6 +114,7 @@ class DestinationRepository
 
     /**
      * Get a single destination by ID.
+     * @return array<string, mixed>|null
      */
     public function getById(int $id): ?array
     {
@@ -127,6 +128,7 @@ class DestinationRepository
 
     /**
      * Get children of a parent destination.
+     * @return array<string, mixed>
      */
     public function getChildren(int $parentId): array
     {
@@ -138,6 +140,7 @@ class DestinationRepository
 
     /**
      * Get all countries (type = 'country'), ordered by name.
+     * @return array<string, mixed>
      */
     public function getCountries(): array
     {
@@ -197,7 +200,7 @@ class DestinationRepository
      * Get regions for a country (direct children of the country destination).
      *
      * @param string $countryCode ISO country code (e.g. 'GR')
-     * @return array Regions with destination_id, name, type, hotel_count
+     * @return array<string, mixed> Regions with destination_id, name, type, hotel_count
      */
     public function getRegionsByCountry(string $countryCode): array
     {
@@ -221,7 +224,7 @@ class DestinationRepository
      * Get cities/resorts under a parent destination (region or country).
      *
      * @param int $parentId Parent destination ID
-     * @return array Cities with destination_id, name, type, hotel_count
+     * @return array<string, mixed> Cities with destination_id, name, type, hotel_count
      */
     public function getCitiesByParent(int $parentId): array
     {
@@ -239,7 +242,7 @@ class DestinationRepository
      * so the caller can pick the most relevant one for disambiguation.
      *
      * @param string $name Destination name (e.g. "Crete", "Athens")
-     * @return array All matching destination rows
+     * @return array<string, mixed> All matching destination rows
      */
     public function findByExactName(string $name): array
     {
@@ -256,6 +259,7 @@ class DestinationRepository
      *
      * @param string $query Search term
      * @param int $limit Max results
+     * @return array<string, mixed>
      */
     public function search(string $query, int $limit = 20): array
     {
@@ -366,7 +370,7 @@ class DestinationRepository
     /**
      * Get all continents with country count.
      *
-     * @return array Continents with destination_id, name, type, country_count
+     * @return array<string, mixed> Continents with destination_id, name, type, country_count
      */
     public function getContinents(): array
     {
@@ -494,7 +498,7 @@ class DestinationRepository
      * enabling unambiguous disambiguation (the "Athens Problem").
      *
      * @param string $query Destination name or partial full_path
-     * @return array Matching destination rows, ordered by hierarchy level
+     * @return array<string, mixed> Matching destination rows, ordered by hierarchy level
      */
     public function findByNameOrPath(string $query): array
     {

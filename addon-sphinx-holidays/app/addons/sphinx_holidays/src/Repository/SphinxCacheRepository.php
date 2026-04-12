@@ -10,6 +10,9 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
  */
 class SphinxCacheRepository
 {
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findByKey(string $key): ?array
     {
         $row = db_get_row(

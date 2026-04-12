@@ -42,6 +42,11 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         return $this->runSync(true);
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $context
+     * @return array<string, mixed>
+     */
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
@@ -110,6 +115,10 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         return $stats;
     }
 
+    /**
+     * @param array<string, mixed> $raw
+     * @return array<string, mixed>|null
+     */
     private function normalizeCircuit(array $raw): ?array
     {
         $id = (int) ($raw['id'] ?? 0);
@@ -168,6 +177,9 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         ];
     }
 
+    /**
+     * @param array<string, mixed> $batch
+     */
     private function upsertBatch(array $batch): int
     {
         $repo = new CircuitRepository();

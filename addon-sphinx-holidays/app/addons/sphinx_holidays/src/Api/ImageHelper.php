@@ -31,7 +31,7 @@ class ImageHelper
     /**
      * Get the authentication headers required for watermark-free image access.
      *
-     * @return array HTTP headers as key => value
+     * @return array<string, mixed> HTTP headers as key => value
      */
     public static function getAuthHeaders(): array
     {

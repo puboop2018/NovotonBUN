@@ -118,6 +118,9 @@ class DestinationSyncCommand extends AbstractSyncCommand
     /**
      * Process pages from the API, saving state after each page.
      * Can be interrupted (browser close, timeout) and resumed on next call.
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function runWithState(array $state, array $params): array
     {
@@ -216,6 +219,8 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
     /**
      * Mark sync as completed, build breadcrumbs, log, clear state.
+     * @param array<string, mixed> $state
+     * @return array<string, mixed>
      */
     private function completeSync(array $state, $repository): array
     {
@@ -255,6 +260,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
     /**
      * Show current sync progress without doing any API calls.
+     * @return array<string, mixed>
      */
     private function showStatus(): array
     {
@@ -302,6 +308,8 @@ class DestinationSyncCommand extends AbstractSyncCommand
     /**
      * Normalize a raw API destination into the DB column format.
      * (Duplicated from DestinationSyncService to keep command self-contained)
+     * @param array<string, mixed> $raw
+     * @return array<string, mixed>|null
      */
     private function normalizeDestination(array $raw): ?array
     {
@@ -355,6 +363,8 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
     /**
      * Extract items array from a paginated API response.
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
      */
     private function extractItems(array $response): array
     {
@@ -369,6 +379,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
     /**
      * Check if there are more pages to fetch.
+     * @param array<string, mixed> $response
      */
     private function hasMorePages(array $response, int $currentPage, int $perPage, int $fetchedSoFar): bool
     {

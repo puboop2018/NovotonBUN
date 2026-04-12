@@ -78,6 +78,7 @@ class CacheService implements CacheServiceInterface
 
     /**
      * Build a deterministic cache key from search parameters.
+     * @param array<string, mixed> $params
      */
     public static function buildSearchKey(array $params): string
     {

@@ -43,6 +43,9 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /** @return array<string, string> Currency code => display symbol */
+    /**
+     * @return array<string, mixed>
+     */
     public static function getCurrencySymbols(): array
     {
         return ['EUR' => '€', 'USD' => '$', 'GBP' => '£', 'RON' => 'lei', 'BGN' => 'лв'];

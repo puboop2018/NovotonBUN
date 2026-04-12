@@ -50,6 +50,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $hotel
+     * @param array<string, mixed> $hierarchy
+     * @return array<string, mixed>
      */
     #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
@@ -227,6 +230,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $hotel
+     * @param array<string, mixed> $hierarchy
      */
     #[\Override]
     public function resolveCountryName(array $hotel, array $hierarchy): string

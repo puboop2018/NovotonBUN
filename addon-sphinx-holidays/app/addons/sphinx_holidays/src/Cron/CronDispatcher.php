@@ -85,7 +85,7 @@ class CronDispatcher implements CronDispatcherInterface
      *
      * @param string $mode The cron mode to execute
      * @param array<string, mixed> $params Additional parameters
-     * @return array Result from the command
+     * @return array<string, mixed> Result from the command
      */
     #[\Override]
     public function dispatch(string $mode, array $params = []): array

@@ -64,6 +64,11 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $context
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
@@ -146,6 +151,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      * @param string $countryCode
      * @param int[] $destinationIds Destination IDs belonging to this country
      * @param string|null $updatedSince Only fetch hotels updated since this datetime
+     * @return array<string, mixed>
      */
     private function syncCountry(string $countryCode, array $destinationIds, ?string $updatedSince = null): array
     {
@@ -309,6 +315,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      *
      * Sphinx static API returns: {id, destination_id, name, type, classification,
      * latitude, longitude, description, address, images, facilities, external_ids}
+     * @param array<string, mixed> $raw
+     * @return array<string, mixed>|null
      */
     private function normalizeHotel(array $raw): ?array
     {

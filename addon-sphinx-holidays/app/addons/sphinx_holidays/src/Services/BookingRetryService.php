@@ -134,6 +134,9 @@ class BookingRetryService implements BookingRetryServiceInterface
 
     /**
      * Dispatch booking to the correct API method based on type.
+     * @param array<string, mixed> $booking
+     * @param array<string, mixed> $guestsData
+     * @return array<string, mixed>
      */
     private function submitBooking(string $type, string $offerId, float $price, string $currency, array $booking, array $guestsData): array
     {

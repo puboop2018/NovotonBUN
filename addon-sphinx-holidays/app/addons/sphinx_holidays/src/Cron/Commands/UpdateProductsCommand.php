@@ -27,6 +27,10 @@ class UpdateProductsCommand extends AbstractSyncCommand
         return 'Update CS-Cart products when Sphinx hotel data changes';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -143,6 +147,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
     /**
      * Find hotels that have product_needs_update = 'Y' and a linked product.
+     * @return array<string, mixed>
      */
     private function findHotelsNeedingUpdate(string $countryCode, int $limit): array
     {

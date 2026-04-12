@@ -42,6 +42,11 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
         return $this->runSync($fullSync);
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $context
+     * @return array<string, mixed>
+     */
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         // Determine sync mode: incremental (updated_since) or full
@@ -161,6 +166,8 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
 
     /**
      * Normalize a raw API destination into the DB column format.
+     * @param array<string, mixed> $raw
+     * @return array<string, mixed>|null
      */
     private function normalizeDestination(array $raw): ?array
     {

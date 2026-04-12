@@ -29,7 +29,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
      * Get hotel deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
-     * @return array Normalized deal entries with commission-applied prices
+     * @return array<string, mixed> Normalized deal entries with commission-applied prices
      */
     #[\Override]
     public function getHotelDeals(array $filters = []): array
@@ -58,7 +58,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
      * Get package deals with commission applied.
      *
      * @param array<string, mixed> $filters {destination_id?: int, type?: string, limit?: int}
-     * @return array Normalized deal entries with commission-applied prices
+     * @return array<string, mixed> Normalized deal entries with commission-applied prices
      */
     #[\Override]
     public function getPackageDeals(array $filters = []): array
@@ -86,7 +86,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     /**
      * Refresh all cached deals (called by cron).
      *
-     * @return array Stats: {hotels_count, packages_count, errors}
+     * @return array<string, mixed> Stats: {hotels_count, packages_count, errors}
      */
     #[\Override]
     public function refreshAll(): array
@@ -118,6 +118,8 @@ class CacheEndpointService implements CacheEndpointServiceInterface
 
     /**
      * Normalize and apply commission to deal entries.
+     * @param array<string, mixed> $items
+     * @return array<string, mixed>
      */
     private function normalizeDeals(array $items): array
     {

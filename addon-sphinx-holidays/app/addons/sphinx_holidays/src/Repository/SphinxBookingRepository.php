@@ -19,6 +19,7 @@ class SphinxBookingRepository
 {
     /**
      * Find booking by ID (raw DB row).
+     * @return array<string, mixed>|null
      */
     public function findById(int $booking_id): ?array
     {
@@ -28,6 +29,7 @@ class SphinxBookingRepository
 
     /**
      * Find bookings by order ID.
+     * @return array<string, mixed>
      */
     public function findByOrderId(int $order_id): array
     {
@@ -73,6 +75,7 @@ class SphinxBookingRepository
 
     /**
      * Create a new sphinx booking with dual-write to travel_bookings.
+     * @param array<string, mixed> $data
      */
     public function create(array $data): int
     {
@@ -91,6 +94,7 @@ class SphinxBookingRepository
 
     /**
      * Update an existing sphinx booking with dual-write to travel_bookings.
+     * @param array<string, mixed> $data
      */
     public function update(int $booking_id, array $data): bool
     {
@@ -204,6 +208,7 @@ class SphinxBookingRepository
      *
      * Uses INSERT ... ON DUPLICATE KEY UPDATE for atomicity.
      * Relies on UNIQUE KEY uq_provider_booking(provider, provider_booking_id).
+     * @param array<string, mixed> $data
      */
     private function syncToTravelBookings(int $booking_id, array $data): void
     {
@@ -243,6 +248,7 @@ class SphinxBookingRepository
      * Sync partial updates from sphinx_bookings to travel_bookings.
      *
      * Only syncs fields that travel_bookings actually stores.
+     * @param array<string, mixed> $data
      */
     private function syncUpdateToTravelBookings(int $booking_id, array $data): void
     {
@@ -305,6 +311,7 @@ class SphinxBookingRepository
     /**
      * Direct update to sphinx_bookings only (bypasses travel_bookings sync).
      * Use for fields that only exist in sphinx_bookings (e.g., payment_terms_json).
+     * @param array<string, mixed> $data
      */
     public function updateDirect(int $booking_id, array $data): bool
     {
@@ -338,6 +345,8 @@ class SphinxBookingRepository
 
     /**
      * Filter null values to prevent PHP 8.1+ deprecation warnings.
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     private static function filterNullValues(array $data): array
     {

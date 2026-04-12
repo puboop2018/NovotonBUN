@@ -27,6 +27,7 @@ class PackageRouteRepository
 
     /**
      * Upsert a route row.
+     * @param array<string, mixed> $row
      */
     public function upsert(array $row): void
     {

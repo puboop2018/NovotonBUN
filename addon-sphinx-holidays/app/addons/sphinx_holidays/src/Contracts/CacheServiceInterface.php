@@ -22,7 +22,7 @@ interface CacheServiceInterface
      * Store a value in cache with a TTL.
      *
      * @param string $key  Cache key
-     * @param array  $data Data to cache
+     * @param array<string, mixed>  $data Data to cache
      * @param int    $ttl  Time-to-live in seconds
      */
     public static function set(string $key, array $data, int $ttl): void;
@@ -39,6 +39,7 @@ interface CacheServiceInterface
 
     /**
      * Build a deterministic cache key from search parameters.
+     * @param array<string, mixed> $params
      */
     public static function buildSearchKey(array $params): string;
 }

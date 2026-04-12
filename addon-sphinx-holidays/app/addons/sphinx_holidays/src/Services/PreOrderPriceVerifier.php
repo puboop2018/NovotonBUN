@@ -20,6 +20,8 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /**
      * {@inheritdoc}
+     * @param array<string, mixed> $cart
+     * @return array<string, mixed>
      */
     #[\Override]
     public function verify(array $cart): array

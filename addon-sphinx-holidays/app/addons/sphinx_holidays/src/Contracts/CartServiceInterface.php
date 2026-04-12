@@ -38,6 +38,7 @@ interface CartServiceInterface
      * Sanitize raw guest data and run server-side validation.
      *
      * @return array{guests_data: array, guest_list: string, holder_name: string}|false
+     * @param array<string, mixed> $rawGuests
      */
     public function parseGuests(array $rawGuests, string $dateRef): array|false;
 
@@ -49,6 +50,7 @@ interface CartServiceInterface
     /**
      * Create or update a booking record using the findRecentUnassigned pattern.
      * Returns the booking_id.
+     * @param array<string, mixed> $record
      */
     public function upsertBooking(
         array $record,
@@ -63,6 +65,7 @@ interface CartServiceInterface
      * Returns the controller redirect tuple.
      *
      * @return array<string, mixed>
+     * @param array<string, mixed> $productExtra
      */
     public function addToCartAndRedirect(
         int $productId,
@@ -77,6 +80,9 @@ interface CartServiceInterface
      * Build the base booking record fields shared across all 4 booking types.
      *
      * @return array<string, mixed>
+     * @param array<string, mixed> $parsedGuests
+     * @param array<string, mixed> $contact
+     * @param array<string, mixed> $apiResponse
      */
     public function buildBaseBookingRecord(
         int $productId,

@@ -22,6 +22,10 @@ class PackageRouteSyncCommand extends AbstractSyncCommand
         return 'Sync package routes (flight/bus) from Sphinx static API';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {

@@ -13,6 +13,9 @@ use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
  */
 abstract class AbstractSyncCommand extends BaseCommand
 {
+    /**
+     * @param array<string, mixed> $stats
+     */
     protected function outputRateLimitSummary(array $stats): void
     {
         if ($this->outputCallback === null) {

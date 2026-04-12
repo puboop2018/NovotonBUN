@@ -75,6 +75,10 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         return 'Discover available board/meal types per hotel via live search API (batched with resume)';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -145,6 +149,9 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     /**
      * Process a batch of destinations, respecting time limits.
      * Saves state after each destination for resume capability.
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function processBatch(array $state, array $params): array
     {
@@ -326,6 +333,8 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     /**
      * Mark sync as completed, log to sphinx_sync_log, clear state.
+     * @param array<string, mixed> $state
+     * @return array<string, mixed>
      */
     private function completeSync(array $state): array
     {
@@ -391,6 +400,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     /**
      * Show current discovery progress without doing any API calls.
+     * @return array<string, mixed>
      */
     private function showStatus(): array
     {
@@ -441,6 +451,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     /**
      * Poll search results until completed or max attempts reached.
+     * @return array<string, mixed>
      */
     private function pollResults($api, string $cursor): array
     {
@@ -487,6 +498,10 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /** @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     private function resolveCountryCodes(array $params): array
     {
         if (!empty($params['country'])) {

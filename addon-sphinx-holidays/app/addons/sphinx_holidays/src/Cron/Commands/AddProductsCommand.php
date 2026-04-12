@@ -52,6 +52,10 @@ class AddProductsCommand extends AbstractSyncCommand
         return 'Create CS-Cart products from unlinked Sphinx hotels (retry_skipped=1 to retry previously skipped)';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -102,6 +106,9 @@ class AddProductsCommand extends AbstractSyncCommand
     /**
      * Process hotels in batches, saving state after each batch.
      * Can be interrupted and resumed — findUnlinked() skips already-linked hotels.
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function runWithState(array $state, array $params): array
     {
@@ -239,6 +246,8 @@ class AddProductsCommand extends AbstractSyncCommand
      * Does NOT create anything — read-only diagnostic.
      *
      * Usage: &cron_mode=add_products&debug=1
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function debugCategoryCreation(array $params): array
     {
@@ -381,6 +390,7 @@ class AddProductsCommand extends AbstractSyncCommand
 
     /**
      * Show current progress without processing any hotels.
+     * @return array<string, mixed>
      */
     private function showStatus(): array
     {

@@ -23,6 +23,9 @@ use Tygh\Tygh;
  */
 final class CartService implements CartServiceInterface
 {
+    /**
+     * @return array<string, mixed>|null
+     */
     #[\Override]
     public function checkRateLimit(string $errorRedirect = 'index.index'): ?array
     {
@@ -43,6 +46,7 @@ final class CartService implements CartServiceInterface
     /**
      * Check for an existing pending booking with the same offer_id.
      * Returns a redirect array if a duplicate is found, null otherwise.
+     * @return array<string, mixed>|null
      */
     #[\Override]
     public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array
@@ -80,6 +84,7 @@ final class CartService implements CartServiceInterface
      * Returns the parsed result or false on validation failure (notification already set).
      *
      * @return array{guests_data: array, guest_list: string, holder_name: string}|false
+     * @param array<string, mixed> $rawGuests
      */
     #[\Override]
     public function parseGuests(array $rawGuests, string $dateRef): array|false
@@ -115,6 +120,7 @@ final class CartService implements CartServiceInterface
     /**
      * Create or update a booking record using the findRecentUnassigned pattern.
      * Returns the booking_id.
+     * @param array<string, mixed> $record
      */
     #[\Override]
     public function upsertBooking(
@@ -139,6 +145,8 @@ final class CartService implements CartServiceInterface
     /**
      * Assemble the product entry in the CS-Cart cart and persist it.
      * Returns the controller redirect tuple.
+     * @param array<string, mixed> $productExtra
+     * @return array<string, mixed>
      */
     #[\Override]
     public function addToCartAndRedirect(
@@ -185,6 +193,9 @@ final class CartService implements CartServiceInterface
      * Callers add/override type-specific fields before calling upsertBooking().
      *
      * @return array<string, mixed>
+     * @param array<string, mixed> $parsedGuests
+     * @param array<string, mixed> $contact
+     * @param array<string, mixed> $apiResponse
      */
     #[\Override]
     public function buildBaseBookingRecord(

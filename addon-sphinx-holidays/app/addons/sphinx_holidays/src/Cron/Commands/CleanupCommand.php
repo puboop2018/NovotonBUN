@@ -16,6 +16,10 @@ class CleanupCommand extends AbstractSyncCommand
         return 'Clean up orphan bookings, old sync logs, and expired cache entries';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {

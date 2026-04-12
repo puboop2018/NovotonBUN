@@ -212,6 +212,7 @@ class HotelRepository
 
     /**
      * Get a single hotel by ID.
+     * @return array<string, mixed>|null
      */
     public function getById(string $hotelId): ?array
     {
@@ -225,6 +226,7 @@ class HotelRepository
 
     /**
      * Get hotels by destination ID (excludes large JSON/TEXT columns).
+     * @return array<string, mixed>
      */
     public function getByDestination(int $destinationId): array
     {
@@ -292,6 +294,7 @@ class HotelRepository
 
     /**
      * Search hotels by name (excludes large JSON/TEXT columns).
+     * @return array<string, mixed>
      */
     public function search(string $query, int $limit = 20): array
     {
@@ -307,6 +310,7 @@ class HotelRepository
     /**
      * Lightweight hotel name search for AJAX autocomplete.
      * Returns only the columns needed for the Select2 dropdown display.
+     * @return array<string, mixed>
      */
     public function searchByName(string $query, int $limit = 20): array
     {
@@ -340,7 +344,7 @@ class HotelRepository
     /**
      * Get unlinked hotels (no product_id) with optional country filter.
      *
-     * @return array List of hotel rows without linked products
+     * @return array<string, mixed> List of hotel rows without linked products
      */
     public function findUnlinked(string $countryCode = '', int $limit = 0): array
     {
@@ -438,7 +442,7 @@ class HotelRepository
      * @param string $countryCode Optional country filter
      * @param int $limit Max rows (0 = unlimited)
      * @param int $offset Starting offset for pagination
-     * @return array List of hotel rows
+     * @return array<string, mixed> List of hotel rows
      */
     public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
     {

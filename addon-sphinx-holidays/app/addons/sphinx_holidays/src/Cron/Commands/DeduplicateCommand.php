@@ -25,6 +25,10 @@ class DeduplicateCommand extends AbstractSyncCommand
         return 'Find and merge duplicate hotels (same name + property_type + classification + region)';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -163,7 +167,7 @@ class DeduplicateCommand extends AbstractSyncCommand
      * Find groups of duplicate hotels sharing (name, property_type, classification, region_id, country_code).
      *
      * @param int $limit Max groups to return (0 = unlimited)
-     * @return array Each row has: name, property_type, classification, region_id, country_code, cnt, hotel_ids
+     * @return array<string, mixed> Each row has: name, property_type, classification, region_id, country_code, cnt, hotel_ids
      */
     private function findDuplicateGroups(int $limit): array
     {

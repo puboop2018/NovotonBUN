@@ -28,6 +28,10 @@ class SyncImagesCommand extends AbstractSyncCommand
         return 'Download and attach hotel images to CS-Cart products';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(array $params = []): array
     {
@@ -146,6 +150,7 @@ class SyncImagesCommand extends AbstractSyncCommand
      * @param string[] $countryCodes  Whitelist country codes
      * @param int      $limit         Max rows to return
      * @param bool     $skipExisting  If true, LEFT JOINs images_links to skip products with images
+     * @return array<string, mixed>
      */
     private function findHotels(array $countryCodes, int $limit, bool $skipExisting): array
     {

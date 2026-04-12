@@ -18,16 +18,25 @@ class CircuitRepository
         );
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function update(int $circuitId, array $data): void
     {
         db_query("UPDATE ?:sphinx_circuits SET ?u WHERE circuit_id = ?i", $data, $circuitId);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function insert(array $data): void
     {
         db_query("INSERT INTO ?:sphinx_circuits ?e", $data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function upsert(int $circuitId, array $data): void
     {
         if ($this->exists($circuitId)) {
