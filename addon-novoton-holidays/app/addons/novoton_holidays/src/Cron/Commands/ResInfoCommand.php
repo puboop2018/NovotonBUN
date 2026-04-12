@@ -9,6 +9,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class ResInfoCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['resinfo'];
@@ -19,6 +22,9 @@ class ResInfoCommand extends AbstractCronCommand
         return 'Check ASK booking statuses via resinfo API';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("Checking ASK bookings status...");

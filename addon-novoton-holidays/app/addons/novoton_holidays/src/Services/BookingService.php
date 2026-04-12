@@ -189,7 +189,7 @@ class BookingService implements BookingServiceInterface
      * Get bookings for order
      * 
      * @param int $order_id Order ID
-     * @return array Bookings
+     * @return array<string, mixed> Bookings
      */
     public function getBookingsForOrder(int $order_id): array
     {
@@ -262,7 +262,7 @@ class BookingService implements BookingServiceInterface
      * Parse rooms data from booking form
      * 
      * @param array<string, mixed> $bookingData Form data
-     * @return array Parsed rooms data
+     * @return array<string, mixed> Parsed rooms data
      */
     public function parseRoomsData(array $bookingData): array
     {
@@ -309,7 +309,7 @@ class BookingService implements BookingServiceInterface
      * @param array<string, mixed> $guestsData Parsed guest data
      * @param array<string, mixed> $priceResult Result from verifyPrice()
      * @param array<string, mixed> $roomsData Parsed rooms data
-     * @return array Cart product entry with 'extra' containing all booking metadata
+     * @return array<string, mixed> Cart product entry with 'extra' containing all booking metadata
      */
     public function assembleCartProduct(
         int $productId,
@@ -333,7 +333,7 @@ class BookingService implements BookingServiceInterface
      *
      * @param array<string, mixed> $roomsData Rooms data array
      * @param array<string, mixed> $guestsData Parsed guest data
-     * @return array Enriched rooms data
+     * @return array<string, mixed> Enriched rooms data
      */
     public function enrichRoomsData(array $roomsData, array $guestsData): array
     {

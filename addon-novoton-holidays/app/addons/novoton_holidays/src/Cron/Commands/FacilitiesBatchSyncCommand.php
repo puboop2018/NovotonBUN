@@ -24,6 +24,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
  */
 class FacilitiesBatchSyncCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['hotel_facilities_batched'];
@@ -34,6 +37,9 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         return 'Batched hotel facilities sync with resume capability';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("Batched Hotel Facilities Sync");
@@ -86,6 +92,9 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $result];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function printStatus(SyncInterface $sync): array
     {
         $status = $sync->getStatus();
@@ -107,6 +116,9 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $status];
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     private function printResult(array $result): void
     {
         if ($result['status'] === 'in_progress') {

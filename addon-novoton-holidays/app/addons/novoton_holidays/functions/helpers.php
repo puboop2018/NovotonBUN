@@ -23,7 +23,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * If countries are selected, returns only those countries.
  * 
  * @param mixed $selected_countries Countries from settings (array or comma-separated string)
- * @return array List of country names in uppercase
+ * @return array<string, mixed> List of country names in uppercase
  */
 function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): array
 {
@@ -353,7 +353,7 @@ function fn_novoton_holidays_stream_page_open(string $title, string $extra_css =
  * Output the closing HTML for a streaming progress page.
  *
  * @param string $back_url  URL for the "Back" button (defaults to manage page)
- * @param array  $extra_buttons  Optional additional buttons [['url' => ..., 'label' => ...], ...]
+ * @param array<string, mixed>  $extra_buttons  Optional additional buttons [['url' => ..., 'label' => ...], ...]
  */
 function fn_novoton_holidays_stream_page_close(string $back_url = '', array $extra_buttons = []): void
 {

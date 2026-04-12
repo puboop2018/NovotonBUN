@@ -68,13 +68,13 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Collected messages for later retrieval
-     * @var array
+     * @var array<string, mixed>
      */
     private array $messages = [];
 
     /**
      * Statistics for the current sync
-     * @var array
+     * @var array<string, mixed>
      */
     private array $stats = [
         'total' => 0,
@@ -176,7 +176,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Output summary statistics
      *
-     * @param array|null $stats Custom stats (uses internal stats if not provided)
+     * @param array<string, mixed>|null $stats Custom stats (uses internal stats if not provided)
      */
     public function outputSummary(?array $stats = null): void
     {
@@ -359,7 +359,7 @@ class SyncLogger implements SyncLoggerInterface
      * @param bool $sendEmail Whether to send email report
      * @param string $country Country for email
      * @param array<string, mixed> $extra Extra data for database log
-     * @return array Result with log_id and email_sent
+     * @return array<string, mixed> Result with log_id and email_sent
      */
     public function complete(bool $sendEmail = true, string $country = '', array $extra = []): array
     {

@@ -482,7 +482,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
  *   feature_stele → Feature: Stele
  *   feature_tip_masa → Feature: Tip Masa
  *
- * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string, 'filename' => string]
+ * @return array<string, mixed> ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string, 'filename' => string]
  */
 function fn_novoton_holidays_generate_hotel_features_xml(): array
 {

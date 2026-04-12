@@ -19,12 +19,18 @@ use Tygh\Addons\NovotonHolidays\Constants;
 
 class HotelReportingRepository implements HotelReportingRepositoryInterface
 {
+    /**
+     * @return list<string>
+     */
     #[\Override]
     public function getCountries(): array
     {
         return db_get_fields("SELECT DISTINCT country FROM ?:novoton_hotels WHERE country != '' ORDER BY country");
     }
 
+    /**
+     * @return list<string>
+     */
     #[\Override]
     public function getResorts(string $country = ''): array
     {
@@ -52,6 +58,9 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         return db_get_fields("SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' ORDER BY city");
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getCountryCityPairs(): array
     {
@@ -60,6 +69,9 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getCountriesWithPriceCounts(): array
     {
@@ -68,6 +80,9 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function countWithoutPackagesByCountry(): array
     {
@@ -91,6 +106,9 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getResortStatsByCountry(string $country): array
     {

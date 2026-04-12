@@ -10,6 +10,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class OffersUpdateCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['offers_update'];
@@ -20,6 +23,9 @@ class OffersUpdateCommand extends AbstractCronCommand
         return 'Check offers_update API for new/changed hotels and add as products';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("Checking for new/updated offers (offers_update API)...");
@@ -213,6 +219,8 @@ class OffersUpdateCommand extends AbstractCronCommand
 
     /**
      * Build the placeholder map for SEO template rendering.
+     * @param array<string, mixed> $hotel
+     * @return array<string, mixed>
      */
     private function buildPlaceholders(array $hotel, string $displayName, string $description = ''): array
     {

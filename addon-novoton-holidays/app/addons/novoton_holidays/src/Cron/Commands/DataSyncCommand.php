@@ -8,6 +8,9 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DataSyncCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['resort_list', 'list_facilities'];
@@ -18,6 +21,9 @@ class DataSyncCommand extends AbstractCronCommand
         return 'Sync reference data (resorts, facilities)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $mode = $this->params['_mode'] ?? 'resort_list';
@@ -32,6 +38,9 @@ class DataSyncCommand extends AbstractCronCommand
         return ['success' => false, 'error' => 'Unknown sub-mode'];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function syncResortList(): array
     {
         $countries = ConfigProvider::getSelectedCountries();
@@ -80,6 +89,9 @@ class DataSyncCommand extends AbstractCronCommand
         return ['success' => $totalErrors === 0, 'stats' => ['added' => $totalAdded, 'updated' => $totalUpdated]];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function syncFacilities(): array
     {
         $this->output("Syncing facilities list from Novoton API...");

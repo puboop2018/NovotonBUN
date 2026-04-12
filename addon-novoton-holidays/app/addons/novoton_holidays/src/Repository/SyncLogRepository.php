@@ -15,6 +15,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
 {
     /**
      * Find log by ID
+     * @return list<array<string, mixed>>|null
      */
     public function findById(int $log_id): ?array
     {
@@ -24,6 +25,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     
     /**
      * Find recent logs
+     * @return list<array<string, mixed>>
      */
     public function findRecent(int $limit = 20, string $type = ''): array
     {
@@ -40,6 +42,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     
     /**
      * Find logs by type
+     * @return list<array<string, mixed>>
      */
     public function findByType(string $type, int $limit = 0): array
     {
@@ -52,6 +55,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     
     /**
      * Get last sync for a type
+     * @return array<string, mixed>|null
      */
     public function getLastSync(string $type): ?array
     {
@@ -76,6 +80,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     
     /**
      * Create log entry
+     * @param array<string, mixed> $data
      */
     public function create(string $type, array $data): int
     {
@@ -97,6 +102,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
 
     /**
      * Log sync result (convenience method)
+     * @param array<string, mixed> $details
      */
     public function logSync(string $type, int $total, int $updated, int $failed = 0, int $duration = 0, string $status = 'completed', array $details = []): int
     {
@@ -137,7 +143,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      * @param int $page Current page (1-based)
      * @param int $per_page Items per page
      * @param string $type Optional sync type filter
-     * @return array ['items' => array, 'total' => int, 'pages' => int]
+     * @return array<string, mixed> ['items' => array, 'total' => int, 'pages' => int]
      */
     public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array
     {
@@ -191,6 +197,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
 
     /**
      * Get sync statistics
+     * @return array<string, mixed>
      */
     public function getStats(int $days = 7): array
     {

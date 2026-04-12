@@ -50,7 +50,7 @@ interface DatabaseHelperInterface
      * Upsert hotel packages (batch).
      *
      * @param string $hotelId
-     * @param array  $packages
+     * @param array<string, mixed>  $packages
      * @return int Number of packages upserted
      */
     public function upsertHotelPackages(string $hotelId, array $packages): int;

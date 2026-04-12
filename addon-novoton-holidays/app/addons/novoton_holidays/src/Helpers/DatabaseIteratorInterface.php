@@ -62,7 +62,7 @@ interface DatabaseIteratorInterface
      * Generic query iterator — iterate over any query results.
      *
      * @param string $query  SQL query with LIMIT ?i OFFSET ?i placeholders
-     * @param array  $params
+     * @param array<string, mixed>  $params
      * @param int    $chunk_size
      * @return \Generator Yields one row at a time
      */
@@ -72,7 +72,7 @@ interface DatabaseIteratorInterface
      * Count total items matching filters.
      *
      * @param string $table   Table name (without prefix)
-     * @param array  $filters
+     * @param array<string, mixed>  $filters
      * @return int
      */
     public function countItems(string $table, array $filters = []): int;

@@ -31,6 +31,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         has_room_price, packages_count, hotelinfo_synced_at, hotel_list_synced_at,
         last_price_check, created_at, updated_at';
 
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
@@ -40,6 +44,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
     }
 
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
     {
@@ -49,12 +57,18 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountry(string $country): array
     {
         return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryForListing(string $country): array
     {
@@ -64,6 +78,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryIndexed(string $country): array
     {
@@ -74,6 +91,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryWithLimit(string $country, int $limit = 0): array
     {
@@ -84,6 +104,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithoutPackages(int $limit = 0): array
     {
@@ -98,6 +121,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $excludeResorts
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
@@ -120,6 +147,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         return db_get_array($query, ...$params);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
     {
@@ -151,6 +181,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
     {
@@ -163,6 +196,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
     {
@@ -178,6 +214,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithProductsSortedByStaleness(int $limit = 50): array
     {
@@ -191,6 +230,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithPricesForExport(string $country): array
     {
@@ -203,6 +245,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $selectedResorts
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
     {
@@ -226,6 +272,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findIdsWithPriceinfoData(): array
     {
@@ -236,6 +285,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findLinkedForSeo(int $offset, int $batch): array
     {
@@ -249,6 +301,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithPriceinfoData(int $limit = 200): array
     {
@@ -263,6 +318,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $filters
+     */
     #[\Override]
     public function count(array $filters = []): int
     {
@@ -275,6 +333,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
      *
      * Duplicated from HotelRepository::buildWhereClause — intentional and
      * temporary; see class-level docblock.
+     * @param array<string, mixed> $filters
      */
     private function buildWhereClause(array $filters): string
     {

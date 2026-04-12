@@ -7,6 +7,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class CleanupCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['cleanup'];
@@ -17,6 +20,9 @@ class CleanupCommand extends AbstractCronCommand
         return 'Clean orphan bookings, old logs, and expired cache';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("=== NOVOTON CLEANUP ===");

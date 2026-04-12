@@ -38,7 +38,7 @@ class DebugLogger
      * Log a debug message via fn_log_event when debug is enabled.
      *
      * @param string $message  Human-readable summary
-     * @param array  $context  Arbitrary key-value context (will appear in log)
+     * @param array<string, mixed>  $context  Arbitrary key-value context (will appear in log)
      */
     public static function log(string $message, array $context = []): void
     {

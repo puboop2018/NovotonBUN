@@ -21,12 +21,16 @@ use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
 
 class PriceInfoParser
 {
+    /** @var array<string, mixed>|null */
     private ?array $priceinfo;
 
+    /** @var array<string, mixed>|null */
     private ?array $hotelinfo;
 
+    /** @var array<string, mixed> */
     private array $codeIndex = [];
 
+    /** @var array<string, mixed> */
     private array $childAgeBands = [];
 
     private ?\Closure $logger;
@@ -47,13 +51,26 @@ class PriceInfoParser
 
     // -- Getters for parsed data ------------------------------------------
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getPriceinfo(): ?array { return $this->priceinfo; }
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getHotelinfo(): ?array { return $this->hotelinfo; }
+    /**
+     * @return array<string, mixed>
+     */
     public function getCodeIndex(): array { return $this->codeIndex; }
+    /**
+     * @return array<string, mixed>
+     */
     public function getChildAgeBands(): array { return $this->childAgeBands; }
 
     /**
      * Set priceinfo directly (used by debug tools that bypass loadPriceInfo)
+     * @param array<string, mixed> $priceinfo
      */
     public function setPriceinfo(array $priceinfo): void
     {
@@ -62,6 +79,7 @@ class PriceInfoParser
 
     /**
      * Load priceinfo data from database
+     * @return array<string, mixed>|null
      */
     public function loadPriceInfo(string $hotelId, string $packageName): ?array
     {
@@ -78,6 +96,7 @@ class PriceInfoParser
 
     /**
      * Load hotel info for room capacities
+     * @return array<string, mixed>|null
      */
     public function loadHotelInfo(string $hotelId): ?array
     {
@@ -170,6 +189,7 @@ class PriceInfoParser
 
     /**
      * Get room capacity (RB, EB, maxADT, maxCHD, minPAX)
+     * @return array<string, mixed>
      */
     public function getRoomCapacity(string $roomId): array
     {
@@ -208,6 +228,8 @@ class PriceInfoParser
 
     /**
      * Validate occupancy against room capacity
+     * @param array<string, mixed> $capacity
+     * @return array<string, mixed>
      */
     public function validateOccupancy(int $adults, int $children, array $capacity): array
     {
@@ -237,6 +259,9 @@ class PriceInfoParser
      *
      * If a child's age band has no matching price row in this room,
      * the child is reclassified as an additional adult on EXTRA BED.
+     * @param list<int> $childrenAges
+     * @param array<string, mixed> $capacity
+     * @return array<string, mixed>
      */
     public function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity, string $roomId = '', string $boardId = ''): array
     {
@@ -432,6 +457,7 @@ class PriceInfoParser
 
     /**
      * Get available child age bands for a specific room+board from season_price data.
+     * @return array<string, mixed>
      */
     public function getAvailableChildAgeBands(string $roomId, string $boardId): array
     {
@@ -516,6 +542,7 @@ class PriceInfoParser
 
     /**
      * Get season number for each night of the stay
+     * @return array<string, mixed>
      */
     public function getSeasonsByNight(string $checkIn, int $nights): array
     {

@@ -16,7 +16,7 @@ use Tygh\Registry;
 
 class PathResolver
 {
-    /** @var array|null Cached paths array. */
+    /** @var array<string, mixed>|null Cached paths array. */
     private static $paths;
 
     /**

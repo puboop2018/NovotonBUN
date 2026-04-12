@@ -127,6 +127,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         return true;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     #[\Override]
     protected function determineSyncType(array $options): string
     {
@@ -178,6 +181,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         return 'none';
     }
 
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
@@ -249,6 +256,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $this->batchResults = $this->getApi()->hotels()->getHotelInfoBatch($hotelIds);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function processItem($itemId): array
     {

@@ -24,7 +24,7 @@ class RoomsDataParser
      * Falls back to a single room from flat booking fields if empty.
      *
      * @param array<string, mixed> $bookingData Form data
-     * @return array Parsed rooms data
+     * @return array<string, mixed> Parsed rooms data
      */
     public function parseRoomsData(array $bookingData): array
     {

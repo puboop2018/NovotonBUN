@@ -13,7 +13,10 @@ namespace Tygh\Addons\NovotonHolidays\Api\Contracts;
 
 interface ReservationApiClientInterface
 {
-    /** 7. hotel_res_RQ — Reservation request. */
+    /**
+     * 7. hotel_res_RQ — Reservation request.
+     * @param array<string, mixed> $bookingData
+     */
     public function createReservation(array $bookingData): \SimpleXMLElement;
 
     /** 15. resinfo — Reservations info. */
@@ -22,7 +25,8 @@ interface ReservationApiClientInterface
     /**
      * 22. hotel_request — Request alternatives when no prices are available.
      *
-     * @return \SimpleXMLElement|array When $returnXml is true, an array is returned.
+     * @param array<string, mixed> $requestData
+     * @return \SimpleXMLElement|array<string, mixed> When $returnXml is true, an array is returned.
      */
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array;
 
@@ -30,6 +34,7 @@ interface ReservationApiClientInterface
      * Generate hotel_request XML **without sending** — for preview / testing.
      *
      * This is a pure XML builder: no HTTP call, no debug state mutation.
+     * @param array<string, mixed> $requestData
      */
     public function generateHotelRequestXml(array $requestData): string;
 

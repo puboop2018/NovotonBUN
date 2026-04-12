@@ -33,15 +33,16 @@ interface AvailabilityApiClientInterface
     /**
      * Search availability using the frmsearch endpoint.
      *
-     * @return array List of offers with commission already applied.
+     * @return array<string, mixed> List of offers with commission already applied.
+     * @param array<string, mixed> $params
      */
     public function searchAvailability(array $params): array;
 
     /**
      * Batch availability search using curl_multi.
      *
-     * @param array<string, array> $paramsList Keyed array: key => search params
-     * @return array<string, array> key => parsed search results (commission already applied)
+     * @param array<string, array<string, mixed>> $paramsList Keyed array: key => search params
+     * @return array<string, array<string, mixed>> key => parsed search results (commission already applied)
      */
     public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array;
 }

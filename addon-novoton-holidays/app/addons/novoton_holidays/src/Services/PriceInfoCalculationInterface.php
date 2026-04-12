@@ -27,7 +27,7 @@ interface PriceInfoCalculationInterface
      *   - adults: Number of adults
      *   - children_ages: Array of children ages
      *   - booking_date: Date of booking for EB check (default: today)
-     * @return array Calculation result with price breakdowns
+     * @return array<string, mixed> Calculation result with price breakdowns
      */
     public function calculate(array $params): array;
 

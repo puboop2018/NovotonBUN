@@ -90,6 +90,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         return true;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     #[\Override]
     protected function determineSyncType(array $options): string
     {
@@ -138,6 +141,10 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         return 'none';
     }
 
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
@@ -217,6 +224,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     protected function processItem($itemId): array
     {
@@ -334,6 +344,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      * preserves text content, and includes attributes.
      *
      * Preserved verbatim from the legacy BatchedPriceInfoSync.
+     * @return array<string, mixed>
      */
     private static function simpleXmlToArray($xml): array
     {

@@ -45,14 +45,18 @@ interface BookingRepositoryInterface
     public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array;
     /** @return list<BookingRow> */
     public function findRqWithoutAlternatives(int $limit = 50): array;
-    /** @param array<string, mixed> $filters */
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function count(array $filters = []): int;
     /**
      * @param array<string, mixed> $data
      * @return int Booking ID
      */
     public function create(array $data): int;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function update(int $booking_id, array $data): bool;
     public function updateStatus(int $booking_id, string $status, string $novoton_status = ''): bool;
     public function linkToOrder(int $booking_id, int $order_id): bool;

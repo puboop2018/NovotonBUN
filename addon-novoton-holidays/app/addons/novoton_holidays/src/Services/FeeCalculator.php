@@ -28,6 +28,8 @@ class FeeCalculator implements FeeCalculatorInterface
 
     /**
      * Calculate fees (extras_daily, handling_fee, company_fee, etc.)
+     * @param array<string, mixed> $occupancy
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateFees(array $occupancy, string $checkIn, int $nights, string $roomId, string $boardId): array
@@ -138,6 +140,7 @@ class FeeCalculator implements FeeCalculatorInterface
      *
      * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
      *                              Entries whose IdAge does not correlate are skipped.
+     * @param array<string, mixed> $occupancy
      */
     private function calculateExtrasDaily(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): float
     {
@@ -201,6 +204,8 @@ class FeeCalculator implements FeeCalculatorInterface
      * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
      *                              Only handling_fee entries whose IdAge correlates with one of these
      *                              are considered.
+     * @param array<string, mixed> $occupancy
+     * @return array<string, mixed>
      */
     private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): array
     {
@@ -307,6 +312,7 @@ class FeeCalculator implements FeeCalculatorInterface
 
     /**
      * Calculate extras_single (single supplement)
+     * @param array<string, mixed> $occupancy
      */
     private function calculateExtrasSingle(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
@@ -365,6 +371,7 @@ class FeeCalculator implements FeeCalculatorInterface
 
     /**
      * Calculate extras_rooms
+     * @param array<string, mixed> $occupancy
      */
     private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
@@ -419,6 +426,7 @@ class FeeCalculator implements FeeCalculatorInterface
 
     /**
      * Calculate extras_board
+     * @param array<string, mixed> $occupancy
      */
     private function calculateExtrasBoard(array $occupancy, string $checkIn, int $nights, string $boardId): float
     {

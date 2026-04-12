@@ -26,6 +26,7 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Find facility by ID
+     * @return list<array<string, mixed>>|null
      */
     public function findById(int $facility_id): ?array
     {
@@ -35,6 +36,7 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Find all facilities
+     * @return list<array<string, mixed>>
      */
     public function findAll(string $lang = 'en'): array
     {
@@ -44,6 +46,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     
     /**
      * Find all facilities with all columns (for admin listing).
+     * @return list<array<string, mixed>>
      */
     public function findAllFull(): array
     {
@@ -104,6 +107,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     
     /**
      * Get facilities for a hotel
+     * @return array<string, mixed>
      */
     public function getForHotel(string $hotel_id, string $lang = 'en'): array
     {
@@ -121,6 +125,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     
     /**
      * Get facility IDs for a hotel
+     * @return array<string, mixed>
      */
     public function getIdsForHotel(string $hotel_id): array
     {
@@ -159,6 +164,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     
     /**
      * Set facilities for a hotel (replace all)
+     * @param list<int> $facility_ids
      */
     public function setHotelFacilities(string $hotel_id, array $facility_ids): bool
     {
@@ -195,6 +201,7 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Get facilities for a hotel filtered by feature type (hotel_facility, room_facility, travel_group, beach_access)
+     * @return array<string, mixed>
      */
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array
     {
@@ -213,6 +220,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     /**
      * Get all facilities for a hotel, grouped by feature type.
      * Returns ['hotel_facility' => [['facility_id' => 1, ...], ...], 'travel_group' => [...], ...]
+     * @return array<string, mixed>
      */
     public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array
     {

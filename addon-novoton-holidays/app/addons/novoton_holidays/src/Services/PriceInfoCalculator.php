@@ -31,6 +31,9 @@ class PriceInfoCalculator
 
     /**
      * Calculate base price from season_price rows
+     * @param array<string, mixed> $occupancy
+     * @param array<string, mixed> $seasonsByNight
+     * @return array<string, mixed>
      */
     public function calculateBasePrice(array $occupancy, array $seasonsByNight, string $roomId, string $boardId, int $nights): array
     {
@@ -210,6 +213,8 @@ class PriceInfoCalculator
 
     /**
      * Find the base code row for percentage calculations
+     * @param array<string, mixed> $seasonPrices
+     * @return array<string, mixed>|null
      */
     public function findBaseCodeRow(array $seasonPrices, string $roomId, string $boardId): ?array
     {
@@ -230,6 +235,8 @@ class PriceInfoCalculator
      *
      * Uses exact matching for all fields (room, board, age type, acc type).
      * When multiple rows match, picks the most specific (largest FromDays).
+     * @param array<string, mixed> $seasonPrices
+     * @return array<string, mixed>|null
      */
     public function findSeasonPriceRow(array $seasonPrices, string $roomId, string $boardId, string $ageType, string $accType, int $nights): ?array
     {
@@ -288,6 +295,7 @@ class PriceInfoCalculator
 
     /**
      * Get price from row, handling percentages via recursive Code/Base resolution
+     * @param array<string, mixed> $row
      */
     public function getPriceFromRow(array $row, string $priceKey): float
     {
@@ -315,6 +323,9 @@ class PriceInfoCalculator
      */
     private const MAX_RESOLVE_DEPTH = 10;
 
+    /**
+     * @param array<string, mixed> $row
+     */
     private function resolvePrice(array $row, string $priceKey, array &$visited, int $depth = 0): float
     {
         if ($depth > self::MAX_RESOLVE_DEPTH) {
@@ -375,6 +386,8 @@ class PriceInfoCalculator
      * pick the one that best matches the given room and board.
      *
      * Falls back to the first row if no room/board match is found.
+     * @param array<string, mixed> $candidates
+     * @return array<string, mixed>
      */
     private function findBestBaseRow(array $candidates, string $roomId, string $boardId): array
     {

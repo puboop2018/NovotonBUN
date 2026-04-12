@@ -9,6 +9,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class HotelListSyncCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['hotel_list'];
@@ -19,6 +22,9 @@ class HotelListSyncCommand extends AbstractCronCommand
         return 'Sync hotel list from API (upsert into novoton_hotels)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $dbHelper = Container::getInstance()->databaseHelper();

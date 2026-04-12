@@ -374,6 +374,8 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
     /**
      * Fetch a chunk of hotels
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
      */
     private function fetchHotelChunk(array $filters, int $limit, int $offset): array
     {

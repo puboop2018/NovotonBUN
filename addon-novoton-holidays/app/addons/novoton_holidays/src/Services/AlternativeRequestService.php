@@ -241,6 +241,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 
     /**
      * Build the database record for an alternative request, encrypting PII.
+     * @return array<string, mixed>
      */
     private function buildRequestRecord(
         string $hotelId, string $hotelName, string $checkIn, string $checkOut,
@@ -272,6 +273,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 
     /**
      * Send confirmation email to customer.
+     * @param array<string, mixed> $mailData
      */
     private function sendConfirmationEmail(string $email, array $mailData): void
     {

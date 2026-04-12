@@ -93,7 +93,7 @@ class CronHelper
      * Initialize cron environment
      *
      * @param array<string, mixed> $params Request parameters (defaults to $_REQUEST)
-     * @return array ['api' => NovotonApi, 'logger' => SyncLogger, 'mode' => string]
+     * @return array<string, mixed> ['api' => NovotonApi, 'logger' => SyncLogger, 'mode' => string]
      */
     public static function initialize(array $params = []): array
     {
@@ -116,6 +116,7 @@ class CronHelper
      * Parse excluded resorts from request or settings
      *
      * @return array<string, mixed>
+     * @param array<string, mixed> $params
      */
     public static function getExcludedResorts(array $params = []): array
     {

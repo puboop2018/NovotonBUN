@@ -12,6 +12,9 @@ use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 
 class AddProductsCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['add_hotels_as_products'];
@@ -22,6 +25,9 @@ class AddProductsCommand extends AbstractCronCommand
         return 'Add hotels with prices as CS-Cart products';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $limit = (int) $this->getParam('limit', 0);
@@ -206,6 +212,7 @@ class AddProductsCommand extends AbstractCronCommand
 
     /**
      * Assign all mappable features to a newly created product.
+     * @param array<string, mixed> $hotel
      */
     private function assignProductFeatures(int $productId, string $hotelId, array $hotel): void
     {
@@ -290,6 +297,9 @@ class AddProductsCommand extends AbstractCronCommand
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getExcludedResorts(): array
     {
         $paramVal = $this->getParam('exclude_resorts');

@@ -11,7 +11,14 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  */
 interface FeeCalculatorInterface
 {
+    /**
+     * @param array<string, mixed> $occupancy
+     * @return array<string, mixed>
+     */
     public function calculateFees(array $occupancy, string $checkIn, int $nights, string $roomId, string $boardId): array;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array;
 }

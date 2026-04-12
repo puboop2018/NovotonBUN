@@ -18,6 +18,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 {
     /**
      * Find request by ID.
+     * @return list<array<string, mixed>>|null
      */
     public function findById(int $request_id): ?array
     {
@@ -27,6 +28,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Create a new alternative request and return its ID.
+     * @param array<string, mixed> $data
      */
     public function create(array $data): int
     {
@@ -36,6 +38,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Find pending requests older than N hours (for API polling).
+     * @return list<array<string, mixed>>
      */
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array
     {
@@ -53,6 +56,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Find pending requests that have a Novoton API reference.
+     * @return list<array<string, mixed>>
      */
     public function findPendingWithApiRef(): array
     {
@@ -68,6 +72,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Find requests with alternatives found but not yet notified.
+     * @return array<string, mixed>
      */
     public function findUnnotified(int $limit = 20): array
     {
@@ -81,6 +86,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Update a request's status and optional data fields.
+     * @param array<string, mixed> $data
      */
     public function update(int $request_id, array $data): bool
     {
@@ -145,7 +151,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      * Count requests matching optional status/conditions.
      *
      * @param string $whereSql  Pre-built WHERE clause (e.g. "WHERE status = 'pending'")
-     * @param array  $params    Bound parameters for the WHERE clause
+     * @param array<string, mixed>  $params    Bound parameters for the WHERE clause
      */
     public function countFiltered(string $whereSql = '', array $params = []): int
     {
@@ -159,9 +165,10 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      * Find requests with pagination and optional WHERE clause.
      *
      * @param string $whereSql  Pre-built WHERE clause
-     * @param array  $params    Bound parameters
+     * @param array<string, mixed>  $params    Bound parameters
      * @param int    $limit
      * @param int    $offset
+     * @return array<string, mixed>
      */
     public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array
     {

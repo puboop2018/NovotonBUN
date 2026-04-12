@@ -38,5 +38,8 @@ interface CacheServiceInterface
      */
     public function cleanup(): int;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getStats(): array;
 }

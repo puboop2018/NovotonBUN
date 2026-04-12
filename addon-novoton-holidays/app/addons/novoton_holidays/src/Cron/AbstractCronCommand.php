@@ -26,8 +26,12 @@ abstract class AbstractCronCommand extends BaseCommand
      */
     protected \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api;
     protected ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
+    /** @var array<string, mixed> */
     protected array $params = [];
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function __construct(
         \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api,
         ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger,
@@ -53,6 +57,9 @@ abstract class AbstractCronCommand extends BaseCommand
         return $this->params[$key] ?? $default;
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     */
     protected function logComplete(string $mode, array $stats = []): void
     {
         fn_log_event('novoton_holidays', 'cron_complete', [
@@ -74,6 +81,9 @@ abstract class AbstractCronCommand extends BaseCommand
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     */
     protected function sendReport(string $type, array $stats, string $context = ''): void
     {
         fn_novoton_holidays_send_import_report_email([], $type, $stats, $context);

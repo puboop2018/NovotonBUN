@@ -156,7 +156,7 @@ class TermsFormatter
      * Parse payment terms from XML string.
      *
      * @param string $xmlString XML terms string
-     * @return array Parsed terms data
+     * @return array<string, mixed> Parsed terms data
      */
     public static function parsePaymentTerms(string $xmlString): array
     {
@@ -217,7 +217,7 @@ class TermsFormatter
      *
      * @param string $xmlString XML terms string
      * @param string $checkIn   Check-in date for relative calculations
-     * @return array Parsed cancellation terms
+     * @return array<string, mixed> Parsed cancellation terms
      */
     public static function parseCancellationTerms(string $xmlString, string $checkIn = ''): array
     {

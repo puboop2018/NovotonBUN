@@ -30,7 +30,9 @@ class HotelSync
     private NovotonApiKitInterface $api;
     private AdultOnlyDetector $adultOnlyDetector;
     private PropertyTypeDetector $propertyTypeDetector;
+    /** @var list<string> */
     private array $selectedCountries;
+    /** @var array<string, mixed> */
     private array $stats;
 
     /**
@@ -89,7 +91,7 @@ class HotelSync
      * Optimized: Uses batch INSERT ON DUPLICATE KEY UPDATE
      *
      * @param string|null $country Specific country or null for all selected
-     * @return array Stats
+     * @return array<string, mixed> Stats
      */
     public function syncHotelList(?string $country = null): array
     {
@@ -227,9 +229,9 @@ class HotelSync
      * Step 2: Sync hotel info for specific hotels
      * Calls getHotelInfo and stores full response in novoton_hotels
      *
-     * @param array|null $hotelIds Specific hotel IDs or null for all
+     * @param array<string, mixed>|null $hotelIds Specific hotel IDs or null for all
      * @param int $limit Max hotels to process (0 = unlimited)
-     * @return array Stats
+     * @return array<string, mixed> Stats
      */
     public function syncHotelInfo(?array $hotelIds = null, int $limit = 0): array
     {
@@ -520,7 +522,7 @@ class HotelSync
      *
      * @param string|null $country Specific country or null for all
      * @param int $hotelLimit Max hotels for hotelinfo sync (0 = unlimited)
-     * @return array Stats
+     * @return array<string, mixed> Stats
      */
     public function fullSync(?string $country = null, int $hotelLimit = 0): array
     {
@@ -552,7 +554,7 @@ class HotelSync
      * Sync only priceinfo for packages (faster refresh)
      *
      * @param int $limit Max packages to sync (0 = unlimited)
-     * @return array Stats
+     * @return array<string, mixed> Stats
      */
     public function syncPriceInfoOnly(int $limit = 0): array
     {
@@ -628,6 +630,7 @@ class HotelSync
 
     /**
      * Get sync stats
+     * @return array<string, mixed>
      */
     public function getStats(): array
     {

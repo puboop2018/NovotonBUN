@@ -55,6 +55,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk lookup: Get existing product IDs for multiple hotel IDs
      *
      * @return array<string, int> Map of hotel_id => product_id
+     * @param array<string, mixed> $hotelIds
      */
     public function getProductIdsByHotelIds(array $hotelIds): array
     {
@@ -89,6 +90,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk lookup: Check which hotel IDs already exist in database
      *
      * @return string[] Existing hotel IDs
+     * @param array<string, mixed> $hotelIds
      */
     public function getExistingHotelIds(array $hotelIds): array
     {
@@ -106,6 +108,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk upsert hotels (INSERT ... ON DUPLICATE KEY UPDATE)
      *
      * @return array{inserted: int, updated: int}
+     * @param array<string, mixed> $hotels
      */
     public function upsertHotels(array $hotels): array
     {
@@ -145,6 +148,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Upsert hotel packages (batch)
      *
      * @return int Number of packages upserted
+     * @param array<string, mixed> $packages
      */
     public function upsertHotelPackages(string $hotelId, array $packages): int
     {
@@ -225,6 +229,9 @@ class DatabaseHelper implements DatabaseHelperInterface
 
     /**
      * Get hotels for sync with optimized field selection
+     * @param array<string, mixed> $conditions
+     * @param array<string, mixed> $fields
+     * @return array<string, mixed>
      */
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
     {
@@ -291,6 +298,7 @@ class DatabaseHelper implements DatabaseHelperInterface
 
     /**
      * Get sync statistics from sync_log
+     * @return array<string, mixed>
      */
     public function getSyncStats(string $syncType, int $days = 30): array
     {

@@ -21,14 +21,14 @@ interface SyncInterface
      * Run the sync operation
      *
      * @param array<string, mixed> $options Options for the sync (e.g., force_full, reset)
-     * @return array Result with status, counts, and other info
+     * @return array<string, mixed> Result with status, counts, and other info
      */
     public function run(array $options = []): array;
 
     /**
      * Get current status of the sync
      *
-     * @return array Status info including progress if in progress
+     * @return array<string, mixed> Status info including progress if in progress
      */
     public function getStatus(): array;
 

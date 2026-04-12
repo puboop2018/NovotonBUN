@@ -18,7 +18,7 @@ interface ProductFactoryInterface
     /**
      * Create CS-Cart product from hotel data.
      *
-     * @param array                   $hotel      Hotel data array
+     * @param array<string, mixed>                   $hotel      Hotel data array
      * @param HotelApiClientInterface $api        Narrow hotel sub-client
      * @param int                     $categoryId Category to assign product to
      * @return int|null Product ID or null on failure

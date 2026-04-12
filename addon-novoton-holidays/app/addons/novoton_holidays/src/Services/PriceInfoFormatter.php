@@ -179,6 +179,7 @@ class PriceInfoFormatter
      *   - For non-positional patterns: count all persons matching the type.
      *   - For positional child patterns: return 1 when the Nth matching
      *     child exists, else 0.
+     * @param array<string, mixed> $occupancy
      */
     public static function countMatchingPersons(array $occupancy, string $idAge): int
     {
@@ -230,6 +231,7 @@ class PriceInfoFormatter
 
     /**
      * Count persons matching a (non-positional) type string.
+     * @param array<string, mixed> $occupancy
      */
     private static function countByType(array $occupancy, string $type): int
     {
@@ -261,6 +263,7 @@ class PriceInfoFormatter
      * Count children whose age falls within the band encoded in the type string.
      *
      * Parses age ranges like "CHD 2-11,99", "CHD 0-1,99", bare "CHD" (0-17).
+     * @param array<string, mixed> $occupancy
      */
     private static function countChildrenInBand(array $occupancy, string $type): int
     {
@@ -298,6 +301,7 @@ class PriceInfoFormatter
      * pricing rows in season_price).
      *
      * Comma/dot and whitespace normalization IS applied for consistency.
+     * @param array<string, mixed> $seasonAgeTypes
      */
     public static function correlatesWithSeasonAgeTypes(string $feeIdAge, array $seasonAgeTypes): bool
     {
@@ -347,6 +351,8 @@ class PriceInfoFormatter
 
     /**
      * Create error result
+     * @param array<string, mixed> $debugLog
+     * @return array<string, mixed>
      */
     public static function errorResult(string $message, array $debugLog = [], bool $debug = false): array
     {
@@ -364,7 +370,7 @@ class PriceInfoFormatter
      * @param array<string, mixed> $priceinfo Priceinfo data
      * @param string $checkIn Check-in date
      * @param int $nights Number of nights
-     * @return array Debug info showing date -> season -> priceKey mapping
+     * @return array<string, mixed> Debug info showing date -> season -> priceKey mapping
      */
     public static function verifySeasonPriceMapping(array $priceinfo, string $checkIn, int $nights): array
     {
@@ -429,7 +435,7 @@ class PriceInfoFormatter
      * @param array<string, mixed> $priceinfo Priceinfo data
      * @param string $roomId Room ID
      * @param string $boardId Board ID
-     * @return array Price values by column
+     * @return array<string, mixed> Price values by column
      */
     public static function getSamplePrices(array $priceinfo, string $roomId, string $boardId): array
     {

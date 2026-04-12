@@ -93,7 +93,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $booking
+     */
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
@@ -139,7 +142,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return 'travel_bookings.view?booking_id=' . (int) $providerBookingId;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $request
+     */
     public function handleAction(string $action, array $request): array
     {
         switch ($action) {
@@ -166,7 +172,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         }
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $booking
+     */
     public function getProviderTabs(array $booking): array
     {
         $tabs = [];
@@ -205,7 +214,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $url;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $request
+     */
     private function handleResinfo(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
@@ -221,7 +233,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $request
+     */
     private function handleRequestAlternatives(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
@@ -283,7 +298,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $request
+     */
     private function handleUpdateNovotonId(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);

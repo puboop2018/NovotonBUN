@@ -103,6 +103,9 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         ];
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     private function log(string $message, array $context = []): void
     {
         if ($this->debug) {

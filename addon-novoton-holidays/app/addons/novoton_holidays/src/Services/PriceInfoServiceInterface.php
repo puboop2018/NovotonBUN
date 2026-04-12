@@ -29,7 +29,7 @@ interface PriceInfoServiceInterface
      *
      * @param int|string  $productIdOrHotelId Product ID or Hotel ID
      * @param string|null $packageName        Optional package name filter
-     * @return array Prices grouped by room
+     * @return array<string, mixed> Prices grouped by room
      */
     public function getStoredPrices(int|string $productIdOrHotelId, ?string $packageName = null): array;
 
@@ -53,7 +53,7 @@ interface PriceInfoServiceInterface
      * Get seasons for hotel.
      *
      * @param string $hotelId Hotel ID
-     * @return array Seasons with dates
+     * @return array<string, mixed> Seasons with dates
      */
     public function getSeasons(string $hotelId): array;
 
@@ -61,7 +61,7 @@ interface PriceInfoServiceInterface
      * Get early booking discounts for hotel.
      *
      * @param string $hotelId Hotel ID
-     * @return array Early booking periods
+     * @return array<string, mixed> Early booking periods
      */
     public function getEarlyBooking(string $hotelId): array;
 
@@ -84,7 +84,7 @@ interface PriceInfoServiceInterface
      * @param string      $hotelId        Hotel ID
      * @param string|null $targetCurrency  Target currency code (null = display currency)
      * @param int         $adults          Number of adults (default 2)
-     * @return array ['prices' => [date => price], 'currency' => string]
+     * @return array<string, mixed> ['prices' => [date => price], 'currency' => string]
      */
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array;
 }

@@ -47,6 +47,7 @@ foreach ($function_files as $file) {
  * Variants function for the api_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
  * Called only from admin settings page where Registry is always populated.
+ * @return array<string, mixed>
  */
 function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 {

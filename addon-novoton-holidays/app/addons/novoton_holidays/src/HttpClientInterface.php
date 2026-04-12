@@ -44,7 +44,7 @@ interface HttpClientInterface
      *
      * @param array<string, mixed> $requests    Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
      * @param int   $concurrency Max simultaneous requests
-     * @return array key => raw response string or false
+     * @return array<string, mixed> key => raw response string or false
      */
     public function sendBatchRequests(array $requests, int $concurrency = 5): array;
 

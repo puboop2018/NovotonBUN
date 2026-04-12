@@ -10,6 +10,9 @@ class XmlParsingException extends NovotonException
     private $xmlErrors;
     private $responseSize;
 
+    /**
+     * @param array<string, mixed> $xmlErrors
+     */
     public function __construct(string $message, array $xmlErrors = [], int $responseSize = 0, ?\Throwable $previous = null)
     {
         $this->xmlErrors = $xmlErrors;
@@ -20,6 +23,9 @@ class XmlParsingException extends NovotonException
         ], 0, $previous);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getXmlErrors(): array
     {
         return $this->xmlErrors;

@@ -28,6 +28,9 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
     /**
      * Calculate Early Booking discount
+     * @param array<string, mixed> $basePrice
+     * @param array<string, mixed> $fees
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateEarlyBookingDiscount(string $bookingDate, string $checkIn, int $nights, array $basePrice, array $fees): array
@@ -111,6 +114,11 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
     /**
      * Calculate Reduction (free nights)
+     * @param array<string, mixed> $seasonsByNight
+     * @param array<string, mixed> $occupancy
+     * @param array<string, mixed> $basePrice
+     * @param array<string, mixed> $fees
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId, array $basePrice = [], array $fees = []): array
@@ -231,6 +239,8 @@ class DiscountCalculator implements DiscountCalculatorInterface
      * If the stay length falls between FromDays and ToDays, and overlaps the
      * FromDate-ToDate range, the guest only pays for MaxDays nights instead
      * of the actual nights. The discount is the value of the excess nights.
+     * @param array<string, mixed> $basePrice
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateReductionPeriod(string $checkIn, int $nights, array $basePrice): array
@@ -305,6 +315,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
      * Calculate reduction_perc_additional (percentage promo discount)
      *
      * Applied as a flat percentage off the subtotal (base + fees - EB/reduction).
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateReductionPercAdditional(float $subtotal): array
@@ -361,6 +372,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
      * Calculate reduction_perc_marketing (marketing percentage discount)
      *
      * Supports date restrictions, room type filtering, minimum stay, and Type.
+     * @return array<string, mixed>
      */
     #[\Override]
     public function calculateReductionPercMarketing(
@@ -485,6 +497,12 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
     /**
      * Apply priority rules to select best discount scenario
+     * @param array<string, mixed> $basePrice
+     * @param array<string, mixed> $fees
+     * @param array<string, mixed> $ebDiscount
+     * @param array<string, mixed> $reduction
+     * @param array<string, mixed> $reductionPeriod
+     * @return array<string, mixed>
      */
     #[\Override]
     public function applyPriorityRules(array $basePrice, array $fees, array $ebDiscount, array $reduction, array $reductionPeriod = []): array

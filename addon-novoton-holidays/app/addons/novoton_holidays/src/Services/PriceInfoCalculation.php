@@ -56,7 +56,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /** @var bool Debug mode */
     private $debug = false;
 
-    /** @var array Debug log */
+    /** @var array<string, mixed> Debug log */
     private $debugLog = [];
 
     /** @var PriceInfoParser */
@@ -99,7 +99,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      *   - adults: Number of adults
      *   - children_ages: Array of children ages (e.g., [1.5, 7])
      *   - booking_date: Date of booking for EB check (default: today)
-     * @return array Calculation result with price breakdowns
+     * @return array<string, mixed> Calculation result with price breakdowns
      */
     public function calculate(array $params): array
     {
@@ -285,6 +285,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
 
     /**
      * Get debug log
+     * @return list<string>
      */
     public function getDebugLog(): array
     {
@@ -296,6 +297,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      *
      * Delegates to PriceInfoFormatter. The priceinfo must be loaded first
      * (either via calculate() or by setting it directly on the parser).
+     * @return array<string, mixed>
      */
     public function verifySeasonPriceMapping(string $checkIn, int $nights): array
     {
@@ -308,6 +310,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
 
     /**
      * Get sample prices for verification (debug helper)
+     * @return array<string, mixed>
      */
     public function getSamplePrices(string $roomId, string $boardId): array
     {
@@ -324,6 +327,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      * Used by the handling-fee correlation logic: handling_fee entries are
      * only considered when their IdAge matches an age type present in the
      * season_price for the booked room.
+     * @return array<string, mixed>
      */
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {

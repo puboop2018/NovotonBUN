@@ -17,24 +17,36 @@ interface PricingApiClientInterface
     /** Apply the configured commission to a raw API price. */
     public function applyCommission(float $price): float;
 
-    /** Build the room_price XML request body (extracted so it can be reused by batch calls). */
+    /**
+     * Build the room_price XML request body (extracted so it can be reused by batch calls).
+     * @param array<string, mixed> $params
+     */
     public function buildRoomPriceXml(array $params): string;
 
     /**
      * Batch room_price requests using curl_multi.
      *
-     * @param array<string, array> $requestParams Keyed array: key => room_price params
+     * @param array<string, array<string, mixed>> $requestParams Keyed array: key => room_price params
      * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}>
      */
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array;
 
-    /** 3. room_price — Accommodation prices (real-time rates). */
+    /**
+     * 3. room_price — Accommodation prices (real-time rates).
+     * @param array<string, mixed> $params
+     */
     public function getRoomPrice(array $params): \SimpleXMLElement|false;
 
-    /** Get room prices for an entire resort (parsed). */
+    /**
+     * Get room prices for an entire resort (parsed).
+     * @param array<string, mixed> $params
+     */
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false;
 
-    /** Get room prices for an entire resort (raw XML, no parsing). */
+    /**
+     * Get room prices for an entire resort (raw XML, no parsing).
+     * @param array<string, mixed> $params
+     */
     public function getRoomPriceByResortRaw(array $params): string;
 
     /** 13. priceinfo — Season prices request. */

@@ -52,7 +52,7 @@ interface SyncLoggerInterface
     /**
      * Output summary statistics.
      *
-     * @param array|null $stats Custom stats (uses internal stats if not provided)
+     * @param array<string, mixed>|null $stats Custom stats (uses internal stats if not provided)
      */
     public function outputSummary(?array $stats = null): void;
 
@@ -104,7 +104,7 @@ interface SyncLoggerInterface
      * Log to database sync_log table.
      *
      * @param string|null $status Status: 'completed', 'failed', 'in_progress'
-     * @param array       $extra  Additional data
+     * @param array<string, mixed>       $extra  Additional data
      * @return int|false Log ID or false on failure
      */
     public function logToDatabase(?string $status = 'completed', array $extra = []): int|false;
@@ -112,7 +112,7 @@ interface SyncLoggerInterface
     /**
      * Send email report.
      *
-     * @param array  $results Detailed results for CSV attachment
+     * @param array<string, mixed>  $results Detailed results for CSV attachment
      * @param string $country
      * @return bool
      */
@@ -122,7 +122,7 @@ interface SyncLoggerInterface
      * Log event using CS-Cart's fn_log_event.
      *
      * @param string $action
-     * @param array  $context
+     * @param array<string, mixed>  $context
      */
     public function logEvent(string $action, array $context = []): void;
 
@@ -131,8 +131,8 @@ interface SyncLoggerInterface
      *
      * @param bool   $sendEmail
      * @param string $country
-     * @param array  $extra
-     * @return array Result with log_id and email_sent
+     * @param array<string, mixed>  $extra
+     * @return array<string, mixed> Result with log_id and email_sent
      */
     public function complete(bool $sendEmail = true, string $country = '', array $extra = []): array;
 

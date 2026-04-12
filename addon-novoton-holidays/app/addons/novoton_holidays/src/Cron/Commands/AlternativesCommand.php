@@ -8,6 +8,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class AlternativesCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['alternative_rs', 'alternative_rs_bookings', 'notify_alternatives', 'expire_requests'];
@@ -18,6 +21,9 @@ class AlternativesCommand extends AbstractCronCommand
         return 'Alternative request management (check, notify, expire)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $mode = $this->params['_mode'] ?? 'alternative_rs';
@@ -36,6 +42,9 @@ class AlternativesCommand extends AbstractCronCommand
         return ['success' => false, 'error' => 'Unknown sub-mode'];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function checkAlternatives(): array
     {
         $this->output("Checking alternative_RS for pending requests...");
@@ -117,6 +126,9 @@ class AlternativesCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => ['checked' => count($pending), 'found' => $found, 'emailed' => $emailed]];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function checkBookingAlternatives(): array
     {
         $this->output("Checking alternatives for RQ status bookings...");
@@ -149,6 +161,9 @@ class AlternativesCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => ['checked' => count($bookings)]];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function notifyAlternatives(): array
     {
         $this->output("Sending notifications for found alternatives...");
@@ -191,6 +206,9 @@ class AlternativesCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => ['notified' => $notified]];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function expireRequests(): array
     {
         $days = (int)$this->getParam('days', 30);
@@ -203,6 +221,10 @@ class AlternativesCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => ['expired' => $result]];
     }
 
+    /**
+     * @param array<string, mixed> $request
+     * @param array<string, mixed> $alternatives
+     */
     private function sendAlternativeEmail(array $request, array $alternatives): bool
     {
         try {

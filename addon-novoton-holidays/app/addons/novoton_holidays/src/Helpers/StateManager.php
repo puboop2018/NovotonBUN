@@ -67,7 +67,7 @@ class StateManager implements StateManagerInterface
     /**
      * Load state from file
      *
-     * @return array State array
+     * @return array<string, mixed> State array
      */
     public function load(): array
     {
@@ -188,7 +188,7 @@ class StateManager implements StateManagerInterface
     /**
      * Attempt to restore state from backup file
      *
-     * @return array Restored state or DEFAULT_STATE
+     * @return array<string, mixed> Restored state or DEFAULT_STATE
      */
     private function restoreFromBackup(): array
     {
@@ -227,7 +227,7 @@ class StateManager implements StateManagerInterface
      * @param string $syncType Type of sync (e.g., 'full', 'incremental')
      * @param array<string, mixed> $itemIds Array of item IDs to process
      * @param array<string, mixed> $metadata Additional metadata
-     * @return array New state
+     * @return array<string, mixed> New state
      */
     public function start(string $syncType, array $itemIds, array $metadata = []): array
     {
@@ -256,7 +256,7 @@ class StateManager implements StateManagerInterface
      * @param int $synced Number of items successfully synced
      * @param int $errors Number of errors
      * @param array<string, mixed> $errorIds IDs of items with errors
-     * @return array Updated state
+     * @return array<string, mixed> Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array
     {
@@ -281,7 +281,7 @@ class StateManager implements StateManagerInterface
      * @param int $synced Increment synced by
      * @param int $errors Increment errors by
      * @param string|null $errorId Optional error ID to add
-     * @return array Updated state
+     * @return array<string, mixed> Updated state
      */
     public function increment(int $processed = 0, int $synced = 0, int $errors = 0, ?string $errorId = null): array
     {
@@ -302,7 +302,7 @@ class StateManager implements StateManagerInterface
     /**
      * Mark sync as completed
      *
-     * @return array Final state
+     * @return array<string, mixed> Final state
      */
     public function complete(): array
     {
@@ -325,7 +325,7 @@ class StateManager implements StateManagerInterface
     /**
      * Get current status with calculated fields
      *
-     * @return array Status with percent, eta, etc.
+     * @return array<string, mixed> Status with percent, eta, etc.
      */
     public function getStatus(): array
     {
@@ -383,7 +383,7 @@ class StateManager implements StateManagerInterface
      * Get the next batch of item IDs to process
      *
      * @param int $batchSize Number of items to get
-     * @return array Array of item IDs
+     * @return array<string, mixed> Array of item IDs
      */
     /**
      * Get the next batch of item IDs to process.
@@ -391,7 +391,7 @@ class StateManager implements StateManagerInterface
      * Otherwise returns empty — callers should use DB-based pagination.
      *
      * @param int $batchSize Number of items to get
-     * @return array Array of item IDs
+     * @return array<string, mixed> Array of item IDs
      */
     public function getNextBatch(int $batchSize): array
     {

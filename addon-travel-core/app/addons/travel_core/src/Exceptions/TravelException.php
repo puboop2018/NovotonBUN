@@ -13,6 +13,7 @@ class TravelException extends \RuntimeException
         parent::__construct($message, $code, $previous);
     }
 
+    /** @return array<string, mixed> */
     public function getContext(): array
     {
         return $this->context;

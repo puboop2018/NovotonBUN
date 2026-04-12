@@ -69,7 +69,7 @@ interface RoomPriceServiceInterface
      * Get multiple room prices
      *
      * @param array<string, mixed> $rooms_params Array of room parameters
-     * @return array Prices by room index
+     * @return array<string, mixed> Prices by room index
      */
     public function getMultipleRoomPrices(array $rooms_params): array;
 
@@ -98,7 +98,7 @@ interface RoomPriceServiceInterface
      *
      * @param float $original_price Original/higher price
      * @param float $discounted_price Discounted price
-     * @return array Savings info [amount, percentage]
+     * @return array<string, mixed> Savings info [amount, percentage]
      */
     public function calculateSavings(float $original_price, float $discounted_price): array;
 
@@ -115,7 +115,7 @@ interface RoomPriceServiceInterface
     /**
      * Get commission info
      *
-     * @return array Commission info
+     * @return array<string, mixed> Commission info
      */
     public function getCommissionInfo(): array;
 

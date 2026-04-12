@@ -58,6 +58,9 @@ class HotelRepository implements HotelRepositoryInterface
         has_room_price, packages_count, hotelinfo_synced_at, hotel_list_synced_at,
         last_price_check, created_at, updated_at';
 
+    /**
+     * @return list<array<string, mixed>>|null
+     */
     #[\Override]
     public function findById(string $hotel_id): ?array
     {
@@ -65,6 +68,9 @@ class HotelRepository implements HotelRepositoryInterface
         return $hotel ?: null;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     #[\Override]
     public function findBasicById(string $hotel_id): ?array
     {
@@ -75,6 +81,9 @@ class HotelRepository implements HotelRepositoryInterface
         return $hotel ?: null;
     }
 
+    /**
+     * @return list<array<string, mixed>>|null
+     */
     #[\Override]
     public function findByProductId(int $product_id): ?array
     {
@@ -95,6 +104,9 @@ class HotelRepository implements HotelRepositoryInterface
         return (bool) db_get_field("SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotel_id);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     #[\Override]
     public function save(string $hotel_id, array $data): bool
     {
@@ -102,6 +114,9 @@ class HotelRepository implements HotelRepositoryInterface
         return $this->upsert($data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     #[\Override]
     public function insert(array $data): bool
     {
@@ -109,6 +124,9 @@ class HotelRepository implements HotelRepositoryInterface
         return (bool) db_query("INSERT INTO ?:novoton_hotels ?e", $data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     #[\Override]
     public function update(string $hotel_id, array $data): bool
     {
@@ -116,6 +134,9 @@ class HotelRepository implements HotelRepositoryInterface
         return (bool) db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $data, $hotel_id);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     #[\Override]
     public function upsert(array $data): bool
     {
@@ -194,108 +215,166 @@ class HotelRepository implements HotelRepositoryInterface
     // HotelSearchRepository delegation (18 methods)
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         return $this->search->findAll($filters, $limit, $offset);
     }
 
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         return $this->search->findAllForListing($filters, $limit, $offset);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountry(string $country): array
     {
         return $this->search->findByCountry($country);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryForListing(string $country): array
     {
         return $this->search->findByCountryForListing($country);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryIndexed(string $country): array
     {
         return $this->search->findByCountryIndexed($country);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     #[\Override]
     public function findByCountryWithLimit(string $country, int $limit = 0): array
     {
         return $this->search->findByCountryWithLimit($country, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithoutPackages(int $limit = 0): array
     {
         return $this->search->findWithoutPackages($limit);
     }
 
+    /**
+     * @param array<string, mixed> $excludeResorts
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
         return $this->search->findUnlinkedWithPrices($country, $excludeResorts, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
     {
         return $this->search->findUnlinkedForAdmin($country, $filter, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
     {
         return $this->search->findNeedingPriceCheck($daysStale, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
     {
         return $this->search->findNeedingPriceUpdate($staleHours, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithProductsSortedByStaleness(int $limit = 50): array
     {
         return $this->search->findWithProductsSortedByStaleness($limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithPricesForExport(string $country): array
     {
         return $this->search->findWithPricesForExport($country);
     }
 
+    /**
+     * @param array<string, mixed> $selectedResorts
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array
     {
         return $this->search->findForImport($country, $importMode, $selectedResorts, $limit);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findIdsWithPriceinfoData(): array
     {
         return $this->search->findIdsWithPriceinfoData();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findLinkedForSeo(int $offset, int $batch): array
     {
         return $this->search->findLinkedForSeo($offset, $batch);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function findWithPriceinfoData(int $limit = 200): array
     {
         return $this->search->findWithPriceinfoData($limit);
     }
 
+    /**
+     * @param array<string, mixed> $filters
+     */
     #[\Override]
     public function count(array $filters = []): int
     {
@@ -306,30 +385,45 @@ class HotelRepository implements HotelRepositoryInterface
     // HotelReportingRepository delegation (8 methods)
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * @return list<string>
+     */
     #[\Override]
     public function getCountries(): array
     {
         return $this->reporting->getCountries();
     }
 
+    /**
+     * @return list<string>
+     */
     #[\Override]
     public function getResorts(string $country = ''): array
     {
         return $this->reporting->getResorts($country);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getCountryCityPairs(): array
     {
         return $this->reporting->getCountryCityPairs();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getCountriesWithPriceCounts(): array
     {
         return $this->reporting->getCountriesWithPriceCounts();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function countWithoutPackagesByCountry(): array
     {
@@ -342,6 +436,9 @@ class HotelRepository implements HotelRepositoryInterface
         return $this->reporting->countWithPackagesByCountry($country);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getResortStatsByCountry(string $country): array
     {
@@ -386,18 +483,27 @@ class HotelRepository implements HotelRepositoryInterface
     // HotelPackageRepository delegation (5 methods)
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getPackages(string $hotel_id): array
     {
         return $this->packages->findByHotelIdFull($hotel_id);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function getPackagesForListing(string $hotel_id): array
     {
         return $this->packages->findForListing($hotel_id);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     #[\Override]
     public function savePackage(string $hotel_id, string $package_id, array $data): bool
     {
@@ -424,6 +530,8 @@ class HotelRepository implements HotelRepositoryInterface
      * Filter null values from a data array to prevent PHP 8.1+
      * real_escape_string() deprecation when passed to ?e / ?u placeholders.
      * Null values are removed so the DB column keeps its DEFAULT / current value.
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     private static function filterNullValues(array $data): array
     {

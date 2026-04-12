@@ -97,7 +97,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * @param int|string $productIdOrHotelId Product ID or Hotel ID
      * @param string|null $packageName Optional package name filter
-     * @return array Prices grouped by room
+     * @return array<string, mixed> Prices grouped by room
      */
     public function getStoredPrices(int|string $productIdOrHotelId, ?string $packageName = null): array
     {
@@ -165,7 +165,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * V3: Extracts from priceinfo_data JSON
      *
      * @param string $hotelId Hotel ID
-     * @return array Seasons with dates
+     * @return array<string, mixed> Seasons with dates
      */
     public function getSeasons(string $hotelId): array
     {
@@ -205,7 +205,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * V3: Extracts from priceinfo_data JSON
      *
      * @param string $hotelId Hotel ID
-     * @return array Early booking periods
+     * @return array<string, mixed> Early booking periods
      */
     public function getEarlyBooking(string $hotelId): array
     {
@@ -290,7 +290,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param string      $hotelId        Hotel ID
      * @param string|null $targetCurrency  Target currency code (null = display currency)
      * @param int         $adults          Number of adults (default 2)
-     * @return array ['prices' => [date => price], 'currency' => string]
+     * @return array<string, mixed> ['prices' => [date => price], 'currency' => string]
      */
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array
     {
@@ -376,7 +376,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * values — the cheapest room total for 2 adults per date.
      *
      * @param string $hotelId Hotel ID
-     * @return array [date => rawEurPrice]
+     * @return array<string, mixed> [date => rawEurPrice]
      */
     private static function computeRawCalendarPrices(string $hotelId): array
     {
@@ -420,11 +420,11 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Returns raw API prices (EUR, no commission, no conversion).
      *
-     * @param array  $priceinfo Decoded priceinfo_data JSON
+     * @param array<string, mixed>  $priceinfo Decoded priceinfo_data JSON
      * @param int    $adults    Number of adults
      * @param string $today     Today's date (Y-m-d)
      * @param string $maxDate   Max future date (Y-m-d)
-     * @return array [date => rawPrice]
+     * @return array<string, mixed> [date => rawPrice]
      */
     private static function buildRawDateMap(array $priceinfo, int $adults, string $today, string $maxDate): array
     {
@@ -508,7 +508,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param array<string, mixed> $seasonPrices season_price rows
      * @param array<string, mixed> $seasons      seasons array
      * @param int   $adults       number of adults
-     * @return array [seasonNum => cheapestRoomTotal]
+     * @return array<string, mixed> [seasonNum => cheapestRoomTotal]
      */
     private function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
     {
@@ -599,7 +599,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * @param mixed  $rawPrice  Price value (numeric or "85%")
      * @param string $priceKey  Column key (e.g. "Price2")
-     * @param array  $codeIndex Code-indexed season_price rows
+     * @param array<string, mixed>  $codeIndex Code-indexed season_price rows
      * @return float Resolved price
      */
     private function resolveCalendarPrice($rawPrice, string $priceKey, array $codeIndex): float
@@ -640,7 +640,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Extract prices from priceinfo response
      *
      * @param array<string, mixed> $priceinfo Priceinfo data
-     * @return array Prices grouped by room
+     * @return array<string, mixed> Prices grouped by room
      */
     private function extractPricesFromPriceInfo(array $priceinfo): array
     {
@@ -662,7 +662,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * @param array<string, mixed> $priceinfo Raw priceinfo data
      * @param string $hotelId Hotel ID
-     * @return array Formatted priceinfo
+     * @return array<string, mixed> Formatted priceinfo
      */
     private function formatPriceInfo(array $priceinfo, string $hotelId): array
     {
@@ -708,7 +708,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Group prices by room
      *
      * @param array<string, mixed> $prices Array of price records
-     * @return array Prices grouped by room
+     * @return array<string, mixed> Prices grouped by room
      */
     private function groupPricesByRoom(array $prices): array
     {
@@ -732,7 +732,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * @param \SimpleXMLElement $response API response
      * @param string $hotelId Hotel ID
-     * @return array Parsed data
+     * @return array<string, mixed> Parsed data
      */
     private function parsePriceInfoResponse($response, string $hotelId): array
     {

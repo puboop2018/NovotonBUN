@@ -8,7 +8,7 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
 
 // Shared tab set for Novoton admin pages
 $tabs = [

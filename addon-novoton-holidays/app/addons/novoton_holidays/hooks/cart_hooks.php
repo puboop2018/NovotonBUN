@@ -200,6 +200,7 @@ function smarty_modifier_json_decode($string, $assoc = true)
 
 /**
  * Inject DB booking fields into a cart product's extra data.
+ * @param array<string, mixed> $booking
  */
 function _nvt_inject_booking_into_cart_product(
     array &$product,
@@ -248,6 +249,7 @@ function _nvt_inject_booking_into_cart_product(
  *
  * Delegates to BookingDisplayService::addBookingDisplayData() with
  * Novoton-specific config (lang prefix, formatters, JSON decoder).
+ * @param array<string, mixed>|null $cart
  */
 function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $cart = null): void
 {

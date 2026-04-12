@@ -7,6 +7,9 @@ use Tygh\Addons\NovotonHolidays\HotelSync;
 
 class HotelSyncCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['sync_hotels', 'sync_hotellist', 'sync_hotelinfo', 'sync_priceinfo'];
@@ -17,6 +20,9 @@ class HotelSyncCommand extends AbstractCronCommand
         return 'Hotel sync (hotel_list, hotelinfo, priceinfo)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $mode = $this->params['_mode'] ?? 'sync_hotels';

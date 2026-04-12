@@ -13,6 +13,9 @@ class FullSyncCommand extends AbstractCronCommand
     private ?ResInfoCommand $resInfoCmd;
     private ?CleanupCommand $cleanupCmd;
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function __construct(
         \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api,
         ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger,
@@ -27,6 +30,9 @@ class FullSyncCommand extends AbstractCronCommand
         $this->cleanupCmd = $cleanupCmd;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public static function getModes(): array
     {
@@ -39,6 +45,9 @@ class FullSyncCommand extends AbstractCronCommand
         return 'Full sync: prices + booking status + cleanup';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function execute(): array
     {

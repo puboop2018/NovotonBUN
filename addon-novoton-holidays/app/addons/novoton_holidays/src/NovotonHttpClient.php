@@ -37,6 +37,9 @@ class NovotonHttpClient implements HttpClientInterface
     public string $lastError = '';
     public string $lastResponseRaw = '';
 
+    /**
+     * @param array<string, mixed> $settings
+     */
     public function __construct(array $settings)
     {
         if (empty($settings['api_url'])) {
@@ -205,7 +208,7 @@ class NovotonHttpClient implements HttpClientInterface
      *
      * @param array<string, mixed> $requests Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
      * @param int $concurrency Max simultaneous requests
-     * @return array key => raw response string or false
+     * @return array<string, mixed> key => raw response string or false
      */
     public function sendBatchRequests(array $requests, int $concurrency = 5): array
     {
@@ -339,6 +342,7 @@ class NovotonHttpClient implements HttpClientInterface
 
     /**
      * Get circuit breaker status (for monitoring)
+     * @return array<string, mixed>
      */
     public function getCircuitStatus(): array
     {

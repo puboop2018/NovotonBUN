@@ -23,7 +23,7 @@ class JsonDecoder
      *
      * @param mixed  $json     The raw JSON string (null/empty/non-string are handled)
      * @param string $context  Human-readable label for log messages (e.g. 'rooms_data', 'priceinfo')
-     * @param array  $default  Value to return on decode failure
+     * @param array<string, mixed>  $default  Value to return on decode failure
      * @return array<string, mixed>
      */
     public static function decode($json, string $context = '', array $default = []): array

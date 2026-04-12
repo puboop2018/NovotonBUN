@@ -36,19 +36,19 @@ class ConfigProvider
     /** @var self|null Instance-based singleton. */
     private static ?self $instance = null;
 
-    /** @var array|null Cached settings array, loaded once per request. */
+    /** @var array<string, mixed>|null Cached settings array, loaded once per request. */
     private static $settings;
 
     /** @var string|null Cached addon version, loaded once per request. */
     private static $version;
 
-    /** @var array|null Instance-level settings (for injected/test instances). */
+    /** @var array<string, mixed>|null Instance-level settings (for injected/test instances). */
     private ?array $instanceSettings;
 
     /**
      * Instance constructor for DI / testing.
      *
-     * @param array|null $settings If provided, this instance uses these settings
+     * @param array<string, mixed>|null $settings If provided, this instance uses these settings
      *                             instead of the Registry. Pass null to use Registry.
      */
     public function __construct(?array $settings = null)
@@ -77,6 +77,7 @@ class ConfigProvider
 
     /**
      * Instance method: get settings array.
+     * @return array<string, mixed>
      */
     public function getSettings(): array
     {
@@ -86,6 +87,9 @@ class ConfigProvider
         return self::settings();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public static function settings(): array
     {
         if (self::$settings === null) {
@@ -383,6 +387,9 @@ class ConfigProvider
 
     // ── Raw Access ──
 
+    /**
+     * @return array<string, mixed>
+     */
     public static function all(): array
     {
         return self::settings();

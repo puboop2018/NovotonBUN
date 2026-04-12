@@ -20,6 +20,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     private const LISTING_COLUMNS = 'id, hotel_id, package_id, package_name, seasons_count,
         has_early_booking, min_price, currency, needs_price_compute, synced_at, created_at, updated_at';
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function findByHotelId(string $hotelId): array
     {
         return db_get_array(
@@ -31,6 +34,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     /**
      * Find all packages for a hotel including full priceinfo_data JSON.
      * Use only when the caller needs to process pricing data.
+     * @return list<array<string, mixed>>
      */
     public function findByHotelIdFull(string $hotelId): array
     {
@@ -40,6 +44,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         );
     }
 
+    /**
+     * @return list<array<string, mixed>>|null
+     */
     public function findByHotelAndPackageId(string $hotelId, string $packageId): ?array
     {
         $row = db_get_row(
@@ -49,6 +56,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         return $row ?: null;
     }
 
+    /**
+     * @return list<array<string, mixed>>|null
+     */
     public function findByHotelAndPackageName(string $hotelId, string $packageName): ?array
     {
         $row = db_get_row(
@@ -66,6 +76,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function upsert(string $hotelId, string $packageId, array $data): bool
     {
         $data['hotel_id'] = $hotelId;
@@ -96,6 +109,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findEarlyBookingPackage(string $hotelId): ?array
     {
         $row = db_get_row(
@@ -115,6 +131,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function findForListing(string $hotelId): array
     {
         return db_get_array(
@@ -175,6 +194,9 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         return ($val !== false && $val !== '') ? (string) $val : null;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function getAllPriceinfoData(string $hotelId): array
     {
         return db_get_fields(
@@ -186,6 +208,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
 
     /**
      * Get package names with priceinfo data for a hotel (for AJAX dropdown).
+     * @return array<string, mixed>
      */
     public function findPackageNamesWithPriceinfo(string $hotelId): array
     {
@@ -211,6 +234,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
 
     /**
      * Get package_id and package_name pairs for a hotel.
+     * @return array<string, mixed>
      */
     public function getPackageIdNamePairs(string $hotelId): array
     {
@@ -222,6 +246,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
 
     /**
      * Get package listing data for hotel detail view.
+     * @return array<string, mixed>
      */
     public function findForHotelDetail(string $hotelId): array
     {

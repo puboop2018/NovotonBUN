@@ -33,7 +33,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     /**
      * 4. hotel_quota - Free allotments for all rooms
      *
-     * @return array Associative array of room_id => quota value
+     * @return array<string, mixed> Associative array of room_id => quota value
      */
     #[\Override]
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
@@ -140,6 +140,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      * Build the frmsearch XML request body.
      *
      * Extracted for reuse by searchAvailabilityBatch().
+     * @param array<string, mixed> $params
      */
     private function buildSearchXml(array $params): string
     {
@@ -166,7 +167,8 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      * commission applied (see `parseSearchResults()` below). Callers must NOT
      * call `applyCommission()` on those values a second time.
      *
-     * @return array Search results (commission applied)
+     * @return array<string, mixed> Search results (commission applied)
+     * @param array<string, mixed> $params
      */
     #[\Override]
     public function searchAvailability(array $params): array
@@ -190,9 +192,9 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      * Same commission caveat as `searchAvailability()` — prices come out with
      * commission already applied; do not re-apply.
      *
-     * @param array<string, array> $paramsList Keyed array: key => search params
+     * @param array<string, array<string, mixed>> $paramsList Keyed array: key => search params
      * @param int $concurrency Max simultaneous requests
-     * @return array<string, array> key => parsed search results array
+     * @return array<string, array<string, mixed>> key => parsed search results array
      */
     #[\Override]
     public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
@@ -231,6 +233,9 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         return $results;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function parseSearchResults($result, $params): array
     {
         $results = [];

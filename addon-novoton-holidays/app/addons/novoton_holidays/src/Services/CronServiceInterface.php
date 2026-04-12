@@ -17,7 +17,7 @@ interface CronServiceInterface
      * Check ASK status bookings.
      * Polls API for status updates on pending ASK bookings.
      *
-     * @return array Results with updated/unchanged/errors counts
+     * @return array<string, mixed> Results with updated/unchanged/errors counts
      */
     public function checkAskBookings(): array;
 
@@ -25,7 +25,7 @@ interface CronServiceInterface
      * Check pending alternative requests.
      * Polls API for alternatives on pending requests.
      *
-     * @return array Results
+     * @return array<string, mixed> Results
      */
     public function checkAlternatives(): array;
 

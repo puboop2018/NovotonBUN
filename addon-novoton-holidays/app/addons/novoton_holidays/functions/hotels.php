@@ -17,7 +17,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  *
  * @param array<string, mixed> $pkg Package record from novoton_hotel_packages table
  * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
- * @return array Normalized package data
+ * @return array<string, mixed> Normalized package data
  */
 function fn_novoton_holidays_normalize_package(array $pkg, bool $include_priceinfo_details = false): array
 {
@@ -76,7 +76,7 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
  *
  * Returns by reference so callers can mutate the cache in-place.
  *
- * @return array The shared cache array, returned by reference
+ * @return array<string, mixed> The shared cache array, returned by reference
  */
 function &_novoton_hotel_data_cache(): array
 {
@@ -88,9 +88,9 @@ function &_novoton_hotel_data_cache(): array
  * Enrich a raw novoton_hotels DB row: decode hotel_data JSON, extract
  * rooms/boards/ages, attach packages.
  *
- * @param array      $hotel    Raw row from novoton_hotels
- * @param array|null $packages Pre-fetched package rows (already normalized), or null to query
- * @return array Enriched hotel array
+ * @param array<string, mixed>      $hotel    Raw row from novoton_hotels
+ * @param array<string, mixed>|null $packages Pre-fetched package rows (already normalized), or null to query
+ * @return array<string, mixed> Enriched hotel array
  */
 function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
 {
@@ -244,7 +244,7 @@ function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $for
  * @param int $product_id Product ID
  * @param bool $force Force refresh
  * @param string|int|null $hotel_id Hotel ID (string from API, int from DB)
- * @return array Packages with prices data
+ * @return array<string, mixed> Packages with prices data
  */
 function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, string|int|null $hotel_id = null): array
 {
@@ -435,7 +435,7 @@ function fn_novoton_holidays_get_hotels_no_packages_count(): int
  * Get hotels without packages data grouped by country
  * V3: Checks novoton_hotel_packages table instead of packages_data column
  *
- * @return array Array with country => count
+ * @return array<string, mixed> Array with country => count
  */
 function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
 {
@@ -481,7 +481,7 @@ function fn_novoton_holidays_get_or_create_category(string $path): int
  * Stores the authoritative resort names that room_price API accepts.
  *
  * @param string $country Country name (default: BULGARIA)
- * @return array Result with counts
+ * @return array<string, mixed> Result with counts
  */
 function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY): array
 {
@@ -552,7 +552,7 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
 /**
  * Sync facilities list from API
  *
- * @return array Result with counts
+ * @return array<string, mixed> Result with counts
  */
 function fn_novoton_holidays_sync_facilities_list(): array
 {
@@ -673,7 +673,7 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
  * 
  * @param string $hotel_id Hotel ID
  * @param string $lang Language code (en/ro)
- * @return array Facilities list
+ * @return array<string, mixed> Facilities list
  */
 function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang = 'en'): array
 {
@@ -700,7 +700,7 @@ function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang
  * @param string $hotel_id Hotel ID
  * @param string $facility_type Feature type constant: hotel_facility, room_facility, travel_group, beach_access
  * @param string $lang Language code (en/ro)
- * @return array Facilities list
+ * @return array<string, mixed> Facilities list
  */
 function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, string $facility_type, string $lang = 'en'): array
 {
@@ -724,7 +724,7 @@ function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, stri
 /**
  * Get resorts list for settings dropdown (resort = city in the API)
  *
- * @return array Resorts grouped by country
+ * @return array<string, mixed> Resorts grouped by country
  */
 function fn_novoton_holidays_get_resorts_for_settings(): array
 {

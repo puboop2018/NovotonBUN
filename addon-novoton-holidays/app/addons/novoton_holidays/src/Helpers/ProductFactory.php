@@ -29,7 +29,7 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * Create CS-Cart product from hotel data
      *
-     * @param array                   $hotel      Hotel data array
+     * @param array<string, mixed>                   $hotel      Hotel data array
      * @param HotelApiClientInterface $api        Narrow hotel sub-client
      * @param int                     $categoryId Category to assign product to
      * @return int|null Product ID or null on failure
@@ -180,10 +180,10 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * Build the placeholder map for SEO template rendering from Novoton hotel data.
      *
-     * @param array  $hotel       Hotel row from novoton_hotels table
+     * @param array<string, mixed>  $hotel       Hotel row from novoton_hotels table
      * @param string $displayName Formatted display name (Title Case, with property type)
      * @param string $description API description text
-     * @return array<string, string|array> Key => value map (keys without braces)
+     * @return array<string, string|array<string, mixed>> Key => value map (keys without braces)
      */
     public static function buildNovotonPlaceholders(array $hotel, string $displayName, string $description = ''): array
     {

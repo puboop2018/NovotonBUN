@@ -148,6 +148,9 @@ class NovotonApi implements NovotonApiKitInterface
         return (string) ($this->lastActiveClient->lastResponse ?? '');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getLastRequestFormatted(): array
     {
         return (array) ($this->lastActiveClient->lastRequestFormatted ?? []);
@@ -175,6 +178,9 @@ class NovotonApi implements NovotonApiKitInterface
 
     // ========== CIRCUIT BREAKER ==========
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getCircuitStatus(): array { return $this->httpClient->getCircuitStatus(); }
     public function resetCircuitBreaker(): void { $this->httpClient->resetCircuitBreaker(); }
 

@@ -17,7 +17,7 @@ interface StateManagerInterface
     /**
      * Load state from file.
      *
-     * @return array State array
+     * @return array<string, mixed> State array
      */
     public function load(): array;
 
@@ -47,9 +47,9 @@ interface StateManagerInterface
      * Start a new sync.
      *
      * @param string $syncType Type of sync (e.g., 'full', 'incremental')
-     * @param array  $itemIds  Items to process
-     * @param array  $metadata Additional metadata
-     * @return array New state
+     * @param array<string, mixed>  $itemIds  Items to process
+     * @param array<string, mixed>  $metadata Additional metadata
+     * @return array<string, mixed> New state
      */
     public function start(string $syncType, array $itemIds, array $metadata = []): array;
 
@@ -60,7 +60,7 @@ interface StateManagerInterface
      * @param int   $synced
      * @param int   $errors
      * @param array<string, mixed> $errorIds
-     * @return array Updated state
+     * @return array<string, mixed> Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array;
 
@@ -71,21 +71,21 @@ interface StateManagerInterface
      * @param int         $synced
      * @param int         $errors
      * @param string|null $errorId
-     * @return array Updated state
+     * @return array<string, mixed> Updated state
      */
     public function increment(int $processed = 0, int $synced = 0, int $errors = 0, ?string $errorId = null): array;
 
     /**
      * Mark sync as completed.
      *
-     * @return array Final state
+     * @return array<string, mixed> Final state
      */
     public function complete(): array;
 
     /**
      * Get current status with calculated fields.
      *
-     * @return array Status with percent, eta, etc.
+     * @return array<string, mixed> Status with percent, eta, etc.
      */
     public function getStatus(): array;
 
@@ -93,7 +93,7 @@ interface StateManagerInterface
      * Get the next batch of item IDs to process.
      *
      * @param int $batchSize
-     * @return array Array of item IDs
+     * @return array<string, mixed> Array of item IDs
      */
     public function getNextBatch(int $batchSize): array;
 

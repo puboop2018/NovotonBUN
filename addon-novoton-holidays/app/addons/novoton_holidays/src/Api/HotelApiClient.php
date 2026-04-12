@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
 {
+    /** @var array<string, mixed> */
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_HOTEL_LIST,
         Constants::API_FUNCTION_HOTEL_INFO,
@@ -59,7 +60,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
      * 2b. hotelinfo batch - fetch multiple hotels in parallel using curl_multi
      *
      * @param array<string, mixed> $hotelIds Array of hotel IDs
-     * @return array hotel_id => SimpleXMLElement|false
+     * @return array<string, mixed> hotel_id => SimpleXMLElement|false
      */
     #[\Override]
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array

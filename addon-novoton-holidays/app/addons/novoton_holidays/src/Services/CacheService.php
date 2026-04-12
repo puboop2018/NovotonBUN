@@ -540,7 +540,7 @@ class CacheService implements CacheServiceInterface
     /**
      * Get cache statistics
      * 
-     * @return array Statistics
+     * @return array<string, mixed> Statistics
      */
     public function getStats(): array
     {

@@ -10,6 +10,9 @@ class SyncException extends NovotonException
     private string $syncType;
     private string $entityId;
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(string $message, string $syncType = '', string $entityId = '', array $context = [], ?\Throwable $previous = null)
     {
         $this->syncType = $syncType;

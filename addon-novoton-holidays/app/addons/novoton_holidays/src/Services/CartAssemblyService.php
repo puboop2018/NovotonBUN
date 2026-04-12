@@ -29,7 +29,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      * @param array<string, mixed> $guestsData  Parsed guest data
      * @param array<string, mixed> $priceResult Result from verifyPrice()
      * @param array<string, mixed> $roomsData   Parsed rooms data
-     * @return array Cart product entry with 'extra' containing all booking metadata
+     * @return array<string, mixed> Cart product entry with 'extra' containing all booking metadata
      */
     #[\Override]
     public function assembleCartProduct(
@@ -117,7 +117,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      *
      * @param array<string, mixed> $roomsData  Rooms data array
      * @param array<string, mixed> $guestsData Parsed guest data
-     * @return array Enriched rooms data
+     * @return array<string, mixed> Enriched rooms data
      */
     #[\Override]
     public function enrichRoomsData(array $roomsData, array $guestsData): array
@@ -175,7 +175,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      *
      * @param array<string, mixed> $booking     Booking record from DB
      * @param array<string, mixed> $bookingData Additional data from form
-     * @return array Cart extra array
+     * @return array<string, mixed> Cart extra array
      */
     #[\Override]
     public function buildCartExtra(array $booking, array $bookingData): array

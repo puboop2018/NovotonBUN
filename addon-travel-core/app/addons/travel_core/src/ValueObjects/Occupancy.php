@@ -60,6 +60,7 @@ final class Occupancy
 
     public function adults(): int        { return $this->adults; }
     public function children(): int      { return $this->children; }
+    /** @return array<string, mixed> */
     public function childrenAges(): array { return $this->childrenAges; }
     public function totalGuests(): int   { return $this->adults + $this->children; }
     public function hasChildren(): bool  { return $this->children > 0; }

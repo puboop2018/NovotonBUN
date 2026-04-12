@@ -10,6 +10,9 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
  */
 class CacheRepository implements CacheRepositoryInterface
 {
+    /**
+     * @return list<array<string, mixed>>|null
+     */
     public function findByKey(string $key): ?array
     {
         $row = db_get_row(

@@ -19,7 +19,7 @@ class SearchParameterNormalizer
      * Normalize raw search parameters from the HTTP request.
      *
      * @param array<string, mixed> $searchParams Already-sanitized request params (from SecurityService)
-     * @return array Normalized parameter bag with keys:
+     * @return array<string, mixed> Normalized parameter bag with keys:
      *   check_in, check_out, nights, adults, children (ages array),
      *   children_count, children_ages_str, num_rooms, rooms_data,
      *   rooms_data_json, flex_days, meal_plan, hotel_id, product_id,
@@ -105,11 +105,17 @@ class SearchParameterNormalizer
     // Internals
     // =====================================================================
 
+    /**
+     * @param array<string, mixed> $params
+     */
     private function resolveCheckIn(array $params): string
     {
         return !empty($params['check_in']) ? $params['check_in'] : '';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     private function resolveNights(array $params, string $checkIn): int
     {
         if (!empty($params['check_out'])) {
@@ -132,6 +138,8 @@ class SearchParameterNormalizer
     /**
      * Parse rooms_data / room_data JSON from the React or legacy form.
      * Falls back to constructing a single-room entry from scalar params.
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function parseRoomsData(array $params): array
     {
@@ -201,6 +209,9 @@ class SearchParameterNormalizer
     /**
      * If the URL also carries a children_ages param, distribute them
      * to rooms whose childrenAges are still empty.
+     * @param array<string, mixed> $roomsData
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     private function mergeUrlChildrenAges(array $roomsData, array $params): array
     {
@@ -224,6 +235,7 @@ class SearchParameterNormalizer
 
     /**
      * @return array{int, int, int[]}  [totalAdults, totalChildren, allAges]
+     * @param array<string, mixed> $roomsData
      */
     private function calculateTotals(array $roomsData): array
     {

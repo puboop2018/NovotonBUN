@@ -15,6 +15,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
 {
     private readonly CommissionCalculator $commissionCalculator;
 
+    /** @var array<string, mixed> */
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_PRICE_INFO,
     ];
@@ -85,7 +86,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      * Checks cache for each request first, then sends uncached requests in parallel.
      * Returns both the parsed SimpleXMLElement and the raw cleaned XML for each key.
      *
-     * @param array<string, array> $requestParams Keyed array: key => room_price params
+     * @param array<string, array<string, mixed>> $requestParams Keyed array: key => room_price params
      * @param int $concurrency Max simultaneous requests (default 5)
      * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}> key => result
      */
@@ -176,6 +177,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
      *
      * @return \SimpleXMLElement
+     * @param array<string, mixed> $params
      */
     #[\Override]
     public function getRoomPrice(array $params): \SimpleXMLElement|false
@@ -249,6 +251,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      * Get room prices for an entire resort
      *
      * @return \SimpleXMLElement
+     * @param array<string, mixed> $params
      */
     #[\Override]
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
@@ -345,6 +348,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      * Get room prices for an entire resort - RAW response (no XML parsing)
      *
      * @return string Raw XML response
+     * @param array<string, mixed> $params
      */
     #[\Override]
     public function getRoomPriceByResortRaw(array $params): string

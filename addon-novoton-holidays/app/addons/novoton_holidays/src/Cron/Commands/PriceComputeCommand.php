@@ -35,6 +35,9 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
  */
 class PriceComputeCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['compute_prices'];
@@ -45,6 +48,9 @@ class PriceComputeCommand extends AbstractCronCommand
         return 'Compute min_price, seasons_count, has_early_booking from priceinfo_data (no API calls, fast)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("Compute Price Metadata");
@@ -181,6 +187,7 @@ class PriceComputeCommand extends AbstractCronCommand
 
     /**
      * Compute prices for a single hotel's packages.
+     * @return array<string, mixed>
      */
     private function computeForHotel(string $hotelId): array
     {
@@ -352,6 +359,7 @@ class PriceComputeCommand extends AbstractCronCommand
 
     /**
      * Count seasons in priceinfo data.
+     * @param array<string, mixed> $priceinfo
      */
     public static function countSeasons(array $priceinfo): int
     {
@@ -371,6 +379,7 @@ class PriceComputeCommand extends AbstractCronCommand
 
     /**
      * Check if priceinfo has early booking discounts.
+     * @param array<string, mixed> $priceinfo
      */
     public static function hasEarlyBooking(array $priceinfo): bool
     {

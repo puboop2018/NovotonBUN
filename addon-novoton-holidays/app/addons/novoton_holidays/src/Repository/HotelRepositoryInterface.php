@@ -30,18 +30,28 @@ interface HotelRepositoryInterface
     public function findByCountry(string $country): array;
     /** @return list<HotelRow> */
     public function findWithoutPackages(int $limit = 0): array;
-    /** @param array<string, mixed> $filters */
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function count(array $filters = []): int;
     /** @return array<string, int> */
     public function countWithoutPackagesByCountry(): array;
     public function exists(string $hotel_id): bool;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function save(string $hotel_id, array $data): bool;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function insert(array $data): bool;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function update(string $hotel_id, array $data): bool;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function upsert(array $data): bool;
     public function delete(string $hotel_id): bool;
     public function linkToProduct(string $hotel_id, int $product_id): bool;
@@ -54,7 +64,9 @@ interface HotelRepositoryInterface
     public function getPackages(string $hotel_id): array;
     /** @return list<PackageRow> */
     public function getPackagesForListing(string $hotel_id): array;
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function savePackage(string $hotel_id, string $package_id, array $data): bool;
     /**
      * @param list<string> $excludeResorts

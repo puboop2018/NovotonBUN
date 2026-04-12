@@ -11,6 +11,14 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  */
 interface CartAssemblyServiceInterface
 {
+    /**
+     * @param array<string, mixed> $bookingData
+     * @param array<string, mixed> $hotelInfo
+     * @param array<string, mixed> $guestsData
+     * @param array<string, mixed> $priceResult
+     * @param array<string, mixed> $roomsData
+     * @return array<string, mixed>
+     */
     public function assembleCartProduct(
         int $productId,
         int $bookingId,
@@ -21,7 +29,17 @@ interface CartAssemblyServiceInterface
         array $roomsData
     ): array;
 
+    /**
+     * @param array<string, mixed> $roomsData
+     * @param array<string, mixed> $guestsData
+     * @return array<string, mixed>
+     */
     public function enrichRoomsData(array $roomsData, array $guestsData): array;
 
+    /**
+     * @param array<string, mixed> $booking
+     * @param array<string, mixed> $bookingData
+     * @return array<string, mixed>
+     */
     public function buildCartExtra(array $booking, array $bookingData): array;
 }

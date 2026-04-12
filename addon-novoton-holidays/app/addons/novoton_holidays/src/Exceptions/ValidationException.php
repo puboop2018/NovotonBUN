@@ -9,6 +9,9 @@ class ValidationException extends NovotonException
 {
     private $field;
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(string $message, string $field = '', array $context = [], ?\Throwable $previous = null)
     {
         $this->field = $field;

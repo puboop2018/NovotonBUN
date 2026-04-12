@@ -17,7 +17,7 @@ use Tygh\Registry;
 
 class ErrorHandler
 {
-    /** @var array Collected errors */
+    /** @var array<string, mixed> Collected errors */
     private static $errors = [];
 
     /** @var bool Debug mode */
@@ -26,7 +26,7 @@ class ErrorHandler
     /** @var bool Whether debug has been auto-initialized from settings */
     private static $initialized = false;
     
-    /** @var array Error messages (translatable) */
+    /** @var array<string, mixed> Error messages (translatable) */
     private static $messages = [
         Constants::ERROR_INVALID_DATA => 'Invalid data provided',
         Constants::ERROR_API_FAILURE => 'API communication error',
@@ -37,7 +37,7 @@ class ErrorHandler
         Constants::ERROR_UNAUTHORIZED => 'Authentication failed',
     ];
     
-    /** @var array Romanian error messages */
+    /** @var array<string, mixed> Romanian error messages */
     private static $messagesRo = [
         Constants::ERROR_INVALID_DATA => 'Date invalide furnizate',
         Constants::ERROR_API_FAILURE => 'Eroare de comunicare cu serverul',
@@ -108,7 +108,7 @@ class ErrorHandler
     /**
      * Get all errors
      * 
-     * @return array Errors
+     * @return array<string, mixed> Errors
      */
     public static function getErrors(): array
     {
@@ -155,7 +155,7 @@ class ErrorHandler
      * @param string $code Error code
      * @param string $message Custom message
      * @param array<string, mixed> $data Additional data
-     * @return array Response array
+     * @return array<string, mixed> Response array
      */
     public static function createResponse(string $code, string $message = '', array $data = []): array
     {
@@ -174,7 +174,7 @@ class ErrorHandler
      * 
      * @param array<string, mixed> $data Response data
      * @param string $message Success message
-     * @return array Response array
+     * @return array<string, mixed> Response array
      */
     public static function createSuccessResponse(array $data = [], string $message = ''): array
     {
@@ -190,7 +190,7 @@ class ErrorHandler
      * 
      * @param \Throwable $e Exception
      * @param string $context Where the exception occurred
-     * @return array Error response
+     * @return array<string, mixed> Error response
      */
     public static function handleException(\Throwable $e, string $context = ''): array
     {
@@ -228,7 +228,7 @@ class ErrorHandler
      * 
      * @param array<string, mixed> $data Data to validate
      * @param array<string, mixed> $required Required field names
-     * @return array [valid => bool, missing => array]
+     * @return array<string, mixed> [valid => bool, missing => array]
      */
     public static function validateRequired(array $data, array $required): array
     {

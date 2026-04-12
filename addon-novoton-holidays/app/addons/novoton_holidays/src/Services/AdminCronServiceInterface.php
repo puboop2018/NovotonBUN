@@ -21,7 +21,10 @@ interface AdminCronServiceInterface
     /** @return array{success: bool, message: string} */
     public function syncFacilities(): array;
 
-    /** @return array{success: bool, message: string} */
+    /**
+     * @return array{success: bool, message: string}
+     * @param list<string> $countries
+     */
     public function addProducts(array $countries, int $limit): array;
 
     /** @return array{success: bool, message: string} */

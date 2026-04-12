@@ -86,6 +86,8 @@ interface HotelSearchRepositoryInterface
     /** @return list<HotelRow> */
     public function findWithPriceinfoData(int $limit = 200): array;
 
-    /** @param array<string, mixed> $filters */
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function count(array $filters = []): int;
 }

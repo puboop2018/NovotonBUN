@@ -53,6 +53,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
+     * @return list<array<string, mixed>>|null
      */
     public function findById(int $booking_id): ?array
     {
@@ -130,6 +131,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings by order ID
+     * @return list<array<string, mixed>>
      */
     public function findByOrderId(int $order_id): array
     {
@@ -138,6 +140,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings by user ID
+     * @return list<array<string, mixed>>
      */
     public function findByUserId(int $user_id, int $limit = 100): array
     {
@@ -150,6 +153,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings by session ID
+     * @return list<array<string, mixed>>
      */
     public function findBySessionId(string $session_id): array
     {
@@ -161,6 +165,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings by hotel ID
+     * @return list<array<string, mixed>>
      */
     public function findByHotelId(string $hotel_id, int $limit = 100): array
     {
@@ -173,6 +178,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find pending bookings
+     * @return list<array<string, mixed>>
      */
     public function findPending(int $limit = 500): array
     {
@@ -185,6 +191,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find bookings with Novoton reservation ID
+     * @return array<string, mixed>
      */
     public function findWithReservationId(int $limit = 1000): array
     {
@@ -198,6 +205,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Find existing booking (for duplicate prevention)
+     * @return array<string, mixed>|null
      */
     public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array
     {
@@ -218,6 +226,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Count bookings with filters
+     * @param array<string, mixed> $filters
      */
     public function count(array $filters = []): int
     {
@@ -227,6 +236,7 @@ class BookingRepository implements BookingRepositoryInterface
     
     /**
      * Create new booking
+     * @param array<string, mixed> $data
      */
     public function create(array $data): int
     {
@@ -251,6 +261,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Update booking
+     * @param array<string, mixed> $data
      */
     public function update(int $booking_id, array $data): bool
     {
@@ -368,6 +379,7 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Get booking statistics.
      * @deprecated Use BookingQueryService::getStats() directly
+     * @return array<string, mixed>
      */
     public function getStats(): array
     {
@@ -378,6 +390,8 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Get unified booking list.
      * @deprecated Use BookingQueryService::getUnifiedBookings() directly
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     public function getUnifiedBookings(array $params = []): array
     {
@@ -453,8 +467,8 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings by multiple product IDs (batch query for cart).
      *
-     * @param array  $product_ids Product IDs
-     * @param array  $statuses    Optional status filter (default: pending + confirmed)
+     * @param array<string, mixed>  $product_ids Product IDs
+     * @param array<string, mixed>  $statuses    Optional status filter (default: pending + confirmed)
      * @return array<string, mixed> Booking rows
      */
     public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
@@ -530,6 +544,7 @@ class BookingRepository implements BookingRepositoryInterface
      * Find the most recent unassigned pending booking matching hotel + dates.
      *
      * Used as a fallback to recover guests_data when cart data is stale.
+     * @return array<string, mixed>|null
      */
     public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array
     {
@@ -567,6 +582,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Get booking terms (payment + cancellation) for order display.
+     * @return array<string, mixed>|null
      */
     public function getTerms(int $booking_id): ?array
     {
@@ -600,8 +616,9 @@ class BookingRepository implements BookingRepositoryInterface
      * Find bookings by Novoton API status (e.g. ASK, RQ).
      *
      * @param string $novoton_status  API-level status (e.g. 'ASK')
-     * @param array  $statuses        Internal statuses to match
+     * @param array<string, mixed>  $statuses        Internal statuses to match
      * @param int    $limit           Max rows
+     * @return list<array<string, mixed>>
      */
     public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
     {
@@ -617,6 +634,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find RQ bookings that haven't had alternatives requested yet.
+     * @return array<string, mixed>
      */
     public function findRqWithoutAlternatives(int $limit = 50): array
     {
@@ -646,6 +664,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * Maps novoton-specific fields to the provider-agnostic schema.
      * Uses INSERT ... ON DUPLICATE KEY UPDATE for idempotency.
+     * @param array<string, mixed> $data
      */
     private function syncToTravelBookings(int $booking_id, array $data): void
     {
@@ -683,6 +702,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * Only syncs fields that travel_bookings actually stores.
      * Skips the sync if no travel_bookings-relevant fields were changed.
+     * @param array<string, mixed> $data
      */
     private function syncUpdateToTravelBookings(int $booking_id, array $data): void
     {
@@ -748,6 +768,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find a booking with full order and product info for admin detail view.
+     * @return array<string, mixed>|null
      */
     public function findWithOrderDetails(int $booking_id): ?array
     {
@@ -764,6 +785,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find all bookings with order info for CSV export.
+     * @return list<array<string, mixed>>
      */
     public function findAllForExport(): array
     {
@@ -777,6 +799,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find booking by ownership (user_id or session_id) — for frontend security checks.
+     * @return list<array<string, mixed>>|null
      */
     public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array
     {
@@ -802,6 +825,8 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Filter null values from data array to prevent PHP 8.1+
      * real_escape_string() deprecation when passed to ?e / ?u placeholders.
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     private static function filterNullValues(array $data): array
     {
@@ -810,6 +835,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Build WHERE clause from filters
+     * @param array<string, mixed> $filters
      */
     private function buildWhereClause(array $filters): string
     {

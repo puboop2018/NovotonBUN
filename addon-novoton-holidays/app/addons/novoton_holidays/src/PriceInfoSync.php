@@ -20,6 +20,7 @@ class PriceInfoSync
 {
     private NovotonApiKitInterface $api;
     private string $defaultCountry;
+    /** @var list<string> */
     private array $productPrefixes;
 
     /**
@@ -36,6 +37,7 @@ class PriceInfoSync
 
     /**
      * Get products to sync based on prefix
+     * @return array<string, mixed>
      */
     private function getProductsToSync(): array
     {
@@ -62,6 +64,7 @@ class PriceInfoSync
 
     /**
      * Extract hotel ID from product
+     * @param array<string, mixed> $product
      */
     private function getHotelIdFromProduct(array $product): ?string
     {
@@ -214,6 +217,7 @@ class PriceInfoSync
 
     /**
      * Sync all products
+     * @return array<string, mixed>
      */
     public function syncAllProducts(): array
     {
@@ -345,6 +349,7 @@ class PriceInfoSync
 
     /**
      * Save log file
+     * @param array<string, mixed> $stats
      */
     private function saveLogFile(array $stats): string
     {

@@ -24,6 +24,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 {
     private ?NovotonApiKitInterface $api;
 
+    /** @var array<string, mixed> */
     private array $settings;
 
     public function __construct(?NovotonApiKitInterface $api = null)

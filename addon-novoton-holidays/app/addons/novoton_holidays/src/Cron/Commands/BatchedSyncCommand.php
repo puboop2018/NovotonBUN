@@ -7,6 +7,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class BatchedSyncCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['hotel_info_batched', 'sync_priceinfo_batched'];
@@ -17,6 +20,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         return 'Batched sync with resume capability (hotel info / price info)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $mode = $this->params['_mode'] ?? 'hotel_info_batched';
@@ -27,6 +33,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         return $this->priceInfoBatched();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function hotelInfoBatched(): array
     {
         $this->output("Batched Hotel Info Sync");
@@ -55,6 +64,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $result];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function priceInfoBatched(): array
     {
         $this->output("Batched Price Info Sync");
@@ -104,6 +116,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getBatchOptions(): array
     {
         $options = [];
@@ -118,6 +133,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         return $options;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function printBatchStatus($sync): array
     {
         $status = $sync->getStatus();
@@ -141,6 +159,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         return ['success' => true, 'stats' => $status];
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     private function printBatchResult(array $result, string $type): void
     {
         if ($result['status'] === 'in_progress') {

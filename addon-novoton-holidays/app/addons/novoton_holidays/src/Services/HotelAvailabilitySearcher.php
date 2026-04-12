@@ -156,6 +156,12 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Multi-room search
     // =====================================================================
 
+    /**
+     * @param array<string, mixed> $roomsData
+     * @param array<string, mixed> $roomTypeMap
+     * @param array<string, mixed> $rooms
+     * @return array<string, mixed>
+     */
     private function searchMultiRoom(
         NovotonApiKitInterface $api,
         string $hotelId,
@@ -267,6 +273,12 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Single-room search
     // =====================================================================
 
+    /**
+     * @param list<int> $children
+     * @param array<string, mixed> $roomsData
+     * @param array<string, mixed> $roomTypeMap
+     * @return array<string, mixed>
+     */
     private function searchSingleRoom(
         NovotonApiKitInterface $api,
         string $hotelId,
@@ -425,7 +437,10 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $packages;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $rooms
+     */
     private function buildRoomTypeMap(array $rooms): array
     {
         $map = [];
@@ -451,7 +466,10 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Utility helpers
     // =====================================================================
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $results
+     */
     private function calculateMaxCapacity(array $results): array
     {
         $maxAdults   = 0;
@@ -476,7 +494,10 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @param array<string, mixed> $raw
+     */
     private function cleanChildrenAges(array $raw): array
     {
         $clean = [];
@@ -573,6 +594,9 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $priceParams
+     */
     private function logSingleRoomDebug(NovotonApiKitInterface $api, string $hotelId, array $priceParams): void
     {
         if (!$this->debug) {

@@ -13,6 +13,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
      * 7. hotel_res_RQ - Reservation request
      *
      * @return \SimpleXMLElement
+     * @param array<string, mixed> $bookingData
      */
     #[\Override]
     public function createReservation(array $bookingData): \SimpleXMLElement
@@ -123,6 +124,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
      * 22. hotel_request - Request alternatives when no prices available
      *
      * @return \SimpleXMLElement|array
+     * @param array<string, mixed> $requestData
      */
     #[\Override]
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
@@ -156,6 +158,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
      * intentionally bypass the delegate/syncFrom pipeline for this method —
      * running `syncFrom()` would overwrite the current debug state with stale
      * values from the last real API call on this sub-client.
+     * @param array<string, mixed> $requestData
      */
     #[\Override]
     public function generateHotelRequestXml(array $requestData): string
@@ -244,6 +247,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * Build <Guests> XML elements from a guest array.
+     * @param array<string, mixed> $guests
      */
     private function buildGuestsXml(array $guests, int $startId = 1, int $defaultAge = 0): string
     {
@@ -264,6 +268,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * Build <room_acc> XML elements from a guest array.
+     * @param array<string, mixed> $guests
      */
     private function buildRoomAccXml(array $guests, int $startId = 1): string
     {
@@ -282,6 +287,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * Build the full hotel_request XML (shared by createHotelRequest and generateHotelRequestXml).
+     * @param array<string, mixed> $requestData
      */
     private function buildHotelRequestXml(array $requestData): string
     {

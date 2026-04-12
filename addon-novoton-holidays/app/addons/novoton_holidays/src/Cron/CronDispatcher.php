@@ -66,6 +66,10 @@ class CronDispatcher implements CronDispatcherInterface
         self::$registered = true;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function dispatch(string $mode, array $params = []): array
     {

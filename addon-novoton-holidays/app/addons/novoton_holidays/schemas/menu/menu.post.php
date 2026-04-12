@@ -8,7 +8,7 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
 
 $schema['central']['novoton_holidays'] = [
     'title' => __('novoton_holidays.addon_name', ['[default]' => 'Novoton Holidays']),

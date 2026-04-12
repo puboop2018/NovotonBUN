@@ -38,10 +38,10 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
      * @param string $checkIn   Original check-in date
      * @param int    $nights    Stay duration
      * @param int    $adults    Total adults
-     * @param array  $children  Children ages
+     * @param array<string, mixed>  $children  Children ages
      * @param int    $flexDays  Days to search before/after (0 = use default 10)
-     * @param array  $rooms     Room XML nodes from HotelAvailabilitySearcher::getRooms()
-     * @param array  $boardTypes Board type IDs from HotelAvailabilitySearcher::getBoardTypes()
+     * @param array<string, mixed>  $rooms     Room XML nodes from HotelAvailabilitySearcher::getRooms()
+     * @param array<string, mixed>  $boardTypes Board type IDs from HotelAvailabilitySearcher::getBoardTypes()
      * @return array{
      *   results: array,
      *   check_in: string,

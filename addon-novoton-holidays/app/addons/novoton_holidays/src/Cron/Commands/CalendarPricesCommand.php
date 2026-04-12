@@ -25,6 +25,9 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
  */
 class CalendarPricesCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['recompute_calendar_prices'];
@@ -35,6 +38,9 @@ class CalendarPricesCommand extends AbstractCronCommand
         return 'Recompute calendar_prices_raw for hotels (no API calls, fast)';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $this->output("Recompute Calendar Prices");
@@ -113,6 +119,9 @@ class CalendarPricesCommand extends AbstractCronCommand
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function recomputeSingle(string $hotelId): array
     {
         $this->output("Recomputing hotel: {$hotelId}");

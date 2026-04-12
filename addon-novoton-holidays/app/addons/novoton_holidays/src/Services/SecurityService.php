@@ -36,7 +36,7 @@ class SecurityService implements SecurityServiceInterface
      * Validate booking data
      * 
      * @param array<string, mixed> $data Booking data
-     * @return array [valid => bool, errors => array]
+     * @return array<string, mixed> [valid => bool, errors => array]
      */
     public function validateBookingData(array $data): array
     {
@@ -128,7 +128,7 @@ class SecurityService implements SecurityServiceInterface
      * Validate search parameters
      * 
      * @param array<string, mixed> $params Search parameters
-     * @return array [valid => bool, errors => array, sanitized => array]
+     * @return array<string, mixed> [valid => bool, errors => array, sanitized => array]
      */
     public function validateSearchParams(array $params): array
     {
@@ -222,7 +222,7 @@ class SecurityService implements SecurityServiceInterface
      * Validate and sanitize guest data
      * 
      * @param array<string, mixed> $guests Guest data
-     * @return array Sanitized guest data
+     * @return array<string, mixed> Sanitized guest data
      */
     public function sanitizeGuestData(array $guests): array
     {
@@ -303,7 +303,7 @@ class SecurityService implements SecurityServiceInterface
      * @param string $key Rate limit key (e.g., IP, user_id)
      * @param int $maxRequests Max requests per window
      * @param int $window Window in seconds
-     * @return array [allowed => bool, remaining => int, reset => int]
+     * @return array<string, mixed> [allowed => bool, remaining => int, reset => int]
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
@@ -482,6 +482,7 @@ class SecurityService implements SecurityServiceInterface
     
     /**
      * Get rate limit data from cache
+     * @return array<string, mixed>
      */
     private function getRateLimitData(string $key): array
     {
@@ -497,6 +498,7 @@ class SecurityService implements SecurityServiceInterface
 
     /**
      * Set rate limit data in cache
+     * @param array<string, mixed> $data
      */
     private function setRateLimitData(string $key, array $data): void
     {

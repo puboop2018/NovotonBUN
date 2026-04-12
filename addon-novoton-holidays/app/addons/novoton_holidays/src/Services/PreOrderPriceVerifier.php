@@ -206,6 +206,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * Compare form price to API price and determine action.
      *
      * @return array{allow: bool, correction: array|null, notification: array|null, type: string}
+     * @param array<string, mixed> $extra
      */
     private function comparePrice(
         float  $formPrice,
@@ -367,6 +368,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * Parse children ages from cart extra data.
      *
      * @return int[]
+     * @param array<string, mixed> $extra
      */
     private function parseChildrenAges(array $extra): array
     {

@@ -61,7 +61,7 @@ interface HotelPackageRepositoryInterface
      *
      * @param string $hotelId
      * @param string $packageId
-     * @param array  $data
+     * @param array<string, mixed>  $data
      * @return bool
      */
     public function upsert(string $hotelId, string $packageId, array $data): bool;
@@ -129,6 +129,7 @@ interface HotelPackageRepositoryInterface
 
     /**
      * Get package names with priceinfo data for a hotel (for AJAX dropdown).
+     * @return array<string, mixed>
      */
     public function findPackageNamesWithPriceinfo(string $hotelId): array;
 
@@ -139,11 +140,13 @@ interface HotelPackageRepositoryInterface
 
     /**
      * Get package_id and package_name pairs for a hotel.
+     * @return array<string, mixed>
      */
     public function getPackageIdNamePairs(string $hotelId): array;
 
     /**
      * Get package listing data for hotel detail view.
+     * @return array<string, mixed>
      */
     public function findForHotelDetail(string $hotelId): array;
 

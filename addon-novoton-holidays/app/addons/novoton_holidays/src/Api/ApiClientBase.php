@@ -18,7 +18,7 @@ abstract class ApiClientBase
     protected ?CacheService $cache;
     protected bool $enableCache;
 
-    /** @var array Cache TTL by function (seconds) */
+    /** @var array<string, mixed> Cache TTL by function (seconds) */
     protected array $cacheTtl = [];
 
     /** @var string[] Functions that bypass cache */
@@ -29,6 +29,7 @@ abstract class ApiClientBase
     public string $lastRequest = '';
     public string $lastResponse = '';
     public string $lastResponseRaw = '';
+    /** @var array<string, mixed> */
     public array $lastRequestFormatted = [];
     public string $lastError = '';
     public int $lastHttpCode = 0;
@@ -154,6 +155,7 @@ abstract class ApiClientBase
     /**
      * Build children ages XML (<Age> elements).
      * Delegates to Occupancy::buildAgeXml() — single source of truth.
+     * @param array<string, mixed> $children
      */
     protected function buildChildrenAgesXml(array $children): string
     {
@@ -163,6 +165,7 @@ abstract class ApiClientBase
     /**
      * Build adult ages XML (<Age> elements).
      * Uses default adult age from Constants for missing entries.
+     * @param array<string, mixed> $adultAges
      */
     protected function buildAdultAgesXml(int $count, array $adultAges = []): string
     {
@@ -173,6 +176,9 @@ abstract class ApiClientBase
         return Occupancy::buildAgeXml($ages);
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     protected function buildCacheKey(string $function, array $params): string
     {
         // Include hotel_id before the hash so cache invalidation per hotel

@@ -70,7 +70,7 @@ interface SecurityServiceInterface extends BaseSecurityServiceInterface
      * Log security event.
      *
      * @param string $event Event type
-     * @param array  $data  Event data
+     * @param array<string, mixed>  $data  Event data
      */
     public function logSecurityEvent(string $event, array $data = []): void;
 }

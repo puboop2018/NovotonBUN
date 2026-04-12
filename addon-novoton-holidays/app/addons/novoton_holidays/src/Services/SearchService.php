@@ -57,7 +57,7 @@ class SearchService implements SearchServiceInterface
      * Parse search parameters from request
      * 
      * @param array<string, mixed> $request Request parameters
-     * @return array Normalized search parameters
+     * @return array<string, mixed> Normalized search parameters
      */
     public function parseSearchParams(array $request): array
     {
@@ -111,7 +111,7 @@ class SearchService implements SearchServiceInterface
      * 
      * @param array<string, mixed> $request Request data
      * @param int $children_count Number of children
-     * @return array Children ages
+     * @return array<string, mixed> Children ages
      */
     private function parseChildrenAges(array $request, int $children_count): array
     {
@@ -131,7 +131,7 @@ class SearchService implements SearchServiceInterface
      * Calculate totals from rooms data
      * 
      * @param array<string, mixed> $rooms_data Rooms configuration
-     * @return array Totals [adults, children, ages]
+     * @return array<string, mixed> Totals [adults, children, ages]
      */
     public function calculateRoomTotals(array $rooms_data): array
     {
@@ -270,11 +270,11 @@ class SearchService implements SearchServiceInterface
      * @param string      $checkIn      Check-in date (Y-m-d)
      * @param string      $checkOut     Check-out date (Y-m-d)
      * @param string      $mealPlan     Requested meal plan code (empty = all)
-     * @param array       $quotaMap     Room ID => quota value map (from hotel_quota)
-     * @param array       $roomTypeMap  Room ID => Type map (from hotelinfo)
+     * @param array<string, mixed>       $quotaMap     Room ID => quota value map (from hotel_quota)
+     * @param array<string, mixed>       $roomTypeMap  Room ID => Type map (from hotelinfo)
      * @param int|null    $forRoom      Room number (multi-room), null for single
      * @param string|null $occupancyStr Occupancy string for display
-     * @return array List of result items
+     * @return array<string, mixed> List of result items
      */
     public function parseRoomPriceResponse(
         string $rawXml,
@@ -445,7 +445,7 @@ class SearchService implements SearchServiceInterface
      * @param string $hotelId  Hotel ID
      * @param string $checkIn  Guest check-in date (Y-m-d)
      * @param string $checkOut Guest check-out date (Y-m-d)
-     * @return array List of applicable discount records
+     * @return array<string, mixed> List of applicable discount records
      */
     public static function getEarlyBookingDiscounts(string $hotelId, string $checkIn, string $checkOut): array
     {
@@ -497,7 +497,7 @@ class SearchService implements SearchServiceInterface
      * Calculate discount range from a list of early booking discounts.
      *
      * @param array<string, mixed> $discounts From getEarlyBookingDiscounts()
-     * @return array {min, max, all} or empty
+     * @return array<string, mixed> {min, max, all} or empty
      */
     public static function getDiscountRange(array $discounts): array
     {
@@ -528,7 +528,7 @@ class SearchService implements SearchServiceInterface
      * the promotional price / label are attached as extras_price / extras_label.
      *
      * @param array<string, mixed> $results
-     * @return array Deduplicated results (re-indexed)
+     * @return array<string, mixed> Deduplicated results (re-indexed)
      */
     public static function deduplicateResults(array $results): array
     {
@@ -570,6 +570,7 @@ class SearchService implements SearchServiceInterface
 
     /**
      * Safe xpath value accessor.
+     * @param array<string, mixed>|null $elements
      */
     private static function xpathValue(?array $elements, int $index, string $default = ''): string
     {

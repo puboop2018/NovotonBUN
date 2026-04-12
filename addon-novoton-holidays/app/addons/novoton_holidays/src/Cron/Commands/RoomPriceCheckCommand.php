@@ -8,6 +8,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class RoomPriceCheckCommand extends AbstractCronCommand
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getModes(): array
     {
         return ['room_price'];
@@ -18,6 +21,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         return 'Check which hotels have active room_price data';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function execute(): array
     {
         $dbHelper = Container::getInstance()->databaseHelper();

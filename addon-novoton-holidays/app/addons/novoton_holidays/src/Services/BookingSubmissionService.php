@@ -54,6 +54,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * For multi-room bookings:
      *   - Sends ALL rooms in SINGLE API request IF same hotel, package, and dates
      *   - Sends SEPARATE API calls if rooms have different packages or dates
+     * @param array<string, mixed> $cart
      */
     public function submitOrder(int $orderId, array $cart): void
     {
@@ -224,6 +225,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * The database is the Single Source of Truth. Cart session data may be
      * stale or incomplete (e.g. after browser refresh), so we always merge
      * the DB row back into $bookingData before processing.
+     * @param array<string, mixed> $bookingData
+     * @return array<string, mixed>
      */
     private function hydrateBookingFromDb(array $bookingData, int $bookingId, bool $debug): array
     {
@@ -281,6 +284,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Determine the authoritative price for a booking.
      *
      * Priority: DB total_price > cart price > cart base_price.
+     * @param array<string, mixed> $bookingData
+     * @param array<string, mixed> $product
      */
     private function resolveFinalPrice(array $bookingData, array $product): float
     {
@@ -301,6 +306,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Parse rooms_data and guests_data, with DB fallbacks.
      *
      * @return array{0: array, 1: array} [rooms_data[], guests_data[]]
+     * @param array<string, mixed> $bookingData
      */
     private function resolveRoomsAndGuests(array $bookingData, int $orderId, bool $debug): array
     {
@@ -349,6 +355,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * 1. From cart extra (already hydrated from DB if available)
      * 2. Re-fetch from DB by booking_id
      * 3. Match unassigned pending booking by hotel + dates
+     * @param array<string, mixed> $bookingData
+     * @return array<string, mixed>
      */
     private function resolveGuestsData(array $bookingData, int $orderId, bool $debug): array
     {
@@ -406,6 +414,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Rooms with identical grouping keys can be sent in a single API call.
      *
      * @return array<string, array{package_name: string, check_in: string, check_out: string, rooms: array}>
+     * @param array<string, mixed> $roomsData
+     * @param array<string, mixed> $bookingData
      */
     private function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
@@ -445,6 +455,9 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * calculates the API price (without commission).
      *
      * @return array{0: array, 1: array, 2: float, 3: float} [allGuests[], apiRooms[], totalApiPrice, totalGroupPrice]
+     * @param array<string, mixed> $group
+     * @param array<string, mixed> $guestsData
+     * @param array<string, mixed> $bookingData
      */
     private function buildGroupGuestsAndRooms(
         array $group,
@@ -542,6 +555,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Extract a guest name from the guestsData array.
      *
      * Prefers api_name (First Last format) over display_name/name.
+     * @param array<string, mixed> $guestsData
      */
     private function extractGuestName(array $guestsData, string $guestKey): string
     {
@@ -563,6 +577,11 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
     /**
      * Construct the Novoton reservation API request payload.
+     * @param array<string, mixed> $group
+     * @param array<string, mixed> $allGuests
+     * @param array<string, mixed> $apiRooms
+     * @param array<string, mixed> $bookingData
+     * @return array<string, mixed>
      */
     private function buildApiBookingRequest(
         array  $group,
@@ -601,7 +620,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     /**
      * Build the booking record array for DB persistence.
      *
-     * @return array Column => value map for novoton_bookings
+     * @return array<string, mixed> Column => value map for novoton_bookings
+     * @param array<string, mixed> $group
+     * @param array<string, mixed> $allGuests
+     * @param array<string, mixed> $bookingData
+     * @param array<string, mixed> $product
+     * @param array<string, mixed> $apiData
      */
     private function buildBookingRecord(
         array $group,
@@ -683,6 +707,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      *   1. Update by originalBookingId (from cart) for group 1
      *   2. Update existing row matching (order + hotel + dates) to prevent duplicates
      *   3. Insert new row
+     * @param array<string, mixed> $record
      */
     private function persistBookingRecord(
         array $record,
@@ -715,6 +740,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Submit booking to the Novoton reservation API and update the DB row.
      *
      * Uses Constants::NOVOTON_STATUS_TO_INTERNAL for status mapping.
+     * @param array<string, mixed> $apiData
      */
     private function submitAndRecordBooking(
         array $apiData,

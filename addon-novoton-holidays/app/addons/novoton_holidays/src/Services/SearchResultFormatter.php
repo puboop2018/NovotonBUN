@@ -213,6 +213,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_country', $hotelCountry);
     }
 
+    /**
+     * @param array<string, mixed> $packages
+     */
     private function assignPackages($view, array $packages): void
     {
         if (empty($packages)) {
@@ -238,6 +241,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_all_packages', $packages);
     }
 
+    /**
+     * @param array<string, mixed> $packages
+     */
     private function assignActiveEarlyBooking($view, array $packages): void
     {
         $currentDate = date('Y-m-d');
@@ -283,6 +289,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $packages
+     */
     private function assignSeasonPeriod($view, array $packages): void
     {
         $seasonFrom  = '';
@@ -315,6 +324,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_season_to', $seasonTo);
     }
 
+    /**
+     * @param array<string, mixed> $results
+     * @param array<string, mixed> $searchParams
+     */
     private function assignTerms($view, array $results, array $searchParams, string $hotelId): void
     {
         $termsPaymentRaw      = '';

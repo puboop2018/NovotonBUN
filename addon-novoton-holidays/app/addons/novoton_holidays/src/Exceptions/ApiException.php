@@ -11,6 +11,9 @@ class ApiException extends NovotonException
     private int $httpCode;
     private string $apiFunction;
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(string $message, string $apiFunction = '', int $httpCode = 0, array $context = [], ?\Throwable $previous = null)
     {
         $this->httpCode = $httpCode;

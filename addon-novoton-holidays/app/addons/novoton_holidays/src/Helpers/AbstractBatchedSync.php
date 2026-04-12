@@ -137,7 +137,7 @@ abstract class AbstractBatchedSync implements SyncInterface
      * Process a single item
      *
      * @param string|int $itemId
-     * @return array ['success' => bool, 'message' => string, 'data' => mixed]
+     * @return array<string, mixed> ['success' => bool, 'message' => string, 'data' => mixed]
      */
     abstract protected function processItem($itemId): array;
 
