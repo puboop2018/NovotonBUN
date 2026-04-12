@@ -8,7 +8,7 @@ on:
 
 jobs:
   phpstan:
-    name: PHPStan (level 5)
+    name: PHPStan (level 6)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
