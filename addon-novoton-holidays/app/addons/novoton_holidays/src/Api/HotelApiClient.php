@@ -58,7 +58,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 2b. hotelinfo batch - fetch multiple hotels in parallel using curl_multi
      *
-     * @param array $hotelIds Array of hotel IDs
+     * @param array<string, mixed> $hotelIds Array of hotel IDs
      * @return array hotel_id => SimpleXMLElement|false
      */
     #[\Override]

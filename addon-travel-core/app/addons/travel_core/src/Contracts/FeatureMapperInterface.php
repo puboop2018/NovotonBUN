@@ -17,7 +17,7 @@ interface FeatureMapperInterface
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
      * @param string $apiValue    Raw value from the API
-     * @return array|null Mapping row or null if unresolved
+     * @return array<string, mixed>|null Mapping row or null if unresolved
      */
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array;
 
@@ -27,7 +27,7 @@ interface FeatureMapperInterface
      * If the mapping has no variant yet, uses 3-pass name matching to find
      * an existing variant, or auto-creates one.
      *
-     * @return array|null The mapping with guaranteed cscart_variant_id (if resolvable)
+     * @return array<string, mixed>|null The mapping with guaranteed cscart_variant_id (if resolvable)
      */
     public static function resolveWithVariant(string $apiSource, string $featureType, string $apiValue): ?array;
 

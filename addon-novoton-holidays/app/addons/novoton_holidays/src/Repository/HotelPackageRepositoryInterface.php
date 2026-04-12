@@ -16,7 +16,7 @@ interface HotelPackageRepositoryInterface
      * Find all packages for a hotel (excludes large priceinfo_data JSON).
      *
      * @param string $hotelId
-     * @return array
+     * @return array<string, mixed>
      */
     public function findByHotelId(string $hotelId): array;
 
@@ -25,7 +25,7 @@ interface HotelPackageRepositoryInterface
      * Use only when the caller needs to process pricing data.
      *
      * @param string $hotelId
-     * @return array
+     * @return array<string, mixed>
      */
     public function findByHotelIdFull(string $hotelId): array;
 
@@ -34,7 +34,7 @@ interface HotelPackageRepositoryInterface
      *
      * @param string $hotelId
      * @param string $packageId
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageId(string $hotelId, string $packageId): ?array;
 
@@ -43,7 +43,7 @@ interface HotelPackageRepositoryInterface
      *
      * @param string $hotelId
      * @param string $packageName
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageName(string $hotelId, string $packageName): ?array;
 
@@ -78,7 +78,7 @@ interface HotelPackageRepositoryInterface
      * Get the first package with an early booking discount for a hotel.
      *
      * @param string $hotelId
-     * @return array|null The priceinfo_data row, or null
+     * @return array<string, mixed>|null The priceinfo_data row, or null
      */
     public function findEarlyBookingPackage(string $hotelId): ?array;
 
@@ -94,7 +94,7 @@ interface HotelPackageRepositoryInterface
      * Get packages for listing (excludes large priceinfo_data JSON).
      *
      * @param string $hotelId
-     * @return array
+     * @return array<string, mixed>
      */
     public function findForListing(string $hotelId): array;
 

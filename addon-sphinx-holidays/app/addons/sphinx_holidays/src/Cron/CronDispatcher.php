@@ -84,7 +84,7 @@ class CronDispatcher implements CronDispatcherInterface
      * will also acquire their own locks).
      *
      * @param string $mode The cron mode to execute
-     * @param array $params Additional parameters
+     * @param array<string, mixed> $params Additional parameters
      * @return array Result from the command
      */
     #[\Override]

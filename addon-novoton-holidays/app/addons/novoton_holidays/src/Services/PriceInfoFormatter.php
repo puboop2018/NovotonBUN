@@ -361,7 +361,7 @@ class PriceInfoFormatter
     /**
      * Verify season-to-price correlation (debug helper)
      *
-     * @param array $priceinfo Priceinfo data
+     * @param array<string, mixed> $priceinfo Priceinfo data
      * @param string $checkIn Check-in date
      * @param int $nights Number of nights
      * @return array Debug info showing date -> season -> priceKey mapping
@@ -426,7 +426,7 @@ class PriceInfoFormatter
     /**
      * Get sample prices for verification (debug helper)
      *
-     * @param array $priceinfo Priceinfo data
+     * @param array<string, mixed> $priceinfo Priceinfo data
      * @param string $roomId Room ID
      * @param string $boardId Board ID
      * @return array Price values by column

@@ -175,8 +175,8 @@ function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
 /**
  * Check if a product is a hotel product based on product_code prefix.
  *
- * @param array $product        Product data (must contain 'product_code')
- * @param array $addon_settings Addon settings (must contain 'product_code_prefixes')
+ * @param array<string, mixed> $product        Product data (must contain 'product_code')
+ * @param array<string, mixed> $addon_settings Addon settings (must contain 'product_code_prefixes')
  * @return bool
  */
 function _nvt_is_hotel_product(array $product, array $addon_settings): bool

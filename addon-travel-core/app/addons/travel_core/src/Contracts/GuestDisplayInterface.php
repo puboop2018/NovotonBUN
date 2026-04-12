@@ -14,7 +14,7 @@ interface GuestDisplayInterface
     /**
      * Build comma-separated guest list
      *
-     * @param array $guests_data Guests data (keyed array)
+     * @param array<string, mixed> $guests_data Guests data (keyed array)
      * @return string Guest list
      */
     public function buildGuestList(array $guests_data): string;
@@ -22,8 +22,8 @@ interface GuestDisplayInterface
     /**
      * Get holder name from guests data
      *
-     * @param array $guests_data Guests data
-     * @param array $bookingData Fallback booking data
+     * @param array<string, mixed> $guests_data Guests data
+     * @param array<string, mixed> $bookingData Fallback booking data
      * @return string Holder name
      */
     public function getHolderName(array $guests_data, array $bookingData = []): string;
@@ -31,7 +31,7 @@ interface GuestDisplayInterface
     /**
      * Format guests for display
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Display-formatted guests
      */
     public function formatForDisplay(array $guests_data): array;

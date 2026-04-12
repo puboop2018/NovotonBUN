@@ -180,7 +180,7 @@ class HotelSync
     /**
      * Execute batch INSERT ON DUPLICATE KEY UPDATE for hotels
      *
-     * @param array $batchData Array of hotel data arrays
+     * @param array<string, mixed> $batchData Array of hotel data arrays
      */
     private function executeBatchHotelUpsert(array $batchData): void
     {
@@ -484,7 +484,7 @@ class HotelSync
     /**
      * Execute batch INSERT ON DUPLICATE KEY UPDATE for packages
      *
-     * @param array $batchData Array of package data arrays
+     * @param array<string, mixed> $batchData Array of package data arrays
      */
     private function executeBatchPackageUpsert(array $batchData): void
     {

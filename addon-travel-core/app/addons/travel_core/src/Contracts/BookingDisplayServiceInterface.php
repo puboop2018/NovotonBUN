@@ -26,9 +26,9 @@ interface BookingDisplayServiceInterface
      *   - 'board_name_formatter' (callable) Board name formatter:  fn(string): string
      *   - 'room_name_formatter'  (callable) Room name formatter:   fn(array room_data): string
      *
-     * @param array $product Cart product (by reference)
+     * @param array<string, mixed> $product Cart product (by reference)
      * @param array|null $cart Cart data
-     * @param array $config Provider-specific configuration overrides
+     * @param array<string, mixed> $config Provider-specific configuration overrides
      */
     public static function addBookingDisplayData(array &$product, ?array $cart = null, array $config = []): void;
 }

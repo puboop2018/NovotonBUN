@@ -28,7 +28,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * decrypt() returns null on non-encrypted strings, and the helper falls
  * back to the original value in that case.
  *
- * @param array $request  Single row from novoton_alternative_requests
+ * @param array<string, mixed> $request  Single row from novoton_alternative_requests
  * @return array          Same row with decrypted PII fields
  */
 function fn_novoton_holidays_decrypt_request_pii(array $request): array
@@ -65,7 +65,7 @@ function fn_novoton_holidays_decrypt_request_pii(array $request): array
 /**
  * Decrypt PII fields on an array of alternative request rows.
  *
- * @param array $requests  Array of rows from novoton_alternative_requests
+ * @param array<string, mixed> $requests  Array of rows from novoton_alternative_requests
  * @return array           Same rows with decrypted PII fields
  */
 function fn_novoton_holidays_decrypt_requests_pii(array $requests): array

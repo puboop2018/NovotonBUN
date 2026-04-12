@@ -199,19 +199,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
-			message: '#^Function fn_novoton_holidays_decrypt_request_pii\(\) has parameter \$request with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
 			message: '#^Function fn_novoton_holidays_decrypt_request_pii\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_decrypt_requests_pii\(\) has parameter \$requests with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
@@ -253,18 +241,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
-			message: '#^Function fn_novoton_holidays_generate_import_csv_report\(\) has parameter \$results with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Function fn_novoton_holidays_generate_import_csv_report\(\) has parameter \$summary with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Function fn_novoton_holidays_send_import_report_email\(\) has parameter \$results with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -277,20 +253,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
-			message: '#^Function fn_novoton_holidays_send_price_alert_email\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Function fn_novoton_holidays_send_price_discrepancy_email\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Offset int\<0, 4\> on array\{''1 star'', ''2 stars'', ''3 stars'', ''4 stars'', ''5 stars''\}\|array\{''1 stea'', ''2 stele'', ''3 stele'', ''4 stele'', ''5 stele''\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
+
+		-
+			message: '#^Parameter \#1 \$hotel_ids of function fn_novoton_holidays_prefetch_hotel_data expects array\<string, mixed\>, list given\.$#'
+			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
@@ -343,12 +313,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
 
 		-
-			message: '#^Function fn_novoton_match_price_from_xml\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
-
-		-
 			message: '#^Function _novoton_enrich_hotel_row\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -368,12 +332,6 @@ parameters:
 
 		-
 			message: '#^Function _novoton_hotel_data_cache\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_hotel_data\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
@@ -403,37 +361,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Function fn_novoton_holidays_get_package_priceinfo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_package_priceinfo_by_name\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Function fn_novoton_holidays_get_resorts_for_settings\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Function fn_novoton_holidays_normalize_package\(\) has parameter \$pkg with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Function fn_novoton_holidays_normalize_package\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Function fn_novoton_holidays_prefetch_hotel_data\(\) has parameter \$hotel_ids with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
@@ -461,30 +395,6 @@ parameters:
 			identifier: empty.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Function fn_novoton_holidays_create_user_post\(\) has parameter \$auth with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/auth_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_create_user_post\(\) has parameter \$user_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/auth_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_user_login_post\(\) has parameter \$auth with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/auth_hooks.php
-
-		-
-			message: '#^Function fn_novoton_holidays_user_login_post\(\) has parameter \$user_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/auth_hooks.php
 
 		-
 			message: '#^Function _nvt_inject_booking_into_cart_product\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
@@ -601,12 +511,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Function fn_novoton_holidays_travel_core_exchange_rates_updated\(\) has parameter \$result with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/exchange_rate_hooks.php
-
-		-
 			message: '#^Function _nvt_enrich_order_product_terms\(\) has parameter \$product with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -691,18 +595,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Function _nvt_is_hotel_product\(\) has parameter \$addon_settings with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
-			message: '#^Function _nvt_is_hotel_product\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
-
-		-
 			message: '#^Function fn_novoton_holidays_delete_product_post\(\) has parameter \$product_deleted with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -783,6 +675,12 @@ parameters:
 		-
 			message: '#^Function fn_novoton_holidays_get_products_post\(\) has parameter \$products with no type specified\.$#'
 			identifier: missingType.parameter
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
+
+		-
+			message: '#^Parameter \#1 \$hotel_ids of function fn_novoton_holidays_prefetch_hotel_data expects array\<string, mixed\>, list\<string\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
 
@@ -979,12 +877,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/Contracts/ReservationApiClientInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:getHotelInfoBatch\(\) has parameter \$hotelIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:getHotelInfoBatch\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -993,12 +885,6 @@ parameters:
 		-
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\PricingApiClient\:\:buildRoomPriceXml\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
 
@@ -1303,6 +1189,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
 
 		-
+			message: '#^Parameter \#1 \$hotels of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotels\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\|null\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
+
+		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\HotelSyncCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1351,12 +1243,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:extractMinPrice\(\) has parameter \$priceinfo with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:hasEarlyBooking\(\) has parameter \$priceinfo with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1369,8 +1255,32 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php
 
 		-
+			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\RoomPriceCheckCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Parameter \#1 \$withPrices of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) expects array\<string, mixed\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Parameter \#2 \$withoutPrices of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) expects array\<string, mixed\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Parameter \#3 \$fields of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\) expects array\<string, mixed\>, array\<int, string\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
@@ -1447,69 +1357,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Exceptions/XmlParsingException.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:completeSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:determineSyncType\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:getItemsToSync\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:getItemsToSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:getMetadata\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:getMetadata\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:getStatus\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:processItem\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:resumeSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:run\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:run\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
+			message: '#^Parameter \#4 \$errorIds of method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManagerInterface\:\:updateProgress\(\) expects array\<string, mixed\>, list\<string\> given\.$#'
+			identifier: argument.type
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
 
 		-
@@ -1517,24 +1373,6 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelFacilitiesSyncV2\:\:determineSyncType\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelFacilitiesSyncV2\:\:getItemsToSync\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelFacilitiesSyncV2\:\:getItemsToSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelFacilitiesSyncV2\:\:processItem\(\) return type has no value type specified in iterable type array\.$#'
@@ -1549,26 +1387,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:determineSyncType\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:extractPackages\(\) has parameter \$hotelInfo with no type specified\.$#'
 			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:getItemsToSync\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:getItemsToSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
 
@@ -1583,24 +1403,6 @@ parameters:
 			identifier: ternary.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:determineSyncType\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:getItemsToSync\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:getItemsToSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:processItem\(\) return type has no value type specified in iterable type array\.$#'
@@ -1633,14 +1435,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/CronHelper.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\CronHelper\:\:getExcludedResorts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/CronHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\CronHelper\:\:initialize\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\CronHelper\:\:getExcludedResorts\(\) should return array\<string, mixed\> but returns array\<int\<0, max\>, string\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/CronHelper.php
 
@@ -1651,142 +1447,16 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/CronHelper.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:batchUpdateHasRoomPriceFlag\(\) has parameter \$withPrices with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:batchUpdateHasRoomPriceFlag\(\) has parameter \$withoutPrices with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getExistingHotelIds\(\) has parameter \$hotelIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getHotelsForSync\(\) has parameter \$conditions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getHotelsForSync\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getHotelsForSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getProductIdsByHotelIds\(\) has parameter \$hotelIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getSyncStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:linkProductsToHotels\(\) has parameter \$links with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:upsertHotelPackages\(\) has parameter \$packages with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:upsertHotels\(\) has parameter \$hotels with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) has parameter \$withPrices with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) has parameter \$withoutPrices with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getExistingHotelIds\(\) has parameter \$hotelIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\) has parameter \$conditions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getProductIdsByHotelIds\(\) has parameter \$hotelIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getSyncStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:linkProductsToHotels\(\) has parameter \$links with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotelPackages\(\) has parameter \$packages with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotels\(\) has parameter \$hotels with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:countItems\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:fetchHotelChunk\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
@@ -1801,61 +1471,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:iterateBookings\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:iterateHotelIds\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:iterateHotels\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:iteratePackages\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIterator\:\:iterateQuery\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIteratorInterface\:\:countItems\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIteratorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIteratorInterface\:\:iterateBookings\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIteratorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIteratorInterface\:\:iterateHotelIds\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIteratorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIteratorInterface\:\:iterateHotels\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIteratorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseIteratorInterface\:\:iteratePackages\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIteratorInterface.php
@@ -1874,12 +1490,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\JsonDecoder\:\:decode\(\) has parameter \$default with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/JsonDecoder.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\JsonDecoder\:\:decode\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/JsonDecoder.php
@@ -1945,31 +1555,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:save\(\) has parameter \$state with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:start\(\) has parameter \$itemIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:start\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:start\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:updateProgress\(\) has parameter \$errorIds with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
@@ -2011,12 +1597,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManagerInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManagerInterface\:\:save\(\) has parameter \$state with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManagerInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManagerInterface\:\:start\(\) has parameter \$itemIds with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2035,12 +1615,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManagerInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManagerInterface\:\:updateProgress\(\) has parameter \$errorIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManagerInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManagerInterface\:\:updateProgress\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2053,22 +1627,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncInterface\:\:run\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncInterface\:\:run\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:complete\(\) has parameter \$extra with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:complete\(\) return type has no value type specified in iterable type array\.$#'
@@ -2077,37 +1639,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:getMessages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:getStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:logEvent\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:logToDatabase\(\) has parameter \$extra with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:outputSummary\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:sendEmailReport\(\) has parameter \$results with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
@@ -2137,18 +1669,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLoggerInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLoggerInterface\:\:getMessages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLoggerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLoggerInterface\:\:getStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLoggerInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLoggerInterface\:\:logEvent\(\) has parameter \$context with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2171,18 +1691,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLoggerInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchHotelUpsert\(\) has parameter \$batchData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchPackageUpsert\(\) has parameter \$batchData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:fullSync\(\) return type has no value type specified in iterable type array\.$#'
@@ -2221,6 +1729,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
+			message: '#^Parameter \#1 \$batchData of method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchHotelUpsert\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
+			message: '#^Parameter \#1 \$batchData of method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchPackageUpsert\(\) expects array\<string, mixed\>, list\<array\<string, string\|null\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:\$selectedCountries type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2231,12 +1751,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\HttpClientInterface\:\:sendBatchRequests\(\) has parameter \$requests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HttpClientInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\HttpClientInterface\:\:sendBatchRequests\(\) return type has no value type specified in iterable type array\.$#'
@@ -2264,12 +1778,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\NovotonHttpClient\:\:__construct\(\) has parameter \$settings with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\NovotonHttpClient\:\:sendBatchRequests\(\) has parameter \$requests with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
@@ -2635,43 +2143,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/FacilityRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelAndPackageId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelAndPackageName\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findByHotelIdFull\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findEarlyBookingPackage\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findForHotelDetail\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepository\:\:findForListing\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
@@ -2695,43 +2167,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelAndPackageId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelAndPackageName\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findByHotelIdFull\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findEarlyBookingPackage\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findForHotelDetail\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:findForListing\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepositoryInterface.php
@@ -2870,6 +2306,18 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
+
+		-
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackages\(\) should return list\<array\<string, mixed\>\> but returns array\<string, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
+
+		-
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackagesForListing\(\) should return list\<array\<string, mixed\>\> but returns array\<string, mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
@@ -3241,19 +2689,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getAvailableActions\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getDisplayData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getProviderTabs\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
@@ -3343,12 +2779,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getUnifiedBookings\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getUnifiedBookings\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -3377,12 +2807,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryServiceInterface\:\:getUnifiedBookings\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryServiceInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryServiceInterface\:\:getUnifiedBookings\(\) return type has no value type specified in iterable type array\.$#'
@@ -3703,25 +3127,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:submitOrder\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionServiceInterface\:\:submitOrder\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\CacheService\:\:getStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CacheService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\CacheService\:\:log\(\) has parameter \$context with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CacheService.php
@@ -3976,18 +3382,6 @@ parameters:
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testProduct\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testRoomPrice\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testSearch\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsServiceInterface.php
 
 		-
@@ -4651,19 +4045,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:getSamplePrices\(\) has parameter \$priceinfo with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:getSamplePrices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:verifySeasonPriceMapping\(\) has parameter \$priceinfo with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
@@ -4879,12 +4261,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getActiveEarlyBooking\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getCalendarPrices\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -4892,12 +4268,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getEarlyBooking\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getPriceInfo\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoServiceInterface.php
@@ -4919,12 +4289,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceVerificationService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceVerificationServiceInterface\:\:verifyPrice\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceVerificationServiceInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomPriceService\:\:calculateSavings\(\) return type has no value type specified in iterable type array\.$#'
@@ -4963,36 +4327,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceServiceInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:calculateTotals\(\) has parameter \$roomsData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomsDataParser.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:extractRoomInfo\(\) has parameter \$bookingData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomsDataParser.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:extractRoomInfo\(\) has parameter \$roomsData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomsDataParser.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:parseChildrenAges\(\) has parameter \$bookingData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomsDataParser.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:parseRoomsData\(\) has parameter \$bookingData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomsDataParser.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomsDataParser\:\:parseRoomsData\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -5018,12 +4352,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchParameterNormalizer\:\:mergeUrlChildrenAges\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchParameterNormalizer.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchParameterNormalizer\:\:normalize\(\) has parameter \$searchParams with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchParameterNormalizer.php
@@ -5143,82 +4471,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$altResult with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$debugLog with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$novotonParams with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$results with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$searchParams with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) has parameter \$searchResult with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
 			message: '#^Variable \$seasons in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$altResult with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$debugLog with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$novotonParams with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$results with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$searchParams with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatterInterface\:\:assignToView\(\) has parameter \$searchResult with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatterInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:buildCacheKey\(\) is unused\.$#'
@@ -5461,12 +4717,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Api\\SphinxHttpClient\:\:get\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Api\\SphinxHttpClient\:\:getRateLimitState\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -5474,12 +4724,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Api\\SphinxHttpClient\:\:post\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Api\\SphinxHttpClient\:\:post\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
@@ -5509,19 +4753,7 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheEndpointServiceInterface\:\:getHotelDeals\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CacheEndpointServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheEndpointServiceInterface\:\:getHotelDeals\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CacheEndpointServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheEndpointServiceInterface\:\:getPackageDeals\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CacheEndpointServiceInterface.php
@@ -5534,12 +4766,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheServiceInterface\:\:buildSearchKey\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CacheServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheServiceInterface\:\:get\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/CacheServiceInterface.php
@@ -5603,12 +4829,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/ConfigProviderInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Contracts\\SphinxFeatureAssignerInterface\:\:assignAll\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Contracts/SphinxFeatureAssignerInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\AbstractSyncCommand\:\:outputRateLimitSummary\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
@@ -6055,12 +5275,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/FullSyncCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\HotelSyncCommand\:\:execute\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/HotelSyncCommand.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\HotelSyncCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6087,6 +5301,18 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\PackageRouteSyncCommand\:\:execute\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
+
+		-
+			message: '#^Parameter \#1 \$departureIds of method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) expects array\<string, mixed\>, array\<int\<0, max\>, int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
+
+		-
+			message: '#^Parameter \#2 \$destinationIds of method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) expects array\<string, mixed\>, array\<int\<0, max\>, int\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
 
@@ -6127,12 +5353,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\CronDispatcher\:\:dispatch\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\CronDispatcher\:\:dispatch\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6151,58 +5371,10 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:createFromHotel\(\) has parameter \$hierarchy with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:createFromHotel\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:resolveCountryName\(\) has parameter \$hierarchy with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:resolveCountryName\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between 0 and 0 will always evaluate to true\.$#'
 			identifier: identical.alwaysTrue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:createFromHotel\(\) has parameter \$hierarchy with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:createFromHotel\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:resolveCountryName\(\) has parameter \$hierarchy with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:resolveCountryName\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactoryInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\CircuitRepository\:\:insert\(\) has parameter \$data with no value type specified in iterable type array\.$#'
@@ -6427,18 +5599,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/SphinxCacheRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:doSync\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6457,37 +5617,13 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:hasMorePages\(\) has parameter \$response with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:logComplete\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\AbstractSyncService\:\:runSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:getAvailableActions\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:getDisplayData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:getProviderTabs\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
@@ -6554,18 +5690,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CacheService\:\:buildSearchKey\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CacheService\:\:get\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CacheService\:\:set\(\) has parameter \$data with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
@@ -6643,18 +5767,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CircuitSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CircuitSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\CircuitSyncService\:\:doSync\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6679,24 +5791,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\ConfigProvider\:\:resolveWhitelistEntries\(\) has parameter \$entries with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\DestinationSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\DestinationSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\DestinationSyncService\:\:doSync\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6719,18 +5813,6 @@ parameters:
 			identifier: argument.type
 			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\ExperienceSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ExperienceSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\ExperienceSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ExperienceSyncService.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\ExperienceSyncService\:\:doSync\(\) return type has no value type specified in iterable type array\.$#'
@@ -6759,18 +5841,6 @@ parameters:
 		-
 			message: '#^If condition is always true\.$#'
 			identifier: if.alwaysTrue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
@@ -6859,18 +5929,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/OrderStatusSyncService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:doSync\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:doSync\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:doSync\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6889,28 +5947,10 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) has parameter \$departureIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:sync\(\) has parameter \$destinationIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PackageRouteSyncService\:\:upsertBatch\(\) has parameter \$batch with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PreOrderPriceVerifier\:\:verify\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\PreOrderPriceVerifier\:\:verify\(\) return type has no value type specified in iterable type array\.$#'
@@ -6919,19 +5959,7 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:sanitizeGuestData\(\) has parameter \$guests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:sanitizeGuestData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:validateBookingData\(\) has parameter \$data with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
@@ -6943,22 +5971,10 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:validateSearchParams\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:validateSearchParams\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:assignAll\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:assignBoards\(\) has parameter \$hotel with no value type specified in iterable type array\.$#'
@@ -7099,8 +6115,8 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_cron.php
 
 		-
-			message: '#^Function fn_travel_core_calculate_currency_coefficients\(\) has parameter \$bnr_rates with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Default value of the parameter \#2 \$currencies \(array\<int, string\>\) of function fn_travel_core_parse_bnr_xml\(\) is incompatible with type array\<string, mixed\>\.$#'
+			identifier: parameter.defaultValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
 
@@ -7111,25 +6127,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
 
 		-
-			message: '#^Function fn_travel_core_format_exchange_rate_output\(\) has parameter \$result with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_parse_bnr_xml\(\) has parameter \$currencies with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
 			message: '#^Function fn_travel_core_parse_bnr_xml\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
-
-		-
-			message: '#^Function fn_travel_core_update_cscart_currencies\(\) has parameter \$coefficients with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
@@ -7147,6 +6145,12 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
 
 		-
+			message: '#^Parameter \#2 \$currencies of function fn_travel_core_parse_bnr_xml expects array\<string, mixed\>, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
+
+		-
 			message: '#^Function _travel_core_seo_field_map\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7160,12 +6164,6 @@ parameters:
 
 		-
 			message: '#^Function fn_travel_core_apply_seo_fields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Function fn_travel_core_render_booking_engine\(\) has parameter \$params with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
@@ -7249,19 +6247,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getAvailableActions\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingAdminProviderInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getDisplayData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingAdminProviderInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getProviderTabs\(\) has parameter \$booking with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingAdminProviderInterface.php
@@ -7279,28 +6265,10 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingDisplayServiceInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingDisplayServiceInterface\:\:addBookingDisplayData\(\) has parameter \$config with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingDisplayServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\BookingDisplayServiceInterface\:\:addBookingDisplayData\(\) has parameter \$product with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/BookingDisplayServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\CronDispatcherInterface\:\:dispatch\(\) has parameter \$params with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/CronDispatcherInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\CurrencyServiceInterface\:\:convertResultsCurrency\(\) has parameter \$results with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/CurrencyServiceInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\CurrencyServiceInterface\:\:convertResultsCurrency\(\) return type has no value type specified in iterable type array\.$#'
@@ -7381,19 +6349,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapperInterface\:\:resolve\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapperInterface\:\:resolveMany\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapperInterface\:\:resolveWithVariant\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/FeatureMapperInterface.php
@@ -7447,64 +6403,16 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDataServiceInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:buildGuestList\(\) has parameter \$guests_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:formatForDisplay\(\) has parameter \$guests_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:formatForDisplay\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:getHolderName\(\) has parameter \$bookingData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestDisplayInterface\:\:getHolderName\(\) has parameter \$guests_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestDisplayInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestParserInterface\:\:formatApiName\(\) has parameter \$guest with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestParserInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestParserInterface\:\:parseGuestsData\(\) has parameter \$bookingData with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestParserInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestParserInterface\:\:parseGuestsData\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestParserInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\GuestValidatorInterface\:\:validate\(\) has parameter \$guests_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/GuestValidatorInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PreOrderPriceVerifierInterface\:\:verify\(\) has parameter \$cart with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/PreOrderPriceVerifierInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\PreOrderPriceVerifierInterface\:\:verify\(\) return type has no value type specified in iterable type array\.$#'
@@ -7543,19 +6451,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/PriceChangeDetectorInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:sanitizeGuestData\(\) has parameter \$guests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:sanitizeGuestData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateBookingData\(\) has parameter \$data with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
@@ -7567,31 +6463,13 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateSearchParams\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateSearchParams\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/SecurityServiceInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface\:\:getById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/TravelBookingRepositoryInterface.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface\:\:getPaginated\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Contracts/TravelBookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Contracts\\TravelBookingRepositoryInterface\:\:getProviderInfo\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Contracts/TravelBookingRepositoryInterface.php
@@ -7723,19 +6601,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getPaginated\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getProviderInfo\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
@@ -7777,12 +6643,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
 
 		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolve\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveFacility\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7790,12 +6650,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveMany\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:resolveWithVariant\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php

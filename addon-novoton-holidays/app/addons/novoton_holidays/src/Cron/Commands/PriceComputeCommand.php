@@ -297,7 +297,7 @@ class PriceComputeCommand extends AbstractCronCommand
      * - Skips percentage values (e.g. "85%")
      * - Checks Price1 through Price20
      *
-     * @param array $priceinfo Decoded priceinfo_data JSON
+     * @param array<string, mixed> $priceinfo Decoded priceinfo_data JSON
      * @return float|null Minimum price or null if none found
      */
     public static function extractMinPrice(array $priceinfo): ?float

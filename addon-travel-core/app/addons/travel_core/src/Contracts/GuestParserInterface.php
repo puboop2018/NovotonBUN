@@ -14,7 +14,7 @@ interface GuestParserInterface
     /**
      * Parse guests data from booking form.
      *
-     * @param array $bookingData Booking form data
+     * @param array<string, mixed> $bookingData Booking form data
      * @return array Parsed guests data in canonical keyed format
      */
     public function parseGuestsData(array $bookingData): array;
@@ -22,7 +22,7 @@ interface GuestParserInterface
     /**
      * Format name for API (FirstName LastName)
      *
-     * @param array $guest Guest data
+     * @param array<string, mixed> $guest Guest data
      * @return string Formatted API name
      */
     public function formatApiName(array $guest): string;

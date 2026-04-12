@@ -15,7 +15,7 @@ interface SphinxFeatureAssignerInterface
      * Assign all features from a sphinx_hotels row to a CS-Cart product.
      *
      * @param int   $productId CS-Cart product ID
-     * @param array $hotel     Row from sphinx_hotels table
+     * @param array<string, mixed> $hotel     Row from sphinx_hotels table
      */
     public function assignAll(int $productId, array $hotel): void;
 }

@@ -17,7 +17,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Logs the exchange rate update result to novoton's sync log table
  * so the admin panel can display "last updated" timestamps.
  *
- * @param array $result Full result array from fn_travel_core_update_exchange_rates()
+ * @param array<string, mixed> $result Full result array from fn_travel_core_update_exchange_rates()
  */
 function fn_novoton_holidays_travel_core_exchange_rates_updated(array &$result): void
 {

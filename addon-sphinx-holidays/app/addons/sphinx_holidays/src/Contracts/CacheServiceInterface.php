@@ -14,7 +14,7 @@ interface CacheServiceInterface
     /**
      * Get a cached value by key.
      *
-     * @return array|null Cached data or null if expired/missing
+     * @return array<string, mixed>|null Cached data or null if expired/missing
      */
     public static function get(string $key): ?array;
 

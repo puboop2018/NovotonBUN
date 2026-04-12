@@ -42,9 +42,9 @@ function fn_novoton_holidays_csv_escape(string $value): string
 /**
  * Generate CSV report from import results
  *
- * @param array $results Array of import results
+ * @param array<string, mixed> $results Array of import results
  * @param string $import_type Type of import (manual/cron)
- * @param array $summary Summary statistics
+ * @param array<string, mixed> $summary Summary statistics
  * @return string CSV content
  */
 function fn_novoton_holidays_generate_import_csv_report($results, $import_type = 'manual', $summary = []): string
@@ -194,7 +194,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
  * Send a price discrepancy alert email when the form price is lower than the
  * real-time room_price API price.
  *
- * @param array $data Associative array with keys:
+ * @param array<string, mixed> $data Associative array with keys:
  *   hotel_id, hotel_name, room_id, board_id, check_in, check_out,
  *   adults, children, children_ages, form_price, api_price, api_price_raw, difference
  * @return bool
@@ -247,7 +247,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
  * Used by the pre_place_order hook when the form price diverges from the
  * live API price. Handles both "lower" (blocked) and "higher" (allowed) cases.
  *
- * @param array $data Associative array with keys:
+ * @param array<string, mixed> $data Associative array with keys:
  *   type (price_lower|price_higher), hotel_id, hotel_name, room_id, board_id,
  *   check_in, check_out, adults, children, children_ages, form_price,
  *   api_price, api_price_raw, difference, percent

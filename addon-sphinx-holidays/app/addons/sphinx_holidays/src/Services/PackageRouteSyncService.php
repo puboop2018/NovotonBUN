@@ -36,8 +36,8 @@ class PackageRouteSyncService extends AbstractSyncService
     /**
      * Run package route sync from static API.
      *
-     * @param array $departureIds  Optional departure ID filter
-     * @param array $destinationIds Optional destination ID filter
+     * @param array<string, mixed> $departureIds  Optional departure ID filter
+     * @param array<string, mixed> $destinationIds Optional destination ID filter
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
     public function sync(array $departureIds = [], array $destinationIds = []): array

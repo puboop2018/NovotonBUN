@@ -24,7 +24,7 @@ class CacheService implements CacheServiceInterface
     /**
      * Get a cached value by key.
      *
-     * @return array|null Decoded data or null if missing/expired
+     * @return array<string, mixed>|null Decoded data or null if missing/expired
      */
     public static function get(string $key): ?array
     {
@@ -47,7 +47,7 @@ class CacheService implements CacheServiceInterface
      * Store a value in cache with a TTL.
      *
      * @param string $key Cache key
-     * @param array $data Data to cache (must be JSON-serializable)
+     * @param array<string, mixed> $data Data to cache (must be JSON-serializable)
      * @param int $ttl Time-to-live in seconds
      */
     public static function set(string $key, array $data, int $ttl): void

@@ -260,7 +260,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
  * @param \SimpleXMLElement $xml      XML response from room_price API
  * @param string|null       $room_id  Room ID to match (already URL-decoded), or null/empty to match any
  * @param string|null       $board_id Board ID to match, or null/empty to match any
- * @return array|null ['price' => float, 'room' => string, 'board' => string] or null if no match
+ * @return array<string, mixed>|null ['price' => float, 'room' => string, 'board' => string] or null if no match
  */
 function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id): ?array
 {

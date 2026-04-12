@@ -15,7 +15,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Transform database package record to normalized format
  * Shared helper to avoid code duplication
  *
- * @param array $pkg Package record from novoton_hotel_packages table
+ * @param array<string, mixed> $pkg Package record from novoton_hotel_packages table
  * @param bool $include_priceinfo_details Whether to extract detailed priceinfo (seasons, prices)
  * @return array Normalized package data
  */
@@ -147,7 +147,7 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
  * for any number of hotels. Subsequent calls to fn_novoton_holidays_get_hotel_data()
  * for these IDs will be O(1) cache hits.
  *
- * @param array $hotel_ids List of Novoton hotel IDs to prefetch
+ * @param array<string, mixed> $hotel_ids List of Novoton hotel IDs to prefetch
  */
 function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
 {
@@ -209,7 +209,7 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
  *
  * @param string $hotel_id Novoton hotel ID
  * @param bool $force Force refresh from database
- * @return array|null Hotel data with extracted rooms/boards/ages, or null
+ * @return array<string, mixed>|null Hotel data with extracted rooms/boards/ages, or null
  */
 function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $force = false): ?array
 {
@@ -359,7 +359,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
  *
  * @param string $hotel_id Hotel ID
  * @param string $package_id Package ID (IdCont)
- * @return array|null Priceinfo data or null
+ * @return array<string, mixed>|null Priceinfo data or null
  */
 function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $package_id): ?array
 {
@@ -385,7 +385,7 @@ function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $pac
  *
  * @param string $hotel_id Hotel ID
  * @param string $package_name Package name
- * @return array|null Priceinfo data or null
+ * @return array<string, mixed>|null Priceinfo data or null
  */
 function fn_novoton_holidays_get_package_priceinfo_by_name(string $hotel_id, string $package_name): ?array
 {

@@ -25,7 +25,7 @@ interface BookingSubmissionServiceInterface
      *   - Sends SEPARATE API calls if rooms have different packages or dates
      *
      * @param int   $orderId Order ID
-     * @param array $cart    Cart data
+     * @param array<string, mixed> $cart    Cart data
      */
     public function submitOrder(int $orderId, array $cart): void;
 }

@@ -20,7 +20,7 @@ interface SecurityServiceInterface
     /**
      * Validate booking data before submission.
      *
-     * @param array $data Booking data
+     * @param array<string, mixed> $data Booking data
      * @return array{valid: bool, errors: array} Validation result
      */
     public function validateBookingData(array $data): array;
@@ -28,7 +28,7 @@ interface SecurityServiceInterface
     /**
      * Validate and sanitize search parameters.
      *
-     * @param array $params Raw search parameters
+     * @param array<string, mixed> $params Raw search parameters
      * @return array Sanitized parameters (provider decides format)
      */
     public function validateSearchParams(array $params): array;
@@ -44,7 +44,7 @@ interface SecurityServiceInterface
     /**
      * Sanitize guest data for safe storage.
      *
-     * @param array $guests Raw guest data
+     * @param array<string, mixed> $guests Raw guest data
      * @return array Sanitized guest data
      */
     public function sanitizeGuestData(array $guests): array;

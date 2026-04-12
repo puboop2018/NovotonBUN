@@ -24,8 +24,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * Links by session_id first (exact match for current browser session),
  * then by email (catches bookings from other devices).
  *
- * @param array $user_data User profile data
- * @param array $auth      Authentication context
+ * @param array<string, mixed> $user_data User profile data
+ * @param array<string, mixed> $auth      Authentication context
  */
 function fn_novoton_holidays_user_login_post($user_data, $auth): void
 {
@@ -72,8 +72,8 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
  * CS-Cart passes: ($user_id, $user_data, $auth)
  *
  * @param int   $user_id   Newly created user ID
- * @param array $user_data Newly created user data (includes email)
- * @param array $auth      Authentication context
+ * @param array<string, mixed> $user_data Newly created user data (includes email)
+ * @param array<string, mixed> $auth      Authentication context
  */
 function fn_novoton_holidays_create_user_post($user_id, $user_data, $auth): void
 {

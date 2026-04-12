@@ -16,7 +16,7 @@ interface DatabaseIteratorInterface
     /**
      * Iterate over hotels with optional filters.
      *
-     * @param array $filters    Filter conditions (country, has_room_price, etc.)
+     * @param array<string, mixed> $filters    Filter conditions (country, has_room_price, etc.)
      * @param int   $chunk_size
      * @return \Generator Yields one hotel row at a time
      */
@@ -25,7 +25,7 @@ interface DatabaseIteratorInterface
     /**
      * Iterate over hotel IDs only (more memory efficient).
      *
-     * @param array $filters
+     * @param array<string, mixed> $filters
      * @param int   $chunk_size
      * @return \Generator Yields one hotel_id at a time
      */
@@ -34,7 +34,7 @@ interface DatabaseIteratorInterface
     /**
      * Iterate over hotel packages.
      *
-     * @param array $filters
+     * @param array<string, mixed> $filters
      * @param int   $chunk_size
      * @return \Generator Yields one package row at a time
      */
@@ -43,7 +43,7 @@ interface DatabaseIteratorInterface
     /**
      * Iterate over bookings.
      *
-     * @param array $filters Filter conditions (status, novoton_status, etc.)
+     * @param array<string, mixed> $filters Filter conditions (status, novoton_status, etc.)
      * @param int   $chunk_size
      * @return \Generator Yields one booking row at a time
      */

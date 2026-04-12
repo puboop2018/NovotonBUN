@@ -42,7 +42,7 @@ interface HttpClientInterface
     /**
      * Send multiple requests in parallel using curl_multi.
      *
-     * @param array $requests    Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
+     * @param array<string, mixed> $requests    Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
      * @param int   $concurrency Max simultaneous requests
      * @return array key => raw response string or false
      */

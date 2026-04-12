@@ -72,7 +72,7 @@ function fn_travel_core_fetch_bnr_rates(): string|false
  * Parse BNR XML and extract rates for specified currencies
  *
  * @param string $xml_content Raw XML from BNR
- * @param array $currencies Currency codes to extract (default: EUR, USD, GBP)
+ * @param array<string, mixed> $currencies Currency codes to extract (default: EUR, USD, GBP)
  * @param bool $include_date If true, returns array with 'rates' and 'publishing_date' keys
  * @return array Associative array of currency => rate (relative to RON)
  */
@@ -138,7 +138,7 @@ function fn_travel_core_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD',
  * Assumes EUR is the primary currency in CS-Cart.
  * Converts BNR rates (RON-based) to EUR-based coefficients.
  *
- * @param array $bnr_rates Rates from BNR (currency => RON rate)
+ * @param array<string, mixed> $bnr_rates Rates from BNR (currency => RON rate)
  * @param float $commission Commission percentage to add (e.g., 2 for 2%)
  * @return array Currency coefficients for CS-Cart
  */
@@ -172,7 +172,7 @@ function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission 
 /**
  * Update CS-Cart currency rates using direct SQL
  *
- * @param array $coefficients Currency coefficients to update
+ * @param array<string, mixed> $coefficients Currency coefficients to update
  * @return array Results with success/error info per currency
  */
 function fn_travel_core_update_cscart_currencies($coefficients): array
@@ -330,7 +330,7 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
  * Shared by cron.php and travel_cron controller to avoid duplicating
  * the same formatting logic in multiple entry points.
  *
- * @param array $result Result array from fn_travel_core_update_exchange_rates()
+ * @param array<string, mixed> $result Result array from fn_travel_core_update_exchange_rates()
  * @return string Formatted plain-text output
  */
 function fn_travel_core_format_exchange_rate_output(array $result): string

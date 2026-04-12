@@ -565,7 +565,7 @@ class CacheService implements CacheServiceInterface
      * Log debug message
      * 
      * @param string $message Message
-     * @param array $context Context
+     * @param array<string, mixed> $context Context
      */
     private function log(string $message, array $context = []): void
     {

@@ -238,7 +238,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Get current statistics
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getStats(): array
     {
@@ -293,7 +293,7 @@ class SyncLogger implements SyncLoggerInterface
      * Log to database sync_log table
      *
      * @param string|null $status Status: 'completed', 'failed', 'in_progress'
-     * @param array $extra Extra data to store in notes
+     * @param array<string, mixed> $extra Extra data to store in notes
      * @return int|false Log ID or false on failure
      */
     public function logToDatabase(?string $status = 'completed', array $extra = []): int|false
@@ -326,7 +326,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Send email report
      *
-     * @param array $results Detailed results for CSV attachment (optional)
+     * @param array<string, mixed> $results Detailed results for CSV attachment (optional)
      * @param string $country Country or countries
      * @return bool
      */
@@ -343,7 +343,7 @@ class SyncLogger implements SyncLoggerInterface
      * Log event using CS-Cart's fn_log_event
      *
      * @param string $action Action name
-     * @param array $context Additional context
+     * @param array<string, mixed> $context Additional context
      */
     public function logEvent(string $action, array $context = []): void
     {
@@ -358,7 +358,7 @@ class SyncLogger implements SyncLoggerInterface
      *
      * @param bool $sendEmail Whether to send email report
      * @param string $country Country for email
-     * @param array $extra Extra data for database log
+     * @param array<string, mixed> $extra Extra data for database log
      * @return array Result with log_id and email_sent
      */
     public function complete(bool $sendEmail = true, string $country = '', array $extra = []): array
@@ -395,7 +395,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Get all collected messages
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getMessages(): array
     {

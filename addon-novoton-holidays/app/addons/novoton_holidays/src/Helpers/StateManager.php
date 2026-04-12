@@ -113,7 +113,7 @@ class StateManager implements StateManagerInterface
     /**
      * Save state to file with locking
      *
-     * @param array $state State array
+     * @param array<string, mixed> $state State array
      * @return bool Success
      */
     public function save(array $state): bool
@@ -225,8 +225,8 @@ class StateManager implements StateManagerInterface
      * Start a new sync
      *
      * @param string $syncType Type of sync (e.g., 'full', 'incremental')
-     * @param array $itemIds Array of item IDs to process
-     * @param array $metadata Additional metadata
+     * @param array<string, mixed> $itemIds Array of item IDs to process
+     * @param array<string, mixed> $metadata Additional metadata
      * @return array New state
      */
     public function start(string $syncType, array $itemIds, array $metadata = []): array
@@ -255,7 +255,7 @@ class StateManager implements StateManagerInterface
      * @param int $processed Number of items processed
      * @param int $synced Number of items successfully synced
      * @param int $errors Number of errors
-     * @param array $errorIds IDs of items with errors
+     * @param array<string, mixed> $errorIds IDs of items with errors
      * @return array Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array

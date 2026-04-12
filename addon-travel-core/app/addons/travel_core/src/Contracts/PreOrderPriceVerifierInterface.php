@@ -21,7 +21,7 @@ interface PreOrderPriceVerifierInterface
      * Each provider scans the cart for its own booking products, re-checks
      * prices against its API, and returns corrections/notifications.
      *
-     * @param array $cart CS-Cart cart data
+     * @param array<string, mixed> $cart CS-Cart cart data
      * @return array{allow: bool, corrections: array, notifications: array}
      *   - allow: whether the order should proceed (typically always true)
      *   - corrections: cart_id => price correction data

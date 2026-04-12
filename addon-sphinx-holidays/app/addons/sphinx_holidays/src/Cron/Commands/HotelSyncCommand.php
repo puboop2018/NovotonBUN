@@ -31,7 +31,7 @@ class HotelSyncCommand extends AbstractSyncCommand
     /**
      * Execute the hotel sync.
      *
-     * @param array $params CLI parameters. 'country' overrides settings.
+     * @param array<string, mixed> $params CLI parameters. 'country' overrides settings.
      */
     #[\Override]
     public function execute(array $params = []): array

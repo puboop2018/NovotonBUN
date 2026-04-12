@@ -30,7 +30,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * The Smarty template (booking_engine.tpl) is still used for product detail
  * pages and the homepage block where scope chain is not an issue.
  *
- * @param array $params {
+ * @param array<string, mixed> $params {
  *     @type string $provider        'novoton' or 'sphinx'
  *     @type string $search_dispatch 'novoton_booking.search' or 'sphinx_booking.search'
  *     @type string $mode            'search' (default) or 'product'

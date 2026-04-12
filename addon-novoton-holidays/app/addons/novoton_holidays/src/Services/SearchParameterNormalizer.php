@@ -18,7 +18,7 @@ class SearchParameterNormalizer
     /**
      * Normalize raw search parameters from the HTTP request.
      *
-     * @param array $searchParams Already-sanitized request params (from SecurityService)
+     * @param array<string, mixed> $searchParams Already-sanitized request params (from SecurityService)
      * @return array Normalized parameter bag with keys:
      *   check_in, check_out, nights, adults, children (ages array),
      *   children_count, children_ages_str, num_rooms, rooms_data,

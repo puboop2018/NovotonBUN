@@ -20,7 +20,7 @@ interface PriceInfoServiceInterface
      * @param string $hotelId     Hotel ID
      * @param string $packageName Package name
      * @param string $lang        Language
-     * @return array|null Parsed price info
+     * @return array<string, mixed>|null Parsed price info
      */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): ?array;
 
@@ -70,7 +70,7 @@ interface PriceInfoServiceInterface
      *
      * @param string      $hotelId Hotel ID
      * @param string|null $date    Date to check (default: today)
-     * @return array|null Active discount or null
+     * @return array<string, mixed>|null Active discount or null
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array;
 

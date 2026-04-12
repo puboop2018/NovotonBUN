@@ -13,7 +13,7 @@ interface PriceVerificationServiceInterface
     /**
      * Verify price via room_price API and extract terms.
      *
-     * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
+     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
      * @return array{
      *   success: bool,
      *   total_price: float,

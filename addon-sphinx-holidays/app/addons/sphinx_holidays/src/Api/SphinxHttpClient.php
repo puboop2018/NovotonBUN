@@ -63,7 +63,7 @@ class SphinxHttpClient
      *
      * @param string $endpoint API endpoint (e.g., '/api/v1/static/destinations')
      * @param array  $query    Query parameters
-     * @return array|null Decoded JSON response or null on failure
+     * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function get(string $endpoint, array $query = []): ?array
     {
@@ -80,7 +80,7 @@ class SphinxHttpClient
      *
      * @param string $endpoint API endpoint
      * @param array  $data     Request body (will be JSON-encoded)
-     * @return array|null Decoded JSON response or null on failure
+     * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function post(string $endpoint, array $data = []): ?array
     {

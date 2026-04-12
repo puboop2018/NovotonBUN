@@ -119,7 +119,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Determine what type of sync is needed
      *
-     * @param array $options
+     * @param array<string, mixed> $options
      * @return string 'full', 'incremental', or 'none'
      */
     abstract protected function determineSyncType(array $options): string;
@@ -128,8 +128,8 @@ abstract class AbstractBatchedSync implements SyncInterface
      * Get item IDs to sync based on sync type
      *
      * @param string $syncType
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
      */
     abstract protected function getItemsToSync(string $syncType, array $options): array;
 
@@ -333,8 +333,8 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Run the sync operation
      *
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
      */
     public function run(array $options = []): array
     {
@@ -392,8 +392,8 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Get metadata to store with state
      *
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
      */
     protected function getMetadata(array $options): array
     {
@@ -405,7 +405,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Resume an in-progress sync
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function resumeSync(): array
     {
@@ -586,7 +586,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Complete the sync
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function completeSync(): array
     {
@@ -625,7 +625,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Get current status
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getStatus(): array
     {

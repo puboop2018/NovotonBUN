@@ -29,7 +29,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Iterate over hotels with optional filters
      *
-     * @param array $filters Filter conditions (country, has_room_price, etc.)
+     * @param array<string, mixed> $filters Filter conditions (country, has_room_price, etc.)
      * @param int $chunk_size Number of records to fetch per batch
      * @return \Generator Yields one hotel row at a time
      */
@@ -60,7 +60,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Iterate over hotel IDs only (more memory efficient)
      *
-     * @param array $filters Filter conditions
+     * @param array<string, mixed> $filters Filter conditions
      * @param int $chunk_size Number of IDs to fetch per batch
      * @return \Generator Yields one hotel_id at a time
      */
@@ -126,7 +126,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Iterate over hotel packages
      *
-     * @param array $filters Filter conditions
+     * @param array<string, mixed> $filters Filter conditions
      * @param int $chunk_size Number of packages to fetch per batch
      * @return \Generator Yields one package row at a time
      */
@@ -189,7 +189,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Iterate over bookings
      *
-     * @param array $filters Filter conditions (status, novoton_status, etc.)
+     * @param array<string, mixed> $filters Filter conditions (status, novoton_status, etc.)
      * @param int $chunk_size Number of bookings to fetch per batch
      * @return \Generator Yields one booking row at a time
      */
@@ -285,7 +285,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
      * Generic query iterator - iterate over any query results
      *
      * @param string $query SQL query with LIMIT ?i OFFSET ?i placeholders at the end
-     * @param array $params Query parameters (before limit/offset)
+     * @param array<string, mixed> $params Query parameters (before limit/offset)
      * @param int $chunk_size Number of rows to fetch per batch
      * @return \Generator Yields one row at a time
      */
@@ -342,7 +342,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
      * Count total items matching filters
      *
      * @param string $table Table name (without prefix)
-     * @param array $filters Filter conditions
+     * @param array<string, mixed> $filters Filter conditions
      * @return int Total count
      */
     public function countItems(string $table, array $filters = []): int

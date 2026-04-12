@@ -99,7 +99,7 @@ class FeatureMapper implements FeatureMapperInterface
      * @param string $apiSource   Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
      * @param string $apiValue    Raw value from the API
-     * @return array|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
+     * @return array<string, mixed>|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
      */
     #[\Override]
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array
@@ -157,7 +157,7 @@ class FeatureMapper implements FeatureMapperInterface
      *
      * Respects variant_source='manual' — never auto-overwrites admin-locked mappings.
      *
-     * @return array|null The mapping with guaranteed cscart_variant_id (if resolvable)
+     * @return array<string, mixed>|null The mapping with guaranteed cscart_variant_id (if resolvable)
      */
     #[\Override]
     public static function resolveWithVariant(string $apiSource, string $featureType, string $apiValue): ?array

@@ -33,7 +33,7 @@ abstract class AbstractSyncService
      * Template method: orchestrates the full sync lifecycle.
      *
      * @param bool  $fullSync Force full re-fetch (ignores updated_since)
-     * @param array $context  Additional parameters for the concrete service
+     * @param array<string, mixed> $context  Additional parameters for the concrete service
      * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string, sync_mode: string}
      */
     protected function runSync(bool $fullSync, array $context = []): array
@@ -86,8 +86,8 @@ abstract class AbstractSyncService
      * Core sync logic — each service implements its own flow.
      *
      * @param bool  $fullSync Whether this is a full or incremental sync
-     * @param array $stats    Initialized stats array to populate
-     * @param array $context  Additional parameters (country codes, destination IDs, etc.)
+     * @param array<string, mixed> $stats    Initialized stats array to populate
+     * @param array<string, mixed> $context  Additional parameters (country codes, destination IDs, etc.)
      * @return array The populated stats array
      */
     abstract protected function doSync(bool $fullSync, array $stats, array $context): array;
@@ -112,7 +112,7 @@ abstract class AbstractSyncService
     /**
      * Check if there are more pages to fetch.
      *
-     * @param array $response    Full API response (with pagination metadata)
+     * @param array<string, mixed> $response    Full API response (with pagination metadata)
      * @param int   $currentPage Current page number
      * @param int   $perPage     Items per page
      * @param int   $fetchedSoFar Total items fetched across all pages

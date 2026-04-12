@@ -23,12 +23,12 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * Assign all search-result template variables.
      *
-     * @param array $results        Primary result rows
-     * @param array $novotonParams  Template params (from normalizer)
-     * @param array $searchResult   Output from HotelAvailabilitySearcher::search()
-     * @param array $altResult      Output from AlternativeDateSearcher::search()
-     * @param array $searchParams   Raw (sanitized) request params
-     * @param array $debugLog       Debug lines (empty when debug is off)
+     * @param array<string, mixed> $results        Primary result rows
+     * @param array<string, mixed> $novotonParams  Template params (from normalizer)
+     * @param array<string, mixed> $searchResult   Output from HotelAvailabilitySearcher::search()
+     * @param array<string, mixed> $altResult      Output from AlternativeDateSearcher::search()
+     * @param array<string, mixed> $searchParams   Raw (sanitized) request params
+     * @param array<string, mixed> $debugLog       Debug lines (empty when debug is off)
      */
     #[\Override]
     public function assignToView(

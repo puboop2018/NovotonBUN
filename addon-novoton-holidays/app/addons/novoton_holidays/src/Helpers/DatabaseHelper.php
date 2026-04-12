@@ -22,8 +22,8 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Batch update hotels has_room_price flag after room_price API checks
      *
-     * @param array $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
-     * @param array $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
+     * @param array<string, mixed> $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
+     * @param array<string, mixed> $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
      * @return int Number of rows updated
      */
     public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int
@@ -182,7 +182,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Link products to hotels in batch
      *
-     * @param array $links Array of ['hotel_id' => x, 'product_id' => y]
+     * @param array<string, mixed> $links Array of ['hotel_id' => x, 'product_id' => y]
      * @return int Number of links created
      */
     public function linkProductsToHotels(array $links): int

@@ -14,14 +14,14 @@ interface TravelBookingRepositoryInterface
     /**
      * Get provider and provider_booking_id for a booking.
      *
-     * @return array|null Row with 'provider' and 'provider_booking_id', or null if not found
+     * @return array<string, mixed>|null Row with 'provider' and 'provider_booking_id', or null if not found
      */
     public function getProviderInfo(int $bookingId): ?array;
 
     /**
      * Get a single booking by ID with all columns.
      *
-     * @return array|null Full booking row, or null if not found
+     * @return array<string, mixed>|null Full booking row, or null if not found
      */
     public function getById(int $bookingId): ?array;
 

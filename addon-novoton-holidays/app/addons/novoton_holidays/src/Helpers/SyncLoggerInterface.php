@@ -75,7 +75,7 @@ interface SyncLoggerInterface
     /**
      * Get current statistics.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getStats(): array;
 
@@ -139,7 +139,7 @@ interface SyncLoggerInterface
     /**
      * Get all collected messages.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getMessages(): array;
 

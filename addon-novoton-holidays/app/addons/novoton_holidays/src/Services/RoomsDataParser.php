@@ -23,7 +23,7 @@ class RoomsDataParser
      * Handles both JSON string and already-decoded array formats.
      * Falls back to a single room from flat booking fields if empty.
      *
-     * @param array $bookingData Form data
+     * @param array<string, mixed> $bookingData Form data
      * @return array Parsed rooms data
      */
     public function parseRoomsData(array $bookingData): array
@@ -57,8 +57,8 @@ class RoomsDataParser
      *
      * Concatenates room_id and room display names from all rooms.
      *
-     * @param array $roomsData   Parsed rooms data
-     * @param array $bookingData Booking data fallback
+     * @param array<string, mixed> $roomsData   Parsed rooms data
+     * @param array<string, mixed> $bookingData Booking data fallback
      * @return array{room_id: string, room_type: string}
      */
     public function extractRoomInfo(array $roomsData, array $bookingData): array
@@ -94,7 +94,7 @@ class RoomsDataParser
     /**
      * Calculate aggregate totals from rooms data.
      *
-     * @param array $roomsData Parsed rooms data
+     * @param array<string, mixed> $roomsData Parsed rooms data
      * @return array{adults: int, children: int, ages: int[], price: float}
      */
     public function calculateTotals(array $roomsData): array
@@ -128,7 +128,7 @@ class RoomsDataParser
      *
      * Handles both comma-separated string and array formats.
      *
-     * @param array $bookingData Booking data
+     * @param array<string, mixed> $bookingData Booking data
      * @return int[] Ages
      */
     public function parseChildrenAges(array $bookingData): array

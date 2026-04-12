@@ -44,7 +44,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      *
      * Extracted from getRoomPrice() so it can be reused by getRoomPriceBatch().
      *
-     * @param array $params Same parameters as getRoomPrice()
+     * @param array<string, mixed> $params Same parameters as getRoomPrice()
      * @return string XML request body
      */
     #[\Override]

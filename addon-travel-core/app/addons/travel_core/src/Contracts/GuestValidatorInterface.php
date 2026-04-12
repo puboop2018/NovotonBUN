@@ -13,7 +13,7 @@ interface GuestValidatorInterface
     /**
      * Validate guests data
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @param int $expected_adults Expected adult count
      * @param int $expected_children Expected children count
      * @return array{valid: bool, errors: string[], adults: int, children: int}

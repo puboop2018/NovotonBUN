@@ -20,7 +20,7 @@ interface SyncInterface
     /**
      * Run the sync operation
      *
-     * @param array $options Options for the sync (e.g., force_full, reset)
+     * @param array<string, mixed> $options Options for the sync (e.g., force_full, reset)
      * @return array Result with status, counts, and other info
      */
     public function run(array $options = []): array;

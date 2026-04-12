@@ -37,7 +37,7 @@ interface BookingAdminProviderInterface
      * Returns a list of action descriptors that the unified UI can render as buttons.
      * Each action has: name, label, url, method (GET/POST), css_class, icon.
      *
-     * @param array $booking The travel_bookings row merged with provider display data
+     * @param array<string, mixed> $booking The travel_bookings row merged with provider display data
      * @return array<int, array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
      */
     public function getAvailableActions(array $booking): array;
@@ -68,7 +68,7 @@ interface BookingAdminProviderInterface
      * Returns tab descriptors that the unified UI renders alongside the
      * standard booking detail tabs (e.g. Novoton alternatives, order tab).
      *
-     * @param array $booking The full booking row (with provider_display enrichment)
+     * @param array<string, mixed> $booking The full booking row (with provider_display enrichment)
      * @return array<int, array{name: string, label: string, dispatch: string, ajax: bool}>
      */
     public function getProviderTabs(array $booking): array;

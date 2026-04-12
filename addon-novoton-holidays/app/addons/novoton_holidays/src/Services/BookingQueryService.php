@@ -55,7 +55,7 @@ class BookingQueryService implements BookingQueryServiceInterface
      * Get unified booking list - uses novoton_bookings as single source of truth
      * Joins with orders table for order status information
      *
-     * @param array $params Filter parameters
+     * @param array<string, mixed> $params Filter parameters
      * @return array Unified bookings list
      */
     #[\Override]

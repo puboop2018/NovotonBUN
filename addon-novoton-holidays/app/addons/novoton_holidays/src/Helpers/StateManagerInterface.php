@@ -24,7 +24,7 @@ interface StateManagerInterface
     /**
      * Save state to file with locking.
      *
-     * @param array $state State array
+     * @param array<string, mixed> $state State array
      * @return bool Success
      */
     public function save(array $state): bool;
@@ -59,7 +59,7 @@ interface StateManagerInterface
      * @param int   $processed
      * @param int   $synced
      * @param int   $errors
-     * @param array $errorIds
+     * @param array<string, mixed> $errorIds
      * @return array Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array;
