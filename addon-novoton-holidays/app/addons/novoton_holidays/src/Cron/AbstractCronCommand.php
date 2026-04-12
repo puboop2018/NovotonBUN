@@ -48,8 +48,6 @@ abstract class AbstractCronCommand extends BaseCommand
         }
     }
 
-    abstract public static function getModes(): array;
-
     protected function getParam(string $key, mixed $default = null): mixed
     {
         return $this->params[$key] ?? $default;

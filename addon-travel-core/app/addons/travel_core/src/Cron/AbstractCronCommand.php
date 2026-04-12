@@ -33,6 +33,20 @@ abstract class AbstractCronCommand
     abstract public static function getDescription(): string;
 
     /**
+     * Cron mode identifiers this command handles.
+     *
+     * Novoton's CronDispatcher uses this to register commands by mode.
+     * Sphinx commands that don't use the mode concept inherit the empty
+     * default and are registered by other means.
+     *
+     * @return string[]
+     */
+    public static function getModes(): array
+    {
+        return [];
+    }
+
+    /**
      * Set a callback for output messages (used in web/CLI contexts).
      */
     public function setOutputCallback(\Closure $callback): void

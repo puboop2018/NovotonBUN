@@ -50,13 +50,11 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
         $tolerance   = $this->getTolerancePercent();
         $significant = $percent >= $tolerance && abs($difference) > self::MIN_ABSOLUTE_DIFFERENCE;
 
-        if ($difference > 0) {
-            $direction = 'increase';
-        } elseif ($difference < 0) {
-            $direction = 'decrease';
-        } else {
-            $direction = 'none';
-        }
+        $direction = match (true) {
+            $difference > 0 => 'increase',
+            $difference < 0 => 'decrease',
+            default         => 'none',
+        };
 
         $badgeType = 'none';
         if ($significant) {
